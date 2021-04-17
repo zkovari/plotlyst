@@ -1,0 +1,8 @@
+---
+ioPaths:
+  - - "ui/*.ui"
+    - "novel_outliner/view/generated/%%FILENAME%%_ui.py"
+  - - "resources/*.qrc"
+    - "novel_outliner/view/generated/%%FILENAME%%_rc.py"
+uic_options: --from-imports
+force: False
