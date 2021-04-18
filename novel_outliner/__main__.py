@@ -8,7 +8,6 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication.instance()
     if not app:
         app = QtWidgets.QApplication(sys.argv)
-    # app.setStyleSheet(APP_STYLESHEET)
     window = MainWindow()
 
     window.show()
