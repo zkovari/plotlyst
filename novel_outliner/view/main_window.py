@@ -1,9 +1,8 @@
 from typing import List, Optional
 
-import qtawesome
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QMenu, QAction, QWidget
 
-from novel_outliner.core.domain import Character
+from novel_outliner.core.domain import Character, Scene
 from novel_outliner.core.persistence import emit_save
 from novel_outliner.core.project import ProjectFinder
 from novel_outliner.view.character_editor import CharacterEditor
@@ -11,6 +10,8 @@ from novel_outliner.view.characters_view import CharactersView
 from novel_outliner.view.common import EditorCommand
 from novel_outliner.view.generated.main_window_ui import Ui_MainWindow
 from novel_outliner.view.icons import IconRegistry
+from novel_outliner.view.scene_editor import SceneEditor
+from novel_outliner.view.scenes_view import ScenesView
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -28,9 +29,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.characters_view = CharactersView(self.novel)
         self.characters_view.character_edited.connect(self._on_character_edition)
         self.characters_view.commands_sent.connect(self._on_received_commands)
+
+        self.scenes_view = ScenesView(self.novel)
+        self.scenes_view.scene_edited.connect(self._on_scene_edition)
+        self.scenes_view.scene_created.connect(self._on_scene_creation)
+        self.scenes_view.commands_sent.connect(self._on_received_commands)
         self._init_toolbar()
 
-        self.tabWidget.addTab(self.characters_view.widget, qtawesome.icon('fa5s.user'), 'Characters')
+        self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), 'Characters')
+        self.tabWidget.addTab(self.scenes_view.widget, IconRegistry.scene_icon(), 'Scenes')
 
     def _init_toolbar(self):
         self.btnAdd = QToolButton(self.toolBar)
@@ -58,6 +65,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         tab = self.tabWidget.addTab(self.editor.widget, 'New Character')
         self.tabWidget.setCurrentIndex(tab)
 
+    def _on_scene_edition(self, scene: Optional[Scene]):
+        self._on_scene_creation(scene)
+
+    def _on_scene_creation(self, scene: Optional[Scene] = None):
+        self.editor = SceneEditor(self.novel, scene)
+        self.editor.commands_sent.connect(self._on_received_commands)
+        tab = self.tabWidget.addTab(self.editor.widget, 'New Scene')
+        self.tabWidget.setCurrentIndex(tab)
+
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
             if cmd == EditorCommand.SAVE:
@@ -68,3 +84,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif cmd == EditorCommand.DISPLAY_CHARACTERS:
                 self.tabWidget.setCurrentWidget(self.characters_view.widget)
                 self.characters_view.refresh()
+            elif cmd == EditorCommand.DISPLAY_SCENES:
+                self.tabWidget.setCurrentWidget(self.scenes_view.widget)
+                self.scenes_view.refresh()

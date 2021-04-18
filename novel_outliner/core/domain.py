@@ -14,7 +14,16 @@ class Character:
 
 @dataclass_json
 @dataclass
+class Scene:
+    title: str
+    pov: Character = None
+    characters: List[Character] = field(default_factory=list)
+
+
+@dataclass_json
+@dataclass
 class Novel:
     title: str
     config_path: str = ''
     characters: List[Character] = field(default_factory=list)
+    scenes: List[Scene] = field(default_factory=list)
