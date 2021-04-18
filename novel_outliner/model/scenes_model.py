@@ -12,14 +12,16 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
 
     ColTitle = 0
     ColPov = 1
+    ColCharacters = 2
+    ColSynopsis = 3
 
     def __init__(self, novel: Novel, parent=None):
         self._data: List[Scene] = novel.scenes
-        _headers = [''] * 2
-        # for _ in range(2):
-        #     _headers.append('')
+        _headers = [''] * 4
         _headers[self.ColTitle] = 'Title'
         _headers[self.ColPov] = 'POV'
+        _headers[self.ColCharacters] = 'Characters'
+        _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
 
     @overrides
@@ -38,6 +40,12 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return self._data[index.row()].title
             elif index.column() == self.ColPov:
                 return self._data[index.row()].pov.name if self._data[index.row()].pov else ''
+            elif index.column() == self.ColCharacters:
+                return ', '.join([x.name for x in self._data[index.row()].characters])
+            elif index.column() == self.ColSynopsis:
+                return self._data[index.row()].synopsis
+        elif role == Qt.ToolTipRole:
+            return self._data[index.row()].synopsis
 
 
 class SceneEditorTableModel(QAbstractTableModel):
@@ -78,7 +86,7 @@ class SceneEditorTableModel(QAbstractTableModel):
         if index.row() == self.RowTitle:
             self._data.title = value
         elif index.row() == self.RowPov:
-            self._data.pov = int(value)
+            self._data.pov = value
         else:
             return False
 

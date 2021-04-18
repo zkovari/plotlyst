@@ -17,11 +17,20 @@
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QTabWidget" name="tabWidget">
+      <property name="cursor">
+       <cursorShape>ArrowCursor</cursorShape>
+      </property>
       <property name="tabPosition">
-       <enum>QTabWidget::North</enum>
+       <enum>QTabWidget::West</enum>
       </property>
       <property name="currentIndex">
        <number>-1</number>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>32</width>
+        <height>32</height>
+       </size>
       </property>
      </widget>
     </item>
@@ -40,6 +49,7 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionRestart"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -61,6 +71,14 @@
     <bool>false</bool>
    </attribute>
   </widget>
+  <action name="actionRestart">
+   <property name="text">
+    <string>Restart</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from dataclasses_json import dataclass_json
 
@@ -16,7 +16,8 @@ class Character:
 @dataclass
 class Scene:
     title: str
-    pov: Character = None
+    synopsis: str = ''
+    pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
 
 

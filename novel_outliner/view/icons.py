@@ -99,3 +99,11 @@ class IconRegistry:
     @staticmethod
     def book_icon() -> QIcon:
         return qtawesome.icon('fa5s.book-open')
+
+    @staticmethod
+    def synopsis_icon() -> QIcon:
+        return qtawesome.icon('mdi.file-document')
+
+    @staticmethod
+    def general_info_icon() -> QIcon:
+        return qtawesome.icon('mdi.information-outline')

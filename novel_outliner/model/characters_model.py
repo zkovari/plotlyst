@@ -1,9 +1,10 @@
 from typing import List, Any
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant
+from PyQt5.QtGui import QFont
 from overrides import overrides
 
-from novel_outliner.core.domain import Character, Novel
+from novel_outliner.core.domain import Character, Novel, Scene
 
 
 class CharactersTableModel(QAbstractTableModel):
@@ -39,6 +40,44 @@ class CharactersTableModel(QAbstractTableModel):
         elif role == Qt.DisplayRole:
             if index.column() == self.ColName:
                 return self._data[index.row()].name
+
+
+class CharactersSceneAssociationTableModel(CharactersTableModel):
+
+    def __init__(self, novel: Novel, scene: Scene):
+        super().__init__(novel)
+        self.scene = scene
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
+        return 1
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if role == Qt.CheckStateRole and index.column() == 0:
+            return Qt.Checked if self._data[index.row()] in self.scene.characters else Qt.Unchecked
+        elif role == Qt.FontRole:
+            if self._data[index.row()] in self.scene.characters:
+                font = QFont()
+                font.setBold(True)
+                return font
+        return super(CharactersSceneAssociationTableModel, self).data(index, role)
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
+        if role == Qt.CheckStateRole:
+            if value == Qt.Checked:
+                self.scene.characters.append(self._data[index.row()])
+            else:
+                self.scene.characters.remove(self._data[index.row()])
+            return True
+        else:
+            return super(CharactersTableModel, self).setData(index, value, role)
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        flags = super().flags(index)
+        return flags | Qt.ItemIsUserCheckable
 
 
 class CharacterEditorTableModel(QAbstractTableModel):

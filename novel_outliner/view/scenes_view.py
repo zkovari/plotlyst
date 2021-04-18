@@ -1,5 +1,5 @@
 from PyQt5.QtCore import pyqtSignal, QSortFilterProxyModel, QItemSelection, Qt, QObject
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView
 
 from novel_outliner.core.domain import Scene, Novel
 from novel_outliner.model.scenes_model import ScenesTableModel
@@ -25,12 +25,18 @@ class ScenesView(QObject):
         self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
         self._proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.ui.tblScenes.setModel(self._proxy)
+        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Fixed)
+        self.ui.tblScenes.verticalHeader().sectionMoved.connect(lambda: print('row moved'))
+        self.ui.tblScenes.verticalHeader().setSectionsMovable(True)
+        self.ui.tblScenes.verticalHeader().setDragEnabled(True)
+        self.ui.tblScenes.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
 
         self.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.clicked.connect(self._on_new)
         self.ui.btnDelete.clicked.connect(self._on_delete)
-        # self.ui.lineEdit.textChanged.connect(self._proxy.setFilterRegExp)
 
     def refresh(self):
         self.model.modelReset.emit()

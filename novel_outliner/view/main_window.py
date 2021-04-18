@@ -1,7 +1,9 @@
 from typing import List, Optional
 
-from PyQt5.QtWidgets import QMainWindow, QToolButton, QMenu, QAction, QWidget
+import qtawesome
+from PyQt5.QtWidgets import QMainWindow, QToolButton, QMenu, QAction, QWidget, QApplication
 
+from novel_outliner.common import EXIT_CODE_RESTART
 from novel_outliner.core.domain import Character, Scene
 from novel_outliner.core.persistence import emit_save
 from novel_outliner.core.project import ProjectFinder
@@ -34,10 +36,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.scenes_view.scene_edited.connect(self._on_scene_edition)
         self.scenes_view.scene_created.connect(self._on_scene_creation)
         self.scenes_view.commands_sent.connect(self._on_received_commands)
+        self._init_menuber()
         self._init_toolbar()
 
-        self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), 'Characters')
-        self.tabWidget.addTab(self.scenes_view.widget, IconRegistry.scene_icon(), 'Scenes')
+        self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
+        self.tabWidget.addTab(self.scenes_view.widget, IconRegistry.scene_icon(), '')
+        self.tabWidget.setCurrentWidget(self.scenes_view.widget)
+
+    def _init_menuber(self):
+        self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
+        self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
+        # self.actionRestart.setShortcut('Ctrl+R')
 
     def _init_toolbar(self):
         self.btnAdd = QToolButton(self.toolBar)
