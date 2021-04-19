@@ -4,7 +4,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, Qt, QAbstractItemMode
 from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QStyledItemDelegate, QStyleOptionViewItem, QLineEdit, QComboBox
 from overrides import overrides
 
-from novel_outliner.core.domain import Novel, Scene
+from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
 from novel_outliner.model.characters_model import CharactersSceneAssociationTableModel
 from novel_outliner.model.scenes_model import SceneEditorTableModel
 from novel_outliner.view.common import EditorCommand
@@ -72,21 +72,31 @@ class SceneEditorDelegate(QStyledItemDelegate):
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
         if index.row() == SceneEditorTableModel.RowPov:
             combo_box = QComboBox(parent)
-            combo_box.activated.connect(lambda: self.commitData.emit(editor))
+            combo_box.activated.connect(lambda: self.commitData.emit(combo_box))
             for char in self.novel.characters:
                 combo_box.addItem(char.name, char)
-            editor = combo_box
+            return combo_box
+        elif index.row() == SceneEditorTableModel.RowType:
+            combo_box = QComboBox(parent)
+            combo_box.activated.connect(lambda: self.commitData.emit(combo_box))
+            combo_box.addItem(ACTION_SCENE)
+            combo_box.setItemIcon(0, IconRegistry.action_scene())
+            combo_box.addItem(REACTION_SCENE)
+            combo_box.setItemIcon(1, IconRegistry.reaction_scene())
+            return combo_box
         else:
-            editor = QLineEdit(parent)
-
-        return editor
+            return QLineEdit(parent)
 
     @overrides
     def setEditorData(self, editor: QWidget, index: QModelIndex):
         edit_data = index.data(Qt.EditRole)
         if not edit_data:
             edit_data = index.data(Qt.DisplayRole)
+
         if index.row() == SceneEditorTableModel.RowPov:
+            editor.setCurrentText(edit_data)
+            editor.showPopup()
+        elif index.row() == SceneEditorTableModel.RowType:
             editor.setCurrentText(edit_data)
             editor.showPopup()
         else:

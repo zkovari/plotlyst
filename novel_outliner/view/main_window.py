@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 import qtawesome
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QMenu, QAction, QWidget, QApplication
 
 from novel_outliner.common import EXIT_CODE_RESTART
@@ -21,6 +22,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.resize(1000, 630)
+        self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Novel Outliner')
         self.setWindowIcon(IconRegistry.book_icon())
 

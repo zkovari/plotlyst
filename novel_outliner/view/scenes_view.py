@@ -31,6 +31,7 @@ class ScenesView(QObject):
         self.ui.tblScenes.verticalHeader().setDragEnabled(True)
         self.ui.tblScenes.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 40)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
 
         self.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)

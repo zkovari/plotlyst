@@ -3,6 +3,9 @@ from typing import List, Optional
 
 from dataclasses_json import dataclass_json
 
+ACTION_SCENE = 'action'
+REACTION_SCENE = 'reaction'
+
 
 @dataclass_json
 @dataclass
@@ -17,6 +20,7 @@ class Character:
 class Scene:
     title: str
     synopsis: str = ''
+    type: str = ''
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
 

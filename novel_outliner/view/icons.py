@@ -107,3 +107,11 @@ class IconRegistry:
     @staticmethod
     def general_info_icon() -> QIcon:
         return qtawesome.icon('mdi.information-outline')
+
+    @staticmethod
+    def action_scene() -> QIcon:
+        return qtawesome.icon('fa5s.yin-yang', color='red')
+
+    @staticmethod
+    def reaction_scene() -> QIcon:
+        return qtawesome.icon('fa5s.yin-yang', color='darkblue')

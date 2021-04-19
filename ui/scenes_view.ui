@@ -123,6 +123,12 @@
      <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectItems</enum>
      </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
      <property name="showGrid">
       <bool>false</bool>
      </property>

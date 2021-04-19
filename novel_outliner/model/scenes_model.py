@@ -3,22 +3,25 @@ from typing import List, Any
 from PyQt5.QtCore import QModelIndex, Qt, QVariant, QAbstractTableModel
 from overrides import overrides
 
-from novel_outliner.core.domain import Novel, Scene
+from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
 from novel_outliner.model.common import AbstractHorizontalHeaderBasedTableModel
+from novel_outliner.view.icons import IconRegistry
 
 
 class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     SceneRole = Qt.UserRole + 1
 
     ColTitle = 0
-    ColPov = 1
-    ColCharacters = 2
-    ColSynopsis = 3
+    ColType = 1
+    ColPov = 2
+    ColCharacters = 3
+    ColSynopsis = 4
 
     def __init__(self, novel: Novel, parent=None):
         self._data: List[Scene] = novel.scenes
-        _headers = [''] * 4
+        _headers = [''] * 5
         _headers[self.ColTitle] = 'Title'
+        _headers[self.ColType] = 'Type'
         _headers[self.ColPov] = 'POV'
         _headers[self.ColCharacters] = 'Characters'
         _headers[self.ColSynopsis] = 'Synopsis'
@@ -44,6 +47,12 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return ', '.join([x.name for x in self._data[index.row()].characters])
             elif index.column() == self.ColSynopsis:
                 return self._data[index.row()].synopsis
+        elif role == Qt.DecorationRole:
+            if index.column() == self.ColType:
+                if self._data[index.row()].type == ACTION_SCENE:
+                    return IconRegistry.action_scene()
+                elif self._data[index.row()].type == REACTION_SCENE:
+                    return IconRegistry.reaction_scene()
         elif role == Qt.ToolTipRole:
             return self._data[index.row()].synopsis
 
@@ -51,6 +60,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
 class SceneEditorTableModel(QAbstractTableModel):
     RowTitle = 0
     RowPov = 1
+    RowType = 2
 
     def __init__(self, scene: Scene, parent=None):
         super().__init__(parent)
@@ -58,7 +68,7 @@ class SceneEditorTableModel(QAbstractTableModel):
 
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
-        return 2
+        return 3
 
     @overrides
     def columnCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
@@ -80,6 +90,17 @@ class SceneEditorTableModel(QAbstractTableModel):
                     return 'POV'
                 else:
                     return self._data.pov.name if self._data.pov else ''
+            elif index.row() == self.RowType:
+                if index.column() == 0:
+                    return 'Type'
+                else:
+                    return self._data.type
+        elif role == Qt.DecorationRole:
+            if index.row() == self.RowType and index.column() == 1:
+                if self._data.type == ACTION_SCENE:
+                    return IconRegistry.action_scene()
+                elif self._data.type == REACTION_SCENE:
+                    return IconRegistry.reaction_scene()
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
@@ -87,6 +108,8 @@ class SceneEditorTableModel(QAbstractTableModel):
             self._data.title = value
         elif index.row() == self.RowPov:
             self._data.pov = value
+        elif index.row() == self.RowType:
+            self._data.type = value
         else:
             return False
 
