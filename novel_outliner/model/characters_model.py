@@ -1,10 +1,11 @@
 from typing import List, Any
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from overrides import overrides
 
 from novel_outliner.core.domain import Character, Novel, Scene
+from novel_outliner.view.icons import avatars
 
 
 class CharactersTableModel(QAbstractTableModel):
@@ -40,6 +41,9 @@ class CharactersTableModel(QAbstractTableModel):
         elif role == Qt.DisplayRole:
             if index.column() == self.ColName:
                 return self._data[index.row()].name
+        elif role == Qt.DecorationRole:
+            if self._data[index.row()].image_path:
+                return QIcon(avatars.pixmap(self._data[index.row()]))
 
 
 class CharactersSceneAssociationTableModel(CharactersTableModel):

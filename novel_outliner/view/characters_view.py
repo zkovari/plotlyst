@@ -1,8 +1,9 @@
-from PyQt5.QtCore import QItemSelection, QObject, pyqtSignal, QSortFilterProxyModel, Qt
+from PyQt5.QtCore import QItemSelection, QObject, pyqtSignal
 from PyQt5.QtWidgets import QWidget
 
 from novel_outliner.core.domain import Novel, Character
 from novel_outliner.model.characters_model import CharactersTableModel
+from novel_outliner.model.common import proxy
 from novel_outliner.view.common import EditorCommand
 from novel_outliner.view.generated.characters_view_ui import Ui_CharactersView
 
@@ -19,10 +20,9 @@ class CharactersView(QObject):
         self.ui.setupUi(self.widget)
 
         self.model = CharactersTableModel(novel)
-        self._proxy = QSortFilterProxyModel()
-        self._proxy.setSourceModel(self.model)
-        self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
-        self._proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self._proxy = proxy(self.model)
+        # self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
+        # self._proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.ui.listCharacters.setModel(self._proxy)
 
         self.ui.listCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)

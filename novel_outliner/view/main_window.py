@@ -48,7 +48,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _init_menuber(self):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
         self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
-        # self.actionRestart.setShortcut('Ctrl+R')
 
     def _init_toolbar(self):
         self.btnAdd = QToolButton(self.toolBar)

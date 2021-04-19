@@ -1,6 +1,6 @@
 from typing import List, Any
 
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel
 from overrides import overrides
 
 
@@ -22,3 +22,12 @@ class AbstractHorizontalHeaderBasedTableModel(QAbstractTableModel):
 
             return str(section + 1)
         return super().headerData(section, orientation, role)
+
+
+def proxy(model: QAbstractItemModel) -> QSortFilterProxyModel:
+    _proxy = QSortFilterProxyModel()
+    _proxy.setSourceModel(model)
+    _proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
+    _proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+    
+    return _proxy

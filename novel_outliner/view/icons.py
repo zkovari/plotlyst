@@ -1,5 +1,10 @@
+from typing import Dict
+
 import qtawesome
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
+
+from novel_outliner.core.domain import Character
+from novel_outliner.view.common import rounded_pixmap
 
 
 class IconRegistry:
@@ -115,3 +120,18 @@ class IconRegistry:
     @staticmethod
     def reaction_scene() -> QIcon:
         return qtawesome.icon('fa5s.yin-yang', color='darkblue')
+
+
+class AvatarsRegistry:
+    def __init__(self):
+        self._avatars: Dict[str, QPixmap] = {}
+
+    def pixmap(self, character: Character) -> QPixmap:
+        if character.image_path not in self._avatars:
+            self._avatars[character.image_path] = QPixmap(character.image_path)
+
+        orig = self._avatars[character.image_path]
+        return rounded_pixmap(orig)
+
+
+avatars = AvatarsRegistry()

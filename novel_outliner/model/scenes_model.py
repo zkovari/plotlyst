@@ -1,11 +1,12 @@
 from typing import List, Any
 
 from PyQt5.QtCore import QModelIndex, Qt, QVariant, QAbstractTableModel
+from PyQt5.QtGui import QIcon
 from overrides import overrides
 
 from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
 from novel_outliner.model.common import AbstractHorizontalHeaderBasedTableModel
-from novel_outliner.view.icons import IconRegistry
+from novel_outliner.view.icons import IconRegistry, avatars
 
 
 class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
@@ -41,8 +42,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
-            elif index.column() == self.ColPov:
-                return self._data[index.row()].pov.name if self._data[index.row()].pov else ''
             elif index.column() == self.ColCharacters:
                 return ', '.join([x.name for x in self._data[index.row()].characters])
             elif index.column() == self.ColSynopsis:
@@ -53,6 +52,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return IconRegistry.action_scene()
                 elif self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.reaction_scene()
+            elif index.column() == self.ColPov:
+                if self._data[index.row()].pov:
+                    return QIcon(avatars.pixmap(self._data[index.row()].pov))
         elif role == Qt.ToolTipRole:
             return self._data[index.row()].synopsis
 
