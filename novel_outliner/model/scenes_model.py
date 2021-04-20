@@ -12,10 +12,10 @@ from novel_outliner.view.icons import IconRegistry, avatars
 class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     SceneRole = Qt.UserRole + 1
 
-    ColTitle = 0
-    ColType = 1
-    ColPov = 2
-    ColCharacters = 3
+    ColPov = 0
+    ColTitle = 1
+    ColCharacters = 2
+    ColType = 3
     ColSynopsis = 4
 
     def __init__(self, novel: Novel, parent=None):
@@ -57,6 +57,14 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return QIcon(avatars.pixmap(self._data[index.row()].pov))
         elif role == Qt.ToolTipRole:
             return self._data[index.row()].synopsis
+
+    @overrides
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
+        if orientation == Qt.Horizontal:
+            return super(ScenesTableModel, self).headerData(section, orientation, role)
+        if role == Qt.DecorationRole:
+            return IconRegistry.hashtag_icon()
+        # return super(ScenesTableModel, self).headerData(section, orientation, role)
 
 
 class SceneEditorTableModel(QAbstractTableModel):

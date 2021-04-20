@@ -41,8 +41,8 @@
         <widget class="QListView" name="listCharacters">
          <property name="iconSize">
           <size>
-           <width>32</width>
-           <height>32</height>
+           <width>45</width>
+           <height>45</height>
           </size>
          </property>
         </widget>

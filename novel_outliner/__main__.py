@@ -5,6 +5,7 @@ from PyQt5 import QtWidgets
 
 from novel_outliner.common import EXIT_CODE_RESTART
 from novel_outliner.view.main_window import MainWindow
+from novel_outliner.view.stylesheet import APP_STYLESHEET
 
 if __name__ == '__main__':
     while True:
@@ -12,6 +13,7 @@ if __name__ == '__main__':
         if not app:
             app = QtWidgets.QApplication(sys.argv)
         window = MainWindow()
+        app.setStyleSheet(APP_STYLESHEET)
 
         window.show()
         exit_code = app.exec()

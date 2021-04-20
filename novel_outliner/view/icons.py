@@ -121,6 +121,10 @@ class IconRegistry:
     def reaction_scene() -> QIcon:
         return qtawesome.icon('fa5s.yin-yang', color='darkblue')
 
+    @staticmethod
+    def hashtag_icon() -> QIcon:
+        return qtawesome.icon('fa5s.hashtag')
+
 
 class AvatarsRegistry:
     def __init__(self):
