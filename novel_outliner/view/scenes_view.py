@@ -130,4 +130,4 @@ class CharactersScenesDistributionWidget(QWidget):
         self.ui.setupUi(self)
         self.novel = novel
         self.ui.tblSceneDistribution.setModel(CharactersScenesDistributionTableModel(self.novel))
-        self.ui.tblSceneDistribution.setColumnWidth(0, 36)
+        self.ui.tblSceneDistribution.setColumnWidth(0, 70)

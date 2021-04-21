@@ -168,9 +168,15 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
                 return QIcon(avatars.pixmap(self.novel.characters[index.row()]))
             if role == Qt.ToolTipRole:
                 return self.novel.characters[index.row()].name
+            elif role == Qt.DisplayRole:
+                return str(len([x for x in self.novel.scenes if
+                                self.novel.characters[index.row()] in x.characters or self.novel.characters[
+                                    index.row()] == x.pov]))
         elif role == Qt.ToolTipRole:
             return f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
         elif role == Qt.BackgroundRole:
             if self.novel.characters[index.row()] in self.novel.scenes[index.column() - 1].characters:
+                if self.novel.scenes[index.column() - 1].wip:
+                    return QBrush(QColor('#f2f763'))
                 return QBrush(QColor('darkblue'))
         return QVariant()
