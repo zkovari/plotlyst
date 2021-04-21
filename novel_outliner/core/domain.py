@@ -22,6 +22,7 @@ class Scene:
     title: str
     synopsis: str = ''
     type: str = ''
+    pivotal: bool = False
     event_1: str = ''
     event_2: str = ''
     event_3: str = ''

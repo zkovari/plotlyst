@@ -47,6 +47,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         elif role == Qt.BackgroundRole:
             if self._data[index.row()].wip:
                 return QBrush(QColor('#f2f763'))
+            elif self._data[index.row()].pivotal:
+                return QBrush(QColor('#f07762'))
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
@@ -74,6 +76,10 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                     tip += f' - {self._data[index.row()].event_2}\n\n'
                     tip += f' - {self._data[index.row()].event_3}'
                     return tip
+                elif self._data[index.row()].event_2:
+                    return self._data[index.row()].event_2
+                elif self._data[index.row()].event_3:
+                    return self._data[index.row()].event_3
             elif index.column() == self.ColPov:
                 return self._data[index.row()].pov.name if self._data[index.row()].pov else ''
             elif index.column() == self.ColSynopsis:

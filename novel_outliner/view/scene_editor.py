@@ -51,6 +51,7 @@ class SceneEditor(QObject):
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
         self.ui.cbWip.setChecked(self.scene.wip)
+        self.ui.cbPivotal.setChecked(self.scene.pivotal)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
         self._characters_proxy_model = QSortFilterProxyModel()
@@ -89,6 +90,7 @@ class SceneEditor(QObject):
         if pov:
             self.scene.pov = pov
         self.scene.wip = self.ui.cbWip.isChecked()
+        self.scene.pivotal = self.ui.cbPivotal.isChecked()
         if self._new_scene:
             self.novel.scenes.append(self.scene)
         self.commands_sent.emit(self.widget, [EditorCommand.SAVE, EditorCommand.CLOSE_CURRENT_EDITOR,

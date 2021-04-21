@@ -46,7 +46,7 @@
        <string/>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="3" column="0" colspan="2" alignment="Qt::AlignTop">
+       <item row="4" column="0" colspan="2" alignment="Qt::AlignTop">
         <widget class="QFrame" name="frame">
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
@@ -157,7 +157,7 @@
          </layout>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QTableView" name="tblCharacters">
          <property name="selectionMode">
           <enum>QAbstractItemView::NoSelection</enum>
@@ -199,13 +199,20 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <widget class="QTextEdit" name="textSynopsis">
          <property name="autoFormatting">
           <set>QTextEdit::AutoBulletList</set>
          </property>
          <property name="placeholderText">
           <string>Write synopsis</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="cbPivotal">
+         <property name="text">
+          <string>Pivotal moment</string>
          </property>
         </widget>
        </item>
