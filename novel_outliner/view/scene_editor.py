@@ -33,12 +33,25 @@ class SceneEditor(QObject):
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabCharacters), IconRegistry.character_icon())
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabSynopsis), IconRegistry.synopsis_icon())
 
-        self.model = SceneEditorTableModel(self.scene)
-        self.editor_delegate = SceneEditorDelegate(self.novel)
-        self.ui.tblSceneEditor.setModel(self.model)
-        self.ui.tblSceneEditor.setItemDelegate(self.editor_delegate)
-        self.ui.tblSceneEditor.setColumnWidth(1, 200)
+        self.ui.cbPov.addItem('', None)
+        for char in self.novel.characters:
+            self.ui.cbPov.addItem(char.name, char)
+        if self.scene.pov:
+            self.ui.cbPov.setCurrentText(self.scene.pov.name)
+        self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
 
+        self.ui.cbType.setItemIcon(1, IconRegistry.action_scene())
+        self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene())
+        self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
+        if self.scene.type:
+            self.ui.cbType.setCurrentText(self.scene.type)
+
+        self.ui.textEvent1.setText(self.scene.event_1)
+        self.ui.textEvent2.setText(self.scene.event_2)
+        self.ui.textEvent3.setText(self.scene.event_3)
+
+        self.ui.lineTitle.setText(self.scene.title)
+        self.ui.lineTitle.textChanged.connect(self._on_title_changed)
         self.ui.textSynopsis.setText(self.scene.synopsis)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
@@ -51,8 +64,34 @@ class SceneEditor(QObject):
         self.btn_cancel = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
         self.btn_cancel.clicked.connect(self._on_cancel)
 
+    def _on_title_changed(self, text: str):
+        self.scene.title = text
+
+    def _on_pov_changed(self):
+        pov = self.ui.cbPov.currentData()
+        if pov:
+            self.scene.pov = pov
+
+    def _on_type_changed(self, text: str):
+        if text == ACTION_SCENE:
+            self.ui.lblType1.setText('Goal:')
+            self.ui.lblType2.setText('Conflict:')
+            self.ui.lblType3.setText('Disaster:')
+        elif text == REACTION_SCENE:
+            self.ui.lblType1.setText('Reaction:')
+            self.ui.lblType2.setText('Dilemma:')
+            self.ui.lblType3.setText('Decision:')
+        else:
+            self.ui.lblType1.setText('Setup:')
+            self.ui.lblType2.setText('Action:')
+            self.ui.lblType3.setText('End:')
+        self.scene.type = text
+
     def _on_saved(self):
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
+        self.scene.event_1 = self.ui.textEvent1.toPlainText()
+        self.scene.event_2 = self.ui.textEvent2.toPlainText()
+        self.scene.event_3 = self.ui.textEvent3.toPlainText()
         if self._new_scene:
             self.novel.scenes.append(self.scene)
         self.commands_sent.emit(self.widget, [EditorCommand.SAVE, EditorCommand.CLOSE_CURRENT_EDITOR,

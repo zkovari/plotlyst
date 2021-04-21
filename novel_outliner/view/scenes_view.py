@@ -26,13 +26,17 @@ class ScenesView(QObject):
         self._proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.ui.tblScenes.setModel(self._proxy)
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Fixed)
-        self.ui.tblScenes.verticalHeader().sectionMoved.connect(lambda: print('row moved'))
+        self.ui.tblScenes.horizontalHeader().setFixedHeight(30)
+        # self.ui.tblScenes.setStyleSheet('{background-color: white;}')
+        self.ui.tblScenes.verticalHeader().setStyleSheet(
+            'QHeaderView::section {background-color: white; border: 0px;} QHeaderView {background-color: white;}')
+        self.ui.tblScenes.verticalHeader().sectionMoved.connect(self._on_scene_moved)
         self.ui.tblScenes.verticalHeader().setSectionsMovable(True)
         self.ui.tblScenes.verticalHeader().setDragEnabled(True)
         self.ui.tblScenes.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
-        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 50)
-        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 50)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
 
         self.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
@@ -64,3 +68,11 @@ class ScenesView(QObject):
             self.novel.scenes.remove(scene)
             self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
             self.refresh()
+
+    def _on_scene_moved(self, logical: int, old_visual: int, new_visual: int):
+        scene: Scene = self.model.index(logical, 0).data(ScenesTableModel.SceneRole)
+        self.novel.scenes.remove(scene)
+        self.novel.scenes.insert(new_visual, scene)
+
+        self.model.modelReset.emit()
+        self.commands_sent.emit(self.widget, [EditorCommand.SAVE])

@@ -44,6 +44,8 @@ QHeaderView::section {
     padding-left: 4px;
     border: 1px solid #6c6c6c;
     border-radius: 6px;
+    font-size: 16px;
+    font: bold;
 }
 
 QToolBar {

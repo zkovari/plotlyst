@@ -22,6 +22,9 @@ class Scene:
     title: str
     synopsis: str = ''
     type: str = ''
+    event_1: str = ''
+    event_2: str = ''
+    event_3: str = ''
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
 
