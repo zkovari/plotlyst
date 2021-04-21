@@ -73,6 +73,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
         if orientation == Qt.Horizontal:
             return super(ScenesTableModel, self).headerData(section, orientation, role)
+        elif role == Qt.DisplayRole:
+            return str(section + 1)
         if role == Qt.DecorationRole:
             return IconRegistry.hashtag_icon()
         # return super(ScenesTableModel, self).headerData(section, orientation, role)
