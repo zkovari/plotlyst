@@ -1,12 +1,10 @@
 from typing import Optional
 
-from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel
-from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QStyledItemDelegate, QStyleOptionViewItem, QLineEdit, QComboBox
-from overrides import overrides
+from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel
+from PyQt5.QtWidgets import QWidget, QDialogButtonBox
 
 from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
 from novel_outliner.model.characters_model import CharactersSceneAssociationTableModel
-from novel_outliner.model.scenes_model import SceneEditorTableModel
 from novel_outliner.view.common import EditorCommand
 from novel_outliner.view.generated.scene_editor_ui import Ui_SceneEditor
 from novel_outliner.view.icons import IconRegistry
@@ -102,52 +100,3 @@ class SceneEditor(QObject):
 
     def _on_cancel(self):
         self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR])
-
-
-class SceneEditorDelegate(QStyledItemDelegate):
-
-    def __init__(self, novel: Novel):
-        super().__init__()
-        self.novel = novel
-
-    @overrides
-    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
-        if index.row() == SceneEditorTableModel.RowPov:
-            combo_box = QComboBox(parent)
-            combo_box.activated.connect(lambda: self.commitData.emit(combo_box))
-            for char in self.novel.characters:
-                combo_box.addItem(char.name, char)
-            return combo_box
-        elif index.row() == SceneEditorTableModel.RowType:
-            combo_box = QComboBox(parent)
-            combo_box.activated.connect(lambda: self.commitData.emit(combo_box))
-            combo_box.addItem(ACTION_SCENE)
-            combo_box.setItemIcon(0, IconRegistry.action_scene_icon())
-            combo_box.addItem(REACTION_SCENE)
-            combo_box.setItemIcon(1, IconRegistry.reaction_scene_icon())
-            return combo_box
-        else:
-            return QLineEdit(parent)
-
-    @overrides
-    def setEditorData(self, editor: QWidget, index: QModelIndex):
-        edit_data = index.data(Qt.EditRole)
-        if not edit_data:
-            edit_data = index.data(Qt.DisplayRole)
-
-        if index.row() == SceneEditorTableModel.RowPov:
-            editor.setCurrentText(edit_data)
-            editor.showPopup()
-        elif index.row() == SceneEditorTableModel.RowType:
-            editor.setCurrentText(edit_data)
-            editor.showPopup()
-        else:
-            editor.setText(str(edit_data))
-
-    @overrides
-    def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
-        if index.row() == SceneEditorTableModel.RowPov:
-            character = editor.currentData()
-            model.setData(index, character)
-        else:
-            super().setModelData(editor, model, index)

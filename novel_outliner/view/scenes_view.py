@@ -1,7 +1,10 @@
-from PyQt5.QtCore import pyqtSignal, QSortFilterProxyModel, QItemSelection, Qt, QObject
-from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView, QToolButton, QWidgetAction
+from PyQt5.QtCore import pyqtSignal, QSortFilterProxyModel, QItemSelection, Qt, QObject, QModelIndex, QAbstractItemModel
+from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
+    QStyleOptionViewItem, QTextEdit
+from overrides import overrides
 
 from novel_outliner.core.domain import Scene, Novel
+from novel_outliner.core.persistence import emit_save
 from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
 from novel_outliner.model.scenes_model import ScenesTableModel
 from novel_outliner.view.common import EditorCommand, ask_confirmation
@@ -41,6 +44,8 @@ class ScenesView(QObject):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
+
+        self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
 
         self.ui.btnGraphs.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
@@ -90,6 +95,30 @@ class ScenesView(QObject):
 
         self.model.modelReset.emit()
         self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+
+
+class ScenesViewDelegate(QStyledItemDelegate):
+
+    def __init__(self, novel: Novel):
+        super().__init__()
+        self.novel = novel
+
+    @overrides
+    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
+        if index.column() == ScenesTableModel.ColSynopsis:
+            return QTextEdit(parent)
+
+    @overrides
+    def setEditorData(self, editor: QWidget, index: QModelIndex):
+        edit_data = index.data(Qt.EditRole)
+        if not edit_data:
+            edit_data = index.data(Qt.DisplayRole)
+        editor.setText(str(edit_data))
+
+    @overrides
+    def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
+        model.setData(index, editor.toPlainText())
+        emit_save(self.novel)
 
 
 class CharactersScenesDistributionWidget(QWidget):
