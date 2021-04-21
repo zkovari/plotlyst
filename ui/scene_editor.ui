@@ -45,42 +45,8 @@
       <attribute name="title">
        <string/>
       </attribute>
-      <layout class="QFormLayout" name="formLayout_2">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Title:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="lineTitle">
-         <property name="maximumSize">
-          <size>
-           <width>521</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>POV:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="cbPov">
-         <property name="maximumSize">
-          <size>
-           <width>141</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="3" column="0" colspan="2" alignment="Qt::AlignTop">
         <widget class="QFrame" name="frame">
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
@@ -124,14 +90,7 @@
             </item>
            </widget>
           </item>
-          <item row="2" column="0" colspan="2">
-           <widget class="QLabel" name="lblType1">
-            <property name="text">
-             <string>Goal:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
+          <item row="1" column="1">
            <widget class="QTextEdit" name="textEvent1">
             <property name="maximumSize">
              <size>
@@ -141,14 +100,21 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="0" colspan="2">
+          <item row="1" column="0">
+           <widget class="QLabel" name="lblType1">
+            <property name="text">
+             <string>Goal:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
            <widget class="QLabel" name="lblType2">
             <property name="text">
              <string>Conflict:</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
+          <item row="3" column="1">
            <widget class="QTextEdit" name="textEvent2">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -164,14 +130,7 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="0" colspan="2">
-           <widget class="QLabel" name="lblType3">
-            <property name="text">
-             <string>Disaster:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
+          <item row="5" column="1">
            <widget class="QTextEdit" name="textEvent3">
             <property name="maximumSize">
              <size>
@@ -181,47 +140,17 @@
             </property>
            </widget>
           </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="lblType3">
+            <property name="text">
+             <string>Disaster:</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
-       <item row="3" column="1">
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabSynopsis">
-      <attribute name="title">
-       <string/>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QTextEdit" name="textSynopsis">
-         <property name="autoFormatting">
-          <set>QTextEdit::AutoBulletList</set>
-         </property>
-         <property name="placeholderText">
-          <string>Write synopsis</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabCharacters">
-      <attribute name="title">
-       <string/>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
+       <item row="4" column="1">
         <widget class="QTableView" name="tblCharacters">
          <property name="selectionMode">
           <enum>QAbstractItemView::NoSelection</enum>
@@ -238,6 +167,39 @@
          <attribute name="verticalHeaderVisible">
           <bool>false</bool>
          </attribute>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLineEdit" name="lineTitle">
+         <property name="maximumSize">
+          <size>
+           <width>521</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="placeholderText">
+          <string>Title</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QComboBox" name="cbPov">
+         <property name="maximumSize">
+          <size>
+           <width>141</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QTextEdit" name="textSynopsis">
+         <property name="autoFormatting">
+          <set>QTextEdit::AutoBulletList</set>
+         </property>
+         <property name="placeholderText">
+          <string>Write synopsis</string>
+         </property>
         </widget>
        </item>
       </layout>

@@ -28,8 +28,6 @@ class SceneEditor(QObject):
             self._new_scene = True
 
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabGeneral), IconRegistry.general_info_icon())
-        self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabCharacters), IconRegistry.character_icon())
-        self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabSynopsis), IconRegistry.synopsis_icon())
 
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
