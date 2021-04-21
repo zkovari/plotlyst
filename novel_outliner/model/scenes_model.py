@@ -49,9 +49,11 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         elif role == Qt.DecorationRole:
             if index.column() == self.ColType:
                 if self._data[index.row()].type == ACTION_SCENE:
-                    return IconRegistry.action_scene()
+                    return IconRegistry.action_scene_icon()
                 elif self._data[index.row()].type == REACTION_SCENE:
-                    return IconRegistry.reaction_scene()
+                    return IconRegistry.reaction_scene_icon()
+                else:
+                    return IconRegistry.custom_scene_icon()
             elif index.column() == self.ColPov:
                 if self._data[index.row()].pov:
                     return QIcon(avatars.pixmap(self._data[index.row()].pov))
@@ -117,9 +119,9 @@ class SceneEditorTableModel(QAbstractTableModel):
         elif role == Qt.DecorationRole:
             if index.row() == self.RowType and index.column() == 1:
                 if self._data.type == ACTION_SCENE:
-                    return IconRegistry.action_scene()
+                    return IconRegistry.action_scene_icon()
                 elif self._data.type == REACTION_SCENE:
-                    return IconRegistry.reaction_scene()
+                    return IconRegistry.reaction_scene_icon()
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:

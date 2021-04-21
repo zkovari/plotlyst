@@ -1,7 +1,9 @@
 from enum import Enum
+from typing import Optional
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainterPath, QPainter
+from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox
 
 
 class EditorCommand(Enum):
@@ -27,3 +29,13 @@ def rounded_pixmap(original: QPixmap) -> QPixmap:
     painter.drawPixmap(x, y, original.width(), original.height(), original)
 
     return rounded
+
+
+def ask_confirmation(message: str, parent: Optional[QWidget] = None) -> bool:
+    """Raise a confirmation dialog. Return True if the user clicked Yes, False otherwise."""
+    QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
+    status: int = QMessageBox.question(parent, 'Confirmation', message)
+    QApplication.restoreOverrideCursor()
+    if status & QMessageBox.Yes:
+        return True
+    return False

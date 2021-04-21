@@ -4,8 +4,9 @@ from PyQt5.QtWidgets import QWidget
 from novel_outliner.core.domain import Novel, Character
 from novel_outliner.model.characters_model import CharactersTableModel
 from novel_outliner.model.common import proxy
-from novel_outliner.view.common import EditorCommand
+from novel_outliner.view.common import EditorCommand, ask_confirmation
 from novel_outliner.view.generated.characters_view_ui import Ui_CharactersView
+from novel_outliner.view.icons import IconRegistry
 
 
 class CharactersView(QObject):
@@ -21,15 +22,18 @@ class CharactersView(QObject):
 
         self.model = CharactersTableModel(novel)
         self._proxy = proxy(self.model)
-        # self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
-        # self._proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.ui.listCharacters.setModel(self._proxy)
+
+        self.ui.btnUp.setIcon(IconRegistry.arrow_up_thick_icon())
+        self.ui.btnDown.setIcon(IconRegistry.arrow_down_thick_icon())
 
         self.ui.listCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.clicked.connect(self._on_new)
         self.ui.btnDelete.clicked.connect(self._on_delete)
         self.ui.lineEdit.textChanged.connect(self._proxy.setFilterRegExp)
+        self.ui.btnUp.clicked.connect(self._move_character_up)
+        self.ui.btnDown.clicked.connect(self._move_character_down)
 
     def refresh(self):
         self.model.modelReset.emit()
@@ -38,6 +42,8 @@ class CharactersView(QObject):
         selection = len(selection.indexes()) > 0
         self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
+        self.ui.btnUp.setEnabled(selection)
+        self.ui.btnDown.setEnabled(selection)
 
     def _on_edit(self):
         indexes = self.ui.listCharacters.selectedIndexes()
@@ -48,10 +54,36 @@ class CharactersView(QObject):
     def _on_new(self):
         self.character_edited.emit(None)
 
+    def _move_character_up(self):
+        indexes = self.ui.listCharacters.selectedIndexes()
+        if indexes:
+            index: int = indexes[0].row()
+            if index < 1:
+                return
+            character = indexes[0].data(role=CharactersTableModel.CharacterRole)
+            self.novel.characters.remove(character)
+            self.novel.characters.insert(index - 1, character)
+            self.model.modelReset.emit()
+            self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+
+    def _move_character_down(self):
+        indexes = self.ui.listCharacters.selectedIndexes()
+        if indexes:
+            index: int = indexes[0].row()
+            if index >= len(self.novel.characters) - 1:
+                return
+            character = indexes[0].data(role=CharactersTableModel.CharacterRole)
+            self.novel.characters.remove(character)
+            self.novel.characters.insert(index + 1, character)
+            self.model.modelReset.emit()
+            self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+
     def _on_delete(self):
         indexes = self.ui.listCharacters.selectedIndexes()
         if indexes:
             character = indexes[0].data(role=CharactersTableModel.CharacterRole)
+            if not ask_confirmation(f'Are you sure you want to delete character {character.name}?'):
+                return
             self.novel.characters.remove(character)
             self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
             self.refresh()

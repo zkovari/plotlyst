@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView, QToolButton
 from novel_outliner.core.domain import Scene, Novel
 from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
 from novel_outliner.model.scenes_model import ScenesTableModel
-from novel_outliner.view.common import EditorCommand
+from novel_outliner.view.common import EditorCommand, ask_confirmation
 from novel_outliner.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from novel_outliner.view.generated.scenes_view_ui import Ui_ScenesView
 from novel_outliner.view.icons import IconRegistry
@@ -45,7 +45,7 @@ class ScenesView(QObject):
         self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
         action = QWidgetAction(self.ui.btnGraphs)
         self._distribution_widget = CharactersScenesDistributionWidget(self.novel)
-        self._distribution_widget.setMinimumWidth(500)
+        self._distribution_widget.setMinimumWidth(900)
         self._distribution_widget.setMinimumHeight(600)
         action.setDefaultWidget(self._distribution_widget)
         self.ui.btnGraphs.addAction(action)
@@ -76,6 +76,8 @@ class ScenesView(QObject):
         indexes = self.ui.tblScenes.selectedIndexes()
         if indexes:
             scene = indexes[0].data(role=ScenesTableModel.SceneRole)
+            if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
+                return
             self.novel.scenes.remove(scene)
             self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
             self.refresh()

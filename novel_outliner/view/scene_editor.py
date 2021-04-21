@@ -40,11 +40,14 @@ class SceneEditor(QObject):
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
 
-        self.ui.cbType.setItemIcon(1, IconRegistry.action_scene())
-        self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene())
+        self.ui.cbType.setItemIcon(0, IconRegistry.custom_scene_icon())
+        self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
+        self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene_icon())
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
         if self.scene.type:
             self.ui.cbType.setCurrentText(self.scene.type)
+        else:
+            self.ui.cbType.setCurrentIndex(1)
 
         self.ui.textEvent1.setText(self.scene.event_1)
         self.ui.textEvent2.setText(self.scene.event_2)
@@ -119,9 +122,9 @@ class SceneEditorDelegate(QStyledItemDelegate):
             combo_box = QComboBox(parent)
             combo_box.activated.connect(lambda: self.commitData.emit(combo_box))
             combo_box.addItem(ACTION_SCENE)
-            combo_box.setItemIcon(0, IconRegistry.action_scene())
+            combo_box.setItemIcon(0, IconRegistry.action_scene_icon())
             combo_box.addItem(REACTION_SCENE)
-            combo_box.setItemIcon(1, IconRegistry.reaction_scene())
+            combo_box.setItemIcon(1, IconRegistry.reaction_scene_icon())
             return combo_box
         else:
             return QLineEdit(parent)

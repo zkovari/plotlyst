@@ -25,31 +25,59 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QLineEdit" name="lineEdit">
-         <property name="maximumSize">
-          <size>
-           <width>121</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="placeholderText">
-          <string>Filter by name</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QListView" name="listCharacters">
-         <property name="iconSize">
-          <size>
-           <width>45</width>
-           <height>45</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QWidget" name="widget" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QPushButton" name="btnNew">
+            <property name="maximumSize">
+             <size>
+              <width>130</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>New</string>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+N</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnEdit">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>130</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Edit</string>
+            </property>
+            <property name="shortcut">
+             <string>E</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Preferred</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
           <item>
            <widget class="QPushButton" name="btnDelete">
             <property name="enabled">
@@ -79,42 +107,65 @@
             </property>
            </spacer>
           </item>
+         </layout>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignLeft">
+        <widget class="QWidget" name="widget_2" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
-           <widget class="QPushButton" name="btnEdit">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
+           <widget class="QLineEdit" name="lineEdit">
             <property name="maximumSize">
              <size>
-              <width>130</width>
+              <width>121</width>
               <height>16777215</height>
              </size>
             </property>
-            <property name="text">
-             <string>Edit</string>
-            </property>
-            <property name="shortcut">
-             <string>E</string>
+            <property name="placeholderText">
+             <string>Filter by name</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btnNew">
-            <property name="maximumSize">
-             <size>
-              <width>130</width>
-              <height>16777215</height>
-             </size>
+           <widget class="QToolButton" name="btnUp">
+            <property name="enabled">
+             <bool>false</bool>
             </property>
             <property name="text">
-             <string>New</string>
+             <string/>
             </property>
-            <property name="shortcut">
-             <string>Ctrl+N</string>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnDown">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string/>
             </property>
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListView" name="listCharacters">
+         <property name="dragEnabled">
+          <bool>false</bool>
+         </property>
+         <property name="dragDropMode">
+          <enum>QAbstractItemView::NoDragDrop</enum>
+         </property>
+         <property name="defaultDropAction">
+          <enum>Qt::CopyAction</enum>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>45</width>
+           <height>45</height>
+          </size>
+         </property>
         </widget>
        </item>
       </layout>
