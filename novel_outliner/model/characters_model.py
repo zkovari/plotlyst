@@ -169,9 +169,9 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
             if role == Qt.ToolTipRole:
                 return self.novel.characters[index.row()].name
             elif role == Qt.DisplayRole:
-                return str(len([x for x in self.novel.scenes if
-                                self.novel.characters[index.row()] in x.characters or self.novel.characters[
-                                    index.row()] == x.pov]))
+                return len([x for x in self.novel.scenes if
+                            self.novel.characters[index.row()] in x.characters or self.novel.characters[
+                                index.row()] == x.pov])
         elif role == Qt.ToolTipRole:
             return f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
         elif role == Qt.BackgroundRole:

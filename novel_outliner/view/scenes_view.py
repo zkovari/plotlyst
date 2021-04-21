@@ -6,6 +6,7 @@ from overrides import overrides
 from novel_outliner.core.domain import Scene, Novel
 from novel_outliner.core.persistence import emit_save
 from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
+from novel_outliner.model.common import proxy
 from novel_outliner.model.scenes_model import ScenesTableModel
 from novel_outliner.view.common import EditorCommand, ask_confirmation
 from novel_outliner.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
@@ -129,5 +130,7 @@ class CharactersScenesDistributionWidget(QWidget):
         self.ui = Ui_CharactersScenesDistributionWidget()
         self.ui.setupUi(self)
         self.novel = novel
-        self.ui.tblSceneDistribution.setModel(CharactersScenesDistributionTableModel(self.novel))
+        self._proxy = proxy(CharactersScenesDistributionTableModel(self.novel))
+        self._proxy.sort(0, Qt.DescendingOrder)
+        self.ui.tblSceneDistribution.setModel(self._proxy)
         self.ui.tblSceneDistribution.setColumnWidth(0, 70)
