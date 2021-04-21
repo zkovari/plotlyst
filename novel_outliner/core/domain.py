@@ -27,6 +27,7 @@ class Scene:
     event_3: str = ''
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
+    wip: bool = False
 
 
 @dataclass_json

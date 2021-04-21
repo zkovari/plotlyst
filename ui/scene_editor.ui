@@ -58,14 +58,14 @@
           <property name="leftMargin">
            <number>3</number>
           </property>
-          <item row="0" column="0">
+          <item row="1" column="0">
            <widget class="QLabel" name="label_3">
             <property name="text">
              <string>Type:</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="1" column="1">
            <widget class="QComboBox" name="cbType">
             <property name="maximumSize">
              <size>
@@ -90,7 +90,7 @@
             </item>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="2" column="1">
            <widget class="QTextEdit" name="textEvent1">
             <property name="maximumSize">
              <size>
@@ -100,21 +100,21 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="lblType1">
             <property name="text">
              <string>Goal:</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="4" column="0">
            <widget class="QLabel" name="lblType2">
             <property name="text">
              <string>Conflict:</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="4" column="1">
            <widget class="QTextEdit" name="textEvent2">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -130,7 +130,7 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
+          <item row="6" column="1">
            <widget class="QTextEdit" name="textEvent3">
             <property name="maximumSize">
              <size>
@@ -140,10 +140,17 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
+          <item row="6" column="0">
            <widget class="QLabel" name="lblType3">
             <property name="text">
              <string>Disaster:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QCheckBox" name="cbWip">
+            <property name="text">
+             <string>Mark as WIP</string>
             </property>
            </widget>
           </item>

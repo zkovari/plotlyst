@@ -133,6 +133,10 @@ class IconRegistry:
     def graph_icon() -> QIcon:
         return qtawesome.icon('ei.graph')
 
+    @staticmethod
+    def wip_icon() -> QIcon:
+        return qtawesome.icon('mdi.progress-question')
+
 
 class AvatarsRegistry:
     def __init__(self):

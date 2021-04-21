@@ -1,7 +1,7 @@
 from typing import List, Any
 
 from PyQt5.QtCore import QModelIndex, Qt, QVariant
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from overrides import overrides
 
 from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
@@ -39,6 +39,14 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
 
         if role == self.SceneRole:
             return self._data[index.row()]
+        elif role == Qt.FontRole:
+            if self._data[index.row()].wip:
+                font = QFont()
+                font.setItalic(True)
+                return font
+        elif role == Qt.BackgroundRole:
+            if self._data[index.row()].wip:
+                return QBrush(QColor('#f2f763'))
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
@@ -48,7 +56,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return self._data[index.row()].synopsis
         elif role == Qt.DecorationRole:
             if index.column() == self.ColType:
-                if self._data[index.row()].type == ACTION_SCENE:
+                if self._data[index.row()].wip:
+                    return IconRegistry.wip_icon()
+                elif self._data[index.row()].type == ACTION_SCENE:
                     return IconRegistry.action_scene_icon()
                 elif self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.reaction_scene_icon()
