@@ -125,6 +125,10 @@ class IconRegistry:
     def hashtag_icon() -> QIcon:
         return qtawesome.icon('fa5s.hashtag')
 
+    @staticmethod
+    def graph_icon() -> QIcon:
+        return qtawesome.icon('ei.graph')
+
 
 class AvatarsRegistry:
     def __init__(self):

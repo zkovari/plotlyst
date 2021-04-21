@@ -1,10 +1,13 @@
 from PyQt5.QtCore import pyqtSignal, QSortFilterProxyModel, QItemSelection, Qt, QObject
-from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView
+from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView, QToolButton, QWidgetAction
 
 from novel_outliner.core.domain import Scene, Novel
+from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
 from novel_outliner.model.scenes_model import ScenesTableModel
 from novel_outliner.view.common import EditorCommand
+from novel_outliner.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from novel_outliner.view.generated.scenes_view_ui import Ui_ScenesView
+from novel_outliner.view.icons import IconRegistry
 
 
 class ScenesView(QObject):
@@ -27,7 +30,6 @@ class ScenesView(QObject):
         self.ui.tblScenes.setModel(self._proxy)
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Fixed)
         self.ui.tblScenes.horizontalHeader().setFixedHeight(30)
-        # self.ui.tblScenes.setStyleSheet('{background-color: white;}')
         self.ui.tblScenes.verticalHeader().setStyleSheet(
             'QHeaderView::section {background-color: white; border: 0px;} QHeaderView {background-color: white;}')
         self.ui.tblScenes.verticalHeader().sectionMoved.connect(self._on_scene_moved)
@@ -38,6 +40,15 @@ class ScenesView(QObject):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
+
+        self.ui.btnGraphs.setPopupMode(QToolButton.InstantPopup)
+        self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
+        action = QWidgetAction(self.ui.btnGraphs)
+        self._distribution_widget = CharactersScenesDistributionWidget(self.novel)
+        self._distribution_widget.setMinimumWidth(500)
+        self._distribution_widget.setMinimumHeight(600)
+        action.setDefaultWidget(self._distribution_widget)
+        self.ui.btnGraphs.addAction(action)
 
         self.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
         self.ui.btnEdit.clicked.connect(self._on_edit)
@@ -76,3 +87,13 @@ class ScenesView(QObject):
 
         self.model.modelReset.emit()
         self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+
+
+class CharactersScenesDistributionWidget(QWidget):
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.ui = Ui_CharactersScenesDistributionWidget()
+        self.ui.setupUi(self)
+        self.novel = novel
+        self.ui.tblSceneDistribution.setModel(CharactersScenesDistributionTableModel(self.novel))

@@ -1,7 +1,7 @@
 from typing import List, Any
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QBrush, QColor
 from overrides import overrides
 
 from novel_outliner.core.domain import Character, Novel, Scene
@@ -142,3 +142,35 @@ class CharacterEditorTableModel(QAbstractTableModel):
         if index.column() == 1:
             return flags | Qt.ItemIsEditable
         return flags
+
+
+class CharactersScenesDistributionTableModel(QAbstractTableModel):
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return len(self.novel.characters)
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = None) -> int:
+        return len(self.novel.scenes) + 1
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if not index.isValid():
+            return
+
+        if index.column() == 0:
+            if role == Qt.DecorationRole and self.novel.characters[index.row()].image_path:
+                return QIcon(avatars.pixmap(self.novel.characters[index.row()]))
+            if role == Qt.ToolTipRole:
+                return self.novel.characters[index.row()].name
+        elif role == Qt.ToolTipRole:
+            return self.novel.scenes[index.column() - 1].title
+        elif role == Qt.BackgroundRole:
+            if self.novel.characters[index.row()] in self.novel.scenes[index.column() - 1].characters:
+                return QBrush(QColor('darkblue'))
+        return QVariant()
