@@ -59,8 +59,10 @@ class SceneEditor(QObject):
         self.ui.tblCharacters.setModel(self._characters_proxy_model)
 
         self.btn_save = self.ui.buttonBox.button(QDialogButtonBox.Save)
+        self.btn_save.setShortcut('Ctrl+S')
         self.btn_save.clicked.connect(self._on_saved)
         self.btn_cancel = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
+        self.btn_cancel.setShortcut('Esc')
         self.btn_cancel.clicked.connect(self._on_cancel)
 
     def _on_title_changed(self, text: str):

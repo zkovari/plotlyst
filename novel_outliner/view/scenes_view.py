@@ -57,6 +57,7 @@ class ScenesView(QObject):
         self.ui.btnGraphs.addAction(action)
 
         self.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
+        self.ui.tblScenes.doubleClicked.connect(self.ui.btnEdit.click)
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.clicked.connect(self._on_new)
         self.ui.btnDelete.clicked.connect(self._on_delete)
