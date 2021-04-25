@@ -8,7 +8,7 @@ REACTION_SCENE = 'reaction'
 
 
 @dataclass_json
-@dataclass
+@dataclass(unsafe_hash=True)
 class Character:
     name: str
     personality: str = ''

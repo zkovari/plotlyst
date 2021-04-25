@@ -1,13 +1,16 @@
-from PyQt5.QtCore import pyqtSignal, QSortFilterProxyModel, QItemSelection, Qt, QObject, QModelIndex, QAbstractItemModel
+from functools import partial
+
+from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
+    QAbstractItemModel, QPoint
 from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
-    QStyleOptionViewItem, QTextEdit
+    QStyleOptionViewItem, QTextEdit, QMenu, QAction
 from overrides import overrides
 
 from novel_outliner.core.domain import Scene, Novel
 from novel_outliner.core.persistence import emit_save
 from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
 from novel_outliner.model.common import proxy
-from novel_outliner.model.scenes_model import ScenesTableModel
+from novel_outliner.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from novel_outliner.view.common import EditorCommand, ask_confirmation
 from novel_outliner.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from novel_outliner.view.generated.scenes_view_ui import Ui_ScenesView
@@ -27,7 +30,7 @@ class ScenesView(QObject):
         self.ui.setupUi(self.widget)
 
         self.model = ScenesTableModel(novel)
-        self._proxy = QSortFilterProxyModel()
+        self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.model)
         self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
         self._proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -57,6 +60,18 @@ class ScenesView(QObject):
         action.setDefaultWidget(self._distribution_widget)
         self.ui.btnGraphs.addAction(action)
 
+        self.ui.btnFilter.setPopupMode(QToolButton.InstantPopup)
+        self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
+        for pov in set([x.pov for x in self.novel.scenes if x.pov]):
+            action = QAction(pov.name, self.ui.btnFilter)
+            action.setCheckable(True)
+            action.setChecked(True)
+            action.triggered.connect(partial(self._proxy.setCharacterFilter, pov))
+            self.ui.btnFilter.addAction(action)
+
+        self.ui.tblScenes.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.tblScenes.customContextMenuRequested.connect(self._on_custom_menu_requested)
+
         self.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
         self.ui.tblScenes.doubleClicked.connect(self.ui.btnEdit.click)
         self.ui.btnEdit.clicked.connect(self._on_edit)
@@ -79,6 +94,31 @@ class ScenesView(QObject):
 
     def _on_new(self):
         self.scene_created.emit()
+
+    def _on_custom_menu_requested(self, pos: QPoint):
+        def toggle_wip(scene: Scene):
+            scene.wip = not scene.wip
+            self.model.modelReset.emit()
+
+        index: QModelIndex = self.ui.tblScenes.indexAt(pos)
+        scene: Scene = index.data(ScenesTableModel.SceneRole)
+
+        menu = QMenu(self.ui.tblScenes)
+
+        wip_action = QAction('Toggle WIP status', menu)
+        wip_action.triggered.connect(lambda: toggle_wip(scene))
+        insert_action = QAction('Insert new scene', menu)
+        insert_action.triggered.connect(lambda: self._insert_scene_after(index))
+        menu.addAction(wip_action)
+        menu.addAction(insert_action)
+
+        menu.popup(self.ui.tblScenes.viewport().mapToGlobal(pos))
+
+    def _insert_scene_after(self, index: QModelIndex):
+        scene = index.data(ScenesTableModel.SceneRole)
+        i = self.novel.scenes.index(scene)
+        self.novel.scenes.insert(i + 1, Scene('Untitled'))
+        self.model.modelReset.emit()
 
     def _on_delete(self):
         indexes = self.ui.tblScenes.selectedIndexes()
@@ -130,7 +170,13 @@ class CharactersScenesDistributionWidget(QWidget):
         self.ui = Ui_CharactersScenesDistributionWidget()
         self.ui.setupUi(self)
         self.novel = novel
-        self._proxy = proxy(CharactersScenesDistributionTableModel(self.novel))
+        self._model = CharactersScenesDistributionTableModel(self.novel)
+        self._proxy = proxy(self._model)
         self._proxy.sort(0, Qt.DescendingOrder)
         self.ui.tblSceneDistribution.setModel(self._proxy)
         self.ui.tblSceneDistribution.setColumnWidth(0, 70)
+        average = sum([len(x.characters) for x in self.novel.scenes]) / len(self.novel.scenes)
+        self.ui.spinAverage.setValue(average)
+
+    def refresh(self):
+        self._model.modelReset.emit()

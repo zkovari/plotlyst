@@ -195,6 +195,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QToolButton" name="btnFilter">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer_5">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

@@ -1,10 +1,10 @@
-from typing import List, Any
+from typing import List, Any, Dict
 
-from PyQt5.QtCore import QModelIndex, Qt, QVariant
+from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel
 from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from overrides import overrides
 
-from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
+from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Character
 from novel_outliner.model.common import AbstractHorizontalHeaderBasedTableModel
 from novel_outliner.view.icons import IconRegistry, avatars
 
@@ -108,3 +108,26 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         if index.column() == self.ColSynopsis:
             return flags | Qt.ItemIsEditable
         return flags
+
+
+class ScenesFilterProxyModel(QSortFilterProxyModel):
+
+    def __init__(self):
+        super().__init__()
+        self.character_filter: Dict[Character, bool] = {}
+
+    def setCharacterFilter(self, character: Character, filter: bool):
+        self.character_filter[character] = filter
+        self.invalidateFilter()
+
+    @overrides
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        filtered = super(ScenesFilterProxyModel, self).filterAcceptsRow(source_row, source_parent)
+
+        if not filtered:
+            return filtered
+
+        scene: Scene = self.sourceModel().data(self.sourceModel().index(source_row, 0), role=ScenesTableModel.SceneRole)
+        if not scene:
+            return filtered
+        return self.character_filter.get(scene.pov, True)
