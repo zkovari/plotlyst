@@ -99,6 +99,7 @@ class ScenesView(QObject):
         def toggle_wip(scene: Scene):
             scene.wip = not scene.wip
             self.model.modelReset.emit()
+            self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
 
         index: QModelIndex = self.ui.tblScenes.indexAt(pos)
         scene: Scene = index.data(ScenesTableModel.SceneRole)
