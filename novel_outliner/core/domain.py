@@ -11,7 +11,6 @@ class Character:
     id: Optional[int] = None
     personality: str = ''
     age: int = 0
-    image_path: str = ''
 
 
 @dataclass
