@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView, QToolButton
     QStyleOptionViewItem, QTextEdit, QMenu, QAction
 from overrides import overrides
 
+from novel_outliner.core.client import client
 from novel_outliner.core.domain import Scene, Novel
 from novel_outliner.core.persistence import emit_save
 from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
@@ -129,7 +130,7 @@ class ScenesOutlineView(QObject):
             if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
                 return
             self.novel.scenes.remove(scene)
-            self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+            client.delete_scene(scene)
             self.refresh()
 
     def _on_scene_moved(self, logical: int, old_visual: int, new_visual: int):

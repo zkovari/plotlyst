@@ -21,9 +21,9 @@ class Scene:
     synopsis: str = ''
     type: str = ''
     pivotal: bool = False
-    event_1: str = ''
-    event_2: str = ''
-    event_3: str = ''
+    beginning: str = ''
+    middle: str = ''
+    end: str = ''
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
     wip: bool = False

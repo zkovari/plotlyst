@@ -149,7 +149,8 @@ class AvatarsRegistry:
             characters_query.first()
             array = characters_query.value(0)
             pixmap = QPixmap()
-            pixmap.loadFromData(array)
+            if array:
+                pixmap.loadFromData(array)
             self._avatars[character.id] = rounded_pixmap(pixmap)
 
         return self._avatars[character.id]

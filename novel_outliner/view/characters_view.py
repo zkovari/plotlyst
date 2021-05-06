@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QItemSelection, QObject, pyqtSignal
 from PyQt5.QtWidgets import QWidget
 
+from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Character
 from novel_outliner.model.characters_model import CharactersTableModel
 from novel_outliner.model.common import proxy
@@ -85,5 +86,6 @@ class CharactersView(QObject):
             if not ask_confirmation(f'Are you sure you want to delete character {character.name}?'):
                 return
             self.novel.characters.remove(character)
-            self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+            client.delete_character(character)
+            # self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
             self.refresh()

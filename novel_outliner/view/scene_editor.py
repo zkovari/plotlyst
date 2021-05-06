@@ -3,6 +3,7 @@ from typing import Optional
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel
 from PyQt5.QtWidgets import QWidget, QDialogButtonBox
 
+from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
 from novel_outliner.model.characters_model import CharactersSceneAssociationTableModel
 from novel_outliner.view.common import EditorCommand
@@ -44,9 +45,9 @@ class SceneEditor(QObject):
         else:
             self.ui.cbType.setCurrentIndex(1)
 
-        self.ui.textEvent1.setText(self.scene.event_1)
-        self.ui.textEvent2.setText(self.scene.event_2)
-        self.ui.textEvent3.setText(self.scene.event_3)
+        self.ui.textEvent1.setText(self.scene.beginning)
+        self.ui.textEvent2.setText(self.scene.middle)
+        self.ui.textEvent3.setText(self.scene.end)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
@@ -83,9 +84,9 @@ class SceneEditor(QObject):
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.scene.type = self.ui.cbType.currentText()
-        self.scene.event_1 = self.ui.textEvent1.toPlainText()
-        self.scene.event_2 = self.ui.textEvent2.toPlainText()
-        self.scene.event_3 = self.ui.textEvent3.toPlainText()
+        self.scene.beginning = self.ui.textEvent1.toPlainText()
+        self.scene.middle = self.ui.textEvent2.toPlainText()
+        self.scene.end = self.ui.textEvent3.toPlainText()
         pov = self.ui.cbPov.currentData()
         if pov:
             self.scene.pov = pov
@@ -93,7 +94,10 @@ class SceneEditor(QObject):
         self.scene.pivotal = self.ui.cbPivotal.isChecked()
         if self._new_scene:
             self.novel.scenes.append(self.scene)
-        self.commands_sent.emit(self.widget, [EditorCommand.SAVE, EditorCommand.CLOSE_CURRENT_EDITOR,
+
+        id = client.insert_scene(self.novel, self.scene)
+        self.scene.id = id
+        self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR,
                                               EditorCommand.DISPLAY_SCENES])
 
     def _on_cancel(self):

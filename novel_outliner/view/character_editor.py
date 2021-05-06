@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QStyledItemDelegate, QSty
     QComboBox
 from overrides import overrides
 
+from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Character
 from novel_outliner.model.characters_model import CharacterEditorTableModel
 from novel_outliner.view.common import EditorCommand
@@ -44,7 +45,8 @@ class CharacterEditor(QObject):
     def _on_saved(self):
         if self._new_character:
             self.novel.characters.append(self.character)
-        self.commands_sent.emit(self.widget, [EditorCommand.SAVE, EditorCommand.CLOSE_CURRENT_EDITOR,
+        client.insert_character(self.character)
+        self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR,
                                               EditorCommand.DISPLAY_CHARACTERS])
 
     def _on_cancel(self):

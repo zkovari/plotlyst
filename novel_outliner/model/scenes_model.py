@@ -71,15 +71,15 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return QIcon(avatars.pixmap(self._data[index.row()].pov))
         elif role == Qt.ToolTipRole:
             if index.column() == self.ColType:
-                if self._data[index.row()].event_1:
-                    tip = f' - {self._data[index.row()].event_1}\n\n'
-                    tip += f' - {self._data[index.row()].event_2}\n\n'
-                    tip += f' - {self._data[index.row()].event_3}'
+                if self._data[index.row()].beginning:
+                    tip = f' - {self._data[index.row()].beginning}\n\n'
+                    tip += f' - {self._data[index.row()].middle}\n\n'
+                    tip += f' - {self._data[index.row()].end}'
                     return tip
-                elif self._data[index.row()].event_2:
-                    return self._data[index.row()].event_2
-                elif self._data[index.row()].event_3:
-                    return self._data[index.row()].event_3
+                elif self._data[index.row()].middle:
+                    return self._data[index.row()].middle
+                elif self._data[index.row()].end:
+                    return self._data[index.row()].end
             elif index.column() == self.ColPov:
                 return self._data[index.row()].pov.name if self._data[index.row()].pov else ''
             elif index.column() == self.ColSynopsis:
