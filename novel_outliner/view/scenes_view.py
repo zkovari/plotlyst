@@ -12,12 +12,13 @@ from novel_outliner.model.characters_model import CharactersScenesDistributionTa
 from novel_outliner.model.common import proxy
 from novel_outliner.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from novel_outliner.view.common import EditorCommand, ask_confirmation
+from novel_outliner.view.generated.draft_scenes_view_ui import Ui_DraftScenesView
 from novel_outliner.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from novel_outliner.view.generated.scenes_view_ui import Ui_ScenesView
 from novel_outliner.view.icons import IconRegistry
 
 
-class ScenesView(QObject):
+class ScenesOutlineView(QObject):
     commands_sent = pyqtSignal(QWidget, list)
     scene_edited = pyqtSignal(Scene)
     scene_created = pyqtSignal()
@@ -181,3 +182,16 @@ class CharactersScenesDistributionWidget(QWidget):
 
     def refresh(self):
         self._model.modelReset.emit()
+
+
+class DraftScenesView:
+
+    def __init__(self, novel: Novel):
+        self.widget = QWidget()
+        self.ui = Ui_DraftScenesView()
+        self.ui.setupUi(self.widget)
+        self.novel = novel
+
+        self._model = ScenesTableModel(self.novel)
+        self._proxy = proxy(self._model)
+        self.ui.tblDraftScenes.setModel(self._proxy)

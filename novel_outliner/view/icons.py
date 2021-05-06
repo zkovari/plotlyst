@@ -2,6 +2,7 @@ from typing import Dict
 
 import qtawesome
 from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtSql import QSqlQuery
 
 from novel_outliner.core.domain import Character
 from novel_outliner.view.common import rounded_pixmap
@@ -140,14 +141,18 @@ class IconRegistry:
 
 class AvatarsRegistry:
     def __init__(self):
-        self._avatars: Dict[str, QPixmap] = {}
+        self._avatars: Dict[int, QPixmap] = {}
 
     def pixmap(self, character: Character) -> QPixmap:
-        if character.image_path not in self._avatars:
-            self._avatars[character.image_path] = QPixmap(character.image_path)
+        if character.id not in self._avatars:
+            characters_query = QSqlQuery(f"SELECT avatar FROM Characters WHERE id = {character.id}")
+            characters_query.first()
+            array = characters_query.value(0)
+            pixmap = QPixmap()
+            pixmap.loadFromData(array)
+            self._avatars[character.id] = rounded_pixmap(pixmap)
 
-        orig = self._avatars[character.image_path]
-        return rounded_pixmap(orig)
+        return self._avatars[character.id]
 
 
 avatars = AvatarsRegistry()

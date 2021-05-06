@@ -1,25 +1,23 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from dataclasses_json import dataclass_json
-
 ACTION_SCENE = 'action'
 REACTION_SCENE = 'reaction'
 
 
-@dataclass_json
 @dataclass(unsafe_hash=True)
 class Character:
     name: str
+    id: Optional[int] = None
     personality: str = ''
     age: int = 0
     image_path: str = ''
 
 
-@dataclass_json
 @dataclass
 class Scene:
     title: str
+    id: Optional[int] = None
     synopsis: str = ''
     type: str = ''
     pivotal: bool = False
@@ -31,10 +29,10 @@ class Scene:
     wip: bool = False
 
 
-@dataclass_json
 @dataclass
 class Novel:
     title: str
+    id: Optional[int] = None
     config_path: str = ''
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)

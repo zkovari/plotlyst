@@ -2,7 +2,7 @@ from typing import List, Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QToolButton, QMenu, QAction, QWidget, QApplication
+from PyQt5.QtWidgets import QMainWindow, QToolButton, QMenu, QAction, QWidget, QApplication, QTabWidget
 
 from novel_outliner.common import EXIT_CODE_RESTART
 from novel_outliner.core.domain import Character, Scene
@@ -14,7 +14,7 @@ from novel_outliner.view.common import EditorCommand
 from novel_outliner.view.generated.main_window_ui import Ui_MainWindow
 from novel_outliner.view.icons import IconRegistry
 from novel_outliner.view.scene_editor import SceneEditor
-from novel_outliner.view.scenes_view import ScenesView
+from novel_outliner.view.scenes_view import ScenesOutlineView, DraftScenesView
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -34,16 +34,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.characters_view.character_edited.connect(self._on_character_edition)
         self.characters_view.commands_sent.connect(self._on_received_commands)
 
-        self.scenes_view = ScenesView(self.novel)
-        self.scenes_view.scene_edited.connect(self._on_scene_edition)
-        self.scenes_view.scene_created.connect(self._on_scene_creation)
-        self.scenes_view.commands_sent.connect(self._on_received_commands)
+        self.scenes_outline_view = ScenesOutlineView(self.novel)
+        self.scenes_outline_view.scene_edited.connect(self._on_scene_edition)
+        self.scenes_outline_view.scene_created.connect(self._on_scene_creation)
+        self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
+
+        self.draft_scenes_view = DraftScenesView(self.novel)
         self._init_menuber()
         self._init_toolbar()
 
         self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
-        self.tabWidget.addTab(self.scenes_view.widget, IconRegistry.scene_icon(), '')
-        self.tabWidget.setCurrentWidget(self.scenes_view.widget)
+        self.scenes_tab = QTabWidget()
+        self.scenes_tab.addTab(self.scenes_outline_view.widget, 'Outline')
+        self.scenes_tab.addTab(self.draft_scenes_view.widget, 'Draft')
+        self.tabWidget.addTab(self.scenes_tab, IconRegistry.scene_icon(), '')
+        self.tabWidget.setCurrentWidget(self.scenes_tab)
 
     def _init_menuber(self):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
@@ -95,5 +100,5 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.tabWidget.setCurrentWidget(self.characters_view.widget)
                 self.characters_view.refresh()
             elif cmd == EditorCommand.DISPLAY_SCENES:
-                self.tabWidget.setCurrentWidget(self.scenes_view.widget)
-                self.scenes_view.refresh()
+                self.tabWidget.setCurrentWidget(self.scenes_outline_view.widget)
+                self.scenes_outline_view.refresh()

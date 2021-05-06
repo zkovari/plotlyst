@@ -42,8 +42,7 @@ class CharactersTableModel(QAbstractTableModel):
             if index.column() == self.ColName:
                 return self._data[index.row()].name
         elif role == Qt.DecorationRole:
-            if self._data[index.row()].image_path:
-                return QIcon(avatars.pixmap(self._data[index.row()]))
+            return QIcon(avatars.pixmap(self._data[index.row()]))
 
 
 class CharactersSceneAssociationTableModel(CharactersTableModel):
@@ -164,7 +163,7 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
             return
 
         if index.column() == 0:
-            if role == Qt.DecorationRole and self.novel.characters[index.row()].image_path:
+            if role == Qt.DecorationRole:
                 return QIcon(avatars.pixmap(self.novel.characters[index.row()]))
             if role == Qt.ToolTipRole:
                 return self.novel.characters[index.row()].name
