@@ -32,14 +32,20 @@ class SqlClient:
         return characters
 
     def fetch_scenes(self) -> List[Scene]:
-        scenes_query = QSqlQuery("SELECT id, title, synopsis, type, pivotal, wip, beginning, middle, end FROM Scenes")
+        scenes_query = QSqlQuery(
+            """
+            SELECT id, title, synopsis, type, pivotal, wip, beginning, middle, end, sequence 
+            FROM Scenes
+            """)
         scenes = []
         while scenes_query.next():
             scene = Scene(id=scenes_query.value(0), title=scenes_query.value(1), synopsis=scenes_query.value(2),
                           type=scenes_query.value(3),
                           pivotal=scenes_query.value(4) == '1', wip=scenes_query.value(5),
-                          beginning=scenes_query.value(6), middle=scenes_query.value(7), end=scenes_query.value(8))
+                          beginning=scenes_query.value(6), middle=scenes_query.value(7), end=scenes_query.value(8),
+                          sequence=scenes_query.value(9))
             scenes.append(scene)
+        scenes = sorted(scenes, key=lambda x: x.sequence)
 
         characters = self.fetch_characters()
         for scene in scenes:

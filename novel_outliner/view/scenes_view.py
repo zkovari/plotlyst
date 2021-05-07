@@ -152,6 +152,7 @@ class ScenesOutlineView(QObject):
 
         self.model.modelReset.emit()
         self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+        self.refresh()
 
 
 class ScenesViewDelegate(QStyledItemDelegate):

@@ -20,6 +20,7 @@ class Scene:
     synopsis: str = ''
     type: str = ''
     pivotal: bool = False
+    sequence: int = 0
     beginning: str = ''
     middle: str = ''
     end: str = ''
