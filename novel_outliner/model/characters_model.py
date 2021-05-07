@@ -174,7 +174,8 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
         elif role == Qt.ToolTipRole:
             return f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
         elif role == Qt.BackgroundRole:
-            if self.novel.characters[index.row()] in self.novel.scenes[index.column() - 1].characters:
+            if self.novel.characters[index.row()] in self.novel.scenes[index.column() - 1].characters or \
+                    self.novel.characters[index.row()] == self.novel.scenes[index.column() - 1].pov:
                 if self.novel.scenes[index.column() - 1].wip:
                     return QBrush(QColor('#f2f763'))
                 return QBrush(QColor('darkblue'))

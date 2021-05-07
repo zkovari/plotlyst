@@ -52,7 +52,6 @@ class SqlClient:
                 if match:
                     if type == 'pov':
                         scene.pov = match[0]
-                        scene.characters.append(match[0])
                     elif type == 'active':
                         scene.characters.append(match[0])
         return scenes

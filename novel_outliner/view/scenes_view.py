@@ -186,7 +186,7 @@ class CharactersScenesDistributionWidget(QWidget):
         self._proxy.sort(0, Qt.DescendingOrder)
         self.ui.tblSceneDistribution.setModel(self._proxy)
         self.ui.tblSceneDistribution.setColumnWidth(0, 70)
-        average = sum([len(x.characters) for x in self.novel.scenes]) / len(self.novel.scenes)
+        average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
         self.ui.spinAverage.setValue(average)
 
     def refresh(self):
@@ -231,7 +231,7 @@ class SceneCharactersWidget(QWidget, Ui_SceneCharactersWidget):
 
         @overrides
         def columnCount(self, parent: QModelIndex = ...) -> int:
-            return len(self.scene.characters)
+            return len(self.scene.characters) + 1
 
         @overrides
         def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
@@ -239,7 +239,10 @@ class SceneCharactersWidget(QWidget, Ui_SceneCharactersWidget):
                 return
 
             if role == Qt.DecorationRole:
-                return QIcon(avatars.pixmap(self.scene.characters[index.column()]))
+                if index.column() == 0:
+                    return QIcon(avatars.pixmap(self.scene.pov))
+                else:
+                    return QIcon(avatars.pixmap(self.scene.characters[index.column() - 1]))
             if role == Qt.BackgroundRole:
                 if self.scene.wip:
                     return QBrush(QColor('#f2f763'))
