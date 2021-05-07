@@ -53,10 +53,7 @@ class ScenesOutlineView(QObject):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
-        for row in range(self._proxy.rowCount()):
-            self.ui.tblScenes.setIndexWidget(self._proxy.index(row, ScenesTableModel.ColCharacters),
-                                             SceneCharactersWidget(
-                                                 self._proxy.index(row, 0).data(ScenesTableModel.SceneRole)))
+        self._display_characters()
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColCharacters,
                                                                   QHeaderView.ResizeToContents)
@@ -88,8 +85,15 @@ class ScenesOutlineView(QObject):
         self.ui.btnNew.clicked.connect(self._on_new)
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
+    def _display_characters(self):
+        for row in range(self._proxy.rowCount()):
+            self.ui.tblScenes.setIndexWidget(self._proxy.index(row, ScenesTableModel.ColCharacters),
+                                             SceneCharactersWidget(
+                                                 self._proxy.index(row, 0).data(ScenesTableModel.SceneRole)))
+
     def refresh(self):
         self.model.modelReset.emit()
+        self._display_characters()
 
     def _on_scene_selected(self, selection: QItemSelection):
         selection = len(selection.indexes()) > 0
