@@ -44,6 +44,7 @@ class SceneEditor(QObject):
             self.ui.cbType.setCurrentText(self.scene.type)
         else:
             self.ui.cbType.setCurrentIndex(1)
+        self._on_type_changed(self.ui.cbType.currentText())
 
         self.ui.textEvent1.setText(self.scene.beginning)
         self.ui.textEvent2.setText(self.scene.middle)
@@ -76,8 +77,8 @@ class SceneEditor(QObject):
             self.ui.lblType2.setText('Dilemma:')
             self.ui.lblType3.setText('Decision:')
         else:
-            self.ui.lblType1.setText('Setup:')
-            self.ui.lblType2.setText('Action:')
+            self.ui.lblType1.setText('Beginning:')
+            self.ui.lblType2.setText('Middle:')
             self.ui.lblType3.setText('End:')
 
     def _on_saved(self):
