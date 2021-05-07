@@ -69,7 +69,37 @@ class SqlClient:
         query.bindValue(':id', character.id)
         query.exec()
 
-    def insert_scene(self, novel: Novel, scene: Scene) -> int:
+    def update_scene(self, scene: Scene):
+        update_query = QSqlQuery()
+        update_query.prepare(
+            """
+            UPDATE Scenes SET 
+                title=:title, synopsis=:synopsis,
+                wip=:wip, type=:type,
+                pivotal=:pivotal, beginning=:beginning,
+                middle=:middle, end=:end
+            WHERE id = :id
+            """)
+        update_query.bindValue(':title', scene.title)
+        update_query.bindValue(':synopsis', scene.synopsis)
+        update_query.bindValue(':type', scene.type)
+        update_query.bindValue(':wip', scene.wip)
+        update_query.bindValue(':pivotal', scene.pivotal)
+        update_query.bindValue(':beginning', scene.beginning)
+        update_query.bindValue(':middle', scene.middle)
+        update_query.bindValue(':end', scene.end)
+        update_query.exec()
+
+        delete_scene_characters_query = QSqlQuery()
+        delete_scene_characters_query.prepare("DELETE FROM SceneCharacters WHERE scene_id=:id")
+        delete_scene_characters_query.bindValue(':id', scene.id)
+        result = delete_scene_characters_query.exec()
+        if not result:
+            print(delete_scene_characters_query.lastError().text())
+
+        self._insert_scene_characters(scene)
+
+    def insert_scene(self, novel: Novel, scene: Scene):
         scenes_query = QSqlQuery()
         scenes_query.prepare(
             "INSERT INTO Scenes (title, novel_id, type, synopsis, pivotal, beginning, middle, end) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
@@ -82,22 +112,23 @@ class SqlClient:
         scenes_query.addBindValue(scene.middle)
         scenes_query.addBindValue(scene.end)
         scenes_query.exec()
-        id = scenes_query.lastInsertId()
+        scene.id = scenes_query.lastInsertId()
 
+        self._insert_scene_characters(scene)
+
+    def _insert_scene_characters(self, scene: Scene):
         char_scenes_query = QSqlQuery()
         char_scenes_query.prepare('INSERT INTO SceneCharacters (scene_id, character_id, type) VALUES (?, ?, ?)')
         if scene.pov:
-            char_scenes_query.addBindValue(id)
+            char_scenes_query.addBindValue(scene.id)
             char_scenes_query.addBindValue(scene.pov.id)
             char_scenes_query.addBindValue('pov')
             char_scenes_query.exec()
         for char in scene.characters:
-            char_scenes_query.addBindValue(id)
+            char_scenes_query.addBindValue(scene.id)
             char_scenes_query.addBindValue(char.id)
             char_scenes_query.addBindValue('active')
             char_scenes_query.exec()
-
-        return id
 
     def delete_scene(self, scene: Scene):
         query = QSqlQuery()

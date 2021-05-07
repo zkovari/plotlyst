@@ -94,9 +94,9 @@ class SceneEditor(QObject):
         self.scene.pivotal = self.ui.cbPivotal.isChecked()
         if self._new_scene:
             self.novel.scenes.append(self.scene)
-
-        id = client.insert_scene(self.novel, self.scene)
-        self.scene.id = id
+            client.insert_scene(self.novel, self.scene)
+        else:
+            client.update_scene(self.scene)
         self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR,
                                               EditorCommand.DISPLAY_SCENES])
 
