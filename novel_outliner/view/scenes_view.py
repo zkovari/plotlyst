@@ -1,7 +1,9 @@
 from functools import partial
+from typing import Any
 
 from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
-    QAbstractItemModel, QPoint
+    QAbstractItemModel, QPoint, QAbstractTableModel
+from PyQt5.QtGui import QIcon, QBrush, QColor
 from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QMenu, QAction
 from overrides import overrides
@@ -14,9 +16,10 @@ from novel_outliner.model.common import proxy
 from novel_outliner.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from novel_outliner.view.common import EditorCommand, ask_confirmation
 from novel_outliner.view.generated.draft_scenes_view_ui import Ui_DraftScenesView
+from novel_outliner.view.generated.scene_characters_widget_ui import Ui_SceneCharactersWidget
 from novel_outliner.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from novel_outliner.view.generated.scenes_view_ui import Ui_ScenesView
-from novel_outliner.view.icons import IconRegistry
+from novel_outliner.view.icons import IconRegistry, avatars
 
 
 class ScenesOutlineView(QObject):
@@ -50,8 +53,13 @@ class ScenesOutlineView(QObject):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
-
+        for row in range(self._proxy.rowCount()):
+            self.ui.tblScenes.setIndexWidget(self._proxy.index(row, ScenesTableModel.ColCharacters),
+                                             SceneCharactersWidget(
+                                                 self._proxy.index(row, 0).data(ScenesTableModel.SceneRole)))
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
+        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColCharacters,
+                                                                  QHeaderView.ResizeToContents)
 
         self.ui.btnGraphs.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
@@ -196,3 +204,44 @@ class DraftScenesView:
         self._model = ScenesTableModel(self.novel)
         self._proxy = proxy(self._model)
         self.ui.tblDraftScenes.setModel(self._proxy)
+
+
+class SceneCharactersWidget(QWidget, Ui_SceneCharactersWidget):
+
+    def __init__(self, scene: Scene, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.scene = scene
+
+        self.model = self.Model(scene)
+        self.tableView.setModel(self.model)
+        if self.scene.wip:
+            self.setStyleSheet('background: #f2f763')
+        elif self.scene.pivotal:
+            self.setStyleSheet('background: #f07762')
+
+    class Model(QAbstractTableModel):
+        def __init__(self, scene: Scene, parent=None):
+            super().__init__(parent)
+            self.scene = scene
+
+        @overrides
+        def rowCount(self, parent: QModelIndex = ...) -> int:
+            return 1
+
+        @overrides
+        def columnCount(self, parent: QModelIndex = ...) -> int:
+            return len(self.scene.characters)
+
+        @overrides
+        def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+            if not index.isValid():
+                return
+
+            if role == Qt.DecorationRole:
+                return QIcon(avatars.pixmap(self.scene.characters[index.column()]))
+            if role == Qt.BackgroundRole:
+                if self.scene.wip:
+                    return QBrush(QColor('#f2f763'))
+                elif self.scene.pivotal:
+                    return QBrush(QColor('#f07762'))
