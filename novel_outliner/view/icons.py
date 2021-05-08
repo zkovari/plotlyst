@@ -138,6 +138,18 @@ class IconRegistry:
     def wip_icon() -> QIcon:
         return qtawesome.icon('mdi.progress-question')
 
+    @staticmethod
+    def tasks_icon() -> QIcon:
+        return qtawesome.icon('fa5s.tasks')
+
+    @staticmethod
+    def timeline_icon() -> QIcon:
+        return qtawesome.icon('mdi.chart-timeline-variant')
+
+    @staticmethod
+    def reports_icon() -> QIcon:
+        return qtawesome.icon('fa5.chart-bar')
+
 
 class AvatarsRegistry:
     def __init__(self):

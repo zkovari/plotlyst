@@ -52,8 +52,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
-            # elif index.column() == self.ColCharacters:
-            #     return ', '.join([x.name for x in self._data[index.row()].characters])
             elif index.column() == self.ColSynopsis:
                 return self._data[index.row()].synopsis
         elif role == Qt.DecorationRole:

@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QWidget, QDialogButtonBox
 from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
 from novel_outliner.model.characters_model import CharactersSceneAssociationTableModel
+from novel_outliner.model.novel import NovelStoryLinesListModel
 from novel_outliner.view.common import EditorCommand
 from novel_outliner.view.generated.scene_editor_ui import Ui_SceneEditor
 from novel_outliner.view.icons import IconRegistry
@@ -60,6 +61,12 @@ class SceneEditor(QObject):
         self._characters_proxy_model.setSourceModel(self._characters_model)
         self.ui.tblCharacters.setModel(self._characters_proxy_model)
 
+        self.story_line_model = NovelStoryLinesListModel(self.novel)
+        self.ui.lstStoryLines.setModel(self.story_line_model)
+        for story_line in self.scene.story_lines:
+            self.story_line_model.selected.add(story_line)
+        self.story_line_model.modelReset.emit()
+
         self.btn_save = self.ui.buttonBox.button(QDialogButtonBox.Save)
         self.btn_save.setShortcut('Ctrl+S')
         self.btn_save.clicked.connect(self._on_saved)
@@ -93,6 +100,11 @@ class SceneEditor(QObject):
             self.scene.pov = pov
         self.scene.wip = self.ui.cbWip.isChecked()
         self.scene.pivotal = self.ui.cbPivotal.isChecked()
+
+        self.scene.story_lines.clear()
+        for story_line in self.story_line_model.selected:
+            self.scene.story_lines.append(story_line)
+
         if self._new_scene:
             self.novel.scenes.append(self.scene)
             client.insert_scene(self.novel, self.scene)
@@ -102,4 +114,4 @@ class SceneEditor(QObject):
                                               EditorCommand.DISPLAY_SCENES])
 
     def _on_cancel(self):
-        self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR])
+        self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR, EditorCommand.DISPLAY_SCENES])

@@ -13,6 +13,7 @@ from novel_outliner.view.characters_view import CharactersView
 from novel_outliner.view.common import EditorCommand
 from novel_outliner.view.generated.main_window_ui import Ui_MainWindow
 from novel_outliner.view.icons import IconRegistry
+from novel_outliner.view.reports_view import ReportsView
 from novel_outliner.view.scene_editor import SceneEditor
 from novel_outliner.view.scenes_view import ScenesOutlineView, DraftScenesView
 
@@ -39,16 +40,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.scenes_outline_view.scene_created.connect(self._on_scene_creation)
         self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
 
+        self.reports_view = ReportsView(self.novel)
         self.draft_scenes_view = DraftScenesView(self.novel)
         self._init_menuber()
         self._init_toolbar()
 
+        self.tabWidget.addTab(QWidget(), IconRegistry.book_icon(), '')
         self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
         self.scenes_tab = QTabWidget()
         self.scenes_tab.addTab(self.scenes_outline_view.widget, 'Outline')
         self.scenes_tab.addTab(self.draft_scenes_view.widget, 'Draft')
         self.tabWidget.addTab(self.scenes_tab, IconRegistry.scene_icon(), '')
-        self.tabWidget.setCurrentWidget(self.scenes_tab)
+        self.tabWidget.addTab(QWidget(), IconRegistry.tasks_icon(), '')
+        self.tabWidget.addTab(QWidget(), IconRegistry.timeline_icon(), '')
+        self.tabWidget.addTab(self.reports_view.widget, IconRegistry.reports_icon(), '')
+        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.characters_view.widget), 'Characters')
+        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.scenes_tab), 'Scenes')
+        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.reports_view.widget), 'Reports')
+        self.tabWidget.setCurrentWidget(self.reports_view.widget)
 
     def _init_menuber(self):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
@@ -100,5 +109,5 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.tabWidget.setCurrentWidget(self.characters_view.widget)
                 self.characters_view.refresh()
             elif cmd == EditorCommand.DISPLAY_SCENES:
-                self.tabWidget.setCurrentWidget(self.scenes_outline_view.widget)
+                self.tabWidget.setCurrentWidget(self.scenes_tab)
                 self.scenes_outline_view.refresh()

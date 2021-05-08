@@ -13,6 +13,12 @@ class Character:
     age: int = 0
 
 
+@dataclass(unsafe_hash=True)
+class StoryLine:
+    text: str
+    id: Optional[int] = None
+
+
 @dataclass
 class Scene:
     title: str
@@ -27,6 +33,7 @@ class Scene:
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
     wip: bool = False
+    story_lines: List[StoryLine] = field(default_factory=list)
 
 
 @dataclass
@@ -36,3 +43,4 @@ class Novel:
     config_path: str = ''
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
+    story_lines: List[StoryLine] = field(default_factory=list)

@@ -46,7 +46,69 @@
        <string/>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="4" column="0" colspan="2" alignment="Qt::AlignTop">
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="cbPivotal">
+         <property name="text">
+          <string>Pivotal moment</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLineEdit" name="lineTitle">
+         <property name="maximumSize">
+          <size>
+           <width>521</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="placeholderText">
+          <string>Title</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QTextEdit" name="textSynopsis">
+         <property name="autoFormatting">
+          <set>QTextEdit::AutoBulletList</set>
+         </property>
+         <property name="placeholderText">
+          <string>Write synopsis</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QTableView" name="tblCharacters">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::NoSelection</enum>
+         </property>
+         <property name="showGrid">
+          <bool>false</bool>
+         </property>
+         <attribute name="horizontalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="horizontalHeaderDefaultSectionSize">
+          <number>200</number>
+         </attribute>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QComboBox" name="cbPov">
+         <property name="maximumSize">
+          <size>
+           <width>141</width>
+           <height>16777215</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="2">
+        <widget class="QListView" name="lstStoryLines"/>
+       </item>
+       <item row="4" column="0" colspan="3">
         <widget class="QFrame" name="frame">
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
@@ -155,65 +217,6 @@
            </widget>
           </item>
          </layout>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QTableView" name="tblCharacters">
-         <property name="selectionMode">
-          <enum>QAbstractItemView::NoSelection</enum>
-         </property>
-         <property name="showGrid">
-          <bool>false</bool>
-         </property>
-         <attribute name="horizontalHeaderVisible">
-          <bool>false</bool>
-         </attribute>
-         <attribute name="horizontalHeaderDefaultSectionSize">
-          <number>200</number>
-         </attribute>
-         <attribute name="verticalHeaderVisible">
-          <bool>false</bool>
-         </attribute>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLineEdit" name="lineTitle">
-         <property name="maximumSize">
-          <size>
-           <width>521</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="placeholderText">
-          <string>Title</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QComboBox" name="cbPov">
-         <property name="maximumSize">
-          <size>
-           <width>141</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QTextEdit" name="textSynopsis">
-         <property name="autoFormatting">
-          <set>QTextEdit::AutoBulletList</set>
-         </property>
-         <property name="placeholderText">
-          <string>Write synopsis</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QCheckBox" name="cbPivotal">
-         <property name="text">
-          <string>Pivotal moment</string>
-         </property>
         </widget>
        </item>
       </layout>

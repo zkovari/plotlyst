@@ -3,7 +3,7 @@ from typing import List
 
 from PyQt5.QtSql import QSqlDatabase, QSqlQuery
 
-from novel_outliner.core.domain import Novel, Character, Scene
+from novel_outliner.core.domain import Novel, Character, Scene, StoryLine
 
 
 class SqlClient:
@@ -20,7 +20,8 @@ class SqlClient:
         novel = Novel(id=novels_query.value(0), title=novels_query.value(1))
 
         novel.characters.extend(client.fetch_characters())
-        novel.scenes.extend(client.fetch_scenes())
+        novel.story_lines.extend(client.fetch_story_lines(novel))
+        novel.scenes.extend(client.fetch_scenes(novel))
 
         return novel
 
@@ -31,7 +32,7 @@ class SqlClient:
             characters.append(Character(id=characters_query.value(0), name=characters_query.value(1)))
         return characters
 
-    def fetch_scenes(self) -> List[Scene]:
+    def fetch_scenes(self, novel: Novel) -> List[Scene]:
         scenes_query = QSqlQuery(
             """
             SELECT id, title, synopsis, type, pivotal, wip, beginning, middle, end, sequence 
@@ -47,20 +48,34 @@ class SqlClient:
             scenes.append(scene)
         scenes = sorted(scenes, key=lambda x: x.sequence)
 
-        characters = self.fetch_characters()
         for scene in scenes:
             scene_characters_query = QSqlQuery(
                 f"SELECT character_id, type FROM SceneCharacters where scene_id = {scene.id}")
             while scene_characters_query.next():
                 id = scene_characters_query.value(0)
                 type = scene_characters_query.value(1)
-                match = [x for x in characters if x.id == id]
+                match = [x for x in novel.characters if x.id == id]
                 if match:
                     if type == 'pov':
                         scene.pov = match[0]
                     elif type == 'active':
                         scene.characters.append(match[0])
+            scene_story_lines_query = QSqlQuery(
+                f"SELECT story_line_id FROM StoryLinesScenes where scene_id = {scene.id}")
+            while scene_story_lines_query.next():
+                id = scene_story_lines_query.value(0)
+                match = [x for x in novel.story_lines if x.id == id]
+                if match:
+                    scene.story_lines.append(match[0])
+
         return scenes
+
+    def fetch_story_lines(self, novel: Novel) -> List[StoryLine]:
+        query = QSqlQuery(f'SELECT id, text FROM NovelStoryLines WHERE novel_id={novel.id}')
+        story_lines: List[StoryLine] = []
+        while query.next():
+            story_lines.append(StoryLine(id=query.value(0), text=query.value(1)))
+        return story_lines
 
     def insert_character(self, character: Character):
         query = QSqlQuery()
@@ -98,11 +113,17 @@ class SqlClient:
         delete_scene_characters_query = QSqlQuery()
         delete_scene_characters_query.prepare("DELETE FROM SceneCharacters WHERE scene_id=:id")
         delete_scene_characters_query.bindValue(':id', scene.id)
-        result = delete_scene_characters_query.exec()
+        delete_scene_characters_query.exec()
+
+        delete_scene_story_lines_query = QSqlQuery()
+        delete_scene_story_lines_query.prepare("DELETE FROM StoryLinesScenes WHERE scene_id=:id")
+        delete_scene_story_lines_query.bindValue(':id', scene.id)
+        result = delete_scene_story_lines_query.exec()
         if not result:
-            print(delete_scene_characters_query.lastError().text())
+            print(delete_scene_story_lines_query.lastError().text())
 
         self._insert_scene_characters(scene)
+        self._insert_scene_story_lines(scene)
 
     def insert_scene(self, novel: Novel, scene: Scene):
         scenes_query = QSqlQuery()
@@ -120,6 +141,7 @@ class SqlClient:
         scene.id = scenes_query.lastInsertId()
 
         self._insert_scene_characters(scene)
+        self._insert_scene_story_lines(scene)
 
     def _insert_scene_characters(self, scene: Scene):
         char_scenes_query = QSqlQuery()
@@ -134,6 +156,15 @@ class SqlClient:
             char_scenes_query.addBindValue(char.id)
             char_scenes_query.addBindValue('active')
             char_scenes_query.exec()
+
+    def _insert_scene_story_lines(self, scene: Scene):
+        query = QSqlQuery()
+        query.prepare('INSERT INTO StoryLinesScenes (scene_id, story_line_id) VALUES (?, ?)')
+
+        for story_line in scene.story_lines:
+            query.addBindValue(scene.id)
+            query.addBindValue(story_line.id)
+            query.exec()
 
     def delete_scene(self, scene: Scene):
         query = QSqlQuery()
