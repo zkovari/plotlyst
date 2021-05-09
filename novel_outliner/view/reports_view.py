@@ -37,15 +37,15 @@ class ReportsView:
             slice = series.append(k, v)
             slice.setLabelVisible(True)
 
+        for slice in series.slices():
+            slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
+
         chart = QChart()
         chart.legend().hide()
         chart.addSeries(series)
         chart.createDefaultAxes()
         chart.setAnimationOptions(QChart.SeriesAnimations)
         chart.setTitle("POV Distribution")
-
-        chart.legend().setVisible(True)
-        chart.legend().setAlignment(Qt.AlignBottom)
 
         chartview = QChartView(chart)
         chartview.setRenderHint(QPainter.Antialiasing)
