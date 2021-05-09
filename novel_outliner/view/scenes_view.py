@@ -114,6 +114,7 @@ class ScenesOutlineView(QObject):
             scene.wip = not scene.wip
             self.model.modelReset.emit()
             self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+            self.refresh()
 
         index: QModelIndex = self.ui.tblScenes.indexAt(pos)
         scene: Scene = index.data(ScenesTableModel.SceneRole)
@@ -132,8 +133,11 @@ class ScenesOutlineView(QObject):
     def _insert_scene_after(self, index: QModelIndex):
         scene = index.data(ScenesTableModel.SceneRole)
         i = self.novel.scenes.index(scene)
-        self.novel.scenes.insert(i + 1, Scene('Untitled'))
-        self.model.modelReset.emit()
+        scene = Scene('Untitled')
+        self.novel.scenes.insert(i + 1, scene)
+        client.insert_scene(self.novel, scene)
+        self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+        self.refresh()
 
     def _on_delete(self):
         indexes = self.ui.tblScenes.selectedIndexes()
@@ -245,7 +249,8 @@ class SceneCharactersWidget(QWidget, Ui_SceneCharactersWidget):
 
             if role == Qt.DecorationRole:
                 if index.column() == 0:
-                    return QIcon(avatars.pixmap(self.scene.pov))
+                    if self.scene.pov:
+                        return QIcon(avatars.pixmap(self.scene.pov))
                 else:
                     return QIcon(avatars.pixmap(self.scene.characters[index.column() - 1]))
             if role == Qt.BackgroundRole:
