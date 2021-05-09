@@ -57,7 +57,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.characters_view.widget), 'Characters')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.scenes_tab), 'Scenes')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.reports_view.widget), 'Reports')
-        self.tabWidget.setCurrentWidget(self.reports_view.widget)
+        self.tabWidget.setCurrentWidget(self.scenes_tab)
 
     def _init_menuber(self):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))

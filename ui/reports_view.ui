@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tabStoryMap">
       <attribute name="title">
@@ -57,6 +57,11 @@
         <widget class="QGraphicsView" name="graphicsView"/>
        </item>
       </layout>
+     </widget>
+     <widget class="QWidget" name="tabCharacters">
+      <attribute name="title">
+       <string>Characters</string>
+      </attribute>
      </widget>
     </widget>
    </item>
