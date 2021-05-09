@@ -100,6 +100,7 @@ class SqlClient:
                 middle=:middle, end=:end
             WHERE id = :id
             """)
+        update_query.bindValue(':id', scene.id)
         update_query.bindValue(':title', scene.title)
         update_query.bindValue(':synopsis', scene.synopsis)
         update_query.bindValue(':type', scene.type)
@@ -108,7 +109,9 @@ class SqlClient:
         update_query.bindValue(':beginning', scene.beginning)
         update_query.bindValue(':middle', scene.middle)
         update_query.bindValue(':end', scene.end)
-        update_query.exec()
+        result = update_query.exec()
+        if not result:
+            print(update_query.lastError().text())
 
         delete_scene_characters_query = QSqlQuery()
         delete_scene_characters_query.prepare("DELETE FROM SceneCharacters WHERE scene_id=:id")
