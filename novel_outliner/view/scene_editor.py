@@ -1,10 +1,11 @@
 from typing import Optional
 
+import qtawesome
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel
 from PyQt5.QtWidgets import QWidget, QDialogButtonBox
 
 from novel_outliner.core.client import client
-from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE
+from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event
 from novel_outliner.model.characters_model import CharactersSceneAssociationTableModel
 from novel_outliner.model.novel import NovelStoryLinesListModel
 from novel_outliner.view.common import EditorCommand
@@ -30,12 +31,22 @@ class SceneEditor(QObject):
             self._new_scene = True
 
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabGeneral), IconRegistry.general_info_icon())
+        self.ui.btnVeryUnhappy.setIcon(qtawesome.icon('fa5s.sad-cry', color_on='red'))
+        self.ui.btnUnHappy.setIcon(qtawesome.icon('mdi.emoticon-sad', color_on='yellow'))
+        self.ui.btnNeutral.setIcon(qtawesome.icon('mdi.emoticon-neutral', color_on='orange'))
+        self.ui.btnHappy.setIcon(qtawesome.icon('fa5s.smile', color_on='lightgreen'))
+        self.ui.btnVeryHappy.setIcon(qtawesome.icon('fa5s.smile-beam', color_on='darkgreen'))
+
+        self.ui.btnAddEvent.setIcon(IconRegistry.plus_icon())
+        self.ui.btnRemoveEvent.setIcon(IconRegistry.minus_icon())
 
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
             self.ui.cbPov.addItem(char.name, char)
         if self.scene.pov:
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
+
+        self.ui.sbDay.setValue(self.scene.day)
 
         self.ui.cbType.setItemIcon(0, IconRegistry.custom_scene_icon())
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
@@ -55,6 +66,7 @@ class SceneEditor(QObject):
         self.ui.textSynopsis.setText(self.scene.synopsis)
         self.ui.cbWip.setChecked(self.scene.wip)
         self.ui.cbPivotal.setChecked(self.scene.pivotal)
+        self.ui.cbEndCreatesEvent.setChecked(self.scene.end_event)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
         self._characters_proxy_model = QSortFilterProxyModel()
@@ -95,6 +107,7 @@ class SceneEditor(QObject):
         self.scene.beginning = self.ui.textEvent1.toPlainText()
         self.scene.middle = self.ui.textEvent2.toPlainText()
         self.scene.end = self.ui.textEvent3.toPlainText()
+        self.scene.day = self.ui.sbDay.value()
         pov = self.ui.cbPov.currentData()
         if pov:
             self.scene.pov = pov
@@ -110,6 +123,12 @@ class SceneEditor(QObject):
             client.insert_scene(self.novel, self.scene)
         else:
             client.update_scene(self.scene)
+
+        events = []
+        self.scene.end_event = self.ui.cbEndCreatesEvent.isChecked()
+        if self.scene.end_event:
+            events.append(Event(event=self.scene.end, day=self.scene.day))
+        client.replace_scene_events(self.novel, self.scene, events)
         self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR,
                                               EditorCommand.DISPLAY_SCENES])
 

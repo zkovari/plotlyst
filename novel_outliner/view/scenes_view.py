@@ -57,6 +57,7 @@ class ScenesOutlineView(QObject):
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColCharacters,
                                                                   QHeaderView.ResizeToContents)
+        self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
         self.ui.btnGraphs.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())

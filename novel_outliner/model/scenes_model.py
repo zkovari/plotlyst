@@ -16,15 +16,17 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     ColTitle = 1
     ColCharacters = 2
     ColType = 3
-    ColSynopsis = 4
+    ColTime = 4
+    ColSynopsis = 5
 
     def __init__(self, novel: Novel, parent=None):
         self._data: List[Scene] = novel.scenes
-        _headers = [''] * 5
+        _headers = [''] * 6
         _headers[self.ColTitle] = 'Title'
         _headers[self.ColType] = 'Type'
         _headers[self.ColPov] = 'POV'
         _headers[self.ColCharacters] = 'Characters'
+        _headers[self.ColTime] = 'Day'
         _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
 
@@ -54,6 +56,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return self._data[index.row()].title
             elif index.column() == self.ColSynopsis:
                 return self._data[index.row()].synopsis
+            elif index.column() == self.ColTime:
+                return self._data[index.row()].day
         elif role == Qt.DecorationRole:
             if index.column() == self.ColType:
                 if self._data[index.row()].wip:

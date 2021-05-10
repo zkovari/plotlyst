@@ -3,7 +3,7 @@ from typing import Optional
 
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor
-from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy
 
 
 class EditorCommand(Enum):
@@ -39,3 +39,11 @@ def ask_confirmation(message: str, parent: Optional[QWidget] = None) -> bool:
     if status & QMessageBox.Yes:
         return True
     return False
+
+
+def spacer_widget(max_width: Optional[int] = None) -> QWidget:
+    spacer = QWidget()
+    spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+    if max_width:
+        spacer.setMaximumWidth(max_width)
+    return spacer

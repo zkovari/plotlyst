@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Any
 
 ACTION_SCENE = 'action'
 REACTION_SCENE = 'reaction'
@@ -34,6 +34,17 @@ class Scene:
     characters: List[Character] = field(default_factory=list)
     wip: bool = False
     story_lines: List[StoryLine] = field(default_factory=list)
+    end_event: bool = True
+    day: int = 0
+
+
+@dataclass
+class Event:
+    event: str
+    day: int
+    id: Optional[int] = None
+    scene: Optional[Scene] = None
+    character: Optional[Character] = None
 
 
 @dataclass
@@ -44,3 +55,10 @@ class Novel:
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
     story_lines: List[StoryLine] = field(default_factory=list)
+    events: List[Event] = field(default_factory=list)
+
+
+@dataclass
+class Task:
+    message: str
+    reference: Optional[Any] = None
