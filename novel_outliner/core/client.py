@@ -194,6 +194,19 @@ class SqlClient:
         scene_m = SceneModel.get(id=scene.id)
         scene_m.delete_instance()
 
+    def insert_story_line(self, novel: Novel, story_line: StoryLine):
+        m = NovelStoryLinesModel.create(text=story_line.text, novel=novel.id)
+        story_line.id = m.id
+
+    def delete_story_line(self, story_line: StoryLine):
+        m = NovelStoryLinesModel.get(id=story_line.id)
+        m.delete_instance()
+
+    def update_story_line(self, story_line: StoryLine):
+        m = NovelStoryLinesModel.get_by_id(story_line.id)
+        m.text = story_line.text
+        m.save()
+
     def replace_scene_events(self, novel: Novel, scene: Scene, events: List[Event]):
         return
         # raise ValueError('not implemented')

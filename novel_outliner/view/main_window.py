@@ -15,6 +15,7 @@ from novel_outliner.view.characters_view import CharactersView
 from novel_outliner.view.common import EditorCommand, spacer_widget
 from novel_outliner.view.generated.main_window_ui import Ui_MainWindow
 from novel_outliner.view.icons import IconRegistry
+from novel_outliner.view.novel_view import NovelView
 from novel_outliner.view.reports_view import ReportsView
 from novel_outliner.view.scene_editor import SceneEditor
 from novel_outliner.view.scenes_view import ScenesOutlineView, DraftScenesView
@@ -35,6 +36,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.novel = self.project_finder.novel
         self.setWindowTitle(self.windowTitle() + f' - {self.novel.title}')
 
+        self.novel_view = NovelView(self.novel)
+
         self.characters_view = CharactersView(self.novel)
         self.characters_view.character_edited.connect(self._on_character_edition)
         self.characters_view.character_created.connect(self._on_character_creation)
@@ -51,7 +54,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._init_menuber()
         self._init_toolbar()
 
-        self.tabWidget.addTab(QWidget(), IconRegistry.book_icon(), '')
+        self.tabWidget.addTab(self.novel_view.widget, IconRegistry.book_icon(), '')
         self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
         self.scenes_tab = QTabWidget()
         self.scenes_tab.addTab(self.scenes_outline_view.widget, 'Outline')
