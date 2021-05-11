@@ -120,6 +120,7 @@ class SceneEditor(QObject):
 
         if self._new_scene:
             self.novel.scenes.append(self.scene)
+            self.scene.sequence = self.novel.scenes.index(self.scene)
             client.insert_scene(self.novel, self.scene)
         else:
             client.update_scene(self.scene)

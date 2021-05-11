@@ -45,7 +45,7 @@ class CharacterEditor(QObject):
     def _on_saved(self):
         if self._new_character:
             self.novel.characters.append(self.character)
-        client.insert_character(self.character)
+        client.insert_character(self.novel, self.character)
         self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR,
                                               EditorCommand.DISPLAY_CHARACTERS])
 

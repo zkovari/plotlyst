@@ -9,6 +9,7 @@ REACTION_SCENE = 'reaction'
 class Character:
     name: str
     id: Optional[int] = None
+    avatar: Optional[Any] = None
     personality: str = ''
     age: int = 0
 

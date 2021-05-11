@@ -13,6 +13,7 @@ from novel_outliner.view.icons import IconRegistry
 class CharactersView(QObject):
     commands_sent = pyqtSignal(QWidget, list)
     character_edited = pyqtSignal(Character)
+    character_created = pyqtSignal()
 
     def __init__(self, novel: Novel):
         super().__init__()
@@ -53,7 +54,7 @@ class CharactersView(QObject):
             self.character_edited.emit(character)
 
     def _on_new(self):
-        self.character_edited.emit(None)
+        self.character_created.emit()
 
     def _move_character_up(self):
         indexes = self.ui.listCharacters.selectedIndexes()

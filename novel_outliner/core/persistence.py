@@ -4,6 +4,7 @@ from novel_outliner.core.domain import Novel
 
 
 def emit_save(novel: Novel):
+    raise ValueError('not implemented')
     scenes_query = QSqlQuery()
     scenes_query.prepare("""
         UPDATE Scenes SET 

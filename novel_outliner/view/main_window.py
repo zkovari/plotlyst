@@ -35,6 +35,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.characters_view = CharactersView(self.novel)
         self.characters_view.character_edited.connect(self._on_character_edition)
+        self.characters_view.character_created.connect(self._on_character_creation)
         self.characters_view.commands_sent.connect(self._on_received_commands)
 
         self.scenes_outline_view = ScenesOutlineView(self.novel)
@@ -90,6 +91,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.editor.commands_sent.connect(self._on_received_commands)
         tab = self.tabWidget.addTab(self.editor.widget, 'New Character')
         self.tabWidget.setCurrentIndex(tab)
+
+    def _on_character_creation(self):
+        self._on_character_edition(None)
 
     def _on_current_tab_changed(self, index: int):
         pass
