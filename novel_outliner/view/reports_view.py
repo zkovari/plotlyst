@@ -1,9 +1,9 @@
 from typing import Dict
 
 from PyQt5.QtChart import QPieSeries, QChart, QChartView
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
-from PyQt5.QtWidgets import QWidget, QHeaderView, QHBoxLayout
+from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap
+from PyQt5.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QMenu, QAction, QApplication
 from overrides import overrides
 
 from novel_outliner.core.domain import Novel
@@ -146,6 +146,9 @@ class StoryLinesLinearMapWidget(QWidget):
         self.setMouseTracking(True)
         self.novel = novel
 
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._context_menu_requested)
+
     # def event(self, event: QEvent) -> bool:
     #     if event.type() == QEvent.ToolTip:
     #         pos: QPoint = event.pos()
@@ -182,6 +185,17 @@ class StoryLinesLinearMapWidget(QWidget):
                         painter.setBrush(Qt.white)
                         painter.drawEllipse(x, y - 10, 20, 20)
 
-        # painter.drawPixmap(0, 0, 32, 32,
-        #                    avatars.pixmap(self.novel.characters[0]).scaled(32, 32, Qt.KeepAspectRatio,
-        #                                                                    Qt.SmoothTransformation))
+    def _context_menu_requested(self, pos: QPoint):
+        menu = QMenu(self)
+
+        wip_action = QAction('Copy image', menu)
+        wip_action.triggered.connect(self._copy_image)
+        menu.addAction(wip_action)
+
+        menu.popup(self.mapToGlobal(pos))
+
+    def _copy_image(self):
+        clipboard = QApplication.clipboard()
+        pixmap = QPixmap(self.size())
+        self.render(pixmap)
+        clipboard.setPixmap(pixmap)
