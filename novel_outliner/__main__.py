@@ -4,6 +4,7 @@ import sys
 from PyQt5 import QtWidgets
 
 from novel_outliner.common import EXIT_CODE_RESTART
+from novel_outliner.event.handler import exception_handler
 from novel_outliner.view.main_window import MainWindow
 from novel_outliner.view.stylesheet import APP_STYLESHEET
 
@@ -16,6 +17,7 @@ if __name__ == '__main__':
         app.setStyleSheet(APP_STYLESHEET)
 
         window.show()
+        sys.excepthook = exception_handler  # type: ignore
         exit_code = app.exec()
         if exit_code < EXIT_CODE_RESTART:
             break

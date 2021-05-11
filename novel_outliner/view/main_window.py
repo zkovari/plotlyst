@@ -8,6 +8,8 @@ from novel_outliner.common import EXIT_CODE_RESTART
 from novel_outliner.core.domain import Character, Scene
 from novel_outliner.core.persistence import emit_save
 from novel_outliner.core.project import ProjectFinder
+from novel_outliner.event.core import event_log_reporter
+from novel_outliner.event.handler import EventAuthorizationHandler, EventLogHandler
 from novel_outliner.view.character_editor import CharacterEditor
 from novel_outliner.view.characters_view import CharactersView
 from novel_outliner.view.common import EditorCommand, spacer_widget
@@ -63,6 +65,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.setCurrentWidget(self.timeline_view.widget)
 
         self.tabWidget.currentChanged.connect(self._on_current_tab_changed)
+
+        EventAuthorizationHandler.parent = self
+        self.event_log_handler = EventLogHandler(self.statusBar())
+        event_log_reporter.info.connect(self.event_log_handler.on_info_event)
+        event_log_reporter.warning.connect(self.event_log_handler.on_warning_event)
+        event_log_reporter.error.connect(self.event_log_handler.on_error_event)
 
     def _init_menuber(self):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
