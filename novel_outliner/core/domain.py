@@ -26,7 +26,7 @@ class Scene:
     id: Optional[int] = None
     synopsis: str = ''
     type: str = ''
-    pivotal: bool = False
+    pivotal: str = ''
     sequence: int = 0
     beginning: str = ''
     middle: str = ''
