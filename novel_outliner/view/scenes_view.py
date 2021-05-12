@@ -156,8 +156,7 @@ class ScenesOutlineView(QObject):
         self.novel.scenes.remove(scene)
         self.novel.scenes.insert(new_visual, scene)
 
-        self.model.modelReset.emit()
-        self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+        self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
         self.refresh()
 
 
