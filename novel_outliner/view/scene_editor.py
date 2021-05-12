@@ -2,13 +2,13 @@ from typing import Optional
 
 import qtawesome
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel
-from PyQt5.QtWidgets import QWidget, QDialogButtonBox
+from PyQt5.QtWidgets import QWidget
 
 from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event
 from novel_outliner.model.characters_model import CharactersSceneAssociationTableModel
 from novel_outliner.model.novel import NovelStoryLinesListModel
-from novel_outliner.view.common import EditorCommand
+from novel_outliner.view.common import EditorCommand, EditorCommandType
 from novel_outliner.view.generated.scene_editor_ui import Ui_SceneEditor
 from novel_outliner.view.icons import IconRegistry
 
@@ -65,7 +65,7 @@ class SceneEditor(QObject):
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
         self.ui.cbWip.setChecked(self.scene.wip)
-        self.ui.cbPivotal.setChecked(self.scene.pivotal)
+        self.ui.cbPivotal.setCurrentText(self.scene.pivotal)
         self.ui.cbEndCreatesEvent.setChecked(self.scene.end_event)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
@@ -79,12 +79,25 @@ class SceneEditor(QObject):
             self.story_line_model.selected.add(story_line)
         self.story_line_model.modelReset.emit()
 
-        self.btn_save = self.ui.buttonBox.button(QDialogButtonBox.Save)
-        self.btn_save.setShortcut('Ctrl+S')
-        self.btn_save.clicked.connect(self._on_saved)
-        self.btn_cancel = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
-        self.btn_cancel.setShortcut('Esc')
-        self.btn_cancel.clicked.connect(self._on_cancel)
+        if self._new_scene:
+            self.ui.btnPrevious.setDisabled(True)
+            self.ui.btnPrevious.setHidden(True)
+            self.ui.btnNext.setDisabled(True)
+            self.ui.btnNext.setHidden(True)
+            self.ui.btnSaveAndNext.setDisabled(True)
+            self.ui.btnSaveAndNext.setHidden(True)
+        else:
+            if self.scene.sequence == 0:
+                self.ui.btnPrevious.setDisabled(True)
+            elif self.scene.sequence == len(self.novel.scenes) - 1:
+                self.ui.btnNext.setDisabled(True)
+                self.ui.btnSaveAndNext.setDisabled(True)
+
+        self.ui.btnSave.clicked.connect(self._on_saved)
+        self.ui.btnCancel.clicked.connect(self._on_cancel)
+        self.ui.btnPrevious.clicked.connect(self._on_previous_scene)
+        self.ui.btnNext.clicked.connect(self._on_next_scene)
+        self.ui.btnSaveAndNext.clicked.connect(self._on_save_and_next_scene)
 
     def _on_type_changed(self, text: str):
         if text == ACTION_SCENE:
@@ -101,6 +114,11 @@ class SceneEditor(QObject):
             self.ui.lblType3.setText('End:')
 
     def _on_saved(self):
+        self._save_scene()
+        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
+                                              EditorCommand.display_scenes()])
+
+    def _save_scene(self):
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.scene.type = self.ui.cbType.currentText()
@@ -112,26 +130,34 @@ class SceneEditor(QObject):
         if pov:
             self.scene.pov = pov
         self.scene.wip = self.ui.cbWip.isChecked()
-        self.scene.pivotal = self.ui.cbPivotal.isChecked()
-
+        self.scene.pivotal = self.ui.cbPivotal.currentText()
         self.scene.story_lines.clear()
         for story_line in self.story_line_model.selected:
             self.scene.story_lines.append(story_line)
-
         if self._new_scene:
             self.novel.scenes.append(self.scene)
             self.scene.sequence = self.novel.scenes.index(self.scene)
             client.insert_scene(self.novel, self.scene)
         else:
             client.update_scene(self.scene)
-
         events = []
         self.scene.end_event = self.ui.cbEndCreatesEvent.isChecked()
         if self.scene.end_event:
             events.append(Event(event=self.scene.end, day=self.scene.day))
         client.replace_scene_events(self.novel, self.scene, events)
-        self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR,
-                                              EditorCommand.DISPLAY_SCENES])
 
     def _on_cancel(self):
-        self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR, EditorCommand.DISPLAY_SCENES])
+        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(), EditorCommand.display_scenes()])
+
+    def _on_previous_scene(self):
+        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
+                                              EditorCommand(EditorCommandType.EDIT_SCENE, self.scene.sequence - 1)])
+
+    def _on_next_scene(self):
+        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
+                                              EditorCommand(EditorCommandType.EDIT_SCENE, self.scene.sequence + 1)])
+
+    def _on_save_and_next_scene(self):
+        self._save_scene()
+        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
+                                              EditorCommand(EditorCommandType.EDIT_SCENE, self.scene.sequence + 1)])
