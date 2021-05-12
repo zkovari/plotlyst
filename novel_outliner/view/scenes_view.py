@@ -14,7 +14,7 @@ from novel_outliner.core.persistence import emit_save
 from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
 from novel_outliner.model.common import proxy
 from novel_outliner.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
-from novel_outliner.view.common import EditorCommand, ask_confirmation
+from novel_outliner.view.common import EditorCommand, ask_confirmation, EditorCommandType
 from novel_outliner.view.generated.draft_scenes_view_ui import Ui_DraftScenesView
 from novel_outliner.view.generated.scene_characters_widget_ui import Ui_SceneCharactersWidget
 from novel_outliner.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
@@ -113,8 +113,7 @@ class ScenesOutlineView(QObject):
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):
             scene.wip = not scene.wip
-            self.model.modelReset.emit()
-            self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
+            client.update_scene(scene)
             self.refresh()
 
         index: QModelIndex = self.ui.tblScenes.indexAt(pos)
@@ -136,9 +135,10 @@ class ScenesOutlineView(QObject):
         i = self.novel.scenes.index(scene)
         scene = Scene('Untitled')
         self.novel.scenes.insert(i + 1, scene)
+        scene.sequence = i + 1
         client.insert_scene(self.novel, scene)
-        self.commands_sent.emit(self.widget, [EditorCommand.SAVE])
         self.refresh()
+        self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
     def _on_delete(self):
         indexes = self.ui.tblScenes.selectedIndexes()
@@ -149,6 +149,7 @@ class ScenesOutlineView(QObject):
             self.novel.scenes.remove(scene)
             client.delete_scene(scene)
             self.refresh()
+            self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
     def _on_scene_moved(self, logical: int, old_visual: int, new_visual: int):
         scene: Scene = self.model.index(logical, 0).data(ScenesTableModel.SceneRole)

@@ -122,7 +122,7 @@ class SqlClient:
             day = scene_m.day if scene_m.day else 0
             end_event = scene_m.end_event if scene_m.end_event else True
             scenes.append(Scene(id=scene_m.id, title=scene_m.title, synopsis=scene_m.synopsis, type=scene_m.type,
-                                pivotal=scene_m.pivotal == '1', sequence=scene_m.sequence, beginning=scene_m.beginning,
+                                pivotal=scene_m.pivotal, sequence=scene_m.sequence, beginning=scene_m.beginning,
                                 middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
                                 end_event=end_event, characters=scene_characters, pov=pov,
                                 story_lines=scene_story_lines))
@@ -162,6 +162,12 @@ class SqlClient:
 
         self._update_scene_characters(scene)
         self._update_scene_story_lines(scene)
+
+    def update_scene_sequences(self, novel: Novel):
+        for scene in novel.scenes:
+            m = SceneModel.get_by_id(scene.id)
+            m.sequence = scene.sequence
+            m.save()
 
     def insert_scene(self, novel: Novel, scene: Scene):
         scene_m = SceneModel.create(title=scene.title, synopsis=scene.synopsis, type=scene.type,
