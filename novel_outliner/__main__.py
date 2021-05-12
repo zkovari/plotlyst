@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 
 from PyQt5 import QtWidgets
@@ -23,5 +24,6 @@ if __name__ == '__main__':
             break
 
         # restart process
+        subprocess.call('./gen.sh')
         python = sys.executable
         os.execl(python, python, *sys.argv)
