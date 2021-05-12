@@ -1,16 +1,33 @@
+from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy
 
 
-class EditorCommand(Enum):
+class EditorCommandType(Enum):
     SAVE = 0
     CLOSE_CURRENT_EDITOR = 1
     DISPLAY_CHARACTERS = 2
     DISPLAY_SCENES = 3
+    EDIT_SCENE = 4
+    UPDATE_SCENE_SEQUENCES = 5
+
+
+@dataclass
+class EditorCommand:
+    type: EditorCommandType
+    value: Optional[Any] = None
+
+    @staticmethod
+    def close_editor():
+        return EditorCommand(EditorCommandType.CLOSE_CURRENT_EDITOR)
+
+    @staticmethod
+    def display_scenes():
+        return EditorCommand(EditorCommandType.DISPLAY_SCENES)
 
 
 def rounded_pixmap(original: QPixmap) -> QPixmap:

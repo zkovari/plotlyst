@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QTabWidget, QWidgetAction
 
 from novel_outliner.common import EXIT_CODE_RESTART
+from novel_outliner.core.client import client
 from novel_outliner.core.domain import Character, Scene
 from novel_outliner.core.persistence import emit_save
 from novel_outliner.core.project import ProjectFinder
@@ -12,7 +13,7 @@ from novel_outliner.event.core import event_log_reporter
 from novel_outliner.event.handler import EventAuthorizationHandler, EventLogHandler
 from novel_outliner.view.character_editor import CharacterEditor
 from novel_outliner.view.characters_view import CharactersView
-from novel_outliner.view.common import EditorCommand, spacer_widget
+from novel_outliner.view.common import EditorCommand, spacer_widget, EditorCommandType
 from novel_outliner.view.generated.main_window_ui import Ui_MainWindow
 from novel_outliner.view.icons import IconRegistry
 from novel_outliner.view.novel_view import NovelView
@@ -65,7 +66,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.characters_view.widget), 'Characters')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.scenes_tab), 'Scenes')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.reports_view.widget), 'Reports')
-        self.tabWidget.setCurrentWidget(self.timeline_view.widget)
+        self.tabWidget.setCurrentWidget(self.scenes_tab)
 
         self.tabWidget.currentChanged.connect(self._on_current_tab_changed)
 
@@ -120,14 +121,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
-            if cmd == EditorCommand.SAVE:
+            if cmd.type == EditorCommandType.SAVE:
                 emit_save(self.novel)
-            elif cmd == EditorCommand.CLOSE_CURRENT_EDITOR:
+            elif cmd.type == EditorCommandType.CLOSE_CURRENT_EDITOR:
                 index = self.tabWidget.indexOf(widget)
                 self.tabWidget.removeTab(index)
-            elif cmd == EditorCommand.DISPLAY_CHARACTERS:
+            elif cmd.type == EditorCommandType.DISPLAY_CHARACTERS:
                 self.tabWidget.setCurrentWidget(self.characters_view.widget)
                 self.characters_view.refresh()
-            elif cmd == EditorCommand.DISPLAY_SCENES:
+            elif cmd.type == EditorCommandType.DISPLAY_SCENES:
                 self.tabWidget.setCurrentWidget(self.scenes_tab)
                 self.scenes_outline_view.refresh()
+            elif cmd.type == EditorCommandType.EDIT_SCENE:
+                if cmd.value is not None and cmd.value < len(self.novel.scenes):
+                    self._on_scene_edition(self.novel.scenes[cmd.value])
+            elif cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
+                for index, scene in enumerate(self.novel.scenes):
+                    scene.sequence = index
+                client.update_scene_sequences(self.novel)
