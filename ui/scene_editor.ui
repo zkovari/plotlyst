@@ -58,7 +58,7 @@
         <string>Previous</string>
        </property>
        <property name="shortcut">
-        <string>P</string>
+        <string>Left</string>
        </property>
       </widget>
      </item>
@@ -68,7 +68,7 @@
         <string>Next</string>
        </property>
        <property name="shortcut">
-        <string>N</string>
+        <string>Right</string>
        </property>
       </widget>
      </item>
