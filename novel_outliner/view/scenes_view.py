@@ -10,7 +10,6 @@ from overrides import overrides
 
 from novel_outliner.core.client import client
 from novel_outliner.core.domain import Scene, Novel
-from novel_outliner.core.persistence import emit_save
 from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
 from novel_outliner.model.common import proxy
 from novel_outliner.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
@@ -181,7 +180,8 @@ class ScenesViewDelegate(QStyledItemDelegate):
     @overrides
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
         model.setData(index, editor.toPlainText())
-        emit_save(self.novel)
+        scene = index.data(ScenesTableModel.SceneRole)
+        client.update_scene(scene)
 
 
 class CharactersScenesDistributionWidget(QWidget):
