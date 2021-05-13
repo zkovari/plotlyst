@@ -29,6 +29,10 @@ class EditorCommand:
     def display_scenes():
         return EditorCommand(EditorCommandType.DISPLAY_SCENES)
 
+    @staticmethod
+    def display_characters():
+        return EditorCommand(EditorCommandType.DISPLAY_CHARACTERS)
+
 
 def rounded_pixmap(original: QPixmap) -> QPixmap:
     size = max(original.width(), original.height())

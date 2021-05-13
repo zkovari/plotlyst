@@ -31,6 +31,8 @@ class SceneEditor(QObject):
             self._new_scene = True
 
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabGeneral), IconRegistry.general_info_icon())
+        self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabNotes), IconRegistry.notes_icon())
+        
         self.ui.btnVeryUnhappy.setIcon(qtawesome.icon('fa5s.sad-cry', color_on='red'))
         self.ui.btnUnHappy.setIcon(qtawesome.icon('mdi.emoticon-sad', color_on='yellow'))
         self.ui.btnNeutral.setIcon(qtawesome.icon('mdi.emoticon-neutral', color_on='orange'))
@@ -66,7 +68,10 @@ class SceneEditor(QObject):
         self.ui.textSynopsis.setText(self.scene.synopsis)
         self.ui.cbWip.setChecked(self.scene.wip)
         self.ui.cbPivotal.setCurrentText(self.scene.pivotal)
+        self.ui.cbBeginningType.setCurrentText(self.scene.beginning_type)
+        self.ui.cbEndingHook.setCurrentText(self.scene.ending_hook)
         self.ui.cbEndCreatesEvent.setChecked(self.scene.end_event)
+        self.ui.textNotes.setPlainText(self.scene.notes)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
         self._characters_proxy_model = QSortFilterProxyModel()
@@ -126,11 +131,14 @@ class SceneEditor(QObject):
         self.scene.middle = self.ui.textEvent2.toPlainText()
         self.scene.end = self.ui.textEvent3.toPlainText()
         self.scene.day = self.ui.sbDay.value()
+        self.scene.notes = self.ui.textNotes.toPlainText()
         pov = self.ui.cbPov.currentData()
         if pov:
             self.scene.pov = pov
         self.scene.wip = self.ui.cbWip.isChecked()
         self.scene.pivotal = self.ui.cbPivotal.currentText()
+        self.scene.beginning_type = self.ui.cbBeginningType.currentText()
+        self.scene.ending_hook = self.ui.cbEndingHook.currentText()
         self.scene.story_lines.clear()
         for story_line in self.story_line_model.selected:
             self.scene.story_lines.append(story_line)

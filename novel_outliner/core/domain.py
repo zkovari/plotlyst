@@ -37,6 +37,9 @@ class Scene:
     story_lines: List[StoryLine] = field(default_factory=list)
     end_event: bool = True
     day: int = 0
+    beginning_type: str = ''
+    ending_hook: str = ''
+    notes: str = ''
 
 
 @dataclass

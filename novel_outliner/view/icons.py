@@ -149,6 +149,10 @@ class IconRegistry:
     def reports_icon() -> QIcon:
         return qtawesome.icon('fa5.chart-bar')
 
+    @staticmethod
+    def notes_icon() -> QIcon:
+        return qtawesome.icon('mdi.notebook')
+
 
 class AvatarsRegistry:
     def __init__(self):

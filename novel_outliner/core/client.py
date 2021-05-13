@@ -33,6 +33,9 @@ class SceneModel(Model):
     wip = BooleanField()
     end_event = BooleanField()
     day = IntegerField()
+    beginning_type = TextField()
+    ending_hook = TextField()
+    notes = TextField()
 
     class Meta:
         table_name = 'Scenes'
@@ -125,7 +128,8 @@ class SqlClient:
                                 pivotal=scene_m.pivotal, sequence=scene_m.sequence, beginning=scene_m.beginning,
                                 middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
                                 end_event=end_event, characters=scene_characters, pov=pov,
-                                story_lines=scene_story_lines))
+                                story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
+                                ending_hook=scene_m.ending_hook, notes=scene_m.notes))
 
         scenes = sorted(scenes, key=lambda x: x.sequence)
         novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
@@ -145,7 +149,7 @@ class SqlClient:
         character_m.delete_instance()
 
     def update_scene(self, scene: Scene):
-        scene_m = SceneModel.get_by_id(scene.id)
+        scene_m: SceneModel = SceneModel.get_by_id(scene.id)
         scene_m.title = scene.title
         scene_m.synopsis = scene.synopsis
         scene_m.type = scene.type
@@ -157,6 +161,9 @@ class SqlClient:
         scene_m.wip = scene.wip
         scene_m.end_event = scene.end_event
         scene_m.day = scene.day
+        scene_m.beginning_type = scene.beginning_type
+        scene_m.ending_hook = scene.ending_hook
+        scene_m.notes = scene.notes
 
         scene_m.save()
 
@@ -170,10 +177,13 @@ class SqlClient:
             m.save()
 
     def insert_scene(self, novel: Novel, scene: Scene):
-        scene_m = SceneModel.create(title=scene.title, synopsis=scene.synopsis, type=scene.type,
-                                    pivotal=scene.pivotal, sequence=scene.sequence, beginning=scene.beginning,
-                                    middle=scene.middle, end=scene.end, novel=novel.id, wip=scene.wip,
-                                    end_event=scene.end_event, day=scene.day)
+        scene_m: SceneModel = SceneModel.create(title=scene.title, synopsis=scene.synopsis, type=scene.type,
+                                                pivotal=scene.pivotal, sequence=scene.sequence,
+                                                beginning=scene.beginning,
+                                                middle=scene.middle, end=scene.end, novel=novel.id, wip=scene.wip,
+                                                end_event=scene.end_event, day=scene.day,
+                                                beginning_type=scene.beginning_type,
+                                                ending_hook=scene.ending_hook, notes=scene.notes)
         scene.id = scene_m.id
 
         self._update_scene_characters(scene)
@@ -215,20 +225,6 @@ class SqlClient:
 
     def replace_scene_events(self, novel: Novel, scene: Scene, events: List[Event]):
         return
-        # raise ValueError('not implemented')
-        # query = QSqlQuery(f"DELETE FROM Events WHERE scene_id={scene.id}")
-        # query.exec()
-        #
-        # query = QSqlQuery()
-        # query.prepare("INSERT INTO Events (event, day, novel_id, scene_id) VALUES (?, ?, ?, ?)")
-        # for event in events:
-        #     query.addBindValue(event.event)
-        #     query.addBindValue(event.day)
-        #     query.addBindValue(novel.id)
-        #     query.addBindValue(scene.id)
-        #     result = query.exec()
-        #     if not result:
-        #         print(query.lastError().text())
 
 
 client = SqlClient()

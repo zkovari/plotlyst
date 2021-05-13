@@ -46,21 +46,22 @@ class CharacterEditor(QObject):
         if self._new_character:
             self.novel.characters.append(self.character)
         client.insert_character(self.novel, self.character)
-        self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR,
-                                              EditorCommand.DISPLAY_CHARACTERS])
+        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
+                                              EditorCommand.display_characters()])
 
     def _on_cancel(self):
-        self.commands_sent.emit(self.widget, [EditorCommand.CLOSE_CURRENT_EDITOR])
+        self.commands_sent.emit(self.widget, [EditorCommand.close_editor()])
 
 
 class CharacterEditorDelegate(QStyledItemDelegate):
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
+        editor = None
         if index.row() == CharacterEditorTableModel.RowName:
-            self.editor = QLineEdit(parent)
+            editor = QLineEdit(parent)
         elif index.row() == CharacterEditorTableModel.RowAge:
-            self.editor = QSpinBox(parent)
+            editor = QSpinBox(parent)
         elif index.row() == CharacterEditorTableModel.RowPersonality:
             combo_box = QComboBox(parent)
             combo_box.activated.connect(lambda: self.commitData.emit(self.editor))
@@ -68,9 +69,11 @@ class CharacterEditorDelegate(QStyledItemDelegate):
             combo_box.setItemData(0, QBrush(Qt.green), role=Qt.BackgroundRole)
             combo_box.addItem('OFF')
             combo_box.setItemData(1, QBrush(Qt.red), role=Qt.BackgroundRole)
-            self.editor = combo_box
+            editor = combo_box
 
-        return self.editor
+        if editor:
+            return editor
+        return super(CharacterEditorDelegate, self).createEditor(parent, option, index)
 
     @overrides
     def setEditorData(self, editor: QWidget, index: QModelIndex):
@@ -78,9 +81,9 @@ class CharacterEditorDelegate(QStyledItemDelegate):
         if not edit_data:
             edit_data = index.data(Qt.DisplayRole)
         if index.row() == CharacterEditorTableModel.RowName:
-            self.editor.setText(str(edit_data))
+            editor.setText(str(edit_data))
         elif index.row() == CharacterEditorTableModel.RowAge:
-            self.editor.setValue(edit_data)
+            editor.setValue(edit_data)
         elif index.row() == CharacterEditorTableModel.RowPersonality:
-            self.editor.setCurrentText(edit_data)
-            self.editor.showPopup()
+            editor.setCurrentText(edit_data)
+            editor.showPopup()

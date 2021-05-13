@@ -121,7 +121,7 @@
       <attribute name="title">
        <string/>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
@@ -326,108 +326,260 @@
         </layout>
        </item>
        <item>
-        <widget class="QSpinBox" name="sbDay">
-         <property name="minimumSize">
-          <size>
-           <width>121</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="buttonSymbols">
-          <enum>QAbstractSpinBox::PlusMinus</enum>
-         </property>
-         <property name="prefix">
-          <string>Day: </string>
-         </property>
-         <property name="minimum">
-          <number>-999999999</number>
-         </property>
-         <property name="maximum">
-          <number>999999999</number>
-         </property>
-         <property name="value">
-          <number>0</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
          <item>
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Pivotal:</string>
-           </property>
-          </widget>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <widget class="QSpinBox" name="sbDay">
+             <property name="minimumSize">
+              <size>
+               <width>121</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>150</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::PlusMinus</enum>
+             </property>
+             <property name="prefix">
+              <string>Day: </string>
+             </property>
+             <property name="minimum">
+              <number>-999999999</number>
+             </property>
+             <property name="maximum">
+              <number>999999999</number>
+             </property>
+             <property name="value">
+              <number>0</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>Pivotal:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="cbPivotal">
+               <property name="minimumSize">
+                <size>
+                 <width>150</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>200</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <item>
+                <property name="text">
+                 <string/>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Hook</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Inciting incident</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>First plot point</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>First pinch point</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Midpoint</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Second pinch point</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Dark moment</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>A-ha moment</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Climax</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>60</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </item>
          <item>
-          <widget class="QComboBox" name="cbPivotal">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>200</width>
-             <height>16777215</height>
-            </size>
-           </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
-            <property name="text">
-             <string/>
-            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_10">
+             <item>
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>Beginning type:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="cbBeginningType">
+               <property name="minimumSize">
+                <size>
+                 <width>150</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>250</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <item>
+                <property name="text">
+                 <string/>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Action</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Summary</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Character's thoughts</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Setting</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Dialogue</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
-            <property name="text">
-             <string>Inciting incident</string>
-            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QLabel" name="label_6">
+               <property name="text">
+                <string>Ending hook:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="cbEndingHook">
+               <property name="minimumSize">
+                <size>
+                 <width>150</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>250</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <item>
+                <property name="text">
+                 <string/>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Cliffhanger</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Epiphany</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Revelation</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Emotional turmoil</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Promise of more revelation</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Plottwist</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+            </layout>
            </item>
-           <item>
-            <property name="text">
-             <string>First plot point</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>First pinch point</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Midpoint</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Second pinch point</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Dark moment</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>A-ha moment</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Climax</string>
-            </property>
-           </item>
-          </widget>
+          </layout>
          </item>
          <item>
-          <spacer name="horizontalSpacer_5">
+          <spacer name="horizontalSpacer_8">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -723,10 +875,19 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="tabNotes">
       <attribute name="title">
        <string/>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QTextEdit" name="textNotes">
+         <property name="autoFormatting">
+          <set>QTextEdit::AutoAll</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
