@@ -3,11 +3,10 @@ from typing import Dict
 from PyQt5.QtChart import QPieSeries, QChart, QChartView
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap
-from PyQt5.QtWidgets import QWidget, QHeaderView, QHBoxLayout, QMenu, QAction, QApplication
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QMenu, QAction, QApplication, QVBoxLayout
 from overrides import overrides
 
 from novel_outliner.core.domain import Novel
-from novel_outliner.model.report import StoryLinesScenesDistributionTableModel
 from novel_outliner.view.generated.reports_view_ui import Ui_ReportsView
 
 
@@ -17,13 +16,10 @@ class ReportsView:
         self.ui = Ui_ReportsView()
         self.ui.setupUi(self.widget)
 
-        self.story_line_report_model = StoryLinesScenesDistributionTableModel(novel)
-        self.ui.tblStoryMap.setModel(self.story_line_report_model)
-
-        self.ui.tblStoryMap.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-
-        self.ui.tabWidget.addTab(StoryLinesLinearMapWidget(novel), 'Story Lines Linear Map')
-        self.ui.tabWidget.addTab(StoryLinesMapWidget(novel), 'Story Lines Map')
+        layout = QVBoxLayout()
+        layout.addWidget(StoryLinesLinearMapWidget(novel))
+        layout.addWidget(StoryLinesMapWidget(novel))
+        self.ui.tabStoryMap.setLayout(layout)
 
         pov_number = {}
         for scene in novel.scenes:
@@ -94,7 +90,7 @@ class StoryLinesMapWidget(QWidget):
     colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
 
     def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent=None)
+        super().__init__(parent=parent)
         self.setMouseTracking(True)
         self.novel = novel
         self._scene_coord_y: Dict[int, int] = {}
@@ -142,7 +138,7 @@ class StoryLinesLinearMapWidget(QWidget):
     colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
 
     def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent=None)
+        super().__init__(parent=parent)
         self.setMouseTracking(True)
         self.novel = novel
 
