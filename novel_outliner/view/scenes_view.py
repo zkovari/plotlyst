@@ -200,6 +200,9 @@ class CharactersScenesDistributionWidget(QWidget):
         self.ui.tblCharacters.setColumnWidth(0, 70)
         self.ui.tblCharacters.setMaximumWidth(70)
 
+        self.ui.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
+        self.ui.tblSceneDistribution.selectionModel().selectionChanged.connect(self._on_scene_selected)
+
         self.refresh()
 
     def refresh(self):
@@ -213,6 +216,17 @@ class CharactersScenesDistributionWidget(QWidget):
             self.ui.tblCharacters.hideColumn(col)
         self.ui.spinAverage.setValue(average)
         self._scenes_model.modelReset.emit()
+
+    def _on_character_selected(self, selection: QItemSelection):
+        self._scenes_model.highlightCharacters(selection.indexes())
+        self.ui.tblSceneDistribution.clearSelection()
+
+    def _on_scene_selected(self, selection: QItemSelection):
+        indexes = selection.indexes()
+        if not indexes:
+            return
+        self._scenes_model.highlightScene(self._scenes_proxy.mapToSource(indexes[0]))
+        self.ui.tblCharacters.clearSelection()
 
 
 class DraftScenesView:

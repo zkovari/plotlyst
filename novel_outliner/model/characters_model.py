@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant
 from PyQt5.QtGui import QFont, QIcon, QBrush, QColor
@@ -148,6 +148,8 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
+        self._highlighted_scene: Optional[QModelIndex] = None
+        self._highlighted_characters: List[QModelIndex] = []
 
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
@@ -172,11 +174,47 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
                             self.novel.characters[index.row()] in x.characters or self.novel.characters[
                                 index.row()] == x.pov])
         elif role == Qt.ToolTipRole:
-            return f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
+            tooltip = f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
+            if self.novel.scenes[index.column() - 1].pivotal:
+                tooltip += f' ({self.novel.scenes[index.column() - 1].pivotal})'
+            return tooltip
         elif role == Qt.BackgroundRole:
-            if self.novel.characters[index.row()] in self.novel.scenes[index.column() - 1].characters or \
-                    self.novel.characters[index.row()] == self.novel.scenes[index.column() - 1].pov:
+            if self._match(index):
+                if self._highlighted_scene:
+                    if self._highlighted_scene.column() != index.column():
+                        return QBrush(QColor(Qt.gray))
                 if self.novel.scenes[index.column() - 1].wip:
                     return QBrush(QColor('#f2f763'))
+                if self.novel.scenes[index.column() - 1].pivotal:
+                    return QBrush(QColor('#f07762'))
                 return QBrush(QColor('darkblue'))
         return QVariant()
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        flags = super().flags(index)
+
+        if self._highlighted_scene and index.column() == 0:
+            if self._match_by_row_col(index.row(), self._highlighted_scene.column()):
+                return flags
+            return Qt.NoItemFlags
+
+        return flags
+
+    def highlightScene(self, index: QModelIndex):
+        if self._match(index):
+            self._highlighted_scene = index
+        else:
+            self._highlighted_scene = None
+
+        self.modelReset.emit()
+
+    def highlightCharacters(self, indexes: List[QModelIndex]):
+        self._highlighted_characters = indexes
+
+    def _match(self, index: QModelIndex):
+        return self._match_by_row_col(index.row(), index.column())
+
+    def _match_by_row_col(self, row: int, column: int):
+        return self.novel.characters[row] in self.novel.scenes[column - 1].characters or \
+               self.novel.characters[row] == self.novel.scenes[column - 1].pov
