@@ -191,19 +191,28 @@ class CharactersScenesDistributionWidget(QWidget):
         self.ui = Ui_CharactersScenesDistributionWidget()
         self.ui.setupUi(self)
         self.novel = novel
-        self._model = CharactersScenesDistributionTableModel(self.novel)
-        self._proxy = proxy(self._model)
-        self._proxy.sort(0, Qt.DescendingOrder)
-        self.ui.tblSceneDistribution.setModel(self._proxy)
-        self.ui.tblSceneDistribution.setColumnWidth(0, 70)
+        self._scenes_model = CharactersScenesDistributionTableModel(self.novel)
+        self._scenes_proxy = proxy(self._scenes_model)
+        self._scenes_proxy.sort(0, Qt.DescendingOrder)
+        self.ui.tblSceneDistribution.setModel(self._scenes_proxy)
+        self.ui.tblSceneDistribution.hideColumn(0)
+        self.ui.tblCharacters.setModel(self._scenes_model)
+        self.ui.tblCharacters.setColumnWidth(0, 70)
+        self.ui.tblCharacters.setMaximumWidth(70)
+
+        self.refresh()
+
+    def refresh(self):
         if self.novel.scenes:
             average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
         else:
             average = 0
+        for col in range(self._scenes_model.columnCount()):
+            if col == 0:
+                continue
+            self.ui.tblCharacters.hideColumn(col)
         self.ui.spinAverage.setValue(average)
-
-    def refresh(self):
-        self._model.modelReset.emit()
+        self._scenes_model.modelReset.emit()
 
 
 class DraftScenesView:
