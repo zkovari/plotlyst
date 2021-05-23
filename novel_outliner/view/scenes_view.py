@@ -185,18 +185,21 @@ class ScenesViewDelegate(QStyledItemDelegate):
 
 
 class CharactersScenesDistributionWidget(QWidget):
+    avg_text: str = 'Average characters per scenes: '
+    common_text: str = 'Common scenes: '
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.ui = Ui_CharactersScenesDistributionWidget()
         self.ui.setupUi(self)
         self.novel = novel
+        self.average = 0
         self._scenes_model = CharactersScenesDistributionTableModel(self.novel)
         self._scenes_proxy = proxy(self._scenes_model)
         self._scenes_proxy.sort(0, Qt.DescendingOrder)
         self.ui.tblSceneDistribution.setModel(self._scenes_proxy)
         self.ui.tblSceneDistribution.hideColumn(0)
-        self.ui.tblCharacters.setModel(self._scenes_model)
+        self.ui.tblCharacters.setModel(self._scenes_proxy)
         self.ui.tblCharacters.setColumnWidth(0, 70)
         self.ui.tblCharacters.setMaximumWidth(70)
 
@@ -207,18 +210,28 @@ class CharactersScenesDistributionWidget(QWidget):
 
     def refresh(self):
         if self.novel.scenes:
-            average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
+            self.average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
         else:
-            average = 0
+            self.average = 0
         for col in range(self._scenes_model.columnCount()):
             if col == 0:
                 continue
             self.ui.tblCharacters.hideColumn(col)
-        self.ui.spinAverage.setValue(average)
+        self.ui.spinAverage.setValue(self.average)
         self._scenes_model.modelReset.emit()
 
-    def _on_character_selected(self, selection: QItemSelection):
-        self._scenes_model.highlightCharacters(selection.indexes())
+    def _on_character_selected(self):
+        selected = self.ui.tblCharacters.selectionModel().selectedIndexes()
+        self._scenes_model.highlightCharacters(
+            [self._scenes_proxy.mapToSource(x) for x in selected])
+
+        if selected and len(selected) > 1:
+            self.ui.spinAverage.setPrefix(self.common_text)
+            self.ui.spinAverage.setValue(self._scenes_model.commonScenes())
+        else:
+            self.ui.spinAverage.setPrefix(self.avg_text)
+            self.ui.spinAverage.setValue(self.average)
+
         self.ui.tblSceneDistribution.clearSelection()
 
     def _on_scene_selected(self, selection: QItemSelection):

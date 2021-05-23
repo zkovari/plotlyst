@@ -173,6 +173,9 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
                 return len([x for x in self.novel.scenes if
                             self.novel.characters[index.row()] in x.characters or self.novel.characters[
                                 index.row()] == x.pov])
+            if role == Qt.ForegroundRole:
+                if self._highlighted_characters and index not in self._highlighted_characters:
+                    return QBrush(QColor(Qt.gray))
         elif role == Qt.ToolTipRole:
             tooltip = f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
             if self.novel.scenes[index.column() - 1].pivotal:
@@ -182,6 +185,9 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
             if self._match(index):
                 if self._highlighted_scene:
                     if self._highlighted_scene.column() != index.column():
+                        return QBrush(QColor(Qt.gray))
+                if self._highlighted_characters:
+                    if not all([self._match_by_row_col(x.row(), index.column()) for x in self._highlighted_characters]):
                         return QBrush(QColor(Qt.gray))
                 if self.novel.scenes[index.column() - 1].wip:
                     return QBrush(QColor('#f2f763'))
@@ -195,9 +201,8 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
         flags = super().flags(index)
 
         if self._highlighted_scene and index.column() == 0:
-            if self._match_by_row_col(index.row(), self._highlighted_scene.column()):
-                return flags
-            return Qt.NoItemFlags
+            if not self._match_by_row_col(index.row(), self._highlighted_scene.column()):
+                return Qt.NoItemFlags
 
         return flags
 
@@ -207,10 +212,20 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
         else:
             self._highlighted_scene = None
 
-        self.modelReset.emit()
+        self._highlighted_characters.clear()
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount() - 1, self.columnCount() - 1))
 
     def highlightCharacters(self, indexes: List[QModelIndex]):
         self._highlighted_characters = indexes
+        self._highlighted_scene = None
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount() - 1, self.columnCount() - 1))
+
+    def commonScenes(self) -> int:
+        matches = 0
+        for y in range(1, self.columnCount()):
+            if all(self._match_by_row_col(x.row(), y) for x in self._highlighted_characters):
+                matches += 1
+        return matches
 
     def _match(self, index: QModelIndex):
         return self._match_by_row_col(index.row(), index.column())
