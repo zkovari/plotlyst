@@ -196,7 +196,10 @@ class CharactersScenesDistributionWidget(QWidget):
         self._proxy.sort(0, Qt.DescendingOrder)
         self.ui.tblSceneDistribution.setModel(self._proxy)
         self.ui.tblSceneDistribution.setColumnWidth(0, 70)
-        average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
+        if self.novel.scenes:
+            average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
+        else:
+            average = 0
         self.ui.spinAverage.setValue(average)
 
     def refresh(self):

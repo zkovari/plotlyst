@@ -1,6 +1,6 @@
 from typing import Any, Set
 
-from PyQt5.QtCore import QAbstractListModel, QModelIndex, Qt, QVariant
+from PyQt5.QtCore import QAbstractListModel, QModelIndex, Qt, QVariant, pyqtSignal
 from overrides import overrides
 
 from novel_outliner.core.domain import Novel, StoryLine
@@ -8,6 +8,7 @@ from novel_outliner.core.domain import Novel, StoryLine
 
 class NovelStoryLinesListModel(QAbstractListModel):
     StoryLineRole = Qt.UserRole + 1
+    selection_changed = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -44,6 +45,7 @@ class NovelStoryLinesListModel(QAbstractListModel):
                 self.selected.add(self.novel.story_lines[index.row()])
             elif value == Qt.Unchecked:
                 self.selected.remove(self.novel.story_lines[index.row()])
+            self.selection_changed.emit()
             return True
         return False
 

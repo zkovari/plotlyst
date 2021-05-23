@@ -23,6 +23,62 @@
       <attribute name="title">
        <string>Story map</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>3</number>
+       </property>
+       <property name="topMargin">
+        <number>3</number>
+       </property>
+       <property name="rightMargin">
+        <number>3</number>
+       </property>
+       <property name="bottomMargin">
+        <number>3</number>
+       </property>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="StoryLinesLinearMapWidget" name="storyLinesLinearMap" native="true"/>
+         </item>
+         <item>
+          <widget class="StoryLinesMapWidget" name="storyLinesMap" native="true"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <property name="spacing">
+          <number>2</number>
+         </property>
+         <item>
+          <widget class="QLineEdit" name="lineEdit"/>
+         </item>
+         <item>
+          <widget class="QListView" name="listView">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>150</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tabCharacters">
       <attribute name="title">
@@ -33,6 +89,20 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>StoryLinesMapWidget</class>
+   <extends>QWidget</extends>
+   <header>novel_outliner.view.widget.story_map</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>StoryLinesLinearMapWidget</class>
+   <extends>QWidget</extends>
+   <header>novel_outliner.view.widget.story_map</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

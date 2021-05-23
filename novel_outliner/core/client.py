@@ -5,7 +5,6 @@ from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField,
 from novel_outliner.core.domain import Novel, Character, Scene, StoryLine, Event
 
 db = SqliteDatabase("/home/zkovari/novels/novels.sqlite", pragmas={
-    'journal_mode': 'wal',
     'cache_size': 10000,  # 10000 pages, or ~40MB
     'foreign_keys': 1,  # Enforce foreign-key constraints
     'ignore_check_constraints': 0,

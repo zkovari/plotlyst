@@ -8,6 +8,7 @@ from novel_outliner.view.icons import avatars
 
 
 class TimelineView:
+    colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
 
     def __init__(self, novel: Novel):
         self.widget = QWidget()
@@ -18,12 +19,14 @@ class TimelineView:
         self.refresh()
 
     def refresh(self):
+        self._refresh_timeline()
+        self._refresh_events()
+
+    def _refresh_timeline(self):
         scene = QGraphicsScene()
         scenes = [x for x in self.novel.scenes if x.day]
         scenes = sorted(scenes, key=lambda x: x.day)
-
         scene.addRect(-10, -500, 20, len(scenes) * 100, brush=Qt.darkRed)
-
         last_day = 0
         left = True
         x = -50
@@ -43,9 +46,25 @@ class TimelineView:
             item = scene.addWidget(scene_widget)
             item.moveBy(scene_x, -500 + index * 80 + 30)
             item.setToolTip(s.synopsis)
-
         self.ui.graphicsTimeline.setScene(scene)
 
+    def _refresh_events(self):
+        scene = QGraphicsScene()
+        scene.setSceneRect(0, 0, 5000, 5000)
+
+        sl_size = len(self.novel.story_lines)
+        step = 500 / sl_size
+        x = sl_size / 2 * -step
+        for i, sl in enumerate(self.novel.story_lines):
+            scene.addRect(x, 0, 20, 500, brush=self.colors[i])
+            x += step
+
+        self.ui.graphicsEvents.setScene(scene)
+
+
+# class EventsScene(QGraphicsScene):
+#
+#     def paint
 
 class SceneCardWidget(QFrame, Ui_SceneCardWidget):
     def __init__(self, scene: Scene, parent=None):
