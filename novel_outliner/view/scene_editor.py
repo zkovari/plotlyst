@@ -1,13 +1,14 @@
 from typing import Optional
 
 import qtawesome
-from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel
+from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
 from PyQt5.QtWidgets import QWidget
 
 from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event
 from novel_outliner.model.characters_model import CharactersSceneAssociationTableModel
 from novel_outliner.model.novel import NovelStoryLinesListModel
+from novel_outliner.model.scenes_model import ScenesTableModel
 from novel_outliner.view.common import EditorCommand, EditorCommandType
 from novel_outliner.view.generated.scene_editor_ui import Ui_SceneEditor
 from novel_outliner.view.icons import IconRegistry
@@ -23,16 +24,9 @@ class SceneEditor(QObject):
         self.ui.setupUi(self.widget)
         self.novel = novel
 
-        if scene:
-            self.scene = scene
-            self._new_scene = False
-        else:
-            self.scene = Scene('')
-            self._new_scene = True
-
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabGeneral), IconRegistry.general_info_icon())
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabNotes), IconRegistry.notes_icon())
-        
+
         self.ui.btnVeryUnhappy.setIcon(qtawesome.icon('fa5s.sad-cry', color_on='red'))
         self.ui.btnUnHappy.setIcon(qtawesome.icon('mdi.emoticon-sad', color_on='yellow'))
         self.ui.btnNeutral.setIcon(qtawesome.icon('mdi.emoticon-neutral', color_on='orange'))
@@ -45,15 +39,42 @@ class SceneEditor(QObject):
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
             self.ui.cbPov.addItem(char.name, char)
-        if self.scene.pov:
-            self.ui.cbPov.setCurrentText(self.scene.pov.name)
-
-        self.ui.sbDay.setValue(self.scene.day)
 
         self.ui.cbType.setItemIcon(0, IconRegistry.custom_scene_icon())
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
         self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene_icon())
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
+
+        self.story_line_model = NovelStoryLinesListModel(self.novel)
+        self.ui.lstStoryLines.setModel(self.story_line_model)
+
+        self.scenes_model = ScenesTableModel(self.novel)
+        self.ui.lstScenes.setModel(self.scenes_model)
+        self.ui.lstScenes.setModelColumn(ScenesTableModel.ColTitle)
+        self.ui.lstScenes.setMaximumWidth(200)
+        self.ui.lstScenes.clicked.connect(self._new_scene_selected)
+
+        self.ui.btnSave.clicked.connect(self._on_saved)
+        self.ui.btnCancel.clicked.connect(self._on_cancel)
+        self.ui.btnPrevious.clicked.connect(self._on_previous_scene)
+        self.ui.btnNext.clicked.connect(self._on_next_scene)
+        self.ui.btnSaveAndNext.clicked.connect(self._on_save_and_next_scene)
+
+        self._update_view(scene)
+
+    def _update_view(self, scene: Optional[Scene] = None):
+        if scene:
+            self.scene = scene
+            self._new_scene = False
+        else:
+            self.scene = Scene('')
+            self._new_scene = True
+
+        if self.scene.pov:
+            self.ui.cbPov.setCurrentText(self.scene.pov.name)
+
+        self.ui.sbDay.setValue(self.scene.day)
+
         if self.scene.type:
             self.ui.cbType.setCurrentText(self.scene.type)
         else:
@@ -78,8 +99,7 @@ class SceneEditor(QObject):
         self._characters_proxy_model.setSourceModel(self._characters_model)
         self.ui.tblCharacters.setModel(self._characters_proxy_model)
 
-        self.story_line_model = NovelStoryLinesListModel(self.novel)
-        self.ui.lstStoryLines.setModel(self.story_line_model)
+        self.story_line_model.selected.clear()
         for story_line in self.scene.story_lines:
             self.story_line_model.selected.add(story_line)
         self.story_line_model.modelReset.emit()
@@ -97,12 +117,6 @@ class SceneEditor(QObject):
             elif self.scene.sequence == len(self.novel.scenes) - 1:
                 self.ui.btnNext.setDisabled(True)
                 self.ui.btnSaveAndNext.setDisabled(True)
-
-        self.ui.btnSave.clicked.connect(self._on_saved)
-        self.ui.btnCancel.clicked.connect(self._on_cancel)
-        self.ui.btnPrevious.clicked.connect(self._on_previous_scene)
-        self.ui.btnNext.clicked.connect(self._on_next_scene)
-        self.ui.btnSaveAndNext.clicked.connect(self._on_save_and_next_scene)
 
     def _on_type_changed(self, text: str):
         if text == ACTION_SCENE:
@@ -169,3 +183,7 @@ class SceneEditor(QObject):
         self._save_scene()
         self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
                                               EditorCommand(EditorCommandType.EDIT_SCENE, self.scene.sequence + 1)])
+
+    def _new_scene_selected(self, index: QModelIndex):
+        scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
+        self._update_view(scene)
