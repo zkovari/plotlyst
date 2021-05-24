@@ -1,6 +1,7 @@
+import pickle
 from typing import List, Any, Dict
 
-from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel
+from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMimeData, QByteArray, pyqtSignal
 from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from overrides import overrides
 
@@ -10,7 +11,10 @@ from novel_outliner.view.icons import IconRegistry, avatars
 
 
 class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
+    orderChanged = pyqtSignal()
     SceneRole = Qt.UserRole + 1
+
+    MimeType: str = 'application/scene'
 
     ColPov = 0
     ColTitle = 1
@@ -107,9 +111,49 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
+        flags = flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
         if index.column() == self.ColSynopsis:
             return flags | Qt.ItemIsEditable
         return flags
+
+    @overrides
+    def mimeData(self, indexes: List[QModelIndex]) -> QMimeData:
+        mime_data = QMimeData()
+        scene = self._data[indexes[0].row()]
+        mime_data.setData(self.MimeType, QByteArray(pickle.dumps(scene)))
+        return mime_data
+
+    @overrides
+    def mimeTypes(self) -> List[str]:
+        return [self.MimeType]
+
+    @overrides
+    def canDropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int,
+                        parent: QModelIndex) -> bool:
+        if row < 0:
+            return False
+        if not data.hasFormat(self.MimeType):
+            return False
+
+        return True
+
+    @overrides
+    def dropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int, parent: QModelIndex) -> bool:
+        if row < 0:
+            return False
+        if not data.hasFormat(self.MimeType):
+            return False
+
+        scene: Scene = pickle.loads(data.data(self.MimeType))
+        old_index = self._data.index(scene)
+        if row < old_index:
+            new_index = row
+        else:
+            new_index = row - 1
+        self._data.insert(new_index, self._data.pop(old_index))
+
+        self.orderChanged.emit()
+        return True
 
 
 class ScenesFilterProxyModel(QSortFilterProxyModel):

@@ -4,7 +4,7 @@ from typing import Any
 from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
     QAbstractItemModel, QPoint, QAbstractTableModel
 from PyQt5.QtGui import QIcon, QBrush, QColor
-from PyQt5.QtWidgets import QWidget, QAbstractItemView, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
+from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QMenu, QAction
 from overrides import overrides
 
@@ -45,9 +45,7 @@ class ScenesOutlineView(QObject):
             'QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;} QHeaderView {background-color: white;}')
         self.ui.tblScenes.verticalHeader().sectionMoved.connect(self._on_scene_moved)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
-        self.ui.tblScenes.verticalHeader().setSectionsMovable(True)
-        self.ui.tblScenes.verticalHeader().setDragEnabled(True)
-        self.ui.tblScenes.verticalHeader().setDragDropMode(QAbstractItemView.InternalMove)
+        self.model.orderChanged.connect(self._on_scene_moved)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
@@ -150,11 +148,7 @@ class ScenesOutlineView(QObject):
             self.refresh()
             self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
-    def _on_scene_moved(self, logical: int, old_visual: int, new_visual: int):
-        scene: Scene = self.model.index(logical, 0).data(ScenesTableModel.SceneRole)
-        self.novel.scenes.remove(scene)
-        self.novel.scenes.insert(new_visual, scene)
-
+    def _on_scene_moved(self):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
         self.refresh()
 
