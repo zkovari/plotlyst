@@ -153,6 +153,18 @@ class IconRegistry:
     def notes_icon() -> QIcon:
         return qtawesome.icon('mdi.notebook')
 
+    @staticmethod
+    def act_one_icon() -> QIcon:
+        return qtawesome.icon('mdi.numeric-1-circle', color='#02bcd4')
+
+    @staticmethod
+    def act_two_icon() -> QIcon:
+        return qtawesome.icon('mdi.numeric-2-circle', color='#1bbc9c')
+
+    @staticmethod
+    def act_three_icon() -> QIcon:
+        return qtawesome.icon('mdi.numeric-3-circle', color='#ff7800')
+
 
 class AvatarsRegistry:
     def __init__(self):

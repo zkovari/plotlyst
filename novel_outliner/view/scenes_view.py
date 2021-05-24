@@ -58,6 +58,12 @@ class ScenesOutlineView(QObject):
 
         self.ui.btnGraphs.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
+        self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
+        self.ui.btnAct2.setIcon(IconRegistry.act_two_icon())
+        self.ui.btnAct3.setIcon(IconRegistry.act_three_icon())
+        self.ui.btnAct1.toggled.connect(partial(self._proxy.setActsFilter, 1))
+        self.ui.btnAct2.toggled.connect(partial(self._proxy.setActsFilter, 2))
+        self.ui.btnAct3.toggled.connect(partial(self._proxy.setActsFilter, 3))
         action = QWidgetAction(self.ui.btnGraphs)
         self._distribution_widget = CharactersScenesDistributionWidget(self.novel)
         self._distribution_widget.setMinimumWidth(900)

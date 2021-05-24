@@ -1,5 +1,5 @@
 import pickle
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 
 from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMimeData, QByteArray, pyqtSignal
 from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
@@ -33,6 +33,10 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         _headers[self.ColTime] = 'Day'
         _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
+        self._second_act_start: Optional[QModelIndex] = None
+        self._third_act_start: Optional[QModelIndex] = None
+
+        self._find_acts()
 
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
@@ -95,10 +99,11 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
         if orientation == Qt.Horizontal:
             return super(ScenesTableModel, self).headerData(section, orientation, role)
-        elif role == Qt.DisplayRole:
-            return str(section + 1)
-        if role == Qt.DecorationRole:
-            return IconRegistry.hashtag_icon()
+        else:
+            if role == Qt.DisplayRole:
+                return str(section + 1)
+            if role == Qt.DecorationRole:
+                return IconRegistry.hashtag_icon()
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
@@ -155,15 +160,42 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         self.orderChanged.emit()
         return True
 
+    @overrides
+    def beginResetModel(self) -> None:
+        self._find_acts()
+        super().beginResetModel()
+
+    def isInAct(self, act: int, row: int) -> bool:
+        if act == 1 and self._second_act_start:
+            return row <= self._second_act_start.row()
+        elif act == 2 and self._second_act_start and self._third_act_start:
+            return self._second_act_start.row() < row <= self._third_act_start.row()
+        elif act == 3 and self._third_act_start:
+            return row > self._third_act_start.row()
+
+        return False
+
+    def _find_acts(self):
+        for index, scene in enumerate(self._data):
+            if scene.pivotal == 'First plot point':
+                self._second_act_start = self.index(index, 0)
+            elif scene.pivotal == 'Dark moment':
+                self._third_act_start = self.index(index, 0)
+
 
 class ScenesFilterProxyModel(QSortFilterProxyModel):
 
     def __init__(self):
         super().__init__()
         self.character_filter: Dict[Character, bool] = {}
+        self.acts_filter: Dict[int, bool] = {}
 
     def setCharacterFilter(self, character: Character, filter: bool):
         self.character_filter[character] = filter
+        self.invalidateFilter()
+
+    def setActsFilter(self, act: int, filter: bool):
+        self.acts_filter[act] = filter
         self.invalidateFilter()
 
     @overrides
@@ -176,4 +208,11 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
         scene: Scene = self.sourceModel().data(self.sourceModel().index(source_row, 0), role=ScenesTableModel.SceneRole)
         if not scene:
             return filtered
-        return self.character_filter.get(scene.pov, True)
+        if not self.character_filter.get(scene.pov, True):
+            return False
+
+        for act, toggled in self.acts_filter.items():
+            if self.sourceModel().isInAct(act, source_row) and not toggled:
+                return False
+
+        return filtered
