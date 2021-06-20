@@ -1,11 +1,12 @@
 from PyQt5.QtChart import QPieSeries, QChart, QChartView
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QWidget
 
 from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Scene
 from novel_outliner.model.novel import NovelStoryLinesListModel
 from novel_outliner.view.generated.reports_view_ui import Ui_ReportsView
+from novel_outliner.view.icons import IconRegistry
 
 
 class ReportsView:
@@ -19,35 +20,40 @@ class ReportsView:
         self.ui.storyLinesMap.novel = novel
         self.ui.storyLinesLinearMap.novel = novel
         self.ui.storyLinesLinearMap.scene_selected.connect(self._on_scene_selected)
-        pov_number = {}
-        for scene in novel.scenes:
-            if scene.pov and scene.pov.name not in pov_number.keys():
-                pov_number[scene.pov.name] = 0
-            if scene.pov:
-                pov_number[scene.pov.name] += 1
+        self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
+        self.ui.btnAct2.setIcon(IconRegistry.act_two_icon())
+        self.ui.btnAct3.setIcon(IconRegistry.act_three_icon())
+        self.ui.btnAct1.toggled.connect(self._update_characters_chart)
+        self.ui.btnAct2.toggled.connect(self._update_characters_chart)
+        self.ui.btnAct3.toggled.connect(self._update_characters_chart)
 
-        series = QPieSeries()
-        for k, v in pov_number.items():
-            slice = series.append(k, v)
-            slice.setLabelVisible(True)
+        self.pov_number = {}
+        # for scene in novel.scenes:
+        #     if scene.pov and scene.pov.name not in self.pov_number.keys():
+        #         self.pov_number[scene.pov.name] = 0
+        #     if scene.pov:
+        #         self.pov_number[scene.pov.name] += 1
+        #
+        # series = QPieSeries()
+        # for k, v in self.pov_number.items():
+        #     slice = series.append(k, v)
+        #     slice.setLabelVisible(True)
+        #
+        # for slice in series.slices():
+        #     slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
 
-        for slice in series.slices():
-            slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
+        self.chart = QChart()
+        self.chart.legend().hide()
+        # self.chart.addSeries(series)
+        self._update_characters_chart()
+        self.chart.createDefaultAxes()
+        self.chart.setAnimationOptions(QChart.SeriesAnimations)
+        self.chart.setTitle("POV Distribution")
 
-        chart = QChart()
-        chart.legend().hide()
-        chart.addSeries(series)
-        chart.createDefaultAxes()
-        chart.setAnimationOptions(QChart.SeriesAnimations)
-        chart.setTitle("POV Distribution")
-
-        chartview = QChartView(chart)
+        chartview = QChartView(self.chart)
         chartview.setRenderHint(QPainter.Antialiasing)
 
-        layout = QHBoxLayout()
-        layout.addWidget(chartview)
-
-        self.ui.tabCharacters.setLayout(layout)
+        self.ui.tabCharacters.layout().addWidget(chartview)
 
         self.ui.tabWidget.setCurrentIndex(3)
         self.story_line_model = NovelStoryLinesListModel(self.novel)
@@ -72,3 +78,35 @@ class ReportsView:
         client.update_scene(self.scene_selected)
         self.ui.storyLinesLinearMap.repaint()
         self.ui.storyLinesMap.repaint()
+
+    def _update_characters_chart(self):
+        for k in self.pov_number.keys():
+            self.pov_number[k] = 0
+
+        include_act1 = self.ui.btnAct1.isChecked()
+        include_act2 = self.ui.btnAct2.isChecked()
+        include_act3 = self.ui.btnAct3.isChecked()
+        in_act_2 = False
+        in_act_3 = False
+        for scene in self.novel.scenes:
+            if (include_act1 and not include_act2) or (include_act2 and in_act_2) or (include_act3 and in_act_3):
+                if scene.pov and scene.pov.name not in self.pov_number.keys():
+                    self.pov_number[scene.pov.name] = 0
+                if scene.pov:
+                    self.pov_number[scene.pov.name] += 1
+
+            if scene.pivotal == 'First plot point':
+                in_act_2 = True
+            elif scene.pivotal == 'Dark moment':
+                in_act_3 = True
+
+        series = QPieSeries()
+        for k, v in self.pov_number.items():
+            slice = series.append(k, v)
+            slice.setLabelVisible(True)
+
+        for slice in series.slices():
+            slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
+
+        self.chart.removeAllSeries()
+        self.chart.addSeries(series)
