@@ -17,22 +17,12 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
-      <widget class="QPushButton" name="btnCancel">
+      <widget class="QPushButton" name="btnClose">
        <property name="text">
-        <string>Cancel</string>
+        <string>Close</string>
        </property>
        <property name="shortcut">
         <string>Esc</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnSave">
-       <property name="text">
-        <string>Save</string>
-       </property>
-       <property name="shortcut">
-        <string>Ctrl+S</string>
        </property>
       </widget>
      </item>
@@ -69,16 +59,6 @@
        </property>
        <property name="shortcut">
         <string>Right</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnSaveAndNext">
-       <property name="text">
-        <string>Save next</string>
-       </property>
-       <property name="shortcut">
-        <string>Ctrl+N</string>
        </property>
       </widget>
      </item>
@@ -760,51 +740,6 @@
                   <property name="bottomMargin">
                    <number>2</number>
                   </property>
-                  <item>
-                   <widget class="QLabel" name="label_4">
-                    <property name="text">
-                     <string>Creates event:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="AnimatedToggle" name="cbEndCreatesEvent">
-                    <property name="minimumSize">
-                     <size>
-                      <width>100</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>150</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="cursor">
-                     <cursorShape>PointingHandCursor</cursorShape>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_4">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
                  </layout>
                 </widget>
                </item>

@@ -1,6 +1,6 @@
 from typing import List, Any, Optional
 
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon, QBrush, QColor
 from overrides import overrides
 
@@ -46,6 +46,7 @@ class CharactersTableModel(QAbstractTableModel):
 
 
 class CharactersSceneAssociationTableModel(CharactersTableModel):
+    selection_changed = pyqtSignal()
 
     def __init__(self, novel: Novel, scene: Scene):
         super().__init__(novel)
@@ -73,6 +74,7 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
                 self.scene.characters.append(self._data[index.row()])
             else:
                 self.scene.characters.remove(self._data[index.row()])
+            self.selection_changed.emit()
             return True
         else:
             return super(CharactersTableModel, self).setData(index, value, role)

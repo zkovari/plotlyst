@@ -1,7 +1,7 @@
 from typing import Optional
 
 import qtawesome
-from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
+from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer
 from PyQt5.QtWidgets import QWidget
 
 from novel_outliner.core.client import client
@@ -47,6 +47,7 @@ class SceneEditor(QObject):
 
         self.story_line_model = NovelStoryLinesListModel(self.novel)
         self.ui.lstStoryLines.setModel(self.story_line_model)
+        self.story_line_model.selection_changed.connect(self._save_scene)
 
         self.scenes_model = ScenesTableModel(self.novel)
         self.ui.lstScenes.setModel(self.scenes_model)
@@ -54,13 +55,26 @@ class SceneEditor(QObject):
         self.ui.lstScenes.setMaximumWidth(200)
         self.ui.lstScenes.clicked.connect(self._new_scene_selected)
 
-        self.ui.btnSave.clicked.connect(self._on_saved)
-        self.ui.btnCancel.clicked.connect(self._on_cancel)
+        self.ui.btnClose.clicked.connect(self._on_close)
         self.ui.btnPrevious.clicked.connect(self._on_previous_scene)
         self.ui.btnNext.clicked.connect(self._on_next_scene)
-        self.ui.btnSaveAndNext.clicked.connect(self._on_save_and_next_scene)
 
+        self._save_timer = QTimer()
+        self._save_timer.setInterval(500)
+        self._save_timer.timeout.connect(self._save_scene)
+        self._save_enabled = False
         self._update_view(scene)
+
+        self.ui.cbWip.clicked.connect(self._save_scene)
+        self.ui.cbPov.currentIndexChanged.connect(self._save_scene)
+        self.ui.sbDay.valueChanged.connect(self._save_scene)
+        self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
+        self.ui.cbBeginningType.currentIndexChanged.connect(self._save_scene)
+        self.ui.cbEndingHook.currentIndexChanged.connect(self._save_scene)
+        self.ui.cbType.currentIndexChanged.connect(self._save_scene)
+        self.ui.lineTitle.textEdited.connect(self._pending_save)
+        self.ui.textSynopsis.textChanged.connect(self._pending_save)
+        self.ui.textNotes.textChanged.connect(self._pending_save)
 
     def _update_view(self, scene: Optional[Scene] = None):
         if scene:
@@ -91,10 +105,10 @@ class SceneEditor(QObject):
         self.ui.cbPivotal.setCurrentText(self.scene.pivotal)
         self.ui.cbBeginningType.setCurrentText(self.scene.beginning_type)
         self.ui.cbEndingHook.setCurrentText(self.scene.ending_hook)
-        self.ui.cbEndCreatesEvent.setChecked(self.scene.end_event)
         self.ui.textNotes.setPlainText(self.scene.notes)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
+        self._characters_model.selection_changed.connect(self._save_scene)
         self._characters_proxy_model = QSortFilterProxyModel()
         self._characters_proxy_model.setSourceModel(self._characters_model)
         self.ui.tblCharacters.setModel(self._characters_proxy_model)
@@ -109,14 +123,13 @@ class SceneEditor(QObject):
             self.ui.btnPrevious.setHidden(True)
             self.ui.btnNext.setDisabled(True)
             self.ui.btnNext.setHidden(True)
-            self.ui.btnSaveAndNext.setDisabled(True)
-            self.ui.btnSaveAndNext.setHidden(True)
         else:
             if self.scene.sequence == 0:
                 self.ui.btnPrevious.setDisabled(True)
             elif self.scene.sequence == len(self.novel.scenes) - 1:
                 self.ui.btnNext.setDisabled(True)
-                self.ui.btnSaveAndNext.setDisabled(True)
+
+        self._save_enabled = True
 
     def _on_type_changed(self, text: str):
         if text == ACTION_SCENE:
@@ -132,12 +145,15 @@ class SceneEditor(QObject):
             self.ui.lblType2.setText('Middle:')
             self.ui.lblType3.setText('End:')
 
-    def _on_saved(self):
-        self._save_scene()
-        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
-                                              EditorCommand.display_scenes()])
+    def _pending_save(self):
+        if self._save_enabled:
+            self._save_timer.start(500)
 
     def _save_scene(self):
+        self._save_timer.stop()
+        if not self._save_enabled:
+            return
+
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.scene.type = self.ui.cbType.currentText()
@@ -162,13 +178,14 @@ class SceneEditor(QObject):
             client.insert_scene(self.novel, self.scene)
         else:
             client.update_scene(self.scene)
+        self._new_scene = False
         events = []
-        self.scene.end_event = self.ui.cbEndCreatesEvent.isChecked()
+        self.scene.end_event = True
         if self.scene.end_event:
             events.append(Event(event=self.scene.end, day=self.scene.day))
         client.replace_scene_events(self.novel, self.scene, events)
 
-    def _on_cancel(self):
+    def _on_close(self):
         self.commands_sent.emit(self.widget, [EditorCommand.close_editor(), EditorCommand.display_scenes()])
 
     def _on_previous_scene(self):
@@ -179,11 +196,7 @@ class SceneEditor(QObject):
         self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
                                               EditorCommand(EditorCommandType.EDIT_SCENE, self.scene.sequence + 1)])
 
-    def _on_save_and_next_scene(self):
-        self._save_scene()
-        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
-                                              EditorCommand(EditorCommandType.EDIT_SCENE, self.scene.sequence + 1)])
-
     def _new_scene_selected(self, index: QModelIndex):
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
+        self._save_enabled = False
         self._update_view(scene)
