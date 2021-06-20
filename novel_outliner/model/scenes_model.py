@@ -216,3 +216,13 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
                 return False
 
         return filtered
+
+
+class ScenesNotesTableModel(ScenesTableModel):
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if role == Qt.DecorationRole:
+            if self._data[index.row()].notes:
+                return IconRegistry.notes_icon()
+        return super(ScenesNotesTableModel, self).data(index, role)

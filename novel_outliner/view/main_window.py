@@ -16,6 +16,7 @@ from novel_outliner.view.characters_view import CharactersView
 from novel_outliner.view.common import EditorCommand, spacer_widget, EditorCommandType
 from novel_outliner.view.generated.main_window_ui import Ui_MainWindow
 from novel_outliner.view.icons import IconRegistry
+from novel_outliner.view.notes_view import NotesView
 from novel_outliner.view.novel_view import NovelView
 from novel_outliner.view.reports_view import ReportsView
 from novel_outliner.view.scene_editor import SceneEditor
@@ -50,6 +51,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
 
         self.timeline_view = TimelineView(self.novel)
+        self.notes_view = NotesView(self.novel)
         self.reports_view = ReportsView(self.novel)
         self.draft_scenes_view = DraftScenesView(self.novel)
         self._init_menuber()
@@ -62,9 +64,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.scenes_tab.addTab(self.draft_scenes_view.widget, 'Draft')
         self.tabWidget.addTab(self.scenes_tab, IconRegistry.scene_icon(), '')
         self.tabWidget.addTab(self.timeline_view.widget, IconRegistry.timeline_icon(), '')
+        self.tabWidget.addTab(self.notes_view.widget, IconRegistry.notes_icon(), '')
         self.tabWidget.addTab(self.reports_view.widget, IconRegistry.reports_icon(), '')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.characters_view.widget), 'Characters')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.scenes_tab), 'Scenes')
+        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.timeline_view.widget), 'Timeline & events')
+        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.notes_view.widget), 'Notes')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.reports_view.widget), 'Reports')
         self.tabWidget.setCurrentWidget(self.scenes_tab)
 

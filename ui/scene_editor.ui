@@ -897,6 +897,9 @@
           <property name="autoFormatting">
            <set>QTextEdit::AutoAll</set>
           </property>
+          <property name="placeholderText">
+           <string>Notes</string>
+          </property>
          </widget>
         </item>
        </layout>

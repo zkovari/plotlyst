@@ -28,19 +28,6 @@ class ReportsView:
         self.ui.btnAct3.toggled.connect(self._update_characters_chart)
 
         self.pov_number = {}
-        # for scene in novel.scenes:
-        #     if scene.pov and scene.pov.name not in self.pov_number.keys():
-        #         self.pov_number[scene.pov.name] = 0
-        #     if scene.pov:
-        #         self.pov_number[scene.pov.name] += 1
-        #
-        # series = QPieSeries()
-        # for k, v in self.pov_number.items():
-        #     slice = series.append(k, v)
-        #     slice.setLabelVisible(True)
-        #
-        # for slice in series.slices():
-        #     slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
 
         self.chart = QChart()
         self.chart.legend().hide()
