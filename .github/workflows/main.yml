@@ -10,12 +10,8 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-    strategy: 
-      matrix:
-        os: [ubuntu-18.04, windows-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
+  Linux build:
+    runs-on: ubuntu-18.04
 
     steps:
       - uses: actions/checkout@v2
@@ -39,5 +35,57 @@ jobs:
           fbs installer
       - uses: actions/upload-artifact@v2
         with:
-          name: app-${{ matrix.os }}-artifact
+          name: app-deb-artifact
+          path: target/NovelApp.deb
+  Mac build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: Install dependencies
+        run: |
+          sudo brew install ruby ruby-dev rubygems build-essential
+          sudo gem install --no-document fpm
+          python -m pip install --upgrade pip
+          pip install fbs PyQt5 overrides==3.1.0 qtwidgets PyQtChart peewee dataclasses qtawesome pyqt5ac
+      - name: Generate code
+        run: |
+          ./gen.sh
+      - name: fbs
+        run: |
+          fbs freeze
+          fbs installer
+      - uses: actions/upload-artifact@v2
+        with:
+          name: app-deb-artifact
+          path: target/NovelApp.deb
+  Window build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - uses: ruby/setup-ruby@v1
+      - name: Install dependencies
+        run: |
+          gem install --no-document fpm
+          python -m pip install --upgrade pip
+          pip install fbs PyQt5 overrides==3.1.0 qtwidgets PyQtChart peewee dataclasses qtawesome pyqt5ac
+      - name: Generate code
+        run: |
+          ./gen.sh
+      - name: fbs
+        run: |
+          fbs freeze
+          fbs installer
+      - uses: actions/upload-artifact@v2
+        with:
+          name: app-deb-artifact
           path: target/NovelApp.deb
