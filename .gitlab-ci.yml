@@ -3,3 +3,5 @@ image: python:3.6
 Build distribution:
   script:
     - pip install fbs
+    - fbs freeze
+    - fbs installer
