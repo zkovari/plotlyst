@@ -31,3 +31,7 @@ jobs:
         run: |
           fbs freeze
           fbs installer
+      - uses: actions/upload-artifact@v2
+        with:
+          name: app-deb-artifact
+          path: target/NovelApp.deb
