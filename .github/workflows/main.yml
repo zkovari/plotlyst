@@ -63,7 +63,7 @@ jobs:
           fbs installer
       - uses: actions/upload-artifact@v2
         with:
-          name: app-deb-artifact
+          name: app-mac-artifact
           path: target/NovelApp.dmg
   Windows_build:
     runs-on: windows-latest
@@ -91,5 +91,5 @@ jobs:
           fbs installer
       - uses: actions/upload-artifact@v2
         with:
-          name: app-deb-artifact
+          name: app-win-artifact
           path: target\NovelAppSetup.exe
