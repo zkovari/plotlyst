@@ -22,7 +22,7 @@ jobs:
           python-version: 3.6
       - name: Install dependencies
         run: |
-          apt-get install ruby ruby-dev rubygems build-essential
+          sudo apt-get install ruby ruby-dev rubygems build-essential
           gem install --no-document fpm
           python -m pip install --upgrade pip
           pip install fbs
