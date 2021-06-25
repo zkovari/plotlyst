@@ -25,7 +25,7 @@ jobs:
           sudo apt-get install ruby ruby-dev rubygems build-essential
           sudo gem install --no-document fpm
           python -m pip install --upgrade pip
-          pip install fbs PyQt5 overrides<4 qtwidgets PyQtChart-Qt5 peewee dataclasses qtawesome
+          pip install fbs PyQt5 overrides==3.1.0 qtwidgets PyQtChart-Qt5 peewee dataclasses qtawesome
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: fbs
         run: |
