@@ -11,8 +11,11 @@ on:
 
 jobs:
   build:
+    strategy: 
+      matrix:
+        os: [ubuntu-18.04, windows-latest, macos-latest]
 
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
@@ -36,5 +39,5 @@ jobs:
           fbs installer
       - uses: actions/upload-artifact@v2
         with:
-          name: app-deb-artifact
+          name: app-${{ matrix.os }}-artifact
           path: target/NovelApp.deb
