@@ -1,0 +1,6 @@
+{
+  "app_name": "NovelApp",
+  "author": "Zkovari",
+  "main_module": "novel_outliner/__main__.py",
+  "version": "0.1.0"
+}
