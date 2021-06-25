@@ -46,10 +46,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.5.1
       - name: Install dependencies
         run: |
-          sudo brew install ruby ruby-dev rubygems build-essential
-          sudo gem install --no-document fpm
+          gem install --no-document fpm
           python -m pip install --upgrade pip
           pip install fbs PyQt5 overrides==3.1.0 qtwidgets PyQtChart peewee dataclasses qtawesome pyqt5ac
       - name: Generate code
@@ -73,6 +75,8 @@ jobs:
         with:
           python-version: 3.6
       - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.5.1
       - name: Install dependencies
         run: |
           gem install --no-document fpm
