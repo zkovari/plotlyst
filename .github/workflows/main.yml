@@ -10,7 +10,7 @@ on:
     branches: [ main ]
 
 jobs:
-  Linux build:
+  Linux_build:
     runs-on: ubuntu-18.04
 
     steps:
@@ -37,7 +37,7 @@ jobs:
         with:
           name: app-deb-artifact
           path: target/NovelApp.deb
-  Mac build:
+  Mac_build:
     runs-on: macos-latest
 
     steps:
@@ -63,7 +63,7 @@ jobs:
         with:
           name: app-deb-artifact
           path: target/NovelApp.deb
-  Window build:
+  Windows_build:
     runs-on: windows-latest
 
     steps:
