@@ -77,9 +77,11 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.5.1
+      - uses: fortran-lang/setup-fpm@v3
+        with:
+          fpm-version: 1.13.0
       - name: Install dependencies
         run: |
-          gem install --no-document fpm
           python -m pip install --upgrade pip
           pip install fbs PyQt5 overrides==3.1.0 qtwidgets PyQtChart peewee dataclasses qtawesome pyqt5ac
       - name: Generate code
