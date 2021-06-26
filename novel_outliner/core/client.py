@@ -1,14 +1,37 @@
+import os
 from typing import List
 
-from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField
+from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
 
 from novel_outliner.core.domain import Novel, Character, Scene, StoryLine, Event
 
-db = SqliteDatabase("/home/zkovari/novels/novels.sqlite", pragmas={
-    'cache_size': 10000,  # 10000 pages, or ~40MB
-    'foreign_keys': 1,  # Enforce foreign-key constraints
-    'ignore_check_constraints': 0,
-})
+
+class DbContext:
+
+    def __init__(self):
+        self._db = Proxy()
+
+    def init(self, file_name: str):
+        _create_tables = False
+        if not os.path.exists(file_name) or os.path.getsize(file_name) == 0:
+            _create_tables = True
+        runtime_db = SqliteDatabase(file_name, pragmas={
+            'cache_size': 10000,  # 10000 pages, or ~40MB
+            'foreign_keys': 1,  # Enforce foreign-key constraints
+            'ignore_check_constraints': 0,
+        })
+        self._db.initialize(runtime_db)
+        self._db.connect()
+        if _create_tables:
+            self._db.create_tables([NovelModel, SceneModel, CharacterModel, NovelStoryLinesModel, SceneStoryLinesModel,
+                                    NovelCharactersModel, SceneCharactersModel])
+            NovelModel.create(title='My First Novel')
+
+    def db(self):
+        return self._db
+
+
+context = DbContext()
 
 
 class NovelModel(Model):
@@ -16,7 +39,7 @@ class NovelModel(Model):
 
     class Meta:
         table_name = 'Novels'
-        database = db
+        database = context.db()
 
 
 class SceneModel(Model):
@@ -38,7 +61,7 @@ class SceneModel(Model):
 
     class Meta:
         table_name = 'Scenes'
-        database = db
+        database = context.db()
 
 
 class CharacterModel(Model):
@@ -47,7 +70,7 @@ class CharacterModel(Model):
 
     class Meta:
         table_name = 'Characters'
-        database = db
+        database = context.db()
 
 
 class NovelStoryLinesModel(Model):
@@ -56,7 +79,7 @@ class NovelStoryLinesModel(Model):
 
     class Meta:
         table_name = 'NovelStoryLines'
-        database = db
+        database = context.db()
 
 
 class SceneStoryLinesModel(Model):
@@ -65,7 +88,7 @@ class SceneStoryLinesModel(Model):
 
     class Meta:
         table_name = 'StoryLinesScenes'
-        database = db
+        database = context.db()
 
 
 class NovelCharactersModel(Model):
@@ -74,7 +97,7 @@ class NovelCharactersModel(Model):
 
     class Meta:
         table_name = 'NovelCharacters'
-        database = db
+        database = context.db()
 
 
 class SceneCharactersModel(Model):
@@ -84,10 +107,7 @@ class SceneCharactersModel(Model):
 
     class Meta:
         table_name = 'SceneCharacters'
-        database = db
-
-
-db.connect()
+        database = context.db()
 
 
 class SqlClient:

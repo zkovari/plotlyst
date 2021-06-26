@@ -53,6 +53,8 @@ class TimelineView:
         scene.setSceneRect(0, 0, 5000, 5000)
 
         sl_size = len(self.novel.story_lines)
+        if not sl_size:
+            return
         step = 500 / sl_size
         x = sl_size / 2 * -step
         for i, sl in enumerate(self.novel.story_lines):
