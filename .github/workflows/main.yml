@@ -45,7 +45,7 @@ jobs:
           pip install fbs PyQt5 overrides==3.1.0 qtwidgets PyQtChart peewee dataclasses qtawesome pyqt5ac
       - name: Generate code
         run: |
-          ./gen.sh
+          pyqt5ac --config .pyqt5ac.yml
       
       - name: fbs
         run: |
