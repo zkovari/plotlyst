@@ -13,7 +13,7 @@ jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-latest, windows-2016]
+        os: [ubuntu-18.04, windows-2016]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -49,7 +49,7 @@ jobs:
       
       - name: fbs
         run: |
-          fbs freeze
+          fbs freeze --debug
           fbs installer
       
       - uses: actions/upload-artifact@v2
