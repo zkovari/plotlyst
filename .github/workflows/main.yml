@@ -10,7 +10,7 @@ on:
     branches: [ main ]
 
 jobs:
-  Linux_build:
+  Build_distribution:
     strategy:
       matrix:
         os: [ubuntu-18.04, macos-latest, windows-2016]
@@ -27,12 +27,15 @@ jobs:
           ruby-version: 2.5.1
       
       - if: matrix.os == 'ubuntu-18.04'
+        name: Install fpm on Linux
         run: |
           sudo gem install --no-document fpm
       - if: matrix.os == 'macos-latest'
+        name: Install fpm on Mac
         run: |
           gem install --no-document fpm
       - if: matrix.os == 'windows-2016'
+        name: Install fpm on Windows
         run: |
           gem install --no-document fpm
       
