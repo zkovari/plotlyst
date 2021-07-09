@@ -304,6 +304,15 @@
              <property name="dragDropMode">
               <enum>QAbstractItemView::DragDrop</enum>
              </property>
+             <property name="indentation">
+              <number>20</number>
+             </property>
+             <property name="rootIsDecorated">
+              <bool>false</bool>
+             </property>
+             <property name="itemsExpandable">
+              <bool>true</bool>
+             </property>
              <attribute name="headerVisible">
               <bool>false</bool>
              </attribute>
