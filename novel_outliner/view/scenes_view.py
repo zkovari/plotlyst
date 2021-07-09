@@ -145,7 +145,8 @@ class ScenesOutlineView(QObject):
         self.scene_created.emit()
 
     def _new_chapter(self):
-        self.chaptersModel.newChapter()
+        chapter = self.chaptersModel.newChapter()
+        client.insert_chapter(self.novel, chapter)
 
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):

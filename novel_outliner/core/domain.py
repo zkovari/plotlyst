@@ -23,6 +23,8 @@ class StoryLine:
 @dataclass
 class Chapter:
     title: str
+    sequence: int
+    id: Optional[int] = None
 
 
 @dataclass

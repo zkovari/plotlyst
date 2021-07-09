@@ -5,6 +5,7 @@ from PyQt5.QtCore import QModelIndex, Qt, QVariant, QMimeData, QByteArray, pyqtS
 from anytree import Node
 from overrides import overrides
 
+from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Chapter, Scene
 from novel_outliner.model.tree_model import TreeItemModel
 
@@ -66,13 +67,15 @@ class ChaptersTreeModel(TreeItemModel):
                         dummy_parent = self.root
                 SceneNode(scene, dummy_parent)
 
-    def newChapter(self):
-        index = len(self.novel.chapters) + 1
-        chapter = Chapter(title=str(index))
+    def newChapter(self) -> Chapter:
+        index = len(self.novel.chapters)
+        chapter = Chapter(title=str(index + 1), sequence=index)
         self.novel.chapters.append(chapter)
 
         self.update()
         self.modelReset.emit()
+
+        return chapter
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -125,5 +128,6 @@ class ChaptersTreeModel(TreeItemModel):
         if old_index != new_index:
             self.novel.scenes.insert(new_index, self.novel.scenes.pop(old_index))
             self.orderChanged.emit()
+        client.update_scene_chapter(node.scene)
 
         return True

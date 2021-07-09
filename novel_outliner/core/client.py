@@ -3,7 +3,7 @@ from typing import List
 
 from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
 
-from novel_outliner.core.domain import Novel, Character, Scene, StoryLine, Event
+from novel_outliner.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter
 
 
 class DbContext:
@@ -42,22 +42,35 @@ class NovelModel(Model):
         database = context.db()
 
 
+class ChapterModel(Model):
+    title = TextField()
+    sequence = IntegerField()
+    novel = ForeignKeyField(NovelModel, backref='chapters')
+
+    class Meta:
+        table_name = 'Chapters'
+        database = context.db()
+
+
 class SceneModel(Model):
     title = TextField()
-    synopsis = TextField()
-    type = TextField()
-    pivotal = TextField()
-    sequence = IntegerField()
-    beginning = TextField()
-    middle = TextField()
-    end = TextField()
     novel = ForeignKeyField(NovelModel, backref='scenes')
-    wip = BooleanField()
-    end_event = BooleanField()
-    day = IntegerField()
-    beginning_type = TextField()
-    ending_hook = TextField()
-    notes = TextField()
+    type = TextField(null=True)
+    synopsis = TextField(null=True)
+    wip = BooleanField(default=False)
+    pivotal = TextField(null=True)
+    sequence = IntegerField(null=True)
+    beginning = TextField(null=True)
+    middle = TextField(null=True)
+    end = TextField(null=True)
+    chapter = ForeignKeyField(ChapterModel, backref='scenes', null=True, default=None)
+    end_event = BooleanField(null=True)
+    day = IntegerField(null=True)
+    beginning_type = TextField(null=True)
+    ending_hook = TextField(null=True)
+    notes = TextField(null=True)
+    draft_status = TextField(null=True)
+    edition_status = TextField(null=True)
 
     class Meta:
         table_name = 'Scenes'
@@ -124,6 +137,10 @@ class SqlClient:
         for story_m in novel_model.story_lines:
             story_lines.append(StoryLine(id=story_m.id, text=story_m.text))
 
+        chapters: List[Chapter] = []
+        for chapter_m in novel_model.chapters:
+            chapters.append(Chapter(id=chapter_m.id, title=chapter_m.title, sequence=chapter_m.sequence))
+
         scenes: List[Scene] = []
         for scene_m in novel_model.scenes:
             scene_characters = []
@@ -141,6 +158,14 @@ class SqlClient:
                 for story in story_lines:
                     if story.id == story_m.story_line.id:
                         scene_story_lines.append(story)
+
+            scene_chapter = None
+            if scene_m.chapter:
+                for chapter in chapters:
+                    if chapter.id == scene_m.chapter.id:
+                        scene_chapter = chapter
+                        break
+                    
             day = scene_m.day if scene_m.day else 0
             end_event = scene_m.end_event if scene_m.end_event else True
             scenes.append(Scene(id=scene_m.id, title=scene_m.title, synopsis=scene_m.synopsis, type=scene_m.type,
@@ -148,11 +173,11 @@ class SqlClient:
                                 middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
                                 end_event=end_event, characters=scene_characters, pov=pov,
                                 story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
-                                ending_hook=scene_m.ending_hook, notes=scene_m.notes))
+                                ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter))
 
         scenes = sorted(scenes, key=lambda x: x.sequence)
         novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
-                             story_lines=story_lines)
+                             story_lines=story_lines, chapters=chapters)
 
         return novel
 
@@ -188,6 +213,15 @@ class SqlClient:
 
         self._update_scene_characters(scene)
         self._update_scene_story_lines(scene)
+
+    def update_scene_chapter(self, scene: Scene):
+        scene_m: SceneModel = SceneModel.get_by_id(scene.id)
+        if scene.chapter:
+            scene_m.chapter = scene.chapter.id
+        else:
+            scene_m.chapter = None
+
+        scene_m.save()
 
     def update_scene_sequences(self, novel: Novel):
         for scene in novel.scenes:
@@ -228,6 +262,10 @@ class SqlClient:
     def delete_scene(self, scene: Scene):
         scene_m = SceneModel.get(id=scene.id)
         scene_m.delete_instance()
+
+    def insert_chapter(self, novel: Novel, chapter: Chapter):
+        m = ChapterModel.create(title=chapter.title, novel=novel.id, sequence=chapter.sequence)
+        chapter.id = m.id
 
     def insert_story_line(self, novel: Novel, story_line: StoryLine):
         m = NovelStoryLinesModel.create(text=story_line.text, novel=novel.id)
