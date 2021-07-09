@@ -31,12 +31,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.resize(1000, 630)
         self.setWindowState(Qt.WindowMaximized)
-        self.setWindowTitle('Novel Outliner')
+        self.setWindowTitle('Plotlyst')
         self.setWindowIcon(IconRegistry.book_icon())
 
         self.project_finder = ProjectFinder()
         self.novel = self.project_finder.novel
-        self.setWindowTitle(self.windowTitle() + f' - {self.novel.title}')
 
         self.novel_view = NovelView(self.novel)
 
