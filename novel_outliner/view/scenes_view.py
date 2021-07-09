@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any
+from typing import Any, Optional
 
 from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
     QAbstractItemModel, QPoint, QAbstractTableModel
@@ -10,6 +10,7 @@ from overrides import overrides
 
 from novel_outliner.core.client import client
 from novel_outliner.core.domain import Scene, Novel
+from novel_outliner.model.chapters_model import ChaptersTreeModel
 from novel_outliner.model.characters_model import CharactersScenesDistributionTableModel
 from novel_outliner.model.common import proxy
 from novel_outliner.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
@@ -19,6 +20,7 @@ from novel_outliner.view.generated.scene_characters_widget_ui import Ui_SceneCha
 from novel_outliner.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from novel_outliner.view.generated.scenes_view_ui import Ui_ScenesView
 from novel_outliner.view.icons import IconRegistry, avatars
+from novel_outliner.view.scene_editor import SceneEditor
 
 
 class ScenesOutlineView(QObject):
@@ -33,9 +35,11 @@ class ScenesOutlineView(QObject):
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
-        self.model = ScenesTableModel(novel)
+        self.editor: Optional[SceneEditor] = None
+
+        self.tblModel = ScenesTableModel(novel)
         self._proxy = ScenesFilterProxyModel()
-        self._proxy.setSourceModel(self.model)
+        self._proxy.setSourceModel(self.tblModel)
         self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
         self._proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.ui.tblScenes.setModel(self._proxy)
@@ -45,7 +49,7 @@ class ScenesOutlineView(QObject):
             'QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;} QHeaderView {background-color: white;}')
         self.ui.tblScenes.verticalHeader().sectionMoved.connect(self._on_scene_moved)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
-        self.model.orderChanged.connect(self._on_scene_moved)
+        self.tblModel.orderChanged.connect(self._on_scene_moved)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
@@ -55,6 +59,19 @@ class ScenesOutlineView(QObject):
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColCharacters,
                                                                   QHeaderView.ResizeToContents)
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
+
+        self.ui.splitterLeft.setSizes([70, 500])
+
+        self.chaptersModel = ChaptersTreeModel(self.novel)
+        self.ui.treeChapters.setModel(self.chaptersModel)
+        self.ui.treeChapters.expandAll()
+        self.chaptersModel.orderChanged.connect(self._on_scene_moved)
+        self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
+        self.ui.treeChapters.setColumnWidth(1, 20)
+        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
+        self.ui.btnNewChapter.setIcon(IconRegistry.plus_icon())
+        self.ui.btnNewChapter.clicked.connect(self._new_chapter)
 
         self.ui.btnGraphs.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
@@ -96,7 +113,7 @@ class ScenesOutlineView(QObject):
                                                  self._proxy.index(row, 0).data(ScenesTableModel.SceneRole)))
 
     def refresh(self):
-        self.model.modelReset.emit()
+        self.tblModel.modelReset.emit()
         self._display_characters()
 
     def _on_scene_selected(self, selection: QItemSelection):
@@ -104,14 +121,31 @@ class ScenesOutlineView(QObject):
         self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
 
+    def _hide_chapters_toggled(self, toggled: bool):
+        self.ui.wgtChapters.setHidden(toggled)
+        self.ui.btnChaptersToggle.setText('Show chapters' if toggled else 'Hide chapters')
+
     def _on_edit(self):
         indexes = self.ui.tblScenes.selectedIndexes()
         if indexes:
             scene = indexes[0].data(role=ScenesTableModel.SceneRole)
-            self.scene_edited.emit(scene)
+            self.editor = SceneEditor(self.novel, scene)
+            self.ui.pageEditor.layout().addWidget(self.editor.widget)
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
+
+            self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
+
+    def _on_close_editor(self):
+        self.ui.pageEditor.layout().removeWidget(self.editor.widget)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
+        self.editor.deleteLater()
+        self.editor = None
 
     def _on_new(self):
         self.scene_created.emit()
+
+    def _new_chapter(self):
+        self.chaptersModel.newChapter()
 
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):

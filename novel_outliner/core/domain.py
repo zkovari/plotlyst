@@ -21,6 +21,11 @@ class StoryLine:
 
 
 @dataclass
+class Chapter:
+    title: str
+
+
+@dataclass
 class Scene:
     title: str
     id: Optional[int] = None
@@ -40,6 +45,7 @@ class Scene:
     beginning_type: str = ''
     ending_hook: str = ''
     notes: str = ''
+    chapter: Optional[Chapter] = None
 
 
 @dataclass
@@ -60,6 +66,7 @@ class Novel:
     scenes: List[Scene] = field(default_factory=list)
     story_lines: List[StoryLine] = field(default_factory=list)
     events: List[Event] = field(default_factory=list)
+    chapters: List[Chapter] = field(default_factory=list)
 
 
 @dataclass
