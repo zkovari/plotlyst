@@ -2,10 +2,13 @@ import os
 import subprocess
 import sys
 
-from PyQt5.QtCore import QCoreApplication, QSettings
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QCoreApplication, QSettings, Qt
 from PyQt5.QtWidgets import QFileDialog
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
+QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 from novel_outliner.common import EXIT_CODE_RESTART
 from novel_outliner.core.client import context
 from novel_outliner.event.handler import exception_handler
@@ -16,7 +19,6 @@ if __name__ == '__main__':
     appctxt = ApplicationContext()
     while True:
         app = appctxt.app
-
         QCoreApplication.setOrganizationName('CraftOfGem')
         QCoreApplication.setOrganizationDomain('craftofgem.com')
         QCoreApplication.setApplicationName('NovelApp')
