@@ -170,13 +170,13 @@
   <customwidget>
    <class>StoryLinesMapWidget</class>
    <extends>QWidget</extends>
-   <header>novel_outliner.view.widget.story_map</header>
+   <header>plotlyst.view.widget.story_map</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>StoryLinesLinearMapWidget</class>
    <extends>QWidget</extends>
-   <header>novel_outliner.view.widget.story_map</header>
+   <header>plotlyst.view.widget.story_map</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

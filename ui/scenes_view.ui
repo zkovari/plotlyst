@@ -344,7 +344,7 @@
            <item>
             <widget class="QTableView" name="tblScenes">
              <property name="editTriggers">
-              <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::CurrentChanged|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+              <set>QAbstractItemView::NoEditTriggers</set>
              </property>
              <property name="dragEnabled">
               <bool>true</bool>
@@ -429,7 +429,7 @@
   <customwidget>
    <class>ActionBasedTreeView</class>
    <extends>QTreeView</extends>
-   <header>novel_outliner.view.widget.tree_view</header>
+   <header>plotlyst.view.widget.tree_view</header>
   </customwidget>
  </customwidgets>
  <resources/>
