@@ -1,6 +1,8 @@
+import numpy as np
 from PyQt5.QtChart import QPieSeries, QChart, QChartView
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget
+from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
@@ -111,16 +113,14 @@ class Canvas(FigureCanvasQTAgg):
 
     def __init__(self, novel: Novel, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
+        fig, ax = plt.subplots()
+        self.axes = ax
 
-        labels = [x.name for x in novel.characters]
+        character_names = [x.name for x in novel.characters]
         width = 0.35  # the width of the bars: can also be len(x) sequence
 
-        char_value = {}
-        for i, character in enumerate(novel.characters):
-            char_value[character] = i
-
-        for story_line in novel.story_lines:
+        bottoms = None
+        for i, story_line in enumerate(novel.story_lines):
             occurences = []
             for char in novel.characters:
                 v = 0
@@ -129,7 +129,12 @@ class Canvas(FigureCanvasQTAgg):
                         if char == scene.pov or char in scene.characters:
                             v += 1
                 occurences.append(v)
-            self.axes.bar(labels, occurences, width, label=story_line.text)
+            if bottoms is None:
+                self.axes.bar(character_names, occurences, width, label=story_line.text)
+                bottoms = np.array(occurences)
+            else:
+                self.axes.bar(character_names, occurences, width, label=story_line.text, bottom=bottoms)
+                bottoms += np.array(occurences)
 
         self.axes.set_ylabel('# of scenes')
         self.axes.set_title('Story lines and characters distribution')
