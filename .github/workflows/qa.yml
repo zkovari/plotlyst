@@ -6,7 +6,7 @@ name: QA
 on: [push, pull_request]
 
 jobs:
-  build:
+  qa:
 
     runs-on: ubuntu-latest
     steps:
