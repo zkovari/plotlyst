@@ -1,8 +1,12 @@
+import typing
 from typing import List, Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QTabWidget, QWidgetAction
+from PyQt5 import QtGui, QtCore
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QTabWidget, QWidgetAction, QProxyStyle, \
+    QStyle, QStyleOption, QTabBar, QStyleOptionTab
+from overrides import overrides
 
 from novel_outliner.common import EXIT_CODE_RESTART
 from novel_outliner.core.client import client
@@ -56,6 +60,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._init_menuber()
         self._init_toolbar()
 
+        self._tabstyle = TabStyle()
+        self.tabWidget.tabBar().setStyle(self._tabstyle)
         self.tabWidget.addTab(self.novel_view.widget, IconRegistry.book_icon(), '')
         self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
         self.scenes_tab = QTabWidget()
@@ -143,3 +149,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
                 client.update_scene_sequences(self.novel)
+
+
+class TabStyle(QProxyStyle):
+    @overrides
+    def sizeFromContents(self, type: QStyle.ContentsType, option: QStyleOption, size: QtCore.QSize,
+                         widget: QWidget) -> QtCore.QSize:
+        size: QSize = super(TabStyle, self).sizeFromContents(type, option, size, widget)
+        if type == QStyle.CT_TabBarTab:
+            size.transpose()
+        return size
+
+    @overrides
+    def drawControl(self, element: QStyle.ControlElement, option: QStyleOption, painter: QtGui.QPainter,
+                    widget: typing.Optional[QWidget] = ...) -> None:
+        if element == QStyle.CE_TabBarTabLabel:
+            opt = QStyleOptionTab(option)
+            opt.shape = QTabBar.RoundedNorth
+            super(TabStyle, self).drawControl(element, opt, painter, widget)
+            return
+        super(TabStyle, self).drawControl(element, option, painter, widget)
