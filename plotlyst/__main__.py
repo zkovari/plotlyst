@@ -1,0 +1,74 @@
+"""
+Plotlyst
+Copyright (C) 2021  Zsolt Kovari
+
+This file is part of Plotlyst.
+
+Plotlyst is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Plotlyst is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+import os
+import subprocess
+import sys
+
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QCoreApplication, QSettings, Qt
+from PyQt5.QtWidgets import QFileDialog
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
+
+from plotlyst.view.dialog.about import AboutDialog
+
+QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
+from plotlyst.common import EXIT_CODE_RESTART
+from plotlyst.core.client import context
+from plotlyst.event.handler import exception_handler
+from plotlyst.view.main_window import MainWindow
+from plotlyst.view.stylesheet import APP_STYLESHEET
+
+if __name__ == '__main__':
+    appctxt = ApplicationContext()
+    while True:
+        app = appctxt.app
+        QCoreApplication.setOrganizationName('CraftOfGem')
+        QCoreApplication.setOrganizationDomain('craftofgem.com')
+        QCoreApplication.setApplicationName('NovelApp')
+
+        settings = QSettings()
+        db_file = settings.value('workspace')
+
+        if not db_file:
+            dir = QFileDialog.getExistingDirectory(None, 'Choose directory')
+            db_file = os.path.join(dir, 'novels.sqlite')
+            settings.setValue('workspace', db_file)
+        context.init(db_file)
+        window = MainWindow()
+        app.setStyleSheet(APP_STYLESHEET)
+
+        window.show()
+        window.activateWindow()
+
+        launched_before = settings.value('launchedBefore', False)
+        if not launched_before:
+            AboutDialog().exec()
+            settings.setValue('launchedBefore', True)
+
+        sys.excepthook = exception_handler  # type: ignore
+        exit_code = appctxt.app.exec_()
+        if exit_code < EXIT_CODE_RESTART:
+            break
+
+        # restart process
+        subprocess.call('./gen.sh')
+        python = sys.executable
+        os.execl(python, python, *sys.argv)

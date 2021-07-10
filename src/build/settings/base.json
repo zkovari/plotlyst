@@ -1,6 +1,6 @@
 {
-  "app_name": "NovelApp",
-  "author": "Zkovari",
-  "main_module": "novel_outliner/__main__.py",
+  "app_name": "Plotlyst",
+  "author": "Zsolt Kovari",
+  "main_module": "plotlyst/__main__.py",
   "version": "0.1.0"
 }
