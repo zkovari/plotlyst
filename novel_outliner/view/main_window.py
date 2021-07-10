@@ -37,6 +37,7 @@ from novel_outliner.event.handler import EventAuthorizationHandler, EventLogHand
 from novel_outliner.view.character_editor import CharacterEditor
 from novel_outliner.view.characters_view import CharactersView
 from novel_outliner.view.common import EditorCommand, spacer_widget, EditorCommandType
+from novel_outliner.view.dialog.about import AboutDialog
 from novel_outliner.view.generated.main_window_ui import Ui_MainWindow
 from novel_outliner.view.icons import IconRegistry
 from novel_outliner.view.notes_view import NotesView
@@ -104,6 +105,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event_log_reporter.info.connect(self.event_log_handler.on_info_event)
         event_log_reporter.warning.connect(self.event_log_handler.on_warning_event)
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
+
+        self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
 
     def _init_menuber(self):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))

@@ -26,6 +26,8 @@ from PyQt5.QtCore import QCoreApplication, QSettings, Qt
 from PyQt5.QtWidgets import QFileDialog
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
+from novel_outliner.view.dialog.about import AboutDialog
+
 QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
 QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 from novel_outliner.common import EXIT_CODE_RESTART
@@ -55,6 +57,12 @@ if __name__ == '__main__':
 
         window.show()
         window.activateWindow()
+
+        launched_before = settings.value('launchedBefore', False)
+        if not launched_before:
+            AboutDialog().exec()
+            settings.setValue('launchedBefore', True)
+
         sys.excepthook = exception_handler  # type: ignore
         exit_code = appctxt.app.exec_()
         if exit_code < EXIT_CODE_RESTART:
