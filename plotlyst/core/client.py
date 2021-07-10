@@ -42,8 +42,9 @@ class DbContext:
         self._db.initialize(runtime_db)
         self._db.connect()
         if _create_tables:
-            self._db.create_tables([NovelModel, SceneModel, CharacterModel, NovelStoryLinesModel, SceneStoryLinesModel,
-                                    NovelCharactersModel, SceneCharactersModel])
+            self._db.create_tables(
+                [NovelModel, ChapterModel, SceneModel, CharacterModel, NovelStoryLinesModel, SceneStoryLinesModel,
+                 NovelCharactersModel, SceneCharactersModel])
             NovelModel.create(title='My First Novel')
 
     def db(self):
