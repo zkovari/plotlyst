@@ -1,6 +1,8 @@
 from PyQt5.QtChart import QPieSeries, QChart, QChartView
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
 
 from novel_outliner.core.client import client
 from novel_outliner.core.domain import Novel, Scene
@@ -46,6 +48,12 @@ class ReportsView:
         self.story_line_model = NovelStoryLinesListModel(self.novel)
         self.story_line_model.selection_changed.connect(self._story_line_selection_changed)
         self.ui.listView.setModel(self.story_line_model)
+
+        sc = Canvas(self.novel, parent=self, width=5, height=4, dpi=100)
+        # sc.axes.plot([0, 1, 2, 3, 4], [10, 1, 20, 3, 40])
+        toolbar = NavigationToolbar(sc, self.ui.tabStoryDistribution)
+        self.ui.tabStoryDistribution.layout().addWidget(toolbar)
+        self.ui.tabStoryDistribution.layout().addWidget(sc)
 
     def _on_scene_selected(self, scene: Scene):
         self.scene_selected = scene
@@ -97,3 +105,35 @@ class ReportsView:
 
         self.chart.removeAllSeries()
         self.chart.addSeries(series)
+
+
+class Canvas(FigureCanvasQTAgg):
+
+    def __init__(self, novel: Novel, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+
+        labels = [x.name for x in novel.characters]
+        width = 0.35  # the width of the bars: can also be len(x) sequence
+
+        char_value = {}
+        for i, character in enumerate(novel.characters):
+            char_value[character] = i
+
+        for story_line in novel.story_lines:
+            occurences = []
+            for char in novel.characters:
+                v = 0
+                for scene in novel.scenes:
+                    if story_line in scene.story_lines:
+                        if char == scene.pov or char in scene.characters:
+                            v += 1
+                occurences.append(v)
+            self.axes.bar(labels, occurences, width, label=story_line.text)
+
+        self.axes.set_ylabel('# of scenes')
+        self.axes.set_title('Story lines and characters distribution')
+        self.axes.legend()
+
+        super(Canvas, self).__init__(fig)
+        self.draw()

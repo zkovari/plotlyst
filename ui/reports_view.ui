@@ -156,6 +156,12 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabStoryDistribution">
+      <attribute name="title">
+       <string>Story lines distribution</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5"/>
+     </widget>
     </widget>
    </item>
   </layout>

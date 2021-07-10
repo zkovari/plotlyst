@@ -40,13 +40,11 @@ class TreeItemModel(QAbstractItemModel):
 
         child_node: Node = index.internalPointer()
         parent_node: Node = child_node.parent
-        if not parent_node:
-            print(child_node.name)
 
         if parent_node == self.root:
             return QModelIndex()
 
-        if parent_node.parent == self.root or not parent_node.parent:
+        if not parent_node or parent_node.parent == self.root or not parent_node.parent:
             parent_node_index = 0
         else:
             parent_node_index = parent_node.parent.children.index(parent_node)
