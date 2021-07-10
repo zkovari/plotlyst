@@ -16,6 +16,7 @@ REQUIREMENTS: dict = {
         'peewee',
         'matplotlib',
         'dataclasses;python_version<"3.7"',
+        'anytree',
     ],
     'test': [
         'pytest',
