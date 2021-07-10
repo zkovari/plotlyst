@@ -61,10 +61,10 @@ class ChaptersTreeModel(TreeItemModel):
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if index.column() > 0:
             return QVariant()
-        if role == Qt.DecorationRole:
-            node: Node = index.internalPointer()
-            # if isinstance(node, SceneNode):
-            #     return IconRegistry.scene_icon()
+        # if role == Qt.DecorationRole:
+        #     node: Node = index.internalPointer()
+        # if isinstance(node, SceneNode):
+        #     return IconRegistry.scene_icon()
         return super().data(index, role)
 
     def update(self):

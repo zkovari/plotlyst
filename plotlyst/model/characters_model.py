@@ -252,5 +252,6 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
         return self._match_by_row_col(index.row(), index.column())
 
     def _match_by_row_col(self, row: int, column: int):
-        return self.novel.characters[row] in self.novel.scenes[column - 1].characters or \
-               self.novel.characters[row] == self.novel.scenes[column - 1].pov
+        in_char = self.novel.characters[row] in self.novel.scenes[column - 1].characters
+        pov = self.novel.characters[row] == self.novel.scenes[column - 1].pov
+        return in_char or pov

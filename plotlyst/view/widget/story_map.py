@@ -48,9 +48,6 @@ class StoryLinesMapWidget(QWidget):
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
-        rect = self.rect()
-        h = rect.height()
-        w = rect.width()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         for i, story in enumerate(self.novel.story_lines):
@@ -73,7 +70,7 @@ class StoryLinesMapWidget(QWidget):
 
         for j, scene in enumerate(self.novel.scenes):
             x = 25 * (j + 1)
-            if not j in self._scene_coord_y.keys():
+            if j not in self._scene_coord_y.keys():
                 continue
             if len(scene.story_lines) == 1:
                 painter.setPen(QPen(Qt.black, 3, Qt.SolidLine))
@@ -120,7 +117,6 @@ class StoryLinesLinearMapWidget(QWidget):
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         rect = self.rect()
-        h = rect.height()
         w = rect.width()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)

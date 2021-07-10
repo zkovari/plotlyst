@@ -65,7 +65,8 @@ class ScenesOutlineView(QObject):
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Fixed)
         self.ui.tblScenes.horizontalHeader().setFixedHeight(30)
         self.ui.tblScenes.verticalHeader().setStyleSheet(
-            'QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;} QHeaderView {background-color: white;}')
+            '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
+               QHeaderView {background-color: white;}''')
         self.ui.tblScenes.verticalHeader().sectionMoved.connect(self._on_scene_moved)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
         self.tblModel.orderChanged.connect(self._on_scene_moved)

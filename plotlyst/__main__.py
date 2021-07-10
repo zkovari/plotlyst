@@ -26,15 +26,15 @@ from PyQt5.QtCore import QCoreApplication, QSettings, Qt
 from PyQt5.QtWidgets import QFileDialog
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
-from plotlyst.view.dialog.about import AboutDialog
-
-QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
-QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 from plotlyst.common import EXIT_CODE_RESTART
 from plotlyst.core.client import context
 from plotlyst.event.handler import exception_handler
+from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.main_window import MainWindow
 from plotlyst.view.stylesheet import APP_STYLESHEET
+
+QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
 if __name__ == '__main__':
     appctxt = ApplicationContext()

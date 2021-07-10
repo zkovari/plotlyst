@@ -47,14 +47,14 @@ class TasksWidget(QWidget, Ui_TasksWidget):
             if scene.wip:
                 continue
             if not scene.pov:
-                self.tasks.append(Task(f'POV is missing', reference=scene))
+                self.tasks.append(Task('POV is missing', reference=scene))
             if not scene.title or scene.title == 'Untitled':
-                self.tasks.append(Task(f'Title is not specified', reference=scene))
+                self.tasks.append(Task('Title is not specified', reference=scene))
             if not scene.beginning:
-                self.tasks.append(Task(f'Beginning event is missing', reference=scene))
+                self.tasks.append(Task('Beginning event is missing', reference=scene))
             if not scene.middle:
-                self.tasks.append(Task(f'Middle event is missing', reference=scene))
+                self.tasks.append(Task('Middle event is missing', reference=scene))
             if not scene.end:
-                self.tasks.append(Task(f'End event is missing', reference=scene))
+                self.tasks.append(Task('End event is missing', reference=scene))
 
         self.model.modelReset.emit()
