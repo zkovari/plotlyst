@@ -9,8 +9,13 @@ with (HERE / 'README.md').open('rt') as fh:
 REQUIREMENTS: dict = {
     'core': [
         'PyQt5',
-        'overrides',
+        'overrides==3.1.0',
         'qtawesome',
+        'qtwidgets',
+        'PyQtChart',
+        'peewee',
+        'matplotlib',
+        'dataclasses;python_version<"3.7"',
     ],
     'test': [
         'pytest',
@@ -21,20 +26,16 @@ REQUIREMENTS: dict = {
         'pyqt5ac',
     ],
     'doc': [
-        'sphinx',
-        'sphinx-tabs',
-        'sphinx-copybutton',
-        'sphinxcontrib.contentui',
     ],
 }
 
 setup(
-    name='novel-outliner',
+    name='plotlyst',
     version='0.0.1',
 
     author='Zsolt Kovari',
     author_email='',
-    description='Novel Outliner',
+    description='Plotlyst',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     url='',
