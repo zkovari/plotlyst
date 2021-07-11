@@ -105,6 +105,8 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
 
 
 class CharacterEditorTableModel(QAbstractTableModel):
+    valueChanged = pyqtSignal()
+
     RowName = 0
     RowAge = 1
     RowPersonality = 2
@@ -154,6 +156,7 @@ class CharacterEditorTableModel(QAbstractTableModel):
         else:
             return False
 
+        self.valueChanged.emit()
         return True
 
     @overrides
