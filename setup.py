@@ -17,6 +17,7 @@ REQUIREMENTS: dict = {
         'matplotlib',
         'dataclasses;python_version<"3.7"',
         'anytree',
+        'numpy',
     ],
     'test': [
         'pytest',
