@@ -1,3 +1,4 @@
+[![Test](https://github.com/zkovari/plotlyst/actions/workflows/test.yml/badge.svg)](https://github.com/zkovari/plotlyst/actions/workflows/test.yml)
 # Plotlyst
 
 
