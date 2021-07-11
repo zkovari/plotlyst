@@ -13,7 +13,7 @@ jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ ubuntu-18.04, windows-2016, macos-latest]
+        os: [ ubuntu-18.04, windows-2016, macos-latest ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -42,7 +42,8 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install fbs PyQt5 overrides==3.1.0 qtwidgets PyQtChart peewee dataclasses qtawesome pyqt5ac
+          pip install fbs
+          pip install -e .
       - name: Generate code
         run: |
           pyqt5ac --config .pyqt5ac.yml
