@@ -1,4 +1,5 @@
 [![Test](https://github.com/zkovari/plotlyst/actions/workflows/test.yml/badge.svg)](https://github.com/zkovari/plotlyst/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/zkovari/plotlyst/branch/main/graph/badge.svg?token=LRCKZ1FN65)](https://codecov.io/gh/zkovari/plotlyst)
 # Plotlyst
 
 
