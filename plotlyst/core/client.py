@@ -208,6 +208,12 @@ class SqlClient:
         novel_m = NovelModel.get(id=novel.id)
         NovelCharactersModel.create(novel=novel_m, character=character_m)
 
+    def update_character(self, character: Character):
+        character_m: CharacterModel = CharacterModel.get_by_id(character.id)
+        character_m.name = character.name
+
+        character_m.save()
+
     def delete_character(self, character: Character):
         character_m = CharacterModel.get(id=character.id)
         character_m.delete_instance()
