@@ -83,10 +83,6 @@ class TimelineView:
         self.ui.graphicsEvents.setScene(scene)
 
 
-# class EventsScene(QGraphicsScene):
-#
-#     def paint
-
 class SceneCardWidget(QFrame, Ui_SceneCardWidget):
     def __init__(self, scene: Scene, parent=None):
         super(SceneCardWidget, self).__init__(parent)

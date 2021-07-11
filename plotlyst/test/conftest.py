@@ -22,9 +22,20 @@ import os
 import pytest
 
 from plotlyst.core.client import context
+from plotlyst.view.main_window import MainWindow
 
 
 @pytest.fixture
 def test_client(tmp_path):
     db_file = os.path.join(tmp_path, 'test-db.sqlite')
     context.init(db_file)
+
+
+@pytest.fixture
+def window(qtbot, test_client):
+    main_window = MainWindow()
+    main_window.show()
+    qtbot.addWidget(main_window)
+    qtbot.waitExposed(main_window, timeout=5000)
+
+    return main_window

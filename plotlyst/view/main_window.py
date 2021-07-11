@@ -29,8 +29,6 @@ from overrides import overrides
 
 from plotlyst.common import EXIT_CODE_RESTART
 from plotlyst.core.client import client
-from plotlyst.core.persistence import emit_save
-from plotlyst.core.project import ProjectFinder
 from plotlyst.event.core import event_log_reporter
 from plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
 from plotlyst.view.characters_view import CharactersView
@@ -55,8 +53,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowTitle('Plotlyst')
         self.setWindowIcon(IconRegistry.book_icon())
 
-        self.project_finder = ProjectFinder()
-        self.novel = self.project_finder.novel
+        self.novel = client.fetch_novel()
 
         self.novel_view = NovelView(self.novel)
 
@@ -130,9 +127,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
-            if cmd.type == EditorCommandType.SAVE:
-                emit_save(self.novel)
-            elif cmd.type == EditorCommandType.CLOSE_CURRENT_EDITOR:
+            if cmd.type == EditorCommandType.CLOSE_CURRENT_EDITOR:
                 index = self.tabWidget.indexOf(widget)
                 self.tabWidget.removeTab(index)
             elif cmd.type == EditorCommandType.DISPLAY_CHARACTERS:

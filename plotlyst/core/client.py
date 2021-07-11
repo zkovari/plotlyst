@@ -100,7 +100,7 @@ class SceneModel(Model):
 
 class CharacterModel(Model):
     name = TextField()
-    avatar = BlobField()
+    avatar = BlobField(null=True)
 
     class Meta:
         table_name = 'Characters'

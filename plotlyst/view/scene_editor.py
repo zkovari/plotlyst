@@ -254,7 +254,7 @@ class SceneEditor(QObject):
         client.replace_scene_events(self.novel, self.scene, events)
 
     def _on_close(self):
-        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(), EditorCommand.display_scenes()])
+        self._save_scene()
 
     def _on_previous_scene(self):
         self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),

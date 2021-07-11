@@ -177,6 +177,8 @@ class ScenesOutlineView(QObject):
         self.editor = None
 
         self.tblModel.modelReset.emit()
+        self.chaptersModel.update()
+        self._distribution_widget.refresh()
 
     def _on_new(self):
         self.editor = SceneEditor(self.novel)
@@ -292,8 +294,8 @@ class CharactersScenesDistributionWidget(QWidget):
         self.ui.setupUi(self)
         self.novel = novel
         self.average = 0
-        self._scenes_model = CharactersScenesDistributionTableModel(self.novel)
-        self._scenes_proxy = proxy(self._scenes_model)
+        self._model = CharactersScenesDistributionTableModel(self.novel)
+        self._scenes_proxy = proxy(self._model)
         self._scenes_proxy.sort(0, Qt.DescendingOrder)
         self.ui.tblSceneDistribution.setModel(self._scenes_proxy)
         self.ui.tblSceneDistribution.hideColumn(0)
@@ -311,21 +313,21 @@ class CharactersScenesDistributionWidget(QWidget):
             self.average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
         else:
             self.average = 0
-        for col in range(self._scenes_model.columnCount()):
+        for col in range(self._model.columnCount()):
             if col == 0:
                 continue
             self.ui.tblCharacters.hideColumn(col)
         self.ui.spinAverage.setValue(self.average)
-        self._scenes_model.modelReset.emit()
+        self._model.modelReset.emit()
 
     def _on_character_selected(self):
         selected = self.ui.tblCharacters.selectionModel().selectedIndexes()
-        self._scenes_model.highlightCharacters(
+        self._model.highlightCharacters(
             [self._scenes_proxy.mapToSource(x) for x in selected])
 
         if selected and len(selected) > 1:
             self.ui.spinAverage.setPrefix(self.common_text)
-            self.ui.spinAverage.setValue(self._scenes_model.commonScenes())
+            self.ui.spinAverage.setValue(self._model.commonScenes())
         else:
             self.ui.spinAverage.setPrefix(self.avg_text)
             self.ui.spinAverage.setValue(self.average)
@@ -336,7 +338,7 @@ class CharactersScenesDistributionWidget(QWidget):
         indexes = selection.indexes()
         if not indexes:
             return
-        self._scenes_model.highlightScene(self._scenes_proxy.mapToSource(indexes[0]))
+        self._model.highlightScene(self._scenes_proxy.mapToSource(indexes[0]))
         self.ui.tblCharacters.clearSelection()
 
 
