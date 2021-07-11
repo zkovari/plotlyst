@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import typing
-from typing import List, Optional
+from typing import List
 
 import qtawesome
 from PyQt5 import QtGui, QtCore
@@ -29,12 +29,10 @@ from overrides import overrides
 
 from plotlyst.common import EXIT_CODE_RESTART
 from plotlyst.core.client import client
-from plotlyst.core.domain import Character, Scene
 from plotlyst.core.persistence import emit_save
 from plotlyst.core.project import ProjectFinder
 from plotlyst.event.core import event_log_reporter
 from plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
-from plotlyst.view.character_editor import CharacterEditor
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType
 from plotlyst.view.dialog.about import AboutDialog
@@ -43,7 +41,6 @@ from plotlyst.view.icons import IconRegistry
 from plotlyst.view.notes_view import NotesView
 from plotlyst.view.novel_view import NovelView
 from plotlyst.view.reports_view import ReportsView
-from plotlyst.view.scene_editor import SceneEditor
 from plotlyst.view.scenes_view import ScenesOutlineView, DraftScenesView
 from plotlyst.view.tasks_view import TasksWidget
 from plotlyst.view.timeline_view import TimelineView
@@ -64,13 +61,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.novel_view = NovelView(self.novel)
 
         self.characters_view = CharactersView(self.novel)
-        self.characters_view.character_edited.connect(self._on_character_edition)
-        self.characters_view.character_created.connect(self._on_character_creation)
-        self.characters_view.commands_sent.connect(self._on_received_commands)
 
         self.scenes_outline_view = ScenesOutlineView(self.novel)
-        self.scenes_outline_view.scene_edited.connect(self._on_scene_edition)
-        self.scenes_outline_view.scene_created.connect(self._on_scene_creation)
         self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
 
         self.timeline_view = TimelineView(self.novel)
@@ -130,26 +122,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _on_add(self):
         self._on_character_edition(None)
 
-    def _on_character_edition(self, character: Optional[Character]):
-        self.editor = CharacterEditor(self.novel, character)
-        self.editor.commands_sent.connect(self._on_received_commands)
-        tab = self.tabWidget.addTab(self.editor.widget, 'New Character')
-        self.tabWidget.setCurrentIndex(tab)
-
     def _on_character_creation(self):
         self._on_character_edition(None)
 
     def _on_current_tab_changed(self, index: int):
         pass
-
-    def _on_scene_edition(self, scene: Optional[Scene]):
-        self._on_scene_creation(scene)
-
-    def _on_scene_creation(self, scene: Optional[Scene] = None):
-        self.editor = SceneEditor(self.novel, scene)
-        self.editor.commands_sent.connect(self._on_received_commands)
-        tab = self.tabWidget.addTab(self.editor.widget, 'Edit Scene' if scene else 'New Scene')
-        self.tabWidget.setCurrentIndex(tab)
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:

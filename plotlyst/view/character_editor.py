@@ -1,20 +1,18 @@
 from typing import Optional
 
-from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, Qt
+from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtGui import QBrush
-from PyQt5.QtWidgets import QWidget, QDialogButtonBox, QStyledItemDelegate, QStyleOptionViewItem, QLineEdit, QSpinBox, \
+from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QLineEdit, QSpinBox, \
     QComboBox
 from overrides import overrides
 
 from plotlyst.core.client import client
 from plotlyst.core.domain import Novel, Character
 from plotlyst.model.characters_model import CharacterEditorTableModel
-from plotlyst.view.common import EditorCommand
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 
 
-class CharacterEditor(QObject):
-    commands_sent = pyqtSignal(QWidget, list)
+class CharacterEditor:
 
     def __init__(self, novel: Novel, character: Optional[Character] = None):
         super().__init__()
@@ -31,26 +29,18 @@ class CharacterEditor(QObject):
             self._new_character = True
 
         self.model = CharacterEditorTableModel(self.character)
+        self.model.valueChanged.connect(self._save)
         self.editor_delegate = CharacterEditorDelegate()
         self.ui.tblGeneral.setModel(self.model)
         self.ui.tblGeneral.setItemDelegate(self.editor_delegate)
 
-        self.btn_save = self.ui.buttonBox.button(QDialogButtonBox.Save)
-        self.btn_save.setShortcut('Ctrl+S')
-        self.btn_save.clicked.connect(self._on_saved)
-        self.btn_cancel = self.ui.buttonBox.button(QDialogButtonBox.Cancel)
-        self.btn_cancel.setShortcut('Esc')
-        self.btn_cancel.clicked.connect(self._on_cancel)
-
-    def _on_saved(self):
+    def _save(self):
         if self._new_character:
             self.novel.characters.append(self.character)
-        client.insert_character(self.novel, self.character)
-        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
-                                              EditorCommand.display_characters()])
-
-    def _on_cancel(self):
-        self.commands_sent.emit(self.widget, [EditorCommand.close_editor()])
+            client.insert_character(self.novel, self.character)
+        else:
+            client.update_character(self.character)
+        self._new_character = False
 
 
 class CharacterEditorDelegate(QStyledItemDelegate):

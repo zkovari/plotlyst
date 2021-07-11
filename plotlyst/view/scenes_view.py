@@ -44,8 +44,6 @@ from plotlyst.view.scene_editor import SceneEditor
 
 class ScenesOutlineView(QObject):
     commands_sent = pyqtSignal(QWidget, list)
-    scene_edited = pyqtSignal(Scene)
-    scene_created = pyqtSignal()
 
     def __init__(self, novel: Novel):
         super().__init__()
@@ -150,19 +148,25 @@ class ScenesOutlineView(QObject):
         if indexes:
             scene = indexes[0].data(role=ScenesTableModel.SceneRole)
             self.editor = SceneEditor(self.novel, scene)
-            self.ui.pageEditor.layout().addWidget(self.editor.widget)
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
+            self._switch_to_editor()
 
-            self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
+    def _switch_to_editor(self):
+        self.ui.pageEditor.layout().addWidget(self.editor.widget)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
+
+        self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
 
     def _on_close_editor(self):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
-        self.editor.deleteLater()
+        self.editor.widget.deleteLater()
         self.editor = None
 
+        self.tblModel.modelReset.emit()
+
     def _on_new(self):
-        self.scene_created.emit()
+        self.editor = SceneEditor(self.novel)
+        self._switch_to_editor()
 
     def _new_chapter(self):
         chapter = self.chaptersModel.newChapter()

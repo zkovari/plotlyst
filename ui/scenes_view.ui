@@ -41,6 +41,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QPushButton" name="btnChaptersToggle">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string>Hide chapters</string>
             </property>
@@ -64,6 +67,9 @@
               <height>16777215</height>
              </size>
             </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string>Add new scene</string>
             </property>
@@ -82,6 +88,9 @@
               <width>130</width>
               <height>16777215</height>
              </size>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="text">
              <string>Edit</string>
@@ -125,6 +134,9 @@
           </item>
           <item>
            <widget class="QToolButton" name="btnGraphs">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -132,6 +144,9 @@
           </item>
           <item>
            <widget class="QToolButton" name="btnFilter">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -224,6 +239,9 @@
               <width>130</width>
               <height>16777215</height>
              </size>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="text">
              <string>Delete</string>
