@@ -184,6 +184,34 @@ class IconRegistry:
     def act_three_icon() -> QIcon:
         return qtawesome.icon('mdi.numeric-3-circle', color='#ff7800')
 
+    @staticmethod
+    def table_icon() -> QIcon:
+        return qtawesome.icon('fa.list-alt')
+
+    @staticmethod
+    def goal_icon() -> QIcon:
+        return qtawesome.icon('mdi.target', color='darkBlue')
+
+    @staticmethod
+    def decision_icon() -> QIcon:
+        return qtawesome.icon('fa.lightbulb-o', color='darkGreen')
+
+    @staticmethod
+    def reaction_icon() -> QIcon:
+        return qtawesome.icon('fa.shield')
+
+    @staticmethod
+    def disaster_icon() -> QIcon:
+        return qtawesome.icon('fa.bomb', color='red')
+
+    @staticmethod
+    def dilemma_icon() -> QIcon:
+        return qtawesome.icon('fa.question-circle-o')
+
+    @staticmethod
+    def conflict_icon() -> QIcon:
+        return qtawesome.icon('mdi.sword-cross', color='orange')
+
 
 class AvatarsRegistry:
     def __init__(self):

@@ -55,6 +55,11 @@ class ScenesOutlineView(QObject):
         self.editor: Optional[SceneEditor] = None
 
         self.tblModel = ScenesTableModel(novel)
+        self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
+                                 ScenesTableModel.ColCharacters,
+                                 ScenesTableModel.ColSynopsis]
+        self._actions_view_columns = [ScenesTableModel.ColPov, ScenesTableModel.ColBeginning,
+                                      ScenesTableModel.ColMiddle, ScenesTableModel.ColEnd]
         self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.tblModel)
         self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
@@ -99,6 +104,15 @@ class ScenesOutlineView(QObject):
         self.ui.btnAct1.toggled.connect(partial(self._proxy.setActsFilter, 1))
         self.ui.btnAct2.toggled.connect(partial(self._proxy.setActsFilter, 2))
         self.ui.btnAct3.toggled.connect(partial(self._proxy.setActsFilter, 3))
+
+        self.ui.btnTableView.setIcon(IconRegistry.table_icon())
+        self.ui.btnTableView.toggled.connect(self._switch_view)
+        self.ui.btnSynopsisView.setIcon(IconRegistry.synopsis_icon())
+        self.ui.btnSynopsisView.toggled.connect(self._switch_view)
+        self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
+        self.ui.btnActionsView.toggled.connect(self._switch_view)
+        self.ui.btnTableView.setChecked(True)
+
         action = QWidgetAction(self.ui.btnGraphs)
         self._distribution_widget = CharactersScenesDistributionWidget(self.novel)
         self._distribution_widget.setMinimumWidth(900)
@@ -172,6 +186,32 @@ class ScenesOutlineView(QObject):
         chapter = self.chaptersModel.newChapter()
         client.insert_chapter(self.novel, chapter)
 
+    def _switch_view(self):
+        if self.ui.btnTableView.isChecked():
+            for col in range(self.tblModel.columnCount()):
+                if col in self._default_columns:
+                    self.ui.tblScenes.showColumn(col)
+                    continue
+                self.ui.tblScenes.hideColumn(col)
+
+        elif self.ui.btnSynopsisView.isChecked():
+            for col in range(self.tblModel.columnCount()):
+                if col == ScenesTableModel.ColSynopsis or col == ScenesTableModel.ColPov:
+                    self.ui.tblScenes.showColumn(col)
+                    continue
+                self.ui.tblScenes.hideColumn(col)
+
+        elif self.ui.btnActionsView.isChecked():
+            for col in range(self.tblModel.columnCount()):
+                if col in self._actions_view_columns:
+                    self.ui.tblScenes.showColumn(col)
+                    continue
+                self.ui.tblScenes.hideColumn(col)
+            self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColBeginning,
+                                                                      QHeaderView.Stretch)
+            self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColMiddle,
+                                                                      QHeaderView.Stretch)
+
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):
             scene.wip = not scene.wip
@@ -226,8 +266,7 @@ class ScenesViewDelegate(QStyledItemDelegate):
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
-        if index.column() == ScenesTableModel.ColSynopsis:
-            return QTextEdit(parent)
+        return QTextEdit(parent)
 
     @overrides
     def setEditorData(self, editor: QWidget, index: QModelIndex):

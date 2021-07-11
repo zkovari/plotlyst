@@ -40,16 +40,22 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     ColCharacters = 2
     ColType = 3
     ColTime = 4
-    ColSynopsis = 5
+    ColBeginning = 5
+    ColMiddle = 6
+    ColEnd = 7
+    ColSynopsis = 8
 
     def __init__(self, novel: Novel, parent=None):
         self._data: List[Scene] = novel.scenes
-        _headers = [''] * 6
+        _headers = [''] * 9
         _headers[self.ColTitle] = 'Title'
         _headers[self.ColType] = 'Type'
         _headers[self.ColPov] = 'POV'
         _headers[self.ColCharacters] = 'Characters'
         _headers[self.ColTime] = 'Day'
+        _headers[self.ColBeginning] = 'Beginning'
+        _headers[self.ColMiddle] = 'Middle'
+        _headers[self.ColEnd] = 'End'
         _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
         self._second_act_start: Optional[QModelIndex] = None
@@ -81,10 +87,16 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
-            elif index.column() == self.ColSynopsis:
+            if index.column() == self.ColSynopsis:
                 return self._data[index.row()].synopsis
-            elif index.column() == self.ColTime:
+            if index.column() == self.ColTime:
                 return self._data[index.row()].day
+            if index.column() == self.ColBeginning:
+                return self._data[index.row()].beginning
+            if index.column() == self.ColMiddle:
+                return self._data[index.row()].middle
+            if index.column() == self.ColEnd:
+                return self._data[index.row()].end
         elif role == Qt.DecorationRole:
             if index.column() == self.ColType:
                 if self._data[index.row()].wip:
@@ -98,6 +110,21 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
             elif index.column() == self.ColPov:
                 if self._data[index.row()].pov:
                     return QIcon(avatars.pixmap(self._data[index.row()].pov))
+            elif index.column() == self.ColBeginning:
+                if self._data[index.row()].type == ACTION_SCENE:
+                    return IconRegistry.goal_icon()
+                if self._data[index.row()].type == REACTION_SCENE:
+                    return IconRegistry.reaction_icon()
+            elif index.column() == self.ColMiddle:
+                if self._data[index.row()].type == ACTION_SCENE:
+                    return IconRegistry.conflict_icon()
+                if self._data[index.row()].type == REACTION_SCENE:
+                    return IconRegistry.dilemma_icon()
+            elif index.column() == self.ColEnd:
+                if self._data[index.row()].type == ACTION_SCENE:
+                    return IconRegistry.disaster_icon()
+                if self._data[index.row()].type == REACTION_SCENE:
+                    return IconRegistry.decision_icon()
         elif role == Qt.ToolTipRole:
             if index.column() == self.ColType:
                 if self._data[index.row()].beginning:
@@ -125,20 +152,35 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return IconRegistry.hashtag_icon()
 
     @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
-        if index.column() == self.ColSynopsis:
-            self._data[index.row()].synopsis = value
-            return True
-
-        return False
-
-    @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
         flags = flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
         if index.column() == self.ColSynopsis:
             return flags | Qt.ItemIsEditable
+        if index.column() == self.ColBeginning:
+            return flags | Qt.ItemIsEditable
+        if index.column() == self.ColMiddle:
+            return flags | Qt.ItemIsEditable
+        if index.column() == self.ColEnd:
+            return flags | Qt.ItemIsEditable
         return flags
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
+        if index.column() == self.ColSynopsis:
+            self._data[index.row()].synopsis = value
+            return True
+        if index.column() == self.ColBeginning:
+            self._data[index.row()].beginning = value
+            return True
+        if index.column() == self.ColMiddle:
+            self._data[index.row()].middle = value
+            return True
+        if index.column() == self.ColEnd:
+            self._data[index.row()].end = value
+            return True
+
+        return False
 
     @overrides
     def mimeData(self, indexes: List[QModelIndex]) -> QMimeData:
