@@ -24,8 +24,8 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
 from PyQt5.QtWidgets import QWidget
 
 from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event, CharacterArc, VERY_UNHAPPY, UNHAPPY, \
-    NEUTRAL, HAPPY, VERY_HAPPY
+from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event, CharacterArc, VERY_UNHAPPY, \
+    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
 from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from plotlyst.model.novel import NovelStoryLinesListModel
 from plotlyst.model.scenes_model import ScenesTableModel
