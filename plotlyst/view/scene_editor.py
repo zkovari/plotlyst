@@ -24,7 +24,8 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
 from PyQt5.QtWidgets import QWidget
 
 from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event
+from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event, CharacterArc, VERY_UNHAPPY, UNHAPPY, \
+    NEUTRAL, HAPPY, VERY_HAPPY
 from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from plotlyst.model.novel import NovelStoryLinesListModel
 from plotlyst.model.scenes_model import ScenesTableModel
@@ -81,6 +82,7 @@ class SceneEditor(QObject):
         self._save_timer = QTimer()
         self._save_timer.setInterval(500)
         self._save_timer.timeout.connect(self._save_scene)
+
         self._save_enabled = False
         self._update_view(scene)
 
@@ -97,6 +99,7 @@ class SceneEditor(QObject):
         self.ui.lineTitle.textEdited.connect(self._pending_save)
         self.ui.textSynopsis.textChanged.connect(self._pending_save)
         self.ui.textNotes.textChanged.connect(self._pending_save)
+        self.ui.buttonGroup.buttonClicked.connect(self._save_scene)
 
     def _update_view(self, scene: Optional[Scene] = None):
         if scene:
@@ -108,6 +111,9 @@ class SceneEditor(QObject):
 
         if self.scene.pov:
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
+            self._enable_arc_buttons(True)
+        else:
+            self._enable_arc_buttons(False)
 
         self.ui.sbDay.setValue(self.scene.day)
 
@@ -151,6 +157,19 @@ class SceneEditor(QObject):
             elif self.scene.sequence == len(self.novel.scenes) - 1:
                 self.ui.btnNext.setDisabled(True)
 
+        for char_arc in self.scene.arcs:
+            if scene.pov and char_arc.character == scene.pov:
+                if char_arc.arc == VERY_UNHAPPY:
+                    self.ui.btnVeryUnhappy.setChecked(True)
+                elif char_arc.arc == UNHAPPY:
+                    self.ui.btnUnHappy.setChecked(True)
+                elif char_arc.arc == NEUTRAL:
+                    self.ui.btnNeutral.setChecked(True)
+                elif char_arc.arc == HAPPY:
+                    self.ui.btnHappy.setChecked(True)
+                elif char_arc.arc == VERY_HAPPY:
+                    self.ui.btnVeryHappy.setChecked(True)
+
         self._save_enabled = True
 
     def _on_type_changed(self, text: str):
@@ -171,6 +190,13 @@ class SceneEditor(QObject):
         if self._save_enabled:
             self._save_timer.start(500)
 
+    def _enable_arc_buttons(self, enabled: bool):
+        self.ui.btnVeryUnhappy.setEnabled(enabled)
+        self.ui.btnUnHappy.setEnabled(enabled)
+        self.ui.btnNeutral.setEnabled(enabled)
+        self.ui.btnHappy.setEnabled(enabled)
+        self.ui.btnVeryHappy.setEnabled(enabled)
+
     def _save_scene(self):
         self._save_timer.stop()
         if not self._save_enabled:
@@ -187,6 +213,10 @@ class SceneEditor(QObject):
         pov = self.ui.cbPov.currentData()
         if pov:
             self.scene.pov = pov
+            self._enable_arc_buttons(True)
+        else:
+            self._enable_arc_buttons(False)
+
         self.scene.wip = self.ui.cbWip.isChecked()
         self.scene.pivotal = self.ui.cbPivotal.currentText()
         self.scene.beginning_type = self.ui.cbBeginningType.currentText()
@@ -194,6 +224,21 @@ class SceneEditor(QObject):
         self.scene.story_lines.clear()
         for story_line in self.story_line_model.selected:
             self.scene.story_lines.append(story_line)
+
+        arc = NEUTRAL
+        if self.ui.btnVeryUnhappy.isChecked():
+            arc = VERY_UNHAPPY
+        elif self.ui.btnUnHappy.isChecked():
+            arc = UNHAPPY
+        elif self.ui.btnHappy.isChecked():
+            arc = HAPPY
+        elif self.ui.btnVeryHappy.isChecked():
+            arc = VERY_HAPPY
+
+        self.scene.arcs.clear()
+        if pov:
+            self.scene.arcs.append(CharacterArc(arc, pov))
+
         if self._new_scene:
             self.novel.scenes.append(self.scene)
             self.scene.sequence = self.novel.scenes.index(self.scene)
@@ -205,6 +250,7 @@ class SceneEditor(QObject):
         self.scene.end_event = True
         if self.scene.end_event:
             events.append(Event(event=self.scene.end, day=self.scene.day))
+
         client.replace_scene_events(self.novel, self.scene, events)
 
     def _on_close(self):

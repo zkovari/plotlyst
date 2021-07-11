@@ -47,6 +47,19 @@ class Chapter:
 
 
 @dataclass
+class CharacterArc:
+    arc: int
+    character: Character
+
+
+VERY_UNHAPPY: int = -2
+UNHAPPY: int = -1
+NEUTRAL: int = 0
+HAPPY: int = 1
+VERY_HAPPY: int = 2
+
+
+@dataclass
 class Scene:
     title: str
     id: Optional[int] = None
@@ -67,6 +80,7 @@ class Scene:
     ending_hook: str = ''
     notes: str = ''
     chapter: Optional[Chapter] = None
+    arcs: List[CharacterArc] = field(default_factory=list)
 
 
 @dataclass

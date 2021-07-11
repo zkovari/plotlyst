@@ -22,7 +22,7 @@ from typing import List
 
 from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
 
-from plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter
+from plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter, CharacterArc
 
 
 class DbContext:
@@ -43,7 +43,8 @@ class DbContext:
         self._db.connect()
         if _create_tables:
             self._db.create_tables(
-                [NovelModel, ChapterModel, SceneModel, CharacterModel, NovelStoryLinesModel, SceneStoryLinesModel,
+                [NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel, NovelStoryLinesModel,
+                 SceneStoryLinesModel,
                  NovelCharactersModel, SceneCharactersModel])
             NovelModel.create(title='My First Novel')
 
@@ -65,7 +66,7 @@ class NovelModel(Model):
 class ChapterModel(Model):
     title = TextField()
     sequence = IntegerField()
-    novel = ForeignKeyField(NovelModel, backref='chapters')
+    novel = ForeignKeyField(NovelModel, backref='chapters', on_delete='CASCADE')
 
     class Meta:
         table_name = 'Chapters'
@@ -106,9 +107,19 @@ class CharacterModel(Model):
         database = context.db()
 
 
+class CharacterArcModel(Model):
+    arc = IntegerField()
+    scene = ForeignKeyField(SceneModel, backref='arcs', on_delete='CASCADE')
+    character = ForeignKeyField(CharacterModel, on_delete='CASCADE')
+
+    class Meta:
+        table_name = 'CharacterArcs'
+        database = context.db()
+
+
 class NovelStoryLinesModel(Model):
     text = TextField()
-    novel = ForeignKeyField(NovelModel, backref='story_lines')
+    novel = ForeignKeyField(NovelModel, backref='story_lines', on_delete='CASCADE')
 
     class Meta:
         table_name = 'NovelStoryLines'
@@ -116,8 +127,8 @@ class NovelStoryLinesModel(Model):
 
 
 class SceneStoryLinesModel(Model):
-    story_line = ForeignKeyField(NovelStoryLinesModel)
-    scene = ForeignKeyField(SceneModel, backref='story_lines')
+    story_line = ForeignKeyField(NovelStoryLinesModel, on_delete='CASCADE')
+    scene = ForeignKeyField(SceneModel, backref='story_lines', on_delete='CASCADE')
 
     class Meta:
         table_name = 'StoryLinesScenes'
@@ -125,8 +136,8 @@ class SceneStoryLinesModel(Model):
 
 
 class NovelCharactersModel(Model):
-    novel = ForeignKeyField(NovelModel, backref='characters')  # on_delete='CASCADE'
-    character = ForeignKeyField(CharacterModel)
+    novel = ForeignKeyField(NovelModel, backref='characters', on_delete='CASCADE')  # on_delete='CASCADE'
+    character = ForeignKeyField(CharacterModel, on_delete='CASCADE')
 
     class Meta:
         table_name = 'NovelCharacters'
@@ -134,8 +145,8 @@ class NovelCharactersModel(Model):
 
 
 class SceneCharactersModel(Model):
-    scene = ForeignKeyField(SceneModel, backref='characters')
-    character = ForeignKeyField(CharacterModel)
+    scene = ForeignKeyField(SceneModel, backref='characters', on_delete='CASCADE')
+    character = ForeignKeyField(CharacterModel, on_delete='CASCADE')
     type = TextField()
 
     class Meta:
@@ -185,6 +196,11 @@ class SqlClient:
                     if chapter.id == scene_m.chapter.id:
                         scene_chapter = chapter
                         break
+            arcs: List[CharacterArc] = []
+            for arc_m in scene_m.arcs:
+                for char in characters:
+                    if char.id == arc_m.character.id:
+                        arcs.append(CharacterArc(arc_m.arc, char))
 
             day = scene_m.day if scene_m.day else 0
             end_event = scene_m.end_event if scene_m.end_event else True
@@ -193,7 +209,7 @@ class SqlClient:
                                 middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
                                 end_event=end_event, characters=scene_characters, pov=pov,
                                 story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
-                                ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter))
+                                ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter, arcs=arcs))
 
         scenes = sorted(scenes, key=lambda x: x.sequence)
         novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
@@ -239,6 +255,7 @@ class SqlClient:
 
         self._update_scene_characters(scene)
         self._update_scene_story_lines(scene)
+        self._update_scene_character_arcs(scene)
 
     def update_scene_chapter(self, scene: Scene):
         scene_m: SceneModel = SceneModel.get_by_id(scene.id)
@@ -268,7 +285,7 @@ class SqlClient:
         self._update_scene_characters(scene)
         self._update_scene_story_lines(scene)
 
-    def _update_scene_story_lines(self, scene):
+    def _update_scene_story_lines(self, scene: Scene):
         scene_m = SceneModel.get_by_id(scene.id)
         for story_line in scene_m.story_lines:
             story_line.delete_instance()
@@ -276,7 +293,15 @@ class SqlClient:
         for story_line in scene.story_lines:
             SceneStoryLinesModel.create(story_line=story_line.id, scene=scene.id)
 
-    def _update_scene_characters(self, scene):
+    def _update_scene_character_arcs(self, scene: Scene):
+        scene_m = SceneModel.get_by_id(scene.id)
+        for arc in scene_m.arcs:
+            arc.delete_instance()
+
+        for character_arc in scene.arcs:
+            CharacterArcModel.create(arc=character_arc.arc, character=character_arc.character.id, scene=scene.id)
+
+    def _update_scene_characters(self, scene: Scene):
         scene_m = SceneModel.get_by_id(scene.id)
         for char in scene_m.characters:
             char.delete_instance()
