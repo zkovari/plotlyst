@@ -37,6 +37,10 @@ class IconRegistry:
         return qtawesome.icon('ei.remove', color='red')
 
     @staticmethod
+    def cancel_icon() -> QIcon:
+        return qtawesome.icon('mdi.backspace', color='red')
+
+    @staticmethod
     def error_icon() -> QIcon:
         return qtawesome.icon('fa5s.exclamation-triangle', color='red')
 
@@ -211,6 +215,10 @@ class IconRegistry:
     @staticmethod
     def conflict_icon() -> QIcon:
         return qtawesome.icon('mdi.sword-cross', color='orange')
+
+    @staticmethod
+    def home_icon() -> QIcon:
+        return qtawesome.icon('fa5s.home')
 
 
 class AvatarsRegistry:

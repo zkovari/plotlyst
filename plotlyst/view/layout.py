@@ -59,12 +59,12 @@ class FlowLayout(QLayout):
 
     @overrides
     def heightForWidth(self, width) -> int:
-        return self.doLayout(QRect(0, 0, width, 0), True)
+        return self._arrange(QRect(0, 0, width, 0), True)
 
     @overrides
     def setGeometry(self, rect: QRect):
         super(FlowLayout, self).setGeometry(rect)
-        self.doLayout(rect, False)
+        self._arrange(rect, False)
 
     @overrides
     def sizeHint(self) -> QSize:
@@ -81,7 +81,14 @@ class FlowLayout(QLayout):
 
         return size
 
-    def doLayout(self, rect: QRect, testOnly: bool) -> int:
+    def clear(self):
+        if not self._items:
+            return
+        item = self.takeAt(0)
+        while item:
+            item = self.takeAt(0)
+
+    def _arrange(self, rect: QRect, testOnly: bool) -> int:
         left, top, right, bottom = self.getContentsMargins()
         effectiveRect: QRect = rect.adjusted(left, top, -right, -bottom)
         x = effectiveRect.x()
