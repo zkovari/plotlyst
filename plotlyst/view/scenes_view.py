@@ -146,6 +146,8 @@ class ScenesOutlineView(QObject):
 
     def refresh(self):
         self.tblModel.modelReset.emit()
+        self.chaptersModel.update()
+        self._distribution_widget.refresh()
         self._display_characters()
 
     def _on_scene_selected(self, selection: QItemSelection):
@@ -176,9 +178,7 @@ class ScenesOutlineView(QObject):
         self.editor.widget.deleteLater()
         self.editor = None
 
-        self.tblModel.modelReset.emit()
-        self.chaptersModel.update()
-        self._distribution_widget.refresh()
+        self.refresh()
 
     def _on_new(self):
         self.editor = SceneEditor(self.novel)

@@ -156,8 +156,19 @@ class SceneCharactersModel(Model):
 
 class SqlClient:
 
-    def fetch_novel(self) -> Novel:
-        novel_model = NovelModel.select()[0]
+    def novels(self) -> List[Novel]:
+        novels = []
+        for novel_m in NovelModel.select():
+            novels.append(Novel(id=novel_m.id, title=novel_m.title))
+
+        return novels
+
+    def insert_novel(self, novel: Novel):
+        m = NovelModel.create(title=novel.title)
+        novel.id = m.id
+
+    def fetch_novel(self, id: int) -> Novel:
+        novel_model = NovelModel.get_by_id(id)
 
         characters: List[Character] = []
         for char_m in novel_model.characters:

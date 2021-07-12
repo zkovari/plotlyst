@@ -29,12 +29,14 @@ from overrides import overrides
 
 from plotlyst.common import EXIT_CODE_RESTART
 from plotlyst.core.client import client
+from plotlyst.core.domain import Novel
 from plotlyst.event.core import event_log_reporter
 from plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
 from plotlyst.view.characters_view import CharactersView
 from plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType
 from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
+from plotlyst.view.home_view import HomeView
 from plotlyst.view.icons import IconRegistry
 from plotlyst.view.notes_view import NotesView
 from plotlyst.view.novel_view import NovelView
@@ -52,12 +54,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
 
-        self.novel = client.fetch_novel()
+        self.novel = client.fetch_novel(1)
 
+        self.home_view = HomeView()
         self.novel_view = NovelView(self.novel)
-
         self.characters_view = CharactersView(self.novel)
-
         self.scenes_outline_view = ScenesOutlineView(self.novel)
         self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
 
@@ -70,6 +71,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self._tabstyle = TabStyle()
         self.tabWidget.tabBar().setStyle(self._tabstyle)
+        self.tabWidget.addTab(self.home_view.widget, IconRegistry.home_icon(), '')
         self.tabWidget.addTab(self.novel_view.widget, IconRegistry.book_icon(), '')
         self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
         self.scenes_tab = QTabWidget()
@@ -79,6 +81,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.addTab(self.timeline_view.widget, IconRegistry.timeline_icon(), '')
         self.tabWidget.addTab(self.notes_view.widget, IconRegistry.notes_icon(), '')
         self.tabWidget.addTab(self.reports_view.widget, IconRegistry.reports_icon(), '')
+        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.home_view.widget), 'Home')
+        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.novel_view.widget), 'Novel')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.characters_view.widget), 'Characters')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.scenes_tab), 'Scenes')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.timeline_view.widget), 'Timeline & events')
@@ -87,6 +91,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.setCurrentWidget(self.scenes_tab)
 
         self.tabWidget.currentChanged.connect(self._on_current_tab_changed)
+
+        self.home_view.loadNovel.connect(self._loed_new_novel)
 
         EventAuthorizationHandler.parent = self
         self.event_log_handler = EventLogHandler(self.statusBar())
@@ -123,6 +129,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _on_current_tab_changed(self, index: int):
         pass
+
+    def _loed_new_novel(self, novel: Novel):
+        if self.novel.id == novel.id:
+            return
+        # self.novel = client.fetch_novel(novel.id)
+        # self.scenes_outline_view.refresh()
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
