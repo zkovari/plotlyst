@@ -51,7 +51,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.resize(1000, 630)
         self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
-        self.setWindowIcon(IconRegistry.book_icon())
 
         self.novel = client.fetch_novel()
 
