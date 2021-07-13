@@ -38,7 +38,6 @@ class NovelView:
         self.ui.setupUi(self.widget)
 
         self.ui.lineTitle.setText(self.novel.title)
-        self.ui.cbMultiplePov.setChecked(True)
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
         self.ui.btnAdd.clicked.connect(self._on_add_story_line)
 

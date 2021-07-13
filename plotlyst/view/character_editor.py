@@ -20,9 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex, Qt
-from PyQt5.QtGui import QBrush
-from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QLineEdit, QSpinBox, \
-    QComboBox
+from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QLineEdit
 from overrides import overrides
 
 from plotlyst.core.client import client
@@ -66,23 +64,7 @@ class CharacterEditorDelegate(QStyledItemDelegate):
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
-        editor = None
-        if index.row() == CharacterEditorTableModel.RowName:
-            editor = QLineEdit(parent)
-        elif index.row() == CharacterEditorTableModel.RowAge:
-            editor = QSpinBox(parent)
-        elif index.row() == CharacterEditorTableModel.RowPersonality:
-            combo_box = QComboBox(parent)
-            combo_box.activated.connect(lambda: self.commitData.emit(self.editor))
-            combo_box.addItem('Active')
-            combo_box.setItemData(0, QBrush(Qt.green), role=Qt.BackgroundRole)
-            combo_box.addItem('OFF')
-            combo_box.setItemData(1, QBrush(Qt.red), role=Qt.BackgroundRole)
-            editor = combo_box
-
-        if editor:
-            return editor
-        return super(CharacterEditorDelegate, self).createEditor(parent, option, index)
+        return QLineEdit(parent)
 
     @overrides
     def setEditorData(self, editor: QWidget, index: QModelIndex):
@@ -91,8 +73,3 @@ class CharacterEditorDelegate(QStyledItemDelegate):
             edit_data = index.data(Qt.DisplayRole)
         if index.row() == CharacterEditorTableModel.RowName:
             editor.setText(str(edit_data))
-        elif index.row() == CharacterEditorTableModel.RowAge:
-            editor.setValue(edit_data)
-        elif index.row() == CharacterEditorTableModel.RowPersonality:
-            editor.setCurrentText(edit_data)
-            editor.showPopup()

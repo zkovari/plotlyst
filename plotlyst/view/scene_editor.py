@@ -53,9 +53,6 @@ class SceneEditor(QObject):
         self.ui.btnHappy.setIcon(qtawesome.icon('fa5s.smile', color_on='lightgreen'))
         self.ui.btnVeryHappy.setIcon(qtawesome.icon('fa5s.smile-beam', color_on='darkgreen'))
 
-        self.ui.btnAddEvent.setIcon(IconRegistry.plus_icon())
-        self.ui.btnRemoveEvent.setIcon(IconRegistry.minus_icon())
-
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
             self.ui.cbPov.addItem(char.name, char)

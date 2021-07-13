@@ -23,7 +23,7 @@ from typing import List
 import qtawesome
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QTabWidget, QWidgetAction, QProxyStyle, \
+from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction, QProxyStyle, \
     QStyle, QStyleOption, QTabBar, QStyleOptionTab
 from overrides import overrides
 
@@ -74,21 +74,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.addTab(self.home_view.widget, IconRegistry.home_icon(), '')
         self.tabWidget.addTab(self.novel_view.widget, IconRegistry.book_icon(), '')
         self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
-        self.scenes_tab = QTabWidget()
-        self.scenes_tab.addTab(self.scenes_outline_view.widget, 'Outline')
-        self.scenes_tab.addTab(self.draft_scenes_view.widget, 'Draft')
-        self.tabWidget.addTab(self.scenes_tab, IconRegistry.scene_icon(), '')
+        self.tabWidget.addTab(self.scenes_outline_view.widget, IconRegistry.scene_icon(), '')
         self.tabWidget.addTab(self.timeline_view.widget, IconRegistry.timeline_icon(), '')
         self.tabWidget.addTab(self.notes_view.widget, IconRegistry.notes_icon(), '')
         self.tabWidget.addTab(self.reports_view.widget, IconRegistry.reports_icon(), '')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.home_view.widget), 'Home')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.novel_view.widget), 'Novel')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.characters_view.widget), 'Characters')
-        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.scenes_tab), 'Scenes')
+        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.scenes_outline_view.widget), 'Scenes')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.timeline_view.widget), 'Timeline & events')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.notes_view.widget), 'Notes')
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.reports_view.widget), 'Reports')
-        self.tabWidget.setCurrentWidget(self.scenes_tab)
+        self.tabWidget.setCurrentWidget(self.scenes_outline_view.widget)
 
         self.tabWidget.currentChanged.connect(self._on_current_tab_changed)
 

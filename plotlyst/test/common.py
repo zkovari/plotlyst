@@ -109,7 +109,7 @@ def create_story_line(qtbot, window: MainWindow, text: str):
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:
     scenes: ScenesOutlineView = window.scenes_outline_view
-    window.tabWidget.setCurrentWidget(window.scenes_tab)
+    window.tabWidget.setCurrentWidget(window.scenes_outline_view.widget)
     scenes.ui.btnNew.click()
     assert scenes.editor
     assert scenes.ui.stackedWidget.currentWidget() == scenes.ui.pageEditor

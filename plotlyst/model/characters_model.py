@@ -108,8 +108,6 @@ class CharacterEditorTableModel(QAbstractTableModel):
     valueChanged = pyqtSignal()
 
     RowName = 0
-    RowAge = 1
-    RowPersonality = 2
 
     def __init__(self, character: Character, parent=None):
         super().__init__(parent)
@@ -117,7 +115,7 @@ class CharacterEditorTableModel(QAbstractTableModel):
 
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
-        return 3
+        return 1
 
     @overrides
     def columnCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
@@ -134,25 +132,11 @@ class CharacterEditorTableModel(QAbstractTableModel):
                     return 'Name'
                 else:
                     return self._data.name
-            elif index.row() == self.RowAge:
-                if index.column() == 0:
-                    return 'Age'
-                else:
-                    return self._data.age
-            elif index.row() == self.RowPersonality:
-                if index.column() == 0:
-                    return 'Personality'
-                else:
-                    return self._data.personality
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
         if index.row() == self.RowName:
             self._data.name = value
-        elif index.row() == self.RowAge:
-            self._data.age = int(value)
-        elif index.row() == self.RowPersonality:
-            self._data.personality = value
         else:
             return False
 

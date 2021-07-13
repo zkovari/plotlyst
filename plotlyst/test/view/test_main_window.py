@@ -7,7 +7,7 @@ from plotlyst.view.scenes_view import ScenesOutlineView
 def test_main_window_is_initialized(qtbot, window: MainWindow):
     assert window
 
-    assert window.tabWidget.currentWidget() == window.scenes_tab
+    assert window.tabWidget.currentWidget() == window.scenes_outline_view.widget
 
 
 def test_create_new_character(qtbot, window: MainWindow):

@@ -39,7 +39,7 @@ class TimelineView:
 
     def refresh(self):
         self._refresh_timeline()
-        self._refresh_events()
+        # self._refresh_events()
 
     def _refresh_timeline(self):
         scene = QGraphicsScene()
@@ -67,20 +67,20 @@ class TimelineView:
             item.setToolTip(s.synopsis)
         self.ui.graphicsTimeline.setScene(scene)
 
-    def _refresh_events(self):
-        scene = QGraphicsScene()
-        scene.setSceneRect(0, 0, 5000, 5000)
+    # def _refresh_events(self):
+    #     scene = QGraphicsScene()
+    #     scene.setSceneRect(0, 0, 5000, 5000)
+    #
+    #     sl_size = len(self.novel.story_lines)
+    #     if not sl_size:
+    #         return
+    #     step = 500 / sl_size
+    #     x = sl_size / 2 * -step
+    #     for i, sl in enumerate(self.novel.story_lines):
+    #         scene.addRect(x, 0, 20, 500, brush=self.colors[i])
+    #         x += step
 
-        sl_size = len(self.novel.story_lines)
-        if not sl_size:
-            return
-        step = 500 / sl_size
-        x = sl_size / 2 * -step
-        for i, sl in enumerate(self.novel.story_lines):
-            scene.addRect(x, 0, 20, 500, brush=self.colors[i])
-            x += step
-
-        self.ui.graphicsEvents.setScene(scene)
+    # self.ui.graphicsEvents.setScene(scene)
 
 
 class SceneCardWidget(QFrame, Ui_SceneCardWidget):

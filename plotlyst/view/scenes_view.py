@@ -147,6 +147,7 @@ class ScenesOutlineView(QObject):
     def refresh(self):
         self.tblModel.modelReset.emit()
         self.chaptersModel.update()
+        self.chaptersModel.modelReset.emit()
         self._distribution_widget.refresh()
         self._display_characters()
 
