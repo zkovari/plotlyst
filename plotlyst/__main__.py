@@ -21,9 +21,10 @@ import os
 import subprocess
 import sys
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QCoreApplication, QSettings, Qt
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QFileDialog, QApplication
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 from plotlyst.common import EXIT_CODE_RESTART
@@ -38,8 +39,13 @@ QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdp
 
 if __name__ == '__main__':
     appctxt = ApplicationContext()
+
+    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
+    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
     while True:
         app = appctxt.app
+        font = QFont('Noto Sans')
+        QApplication.setFont(font)
         QCoreApplication.setOrganizationName('CraftOfGem')
         QCoreApplication.setOrganizationDomain('craftofgem.com')
         QCoreApplication.setApplicationName('NovelApp')
