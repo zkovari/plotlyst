@@ -195,6 +195,7 @@ class ScenesOutlineView(QObject):
 
     def _switch_view(self):
         height = 50
+        relax_colors = False
         columns = self._default_columns
 
         if self.ui.btnSynopsisView.isChecked():
@@ -203,11 +204,13 @@ class ScenesOutlineView(QObject):
         elif self.ui.btnActionsView.isChecked():
             columns = self._actions_view_columns
             height = 60
+            relax_colors = True
             self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColBeginning,
                                                                       QHeaderView.Stretch)
             self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColMiddle,
                                                                       QHeaderView.Stretch)
 
+        self.tblModel.setRelaxColors(relax_colors)
         for col in range(self.tblModel.columnCount()):
             if col in columns:
                 self.ui.tblScenes.showColumn(col)

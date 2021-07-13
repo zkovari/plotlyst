@@ -60,6 +60,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         super().__init__(_headers, parent)
         self._second_act_start: Optional[QModelIndex] = None
         self._third_act_start: Optional[QModelIndex] = None
+        self._relax_colors = False
 
         self._find_acts()
 
@@ -80,10 +81,11 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 font.setItalic(True)
                 return font
         elif role == Qt.BackgroundRole:
-            if self._data[index.row()].wip:
-                return QBrush(QColor('#f2f763'))
-            elif self._data[index.row()].pivotal:
-                return QBrush(QColor('#f07762'))
+            if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
+                if self._data[index.row()].wip:
+                    return QBrush(QColor('#f2f763'))
+                elif self._data[index.row()].pivotal:
+                    return QBrush(QColor('#f07762'))
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
@@ -115,16 +117,19 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return IconRegistry.goal_icon()
                 if self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.reaction_icon()
+                return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColMiddle:
                 if self._data[index.row()].type == ACTION_SCENE:
                     return IconRegistry.conflict_icon()
                 if self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.dilemma_icon()
+                return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColEnd:
                 if self._data[index.row()].type == ACTION_SCENE:
                     return IconRegistry.disaster_icon()
                 if self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.decision_icon()
+                return IconRegistry.invisible_white_icon()
         elif role == Qt.ToolTipRole:
             if index.column() == self.ColType:
                 if self._data[index.row()].beginning:
@@ -225,6 +230,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     def beginResetModel(self) -> None:
         self._find_acts()
         super().beginResetModel()
+
+    def setRelaxColors(self, enabled: bool):
+        self._relax_colors = enabled
 
     def isInAct(self, act: int, row: int) -> bool:
         if act == 1 and self._second_act_start:

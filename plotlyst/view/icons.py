@@ -48,6 +48,11 @@ class IconRegistry:
     def empty_icon() -> QIcon:
         return QIcon('')
 
+    # used to fill up space in models
+    @staticmethod
+    def invisible_white_icon():
+        return qtawesome.icon('fa5.circle', color='white')
+
     @staticmethod
     def copy_icon() -> QIcon:
         return qtawesome.icon('fa5.copy')
