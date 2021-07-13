@@ -58,7 +58,7 @@ class ScenesOutlineView(QObject):
         self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
                                  ScenesTableModel.ColCharacters,
                                  ScenesTableModel.ColSynopsis]
-        self._actions_view_columns = [ScenesTableModel.ColPov, ScenesTableModel.ColBeginning,
+        self._actions_view_columns = [ScenesTableModel.ColPov, ScenesTableModel.ColTitle, ScenesTableModel.ColBeginning,
                                       ScenesTableModel.ColMiddle, ScenesTableModel.ColEnd]
         self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.tblModel)
