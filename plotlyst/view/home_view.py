@@ -45,7 +45,7 @@ class HomeView(QObject):
         self._novel_cards: List[NovelCard] = []
         self.update()
 
-        self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
+        self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAdd.clicked.connect(self._add_new_novel)
 
     def update(self):

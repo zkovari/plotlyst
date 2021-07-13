@@ -72,8 +72,11 @@ class SceneEditor(QObject):
         self.ui.lstScenes.setMaximumWidth(200)
         self.ui.lstScenes.clicked.connect(self._new_scene_selected)
 
+        self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._on_close)
+        self.ui.btnPrevious.setIcon(IconRegistry.arrow_left_thick_icon())
         self.ui.btnPrevious.clicked.connect(self._on_previous_scene)
+        self.ui.btnNext.setIcon(IconRegistry.arrow_right_thick_icon())
         self.ui.btnNext.clicked.connect(self._on_next_scene)
 
         self._save_timer = QTimer()

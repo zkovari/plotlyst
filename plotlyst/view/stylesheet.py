@@ -47,6 +47,26 @@ QPushButton:disabled {
     opacity: 0.65;
 }
 
+QPushButton[positive=true]:!disabled {
+    background-color: #2ecc71;
+    color: #fff;
+    font: bold;
+}
+
+QPushButton[positive=true]:hover {
+    background-color: #27ae60;
+}
+
+QPushButton[deconstructive=true]:!disabled {
+    background-color: #e74c3c;
+    color: #fff;
+    font: bold;
+}
+
+QPushButton[deconstructive=true]:hover {
+    background-color: #c0392b;
+}
+
 QDockWidget::float-button {
     subcontrol-position: top left;
     subcontrol-origin: margin;

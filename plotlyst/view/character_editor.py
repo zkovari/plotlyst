@@ -27,6 +27,7 @@ from plotlyst.core.client import client
 from plotlyst.core.domain import Novel, Character
 from plotlyst.model.characters_model import CharacterEditorTableModel
 from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
+from plotlyst.view.icons import IconRegistry
 
 
 class CharacterEditor:
@@ -44,6 +45,8 @@ class CharacterEditor:
         else:
             self.character = Character('')
             self._new_character = True
+
+        self.ui.btnClose.setIcon(IconRegistry.return_icon())
 
         self.model = CharacterEditorTableModel(self.character)
         self.model.valueChanged.connect(self._save)

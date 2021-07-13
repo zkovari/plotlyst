@@ -57,6 +57,9 @@
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
         <widget class="QToolButton" name="btnAdd">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -64,6 +67,9 @@
        </item>
        <item>
         <widget class="QToolButton" name="btnEdit">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -71,6 +77,9 @@
        </item>
        <item>
         <widget class="QToolButton" name="btnRemove">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="text">
           <string/>
          </property>

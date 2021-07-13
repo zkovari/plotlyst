@@ -93,10 +93,10 @@ class ScenesOutlineView(QObject):
         self.ui.treeChapters.setColumnWidth(1, 20)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
+        self.ui.btnChaptersToggle.setChecked(True)
         self.ui.btnNewChapter.setIcon(IconRegistry.plus_icon())
         self.ui.btnNewChapter.clicked.connect(self._new_chapter)
 
-        self.ui.btnGraphs.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
         self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
         self.ui.btnAct2.setIcon(IconRegistry.act_two_icon())
@@ -134,8 +134,12 @@ class ScenesOutlineView(QObject):
 
         self.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
         self.ui.tblScenes.doubleClicked.connect(self.ui.btnEdit.click)
+
+        self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit)
+        self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnNew.clicked.connect(self._on_new)
+        self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
     def _display_characters(self):
@@ -158,7 +162,7 @@ class ScenesOutlineView(QObject):
 
     def _hide_chapters_toggled(self, toggled: bool):
         self.ui.wgtChapters.setHidden(toggled)
-        self.ui.btnChaptersToggle.setText('Show chapters' if toggled else 'Hide chapters')
+        self.ui.btnChaptersToggle.setIcon(IconRegistry.eye_open_icon() if toggled else IconRegistry.eye_closed_icon())
 
     def _on_edit(self):
         indexes = self.ui.tblScenes.selectedIndexes()

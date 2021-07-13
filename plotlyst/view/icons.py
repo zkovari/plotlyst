@@ -45,18 +45,6 @@ class IconRegistry:
         return qtawesome.icon('fa5s.exclamation-triangle', color='red')
 
     @staticmethod
-    def circle_icon() -> QIcon:
-        return qtawesome.icon('mdi.circle-slice-8', color='green')
-
-    @staticmethod
-    def stop_icon() -> QIcon:
-        return qtawesome.icon('ei.stop-alt', color='red')
-
-    @staticmethod
-    def warning_icon() -> QIcon:
-        return qtawesome.icon('fa.warning')
-
-    @staticmethod
     def empty_icon() -> QIcon:
         return QIcon('')
 
@@ -73,36 +61,8 @@ class IconRegistry:
         return qtawesome.icon('mdi.pencil')
 
     @staticmethod
-    def arrow_down_thin_icon() -> QIcon:
-        return qtawesome.icon('fa5s.arrow-down')
-
-    @staticmethod
-    def arrow_down_thick_icon() -> QIcon:
-        return qtawesome.icon('ei.arrow-down')
-
-    @staticmethod
-    def arrow_up_thick_icon() -> QIcon:
-        return qtawesome.icon('ei.arrow-up')
-
-    @staticmethod
-    def toggle_off_icon() -> QIcon:
-        return qtawesome.icon('fa5s.toggle-off')
-
-    @staticmethod
-    def toggle_on_icon() -> QIcon:
-        return qtawesome.icon('fa5s.toggle-on', color='#3532a1')
-
-    @staticmethod
-    def info_icon() -> QIcon:
-        return qtawesome.icon('fa5s.info', color='darkblue')
-
-    @staticmethod
-    def tree_icon() -> QIcon:
-        return qtawesome.icon('mdi.file-tree-outline')
-
-    @staticmethod
-    def plus_icon() -> QIcon:
-        return qtawesome.icon('fa5s.plus', color='green')
+    def plus_icon(color: str = 'green') -> QIcon:
+        return qtawesome.icon('fa5s.plus', color=color)
 
     @staticmethod
     def minus_icon() -> QIcon:
@@ -219,6 +179,30 @@ class IconRegistry:
     @staticmethod
     def home_icon() -> QIcon:
         return qtawesome.icon('fa5s.home')
+
+    @staticmethod
+    def trash_can_icon(color: str = 'red') -> QIcon:
+        return qtawesome.icon('fa5s.trash-alt', color=color)
+
+    @staticmethod
+    def arrow_right_thick_icon() -> QIcon:
+        return qtawesome.icon('ei.arrow-right')
+
+    @staticmethod
+    def arrow_left_thick_icon() -> QIcon:
+        return qtawesome.icon('ei.arrow-left')
+
+    @staticmethod
+    def return_icon() -> QIcon:
+        return qtawesome.icon('ei.return-key')
+
+    @staticmethod
+    def eye_open_icon() -> QIcon:
+        return qtawesome.icon('fa5.eye')
+
+    @staticmethod
+    def eye_closed_icon() -> QIcon:
+        return qtawesome.icon('fa5.eye-slash')
 
 
 class AvatarsRegistry:

@@ -29,6 +29,7 @@ from plotlyst.model.common import proxy
 from plotlyst.view.character_editor import CharacterEditor
 from plotlyst.view.common import ask_confirmation
 from plotlyst.view.generated.characters_view_ui import Ui_CharactersView
+from plotlyst.view.icons import IconRegistry
 
 
 class CharactersView:
@@ -46,8 +47,11 @@ class CharactersView:
 
         self.ui.listCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
         self.ui.listCharacters.doubleClicked.connect(self.ui.btnEdit.click)
+        self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit)
+        self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnNew.clicked.connect(self._on_new)
+        self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
     def refresh(self):

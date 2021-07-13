@@ -18,8 +18,11 @@
     <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
       <widget class="QPushButton" name="btnClose">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="text">
-        <string>Close</string>
+        <string>Back</string>
        </property>
        <property name="shortcut">
         <string>Esc</string>
