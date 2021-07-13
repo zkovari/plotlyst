@@ -194,30 +194,26 @@ class ScenesOutlineView(QObject):
         client.insert_chapter(self.novel, chapter)
 
     def _switch_view(self):
-        if self.ui.btnTableView.isChecked():
-            for col in range(self.tblModel.columnCount()):
-                if col in self._default_columns:
-                    self.ui.tblScenes.showColumn(col)
-                    continue
-                self.ui.tblScenes.hideColumn(col)
+        height = 50
+        columns = self._default_columns
 
-        elif self.ui.btnSynopsisView.isChecked():
-            for col in range(self.tblModel.columnCount()):
-                if col == ScenesTableModel.ColSynopsis or col == ScenesTableModel.ColPov:
-                    self.ui.tblScenes.showColumn(col)
-                    continue
-                self.ui.tblScenes.hideColumn(col)
+        if self.ui.btnSynopsisView.isChecked():
+            columns = [ScenesTableModel.ColSynopsis, ScenesTableModel.ColPov]
 
         elif self.ui.btnActionsView.isChecked():
-            for col in range(self.tblModel.columnCount()):
-                if col in self._actions_view_columns:
-                    self.ui.tblScenes.showColumn(col)
-                    continue
-                self.ui.tblScenes.hideColumn(col)
+            columns = self._actions_view_columns
+            height = 60
             self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColBeginning,
                                                                       QHeaderView.Stretch)
             self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColMiddle,
                                                                       QHeaderView.Stretch)
+
+        for col in range(self.tblModel.columnCount()):
+            if col in columns:
+                self.ui.tblScenes.showColumn(col)
+                continue
+            self.ui.tblScenes.hideColumn(col)
+        self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
 
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):
