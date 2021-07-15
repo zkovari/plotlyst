@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-import qtawesome
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer
 from PyQt5.QtWidgets import QWidget
 
@@ -47,11 +46,11 @@ class SceneEditor(QObject):
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabGeneral), IconRegistry.general_info_icon())
         self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabNotes), IconRegistry.notes_icon())
 
-        self.ui.btnVeryUnhappy.setIcon(qtawesome.icon('fa5s.sad-cry', color_on='red'))
-        self.ui.btnUnHappy.setIcon(qtawesome.icon('mdi.emoticon-sad', color_on='yellow'))
-        self.ui.btnNeutral.setIcon(qtawesome.icon('mdi.emoticon-neutral', color_on='orange'))
-        self.ui.btnHappy.setIcon(qtawesome.icon('fa5s.smile', color_on='lightgreen'))
-        self.ui.btnVeryHappy.setIcon(qtawesome.icon('fa5s.smile-beam', color_on='darkgreen'))
+        self.ui.btnVeryUnhappy.setIcon(IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY))
+        self.ui.btnUnHappy.setIcon(IconRegistry.emotion_icon_from_feeling(UNHAPPY))
+        self.ui.btnNeutral.setIcon(IconRegistry.emotion_icon_from_feeling(NEUTRAL))
+        self.ui.btnHappy.setIcon(IconRegistry.emotion_icon_from_feeling(HAPPY))
+        self.ui.btnVeryHappy.setIcon(IconRegistry.emotion_icon_from_feeling(VERY_HAPPY))
 
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:

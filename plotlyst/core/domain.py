@@ -82,6 +82,12 @@ class Scene:
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
 
+    def pov_arc(self) -> int:
+        for arc in self.arcs:
+            if arc.character == self.pov:
+                return arc.arc
+        return NEUTRAL
+
 
 @dataclass
 class Event:
