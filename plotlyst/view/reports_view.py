@@ -82,7 +82,8 @@ class ReportsView:
         povs = set([x.pov for x in self.novel.scenes])
         for pov in povs:
             self._scenes_proxy.setCharacterFilter(pov, False)
-        self._scenes_proxy.setCharacterFilter(self.novel.characters[0], True)
+        if self.novel.characters:
+            self._scenes_proxy.setCharacterFilter(self.novel.characters[0], True)
 
         self.ui.tblScenes.setModel(self._scenes_proxy)
         for col in range(self.scenes_model.columnCount()):
@@ -91,11 +92,11 @@ class ReportsView:
         self.ui.tblScenes.showColumn(ScenesTableModel.ColTitle)
         self.ui.tblScenes.showColumn(ScenesTableModel.ColArc)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
+        if self.novel.characters:
+            self.arc_canvas = CharacterArcCanvas(self.novel, self.novel.characters[0], parent=self)
+            self.ui.tabCharacterArcs.layout().addWidget(self.arc_canvas)
 
-        self.arc_canvas = CharacterArcCanvas(self.novel, self.novel.characters[0], parent=self)
-        self.ui.tabCharacterArcs.layout().addWidget(self.arc_canvas)
-
-        self.scenes_model.valueChanged.connect(self.arc_canvas.refresh_plot)
+            self.scenes_model.valueChanged.connect(self.arc_canvas.refresh_plot)
 
     def _on_scene_selected(self, scene: Scene):
         self.scene_selected = scene
