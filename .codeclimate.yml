@@ -22,9 +22,7 @@ checks:
     config:
       threshold: 20
   method-lines:
-    enabled: true
-    config:
-      threshold: 25
+    enabled: false
   nested-control-flow:
     enabled: true
     config:
@@ -41,6 +39,16 @@ checks:
     enabled: true
     config:
       threshold: #language-specific defaults. overrides affect all languages.
+
+plugins:
+  bandit:
+    enabled: true
+  pep8:
+    enabled: true
+  radon:
+    enabled: true
+  sonar-python:
+    enabled: true
 
 exclude_patterns:
 - "**/tests/"
