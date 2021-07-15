@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer
+from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel
 from PyQt5.QtWidgets import QWidget
 
 from plotlyst.core.client import client
@@ -28,7 +28,6 @@ from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Eve
 from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from plotlyst.model.novel import NovelStoryLinesListModel
 from plotlyst.model.scenes_model import ScenesTableModel
-from plotlyst.view.common import EditorCommand, EditorCommandType
 from plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from plotlyst.view.icons import IconRegistry
 
@@ -153,8 +152,12 @@ class SceneEditor(QObject):
         else:
             if self.scene.sequence == 0:
                 self.ui.btnPrevious.setDisabled(True)
-            elif self.scene.sequence == len(self.novel.scenes) - 1:
+            else:
+                self.ui.btnPrevious.setEnabled(True)
+            if self.scene.sequence == len(self.novel.scenes) - 1:
                 self.ui.btnNext.setDisabled(True)
+            else:
+                self.ui.btnNext.setEnabled(True)
 
         for char_arc in self.scene.arcs:
             if scene.pov and char_arc.character == scene.pov:
@@ -256,12 +259,16 @@ class SceneEditor(QObject):
         self._save_scene()
 
     def _on_previous_scene(self):
-        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
-                                              EditorCommand(EditorCommandType.EDIT_SCENE, self.scene.sequence - 1)])
+        row = self.scene.sequence - 1
+        self.ui.lstScenes.selectionModel().select(self.scenes_model.index(row, ScenesTableModel.ColTitle),
+                                                  QItemSelectionModel.ClearAndSelect)
+        self._new_scene_selected(self.scenes_model.index(row, 0))
 
     def _on_next_scene(self):
-        self.commands_sent.emit(self.widget, [EditorCommand.close_editor(),
-                                              EditorCommand(EditorCommandType.EDIT_SCENE, self.scene.sequence + 1)])
+        row = self.scene.sequence + 1
+        self.ui.lstScenes.selectionModel().select(self.scenes_model.index(row, ScenesTableModel.ColTitle),
+                                                  QItemSelectionModel.ClearAndSelect)
+        self._new_scene_selected(self.scenes_model.index(row, 0))
 
     def _new_scene_selected(self, index: QModelIndex):
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
