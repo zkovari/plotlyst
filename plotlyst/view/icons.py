@@ -22,7 +22,7 @@ from typing import Dict
 import qtawesome
 from PyQt5.QtGui import QIcon, QPixmap
 
-from plotlyst.core.domain import Character
+from plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 from plotlyst.view.common import rounded_pixmap
 
 
@@ -208,6 +208,19 @@ class IconRegistry:
     @staticmethod
     def eye_closed_icon() -> QIcon:
         return qtawesome.icon('fa5.eye-slash')
+
+    @staticmethod
+    def emotion_icon_from_feeling(feeling: int) -> QIcon:
+        if feeling == VERY_UNHAPPY:
+            return qtawesome.icon('fa5s.sad-cry', color='red')
+        if feeling == UNHAPPY:
+            return qtawesome.icon('mdi.emoticon-sad', color='orange')
+        if feeling == HAPPY:
+            return qtawesome.icon('fa5s.smile', color='lightgreen')
+        if feeling == VERY_HAPPY:
+            return qtawesome.icon('fa5s.smile-beam', color='darkgreen')
+
+        return qtawesome.icon('mdi.emoticon-neutral', color='grey')
 
 
 class AvatarsRegistry:

@@ -20,15 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Any, Optional
 
+from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
-    QAbstractItemModel, QPoint, QAbstractTableModel
+    QAbstractItemModel, QPoint, QAbstractTableModel, QSize
 from PyQt5.QtGui import QIcon, QBrush, QColor
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
-    QStyleOptionViewItem, QTextEdit, QMenu, QAction
+    QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit
 from overrides import overrides
 
 from plotlyst.core.client import client
-from plotlyst.core.domain import Scene, Novel
+from plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
 from plotlyst.model.chapters_model import ChaptersTreeModel
 from plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from plotlyst.model.common import proxy
@@ -271,7 +272,18 @@ class ScenesViewDelegate(QStyledItemDelegate):
         self.novel = novel
 
     @overrides
+    def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
+        if index.column() == ScenesTableModel.ColArc:
+            scene: Scene = index.data(ScenesTableModel.SceneRole)
+            painter.drawPixmap(option.rect.x() + 3, option.rect.y() + 2,
+                               IconRegistry.emotion_icon_from_feeling(scene.pov_arc()).pixmap(QSize(24, 24)))
+        else:
+            super(ScenesViewDelegate, self).paint(painter, option, index)
+
+    @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
+        if index.column() == ScenesTableModel.ColArc:
+            return QComboBox(parent)
         return QTextEdit(parent)
 
     @overrides
@@ -279,13 +291,41 @@ class ScenesViewDelegate(QStyledItemDelegate):
         edit_data = index.data(Qt.EditRole)
         if not edit_data:
             edit_data = index.data(Qt.DisplayRole)
-        editor.setText(str(edit_data))
+        if isinstance(editor, QLineEdit):
+            editor.setText(str(edit_data))
+        if isinstance(editor, QComboBox):
+            arc = index.data(ScenesTableModel.SceneRole).pov_arc()
+            editor.addItem(IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY), '', VERY_UNHAPPY)
+            if arc == VERY_UNHAPPY:
+                editor.setCurrentIndex(0)
+            editor.addItem(IconRegistry.emotion_icon_from_feeling(UNHAPPY), '', UNHAPPY)
+            if arc == UNHAPPY:
+                editor.setCurrentIndex(1)
+            editor.addItem(IconRegistry.emotion_icon_from_feeling(NEUTRAL), '', NEUTRAL)
+            if arc == NEUTRAL:
+                editor.setCurrentIndex(2)
+            editor.addItem(IconRegistry.emotion_icon_from_feeling(HAPPY), '', HAPPY)
+            if arc == HAPPY:
+                editor.setCurrentIndex(3)
+            editor.addItem(IconRegistry.emotion_icon_from_feeling(VERY_HAPPY), '', VERY_HAPPY)
+            if arc == VERY_HAPPY:
+                editor.setCurrentIndex(4)
+
+            editor.activated.connect(lambda: self._commit_and_close(editor))
+            editor.showPopup()
 
     @overrides
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
-        model.setData(index, editor.toPlainText())
+        if isinstance(editor, QComboBox):
+            model.setData(index, editor.currentData(Qt.UserRole))
+        else:
+            model.setData(index, editor.toPlainText())
         scene = index.data(ScenesTableModel.SceneRole)
         client.update_scene(scene)
+
+    def _commit_and_close(self, editor):
+        self.commitData.emit(editor)
+        self.closeEditor.emit(editor)
 
 
 class CharactersScenesDistributionWidget(QWidget):

@@ -86,73 +86,119 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <layout class="QHBoxLayout" name="layoutActButtons">
-         <item>
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item alignment="Qt::AlignHCenter|Qt::AlignBottom">
-          <widget class="QToolButton" name="btnAct1">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignHCenter|Qt::AlignBottom">
-          <widget class="QToolButton" name="btnAct2">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignBottom">
-          <widget class="QToolButton" name="btnAct3">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
+        <widget class="QTabWidget" name="tabWidget_2">
+         <property name="currentIndex">
+          <number>1</number>
+         </property>
+         <widget class="QWidget" name="tabCharacterSceneDistribution">
+          <attribute name="title">
+           <string>Scene distribution</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <layout class="QHBoxLayout" name="layoutActButtons">
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item alignment="Qt::AlignHCenter|Qt::AlignBottom">
+              <widget class="QToolButton" name="btnAct1">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item alignment="Qt::AlignHCenter|Qt::AlignBottom">
+              <widget class="QToolButton" name="btnAct2">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item alignment="Qt::AlignBottom">
+              <widget class="QToolButton" name="btnAct3">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabCharacterArcs">
+          <attribute name="title">
+           <string>Arcs</string>
+          </attribute>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QTableView" name="tblScenes">
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::AllEditTriggers</set>
+             </property>
+             <attribute name="horizontalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+             <attribute name="horizontalHeaderDefaultSectionSize">
+              <number>32</number>
+             </attribute>
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+             <attribute name="verticalHeaderHighlightSections">
+              <bool>false</bool>
+             </attribute>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
        </item>
       </layout>
      </widget>

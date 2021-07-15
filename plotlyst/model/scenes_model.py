@@ -24,13 +24,14 @@ from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMime
 from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from overrides import overrides
 
-from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Character
+from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Character, CharacterArc
 from plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
 from plotlyst.view.icons import IconRegistry, avatars
 
 
 class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     orderChanged = pyqtSignal()
+    valueChanged = pyqtSignal(QModelIndex)
     SceneRole = Qt.UserRole + 1
 
     MimeType: str = 'application/scene'
@@ -43,11 +44,12 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
     ColBeginning = 5
     ColMiddle = 6
     ColEnd = 7
-    ColSynopsis = 8
+    ColArc = 8
+    ColSynopsis = 9
 
     def __init__(self, novel: Novel, parent=None):
         self._data: List[Scene] = novel.scenes
-        _headers = [''] * 9
+        _headers = [''] * 10
         _headers[self.ColTitle] = 'Title'
         _headers[self.ColType] = 'Type'
         _headers[self.ColPov] = 'POV'
@@ -56,6 +58,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         _headers[self.ColBeginning] = 'Beginning'
         _headers[self.ColMiddle] = 'Middle'
         _headers[self.ColEnd] = 'End'
+        _headers[self.ColArc] = 'Arc'
         _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
         self._second_act_start: Optional[QModelIndex] = None
@@ -168,24 +171,31 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColEnd:
             return flags | Qt.ItemIsEditable
+        if index.column() == self.ColArc:
+            return flags | Qt.ItemIsEditable
         return flags
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
         if index.column() == self.ColSynopsis:
             self._data[index.row()].synopsis = value
-            return True
-        if index.column() == self.ColBeginning:
+        elif index.column() == self.ColBeginning:
             self._data[index.row()].beginning = value
-            return True
-        if index.column() == self.ColMiddle:
+        elif index.column() == self.ColMiddle:
             self._data[index.row()].middle = value
-            return True
-        if index.column() == self.ColEnd:
+        elif index.column() == self.ColEnd:
             self._data[index.row()].end = value
-            return True
-
-        return False
+        elif index.column() == self.ColArc:
+            if self._data[index.row()].arcs:
+                for arc in self._data[index.row()].arcs:
+                    if arc.character is self._data[index.row()].pov:
+                        arc.arc = value
+            else:
+                self._data[index.row()].arcs.append(CharacterArc(value, self._data[index.row()].pov))
+        else:
+            return False
+        self.valueChanged.emit(index)
+        return True
 
     @overrides
     def mimeData(self, indexes: List[QModelIndex]) -> QMimeData:
