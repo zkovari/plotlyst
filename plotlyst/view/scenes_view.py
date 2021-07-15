@@ -18,12 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Any, Optional
+from typing import Optional
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
-    QAbstractItemModel, QPoint, QAbstractTableModel, QSize
-from PyQt5.QtGui import QIcon, QBrush, QColor
+    QAbstractItemModel, QPoint, QSize
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit
 from overrides import overrides
@@ -36,7 +35,6 @@ from plotlyst.model.common import proxy
 from plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
 from plotlyst.view.generated.draft_scenes_view_ui import Ui_DraftScenesView
-from plotlyst.view.generated.scene_characters_widget_ui import Ui_SceneCharactersWidget
 from plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from plotlyst.view.icons import IconRegistry, avatars
@@ -75,13 +73,11 @@ class ScenesOutlineView(QObject):
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
         self.tblModel.orderChanged.connect(self._on_scene_moved)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColCharacters, 170)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
-        self._display_characters()
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
-        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColCharacters,
-                                                                  QHeaderView.ResizeToContents)
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
         self.ui.splitterLeft.setSizes([70, 500])
@@ -143,18 +139,11 @@ class ScenesOutlineView(QObject):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-    def _display_characters(self):
-        for row in range(self._proxy.rowCount()):
-            self.ui.tblScenes.setIndexWidget(self._proxy.index(row, ScenesTableModel.ColCharacters),
-                                             SceneCharactersWidget(
-                                                 self._proxy.index(row, 0).data(ScenesTableModel.SceneRole)))
-
     def refresh(self):
         self.tblModel.modelReset.emit()
         self.chaptersModel.update()
         self.chaptersModel.modelReset.emit()
         self._distribution_widget.refresh()
-        self._display_characters()
 
     def _on_scene_selected(self, selection: QItemSelection):
         selection = len(selection.indexes()) > 0
@@ -273,12 +262,27 @@ class ScenesViewDelegate(QStyledItemDelegate):
 
     @overrides
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
-        if index.column() == ScenesTableModel.ColArc:
+        super(ScenesViewDelegate, self).paint(painter, option, index)
+        if index.column() == ScenesTableModel.ColCharacters:
             scene: Scene = index.data(ScenesTableModel.SceneRole)
+            x = 3
+            if scene.pov:
+                painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
+                                   avatars.pixmap(scene.pov).scaled(24, 24, Qt.KeepAspectRatio,
+                                                                    Qt.SmoothTransformation))
+            x += 27
+            for char in scene.characters:
+                painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
+                                   avatars.pixmap(char).scaled(24, 24, Qt.KeepAspectRatio,
+                                                               Qt.SmoothTransformation))
+                x += 27
+                if x + 27 >= option.rect.width():
+                    return
+
+        elif index.column() == ScenesTableModel.ColArc:
+            scene = index.data(ScenesTableModel.SceneRole)
             painter.drawPixmap(option.rect.x() + 3, option.rect.y() + 2,
                                IconRegistry.emotion_icon_from_feeling(scene.pov_arc()).pixmap(QSize(24, 24)))
-        else:
-            super(ScenesViewDelegate, self).paint(painter, option, index)
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
@@ -397,48 +401,3 @@ class DraftScenesView:
         self._model = ScenesTableModel(self.novel)
         self._proxy = proxy(self._model)
         self.ui.tblDraftScenes.setModel(self._proxy)
-
-
-class SceneCharactersWidget(QWidget, Ui_SceneCharactersWidget):
-
-    def __init__(self, scene: Scene, parent=None):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.scene = scene
-
-        self.model = self.Model(scene)
-        self.tableView.setModel(self.model)
-        if self.scene.wip:
-            self.setStyleSheet('background: #f2f763')
-        elif self.scene.pivotal:
-            self.setStyleSheet('background: #f07762')
-
-    class Model(QAbstractTableModel):
-        def __init__(self, scene: Scene, parent=None):
-            super().__init__(parent)
-            self.scene = scene
-
-        @overrides
-        def rowCount(self, parent: QModelIndex = ...) -> int:
-            return 1
-
-        @overrides
-        def columnCount(self, parent: QModelIndex = ...) -> int:
-            return len(self.scene.characters) + 1
-
-        @overrides
-        def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-            if not index.isValid():
-                return
-
-            if role == Qt.DecorationRole:
-                if index.column() == 0:
-                    if self.scene.pov:
-                        return QIcon(avatars.pixmap(self.scene.pov))
-                else:
-                    return QIcon(avatars.pixmap(self.scene.characters[index.column() - 1]))
-            if role == Qt.BackgroundRole:
-                if self.scene.wip:
-                    return QBrush(QColor('#f2f763'))
-                elif self.scene.pivotal:
-                    return QBrush(QColor('#f07762'))
