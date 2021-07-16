@@ -1,5 +1,6 @@
 from plotlyst.core.domain import Character, Scene, StoryLine
-from plotlyst.test.common import assert_data, create_character, start_new_scene_editor, create_story_line
+from plotlyst.test.common import assert_data, create_character, start_new_scene_editor, \
+    create_story_line
 from plotlyst.view.main_window import MainWindow
 from plotlyst.view.scenes_view import ScenesOutlineView
 

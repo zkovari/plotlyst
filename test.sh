@@ -5,4 +5,4 @@ set -e
 
 # generate UI > Python code first
 ./gen.sh
-python -m pytest plotlyst  --cov=plotlyst --junitxml=report.xml --cov-report html:coverage --cov-report term -v --color=yes
+python -m pytest src/main/python/plotlyst  --cov=plotlyst --junitxml=report.xml --cov-report html:coverage --cov-report term -v --color=yes
