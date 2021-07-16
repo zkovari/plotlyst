@@ -272,6 +272,8 @@ class ScenesViewDelegate(QStyledItemDelegate):
                                                                     Qt.SmoothTransformation))
             x += 27
             for char in scene.characters:
+                if not char.avatar:
+                    continue
                 painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
                                    avatars.pixmap(char).scaled(24, 24, Qt.KeepAspectRatio,
                                                                Qt.SmoothTransformation))
