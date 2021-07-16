@@ -27,18 +27,18 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QS
     QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit
 from overrides import overrides
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
-from plotlyst.model.chapters_model import ChaptersTreeModel
-from plotlyst.model.characters_model import CharactersScenesDistributionTableModel
-from plotlyst.model.common import proxy
-from plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
-from plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
-from plotlyst.view.generated.draft_scenes_view_ui import Ui_DraftScenesView
-from plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
-from plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
-from plotlyst.view.icons import IconRegistry, avatars
-from plotlyst.view.scene_editor import SceneEditor
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
+from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
+from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
+from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
+from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
+from src.main.python.plotlyst.view.generated.draft_scenes_view_ui import Ui_DraftScenesView
+from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.scene_editor import SceneEditor
 
 
 class ScenesOutlineView(QObject):

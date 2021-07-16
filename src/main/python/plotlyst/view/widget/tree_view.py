@@ -24,7 +24,7 @@ from PyQt5.QtCore import QModelIndex, QSize, QRect
 from PyQt5.QtWidgets import QTreeView, QStyledItemDelegate, QStyleOptionViewItem
 from overrides import overrides
 
-from plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class ActionBasedTreeView(QTreeView):

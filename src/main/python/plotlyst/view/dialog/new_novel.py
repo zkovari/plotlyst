@@ -21,8 +21,8 @@ from typing import Optional
 
 from PyQt5.QtWidgets import QDialog
 
-from plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
-from plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class NewNovelDialog(QDialog, Ui_NovelCreationDialog):

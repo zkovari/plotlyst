@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt5.QtWidgets import QDialog
 
-from plotlyst.view.generated.about_dialog_ui import Ui_AboutDialog
+from src.main.python.plotlyst.view.generated.about_dialog_ui import Ui_AboutDialog
 
 
 class AboutDialog(Ui_AboutDialog, QDialog):

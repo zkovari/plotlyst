@@ -27,23 +27,23 @@ from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWi
     QStyle, QStyleOption, QTabBar, QStyleOptionTab
 from overrides import overrides
 
-from plotlyst.common import EXIT_CODE_RESTART
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel
-from plotlyst.event.core import event_log_reporter
-from plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
-from plotlyst.view.characters_view import CharactersView
-from plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
-from plotlyst.view.dialog.about import AboutDialog
-from plotlyst.view.generated.main_window_ui import Ui_MainWindow
-from plotlyst.view.home_view import HomeView
-from plotlyst.view.icons import IconRegistry
-from plotlyst.view.notes_view import NotesView
-from plotlyst.view.novel_view import NovelView
-from plotlyst.view.reports_view import ReportsView
-from plotlyst.view.scenes_view import ScenesOutlineView, DraftScenesView
-from plotlyst.view.tasks_view import TasksWidget
-from plotlyst.view.timeline_view import TimelineView
+from src.main.python.plotlyst.common import EXIT_CODE_RESTART
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.event.core import event_log_reporter
+from src.main.python.plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
+from src.main.python.plotlyst.view.characters_view import CharactersView
+from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
+from src.main.python.plotlyst.view.dialog.about import AboutDialog
+from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
+from src.main.python.plotlyst.view.home_view import HomeView
+from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.notes_view import NotesView
+from src.main.python.plotlyst.view.novel_view import NovelView
+from src.main.python.plotlyst.view.reports_view import ReportsView
+from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView, DraftScenesView
+from src.main.python.plotlyst.view.tasks_view import TasksWidget
+from src.main.python.plotlyst.view.timeline_view import TimelineView
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):

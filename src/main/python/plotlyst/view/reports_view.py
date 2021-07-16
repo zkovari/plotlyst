@@ -25,13 +25,13 @@ from matplotlib import pyplot as plt, ticker
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, Scene, Character
-from plotlyst.model.novel import NovelStoryLinesListModel
-from plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
-from plotlyst.view.generated.reports_view_ui import Ui_ReportsView
-from plotlyst.view.icons import IconRegistry
-from plotlyst.view.scenes_view import ScenesViewDelegate
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel, Scene, Character
+from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
+from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
+from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.scenes_view import ScenesViewDelegate
 
 
 class ReportsView:

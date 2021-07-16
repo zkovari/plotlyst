@@ -22,7 +22,7 @@ from typing import Any, Set
 from PyQt5.QtCore import QAbstractListModel, QModelIndex, Qt, QVariant, pyqtSignal
 from overrides import overrides
 
-from plotlyst.core.domain import Novel, StoryLine
+from src.main.python.plotlyst.core.domain import Novel, StoryLine
 
 
 class NovelStoryLinesListModel(QAbstractListModel):

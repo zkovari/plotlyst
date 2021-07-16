@@ -1,8 +1,8 @@
-from plotlyst.core.domain import Character, Scene, StoryLine
-from plotlyst.test.common import assert_data, create_character, start_new_scene_editor, \
+from src.main.python.plotlyst.core.domain import Character, Scene, StoryLine
+from src.main.python.plotlyst.test.common import assert_data, create_character, start_new_scene_editor, \
     create_story_line
-from plotlyst.view.main_window import MainWindow
-from plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.main_window import MainWindow
+from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 
 
 def test_main_window_is_initialized(qtbot, window: MainWindow):

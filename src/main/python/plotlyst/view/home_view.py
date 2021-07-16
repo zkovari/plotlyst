@@ -22,13 +22,13 @@ from typing import List
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import QWidget, QFrame
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel
-from plotlyst.view.dialog.new_novel import NewNovelDialog
-from plotlyst.view.generated.home_view_ui import Ui_HomeView
-from plotlyst.view.generated.novel_card_ui import Ui_NovelCard
-from plotlyst.view.icons import IconRegistry
-from plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.view.dialog.new_novel import NewNovelDialog
+from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
+from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
+from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import FlowLayout
 
 
 class HomeView(QObject):

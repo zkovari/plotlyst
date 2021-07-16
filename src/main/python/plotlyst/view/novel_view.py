@@ -21,12 +21,12 @@ from PyQt5.QtCore import QItemSelection, QModelIndex, QAbstractItemModel, Qt
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QLineEdit
 from overrides import overrides
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, StoryLine
-from plotlyst.model.novel import EditableNovelStoryLinesListModel
-from plotlyst.view.common import ask_confirmation
-from plotlyst.view.generated.novel_view_ui import Ui_NovelView
-from plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel, StoryLine
+from src.main.python.plotlyst.model.novel import EditableNovelStoryLinesListModel
+from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class NovelView:

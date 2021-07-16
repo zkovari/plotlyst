@@ -22,7 +22,7 @@ from typing import List
 
 from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
 
-from plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter, CharacterArc
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter, CharacterArc
 
 
 class DbContext:

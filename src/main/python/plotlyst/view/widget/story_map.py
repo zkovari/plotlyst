@@ -24,7 +24,7 @@ from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap, QMou
 from PyQt5.QtWidgets import QWidget, QMenu, QAction, QApplication
 from overrides import overrides
 
-from plotlyst.core.domain import Scene
+from src.main.python.plotlyst.core.domain import Scene
 
 
 class StoryLinesMapWidget(QWidget):

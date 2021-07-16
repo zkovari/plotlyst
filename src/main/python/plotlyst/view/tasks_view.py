@@ -21,9 +21,9 @@ from typing import List
 
 from PyQt5.QtWidgets import QWidget
 
-from plotlyst.core.domain import Novel, Task
-from plotlyst.model.tasks_model import TasksTableModel
-from plotlyst.view.generated.tasks_widget_ui import Ui_TasksWidget
+from src.main.python.plotlyst.core.domain import Novel, Task
+from src.main.python.plotlyst.model.tasks_model import TasksTableModel
+from src.main.python.plotlyst.view.generated.tasks_widget_ui import Ui_TasksWidget
 
 
 class TasksWidget(QWidget, Ui_TasksWidget):

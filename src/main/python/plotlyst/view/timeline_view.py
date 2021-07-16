@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QGraphicsScene, QFrame
 
-from plotlyst.core.domain import Novel, Scene
-from plotlyst.view.generated.scene_card_widget_ui import Ui_SceneCardWidget
-from plotlyst.view.generated.timeline_view_ui import Ui_TimelineView
-from plotlyst.view.icons import avatars
+from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.view.generated.scene_card_widget_ui import Ui_SceneCardWidget
+from src.main.python.plotlyst.view.generated.timeline_view_ui import Ui_TimelineView
+from src.main.python.plotlyst.view.icons import avatars
 
 
 class TimelineView:

@@ -24,9 +24,9 @@ from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMime
 from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from overrides import overrides
 
-from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Character, CharacterArc
-from plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
-from plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Character, CharacterArc
+from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 
 class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):

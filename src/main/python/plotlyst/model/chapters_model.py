@@ -24,9 +24,9 @@ from PyQt5.QtCore import QModelIndex, Qt, QVariant, QMimeData, QByteArray, pyqtS
 from anytree import Node
 from overrides import overrides
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, Chapter, Scene
-from plotlyst.model.tree_model import TreeItemModel
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene
+from src.main.python.plotlyst.model.tree_model import TreeItemModel
 
 
 class ChapterNode(Node):

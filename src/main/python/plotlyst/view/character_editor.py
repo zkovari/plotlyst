@@ -23,11 +23,11 @@ from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QLineEdit
 from overrides import overrides
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, Character
-from plotlyst.model.characters_model import CharacterEditorTableModel
-from plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
-from plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.model.characters_model import CharacterEditorTableModel
+from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class CharacterEditor:

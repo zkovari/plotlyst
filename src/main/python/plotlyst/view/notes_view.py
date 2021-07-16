@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt5.QtCore import QModelIndex, QTimer
 from PyQt5.QtWidgets import QWidget
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel
-from plotlyst.model.scenes_model import ScenesTableModel, ScenesNotesTableModel
-from plotlyst.view.generated.notes_view_ui import Ui_NotesView
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesNotesTableModel
+from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 
 
 class NotesView:

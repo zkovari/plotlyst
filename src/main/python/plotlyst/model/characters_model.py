@@ -23,8 +23,8 @@ from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant, pyqtSig
 from PyQt5.QtGui import QFont, QIcon, QBrush, QColor
 from overrides import overrides
 
-from plotlyst.core.domain import Character, Novel, Scene
-from plotlyst.view.icons import avatars
+from src.main.python.plotlyst.core.domain import Character, Novel, Scene
+from src.main.python.plotlyst.view.icons import avatars
 
 
 class CharactersTableModel(QAbstractTableModel):

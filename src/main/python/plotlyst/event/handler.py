@@ -26,10 +26,10 @@ from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QMessageBox, QWidget, QStatusBar, QApplication
 
-from plotlyst.event.core import EventAuthorization, EventAuthorizationType, EventLog, Severity, \
+from src.main.python.plotlyst.event.core import EventAuthorization, EventAuthorizationType, EventLog, Severity, \
     emit_warning, emit_critical
-from plotlyst.view.common import ask_confirmation
-from plotlyst.view.dialog.error import ErrorMessageBox
+from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.view.dialog.error import ErrorMessageBox
 
 
 class EventAuthorizationHandler:

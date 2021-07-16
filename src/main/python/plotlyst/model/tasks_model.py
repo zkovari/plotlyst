@@ -22,8 +22,8 @@ from typing import Any, List
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
 from overrides import overrides
 
-from plotlyst.core.domain import Task, Scene, Character
-from plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.core.domain import Task, Scene, Character
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class TasksTableModel(QAbstractTableModel):

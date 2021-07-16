@@ -22,14 +22,14 @@ from typing import Optional
 from PyQt5.QtCore import QItemSelection
 from PyQt5.QtWidgets import QWidget
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel
-from plotlyst.model.characters_model import CharactersTableModel
-from plotlyst.model.common import proxy
-from plotlyst.view.character_editor import CharacterEditor
-from plotlyst.view.common import ask_confirmation
-from plotlyst.view.generated.characters_view_ui import Ui_CharactersView
-from plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.model.characters_model import CharactersTableModel
+from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.view.character_editor import CharacterEditor
+from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class CharactersView:

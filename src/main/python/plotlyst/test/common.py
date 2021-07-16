@@ -22,10 +22,10 @@ from typing import Any
 from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel
 from PyQt5.QtWidgets import QAbstractItemView, QLineEdit
 
-from plotlyst.view.characters_view import CharactersView
-from plotlyst.view.main_window import MainWindow
-from plotlyst.view.novel_view import NovelView
-from plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.characters_view import CharactersView
+from src.main.python.plotlyst.view.main_window import MainWindow
+from src.main.python.plotlyst.view.novel_view import NovelView
+from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 
 
 def click_on_item(qtbot, view: QAbstractItemView, row: int, column: int = 0, parent=None, modifier=Qt.NoModifier):

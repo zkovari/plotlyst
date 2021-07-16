@@ -22,15 +22,15 @@ from typing import Optional
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel
 from PyQt5.QtWidgets import QWidget
 
-from plotlyst.core.client import client
-from plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event, CharacterArc, \
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event, CharacterArc, \
     VERY_UNHAPPY, \
     UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
-from plotlyst.model.characters_model import CharactersSceneAssociationTableModel
-from plotlyst.model.novel import NovelStoryLinesListModel
-from plotlyst.model.scenes_model import ScenesTableModel
-from plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
-from plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
+from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
+from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class SceneEditor(QObject):

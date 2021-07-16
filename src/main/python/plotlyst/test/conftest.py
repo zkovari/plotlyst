@@ -21,8 +21,8 @@ import os
 
 import pytest
 
-from plotlyst.core.client import context
-from plotlyst.view.main_window import MainWindow
+from src.main.python.plotlyst.core.client import context
+from src.main.python.plotlyst.view.main_window import MainWindow
 
 
 @pytest.fixture

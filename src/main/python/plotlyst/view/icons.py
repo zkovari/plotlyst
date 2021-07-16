@@ -22,8 +22,8 @@ from typing import Dict
 import qtawesome
 from PyQt5.QtGui import QIcon, QPixmap
 
-from plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
-from plotlyst.view.common import rounded_pixmap
+from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
+from src.main.python.plotlyst.view.common import rounded_pixmap
 
 
 class IconRegistry:
