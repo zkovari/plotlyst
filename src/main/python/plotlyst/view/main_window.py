@@ -53,7 +53,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.resize(1000, 630)
         self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
-
         self.novel = client.fetch_novel(1)
 
         self._init_menubar()
@@ -104,6 +103,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
         self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
+        self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)
+        self.actionDecreaseFontSize.triggered.connect(self.decrease_font_size)
 
     def _init_toolbar(self):
         tasks_button = QToolButton(self.toolBar)
@@ -128,6 +129,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _on_current_tab_changed(self, index: int):
         pass
+
+    def _increase_font_size(self):
+        current_font = QApplication.font()
+        self._set_font_size(current_font.pointSize() + 1)
+
+    def decrease_font_size(self):
+        current_font = QApplication.font()
+        self._set_font_size(current_font.pointSize() - 1)
+
+    def _set_font_size(self, value: int):
+        current_font = QApplication.font()
+        current_font.setPointSizeF(value)
+        QApplication.instance().setFont(current_font)
+
+        for widget in QApplication.allWidgets():
+            if widget is self.menubar:
+                continue
+            font = widget.font()
+            font.setPointSizeF(value)
+            widget.setFont(font)
 
     @busy
     def _load_new_novel(self, novel: Novel):
