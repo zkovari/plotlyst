@@ -216,13 +216,13 @@
   <customwidget>
    <class>StoryLinesMapWidget</class>
    <extends>QWidget</extends>
-   <header>plotlyst.view.widget.story_map</header>
+   <header>src.main.python.plotlyst.view.widget.story_map</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>StoryLinesLinearMapWidget</class>
    <extends>QWidget</extends>
-   <header>plotlyst.view.widget.story_map</header>
+   <header>src.main.python.plotlyst.view.widget.story_map</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
