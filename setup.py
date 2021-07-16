@@ -11,7 +11,7 @@ REQUIREMENTS: dict = {
         'PyQt5',
         'overrides==3.1.0',
         'qtawesome',
-        'qtwidgets',
+        # 'qtwidgets',
         'PyQtChart',
         'peewee',
         'matplotlib',

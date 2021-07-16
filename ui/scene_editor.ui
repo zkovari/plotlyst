@@ -159,7 +159,7 @@
            </widget>
           </item>
           <item>
-           <widget class="AnimatedToggle" name="cbWip">
+           <widget class="QCheckBox" name="cbWip">
             <property name="minimumSize">
              <size>
               <width>100</width>
@@ -819,13 +819,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>AnimatedToggle</class>
-   <extends>QCheckBox</extends>
-   <header>qtwidgets</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>
