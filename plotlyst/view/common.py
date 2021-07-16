@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import functools
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Any
@@ -87,3 +88,17 @@ def spacer_widget(max_width: Optional[int] = None) -> QWidget:
     if max_width:
         spacer.setMaximumWidth(max_width)
     return spacer
+
+
+# if used on a slot impl, all signal parameters must be specified as method arguments,
+# otherwise the decorator will complain more positional arguments were given
+def busy(func):
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        QApplication.setOverrideCursor(QCursor(Qt.BusyCursor))
+        try:
+            return func(*args, **kwargs)
+        finally:
+            QApplication.restoreOverrideCursor()
+
+    return wrapper_timer

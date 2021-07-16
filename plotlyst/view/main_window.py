@@ -25,7 +25,6 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction, QProxyStyle, \
     QStyle, QStyleOption, QTabBar, QStyleOptionTab
-from fesa_nav.view.common import busy
 from overrides import overrides
 
 from plotlyst.common import EXIT_CODE_RESTART
@@ -34,7 +33,7 @@ from plotlyst.core.domain import Novel
 from plotlyst.event.core import event_log_reporter
 from plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
 from plotlyst.view.characters_view import CharactersView
-from plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType
+from plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from plotlyst.view.dialog.about import AboutDialog
 from plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from plotlyst.view.home_view import HomeView
