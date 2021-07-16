@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 APP_STYLESHEET = '''
 
 * {
-    font-size: 14px;
     icon-size: 20px;
 }
 
