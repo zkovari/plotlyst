@@ -20,19 +20,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import subprocess
 import sys
+import traceback
 
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import QCoreApplication, QSettings, Qt
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QFileDialog, QApplication
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
+try:
+    from PyQt5 import QtWidgets, QtGui
+    from PyQt5.QtCore import QCoreApplication, QSettings, Qt
+    from PyQt5.QtGui import QFont
+    from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
+    from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
-from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-from src.main.python.plotlyst.core.client import context
-from src.main.python.plotlyst.event.handler import exception_handler
-from src.main.python.plotlyst.view.dialog.about import AboutDialog
-from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
+    from src.main.python.plotlyst.common import EXIT_CODE_RESTART
+    from src.main.python.plotlyst.core.client import context
+    from src.main.python.plotlyst.event.handler import exception_handler
+    from src.main.python.plotlyst.view.dialog.about import AboutDialog
+    from src.main.python.plotlyst.view.main_window import MainWindow
+    from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
+except Exception as ex:
+    appctxt = ApplicationContext()
+    QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
+    raise ex
 
 QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
 QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
@@ -57,8 +63,17 @@ if __name__ == '__main__':
             dir = QFileDialog.getExistingDirectory(None, 'Choose directory')
             db_file = os.path.join(dir, 'novels.sqlite')
             settings.setValue('workspace', db_file)
-        context.init(db_file)
-        window = MainWindow()
+        try:
+            context.init(db_file)
+        except Exception as ex:
+            QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
+            raise ex
+
+        try:
+            window = MainWindow()
+        except Exception as ex:
+            QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
+            raise ex
         app.setStyleSheet(APP_STYLESHEET)
 
         window.show()
