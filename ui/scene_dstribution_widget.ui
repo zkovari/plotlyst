@@ -107,18 +107,18 @@
        </property>
        <property name="iconSize">
         <size>
-         <width>32</width>
-         <height>32</height>
+         <width>14</width>
+         <height>14</height>
         </size>
        </property>
        <attribute name="horizontalHeaderVisible">
         <bool>false</bool>
        </attribute>
        <attribute name="horizontalHeaderMinimumSectionSize">
-        <number>24</number>
+        <number>15</number>
        </attribute>
        <attribute name="horizontalHeaderDefaultSectionSize">
-        <number>24</number>
+        <number>15</number>
        </attribute>
        <attribute name="verticalHeaderVisible">
         <bool>false</bool>

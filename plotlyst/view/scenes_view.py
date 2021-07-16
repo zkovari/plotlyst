@@ -110,12 +110,14 @@ class ScenesOutlineView(QObject):
         self.ui.btnActionsView.toggled.connect(self._switch_view)
         self.ui.btnTableView.setChecked(True)
 
-        action = QWidgetAction(self.ui.btnGraphs)
+        menu = QMenu(self.ui.btnGraphs)
+        action = QWidgetAction(menu)
         self._distribution_widget = CharactersScenesDistributionWidget(self.novel)
         self._distribution_widget.setMinimumWidth(900)
         self._distribution_widget.setMinimumHeight(600)
         action.setDefaultWidget(self._distribution_widget)
-        self.ui.btnGraphs.addAction(action)
+        menu.addAction(action)
+        self.ui.btnGraphs.setMenu(menu)
 
         self.ui.btnFilter.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
@@ -347,6 +349,7 @@ class CharactersScenesDistributionWidget(QWidget):
         self._model = CharactersScenesDistributionTableModel(self.novel)
         self._scenes_proxy = proxy(self._model)
         self._scenes_proxy.sort(0, Qt.DescendingOrder)
+        self.ui.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
         self.ui.tblSceneDistribution.setModel(self._scenes_proxy)
         self.ui.tblSceneDistribution.hideColumn(0)
         self.ui.tblCharacters.setModel(self._scenes_proxy)
@@ -368,6 +371,7 @@ class CharactersScenesDistributionWidget(QWidget):
                 continue
             self.ui.tblCharacters.hideColumn(col)
         self.ui.spinAverage.setValue(self.average)
+        self.ui.tblSceneDistribution.horizontalHeader().setMaximumSectionSize(15)
         self._model.modelReset.emit()
 
     def _on_character_selected(self):
