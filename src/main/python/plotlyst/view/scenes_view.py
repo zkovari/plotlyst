@@ -34,7 +34,6 @@ from src.main.python.plotlyst.model.characters_model import CharactersScenesDist
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
-from src.main.python.plotlyst.view.generated.draft_scenes_view_ui import Ui_DraftScenesView
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -394,16 +393,3 @@ class CharactersScenesDistributionWidget(QWidget):
             return
         self._model.highlightScene(self._scenes_proxy.mapToSource(indexes[0]))
         self.ui.tblCharacters.clearSelection()
-
-
-class DraftScenesView:
-
-    def __init__(self, novel: Novel):
-        self.widget = QWidget()
-        self.ui = Ui_DraftScenesView()
-        self.ui.setupUi(self.widget)
-        self.novel = novel
-
-        self._model = ScenesTableModel(self.novel)
-        self._proxy = proxy(self._model)
-        self.ui.tblDraftScenes.setModel(self._proxy)

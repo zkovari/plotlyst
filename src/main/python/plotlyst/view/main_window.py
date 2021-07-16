@@ -17,15 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import typing
 from typing import List
 
 import qtawesome
-from PyQt5 import QtGui, QtCore
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction, QProxyStyle, \
-    QStyle, QStyleOption, QTabBar, QStyleOptionTab
-from overrides import overrides
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client
@@ -41,7 +37,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
-from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView, DraftScenesView
+from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.tasks_view import TasksWidget
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 
@@ -58,10 +54,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self._init_menubar()
         self._init_toolbar()
 
-        self._tabstyle = TabStyle()
-        self.tabWidget.tabBar().setStyle(self._tabstyle)
-        self._init_tabs()
-        self.tabWidget.currentChanged.connect(self._on_current_tab_changed)
+        self._init_views()
 
         EventAuthorizationHandler.parent = self
         self.event_log_handler = EventLogHandler(self.statusBar())
@@ -69,7 +62,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event_log_reporter.warning.connect(self.event_log_handler.on_warning_event)
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
 
-    def _init_tabs(self):
+    def _init_views(self):
         self.home_view = HomeView()
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel)
@@ -79,25 +72,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timeline_view = TimelineView(self.novel)
         self.notes_view = NotesView(self.novel)
         self.reports_view = ReportsView(self.novel)
-        self.draft_scenes_view = DraftScenesView(self.novel)
 
-        self.tabWidget.addTab(self.home_view.widget, IconRegistry.home_icon(), '')
-        self.tabWidget.addTab(self.novel_view.widget, IconRegistry.book_icon(), '')
-        self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
-        self.tabWidget.addTab(self.scenes_outline_view.widget, IconRegistry.scene_icon(), '')
-        self.tabWidget.addTab(self.timeline_view.widget, IconRegistry.timeline_icon(), '')
-        self.tabWidget.addTab(self.notes_view.widget, IconRegistry.notes_icon(), '')
-        self.tabWidget.addTab(self.reports_view.widget, IconRegistry.reports_icon(), '')
-        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.home_view.widget), 'Home')
-        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.novel_view.widget), 'Novel')
-        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.characters_view.widget), 'Characters')
-        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.scenes_outline_view.widget), 'Scenes')
-        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.timeline_view.widget), 'Timeline & events')
-        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.notes_view.widget), 'Notes')
-        self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.reports_view.widget), 'Reports')
-        self.tabWidget.setCurrentWidget(self.scenes_outline_view.widget)
+        self.btnHome.setIcon(IconRegistry.home_icon())
+        self.btnNovel.setIcon(IconRegistry.book_icon())
+        self.btnCharacters.setIcon(IconRegistry.character_icon())
+        self.btnScenes.setIcon(IconRegistry.scene_icon())
+        self.btnTimeline.setIcon(IconRegistry.timeline_icon())
+        self.btnNotes.setIcon(IconRegistry.notes_icon())
+        self.btnReport.setIcon(IconRegistry.reports_icon())
+
+        self.pageHome.layout().addWidget(self.home_view.widget)
+        self.pageNovel.layout().addWidget(self.novel_view.widget)
+        self.pageCharacters.layout().addWidget(self.characters_view.widget)
+        self.pageScenes.layout().addWidget(self.scenes_outline_view.widget)
+        self.pageTimeline.layout().addWidget(self.timeline_view.widget)
+        self.pageNotes.layout().addWidget(self.notes_view.widget)
+        self.pageReports.layout().addWidget(self.reports_view.widget)
+
+        self.buttonGroup.buttonToggled.connect(self._on_view_changed)
 
         self.home_view.loadNovel.connect(self._load_new_novel)
+
+        self.btnScenes.setChecked(True)
+
+    def _on_view_changed(self):
+        if self.btnHome.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageHome)
+        elif self.btnNovel.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageNovel)
+        elif self.btnCharacters.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageCharacters)
+        elif self.btnScenes.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageScenes)
+        elif self.btnTimeline.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageTimeline)
+        elif self.btnNotes.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageNotes)
+        elif self.btnReport.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageReports)
 
     def _init_menubar(self):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
@@ -127,9 +139,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _on_character_creation(self):
         self._on_character_edition(None)
 
-    def _on_current_tab_changed(self, index: int):
-        pass
-
     def _increase_font_size(self):
         current_font = QApplication.font()
         self._set_font_size(current_font.pointSize() + 1)
@@ -155,8 +164,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.novel.id == novel.id:
             return
         self.novel = client.fetch_novel(novel.id)
-        self.tabWidget.clear()
-        self._init_tabs()
+        self.pageHome.layout().removeWidget(self.home_view.widget)
+        self.pageNovel.layout().removeWidget(self.novel_view.widget)
+        self.pageCharacters.layout().removeWidget(self.characters_view.widget)
+        self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
+        self.pageTimeline.layout().removeWidget(self.timeline_view.widget)
+        self.pageNotes.layout().removeWidget(self.notes_view.widget)
+        self.pageReports.layout().removeWidget(self.reports_view.widget)
+        self._init_views()
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
@@ -176,23 +191,3 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
                 client.update_scene_sequences(self.novel)
-
-
-class TabStyle(QProxyStyle):
-    @overrides
-    def sizeFromContents(self, type: QStyle.ContentsType, option: QStyleOption, size: QtCore.QSize,
-                         widget: QWidget) -> QtCore.QSize:
-        size: QSize = super(TabStyle, self).sizeFromContents(type, option, size, widget)
-        if type == QStyle.CT_TabBarTab:
-            size.transpose()
-        return size
-
-    @overrides
-    def drawControl(self, element: QStyle.ControlElement, option: QStyleOption, painter: QtGui.QPainter,
-                    widget: typing.Optional[QWidget] = ...) -> None:
-        if element == QStyle.CE_TabBarTabLabel:
-            opt = QStyleOptionTab(option)
-            opt.shape = QTabBar.RoundedNorth
-            super(TabStyle, self).drawControl(element, opt, painter, widget)
-            return
-        super(TabStyle, self).drawControl(element, option, painter, widget)

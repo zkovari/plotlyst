@@ -79,7 +79,7 @@ class IconRegistry:
 
     @staticmethod
     def character_icon() -> QIcon:
-        return qtawesome.icon('fa5s.user')
+        return qtawesome.icon('fa5s.user', color_on='darkBlue')
 
     @staticmethod
     def location_icon() -> QIcon:
@@ -87,11 +87,11 @@ class IconRegistry:
 
     @staticmethod
     def scene_icon() -> QIcon:
-        return qtawesome.icon('mdi.movie-open')
+        return qtawesome.icon('mdi.movie-open', color_on='darkBlue')
 
     @staticmethod
     def book_icon() -> QIcon:
-        return qtawesome.icon('fa5s.book-open')
+        return qtawesome.icon('fa5s.book-open', color_on='darkBlue')
 
     @staticmethod
     def synopsis_icon() -> QIcon:
@@ -131,15 +131,15 @@ class IconRegistry:
 
     @staticmethod
     def timeline_icon() -> QIcon:
-        return qtawesome.icon('mdi.chart-timeline-variant')
+        return qtawesome.icon('mdi.chart-timeline-variant', color_on='darkBlue')
 
     @staticmethod
     def reports_icon() -> QIcon:
-        return qtawesome.icon('fa5.chart-bar')
+        return qtawesome.icon('fa5.chart-bar', color_on='darkBlue')
 
     @staticmethod
     def notes_icon() -> QIcon:
-        return qtawesome.icon('mdi.notebook')
+        return qtawesome.icon('mdi.notebook', color_on='darkBlue')
 
     @staticmethod
     def act_one_icon() -> QIcon:
@@ -183,7 +183,7 @@ class IconRegistry:
 
     @staticmethod
     def home_icon() -> QIcon:
-        return qtawesome.icon('fa5s.home')
+        return qtawesome.icon('fa5s.home', color_on='darkBlue')
 
     @staticmethod
     def trash_can_icon(color: str = 'red') -> QIcon:

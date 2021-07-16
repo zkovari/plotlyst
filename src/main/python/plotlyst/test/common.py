@@ -68,7 +68,7 @@ def assert_data(model: QAbstractItemModel, value: Any, row: int, column: int = 0
 
 def create_character(qtbot, window: MainWindow, name: str):
     characters: CharactersView = window.characters_view
-    window.tabWidget.setCurrentWidget(characters.widget)
+    window.btnCharacters.setChecked(True)
 
     characters.ui.btnNew.click()
     assert characters.editor
@@ -89,7 +89,7 @@ def create_character(qtbot, window: MainWindow, name: str):
 
 def create_story_line(qtbot, window: MainWindow, text: str):
     novels: NovelView = window.novel_view
-    window.tabWidget.setCurrentWidget(novels.widget)
+    window.btnNovel.setChecked(True)
 
     novels.ui.btnAdd.click()
     click_on_item(qtbot, novels.ui.lstStoryLines, 0)
@@ -109,7 +109,7 @@ def create_story_line(qtbot, window: MainWindow, text: str):
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:
     scenes: ScenesOutlineView = window.scenes_outline_view
-    window.tabWidget.setCurrentWidget(window.scenes_outline_view.widget)
+    window.btnScenes.setChecked(True)
     scenes.ui.btnNew.click()
     assert scenes.editor
     assert scenes.ui.stackedWidget.currentWidget() == scenes.ui.pageEditor
