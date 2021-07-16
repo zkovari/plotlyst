@@ -25,6 +25,7 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction, QProxyStyle, \
     QStyle, QStyleOption, QTabBar, QStyleOptionTab
+from fesa_nav.view.common import busy
 from overrides import overrides
 
 from plotlyst.common import EXIT_CODE_RESTART
@@ -56,6 +57,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.novel = client.fetch_novel(1)
 
+        self._init_menubar()
+        self._init_toolbar()
+
+        self._tabstyle = TabStyle()
+        self.tabWidget.tabBar().setStyle(self._tabstyle)
+        self._init_tabs()
+        self.tabWidget.currentChanged.connect(self._on_current_tab_changed)
+
+        EventAuthorizationHandler.parent = self
+        self.event_log_handler = EventLogHandler(self.statusBar())
+        event_log_reporter.info.connect(self.event_log_handler.on_info_event)
+        event_log_reporter.warning.connect(self.event_log_handler.on_warning_event)
+        event_log_reporter.error.connect(self.event_log_handler.on_error_event)
+
+    def _init_tabs(self):
         self.home_view = HomeView()
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel)
@@ -66,11 +82,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.notes_view = NotesView(self.novel)
         self.reports_view = ReportsView(self.novel)
         self.draft_scenes_view = DraftScenesView(self.novel)
-        self._init_menuber()
-        self._init_toolbar()
 
-        self._tabstyle = TabStyle()
-        self.tabWidget.tabBar().setStyle(self._tabstyle)
         self.tabWidget.addTab(self.home_view.widget, IconRegistry.home_icon(), '')
         self.tabWidget.addTab(self.novel_view.widget, IconRegistry.book_icon(), '')
         self.tabWidget.addTab(self.characters_view.widget, IconRegistry.character_icon(), '')
@@ -87,21 +99,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tabWidget.setTabToolTip(self.tabWidget.indexOf(self.reports_view.widget), 'Reports')
         self.tabWidget.setCurrentWidget(self.scenes_outline_view.widget)
 
-        self.tabWidget.currentChanged.connect(self._on_current_tab_changed)
+        self.home_view.loadNovel.connect(self._load_new_novel)
 
-        self.home_view.loadNovel.connect(self._loed_new_novel)
-
-        EventAuthorizationHandler.parent = self
-        self.event_log_handler = EventLogHandler(self.statusBar())
-        event_log_reporter.info.connect(self.event_log_handler.on_info_event)
-        event_log_reporter.warning.connect(self.event_log_handler.on_warning_event)
-        event_log_reporter.error.connect(self.event_log_handler.on_error_event)
-
-        self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
-
-    def _init_menuber(self):
+    def _init_menubar(self):
         self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
         self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
+        self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
 
     def _init_toolbar(self):
         tasks_button = QToolButton(self.toolBar)
@@ -127,11 +130,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _on_current_tab_changed(self, index: int):
         pass
 
-    def _loed_new_novel(self, novel: Novel):
+    @busy
+    def _load_new_novel(self, novel: Novel):
         if self.novel.id == novel.id:
             return
-        # self.novel = client.fetch_novel(novel.id)
-        # self.scenes_outline_view.refresh()
+        self.novel = client.fetch_novel(novel.id)
+        self.tabWidget.clear()
+        self._init_tabs()
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
