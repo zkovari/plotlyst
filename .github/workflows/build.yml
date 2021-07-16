@@ -11,7 +11,7 @@ jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ macos-latest ]
+        os: [ ubuntu-18.04, macos-latest ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.6
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.5.1
@@ -44,7 +44,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -q ${{secrets.FBS_URL}}
+          pip install -q fbs
           pip install pyqt5ac
           pip install -e .
       - name: Generate code
