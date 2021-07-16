@@ -5,13 +5,13 @@ name: Build distributions
 
 on:
   push:
-    branches: [ 'feature/**' ]
+    branches: [ 'release/**' ]
 
 jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ ubuntu-18.04, macos-latest ]
+        os: [ ubuntu-18.04 ]
     runs-on: ${{ matrix.os }}
 
     steps:
