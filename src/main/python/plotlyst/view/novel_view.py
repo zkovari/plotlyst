@@ -63,7 +63,7 @@ class NovelView:
         self.ui.lstStoryLines.selectionModel().select(
             self.story_lines_model.index(self.story_lines_model.rowCount() - 1, 0),
             QItemSelectionModel.Select)
-        
+
         self.ui.lstStoryLines.edit(self.ui.lstStoryLines.selectionModel().selectedIndexes()[0])
 
     def _on_edit_story_line(self):
@@ -77,7 +77,7 @@ class NovelView:
         if not indexes:
             return
         story_line: StoryLine = indexes[0].data(EditableNovelStoryLinesListModel.StoryLineRole)
-        if not ask_confirmation(f'Are you sure you want to remove story line {story_line.text}'):
+        if not ask_confirmation(f'Are you sure you want to remove story line "{story_line.text}"?'):
             return
 
         self.novel.story_lines.remove(story_line)
