@@ -298,7 +298,7 @@ class ScenesViewDelegate(QStyledItemDelegate):
         edit_data = index.data(Qt.EditRole)
         if not edit_data:
             edit_data = index.data(Qt.DisplayRole)
-        if isinstance(editor, QLineEdit):
+        if isinstance(editor, QTextEdit) or isinstance(editor, QLineEdit):
             editor.setText(str(edit_data))
         if isinstance(editor, QComboBox):
             arc = index.data(ScenesTableModel.SceneRole).pov_arc()
