@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt5.QtCore import QItemSelection, QModelIndex, QAbstractItemModel, Qt
+from PyQt5.QtCore import QItemSelection, QModelIndex, QAbstractItemModel, Qt, QItemSelectionModel
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QLineEdit
 from overrides import overrides
 
@@ -59,6 +59,12 @@ class NovelView:
         self.novel.story_lines.append(story_line)
         client.insert_story_line(self.novel, story_line)
         self.story_lines_model.modelReset.emit()
+
+        self.ui.lstStoryLines.selectionModel().select(
+            self.story_lines_model.index(self.story_lines_model.rowCount() - 1, 0),
+            QItemSelectionModel.Select)
+        
+        self.ui.lstStoryLines.edit(self.ui.lstStoryLines.selectionModel().selectedIndexes()[0])
 
     def _on_edit_story_line(self):
         indexes = self.ui.lstStoryLines.selectedIndexes()
