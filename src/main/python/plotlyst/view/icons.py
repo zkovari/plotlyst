@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict
 
 import qtawesome
+from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon, QPixmap
 
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
@@ -229,11 +230,16 @@ class AvatarsRegistry:
 
     def pixmap(self, character: Character) -> QPixmap:
         if character.id not in self._avatars:
-            array = character.avatar
-            pixmap = QPixmap()
-            if array:
-                pixmap.loadFromData(array)
-            self._avatars[character.id] = rounded_pixmap(pixmap)
+            if character.avatar:
+                array = character.avatar
+                pixmap = QPixmap()
+                if array:
+                    pixmap.loadFromData(array)
+                self._avatars[character.id] = rounded_pixmap(pixmap)
+            else:
+                icon: QIcon = qtawesome.icon(f'mdi.alpha-{character.name[0].lower()}-circle-outline',
+                                             options=[{'scale_factor': 1.2}])
+                self._avatars[character.id] = icon.pixmap(QSize(64, 64))
 
         return self._avatars[character.id]
 
