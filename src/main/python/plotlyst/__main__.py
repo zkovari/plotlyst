@@ -21,6 +21,7 @@ import os
 import subprocess
 import sys
 import traceback
+from typing import Optional
 
 try:
     from PyQt5 import QtWidgets, QtGui
@@ -57,12 +58,30 @@ if __name__ == '__main__':
         QCoreApplication.setApplicationName('NovelApp')
 
         settings = QSettings()
-        db_file = settings.value('workspace')
+        workspace: Optional[str] = settings.value('workspace')
 
-        if not db_file:
-            dir = QFileDialog.getExistingDirectory(None, 'Choose directory')
-            db_file = os.path.join(dir, 'novels.sqlite')
-            settings.setValue('workspace', db_file)
+        changed_dir = False
+        while True:
+            if not workspace:
+                workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
+                changed_dir = True
+
+            if not os.path.exists(workspace):
+                QMessageBox.warning(None, 'Invalid project directory',
+                                    f"The chosen directory doesn't exist: {workspace}")
+            elif os.path.isfile(workspace):
+                QMessageBox.warning(None, 'Invalid project directory',
+                                    f"The chosen path should be a directory, not a file: {workspace}")
+            elif not os.access(workspace, os.W_OK):
+                QMessageBox.warning(None, 'Invalid project directory',
+                                    f"The chosen directory cannot be written: {workspace}")
+            else:
+                if changed_dir:
+                    settings.setValue('workspace', workspace)
+                break
+            workspace = None
+
+        db_file = os.path.join(workspace, 'novels.sqlite')
         try:
             context.init(db_file)
         except Exception as ex:
