@@ -32,6 +32,7 @@ class StoryLinesMapWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+        self.setStyleSheet('background-color:white;')
         self.setMouseTracking(True)
         self.novel = None
         self._scene_coord_y: Dict[int, int] = {}
