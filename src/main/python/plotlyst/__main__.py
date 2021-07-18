@@ -23,6 +23,9 @@ import sys
 import traceback
 from typing import Optional
 
+from src.main.python.plotlyst.core.migration import is_up_to_date, DatabaseVersion
+from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
+
 try:
     from PyQt5 import QtWidgets, QtGui
     from PyQt5.QtCore import QCoreApplication, QSettings, Qt
@@ -31,7 +34,7 @@ try:
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
     from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-    from src.main.python.plotlyst.core.client import context
+    from src.main.python.plotlyst.core.client import context, ApplicationModel
     from src.main.python.plotlyst.event.handler import exception_handler
     from src.main.python.plotlyst.view.dialog.about import AboutDialog
     from src.main.python.plotlyst.view.main_window import MainWindow
@@ -86,6 +89,16 @@ if __name__ == '__main__':
             context.init(db_file)
         except Exception as ex:
             QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
+            raise ex
+
+        try:
+            result: DatabaseVersion = is_up_to_date()
+            if not result.up_to_date:
+                migration_diag = MigrationDialog(result)
+                if not migration_diag.display():
+                    exit(1)
+        except Exception as ex:
+            QMessageBox.critical(None, 'Could not finish database migration', traceback.format_exc())
             raise ex
 
         try:
