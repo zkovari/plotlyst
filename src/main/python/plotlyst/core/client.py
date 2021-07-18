@@ -238,6 +238,7 @@ class SqlClient:
     def update_character(self, character: Character):
         character_m: CharacterModel = CharacterModel.get_by_id(character.id)
         character_m.name = character.name
+        character_m.avatar = character.avatar
 
         character_m.save()
 

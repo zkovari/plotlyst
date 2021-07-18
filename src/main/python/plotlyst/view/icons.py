@@ -222,6 +222,14 @@ class IconRegistry:
 
         return qtawesome.icon('mdi.emoticon-neutral', color='grey')
 
+    @staticmethod
+    def upload_icon() -> QIcon:
+        return qtawesome.icon('fa5s.file-upload')
+
+    @staticmethod
+    def portrait_icon() -> QIcon:
+        return qtawesome.icon('fa5s.portrait')
+
 
 class AvatarsRegistry:
     def __init__(self):
@@ -229,13 +237,16 @@ class AvatarsRegistry:
 
     def pixmap(self, character: Character) -> QPixmap:
         if character.id not in self._avatars:
-            array = character.avatar
-            pixmap = QPixmap()
-            if array:
-                pixmap.loadFromData(array)
-            self._avatars[character.id] = rounded_pixmap(pixmap)
+            self.update(character)
 
         return self._avatars[character.id]
+
+    def update(self, character: Character):
+        array = character.avatar
+        pixmap = QPixmap()
+        if array:
+            pixmap.loadFromData(array)
+        self._avatars[character.id] = rounded_pixmap(pixmap)
 
 
 avatars = AvatarsRegistry()
