@@ -91,7 +91,7 @@ class ReportsView:
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Stretch)
         self.ui.tblScenes.showColumn(ScenesTableModel.ColTitle)
         self.ui.tblScenes.showColumn(ScenesTableModel.ColArc)
-        self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
+        self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         if self.novel.characters:
             self.arc_canvas = CharacterArcCanvas(self.novel, self.novel.characters[0], parent=self)
             self.ui.tabCharacterArcs.layout().addWidget(self.arc_canvas)

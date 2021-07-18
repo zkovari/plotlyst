@@ -173,6 +173,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColArc:
             return flags | Qt.ItemIsEditable
+        if index.column() == self.ColTime:
+            return flags | Qt.ItemIsEditable
         return flags
 
     @overrides
@@ -192,6 +194,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                         arc.arc = value
             else:
                 self._data[index.row()].arcs.append(CharacterArc(value, self._data[index.row()].pov))
+        elif index.column() == self.ColTime:
+            self._data[index.row()].day = value
         else:
             return False
         self.valueChanged.emit(index)

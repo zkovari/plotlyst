@@ -24,7 +24,7 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
     QAbstractItemModel, QPoint, QSize
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
-    QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit
+    QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit, QSpinBox
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
@@ -76,7 +76,7 @@ class ScenesOutlineView(QObject):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
-        self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
+        self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
         self.ui.splitterLeft.setSizes([70, 500])
@@ -257,10 +257,6 @@ class ScenesOutlineView(QObject):
 
 class ScenesViewDelegate(QStyledItemDelegate):
 
-    def __init__(self, novel: Novel):
-        super().__init__()
-        self.novel = novel
-
     @overrides
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
         super(ScenesViewDelegate, self).paint(painter, option, index)
@@ -291,6 +287,8 @@ class ScenesViewDelegate(QStyledItemDelegate):
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
         if index.column() == ScenesTableModel.ColArc:
             return QComboBox(parent)
+        if index.column() == ScenesTableModel.ColTime:
+            return QSpinBox(parent)
         return QTextEdit(parent)
 
     @overrides
@@ -300,7 +298,9 @@ class ScenesViewDelegate(QStyledItemDelegate):
             edit_data = index.data(Qt.DisplayRole)
         if isinstance(editor, QTextEdit) or isinstance(editor, QLineEdit):
             editor.setText(str(edit_data))
-        if isinstance(editor, QComboBox):
+        elif isinstance(editor, QSpinBox):
+            editor.setValue(edit_data)
+        elif isinstance(editor, QComboBox):
             arc = index.data(ScenesTableModel.SceneRole).pov_arc()
             editor.addItem(IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY), '', VERY_UNHAPPY)
             if arc == VERY_UNHAPPY:
@@ -325,6 +325,8 @@ class ScenesViewDelegate(QStyledItemDelegate):
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
         if isinstance(editor, QComboBox):
             model.setData(index, editor.currentData(Qt.UserRole))
+        elif isinstance(editor, QSpinBox):
+            model.setData(index, editor.value())
         else:
             model.setData(index, editor.toPlainText())
         scene = index.data(ScenesTableModel.SceneRole)
