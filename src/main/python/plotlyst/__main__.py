@@ -30,6 +30,8 @@ try:
     from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
+    from src.main.python.plotlyst.core.migration import app_db_schema_version, AppDbSchemaVersion
+    from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
     from src.main.python.plotlyst.common import EXIT_CODE_RESTART
     from src.main.python.plotlyst.core.client import context
     from src.main.python.plotlyst.event.handler import exception_handler
@@ -86,6 +88,16 @@ if __name__ == '__main__':
             context.init(db_file)
         except Exception as ex:
             QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
+            raise ex
+
+        try:
+            version: AppDbSchemaVersion = app_db_schema_version()
+            if not version.up_to_date:
+                migration_diag = MigrationDialog(version)
+                if not migration_diag.display():
+                    exit(1)
+        except Exception as ex:
+            QMessageBox.critical(None, 'Could not finish database migration', traceback.format_exc())
             raise ex
 
         try:

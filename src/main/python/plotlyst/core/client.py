@@ -18,11 +18,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
+from enum import Enum
 from typing import List
 
 from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter, CharacterArc
+
+
+class ApplicationDbVersion(Enum):
+    R0 = 0  # before ApplicationModel existed
+    R1 = 1
+
+
+LATEST = ApplicationDbVersion.R1
 
 
 class DbContext:
@@ -43,9 +52,11 @@ class DbContext:
         self._db.connect()
         if _create_tables:
             self._db.create_tables(
-                [NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel, NovelStoryLinesModel,
+                [ApplicationModel, NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel,
+                 NovelStoryLinesModel,
                  SceneStoryLinesModel,
                  NovelCharactersModel, SceneCharactersModel])
+            ApplicationModel.create(revision=ApplicationDbVersion.R1.value)
             NovelModel.create(title='My First Novel')
 
     def db(self):
@@ -53,6 +64,14 @@ class DbContext:
 
 
 context = DbContext()
+
+
+class ApplicationModel(Model):
+    revision = IntegerField()
+
+    class Meta:
+        table_name = 'Application'
+        database = context.db()
 
 
 class NovelModel(Model):
