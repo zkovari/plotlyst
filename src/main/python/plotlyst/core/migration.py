@@ -30,20 +30,20 @@ from src.main.python.plotlyst.core.client import ApplicationModel, ApplicationDb
 
 
 @dataclass
-class DatabaseVersion:
+class AppDbSchemaVersion:
     up_to_date: bool
     revision: ApplicationDbVersion
 
 
-def is_up_to_date() -> DatabaseVersion:
+def app_db_schema_version() -> AppDbSchemaVersion:
     if not ApplicationModel.table_exists():
-        return DatabaseVersion(False, ApplicationDbVersion.R0)
+        return AppDbSchemaVersion(False, ApplicationDbVersion.R0)
 
     model: ApplicationModel = ApplicationModel.get_by_id(1)
     if model.revision == LATEST.value:
-        return DatabaseVersion(True, LATEST)
+        return AppDbSchemaVersion(True, LATEST)
     else:
-        return DatabaseVersion(False, ApplicationDbVersion[model.revision])
+        return AppDbSchemaVersion(False, ApplicationDbVersion[model.revision])
 
 
 class _MigrationHandler:
@@ -83,7 +83,7 @@ class Migration(QObject):
         self._migrations: Dict[ApplicationDbVersion, _MigrationHandler] = {
             ApplicationDbVersion.R1: _R1MigrationHandler()}
 
-    def migrate(self, db: SqliteDatabase, version: DatabaseVersion):
+    def migrate(self, db: SqliteDatabase, version: AppDbSchemaVersion):
         revision: int = version.revision.value
         revision += 1
         while revision <= LATEST.value:

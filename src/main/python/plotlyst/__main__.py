@@ -30,7 +30,7 @@ try:
     from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
-    from src.main.python.plotlyst.core.migration import is_up_to_date, DatabaseVersion
+    from src.main.python.plotlyst.core.migration import app_db_schema_version, AppDbSchemaVersion
     from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
     from src.main.python.plotlyst.common import EXIT_CODE_RESTART
     from src.main.python.plotlyst.core.client import context
@@ -91,9 +91,9 @@ if __name__ == '__main__':
             raise ex
 
         try:
-            result: DatabaseVersion = is_up_to_date()
-            if not result.up_to_date:
-                migration_diag = MigrationDialog(result)
+            version: AppDbSchemaVersion = app_db_schema_version()
+            if not version.up_to_date:
+                migration_diag = MigrationDialog(version)
                 if not migration_diag.display():
                     exit(1)
         except Exception as ex:

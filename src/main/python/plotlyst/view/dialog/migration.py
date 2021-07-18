@@ -21,12 +21,12 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QDialog
 
 from src.main.python.plotlyst.core.client import context
-from src.main.python.plotlyst.core.migration import DatabaseVersion, Migration
+from src.main.python.plotlyst.core.migration import AppDbSchemaVersion, Migration
 from src.main.python.plotlyst.view.generated.db_migration_dialog_ui import Ui_MigrationDialog
 
 
 class MigrationDialog(QDialog):
-    def __init__(self, version: DatabaseVersion, parent=None):
+    def __init__(self, version: AppDbSchemaVersion, parent=None):
         super(MigrationDialog, self).__init__(parent)
         self.version = version
         self.ui = Ui_MigrationDialog()
