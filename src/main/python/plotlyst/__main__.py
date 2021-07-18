@@ -83,9 +83,8 @@ if __name__ == '__main__':
                 break
             workspace = None
 
-        db_file = os.path.join(workspace, 'novels.sqlite')
         try:
-            context.init(db_file)
+            context.init(workspace)
         except Exception as ex:
             QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
             raise ex

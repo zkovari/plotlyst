@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import os
 
 import pytest
 
@@ -27,8 +26,7 @@ from src.main.python.plotlyst.view.main_window import MainWindow
 
 @pytest.fixture
 def test_client(tmp_path):
-    db_file = os.path.join(tmp_path, 'test-db.sqlite')
-    context.init(db_file)
+    context.init(tmp_path)
 
 
 @pytest.fixture
