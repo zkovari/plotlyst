@@ -43,7 +43,7 @@ def app_db_schema_version() -> AppDbSchemaVersion:
     if model.revision == LATEST.value:
         return AppDbSchemaVersion(True, LATEST)
     else:
-        return AppDbSchemaVersion(False, ApplicationDbVersion[model.revision])
+        return AppDbSchemaVersion(False, ApplicationDbVersion(model.revision))
 
 
 class _MigrationHandler:
@@ -70,7 +70,7 @@ class _R1MigrationHandler(_MigrationHandler):
             return False
 
         model: ApplicationModel = ApplicationModel.get_by_id(1)
-        return model.revision == LATEST.value
+        return model.revision == ApplicationDbVersion.R1.value
 
 
 class Migration(QObject):
@@ -79,7 +79,7 @@ class Migration(QObject):
     migrationFinished = pyqtSignal()
 
     def __init__(self, parent=None):
-        super(Migration, self).__init__(parent)
+        super().__init__(parent)
         self._migrations: Dict[ApplicationDbVersion, _MigrationHandler] = {
             ApplicationDbVersion.R1: _R1MigrationHandler()}
 

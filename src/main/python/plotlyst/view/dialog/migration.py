@@ -28,10 +28,10 @@ from src.main.python.plotlyst.view.generated.db_migration_dialog_ui import Ui_Mi
 class MigrationDialog(QDialog):
     def __init__(self, version: AppDbSchemaVersion, parent=None):
         super(MigrationDialog, self).__init__(parent)
-        self.version = version
+        self.version: AppDbSchemaVersion = version
         self.ui = Ui_MigrationDialog()
         self.ui.setupUi(self)
-        self._migration = Migration()
+        self._migration: Migration = Migration()
         self._migration.migrationFinished.connect(self._finished)
         self._migration.migrationFailed.connect(self._failed)
         self.ui.btnLaunch.setHidden(True)
