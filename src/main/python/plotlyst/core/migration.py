@@ -93,7 +93,7 @@ class Migration(QObject):
                 if not handler.verify(db):
                     self.migrationFailed.emit(f'Migration verification failed at step {revision}')
                     return
-            except Exception as ex:
+            except Exception:
                 self.migrationFailed.emit(f'Migration failed for revision {revision}: {traceback.format_exc()}')
                 return
             self.stepFinished.emit(ApplicationDbVersion(revision))

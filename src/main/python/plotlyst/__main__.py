@@ -23,9 +23,6 @@ import sys
 import traceback
 from typing import Optional
 
-from src.main.python.plotlyst.core.migration import is_up_to_date, DatabaseVersion
-from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
-
 try:
     from PyQt5 import QtWidgets, QtGui
     from PyQt5.QtCore import QCoreApplication, QSettings, Qt
@@ -33,8 +30,10 @@ try:
     from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
+    from src.main.python.plotlyst.core.migration import is_up_to_date, DatabaseVersion
+    from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
     from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-    from src.main.python.plotlyst.core.client import context, ApplicationModel
+    from src.main.python.plotlyst.core.client import context
     from src.main.python.plotlyst.event.handler import exception_handler
     from src.main.python.plotlyst.view.dialog.about import AboutDialog
     from src.main.python.plotlyst.view.main_window import MainWindow
