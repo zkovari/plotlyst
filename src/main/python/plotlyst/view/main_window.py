@@ -49,7 +49,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.resize(1000, 630)
         self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
-        self.novel = client.fetch_novel(3)
+        self.novel = client.fetch_novel(1)
 
         self._init_menubar()
         self._init_toolbar()

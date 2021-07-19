@@ -80,6 +80,9 @@ class ChaptersTreeModel(TreeItemModel):
                 return font
             if role == Qt.ForegroundRole:
                 return QColor(Qt.gray)
+        if isinstance(node, UncategorizedChapterNode) and role == Qt.DisplayRole:
+            if node.children:
+                return f'{node.name} ({len(node.children)})'
         return super().data(index, role)
 
     def update(self):
@@ -143,29 +146,29 @@ class ChaptersTreeModel(TreeItemModel):
     @overrides
     def dropMimeData(self, data: SceneMimeData, action: Qt.DropAction, row: int, column: int,
                      parent: QModelIndex) -> bool:
-
         parent_node: Node = parent.internalPointer()
         node: SceneNode = data.node
         if isinstance(parent_node, ChapterNode):
             node.scene.chapter = parent_node.chapter
-            self._dropUnderChapter(parent_node, node, row)
+            self._dropUnderNode(parent_node, node, row)
 
         if isinstance(parent_node, UncategorizedChapterNode):
             node.scene.chapter = None
-            self._dropUnderChapter(parent_node, node, row)
+            self._dropUnderNode(parent_node, node, row)
 
         old_index = self.novel.scenes.index(node.scene)
         new_index = [x for x in self.root.leaves if isinstance(x, SceneNode)].index(node)
         if old_index != new_index:
             self.novel.scenes.insert(new_index, self.novel.scenes.pop(old_index))
             self.orderChanged.emit()
-        parent = self.index(0, 0, QModelIndex())
+        parent = self.rootIndex()
         self.layoutAboutToBeChanged.emit([QPersistentModelIndex(parent)])
         self.layoutChanged.emit([QPersistentModelIndex(parent)])
         client.update_scene_chapter(node.scene)
+
         return True
 
-    def _dropUnderChapter(self, parent_node: Node, node: SceneNode, row: int):
+    def _dropUnderNode(self, parent_node: Node, node: SceneNode, row: int):
         old_parent_node: Node = node.parent
         if old_parent_node is not parent_node:
             old_parent_node.children = [x for x in old_parent_node.children if x is not node]
@@ -181,6 +184,3 @@ class ChaptersTreeModel(TreeItemModel):
             parent_node.children = children_list
         else:
             parent_node.children = sorted(parent_node.children, key=lambda x: x.scene.sequence)
-
-    def _dropUnderUncategorized(self, uncategorized_node: UncategorizedChapterNode, node: SceneNode, row: int):
-        pass
