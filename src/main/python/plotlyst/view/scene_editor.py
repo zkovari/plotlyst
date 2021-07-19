@@ -112,6 +112,7 @@ class SceneEditor(QObject):
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
             self._enable_arc_buttons(True)
         else:
+            self.ui.cbPov.setCurrentIndex(0)
             self._enable_arc_buttons(False)
 
         self.ui.sbDay.setValue(self.scene.day)
