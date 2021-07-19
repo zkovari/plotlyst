@@ -21,7 +21,7 @@ import numpy as np
 from PyQt5.QtChart import QPieSeries, QChart, QChartView
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget, QHeaderView
-from matplotlib import pyplot as plt, ticker
+from matplotlib import ticker
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
@@ -71,10 +71,10 @@ class ReportsView:
         self.story_line_model.selection_changed.connect(self._story_line_selection_changed)
         self.ui.listView.setModel(self.story_line_model)
 
-        story_lines_canvas = StoryLinesCanvas(self.novel, parent=self)
-        toolbar = NavigationToolbar(story_lines_canvas, self.ui.tabStoryDistribution)
+        self.story_lines_canvas = StoryLinesCanvas(self.novel, parent=self)
+        toolbar = NavigationToolbar(self.story_lines_canvas, self.ui.tabStoryDistribution)
         self.ui.tabStoryDistribution.layout().addWidget(toolbar)
-        self.ui.tabStoryDistribution.layout().addWidget(story_lines_canvas)
+        self.ui.tabStoryDistribution.layout().addWidget(self.story_lines_canvas)
 
         self.scenes_model = ScenesTableModel(self.novel)
         self._scenes_proxy = ScenesFilterProxyModel()
@@ -153,19 +153,28 @@ class ReportsView:
 class StoryLinesCanvas(FigureCanvasQTAgg):
 
     def __init__(self, novel: Novel, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        fig, ax = plt.subplots()
-        self.axes = ax
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = None
+        self.novel = novel
 
-        character_names = [x.name for x in novel.characters]
+        super().__init__(self.fig)
+        self.refresh_plot()
+
+    def refresh_plot(self):
+        if self.axes:
+            self.fig.clear()
+
+        self.axes = self.fig.add_subplot(111)
+
+        character_names = [x.name for x in self.novel.characters]
         width = 0.35  # the width of the bars: can also be len(x) sequence
 
         bottoms = None
-        for i, story_line in enumerate(novel.story_lines):
+        for i, story_line in enumerate(self.novel.story_lines):
             occurences = []
-            for char in novel.characters:
+            for char in self.novel.characters:
                 v = 0
-                for scene in novel.scenes:
+                for scene in self.novel.scenes:
                     if story_line in scene.story_lines:
                         if char == scene.pov or char in scene.characters:
                             v += 1
@@ -181,19 +190,17 @@ class StoryLinesCanvas(FigureCanvasQTAgg):
         self.axes.set_title('Story lines and characters distribution')
         self.axes.legend()
 
-        super(StoryLinesCanvas, self).__init__(fig)
         self.draw()
 
 
 class CharacterArcCanvas(FigureCanvasQTAgg):
     def __init__(self, novel: Novel, character: Character, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.fig = fig
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.novel = novel
         self.character = character
         self.axes = None
 
-        super().__init__(fig)
+        super().__init__(self.fig)
         self.refresh_plot()
 
     def refresh_plot(self):
