@@ -20,13 +20,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from typing import Any, Dict, List
 
-from PyQt5.QtCore import QModelIndex, Qt, QVariant, QMimeData, QByteArray, pyqtSignal
+from PyQt5.QtCore import QModelIndex, Qt, QVariant, QMimeData, QByteArray, pyqtSignal, QPersistentModelIndex
+from PyQt5.QtGui import QFont, QColor
 from anytree import Node
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class ChapterNode(Node):
@@ -39,6 +41,11 @@ class SceneNode(Node):
     def __init__(self, scene: Scene, parent):
         super(SceneNode, self).__init__(scene.title, parent)
         self.scene = scene
+
+
+class UncategorizedChapterNode(Node):
+    def __init__(self, parent):
+        super(UncategorizedChapterNode, self).__init__('<Uncategorized>', parent)
 
 
 class SceneMimeData(QMimeData):
@@ -61,6 +68,18 @@ class ChaptersTreeModel(TreeItemModel):
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if index.column() > 0:
             return QVariant()
+        node = index.internalPointer()
+        if isinstance(node, ChapterNode):
+            if role == Qt.DecorationRole:
+                return IconRegistry.chapter_icon()
+        if isinstance(node, UncategorizedChapterNode) or (
+                isinstance(node, SceneNode) and isinstance(node.parent, UncategorizedChapterNode)):
+            if role == Qt.FontRole:
+                font = QFont()
+                font.setItalic(True)
+                return font
+            if role == Qt.ForegroundRole:
+                return QColor(Qt.gray)
         return super().data(index, role)
 
     def update(self):
@@ -72,14 +91,10 @@ class ChaptersTreeModel(TreeItemModel):
             if scene.chapter:
                 SceneNode(scene, chapters[scene.chapter.title])
 
-        dummy_parent = None
+        Node('', self.root)  # to mimic empty space
+        dummy_parent = UncategorizedChapterNode(self.root)
         for scene in self.novel.scenes:
             if not scene.chapter:
-                if not dummy_parent:
-                    if self.root.children:
-                        dummy_parent = Node('---', self.root)
-                    else:
-                        dummy_parent = self.root
                 SceneNode(scene, dummy_parent)
 
     def newChapter(self) -> Chapter:
@@ -114,13 +129,13 @@ class ChaptersTreeModel(TreeItemModel):
     @overrides
     def canDropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int,
                         parent: QModelIndex) -> bool:
-        if row >= 0:
+        if row >= 0 and parent.internalPointer() == self.root:
             return False
         if not data.hasFormat(self.MimeType):
             return False
         if not isinstance(data, SceneMimeData):
             return False
-        if not isinstance(parent.internalPointer(), ChapterNode):
+        if not isinstance(parent.internalPointer(), (ChapterNode, UncategorizedChapterNode)):
             return False
 
         return True
@@ -128,21 +143,44 @@ class ChaptersTreeModel(TreeItemModel):
     @overrides
     def dropMimeData(self, data: SceneMimeData, action: Qt.DropAction, row: int, column: int,
                      parent: QModelIndex) -> bool:
-        parent_node = parent.internalPointer()
 
+        parent_node: Node = parent.internalPointer()
         node: SceneNode = data.node
-        old_parent = node.parent
-        old_parent.children = [x for x in old_parent.children if x is not node]
-        node.parent = parent_node
-        parent_node.children = sorted(parent_node.children, key=lambda x: x.scene.sequence)
-        node.scene.chapter = parent_node.chapter
-        self.modelReset.emit()
+        if isinstance(parent_node, ChapterNode):
+            node.scene.chapter = parent_node.chapter
+            self._dropUnderChapter(parent_node, node, row)
+
+        if isinstance(parent_node, UncategorizedChapterNode):
+            node.scene.chapter = None
+            self._dropUnderChapter(parent_node, node, row)
 
         old_index = self.novel.scenes.index(node.scene)
         new_index = [x for x in self.root.leaves if isinstance(x, SceneNode)].index(node)
         if old_index != new_index:
             self.novel.scenes.insert(new_index, self.novel.scenes.pop(old_index))
             self.orderChanged.emit()
+        parent = self.index(0, 0, QModelIndex())
+        self.layoutAboutToBeChanged.emit([QPersistentModelIndex(parent)])
+        self.layoutChanged.emit([QPersistentModelIndex(parent)])
         client.update_scene_chapter(node.scene)
-
         return True
+
+    def _dropUnderChapter(self, parent_node: Node, node: SceneNode, row: int):
+        old_parent_node: Node = node.parent
+        if old_parent_node is not parent_node:
+            old_parent_node.children = [x for x in old_parent_node.children if x is not node]
+        node.parent = parent_node
+
+        if row >= 0:
+            children_list = list(parent_node.children)
+            old_index = children_list.index(node)
+            new_index = row
+            if old_parent_node is parent_node and new_index > old_index:
+                new_index -= 1
+            children_list[old_index], children_list[new_index] = children_list[new_index], children_list[old_index]
+            parent_node.children = children_list
+        else:
+            parent_node.children = sorted(parent_node.children, key=lambda x: x.scene.sequence)
+
+    def _dropUnderUncategorized(self, uncategorized_node: UncategorizedChapterNode, node: SceneNode, row: int):
+        pass
