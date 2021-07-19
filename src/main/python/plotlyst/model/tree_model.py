@@ -80,7 +80,8 @@ class TreeItemModel(QAbstractItemModel):
             parent_node = self.root
         else:
             parent_node = parent.internalPointer()
-        return len(parent_node.children)
+
+        return len(parent_node.children) if parent_node else 0
 
     @overrides
     def columnCount(self, parent: QModelIndex) -> int:
@@ -102,3 +103,6 @@ class TreeItemModel(QAbstractItemModel):
         if not index.isValid():
             return Qt.NoItemFlags
         return super().flags(index)
+
+    def rootIndex(self) -> QModelIndex:
+        return self.index(0, 0, QModelIndex())

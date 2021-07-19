@@ -88,6 +88,7 @@ class ScenesOutlineView(QObject):
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
         self.ui.treeChapters.setColumnWidth(1, 20)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self.ui.btnChaptersToggle.setChecked(True)
         self.ui.btnNewChapter.setIcon(IconRegistry.plus_icon())
@@ -147,9 +148,16 @@ class ScenesOutlineView(QObject):
         self._distribution_widget.refresh()
 
     def _on_scene_selected(self, selection: QItemSelection):
-        selection = len(selection.indexes()) > 0
+        selection = len(self.ui.tblScenes.selectedIndexes()) > 0
         self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
+        if selection:
+            self.ui.treeChapters.clearSelection()
+
+    def _on_chapter_selected(self, selection: QItemSelection):
+        selection = len(self.ui.treeChapters.selectedIndexes()) > 0
+        if selection:
+            self.ui.tblScenes.clearSelection()
 
     def _hide_chapters_toggled(self, toggled: bool):
         self.ui.wgtChapters.setHidden(toggled)

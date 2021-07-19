@@ -90,6 +90,10 @@ class IconRegistry:
         return qtawesome.icon('mdi.movie-open', color_on='darkBlue')
 
     @staticmethod
+    def chapter_icon() -> QIcon:
+        return qtawesome.icon('ei.book')
+
+    @staticmethod
     def book_icon() -> QIcon:
         return qtawesome.icon('fa5s.book-open', color_on='darkBlue')
 
