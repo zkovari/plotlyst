@@ -42,7 +42,8 @@ class StoryLinesMapWidget(QWidget):
         if event.type() == QEvent.ToolTip:
             pos: QPoint = event.pos()
             index = int((pos.x() / 25) - 1)
-            self.setToolTip(self.novel.scenes[index].title)
+            if index < len(self.novel.scenes):
+                self.setToolTip(self.novel.scenes[index].title)
 
             return super().event(event)
         return super().event(event)
@@ -102,7 +103,8 @@ class StoryLinesLinearMapWidget(QWidget):
         if event.type() == QEvent.ToolTip:
             pos: QPoint = event.pos()
             index = int((pos.x() / 25) - 1)
-            self.setToolTip(self.novel.scenes[index].title)
+            if index < len(self.novel.scenes):
+                self.setToolTip(self.novel.scenes[index].title)
 
             return super().event(event)
         return super().event(event)
