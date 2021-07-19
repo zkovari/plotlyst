@@ -107,15 +107,15 @@ class IconRegistry:
 
     @staticmethod
     def custom_scene_icon() -> QIcon:
-        return qtawesome.icon('fa5s.yin-yang', color='magenta')
+        return qtawesome.icon('fa5s.yin-yang', color='#c0c2ce')
 
     @staticmethod
     def action_scene_icon() -> QIcon:
-        return qtawesome.icon('fa5s.yin-yang', color='red')
+        return qtawesome.icon('fa5s.yin-yang', color='#fe4a49')
 
     @staticmethod
     def reaction_scene_icon() -> QIcon:
-        return qtawesome.icon('fa5s.yin-yang', color='darkblue')
+        return qtawesome.icon('fa5s.yin-yang', color='#4b86b4')
 
     @staticmethod
     def hashtag_icon() -> QIcon:

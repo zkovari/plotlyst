@@ -86,9 +86,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         elif role == Qt.BackgroundRole:
             if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
                 if self._data[index.row()].wip:
-                    return QBrush(QColor('#f2f763'))
+                    return QBrush(QColor('#f6cd61'))
                 elif self._data[index.row()].pivotal:
-                    return QBrush(QColor('#f07762'))
+                    return QBrush(QColor('#3da4ab'))
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
