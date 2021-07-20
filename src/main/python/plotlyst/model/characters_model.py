@@ -79,7 +79,7 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if role == Qt.CheckStateRole:
             if self._data[index.row()] is self.scene.pov:
-                return QVariant()
+                return Qt.Checked
             return Qt.Checked if self._data[index.row()] in self.scene.characters else Qt.Unchecked
         elif role == Qt.FontRole:
             if self._data[index.row()] in self.scene.characters:

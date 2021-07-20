@@ -68,7 +68,6 @@ class SceneEditor(QObject):
         self.scenes_model = ScenesTableModel(self.novel)
         self.ui.lstScenes.setModel(self.scenes_model)
         self.ui.lstScenes.setModelColumn(ScenesTableModel.ColTitle)
-        self.ui.lstScenes.setMaximumWidth(200)
         self.ui.lstScenes.clicked.connect(self._new_scene_selected)
 
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
