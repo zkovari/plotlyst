@@ -77,13 +77,18 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if role == Qt.CheckStateRole and index.column() == 0:
+        if role == Qt.CheckStateRole:
+            if self._data[index.row()] is self.scene.pov:
+                return QVariant()
             return Qt.Checked if self._data[index.row()] in self.scene.characters else Qt.Unchecked
         elif role == Qt.FontRole:
             if self._data[index.row()] in self.scene.characters:
                 font = QFont()
                 font.setBold(True)
                 return font
+        elif role == Qt.ToolTipRole:
+            if self._data[index.row()] is self.scene.pov:
+                return 'POV character'
         return super(CharactersSceneAssociationTableModel, self).data(index, role)
 
     @overrides
@@ -101,7 +106,14 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
+        if self._data[index.row()] is self.scene.pov:
+            return Qt.NoItemFlags
         return flags | Qt.ItemIsUserCheckable
+
+    def update(self):
+        if self.scene.pov in self.scene.characters:
+            self.scene.characters.remove(self.scene.pov)
+        self.modelReset.emit()
 
 
 class CharacterEditorTableModel(QAbstractTableModel):

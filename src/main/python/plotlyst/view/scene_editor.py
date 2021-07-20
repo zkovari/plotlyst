@@ -86,7 +86,7 @@ class SceneEditor(QObject):
         self._update_view(scene)
 
         self.ui.cbWip.clicked.connect(self._save_scene)
-        self.ui.cbPov.currentIndexChanged.connect(self._save_scene)
+        self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.sbDay.valueChanged.connect(self._save_scene)
         self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
         self.ui.cbBeginningType.currentIndexChanged.connect(self._save_scene)
@@ -201,6 +201,17 @@ class SceneEditor(QObject):
         self.ui.btnHappy.setEnabled(enabled)
         self.ui.btnVeryHappy.setEnabled(enabled)
 
+    def _on_pov_changed(self):
+        pov = self.ui.cbPov.currentData()
+        if pov:
+            self.scene.pov = pov
+            self._enable_arc_buttons(True)
+        else:
+            self.scene.pov = None
+            self._enable_arc_buttons(False)
+        self._characters_model.update()
+        self._save_scene()
+
     def _save_scene(self):
         self._save_timer.stop()
         if not self._save_enabled:
@@ -214,12 +225,6 @@ class SceneEditor(QObject):
         self.scene.end = self.ui.textEvent3.toPlainText()
         self.scene.day = self.ui.sbDay.value()
         self.scene.notes = self.ui.textNotes.toPlainText()
-        pov = self.ui.cbPov.currentData()
-        if pov:
-            self.scene.pov = pov
-            self._enable_arc_buttons(True)
-        else:
-            self._enable_arc_buttons(False)
 
         self.scene.wip = self.ui.cbWip.isChecked()
         self.scene.pivotal = self.ui.cbPivotal.currentText()
@@ -240,8 +245,8 @@ class SceneEditor(QObject):
             arc = VERY_HAPPY
 
         self.scene.arcs.clear()
-        if pov:
-            self.scene.arcs.append(CharacterArc(arc, pov))
+        if self.scene.pov:
+            self.scene.arcs.append(CharacterArc(arc, self.scene.pov))
 
         if self._new_scene:
             self.novel.scenes.append(self.scene)
