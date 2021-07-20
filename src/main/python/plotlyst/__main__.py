@@ -25,6 +25,7 @@ import traceback
 from typing import Optional
 
 from src.main.python.plotlyst.env import AppMode, app_env
+from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
 
 try:
     from PyQt5 import QtWidgets, QtGui
@@ -63,6 +64,7 @@ if __name__ == '__main__':
         app = appctxt.app
         font = QFont('Noto Sans')
         QApplication.setFont(font)
+        app.setStyleSheet(APP_STYLESHEET)
         QCoreApplication.setOrganizationName('CraftOfGem')
         QCoreApplication.setOrganizationDomain('craftofgem.com')
         QCoreApplication.setApplicationName('NovelApp')
@@ -73,8 +75,13 @@ if __name__ == '__main__':
         changed_dir = False
         while True:
             if not workspace:
+                picker = DirectoryPickerDialog()
+                picker.display()
                 workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
                 changed_dir = True
+
+            if not workspace:
+                exit(0)
 
             if not os.path.exists(workspace):
                 QMessageBox.warning(None, 'Invalid project directory',
@@ -112,7 +119,6 @@ if __name__ == '__main__':
         except Exception as ex:
             QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
             raise ex
-        app.setStyleSheet(APP_STYLESHEET)
 
         window.show()
         window.activateWindow()
