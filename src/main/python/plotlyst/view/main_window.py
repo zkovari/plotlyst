@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWi
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter
 from src.main.python.plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
 from src.main.python.plotlyst.view.characters_view import CharactersView
@@ -47,7 +48,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.resize(1000, 630)
-        self.setWindowState(Qt.WindowMaximized)
+        if app_env.is_dev():
+            self.resize(1200, 830)
+        if app_env.is_prod():
+            self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
         self.novel = client.fetch_novel(1)
 
@@ -112,8 +116,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.stackedWidget.setCurrentWidget(self.pageReports)
 
     def _init_menubar(self):
-        self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
-        self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
+        if app_env.is_prod():
+            self.menuFile.removeAction(self.actionRestart)
+        else:
+            self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
+            self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
+
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)
         self.actionDecreaseFontSize.triggered.connect(self.decrease_font_size)

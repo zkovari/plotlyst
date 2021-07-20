@@ -17,11 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import argparse
 import os
 import subprocess
 import sys
 import traceback
 from typing import Optional
+
+from src.main.python.plotlyst.env import AppMode, app_env
 
 try:
     from PyQt5 import QtWidgets, QtGui
@@ -51,6 +54,11 @@ if __name__ == '__main__':
 
     QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
     QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
+    args = parser.parse_args()
+    app_env.mode = args.mode
     while True:
         app = appctxt.app
         font = QFont('Noto Sans')
