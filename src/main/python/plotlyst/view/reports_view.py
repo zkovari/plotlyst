@@ -127,7 +127,7 @@ class ReportsView:
         in_act_2 = False
         in_act_3 = False
         for scene in self.novel.scenes:
-            if (include_act1 and not include_act2) or (include_act2 and in_act_2) or (include_act3 and in_act_3):
+            if (include_act1 and not in_act_2) or (include_act2 and in_act_2) or (include_act3 and in_act_3):
                 if scene.pov and scene.pov.name not in self.pov_number.keys():
                     self.pov_number[scene.pov.name] = 0
                 if scene.pov:
@@ -140,8 +140,9 @@ class ReportsView:
 
         series = QPieSeries()
         for k, v in self.pov_number.items():
-            slice = series.append(k, v)
-            slice.setLabelVisible(True)
+            if v:
+                slice = series.append(k, v)
+                slice.setLabelVisible(True)
 
         for slice in series.slices():
             slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
