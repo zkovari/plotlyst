@@ -77,6 +77,8 @@ class StoryLinesMapWidget(QWidget):
         self._scene_coord_y.clear()
         y = 0
         for sl_i, story in enumerate(self.novel.story_lines):
+            # previous_y = 0
+            # previous_x = 0
             y = self._story_line_y(sl_i)
             path = QPainterPath()
             painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
@@ -88,8 +90,14 @@ class StoryLinesMapWidget(QWidget):
                 if story in scene.story_lines:
                     if sc_i not in self._scene_coord_y.keys():
                         self._scene_coord_y[sc_i] = y
+                    # if previous_y > self._scene_coord_y[sc_i] or (previous_y == 0 and y > self._scene_coord_y[sc_i]):
+                    #     path.lineTo(x - 25, y)
+                    # elif 0 < previous_y < self._scene_coord_y[sc_i]:
+                    #     path.lineTo(previous_x + 25, y)
                     path.lineTo(x, self._scene_coord_y[sc_i])
                     painter.drawPath(path)
+                    previous_y = self._scene_coord_y[sc_i]
+                    previous_x = x
 
         for sc_i, scene in enumerate(self.novel.scenes):
             if sc_i not in self._scene_coord_y.keys():
