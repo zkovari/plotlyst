@@ -46,7 +46,7 @@ class StoryLinesMapWidget(QWidget):
     @overrides
     def minimumSizeHint(self) -> QSize:
         if self.novel:
-            x = self._scene_x(len(self.novel.scenes) - 1)
+            x = self._scene_x(len(self.novel.scenes) - 1) + 50
             y = self._story_line_y(len(self.novel.story_lines)) * 2
             return QSize(x, y)
         return super().minimumSizeHint()
@@ -74,6 +74,7 @@ class StoryLinesMapWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillRect(self.rect(), Qt.white)
+        self._scene_coord_y.clear()
         y = 0
         for sl_i, story in enumerate(self.novel.story_lines):
             y = self._story_line_y(sl_i)
