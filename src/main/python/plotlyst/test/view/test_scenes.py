@@ -1,9 +1,11 @@
-from PyQt5.QtWidgets import QMessageBox
+from typing import List
+
+from PyQt5.QtWidgets import QMessageBox, QAction
 
 from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
-    click_on_item
+    click_on_item, popup_actions_on_item, trigger_popup_action_on_item
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 
@@ -68,3 +70,17 @@ def test_scene_edition(qtbot, filled_window: MainWindow):
     assert not view.editor
 
     assert_data(view.tblModel, title, 0, ScenesTableModel.ColTitle)
+
+
+def test_context_menu(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+    actions: List[QAction] = popup_actions_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle)
+    assert len(actions) == 2
+    assert actions[0].text() == 'Toggle WIP status'
+    assert actions[1].text() == 'Insert new scene'
+
+
+def test_toggle_wip_status(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+    trigger_popup_action_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle, 'Toggle WIP status')
+    assert view.novel.scenes[0].wip

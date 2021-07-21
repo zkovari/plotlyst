@@ -17,10 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any
+from typing import Any, List
 
-from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel
-from PyQt5.QtWidgets import QAbstractItemView, QLineEdit
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel, QCoreApplication
+from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction
 
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -64,6 +65,26 @@ def assert_data(model: QAbstractItemModel, value: Any, row: int, column: int = 0
     else:
         assert model.data(model.index(row, column),
                           role) == value, f'{model.data(model.index(row, column), role)} != {value}'
+
+
+def trigger_popup_action_on_item(qtbot, view: QAbstractItemView, row: int, column: int, *action_names):
+    # Right-click doesn't trigger popup: https://github.com/pytest-dev/pytest-qt/issues/269
+    view.customContextMenuRequested.emit(_get_position_or_fail(view, row, column))
+    app: QCoreApplication = QtWidgets.QApplication.instance()
+    menu: QMenu = app.activePopupWidget()
+
+    for action_name in action_names:
+        action: QAction = next((a for a in menu.actions() if a.text() == action_name), None)
+        qtbot.mouseClick(menu, QtCore.Qt.LeftButton, pos=menu.actionGeometry(action).center())
+        qtbot.wait(100)
+        menu = action.menu()
+
+
+def popup_actions_on_item(qtbot, view: QAbstractItemView, row: int, column: int) -> List[QAction]:
+    view.customContextMenuRequested.emit(_get_position_or_fail(view, row, column))
+    app: QCoreApplication = QtWidgets.QApplication.instance()
+    menu: QMenu = app.activePopupWidget()
+    return menu.actions()
 
 
 def go_to_scenes(window: MainWindow) -> ScenesOutlineView:
