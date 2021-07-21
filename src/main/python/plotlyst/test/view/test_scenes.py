@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QMessageBox, QAction
 from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
-    click_on_item, popup_actions_on_item, trigger_popup_action_on_item
+    click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 
@@ -43,12 +43,12 @@ def test_scene_deletion(qtbot, filled_window: MainWindow, monkeypatch):
     assert view.ui.btnEdit.isEnabled()
     assert view.ui.btnDelete.isEnabled()
 
-    monkeypatch.setattr(QMessageBox, "question", lambda *args: QMessageBox.No)  # cancel
+    patch_confirmed(monkeypatch, QMessageBox.No)
     view.ui.btnDelete.click()
     assert len(view.novel.scenes) == 2
     assert_data(view.tblModel, 'Scene 1', 0, ScenesTableModel.ColTitle)
 
-    monkeypatch.setattr(QMessageBox, "question", lambda *args: QMessageBox.Yes)  # confirm
+    patch_confirmed(monkeypatch)
     view.ui.btnDelete.click()
     assert len(view.novel.scenes) == 1
     assert_data(view.tblModel, 'Scene 2', 0, ScenesTableModel.ColTitle)

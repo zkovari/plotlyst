@@ -25,16 +25,16 @@ from PyQt5.QtCore import QCoreApplication, QSettings
 class AppSettings:
     WORKSPACE = 'workspace'
     LAUNCHED_BEFORE = 'launchedBefore'
-    LAST_NOVEL_ID = 'last_novel_id'
+    LAST_NOVEL_ID = 'lastNovelId'
 
     def __init__(self):
-        self._settings: QSettings() = QSettings()
+        self._settings: QSettings = QSettings()
 
     def init_org(self):
         QCoreApplication.setOrganizationName('CraftOfGem')
         QCoreApplication.setOrganizationDomain('craftofgem.com')
         QCoreApplication.setApplicationName('NovelApp')
-        self._settings: QSettings() = QSettings()
+        self._settings = QSettings()
 
     def workspace(self) -> Optional[str]:
         return self._settings.value(self.WORKSPACE)

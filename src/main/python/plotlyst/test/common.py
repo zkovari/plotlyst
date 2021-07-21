@@ -21,9 +21,10 @@ from typing import Any, List
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel, QCoreApplication
-from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction
+from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction, QMessageBox
 
 from src.main.python.plotlyst.view.characters_view import CharactersView
+from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
@@ -87,6 +88,10 @@ def popup_actions_on_item(qtbot, view: QAbstractItemView, row: int, column: int)
     return menu.actions()
 
 
+def patch_confirmed(monkeypatch, answer=QMessageBox.Yes):
+    monkeypatch.setattr(QMessageBox, "question", lambda *args: answer)  # confirm
+
+
 def go_to_scenes(window: MainWindow) -> ScenesOutlineView:
     window.btnScenes.setChecked(True)
     return window.scenes_outline_view
@@ -100,6 +105,11 @@ def go_to_characters(window: MainWindow) -> CharactersView:
 def go_to_novel(window: MainWindow) -> NovelView:
     window.btnNovel.setChecked(True)
     return window.novel_view
+
+
+def go_to_home(window: MainWindow) -> HomeView:
+    window.btnHome.setChecked(True)
+    return window.home_view
 
 
 def create_character(qtbot, window: MainWindow, name: str):

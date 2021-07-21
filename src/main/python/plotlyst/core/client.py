@@ -231,6 +231,12 @@ class SqlClient:
         novel_m = NovelModel.get(id=novel.id)
         novel_m.delete_instance()
 
+    def update_novel(self, novel: Novel):
+        novel_m = NovelModel.get(id=novel.id)
+        novel_m.title = novel.title
+
+        novel_m.save()
+
     def fetch_novel(self, id: int) -> Novel:
         novel_model = NovelModel.get_by_id(id)
 

@@ -21,13 +21,14 @@ from typing import Optional
 
 from PyQt5.QtWidgets import QDialog
 
+from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
-class NewNovelDialog(QDialog, Ui_NovelCreationDialog):
+class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
     def __init__(self, parent=None):
-        super(NewNovelDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.btnCancel.setIcon(IconRegistry.cancel_icon())
@@ -35,7 +36,9 @@ class NewNovelDialog(QDialog, Ui_NovelCreationDialog):
         self.btnCancel.clicked.connect(self.reject)
         self.btnConfirm.clicked.connect(self.accept)
 
-    def display(self) -> Optional[str]:
+    def display(self, novel: Optional[Novel] = None) -> Optional[str]:
+        if novel:
+            self.lineTitle.setText(novel.title)
         result = self.exec()
         if result == QDialog.Rejected:
             return None
