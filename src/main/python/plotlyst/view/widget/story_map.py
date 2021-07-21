@@ -32,7 +32,6 @@ class StoryLinesMapWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.setStyleSheet('background-color:white;')
         self.setMouseTracking(True)
         self.novel: Optional[Novel] = None
         self._scene_coord_y: Dict[int, int] = {}
@@ -55,8 +54,7 @@ class StoryLinesMapWidget(QWidget):
     @overrides
     def event(self, event: QEvent) -> bool:
         if event.type() == QEvent.ToolTip:
-            pos: QPoint = event.pos()
-            index = int((pos.x() / 25) - 1)
+            index = self._index_from_pos(event.pos())
             if index < len(self.novel.scenes):
                 self.setToolTip(self.novel.scenes[index].title)
 
@@ -65,17 +63,17 @@ class StoryLinesMapWidget(QWidget):
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        pos: QPoint = event.pos()
-        index = int((pos.x() / 25) - 1)
+        index = self._index_from_pos(event.pos())
         if index < len(self.novel.scenes):
             self._clicked_scene = self.novel.scenes[index]
-            self.repaint()
+            self.update()
             self.scene_selected.emit(self._clicked_scene)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(self.rect(), Qt.white)
         y = 0
         for sl_i, story in enumerate(self.novel.story_lines):
             y = self._story_line_y(sl_i)
@@ -137,6 +135,10 @@ class StoryLinesMapWidget(QWidget):
     @staticmethod
     def _scene_x(index: int) -> int:
         return 25 * (index + 1)
+
+    @staticmethod
+    def _index_from_pos(pos: QPoint) -> int:
+        return int((pos.x() / 25) - 1)
 
     def _context_menu_requested(self, pos: QPoint):
         menu = QMenu(self)

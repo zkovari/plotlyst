@@ -39,6 +39,21 @@
        <string>Story map</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>3</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
        <item>
         <widget class="QScrollArea" name="scrollArea">
          <property name="verticalScrollBarPolicy">
@@ -55,11 +70,26 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>529</width>
-            <height>165</height>
+            <width>542</width>
+            <height>174</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
            <item>
             <widget class="StoryLinesMapWidget" name="storyLinesMap" native="true"/>
            </item>
