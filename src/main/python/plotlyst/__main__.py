@@ -30,7 +30,7 @@ from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
 
 try:
     from PyQt5 import QtWidgets, QtGui
-    from PyQt5.QtCore import QCoreApplication, QSettings, Qt
+    from PyQt5.QtCore import Qt
     from PyQt5.QtGui import QFont
     from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
