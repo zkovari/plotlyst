@@ -26,8 +26,11 @@ from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction, QMessa
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
+from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
+from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.timeline_view import TimelineView
 
 
 def click_on_item(qtbot, view: QAbstractItemView, row: int, column: int = 0, parent=None, modifier=Qt.NoModifier):
@@ -110,6 +113,21 @@ def go_to_novel(window: MainWindow) -> NovelView:
 def go_to_home(window: MainWindow) -> HomeView:
     window.btnHome.setChecked(True)
     return window.home_view
+
+
+def go_to_reports(window: MainWindow) -> ReportsView:
+    window.btnReport.setChecked(True)
+    return window.reports_view
+
+
+def go_to_timeline(window: MainWindow) -> TimelineView:
+    window.btnTimeline.setChecked(True)
+    return window.timeline_view
+
+
+def go_to_notes(window: MainWindow) -> NotesView:
+    window.btnNotes.setChecked(True)
+    return window.notes_view
 
 
 def create_character(qtbot, window: MainWindow, name: str):

@@ -8,7 +8,7 @@ from src.main.python.plotlyst.view.main_window import MainWindow
 
 def test_main_window(qtbot, window: MainWindow):
     assert window
-
+    
     assert window.btnScenes.isChecked()
     assert window.scenes_outline_view.widget.isVisible()
 
