@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QAbstractItemView
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event, CharacterArc, \
@@ -103,6 +103,10 @@ class SceneEditor(QObject):
         if scene:
             self.scene = scene
             self._new_scene = False
+            index = self.scenes_model.index(self.scene.sequence, ScenesTableModel.ColTitle)
+            self.ui.lstScenes.selectionModel().select(index, QItemSelectionModel.Select)
+            if self.scene.sequence > 15:
+                self.ui.lstScenes.scrollTo(index, QAbstractItemView.PositionAtCenter)
         else:
             self.scene = Scene('')
             self._new_scene = True
