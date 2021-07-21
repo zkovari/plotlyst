@@ -23,7 +23,8 @@ from enum import Enum
 from typing import List
 
 from PyQt5.QtCore import QTimer, Qt
-from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
+from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
+    DoesNotExist
 from playhouse.sqlite_ext import CSqliteExtDatabase
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter, CharacterArc
@@ -214,6 +215,13 @@ class SqlClient:
             novels.append(Novel(id=novel_m.id, title=novel_m.title))
 
         return novels
+
+    def has_novel(self, id: int) -> bool:
+        try:
+            NovelModel.get_by_id(id)
+            return True
+        except DoesNotExist:
+            return False
 
     def insert_novel(self, novel: Novel):
         m = NovelModel.create(title=novel.title)

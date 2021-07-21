@@ -38,6 +38,15 @@ def in_memory_test_client():
 
 @pytest.fixture
 def window(qtbot, in_memory_test_client):
+    return get_main_window(qtbot)
+
+
+@pytest.fixture
+def window_with_disk_db(qtbot, test_client):
+    return get_main_window(qtbot)
+
+
+def get_main_window(qtbot):
     main_window = MainWindow()
     main_window.setStyleSheet(APP_STYLESHEET)
     main_window.show()
