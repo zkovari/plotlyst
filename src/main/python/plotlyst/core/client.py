@@ -49,10 +49,14 @@ class DbContext:
         self._backup_timer.timeout.connect(self._backup)
 
     def init(self, workspace: str):
-        db_file_name = os.path.join(workspace, 'novels.sqlite')
-        _create_tables = False
-        if not os.path.exists(db_file_name) or os.path.getsize(db_file_name) == 0:
+        if workspace == ':memory:':
+            db_file_name = workspace
             _create_tables = True
+        else:
+            db_file_name = os.path.join(workspace, 'novels.sqlite')
+            _create_tables = False
+            if not os.path.exists(db_file_name) or os.path.getsize(db_file_name) == 0:
+                _create_tables = True
         runtime_db = SqliteDatabase(db_file_name, pragmas={
             'cache_size': 10000,  # 10000 pages, or ~40MB
             'foreign_keys': 1,  # Enforce foreign-key constraints

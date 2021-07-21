@@ -222,8 +222,13 @@ class CharacterArcCanvas(FigureCanvasQTAgg):
             y.append(arc_value)
 
         self.axes.plot(x, y)
-        min_y = min(y)
-        max_y = max(y)
+        if y:
+            min_y = min(y)
+            max_y = max(y)
+        else:
+            min_y = -10
+            max_y = 10
+
         if min_y < 0 and abs(min_y) > max_y:
             self.axes.set_ylim([min_y - 3, abs(min_y) + 3])
         self.axes.yaxis.set_major_locator(ticker.NullLocator())
