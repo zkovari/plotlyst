@@ -136,19 +136,19 @@ def create_story_line(qtbot, window: MainWindow, text: str):
     novels: NovelView = go_to_novel(window)
 
     novels.ui.btnAdd.click()
-    click_on_item(qtbot, novels.ui.lstStoryLines, 0)
+    click_on_item(qtbot, novels.ui.tblStoryLines, 0)
     novels.ui.btnEdit.click()
 
-    index = novels.ui.lstStoryLines.model().index(0, 0)
-    editor = novels.ui.lstStoryLines.indexWidget(index)
+    index = novels.ui.tblStoryLines.model().index(0, 0)
+    editor = novels.ui.tblStoryLines.indexWidget(index)
     assert editor, "Editor should be open at position 0,0"
     assert isinstance(editor, QLineEdit)
 
     qtbot.keyClicks(editor, text)
-    novels.ui.lstStoryLines.itemDelegate().commitData.emit(editor)
-    novels.ui.lstStoryLines.itemDelegate().closeEditor.emit(editor)
+    novels.ui.tblStoryLines.itemDelegate().commitData.emit(editor)
+    novels.ui.tblStoryLines.itemDelegate().closeEditor.emit(editor)
 
-    assert_data(novels.ui.lstStoryLines.model(), text, 0)
+    assert_data(novels.ui.tblStoryLines.model(), text, 0)
 
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:
