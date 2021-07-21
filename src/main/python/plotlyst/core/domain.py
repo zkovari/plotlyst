@@ -36,6 +36,7 @@ class Character:
 @dataclass(unsafe_hash=True)
 class StoryLine:
     text: str
+    color_hexa: str = ''
     id: Optional[int] = None
 
 

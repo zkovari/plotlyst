@@ -26,8 +26,11 @@ from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction, QMessa
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
+from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
+from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.timeline_view import TimelineView
 
 
 def click_on_item(qtbot, view: QAbstractItemView, row: int, column: int = 0, parent=None, modifier=Qt.NoModifier):
@@ -112,6 +115,21 @@ def go_to_home(window: MainWindow) -> HomeView:
     return window.home_view
 
 
+def go_to_reports(window: MainWindow) -> ReportsView:
+    window.btnReport.setChecked(True)
+    return window.reports_view
+
+
+def go_to_timeline(window: MainWindow) -> TimelineView:
+    window.btnTimeline.setChecked(True)
+    return window.timeline_view
+
+
+def go_to_notes(window: MainWindow) -> NotesView:
+    window.btnNotes.setChecked(True)
+    return window.notes_view
+
+
 def create_character(qtbot, window: MainWindow, name: str):
     characters: CharactersView = go_to_characters(window)
 
@@ -136,19 +154,19 @@ def create_story_line(qtbot, window: MainWindow, text: str):
     novels: NovelView = go_to_novel(window)
 
     novels.ui.btnAdd.click()
-    click_on_item(qtbot, novels.ui.lstStoryLines, 0)
+    click_on_item(qtbot, novels.ui.tblStoryLines, 0)
     novels.ui.btnEdit.click()
 
-    index = novels.ui.lstStoryLines.model().index(0, 0)
-    editor = novels.ui.lstStoryLines.indexWidget(index)
+    index = novels.ui.tblStoryLines.model().index(0, 0)
+    editor = novels.ui.tblStoryLines.indexWidget(index)
     assert editor, "Editor should be open at position 0,0"
     assert isinstance(editor, QLineEdit)
 
     qtbot.keyClicks(editor, text)
-    novels.ui.lstStoryLines.itemDelegate().commitData.emit(editor)
-    novels.ui.lstStoryLines.itemDelegate().closeEditor.emit(editor)
+    novels.ui.tblStoryLines.itemDelegate().commitData.emit(editor)
+    novels.ui.tblStoryLines.itemDelegate().closeEditor.emit(editor)
 
-    assert_data(novels.ui.lstStoryLines.model(), text, 0)
+    assert_data(novels.ui.tblStoryLines.model(), text, 0)
 
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:

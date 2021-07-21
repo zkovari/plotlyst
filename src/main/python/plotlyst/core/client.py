@@ -28,14 +28,16 @@ from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField,
 from playhouse.sqlite_ext import CSqliteExtDatabase
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter, CharacterArc
+from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
 class ApplicationDbVersion(Enum):
     R0 = 0  # before ApplicationModel existed
     R1 = 1
+    R2 = 2
 
 
-LATEST = ApplicationDbVersion.R1
+LATEST = ApplicationDbVersion.R2
 
 
 class DbContext:
@@ -172,6 +174,7 @@ class CharacterArcModel(Model):
 
 class NovelStoryLinesModel(Model):
     text = TextField()
+    color_hexa = TextField(null=True)
     novel = ForeignKeyField(NovelModel, backref='story_lines', on_delete='CASCADE')
 
     class Meta:
@@ -246,8 +249,12 @@ class SqlClient:
                 Character(id=char_m.character.id, name=char_m.character.name, avatar=char_m.character.avatar))
 
         story_lines: List[StoryLine] = []
-        for story_m in novel_model.story_lines:
-            story_lines.append(StoryLine(id=story_m.id, text=story_m.text))
+        for i, story_m in enumerate(novel_model.story_lines):
+            if story_m.color_hexa:
+                color = story_m.color_hexa
+            else:
+                color = STORY_LINE_COLOR_CODES[i % len(STORY_LINE_COLOR_CODES)]
+            story_lines.append(StoryLine(id=story_m.id, text=story_m.text, color_hexa=color))
 
         chapters: List[Chapter] = []
         for chapter_m in novel_model.chapters:
@@ -403,6 +410,7 @@ class SqlClient:
     def insert_story_line(self, novel: Novel, story_line: StoryLine):
         m = NovelStoryLinesModel.create(text=story_line.text, novel=novel.id)
         story_line.id = m.id
+        story_line.color_hexa = story_line.color_hexa
 
     def delete_story_line(self, story_line: StoryLine):
         m = NovelStoryLinesModel.get(id=story_line.id)
@@ -411,6 +419,7 @@ class SqlClient:
     def update_story_line(self, story_line: StoryLine):
         m = NovelStoryLinesModel.get_by_id(story_line.id)
         m.text = story_line.text
+        m.color_hexa = story_line.color_hexa
         m.save()
 
     def replace_scene_events(self, novel: Novel, scene: Scene, events: List[Event]):
