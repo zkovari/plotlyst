@@ -24,6 +24,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, StoryLine
 from src.main.python.plotlyst.model.novel import EditableNovelStoryLinesListModel
+from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -50,30 +51,33 @@ class NovelView:
         self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
 
         self.story_lines_model = EditableNovelStoryLinesListModel(self.novel)
-        self.ui.lstStoryLines.setModel(self.story_lines_model)
-        self.ui.lstStoryLines.setItemDelegate(StoryLineDelegate())
-        self.ui.lstStoryLines.selectionModel().selectionChanged.connect(self._on_story_line_selected)
+        self.ui.tblStoryLines.horizontalHeader().setDefaultSectionSize(25)
+        self.ui.tblStoryLines.setModel(self.story_lines_model)
+        self.ui.tblStoryLines.setColumnWidth(EditableNovelStoryLinesListModel.ColText, 140)
+        self.ui.tblStoryLines.setItemDelegate(StoryLineDelegate())
+        self.ui.tblStoryLines.selectionModel().selectionChanged.connect(self._on_story_line_selected)
 
     def _on_add_story_line(self):
         story_line = StoryLine(text='Unknown')
         self.novel.story_lines.append(story_line)
+        story_line.color_hexa = STORY_LINE_COLOR_CODES[(len(self.novel.story_lines) - 1) % len(STORY_LINE_COLOR_CODES)]
         client.insert_story_line(self.novel, story_line)
         self.story_lines_model.modelReset.emit()
 
-        self.ui.lstStoryLines.selectionModel().select(
+        self.ui.tblStoryLines.selectionModel().select(
             self.story_lines_model.index(self.story_lines_model.rowCount() - 1, 0),
             QItemSelectionModel.Select)
 
-        self.ui.lstStoryLines.edit(self.ui.lstStoryLines.selectionModel().selectedIndexes()[0])
+        self.ui.tblStoryLines.edit(self.ui.tblStoryLines.selectionModel().selectedIndexes()[0])
 
     def _on_edit_story_line(self):
-        indexes = self.ui.lstStoryLines.selectedIndexes()
+        indexes = self.ui.tblStoryLines.selectedIndexes()
         if not indexes:
             return
-        self.ui.lstStoryLines.edit(indexes[0])
+        self.ui.tblStoryLines.edit(indexes[0])
 
     def _on_remove_story_line(self):
-        indexes = self.ui.lstStoryLines.selectedIndexes()
+        indexes = self.ui.tblStoryLines.selectedIndexes()
         if not indexes:
             return
         story_line: StoryLine = indexes[0].data(EditableNovelStoryLinesListModel.StoryLineRole)

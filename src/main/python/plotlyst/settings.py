@@ -60,5 +60,10 @@ settings = AppSettings()
 STORY_LINE_COLOR_CODES: List[str] = [
     '#03396c',  # dark blue
     '#851e3e',  # dark red
-    '#0e9aa7'  # green
+    '#0e9aa7',  # green
+    '#f6cd61',  # yellow
+    '#f9caa7',  # light brown-pink
+    '#f37736',  # orange
+    '#bbbbbb',  # grey
+    '#be9b7b',  # brown
 ]

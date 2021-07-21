@@ -181,10 +181,11 @@ class StoryLinesCanvas(FigureCanvasQTAgg):
                             v += 1
                 occurences.append(v)
             if bottoms is None:
-                self.axes.bar(character_names, occurences, width, label=story_line.text)
+                self.axes.bar(character_names, occurences, width, label=story_line.text, color=story_line.color_hexa)
                 bottoms = np.array(occurences)
             else:
-                self.axes.bar(character_names, occurences, width, label=story_line.text, bottom=bottoms)
+                self.axes.bar(character_names, occurences, width, label=story_line.text, bottom=bottoms,
+                              color=story_line.color_hexa)
                 bottoms += np.array(occurences)
 
         self.axes.set_ylabel('# of scenes')

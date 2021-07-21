@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict, Optional
 
 from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal
-from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap, QMouseEvent
+from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap, QMouseEvent, QColor
 from PyQt5.QtWidgets import QWidget, QMenu, QAction, QApplication
 from overrides import overrides
 
@@ -28,7 +28,6 @@ from src.main.python.plotlyst.core.domain import Scene
 
 
 class StoryLinesMapWidget(QWidget):
-    colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -55,7 +54,7 @@ class StoryLinesMapWidget(QWidget):
         for i, story in enumerate(self.novel.story_lines):
             y = 50 * (i + 1)
             path = QPainterPath()
-            painter.setPen(QPen(self.colors[i], 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
             path.moveTo(0, y)
             path.lineTo(5, y)
 
@@ -85,8 +84,6 @@ class StoryLinesMapWidget(QWidget):
 
 
 class StoryLinesLinearMapWidget(QWidget):
-    colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
-
     scene_selected = pyqtSignal(Scene)
 
     def __init__(self, parent=None):
@@ -125,7 +122,7 @@ class StoryLinesLinearMapWidget(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         for i, story in enumerate(self.novel.story_lines):
             y = 50 * (i + 1) + 25
-            painter.setPen(QPen(self.colors[i], 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
             painter.drawLine(0, y, w, y)
             painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
             painter.drawText(5, y - 15, story.text)
