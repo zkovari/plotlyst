@@ -96,8 +96,8 @@ class StoryLinesMapWidget(QWidget):
                     #     path.lineTo(previous_x + 25, y)
                     path.lineTo(x, self._scene_coord_y[sc_i])
                     painter.drawPath(path)
-                    previous_y = self._scene_coord_y[sc_i]
-                    previous_x = x
+                    # previous_y = self._scene_coord_y[sc_i]
+                    # previous_x = x
 
         for sc_i, scene in enumerate(self.novel.scenes):
             if sc_i not in self._scene_coord_y.keys():
