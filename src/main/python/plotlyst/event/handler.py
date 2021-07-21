@@ -26,25 +26,9 @@ from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QMessageBox, QWidget, QStatusBar, QApplication
 
-from src.main.python.plotlyst.event.core import EventAuthorization, EventAuthorizationType, EventLog, Severity, \
-    emit_warning, emit_critical
-from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.event.core import EventLog, Severity, \
+    emit_critical
 from src.main.python.plotlyst.view.dialog.error import ErrorMessageBox
-
-
-class EventAuthorizationHandler:
-    parent: Optional[QWidget] = None
-
-    @classmethod
-    def handle(cls, event_auth: EventAuthorization) -> bool:
-        if event_auth.type == EventAuthorizationType.REJECTED:
-            emit_warning(event_auth.message, highlighted=True)
-            return False
-        if event_auth.type == EventAuthorizationType.ALLOWED:
-            return True
-        if event_auth.type == EventAuthorizationType.CONFIRMATION_REQUESTED:
-            return ask_confirmation(event_auth.message, cls.parent)
-        return False
 
 
 class EventLogHandler:
@@ -53,14 +37,6 @@ class EventLogHandler:
     def __init__(self, statusbar: QStatusBar):
         self.statusbar = statusbar
         self._error_event = Event()
-
-    def on_warning_event(self, event: EventLog, time: int) -> None:
-        if not event.highlighted:
-            self.statusbar.showMessage(event.message, time)
-            self.statusbar.setStyleSheet('color: red')
-        self._handle_highlighted_event(event, Severity.WARNING)
-
-        QTimer.singleShot(time, self._reset_statusbar_color)
 
     def on_error_event(self, event: EventLog, time: int) -> None:
         if not self._error_event.is_set():
@@ -76,12 +52,6 @@ class EventLogHandler:
 
             QTimer.singleShot(50, self._error_event.clear)
             QTimer.singleShot(50, self._reset_statusbar_color)
-
-    def on_info_event(self, event: EventLog, time: int) -> None:
-        if not event.highlighted:
-            self.statusbar.showMessage(event.message, time)
-            self.statusbar.setStyleSheet('color: blue')
-        self._handle_highlighted_event(event, Severity.INFO)
 
     def _handle_highlighted_event(self, event: EventLog, severity: Severity):
         if not event.highlighted:

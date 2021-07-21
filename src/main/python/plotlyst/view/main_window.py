@@ -28,7 +28,7 @@ from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter
-from src.main.python.plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
+from src.main.python.plotlyst.event.handler import EventLogHandler
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
@@ -70,10 +70,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self._init_views()
 
-        EventAuthorizationHandler.parent = self
         self.event_log_handler = EventLogHandler(self.statusBar())
-        event_log_reporter.info.connect(self.event_log_handler.on_info_event)
-        event_log_reporter.warning.connect(self.event_log_handler.on_warning_event)
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
 
     def _init_views(self):
