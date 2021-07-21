@@ -38,34 +38,34 @@
       <attribute name="title">
        <string>Story map</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <property name="spacing">
-        <number>3</number>
-       </property>
-       <property name="leftMargin">
-        <number>3</number>
-       </property>
-       <property name="topMargin">
-        <number>3</number>
-       </property>
-       <property name="rightMargin">
-        <number>3</number>
-       </property>
-       <property name="bottomMargin">
-        <number>3</number>
-       </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <property name="spacing">
-          <number>0</number>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="verticalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOn</enum>
          </property>
-         <item>
-          <widget class="StoryLinesLinearMapWidget" name="storyLinesLinearMap" native="true"/>
-         </item>
-         <item>
-          <widget class="StoryLinesMapWidget" name="storyLinesMap" native="true"/>
-         </item>
-        </layout>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOn</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>515</width>
+            <height>151</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="StoryLinesMapWidget" name="storyLinesMap" native="true"/>
+           </item>
+          </layout>
+         </widget>
+        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
@@ -270,12 +270,6 @@
  <customwidgets>
   <customwidget>
    <class>StoryLinesMapWidget</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.story_map</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>StoryLinesLinearMapWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.story_map</header>
    <container>1</container>
