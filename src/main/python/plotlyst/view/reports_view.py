@@ -42,9 +42,8 @@ class ReportsView:
         self.novel = novel
         self.scene_selected = None
 
-        self.ui.storyLinesMap.novel = novel
-        self.ui.storyLinesLinearMap.novel = novel
-        self.ui.storyLinesLinearMap.scene_selected.connect(self._on_scene_selected)
+        self.ui.storyLinesMap.setNovel(novel)
+        self.ui.storyLinesMap.scene_selected.connect(self._on_scene_selected)
         self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
         self.ui.btnAct2.setIcon(IconRegistry.act_two_icon())
         self.ui.btnAct3.setIcon(IconRegistry.act_three_icon())
@@ -114,8 +113,7 @@ class ReportsView:
             self.scene_selected.story_lines.append(story_line)
 
         client.update_scene(self.scene_selected)
-        self.ui.storyLinesLinearMap.repaint()
-        self.ui.storyLinesMap.repaint()
+        self.ui.storyLinesMap.update()
 
     def _update_characters_chart(self):
         for k in self.pov_number.keys():
