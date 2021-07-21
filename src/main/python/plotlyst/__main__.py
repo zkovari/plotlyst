@@ -25,6 +25,7 @@ import traceback
 from typing import Optional
 
 from src.main.python.plotlyst.env import AppMode, app_env
+from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
 
 try:
@@ -65,12 +66,9 @@ if __name__ == '__main__':
         font = QFont('Noto Sans')
         QApplication.setFont(font)
         app.setStyleSheet(APP_STYLESHEET)
-        QCoreApplication.setOrganizationName('CraftOfGem')
-        QCoreApplication.setOrganizationDomain('craftofgem.com')
-        QCoreApplication.setApplicationName('NovelApp')
+        settings.init_org()
 
-        settings = QSettings()
-        workspace: Optional[str] = settings.value('workspace')
+        workspace: Optional[str] = settings.workspace()
 
         changed_dir = False
         while True:
@@ -94,7 +92,7 @@ if __name__ == '__main__':
                                     f"The chosen directory cannot be written: {workspace}")
             else:
                 if changed_dir:
-                    settings.setValue('workspace', workspace)
+                    settings.set_workspace(workspace)
                 break
             workspace = None
 
@@ -123,10 +121,10 @@ if __name__ == '__main__':
         window.show()
         window.activateWindow()
 
-        launched_before = settings.value('launchedBefore', False)
-        if not launched_before:
+        first_launch = settings.first_launch()
+        if first_launch:
             AboutDialog().exec()
-            settings.setValue('launchedBefore', True)
+            settings.set_launched_before()
 
         sys.excepthook = exception_handler  # type: ignore
         exit_code = appctxt.app.exec_()

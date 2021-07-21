@@ -42,7 +42,9 @@ class TasksWidget(QWidget, Ui_TasksWidget):
 
     def updateTasks(self):
         self.tasks.clear()
-
+        if not self.novel:
+            return
+        
         for scene in self.novel.scenes:
             if scene.wip:
                 continue
