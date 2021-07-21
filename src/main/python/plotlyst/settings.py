@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, List
 
 from PyQt5.QtCore import QCoreApplication, QSettings
 
@@ -56,3 +56,9 @@ class AppSettings:
 
 
 settings = AppSettings()
+
+STORY_LINE_COLOR_CODES: List[str] = [
+    '#03396c',  # dark blue
+    '#851e3e',  # dark red
+    '#0e9aa7'  # green
+]
