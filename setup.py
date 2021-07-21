@@ -8,21 +8,19 @@ with (HERE / 'README.md').open('rt') as fh:
 
 REQUIREMENTS: dict = {
     'core': [
-        'PyQt5',
+        'PyQt5==5.15.4',
         'overrides==3.1.0',
-        'qtawesome',
-        # 'qtwidgets',
-        'PyQtChart',
-        'peewee',
-        'matplotlib',
-        'dataclasses;python_version<"3.7"',
-        'anytree',
-        'numpy',
+        'qtawesome==1.0.3',
+        'PyQtChart==5.15.4',
+        'peewee==3.14.4',
+        'matplotlib==3.4.2',
+        'anytree==2.8.0',
+        'numpy==1.21.1',
     ],
     'test': [
-        'pytest',
-        'pytest-qt',
-        'pytest-cov',
+        'pytest==6.2.4',
+        'pytest-qt==4.0.2',
+        'pytest-cov==2.12.1',
     ],
     'dev': [
         'pyqt5ac',
