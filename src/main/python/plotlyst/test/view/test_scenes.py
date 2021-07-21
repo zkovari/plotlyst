@@ -84,3 +84,13 @@ def test_toggle_wip_status(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
     trigger_popup_action_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle, 'Toggle WIP status')
     assert view.novel.scenes[0].wip
+
+
+def test_insert_new_scene_after(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+    trigger_popup_action_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle, 'Insert new scene')
+
+    assert len(view.novel.scenes) == 3
+    assert_data(view.tblModel, 'Scene 1', 0, ScenesTableModel.ColTitle)
+    assert_data(view.tblModel, 'Untitled', 1, ScenesTableModel.ColTitle)
+    assert_data(view.tblModel, 'Scene 2', 2, ScenesTableModel.ColTitle)
