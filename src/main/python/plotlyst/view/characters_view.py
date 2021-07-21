@@ -87,28 +87,6 @@ class CharactersView:
         self.editor = CharacterEditor(self.novel)
         self._switch_to_editor()
 
-    def _move_character_up(self):
-        indexes = self.ui.listCharacters.selectedIndexes()
-        if indexes:
-            index: int = indexes[0].row()
-            if index < 1:
-                return
-            character = indexes[0].data(role=CharactersTableModel.CharacterRole)
-            self.novel.characters.remove(character)
-            self.novel.characters.insert(index - 1, character)
-            self.model.modelReset.emit()
-
-    def _move_character_down(self):
-        indexes = self.ui.listCharacters.selectedIndexes()
-        if indexes:
-            index: int = indexes[0].row()
-            if index >= len(self.novel.characters) - 1:
-                return
-            character = indexes[0].data(role=CharactersTableModel.CharacterRole)
-            self.novel.characters.remove(character)
-            self.novel.characters.insert(index + 1, character)
-            self.model.modelReset.emit()
-
     def _on_delete(self):
         indexes = self.ui.listCharacters.selectedIndexes()
         if indexes:
