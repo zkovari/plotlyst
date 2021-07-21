@@ -11,5 +11,5 @@ def test_timeline_display(qtbot, filled_window: MainWindow):
     assert_data(view.model, 'Scene 1', 0, ScenesNotesTableModel.ColTitle)
     assert_data(view.model, 'Scene 2', 1, ScenesNotesTableModel.ColTitle)
 
-    assert_data(view.model, 0, 0, ScenesNotesTableModel.ColTime)
-    assert_data(view.model, 0, 0, ScenesNotesTableModel.ColTime)
+    assert_data(view.model, 1, 0, ScenesNotesTableModel.ColTime)
+    assert_data(view.model, 2, 1, ScenesNotesTableModel.ColTime)

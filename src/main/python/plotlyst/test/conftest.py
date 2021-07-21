@@ -82,9 +82,9 @@ def filled_window(qtbot, in_memory_test_client):
     client.insert_chapter(novel, chapter_1)
     client.insert_chapter(novel, chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
-                    story_lines=[storyline_main], sequence=0, chapter=chapter_1)
+                    story_lines=[storyline_main], sequence=0, chapter=chapter_1, day=1)
     scene_2 = Scene(title='Scene 2', synopsis='Scene 2 synopsis', pov=char_d, characters=[char_c, char_a],
-                    story_lines=[storyline_lesser, storyline_love], sequence=1, chapter=chapter_2)
+                    story_lines=[storyline_lesser, storyline_love], sequence=1, chapter=chapter_2, day=2)
     client.insert_scene(novel, scene_1)
     client.update_scene_chapter(scene_1)
     client.insert_scene(novel, scene_2)
