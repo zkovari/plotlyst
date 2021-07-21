@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt5.QtCore import QItemSelection, QModelIndex, QAbstractItemModel, Qt, QItemSelectionModel
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QLineEdit, QColorDialog
+from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QLineEdit, QColorDialog, QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
@@ -54,7 +54,8 @@ class NovelView:
         self.story_lines_model = EditableNovelStoryLinesListModel(self.novel)
         self.ui.tblStoryLines.horizontalHeader().setDefaultSectionSize(25)
         self.ui.tblStoryLines.setModel(self.story_lines_model)
-        self.ui.tblStoryLines.setColumnWidth(EditableNovelStoryLinesListModel.ColText, 140)
+        self.ui.tblStoryLines.horizontalHeader().setSectionResizeMode(EditableNovelStoryLinesListModel.ColText,
+                                                                      QHeaderView.ResizeToContents)
         self.ui.tblStoryLines.setItemDelegate(StoryLineDelegate())
         self.ui.tblStoryLines.selectionModel().selectionChanged.connect(self._on_story_line_selected)
         self.ui.tblStoryLines.clicked.connect(self._on_story_line_clicked)
