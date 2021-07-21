@@ -66,9 +66,23 @@ def assert_data(model: QAbstractItemModel, value: Any, row: int, column: int = 0
                           role) == value, f'{model.data(model.index(row, column), role)} != {value}'
 
 
-def create_character(qtbot, window: MainWindow, name: str):
-    characters: CharactersView = window.characters_view
+def go_to_scenes(window: MainWindow) -> ScenesOutlineView:
+    window.btnScenes.setChecked(True)
+    return window.scenes_outline_view
+
+
+def go_to_characters(window: MainWindow) -> CharactersView:
     window.btnCharacters.setChecked(True)
+    return window.characters_view
+
+
+def go_to_novel(window: MainWindow) -> NovelView:
+    window.btnNovel.setChecked(True)
+    return window.novel_view
+
+
+def create_character(qtbot, window: MainWindow, name: str):
+    characters: CharactersView = go_to_characters(window)
 
     characters.ui.btnNew.click()
     assert characters.editor
@@ -88,8 +102,7 @@ def create_character(qtbot, window: MainWindow, name: str):
 
 
 def create_story_line(qtbot, window: MainWindow, text: str):
-    novels: NovelView = window.novel_view
-    window.btnNovel.setChecked(True)
+    novels: NovelView = go_to_novel(window)
 
     novels.ui.btnAdd.click()
     click_on_item(qtbot, novels.ui.lstStoryLines, 0)
@@ -108,8 +121,7 @@ def create_story_line(qtbot, window: MainWindow, text: str):
 
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:
-    scenes: ScenesOutlineView = window.scenes_outline_view
-    window.btnScenes.setChecked(True)
+    scenes: ScenesOutlineView = go_to_scenes(window)
     scenes.ui.btnNew.click()
     assert scenes.editor
     assert scenes.ui.stackedWidget.currentWidget() == scenes.ui.pageEditor
