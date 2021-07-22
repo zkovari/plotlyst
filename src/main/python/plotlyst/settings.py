@@ -31,9 +31,9 @@ class AppSettings:
         self._settings: QSettings = QSettings()
 
     def init_org(self):
-        QCoreApplication.setOrganizationName('CraftOfGem')
-        QCoreApplication.setOrganizationDomain('craftofgem.com')
-        QCoreApplication.setApplicationName('NovelApp')
+        QCoreApplication.setOrganizationName('Plotlyst')
+        QCoreApplication.setOrganizationDomain('plotlyst.com')
+        QCoreApplication.setApplicationName('Plotlyst')
         self._settings = QSettings()
 
     def workspace(self) -> Optional[str]:
