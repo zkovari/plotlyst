@@ -116,53 +116,6 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
         self.modelReset.emit()
 
 
-class CharacterEditorTableModel(QAbstractTableModel):
-    valueChanged = pyqtSignal()
-
-    RowName = 0
-
-    def __init__(self, character: Character, parent=None):
-        super().__init__(parent)
-        self._data: Character = character
-
-    @overrides
-    def rowCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
-        return 1
-
-    @overrides
-    def columnCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
-        return 2
-
-    @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if not index.isValid():
-            return QVariant()
-
-        if role == Qt.DisplayRole:
-            if index.row() == self.RowName:
-                if index.column() == 0:
-                    return 'Name'
-                else:
-                    return self._data.name
-
-    @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
-        if index.row() == self.RowName:
-            self._data.name = value
-        else:
-            return False
-
-        self.valueChanged.emit()
-        return True
-
-    @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        flags = super().flags(index)
-        if index.column() == 1:
-            return flags | Qt.ItemIsEditable
-        return flags
-
-
 class CharactersScenesDistributionTableModel(QAbstractTableModel):
 
     def __init__(self, novel: Novel, parent=None):

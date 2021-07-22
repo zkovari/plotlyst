@@ -136,16 +136,7 @@ def create_character(qtbot, window: MainWindow, name: str):
     characters.ui.btnNew.click()
     assert characters.editor
 
-    click_on_item(qtbot, characters.editor.ui.tblGeneral, 0, 1)
-    index = characters.editor.ui.tblGeneral.model().index(0, 1)
-    editor = characters.editor.ui.tblGeneral.indexWidget(index)
-    assert editor, "Editor should be open at position 0,1"
-    assert isinstance(editor, QLineEdit)
-    qtbot.keyClicks(editor, name)
-    characters.editor.ui.tblGeneral.itemDelegate().commitData.emit(editor)
-    characters.editor.ui.tblGeneral.itemDelegate().closeEditor.emit(editor)
-
-    assert_data(characters.editor.ui.tblGeneral.model(), name, 0, 1)
+    characters.editor.ui.lineName.setText(name)
 
     characters.editor.ui.btnClose.click()
 
