@@ -1,0 +1,14 @@
+os: osx
+
+language: python
+python:
+  - "3.7"
+  
+install:
+  - python -m pip install --upgrade pip
+  - pip install gdown
+  - pip install pyqt5ac
+  - pip install -e .
+
+script:
+  - echo "hellp"
