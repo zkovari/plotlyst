@@ -41,7 +41,7 @@ def app_db_schema_version() -> AppDbSchemaVersion:
         return AppDbSchemaVersion(False, ApplicationDbVersion.R0)
 
     model: ApplicationModel = ApplicationModel.get_by_id(1)
-    if model.revision == LATEST.value:
+    if model.revision >= LATEST.value:  # temporary fix
         return AppDbSchemaVersion(True, LATEST)
     else:
         return AppDbSchemaVersion(False, ApplicationDbVersion(model.revision))
@@ -133,5 +133,5 @@ class Migration(QObject):
             self.migrationFinished.emit()
 
             app_m = ApplicationModel.get_by_id(1)
-            app_m.revision = revision
+            app_m.revision = LATEST.value
             app_m.save()
