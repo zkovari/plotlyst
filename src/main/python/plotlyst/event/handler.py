@@ -70,8 +70,12 @@ class EventLogHandler:
         self.statusbar.setStyleSheet('color: black')
 
 
-def exception_handler(exception_type, exception_value: Exception, exception_traceback):
-    msg = ''.join(exception_value.args)
+class DialogExceptionHandler:
 
-    details: List[str] = traceback.format_exception(exception_type, exception_value, exception_traceback)
-    emit_critical(msg, ''.join(details))
+    def init(self):
+        pass
+
+    def handle(self, exception_type, exception_value: Exception, exception_traceback):
+        msg = ''.join(exception_value.args)
+        details: List[str] = traceback.format_exception(exception_type, exception_value, exception_traceback)
+        emit_critical(msg, ''.join(details))
