@@ -16,6 +16,7 @@ REQUIREMENTS: dict = {
         'matplotlib==3.4.2',
         'anytree==2.8.0',
         'numpy==1.21.1',
+        'fbs[sentry]',
     ],
     'test': [
         'pytest==6.2.4',
