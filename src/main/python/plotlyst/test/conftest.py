@@ -58,6 +58,18 @@ def get_main_window(qtbot):
 
 @pytest.fixture
 def filled_window(qtbot, in_memory_test_client):
+    init_db()
+
+    main_window = MainWindow()
+    main_window.setStyleSheet(APP_STYLESHEET)
+    main_window.show()
+    qtbot.addWidget(main_window)
+    qtbot.waitExposed(main_window, timeout=5000)
+
+    return main_window
+
+
+def init_db():
     novel = client.novels()[0]
     char_a = Character(name='Alfred')
     char_b = Character(name='Babel')
@@ -92,11 +104,3 @@ def filled_window(qtbot, in_memory_test_client):
     client.update_scene_chapter(scene_1)
     client.insert_scene(novel, scene_2)
     client.update_scene_chapter(scene_2)
-
-    main_window = MainWindow()
-    main_window.setStyleSheet(APP_STYLESHEET)
-    main_window.show()
-    qtbot.addWidget(main_window)
-    qtbot.waitExposed(main_window, timeout=5000)
-
-    return main_window
