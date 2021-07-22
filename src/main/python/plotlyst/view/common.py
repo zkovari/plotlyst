@@ -28,11 +28,6 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy
 
 
 class EditorCommandType(Enum):
-    SAVE = 0
-    CLOSE_CURRENT_EDITOR = 1
-    DISPLAY_CHARACTERS = 2
-    DISPLAY_SCENES = 3
-    EDIT_SCENE = 4
     UPDATE_SCENE_SEQUENCES = 5
 
 

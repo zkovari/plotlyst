@@ -158,12 +158,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.addWidget(tasks_button)
         self.toolBar.addWidget(spacer_widget())
 
-    def _on_add(self):
-        self._on_character_edition(None)
-
-    def _on_character_creation(self):
-        self._on_character_edition(None)
-
     def _increase_font_size(self):
         current_font = QApplication.font()
         self._set_font_size(current_font.pointSize() + 1)
@@ -204,19 +198,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
-            if cmd.type == EditorCommandType.CLOSE_CURRENT_EDITOR:
-                index = self.tabWidget.indexOf(widget)
-                self.tabWidget.removeTab(index)
-            elif cmd.type == EditorCommandType.DISPLAY_CHARACTERS:
-                self.tabWidget.setCurrentWidget(self.characters_view.widget)
-                self.characters_view.refresh()
-            elif cmd.type == EditorCommandType.DISPLAY_SCENES:
-                self.tabWidget.setCurrentWidget(self.scenes_tab)
-                self.scenes_outline_view.refresh()
-            elif cmd.type == EditorCommandType.EDIT_SCENE:
-                if cmd.value is not None and cmd.value < len(self.novel.scenes):
-                    self._on_scene_edition(self.novel.scenes[cmd.value])
-            elif cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
+            if cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
                 client.update_scene_sequences(self.novel)
