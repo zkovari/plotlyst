@@ -74,7 +74,7 @@ class DbContext:
                  NovelStoryLinesModel,
                  SceneStoryLinesModel,
                  NovelCharactersModel, SceneCharactersModel])
-            ApplicationModel.create(revision=ApplicationDbVersion.R1.value)
+            ApplicationModel.create(revision=LATEST.value)
             NovelModel.create(title='My First Novel')
 
         self._ext_db = CSqliteExtDatabase(db_file_name)
