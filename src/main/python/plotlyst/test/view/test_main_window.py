@@ -37,10 +37,10 @@ def test_empty_window(qtbot, test_client):
 
 
 def test_change_font_size(qtbot, window: MainWindow):
-    assert QApplication.font().pointSize() == 10
+    font_size = QApplication.font().pointSize()
     window.actionIncreaseFontSize.trigger()
     window.actionIncreaseFontSize.trigger()
-    assert QApplication.font().pointSize() == 12
+    assert QApplication.font().pointSize() == font_size + 2
 
     window.actionDecreaseFontSize.trigger()
-    assert QApplication.font().pointSize() == 11
+    assert QApplication.font().pointSize() == font_size + 1
