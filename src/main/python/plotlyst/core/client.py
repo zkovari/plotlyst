@@ -130,7 +130,7 @@ class ChapterModel(Model):
 
 class SceneModel(Model):
     title = TextField()
-    novel = ForeignKeyField(NovelModel, backref='scenes')
+    novel = ForeignKeyField(NovelModel, backref='scenes', on_delete='CASCADE')
     type = TextField(null=True)
     synopsis = TextField(null=True)
     wip = BooleanField(default=False)
