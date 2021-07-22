@@ -95,6 +95,18 @@ def patch_confirmed(monkeypatch, answer=QMessageBox.Yes):
     monkeypatch.setattr(QMessageBox, "question", lambda *args: answer)  # confirm
 
 
+def edit_item(qtbot, view: QAbstractItemView, row: int, col: int, type, set_value_func):
+    index = view.model().index(row, col)
+    click_on_item(qtbot, view, index.row(), index.column())
+    editor = view.indexWidget(index)
+    assert editor, "Editor should be open"
+    assert isinstance(editor, type)
+    # editor.setCurrentIndex(0)
+    set_value_func(editor)
+    view.itemDelegate().commitData.emit(editor)
+    view.itemDelegate().closeEditor.emit(editor)
+
+
 def go_to_scenes(window: MainWindow) -> ScenesOutlineView:
     window.btnScenes.setChecked(True)
     return window.scenes_outline_view
