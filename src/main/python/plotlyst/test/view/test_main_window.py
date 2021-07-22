@@ -1,6 +1,4 @@
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Character
-from src.main.python.plotlyst.test.common import create_character
 from src.main.python.plotlyst.test.conftest import get_main_window
 from src.main.python.plotlyst.view.main_window import MainWindow
 
@@ -34,8 +32,3 @@ def test_empty_window(qtbot, test_client):
     assert not window.btnReport.isVisible()
     assert not window.btnNotes.isVisible()
     assert not window.btnTimeline.isVisible()
-
-
-def test_create_new_character(qtbot, window: MainWindow):
-    create_character(qtbot, window, 'Tom')
-    assert window.novel.characters == [Character(id=1, name='Tom')]

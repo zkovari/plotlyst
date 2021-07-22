@@ -19,3 +19,11 @@ def test_delete_novel(in_memory_test_client):
     client.delete_novel(novels[0])
 
     assert not client.novels()
+
+
+def test_has_novel(in_memory_test_client):
+    novel = Novel(title='test1')
+    client.insert_novel(novel)
+
+    assert client.has_novel(novel.id)
+    assert not client.has_novel(99)
