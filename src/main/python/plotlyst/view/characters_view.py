@@ -95,4 +95,5 @@ class CharactersView:
                 return
             self.novel.characters.remove(character)
             client.delete_character(character)
+            self.novel = client.fetch_novel(self.novel.id)
             self.refresh()

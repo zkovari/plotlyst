@@ -89,9 +89,7 @@ class NovelView:
 
         self.novel.story_lines.remove(story_line)
         client.delete_story_line(story_line)
-        for scene in self.novel.scenes:
-            if story_line in scene.story_lines:
-                scene.story_lines.remove(story_line)
+        self.novel = client.fetch_novel(self.novel.id)
         self.story_lines_model.modelReset.emit()
 
     def _on_story_line_selected(self, selection: QItemSelection):
