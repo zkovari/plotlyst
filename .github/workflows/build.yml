@@ -20,6 +20,8 @@ jobs:
           echo "::add-mask::${{secrets.FBS_URL}}"
           echo "::add-mask::${{secrets.FBS_PROXY_URL}}"
           echo "::add-mask::${{secrets.FBS_URL_SHORTER}}"
+          echo "::add-mask::${{secrets.MACOS_CERTIFICATE}}"
+          echo "::add-mask::${{secrets.MACOS_CERTIFICATE_PWD}}"
       - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -58,6 +60,20 @@ jobs:
         run: |
           fbs freeze --debug
           fbs installer
+
+      - if: matrix.os == 'macos-latest'
+        name: Sign Macos App
+        env: 
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p ${{secrets.KEYCHAIN_PWD}} build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ${{secrets.KEYCHAIN_PWD}} build.keychain
+          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ${{secrets.KEYCHAIN_PWD}} build.keychain
+          /usr/bin/codesign --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.dmg -v
 
       - uses: actions/upload-artifact@v2
         if: matrix.os == 'ubuntu-18.04'
