@@ -1,3 +1,5 @@
+from PyQt5.QtWidgets import QApplication
+
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.test.conftest import get_main_window
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -32,3 +34,13 @@ def test_empty_window(qtbot, test_client):
     assert not window.btnReport.isVisible()
     assert not window.btnNotes.isVisible()
     assert not window.btnTimeline.isVisible()
+
+
+def test_change_font_size(qtbot, window: MainWindow):
+    assert QApplication.font().pointSize() == 10
+    window.actionIncreaseFontSize.trigger()
+    window.actionIncreaseFontSize.trigger()
+    assert QApplication.font().pointSize() == 12
+
+    window.actionDecreaseFontSize.trigger()
+    assert QApplication.font().pointSize() == 11
