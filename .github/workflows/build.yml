@@ -69,6 +69,21 @@ jobs:
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ${{secrets.KEYCHAIN_PWD}} build.keychain
           /usr/bin/codesign --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.app -v
+          
+      - name: "Notarize Release Build"
+        uses: devbotsxyz/xcode-notarize@v1
+        with:
+          product-path: "target/Plotlyst.app"
+          appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
+          appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
+      
+      - name: "Staple Release Build"
+        uses: devbotsxyz/xcode-staple@v1
+        with:
+          product-path: "target/Plotlyst.app"
+      
+      - name: Build installer
+        run: |
           fbs installer
 
 #       - if: matrix.os == 'macos-latest'
