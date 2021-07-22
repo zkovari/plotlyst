@@ -17,9 +17,12 @@ def test_timeline_display(qtbot, filled_window: MainWindow):
     assert_data(view.model, 2, 1, ScenesNotesTableModel.ColTime)
 
 
+def _edit_day(editor: QSpinBox):
+    editor.setValue(3)
+
+
 def test_edit_day(qtbot, filled_window: MainWindow):
     view: TimelineView = go_to_timeline(filled_window)
 
-    edit_func = lambda x: x.setValue(3)
-    edit_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTime, QSpinBox, edit_func)
+    edit_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTime, QSpinBox, _edit_day)
     assert view.novel.scenes[0].day == 3
