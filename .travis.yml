@@ -6,8 +6,7 @@ python:
   
 install:
   - python -m pip install --upgrade pip
-  - pip install gdown
-  - pip install pyqt5ac
+  - pip install gdown, pyqt5ac
   - pip install -e .
 
 script:
