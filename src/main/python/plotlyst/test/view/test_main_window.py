@@ -1,14 +1,13 @@
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Character, StoryLine
-from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.test.common import create_character, create_story_line
+from src.main.python.plotlyst.core.domain import Character
+from src.main.python.plotlyst.test.common import create_character
 from src.main.python.plotlyst.test.conftest import get_main_window
 from src.main.python.plotlyst.view.main_window import MainWindow
 
 
 def test_main_window(qtbot, window: MainWindow):
     assert window
-    
+
     assert window.btnScenes.isChecked()
     assert window.scenes_outline_view.widget.isVisible()
 
@@ -40,8 +39,3 @@ def test_empty_window(qtbot, test_client):
 def test_create_new_character(qtbot, window: MainWindow):
     create_character(qtbot, window, 'Tom')
     assert window.novel.characters == [Character(id=1, name='Tom')]
-
-
-def test_create_story_line(qtbot, window: MainWindow):
-    create_story_line(qtbot, window, 'MainStory')
-    assert window.novel.story_lines == [StoryLine(id=1, text='MainStory', color_hexa=STORY_LINE_COLOR_CODES[0])]
