@@ -21,7 +21,7 @@ from functools import partial
 from typing import Optional
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
+from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
     QAbstractItemModel, QPoint, QSize
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit, QSpinBox
@@ -29,8 +29,11 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
+from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
+from src.main.python.plotlyst.model.events import NovelReloadedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
+from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -38,13 +41,11 @@ from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 
 
-class ScenesOutlineView(QObject):
+class ScenesOutlineView(AbstractNovelView):
     commands_sent = pyqtSignal(QWidget, list)
 
     def __init__(self, novel: Novel):
-        super().__init__()
-        self.novel = novel
-        self.widget = QWidget()
+        super().__init__(novel)
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -139,20 +140,23 @@ class ScenesOutlineView(QObject):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
+        event_dispatcher.register(self, NovelReloadedEvent)
+
+    @overrides
     def refresh(self):
         self.tblModel.modelReset.emit()
         self.chaptersModel.update()
         self.chaptersModel.modelReset.emit()
         self._distribution_widget.refresh()
 
-    def _on_scene_selected(self, selection: QItemSelection):
+    def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
         self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
         if selection:
             self.ui.treeChapters.clearSelection()
 
-    def _on_chapter_selected(self, selection: QItemSelection):
+    def _on_chapter_selected(self):
         selection = len(self.ui.treeChapters.selectedIndexes()) > 0
         if selection:
             self.ui.tblScenes.clearSelection()

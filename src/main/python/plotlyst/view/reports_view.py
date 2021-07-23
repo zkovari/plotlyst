@@ -20,26 +20,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import numpy as np
 from PyQt5.QtChart import QPieSeries, QChart, QChartView
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QWidget, QHeaderView
+from PyQt5.QtWidgets import QHeaderView
 from matplotlib import ticker
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Character
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.model.events import NovelReloadedEvent
 from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
+from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.scenes_view import ScenesViewDelegate
 
 
-class ReportsView:
+class ReportsView(AbstractNovelView):
     def __init__(self, novel: Novel):
-        self.widget = QWidget()
+        super().__init__(novel)
         self.ui = Ui_ReportsView()
         self.ui.setupUi(self.widget)
-        self.novel = novel
         self.scene_selected = None
 
         self.ui.storyLinesMap.setNovel(novel)
@@ -96,6 +99,13 @@ class ReportsView:
             self.ui.tabCharacterArcs.layout().addWidget(self.arc_canvas)
 
             self.scenes_model.valueChanged.connect(self.arc_canvas.refresh_plot)
+
+        event_dispatcher.register(self, NovelReloadedEvent)
+
+    @overrides
+    def refresh(self):
+        self._update_characters_chart()
+        self.story_lines_canvas.refresh_plot()
 
     def _on_scene_selected(self, scene: Scene):
         self.scene_selected = scene

@@ -17,9 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
 from PyQt5.QtCore import pyqtSignal, QObject
 
@@ -49,3 +50,26 @@ event_log_reporter = EventLogReporter()
 def emit_critical(message: str, details: Optional[str] = None, time=5000):
     """Emit a highlighted message through EventLogReporter's error signal"""
     event_log_reporter.error.emit(EventLog(message=message, details=details, highlighted=True), time)
+
+
+@dataclass
+class Event:
+    source: Any
+
+
+class EventSender(QObject):
+    send = pyqtSignal(Event)
+
+
+event_sender = EventSender()
+
+
+class EventListener:
+
+    @abstractmethod
+    def event_received(self, event: Event):
+        pass
+
+
+def emit_event(event: Event):
+    event_sender.send.emit(event)

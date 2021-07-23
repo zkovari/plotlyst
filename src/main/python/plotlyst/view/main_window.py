@@ -22,13 +22,15 @@ from typing import List
 import qtawesome
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction
+from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import event_log_reporter
-from src.main.python.plotlyst.event.handler import EventLogHandler
+from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
+from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
+from src.main.python.plotlyst.model.events import NovelReloadRequestedEvent, NovelReloadedEvent
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
@@ -44,7 +46,7 @@ from src.main.python.plotlyst.view.tasks_view import TasksWidget
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 
 
-class MainWindow(QMainWindow, Ui_MainWindow):
+class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
@@ -72,6 +74,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
+        event_sender.send.connect(event_dispatcher.dispatch)
+        event_dispatcher.register(self, NovelReloadRequestedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelReloadRequestedEvent):
+            updated_novel = client.fetch_novel(self.novel.id)
+            self.novel.title = updated_novel.title
+            self.novel.scenes.clear()
+            self.novel.scenes.extend(updated_novel.scenes)
+            self.novel.characters.clear()
+            self.novel.characters.extend(updated_novel.characters)
+            self.novel.chapters.clear()
+            self.novel.chapters.extend(updated_novel.chapters)
+            self.novel.story_lines.clear()
+            self.novel.story_lines.extend(updated_novel.story_lines)
+            emit_event(NovelReloadedEvent(self, self.novel))
 
     def _init_views(self):
         self.home_view = HomeView()
@@ -119,18 +138,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def _on_view_changed(self):
         if self.btnHome.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageHome)
+            self.home_view.activate()
         elif self.btnNovel.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNovel)
+            self.novel_view.activate()
         elif self.btnCharacters.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageCharacters)
+            self.characters_view.activate()
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
+            self.scenes_outline_view.activate()
         elif self.btnTimeline.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageTimeline)
+            self.timeline_view.activate()
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
+            self.notes_view.activate()
         elif self.btnReport.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageReports)
+            self.reports_view.activate()
 
     def _init_menubar(self):
         if app_env.is_prod():

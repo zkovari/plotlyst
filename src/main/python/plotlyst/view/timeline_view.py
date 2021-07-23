@@ -18,24 +18,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QGraphicsScene, QFrame, QHeaderView
+from PyQt5.QtWidgets import QGraphicsScene, QFrame, QHeaderView
+from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.model.events import NovelReloadedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
+from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.scene_card_widget_ui import Ui_SceneCardWidget
 from src.main.python.plotlyst.view.generated.timeline_view_ui import Ui_TimelineView
 from src.main.python.plotlyst.view.icons import avatars
 from src.main.python.plotlyst.view.scenes_view import ScenesViewDelegate
 
 
-class TimelineView:
+class TimelineView(AbstractNovelView):
     colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
 
     def __init__(self, novel: Novel):
-        self.widget = QWidget()
+        super().__init__(novel)
         self.ui = Ui_TimelineView()
         self.ui.setupUi(self.widget)
-        self.novel = novel
 
         self.model = ScenesTableModel(self.novel)
         self.ui.tblScenes.setModel(self.model)
@@ -52,7 +55,9 @@ class TimelineView:
         self._delegate.commitData.connect(self.refresh)
 
         self.refresh()
+        event_dispatcher.register(self, NovelReloadedEvent)
 
+    @overrides
     def refresh(self):
         self._refresh_timeline()
 
