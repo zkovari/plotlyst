@@ -27,7 +27,7 @@ from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField,
     DoesNotExist
 from playhouse.sqlite_ext import CSqliteExtDatabase
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter, CharacterArc
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -421,9 +421,6 @@ class SqlClient:
         m.text = story_line.text
         m.color_hexa = story_line.color_hexa
         m.save()
-
-    def replace_scene_events(self, novel: Novel, scene: Scene, events: List[Event]):
-        return
 
 
 client = SqlClient()

@@ -24,18 +24,20 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, StoryLine
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.novel import EditableNovelStoryLinesListModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
+from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
-class NovelView:
+class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        self.novel = novel
-        self.widget = QWidget()
+        super().__init__(novel)
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
@@ -59,6 +61,11 @@ class NovelView:
         self.ui.tblStoryLines.setItemDelegate(StoryLineDelegate())
         self.ui.tblStoryLines.selectionModel().selectionChanged.connect(self._on_story_line_selected)
         self.ui.tblStoryLines.clicked.connect(self._on_story_line_clicked)
+
+    @overrides
+    def refresh(self):
+        self.ui.lineTitle.setText(self.novel.title)
+        self.story_lines_model.modelReset.emit()
 
     def _on_add_story_line(self):
         story_line = StoryLine(text='Unknown')
@@ -89,8 +96,7 @@ class NovelView:
 
         self.novel.story_lines.remove(story_line)
         client.delete_story_line(story_line)
-        self.novel = client.fetch_novel(self.novel.id)
-        self.story_lines_model.modelReset.emit()
+        emit_event(NovelReloadRequestedEvent(self))
 
     def _on_story_line_selected(self, selection: QItemSelection):
         if selection.indexes():

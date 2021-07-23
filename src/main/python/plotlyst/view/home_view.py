@@ -20,12 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal, QObject
-from PyQt5.QtWidgets import QWidget, QFrame
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QFrame
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.dialog.new_novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
@@ -34,12 +35,11 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout
 
 
-class HomeView(QObject):
+class HomeView(AbstractView):
     loadNovel = pyqtSignal(Novel)
 
-    def __init__(self, parent=None):
-        super(HomeView, self).__init__(parent)
-        self.widget = QWidget()
+    def __init__(self):
+        super(HomeView, self).__init__()
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
         self._layout = FlowLayout(spacing=9)
@@ -47,7 +47,7 @@ class HomeView(QObject):
 
         self.novel_cards: List[NovelCard] = []
         self.selected_card: Optional['NovelCard'] = None
-        self.update()
+        self.refresh()
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAdd.clicked.connect(self._add_new_novel)
@@ -58,7 +58,8 @@ class HomeView(QObject):
         self.ui.btnDelete.setDisabled(True)
         self.ui.btnEdit.setDisabled(True)
 
-    def update(self):
+    @overrides
+    def refresh(self):
         self._layout.clear()
         self.novel_cards.clear()
         for novel in client.novels():
@@ -76,7 +77,7 @@ class HomeView(QObject):
         title = NovelEditionDialog().display()
         if title:
             client.insert_novel(Novel(title))
-            self.update()
+            self.refresh()
 
     def _on_edit(self):
         title = NovelEditionDialog().display(self.selected_card.novel)
@@ -91,7 +92,7 @@ class HomeView(QObject):
             self.selected_card.deleteLater()
             self.selected_card = None
             self.ui.btnDelete.setDisabled(True)
-            self.update()
+            self.refresh()
 
     def _card_selected(self, card: 'NovelCard'):
         if self.selected_card and self.selected_card is not card:

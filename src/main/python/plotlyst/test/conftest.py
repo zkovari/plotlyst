@@ -22,6 +22,7 @@ import pytest
 
 from src.main.python.plotlyst.core.client import context, client
 from src.main.python.plotlyst.core.domain import Character, StoryLine, Scene, Chapter, ACTION_SCENE, REACTION_SCENE
+from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
 
@@ -46,20 +47,15 @@ def window_with_disk_db(qtbot, test_client):
     return get_main_window(qtbot)
 
 
-def get_main_window(qtbot):
-    main_window = MainWindow()
-    main_window.setStyleSheet(APP_STYLESHEET)
-    main_window.show()
-    qtbot.addWidget(main_window)
-    qtbot.waitExposed(main_window, timeout=5000)
-
-    return main_window
-
-
 @pytest.fixture
 def filled_window(qtbot, in_memory_test_client):
     init_db()
+    return get_main_window(qtbot)
 
+
+def get_main_window(qtbot):
+    event_dispatcher.clear()
+    
     main_window = MainWindow()
     main_window.setStyleSheet(APP_STYLESHEET)
     main_window.show()

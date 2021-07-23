@@ -85,8 +85,6 @@ def spacer_widget(max_width: Optional[int] = None) -> QWidget:
     return spacer
 
 
-# if used on a slot impl, all signal parameters must be specified as method arguments,
-# otherwise the decorator will complain more positional arguments were given
 def busy(func):
     @functools.wraps(func)
     def wrapper_timer(*args, **kwargs):
