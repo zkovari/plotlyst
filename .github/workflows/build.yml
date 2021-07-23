@@ -22,6 +22,9 @@ jobs:
           echo "::add-mask::${{secrets.FBS_URL_SHORTER}}"
           echo "::add-mask::${{secrets.MACOS_CERTIFICATE}}"
           echo "::add-mask::${{secrets.MACOS_CERTIFICATE_PWD}}"
+          echo "::add-mask::${{secrets.KEYCHAIN_PWD}}"
+          echo "::add-mask::${{secrets.NOTARIZATION_USERNAME}}"
+          echo "::add-mask::${{secrets.NOTARIZATION_PASSWORD}}"
       - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v2
