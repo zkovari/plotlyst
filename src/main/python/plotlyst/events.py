@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
 
-from src.main.python.plotlyst.core.domain import Scene, Novel
+from src.main.python.plotlyst.core.domain import Character
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -30,19 +30,19 @@ class NovelReloadRequestedEvent(Event):
 
 @dataclass
 class NovelReloadedEvent(Event):
-    novel: Novel
+    pass
+
+
+@dataclass
+class CharacterChangedEvent(Event):
+    character: Character
 
 
 @dataclass
 class SceneChangedEvent(Event):
-    scene: Scene
+    pass
 
 
 @dataclass
 class SceneDeletedEvent(Event):
-    scene: Scene
-
-
-@dataclass
-class SceneAddedEvent(Event):
-    scene: Scene
+    pass

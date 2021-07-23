@@ -29,9 +29,9 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
-from src.main.python.plotlyst.model.events import NovelReloadedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
@@ -140,8 +140,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-        event_dispatcher.register(self, NovelReloadedEvent)
-
     @overrides
     def refresh(self):
         self.tblModel.modelReset.emit()
@@ -184,6 +182,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor.widget.deleteLater()
         self.editor = None
 
+        emit_event(SceneChangedEvent(self))
         self.refresh()
 
     def _on_new(self):
@@ -259,6 +258,7 @@ class ScenesOutlineView(AbstractNovelView):
             client.delete_scene(scene)
             self.refresh()
             self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
+            emit_event(SceneDeletedEvent(self))
 
     def _on_scene_moved(self):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])

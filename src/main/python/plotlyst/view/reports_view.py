@@ -28,8 +28,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Character
-from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.model.events import NovelReloadedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -40,7 +39,7 @@ from src.main.python.plotlyst.view.scenes_view import ScenesViewDelegate
 
 class ReportsView(AbstractNovelView):
     def __init__(self, novel: Novel):
-        super().__init__(novel)
+        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent])
         self.ui = Ui_ReportsView()
         self.ui.setupUi(self.widget)
         self.scene_selected = None
@@ -99,8 +98,6 @@ class ReportsView(AbstractNovelView):
             self.ui.tabCharacterArcs.layout().addWidget(self.arc_canvas)
 
             self.scenes_model.valueChanged.connect(self.arc_canvas.refresh_plot)
-
-        event_dispatcher.register(self, NovelReloadedEvent)
 
     @overrides
     def refresh(self):

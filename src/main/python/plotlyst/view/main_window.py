@@ -30,7 +30,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
-from src.main.python.plotlyst.model.events import NovelReloadRequestedEvent, NovelReloadedEvent
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
@@ -81,16 +81,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def event_received(self, event: Event):
         if isinstance(event, NovelReloadRequestedEvent):
             updated_novel = client.fetch_novel(self.novel.id)
-            self.novel.title = updated_novel.title
-            self.novel.scenes.clear()
-            self.novel.scenes.extend(updated_novel.scenes)
-            self.novel.characters.clear()
-            self.novel.characters.extend(updated_novel.characters)
-            self.novel.chapters.clear()
-            self.novel.chapters.extend(updated_novel.chapters)
-            self.novel.story_lines.clear()
-            self.novel.story_lines.extend(updated_novel.story_lines)
-            emit_event(NovelReloadedEvent(self, self.novel))
+            self.novel.update_from(updated_novel)
+            emit_event(NovelReloadedEvent(self))
 
     def _init_views(self):
         self.home_view = HomeView()

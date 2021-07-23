@@ -22,8 +22,7 @@ from PyQt5.QtWidgets import QGraphicsScene, QFrame, QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Scene
-from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.model.events import NovelReloadedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.scene_card_widget_ui import Ui_SceneCardWidget
@@ -36,7 +35,7 @@ class TimelineView(AbstractNovelView):
     colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
 
     def __init__(self, novel: Novel):
-        super().__init__(novel)
+        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent])
         self.ui = Ui_TimelineView()
         self.ui.setupUi(self.widget)
 
@@ -55,7 +54,6 @@ class TimelineView(AbstractNovelView):
         self._delegate.commitData.connect(self.refresh)
 
         self.refresh()
-        event_dispatcher.register(self, NovelReloadedEvent)
 
     @overrides
     def refresh(self):

@@ -22,8 +22,6 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.model.events import NovelReloadedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesNotesTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
@@ -47,8 +45,6 @@ class NotesView(AbstractNovelView):
         self._first_update: bool = True
         self.ui.textNotes.textChanged.connect(lambda: self._save_timer.start())
         self._save_timer.timeout.connect(self._save)
-
-        event_dispatcher.register(self, NovelReloadedEvent)
 
     @overrides
     def refresh(self):

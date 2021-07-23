@@ -25,10 +25,9 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, CharacterChangedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
-from src.main.python.plotlyst.model.events import NovelReloadRequestedEvent, NovelReloadedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
 from src.main.python.plotlyst.view.common import ask_confirmation, busy
@@ -57,8 +56,6 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-        event_dispatcher.register(self, NovelReloadedEvent)
-
     @overrides
     def refresh(self):
         self.model.modelReset.emit()
@@ -82,12 +79,13 @@ class CharactersView(AbstractNovelView):
         self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
 
     def _on_close_editor(self):
+        character = self.editor.character
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.editor.widget.deleteLater()
         self.editor = None
-
-        self.model.modelReset.emit()
+        emit_event(CharacterChangedEvent(self, character))
+        self.refresh()
 
     def _on_new(self):
         self.editor = CharacterEditor(self.novel)

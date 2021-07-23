@@ -1,5 +1,6 @@
 from src.main.python.plotlyst.core.domain import Character
-from src.main.python.plotlyst.test.common import create_character, go_to_characters, click_on_item, patch_confirmed
+from src.main.python.plotlyst.test.common import create_character, go_to_characters, click_on_item, patch_confirmed, \
+    go_to_scenes
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.main_window import MainWindow
 
@@ -44,5 +45,7 @@ def test_delete_character(qtbot, filled_window: MainWindow, monkeypatch):
     assert len(view.novel.characters) == 4
     assert view.model.rowCount() == 4
     assert alfred not in view.novel.characters
-    assert not view.novel.scenes[0].pov
-    assert alfred not in view.novel.scenes[1].characters
+
+    scenes_view = go_to_scenes(filled_window)
+    assert not scenes_view.novel.scenes[0].pov
+    assert alfred not in scenes_view.novel.scenes[1].characters

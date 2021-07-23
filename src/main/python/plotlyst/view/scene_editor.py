@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel
-from PyQt5.QtWidgets import QWidget, QAbstractItemView
+from PyQt5.QtWidgets import QWidget
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event, CharacterArc, \
+from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
     UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
@@ -105,8 +105,6 @@ class SceneEditor(QObject):
             self._new_scene = False
             index = self.scenes_model.index(self.scene.sequence, ScenesTableModel.ColTitle)
             self.ui.lstScenes.selectionModel().select(index, QItemSelectionModel.Select)
-            if self.scene.sequence > 15:
-                self.ui.lstScenes.scrollTo(index, QAbstractItemView.PositionAtCenter)
         else:
             self.scene = Scene('')
             self._new_scene = True
@@ -258,12 +256,6 @@ class SceneEditor(QObject):
         else:
             client.update_scene(self.scene)
         self._new_scene = False
-        events = []
-        self.scene.end_event = True
-        if self.scene.end_event:
-            events.append(Event(event=self.scene.end, day=self.scene.day))
-
-        client.replace_scene_events(self.novel, self.scene, events)
 
     def _on_close(self):
         self._save_scene()

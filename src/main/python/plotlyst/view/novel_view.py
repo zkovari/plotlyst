@@ -24,8 +24,8 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, StoryLine
-from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.model.events import NovelReloadedEvent
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.novel import EditableNovelStoryLinesListModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -62,8 +62,6 @@ class NovelView(AbstractNovelView):
         self.ui.tblStoryLines.selectionModel().selectionChanged.connect(self._on_story_line_selected)
         self.ui.tblStoryLines.clicked.connect(self._on_story_line_clicked)
 
-        event_dispatcher.register(self, NovelReloadedEvent)
-
     @overrides
     def refresh(self):
         self.ui.lineTitle.setText(self.novel.title)
@@ -98,8 +96,7 @@ class NovelView(AbstractNovelView):
 
         self.novel.story_lines.remove(story_line)
         client.delete_story_line(story_line)
-        self.novel = client.fetch_novel(self.novel.id)
-        self.story_lines_model.modelReset.emit()
+        emit_event(NovelReloadRequestedEvent(self))
 
     def _on_story_line_selected(self, selection: QItemSelection):
         if selection.indexes():
