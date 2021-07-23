@@ -51,7 +51,17 @@ class CharacterEditor:
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
 
+        self.ui.lineName.textChanged.connect(self._name_changed)
+
         self._update_avatar()
+
+    def _name_changed(self, text: str):
+        if self.character.avatar:
+            return
+        if text:
+            self.character.name = text
+            # initial avatar needs to be updated
+            avatars.update(self.character)
 
     def _upload_avatar(self):
         filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
