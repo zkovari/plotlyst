@@ -94,6 +94,9 @@ class EventDispatcher:
             self._listeners[event_type] = []
         self._listeners[event_type].append(listener)
 
+    def clear(self):
+        self._listeners.clear()
+
     def deregister(self, listener: EventListener):
         for v in self._listeners.values():
             if listener in v:
