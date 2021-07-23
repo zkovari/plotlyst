@@ -21,32 +21,31 @@ from functools import partial
 from typing import Optional
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal, QItemSelection, Qt, QObject, QModelIndex, \
+from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
     QAbstractItemModel, QPoint, QSize
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
-    QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit
+    QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit, QSpinBox
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
-from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
-from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
+from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
-from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
+from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 
 
-class ScenesOutlineView(QObject):
+class ScenesOutlineView(AbstractNovelView):
     commands_sent = pyqtSignal(QWidget, list)
 
     def __init__(self, novel: Novel):
-        super().__init__()
-        self.novel = novel
-        self.widget = QWidget()
+        super().__init__(novel)
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -76,7 +75,7 @@ class ScenesOutlineView(QObject):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColType, 55)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColPov, 60)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
-        self.ui.tblScenes.setItemDelegate(ScenesViewDelegate(self.novel))
+        self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
         self.ui.splitterLeft.setSizes([70, 500])
@@ -88,6 +87,7 @@ class ScenesOutlineView(QObject):
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
         self.ui.treeChapters.setColumnWidth(1, 20)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self.ui.btnChaptersToggle.setChecked(True)
         self.ui.btnNewChapter.setIcon(IconRegistry.plus_icon())
@@ -140,16 +140,24 @@ class ScenesOutlineView(QObject):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
+    @overrides
     def refresh(self):
         self.tblModel.modelReset.emit()
         self.chaptersModel.update()
         self.chaptersModel.modelReset.emit()
         self._distribution_widget.refresh()
 
-    def _on_scene_selected(self, selection: QItemSelection):
-        selection = len(selection.indexes()) > 0
+    def _on_scene_selected(self):
+        selection = len(self.ui.tblScenes.selectedIndexes()) > 0
         self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
+        if selection:
+            self.ui.treeChapters.clearSelection()
+
+    def _on_chapter_selected(self):
+        selection = len(self.ui.treeChapters.selectedIndexes()) > 0
+        if selection:
+            self.ui.tblScenes.clearSelection()
 
     def _hide_chapters_toggled(self, toggled: bool):
         self.ui.wgtChapters.setHidden(toggled)
@@ -174,6 +182,7 @@ class ScenesOutlineView(QObject):
         self.editor.widget.deleteLater()
         self.editor = None
 
+        emit_event(SceneChangedEvent(self))
         self.refresh()
 
     def _on_new(self):
@@ -249,6 +258,7 @@ class ScenesOutlineView(QObject):
             client.delete_scene(scene)
             self.refresh()
             self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
+            emit_event(SceneDeletedEvent(self))
 
     def _on_scene_moved(self):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
@@ -256,10 +266,6 @@ class ScenesOutlineView(QObject):
 
 
 class ScenesViewDelegate(QStyledItemDelegate):
-
-    def __init__(self, novel: Novel):
-        super().__init__()
-        self.novel = novel
 
     @overrides
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
@@ -289,6 +295,8 @@ class ScenesViewDelegate(QStyledItemDelegate):
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
         if index.column() == ScenesTableModel.ColArc:
             return QComboBox(parent)
+        if index.column() == ScenesTableModel.ColTime:
+            return QSpinBox(parent)
         return QTextEdit(parent)
 
     @overrides
@@ -298,7 +306,9 @@ class ScenesViewDelegate(QStyledItemDelegate):
             edit_data = index.data(Qt.DisplayRole)
         if isinstance(editor, QTextEdit) or isinstance(editor, QLineEdit):
             editor.setText(str(edit_data))
-        if isinstance(editor, QComboBox):
+        elif isinstance(editor, QSpinBox):
+            editor.setValue(edit_data)
+        elif isinstance(editor, QComboBox):
             arc = index.data(ScenesTableModel.SceneRole).pov_arc()
             editor.addItem(IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY), '', VERY_UNHAPPY)
             if arc == VERY_UNHAPPY:
@@ -323,6 +333,8 @@ class ScenesViewDelegate(QStyledItemDelegate):
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
         if isinstance(editor, QComboBox):
             model.setData(index, editor.currentData(Qt.UserRole))
+        elif isinstance(editor, QSpinBox):
+            model.setData(index, editor.value())
         else:
             model.setData(index, editor.toPlainText())
         scene = index.data(ScenesTableModel.SceneRole)
@@ -331,63 +343,3 @@ class ScenesViewDelegate(QStyledItemDelegate):
     def _commit_and_close(self, editor):
         self.commitData.emit(editor)
         self.closeEditor.emit(editor)
-
-
-class CharactersScenesDistributionWidget(QWidget):
-    avg_text: str = 'Average characters per scenes: '
-    common_text: str = 'Common scenes: '
-
-    def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
-        self.ui = Ui_CharactersScenesDistributionWidget()
-        self.ui.setupUi(self)
-        self.novel = novel
-        self.average = 0
-        self._model = CharactersScenesDistributionTableModel(self.novel)
-        self._scenes_proxy = proxy(self._model)
-        self._scenes_proxy.sort(0, Qt.DescendingOrder)
-        self.ui.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
-        self.ui.tblSceneDistribution.setModel(self._scenes_proxy)
-        self.ui.tblSceneDistribution.hideColumn(0)
-        self.ui.tblCharacters.setModel(self._scenes_proxy)
-        self.ui.tblCharacters.setColumnWidth(0, 70)
-        self.ui.tblCharacters.setMaximumWidth(70)
-
-        self.ui.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
-        self.ui.tblSceneDistribution.selectionModel().selectionChanged.connect(self._on_scene_selected)
-
-        self.refresh()
-
-    def refresh(self):
-        if self.novel.scenes:
-            self.average = sum([len(x.characters) + 1 for x in self.novel.scenes]) / len(self.novel.scenes)
-        else:
-            self.average = 0
-        for col in range(self._model.columnCount()):
-            if col == 0:
-                continue
-            self.ui.tblCharacters.hideColumn(col)
-        self.ui.spinAverage.setValue(self.average)
-        self.ui.tblSceneDistribution.horizontalHeader().setMaximumSectionSize(15)
-        self._model.modelReset.emit()
-
-    def _on_character_selected(self):
-        selected = self.ui.tblCharacters.selectionModel().selectedIndexes()
-        self._model.highlightCharacters(
-            [self._scenes_proxy.mapToSource(x) for x in selected])
-
-        if selected and len(selected) > 1:
-            self.ui.spinAverage.setPrefix(self.common_text)
-            self.ui.spinAverage.setValue(self._model.commonScenes())
-        else:
-            self.ui.spinAverage.setPrefix(self.avg_text)
-            self.ui.spinAverage.setValue(self.average)
-
-        self.ui.tblSceneDistribution.clearSelection()
-
-    def _on_scene_selected(self, selection: QItemSelection):
-        indexes = selection.indexes()
-        if not indexes:
-            return
-        self._model.highlightScene(self._scenes_proxy.mapToSource(indexes[0]))
-        self.ui.tblCharacters.clearSelection()

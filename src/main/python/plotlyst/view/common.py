@@ -28,11 +28,6 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy
 
 
 class EditorCommandType(Enum):
-    SAVE = 0
-    CLOSE_CURRENT_EDITOR = 1
-    DISPLAY_CHARACTERS = 2
-    DISPLAY_SCENES = 3
-    EDIT_SCENE = 4
     UPDATE_SCENE_SEQUENCES = 5
 
 
@@ -90,8 +85,6 @@ def spacer_widget(max_width: Optional[int] = None) -> QWidget:
     return spacer
 
 
-# if used on a slot impl, all signal parameters must be specified as method arguments,
-# otherwise the decorator will complain more positional arguments were given
 def busy(func):
     @functools.wraps(func)
     def wrapper_timer(*args, **kwargs):

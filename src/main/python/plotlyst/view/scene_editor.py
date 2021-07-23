@@ -23,7 +23,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
 from PyQt5.QtWidgets import QWidget
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Event, CharacterArc, \
+from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
     UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
@@ -68,7 +68,6 @@ class SceneEditor(QObject):
         self.scenes_model = ScenesTableModel(self.novel)
         self.ui.lstScenes.setModel(self.scenes_model)
         self.ui.lstScenes.setModelColumn(ScenesTableModel.ColTitle)
-        self.ui.lstScenes.setMaximumWidth(200)
         self.ui.lstScenes.clicked.connect(self._new_scene_selected)
 
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
@@ -86,7 +85,7 @@ class SceneEditor(QObject):
         self._update_view(scene)
 
         self.ui.cbWip.clicked.connect(self._save_scene)
-        self.ui.cbPov.currentIndexChanged.connect(self._save_scene)
+        self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.sbDay.valueChanged.connect(self._save_scene)
         self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
         self.ui.cbBeginningType.currentIndexChanged.connect(self._save_scene)
@@ -104,6 +103,8 @@ class SceneEditor(QObject):
         if scene:
             self.scene = scene
             self._new_scene = False
+            index = self.scenes_model.index(self.scene.sequence, ScenesTableModel.ColTitle)
+            self.ui.lstScenes.selectionModel().select(index, QItemSelectionModel.Select)
         else:
             self.scene = Scene('')
             self._new_scene = True
@@ -112,6 +113,7 @@ class SceneEditor(QObject):
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
             self._enable_arc_buttons(True)
         else:
+            self.ui.cbPov.setCurrentIndex(0)
             self._enable_arc_buttons(False)
 
         self.ui.sbDay.setValue(self.scene.day)
@@ -200,6 +202,17 @@ class SceneEditor(QObject):
         self.ui.btnHappy.setEnabled(enabled)
         self.ui.btnVeryHappy.setEnabled(enabled)
 
+    def _on_pov_changed(self):
+        pov = self.ui.cbPov.currentData()
+        if pov:
+            self.scene.pov = pov
+            self._enable_arc_buttons(True)
+        else:
+            self.scene.pov = None
+            self._enable_arc_buttons(False)
+        self._characters_model.update()
+        self._save_scene()
+
     def _save_scene(self):
         self._save_timer.stop()
         if not self._save_enabled:
@@ -213,12 +226,6 @@ class SceneEditor(QObject):
         self.scene.end = self.ui.textEvent3.toPlainText()
         self.scene.day = self.ui.sbDay.value()
         self.scene.notes = self.ui.textNotes.toPlainText()
-        pov = self.ui.cbPov.currentData()
-        if pov:
-            self.scene.pov = pov
-            self._enable_arc_buttons(True)
-        else:
-            self._enable_arc_buttons(False)
 
         self.scene.wip = self.ui.cbWip.isChecked()
         self.scene.pivotal = self.ui.cbPivotal.currentText()
@@ -239,8 +246,8 @@ class SceneEditor(QObject):
             arc = VERY_HAPPY
 
         self.scene.arcs.clear()
-        if pov:
-            self.scene.arcs.append(CharacterArc(arc, pov))
+        if self.scene.pov:
+            self.scene.arcs.append(CharacterArc(arc, self.scene.pov))
 
         if self._new_scene:
             self.novel.scenes.append(self.scene)
@@ -249,12 +256,6 @@ class SceneEditor(QObject):
         else:
             client.update_scene(self.scene)
         self._new_scene = False
-        events = []
-        self.scene.end_event = True
-        if self.scene.end_event:
-            events.append(Event(event=self.scene.end, day=self.scene.day))
-
-        client.replace_scene_events(self.novel, self.scene, events)
 
     def _on_close(self):
         self._save_scene()

@@ -17,34 +17,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import asyncio
 import logging
 import traceback
-from asyncio import Event
-from typing import Optional, List
+from typing import Optional, List, Dict, TypeVar
 
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QMessageBox, QWidget, QStatusBar, QApplication
 
-from src.main.python.plotlyst.event.core import EventAuthorization, EventAuthorizationType, EventLog, Severity, \
-    emit_warning, emit_critical
-from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.event.core import EventLog, Severity, \
+    emit_critical, EventListener, Event
 from src.main.python.plotlyst.view.dialog.error import ErrorMessageBox
-
-
-class EventAuthorizationHandler:
-    parent: Optional[QWidget] = None
-
-    @classmethod
-    def handle(cls, event_auth: EventAuthorization) -> bool:
-        if event_auth.type == EventAuthorizationType.REJECTED:
-            emit_warning(event_auth.message, highlighted=True)
-            return False
-        if event_auth.type == EventAuthorizationType.ALLOWED:
-            return True
-        if event_auth.type == EventAuthorizationType.CONFIRMATION_REQUESTED:
-            return ask_confirmation(event_auth.message, cls.parent)
-        return False
 
 
 class EventLogHandler:
@@ -52,15 +36,7 @@ class EventLogHandler:
 
     def __init__(self, statusbar: QStatusBar):
         self.statusbar = statusbar
-        self._error_event = Event()
-
-    def on_warning_event(self, event: EventLog, time: int) -> None:
-        if not event.highlighted:
-            self.statusbar.showMessage(event.message, time)
-            self.statusbar.setStyleSheet('color: red')
-        self._handle_highlighted_event(event, Severity.WARNING)
-
-        QTimer.singleShot(time, self._reset_statusbar_color)
+        self._error_event = asyncio.Event()
 
     def on_error_event(self, event: EventLog, time: int) -> None:
         if not self._error_event.is_set():
@@ -76,12 +52,6 @@ class EventLogHandler:
 
             QTimer.singleShot(50, self._error_event.clear)
             QTimer.singleShot(50, self._reset_statusbar_color)
-
-    def on_info_event(self, event: EventLog, time: int) -> None:
-        if not event.highlighted:
-            self.statusbar.showMessage(event.message, time)
-            self.statusbar.setStyleSheet('color: blue')
-        self._handle_highlighted_event(event, Severity.INFO)
 
     def _handle_highlighted_event(self, event: EventLog, severity: Severity):
         if not event.highlighted:
@@ -100,8 +70,43 @@ class EventLogHandler:
         self.statusbar.setStyleSheet('color: black')
 
 
-def exception_handler(exception_type, exception_value: Exception, exception_traceback):
-    msg = ''.join(exception_value.args)
+class DialogExceptionHandler:
 
-    details: List[str] = traceback.format_exception(exception_type, exception_value, exception_traceback)
-    emit_critical(msg, ''.join(details))
+    def init(self):
+        pass
+
+    def handle(self, exception_type, exception_value: Exception, exception_traceback):
+        msg = ''.join(exception_value.args)
+        details: List[str] = traceback.format_exception(exception_type, exception_value, exception_traceback)
+        emit_critical(msg, ''.join(details))
+
+
+TEvent = TypeVar('TEvent', bound=Event)
+
+
+class EventDispatcher:
+
+    def __init__(self):
+        self._listeners: Dict[TEvent, List[EventListener]] = {}
+
+    def register(self, listener: EventListener, event_type):
+        if event_type not in self._listeners.keys():
+            self._listeners[event_type] = []
+        self._listeners[event_type].append(listener)
+
+    def clear(self):
+        self._listeners.clear()
+
+    def deregister(self, listener: EventListener):
+        for v in self._listeners.values():
+            if listener in v:
+                v.remove(listener)
+
+    def dispatch(self, event: Event):
+        if type(event) in self._listeners.keys():
+            for listener in self._listeners[type(event)]:
+                if event.source != listener:
+                    listener.event_received(event)
+
+
+event_dispatcher = EventDispatcher()

@@ -19,15 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, Qt
-from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QLineEdit
-from overrides import overrides
+from PyQt5.QtCore import Qt, QByteArray, QBuffer, QIODevice, QSize
+from PyQt5.QtGui import QImageReader, QImage
+from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Character
-from src.main.python.plotlyst.model.characters_model import CharacterEditorTableModel
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 
 class CharacterEditor:
@@ -41,38 +40,54 @@ class CharacterEditor:
 
         if character:
             self.character = character
+            self.ui.lineName.setText(self.character.name)
             self._new_character = False
         else:
             self.character = Character('')
             self._new_character = True
 
+        self.ui.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
+        self.ui.btnUploadAvatar.clicked.connect(self._upload_avatar)
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
+        self.ui.btnClose.clicked.connect(self._save)
 
-        self.model = CharacterEditorTableModel(self.character)
-        self.model.valueChanged.connect(self._save)
-        self.editor_delegate = CharacterEditorDelegate()
-        self.ui.tblGeneral.setModel(self.model)
-        self.ui.tblGeneral.setItemDelegate(self.editor_delegate)
+        self._update_avatar()
+
+    def _upload_avatar(self):
+        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
+        if not filename:
+            return
+        reader = QImageReader(filename[0])
+        reader.setAutoTransform(True)
+        image: QImage = reader.read()
+        if image is None:
+            QMessageBox.warning(self.widget, 'Error while uploading image', 'Could not upload image')
+            return
+        array = QByteArray()
+        buffer = QBuffer(array)
+        buffer.open(QIODevice.WriteOnly)
+        image.save(buffer, 'PNG')
+        self.character.avatar = array
+
+        self._update_avatar()
+        self._save()
+
+    def _update_avatar(self):
+        if self.character.avatar:
+            avatars.update(self.character)
+            self.ui.lblAvatar.setPixmap(
+                avatars.pixmap(self.character).scaled(256, 256, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            self.ui.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(256, 256)))
 
     def _save(self):
+        name = self.ui.lineName.text()
+        if not name:
+            return
+        self.character.name = name
         if self._new_character:
             self.novel.characters.append(self.character)
             client.insert_character(self.novel, self.character)
         else:
             client.update_character(self.character)
         self._new_character = False
-
-
-class CharacterEditorDelegate(QStyledItemDelegate):
-
-    @overrides
-    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
-        return QLineEdit(parent)
-
-    @overrides
-    def setEditorData(self, editor: QWidget, index: QModelIndex):
-        edit_data = index.data(Qt.EditRole)
-        if not edit_data:
-            edit_data = index.data(Qt.DisplayRole)
-        if index.row() == CharacterEditorTableModel.RowName:
-            editor.setText(str(edit_data))

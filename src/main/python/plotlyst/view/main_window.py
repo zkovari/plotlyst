@@ -22,12 +22,16 @@ from typing import List
 import qtawesome
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction
+from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.event.core import event_log_reporter
-from src.main.python.plotlyst.event.handler import EventAuthorizationHandler, EventLogHandler
+from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
+from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent
+from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
@@ -42,28 +46,62 @@ from src.main.python.plotlyst.view.tasks_view import TasksWidget
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 
 
-class MainWindow(QMainWindow, Ui_MainWindow):
+class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.resize(1000, 630)
-        self.setWindowState(Qt.WindowMaximized)
+        if app_env.is_dev():
+            self.resize(1200, 830)
+        if app_env.is_prod():
+            self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
-        self.novel = client.fetch_novel(1)
+        self.novel = None
+        last_novel_id = settings.last_novel_id()
+        if last_novel_id is not None:
+            has_novel = client.has_novel(last_novel_id)
+            if has_novel:
+                self.novel = client.fetch_novel(last_novel_id)
+        if self.novel is None:
+            _novels = client.novels()
+            if _novels:
+                self.novel = client.fetch_novel(_novels[0].id)
 
         self._init_menubar()
         self._init_toolbar()
 
         self._init_views()
 
-        EventAuthorizationHandler.parent = self
         self.event_log_handler = EventLogHandler(self.statusBar())
-        event_log_reporter.info.connect(self.event_log_handler.on_info_event)
-        event_log_reporter.warning.connect(self.event_log_handler.on_warning_event)
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
+        event_sender.send.connect(event_dispatcher.dispatch)
+        event_dispatcher.register(self, NovelReloadRequestedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelReloadRequestedEvent):
+            updated_novel = client.fetch_novel(self.novel.id)
+            self.novel.update_from(updated_novel)
+            emit_event(NovelReloadedEvent(self))
 
     def _init_views(self):
         self.home_view = HomeView()
+        self.btnHome.setIcon(IconRegistry.home_icon())
+        self.pageHome.layout().addWidget(self.home_view.widget)
+        self.home_view.loadNovel.connect(self._load_new_novel)
+
+        self.buttonGroup.buttonToggled.connect(self._on_view_changed)
+        self.btnHome.setChecked(True)
+
+        if not self.novel:
+            for btn in self.buttonGroup.buttons():
+                if btn is not self.btnHome:
+                    btn.setHidden(True)
+            return
+
+        for btn in self.buttonGroup.buttons():
+            btn.setVisible(True)
+
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
@@ -73,7 +111,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.notes_view = NotesView(self.novel)
         self.reports_view = ReportsView(self.novel)
 
-        self.btnHome.setIcon(IconRegistry.home_icon())
         self.btnNovel.setIcon(IconRegistry.book_icon())
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnScenes.setIcon(IconRegistry.scene_icon())
@@ -81,7 +118,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.btnNotes.setIcon(IconRegistry.notes_icon())
         self.btnReport.setIcon(IconRegistry.reports_icon())
 
-        self.pageHome.layout().addWidget(self.home_view.widget)
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)
         self.pageScenes.layout().addWidget(self.scenes_outline_view.widget)
@@ -89,31 +125,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pageNotes.layout().addWidget(self.notes_view.widget)
         self.pageReports.layout().addWidget(self.reports_view.widget)
 
-        self.buttonGroup.buttonToggled.connect(self._on_view_changed)
-
-        self.home_view.loadNovel.connect(self._load_new_novel)
-
         self.btnScenes.setChecked(True)
 
     def _on_view_changed(self):
         if self.btnHome.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageHome)
+            self.home_view.activate()
         elif self.btnNovel.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNovel)
+            self.novel_view.activate()
         elif self.btnCharacters.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageCharacters)
+            self.characters_view.activate()
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
+            self.scenes_outline_view.activate()
         elif self.btnTimeline.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageTimeline)
+            self.timeline_view.activate()
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
+            self.notes_view.activate()
         elif self.btnReport.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageReports)
+            self.reports_view.activate()
 
     def _init_menubar(self):
-        self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
-        self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
+        if app_env.is_prod():
+            self.menuFile.removeAction(self.actionRestart)
+        else:
+            self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
+            self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
+
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)
         self.actionDecreaseFontSize.triggered.connect(self.decrease_font_size)
@@ -132,12 +175,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.addWidget(spacer_widget(5))
         self.toolBar.addWidget(tasks_button)
         self.toolBar.addWidget(spacer_widget())
-
-    def _on_add(self):
-        self._on_character_edition(None)
-
-    def _on_character_creation(self):
-        self._on_character_edition(None)
 
     def _increase_font_size(self):
         current_font = QApplication.font()
@@ -161,33 +198,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @busy
     def _load_new_novel(self, novel: Novel):
-        if self.novel.id == novel.id:
+        if self.novel and self.novel.id == novel.id:
             return
-        self.novel = client.fetch_novel(novel.id)
+
         self.pageHome.layout().removeWidget(self.home_view.widget)
-        self.pageNovel.layout().removeWidget(self.novel_view.widget)
-        self.pageCharacters.layout().removeWidget(self.characters_view.widget)
-        self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
-        self.pageTimeline.layout().removeWidget(self.timeline_view.widget)
-        self.pageNotes.layout().removeWidget(self.notes_view.widget)
-        self.pageReports.layout().removeWidget(self.reports_view.widget)
+        if self.novel:
+            self.pageNovel.layout().removeWidget(self.novel_view.widget)
+            self.pageCharacters.layout().removeWidget(self.characters_view.widget)
+            self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
+            self.pageTimeline.layout().removeWidget(self.timeline_view.widget)
+            self.pageNotes.layout().removeWidget(self.notes_view.widget)
+            self.pageReports.layout().removeWidget(self.reports_view.widget)
+
+        self.novel = client.fetch_novel(novel.id)
         self._init_views()
+        settings.set_last_novel_id(self.novel.id)
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
-            if cmd.type == EditorCommandType.CLOSE_CURRENT_EDITOR:
-                index = self.tabWidget.indexOf(widget)
-                self.tabWidget.removeTab(index)
-            elif cmd.type == EditorCommandType.DISPLAY_CHARACTERS:
-                self.tabWidget.setCurrentWidget(self.characters_view.widget)
-                self.characters_view.refresh()
-            elif cmd.type == EditorCommandType.DISPLAY_SCENES:
-                self.tabWidget.setCurrentWidget(self.scenes_tab)
-                self.scenes_outline_view.refresh()
-            elif cmd.type == EditorCommandType.EDIT_SCENE:
-                if cmd.value is not None and cmd.value < len(self.novel.scenes):
-                    self._on_scene_edition(self.novel.scenes[cmd.value])
-            elif cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
+            if cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
                 client.update_scene_sequences(self.novel)

@@ -77,13 +77,18 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if role == Qt.CheckStateRole and index.column() == 0:
+        if role == Qt.CheckStateRole:
+            if self._data[index.row()] is self.scene.pov:
+                return Qt.Checked
             return Qt.Checked if self._data[index.row()] in self.scene.characters else Qt.Unchecked
         elif role == Qt.FontRole:
             if self._data[index.row()] in self.scene.characters:
                 font = QFont()
                 font.setBold(True)
                 return font
+        elif role == Qt.ToolTipRole:
+            if self._data[index.row()] is self.scene.pov:
+                return 'POV character'
         return super(CharactersSceneAssociationTableModel, self).data(index, role)
 
     @overrides
@@ -101,54 +106,14 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
+        if self._data[index.row()] is self.scene.pov:
+            return Qt.NoItemFlags
         return flags | Qt.ItemIsUserCheckable
 
-
-class CharacterEditorTableModel(QAbstractTableModel):
-    valueChanged = pyqtSignal()
-
-    RowName = 0
-
-    def __init__(self, character: Character, parent=None):
-        super().__init__(parent)
-        self._data: Character = character
-
-    @overrides
-    def rowCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
-        return 1
-
-    @overrides
-    def columnCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
-        return 2
-
-    @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if not index.isValid():
-            return QVariant()
-
-        if role == Qt.DisplayRole:
-            if index.row() == self.RowName:
-                if index.column() == 0:
-                    return 'Name'
-                else:
-                    return self._data.name
-
-    @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
-        if index.row() == self.RowName:
-            self._data.name = value
-        else:
-            return False
-
-        self.valueChanged.emit()
-        return True
-
-    @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        flags = super().flags(index)
-        if index.column() == 1:
-            return flags | Qt.ItemIsEditable
-        return flags
+    def update(self):
+        if self.scene.pov in self.scene.characters:
+            self.scene.characters.remove(self.scene.pov)
+        self.modelReset.emit()
 
 
 class CharactersScenesDistributionTableModel(QAbstractTableModel):

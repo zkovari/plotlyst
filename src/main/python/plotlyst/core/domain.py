@@ -36,6 +36,7 @@ class Character:
 @dataclass(unsafe_hash=True)
 class StoryLine:
     text: str
+    color_hexa: str = ''
     id: Optional[int] = None
 
 
@@ -90,24 +91,24 @@ class Scene:
 
 
 @dataclass
-class Event:
-    event: str
-    day: int
-    id: Optional[int] = None
-    scene: Optional[Scene] = None
-    character: Optional[Character] = None
-
-
-@dataclass
 class Novel:
     title: str
     id: Optional[int] = None
-    config_path: str = ''
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
     story_lines: List[StoryLine] = field(default_factory=list)
-    events: List[Event] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
+
+    def update_from(self, updated_novel: 'Novel'):
+        self.title = updated_novel.title
+        self.scenes.clear()
+        self.scenes.extend(updated_novel.scenes)
+        self.characters.clear()
+        self.characters.extend(updated_novel.characters)
+        self.chapters.clear()
+        self.chapters.extend(updated_novel.chapters)
+        self.story_lines.clear()
+        self.story_lines.extend(updated_novel.story_lines)
 
 
 @dataclass

@@ -26,12 +26,7 @@
    <string>Frame</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QFrame[mainFrame=true] {
-	border: 2px solid #005b96;
-	border-radius: 15px;
-    
-	background-color: #b3cde0;
-}</string>
+   <string notr="true"/>
   </property>
   <property name="mainFrame" stdset="0">
    <bool>true</bool>

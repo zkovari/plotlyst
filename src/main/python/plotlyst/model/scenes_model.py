@@ -86,9 +86,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         elif role == Qt.BackgroundRole:
             if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
                 if self._data[index.row()].wip:
-                    return QBrush(QColor('#f2f763'))
+                    return QBrush(QColor('#f6cd61'))
                 elif self._data[index.row()].pivotal:
-                    return QBrush(QColor('#f07762'))
+                    return QBrush(QColor('#3da4ab'))
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
@@ -173,6 +173,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColArc:
             return flags | Qt.ItemIsEditable
+        if index.column() == self.ColTime:
+            return flags | Qt.ItemIsEditable
         return flags
 
     @overrides
@@ -192,6 +194,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                         arc.arc = value
             else:
                 self._data[index.row()].arcs.append(CharacterArc(value, self._data[index.row()].pov))
+        elif index.column() == self.ColTime:
+            self._data[index.row()].day = value
         else:
             return False
         self.valueChanged.emit(index)

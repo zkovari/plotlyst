@@ -1,49 +1,46 @@
-from src.main.python.plotlyst.core.domain import Character, Scene, StoryLine
-from src.main.python.plotlyst.test.common import assert_data, create_character, start_new_scene_editor, \
-    create_story_line
+from PyQt5.QtWidgets import QApplication
+
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.test.conftest import get_main_window
 from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 
 
-def test_main_window_is_initialized(qtbot, window: MainWindow):
+def test_main_window(qtbot, window: MainWindow):
     assert window
 
     assert window.btnScenes.isChecked()
     assert window.scenes_outline_view.widget.isVisible()
 
 
-def test_create_new_character(qtbot, window: MainWindow):
-    create_character(qtbot, window, 'Tom')
-    assert window.novel.characters == [Character(id=1, name='Tom')]
+def test_main_window_with_db_on_disk(qtbot, window_with_disk_db):
+    assert window_with_disk_db
+
+    assert window_with_disk_db.btnScenes.isChecked()
+    assert window_with_disk_db.scenes_outline_view.widget.isVisible()
 
 
-def test_create_new_scene(qtbot, window: MainWindow):
-    scenes: ScenesOutlineView = start_new_scene_editor(window)
+def test_empty_window(qtbot, test_client):
+    assert len(client.novels()) == 1
+    client.delete_novel(client.novels()[0])
+    assert not client.novels()
 
-    qtbot.keyClicks(scenes.editor.ui.lineTitle, 'Scene 1')
-    scenes.editor.ui.sbDay.setValue(1)
+    window = get_main_window(qtbot)
 
-    scenes.editor.ui.btnClose.click()
-
-    assert_data(scenes.ui.tblScenes.model(), 'Scene 1', 0, 1)
-    assert window.novel.scenes == [Scene(id=1, title='Scene 1', type='action', day=1)]
-
-
-def test_scene_characters(qtbot, window: MainWindow):
-    create_character(qtbot, window, 'Tom')
-    create_character(qtbot, window, 'Bob')
-
-    scenes: ScenesOutlineView = start_new_scene_editor(window)
-    qtbot.keyClicks(scenes.editor.ui.lineTitle, 'Scene 1')
-    scenes.editor.ui.cbPov.setCurrentText('Tom')
-    scenes.editor.ui.btnClose.click()
-
-    scenes: ScenesOutlineView = start_new_scene_editor(window)
-    qtbot.keyClicks(scenes.editor.ui.lineTitle, 'Scene 2')
-    scenes.editor.ui.cbPov.setCurrentText('Bob')
-    scenes.editor.ui.btnClose.click()
+    assert window.btnHome.isVisible()
+    assert window.btnHome.isChecked()
+    assert not window.btnNovel.isVisible()
+    assert not window.btnCharacters.isVisible()
+    assert not window.btnScenes.isVisible()
+    assert not window.btnReport.isVisible()
+    assert not window.btnNotes.isVisible()
+    assert not window.btnTimeline.isVisible()
 
 
-def test_create_story_line(qtbot, window: MainWindow):
-    create_story_line(qtbot, window, 'MainStory')
-    assert window.novel.story_lines == [StoryLine(id=1, text='MainStory')]
+def test_change_font_size(qtbot, window: MainWindow):
+    font_size = QApplication.font().pointSize()
+    window.actionIncreaseFontSize.trigger()
+    window.actionIncreaseFontSize.trigger()
+    assert QApplication.font().pointSize() == font_size + 2
+
+    window.actionDecreaseFontSize.trigger()
+    assert QApplication.font().pointSize() == font_size + 1

@@ -18,42 +18,63 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QGraphicsScene, QFrame
+from PyQt5.QtWidgets import QGraphicsScene, QFrame, QHeaderView
+from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
+from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.scene_card_widget_ui import Ui_SceneCardWidget
 from src.main.python.plotlyst.view.generated.timeline_view_ui import Ui_TimelineView
 from src.main.python.plotlyst.view.icons import avatars
+from src.main.python.plotlyst.view.scenes_view import ScenesViewDelegate
 
 
-class TimelineView:
+class TimelineView(AbstractNovelView):
     colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
 
     def __init__(self, novel: Novel):
-        self.widget = QWidget()
+        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent])
         self.ui = Ui_TimelineView()
         self.ui.setupUi(self.widget)
-        self.novel = novel
+
+        self.model = ScenesTableModel(self.novel)
+        self.ui.tblScenes.setModel(self.model)
+        for col in range(self.model.columnCount()):
+            self.ui.tblScenes.hideColumn(col)
+        self.ui.tblScenes.showColumn(ScenesTableModel.ColTitle)
+        self.ui.tblScenes.showColumn(ScenesTableModel.ColTime)
+        self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTime, 40)
+        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Stretch)
+        self._delegate = ScenesViewDelegate()
+
+        self.ui.tblScenes.setItemDelegate(self._delegate)
+
+        self._delegate.commitData.connect(self.refresh)
 
         self.refresh()
 
+    @overrides
     def refresh(self):
         self._refresh_timeline()
-        # self._refresh_events()
 
     def _refresh_timeline(self):
-        scene = QGraphicsScene()
+        graphics_scene = QGraphicsScene()
         scenes = [x for x in self.novel.scenes if x.day]
         scenes = sorted(scenes, key=lambda x: x.day)
-        scene.addRect(-10, -500, 20, len(scenes) * 100, brush=Qt.darkRed)
+        graphics_scene.addRect(-10, -500, 20, len(scenes) * 100, brush=Qt.darkRed)
         last_day = 0
         left = True
         x = -50
+        empty_days_count = 0
         for index, s in enumerate(scenes):
             if s.day != last_day:
-                text = scene.addText(str(s.day))
+                if s.day - 1 > last_day:
+                    empty_days_count += 1
+                text = graphics_scene.addText(str(s.day))
                 x = -50 if left else 50
-                text.moveBy(x, -500 + index * 80)
+                text.moveBy(x, -500 + index * 80 + + empty_days_count * 80)
                 last_day = s.day
                 left = not left
             scene_widget = SceneCardWidget(s)
@@ -62,25 +83,10 @@ class TimelineView:
             else:
                 scene_x = x - scene_widget.size().width()
 
-            item = scene.addWidget(scene_widget)
-            item.moveBy(scene_x, -500 + index * 80 + 30)
+            item = graphics_scene.addWidget(scene_widget)
+            item.moveBy(scene_x, -500 + index * 80 + 30 + empty_days_count * 80)
             item.setToolTip(s.synopsis)
-        self.ui.graphicsTimeline.setScene(scene)
-
-    # def _refresh_events(self):
-    #     scene = QGraphicsScene()
-    #     scene.setSceneRect(0, 0, 5000, 5000)
-    #
-    #     sl_size = len(self.novel.story_lines)
-    #     if not sl_size:
-    #         return
-    #     step = 500 / sl_size
-    #     x = sl_size / 2 * -step
-    #     for i, sl in enumerate(self.novel.story_lines):
-    #         scene.addRect(x, 0, 20, 500, brush=self.colors[i])
-    #         x += step
-
-    # self.ui.graphicsEvents.setScene(scene)
+        self.ui.graphicsTimeline.setScene(graphics_scene)
 
 
 class SceneCardWidget(QFrame, Ui_SceneCardWidget):

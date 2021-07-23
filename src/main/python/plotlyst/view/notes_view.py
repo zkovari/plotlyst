@@ -18,20 +18,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt5.QtCore import QModelIndex, QTimer
-from PyQt5.QtWidgets import QWidget
+from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesNotesTableModel
+from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 
 
-class NotesView:
+class NotesView(AbstractNovelView):
+
     def __init__(self, novel: Novel):
-        self.widget = QWidget()
+        super().__init__(novel)
         self.ui = Ui_NotesView()
         self.ui.setupUi(self.widget)
-        self.novel = novel
 
         self.scenes_model = ScenesNotesTableModel(self.novel)
         self.ui.lstScenes.setModel(self.scenes_model)
@@ -44,6 +45,10 @@ class NotesView:
         self._first_update: bool = True
         self.ui.textNotes.textChanged.connect(lambda: self._save_timer.start())
         self._save_timer.timeout.connect(self._save)
+
+    @overrides
+    def refresh(self):
+        self.scenes_model.modelReset.emit()
 
     def _on_scene_selected(self, index: QModelIndex):
         self._scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)

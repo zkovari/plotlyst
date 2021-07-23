@@ -18,41 +18,96 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
+import time
+from enum import Enum
 from typing import List
 
-from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
+from PyQt5.QtCore import QTimer, Qt
+from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
+    DoesNotExist
+from playhouse.sqlite_ext import CSqliteExtDatabase
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Event, Chapter, CharacterArc
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc
+from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
+
+
+class ApplicationDbVersion(Enum):
+    R0 = 0  # before ApplicationModel existed
+    R1 = 1
+    R2 = 2
+
+
+LATEST = ApplicationDbVersion.R2
 
 
 class DbContext:
 
     def __init__(self):
         self._db = Proxy()
+        self._ext_db = None
+        self.workspace = None
+        self._backup_timer = QTimer()
+        self._backup_timer.setInterval(2 * 60 * 1000 * 60)  # 2 hours
+        self._backup_timer.setTimerType(Qt.VeryCoarseTimer)
+        self._backup_timer.timeout.connect(self._backup)
 
-    def init(self, file_name: str):
-        _create_tables = False
-        if not os.path.exists(file_name) or os.path.getsize(file_name) == 0:
+    def init(self, workspace: str):
+        if workspace == ':memory:':
+            db_file_name = workspace
             _create_tables = True
-        runtime_db = SqliteDatabase(file_name, pragmas={
+        else:
+            db_file_name = os.path.join(workspace, 'novels.sqlite')
+            _create_tables = False
+            if not os.path.exists(db_file_name) or os.path.getsize(db_file_name) == 0:
+                _create_tables = True
+        runtime_db = SqliteDatabase(db_file_name, pragmas={
             'cache_size': 10000,  # 10000 pages, or ~40MB
             'foreign_keys': 1,  # Enforce foreign-key constraints
             'ignore_check_constraints': 0,
         })
         self._db.initialize(runtime_db)
         self._db.connect()
+
         if _create_tables:
             self._db.create_tables(
-                [NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel, NovelStoryLinesModel,
+                [ApplicationModel, NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel,
+                 NovelStoryLinesModel,
                  SceneStoryLinesModel,
                  NovelCharactersModel, SceneCharactersModel])
+            ApplicationModel.create(revision=LATEST.value)
             NovelModel.create(title='My First Novel')
+
+        self._ext_db = CSqliteExtDatabase(db_file_name)
+        self.workspace = workspace
+        self._backup_timer.start()
 
     def db(self):
         return self._db
 
+    def _backup(self):
+        backup_dir = os.path.join(self.workspace, 'backups')
+        if not os.path.exists(backup_dir):
+            os.mkdir(backup_dir)
+        elif os.path.isfile(backup_dir):
+            os.remove(backup_dir)
+            os.mkdir(backup_dir)
+        files = os.listdir(backup_dir)
+        if len(files) >= 10:
+            os.remove(os.path.join(backup_dir, sorted(files)[0]))
+        backup_file = os.path.join(backup_dir, f'{time.time()}.sqlite')
+        backup_db = CSqliteExtDatabase(backup_file)
+        self._ext_db.backup(backup_db)
+
 
 context = DbContext()
+
+
+class ApplicationModel(Model):
+    revision = IntegerField()
+
+    class Meta:
+        table_name = 'Application'
+        database = context.db()
 
 
 class NovelModel(Model):
@@ -75,7 +130,7 @@ class ChapterModel(Model):
 
 class SceneModel(Model):
     title = TextField()
-    novel = ForeignKeyField(NovelModel, backref='scenes')
+    novel = ForeignKeyField(NovelModel, backref='scenes', on_delete='CASCADE')
     type = TextField(null=True)
     synopsis = TextField(null=True)
     wip = BooleanField(default=False)
@@ -119,6 +174,7 @@ class CharacterArcModel(Model):
 
 class NovelStoryLinesModel(Model):
     text = TextField()
+    color_hexa = TextField(null=True)
     novel = ForeignKeyField(NovelModel, backref='story_lines', on_delete='CASCADE')
 
     class Meta:
@@ -163,9 +219,26 @@ class SqlClient:
 
         return novels
 
+    def has_novel(self, id: int) -> bool:
+        try:
+            NovelModel.get_by_id(id)
+            return True
+        except DoesNotExist:
+            return False
+
     def insert_novel(self, novel: Novel):
         m = NovelModel.create(title=novel.title)
         novel.id = m.id
+
+    def delete_novel(self, novel: Novel):
+        novel_m = NovelModel.get(id=novel.id)
+        novel_m.delete_instance()
+
+    def update_novel(self, novel: Novel):
+        novel_m = NovelModel.get(id=novel.id)
+        novel_m.title = novel.title
+
+        novel_m.save()
 
     def fetch_novel(self, id: int) -> Novel:
         novel_model = NovelModel.get_by_id(id)
@@ -176,8 +249,12 @@ class SqlClient:
                 Character(id=char_m.character.id, name=char_m.character.name, avatar=char_m.character.avatar))
 
         story_lines: List[StoryLine] = []
-        for story_m in novel_model.story_lines:
-            story_lines.append(StoryLine(id=story_m.id, text=story_m.text))
+        for i, story_m in enumerate(novel_model.story_lines):
+            if story_m.color_hexa:
+                color = story_m.color_hexa
+            else:
+                color = STORY_LINE_COLOR_CODES[i % len(STORY_LINE_COLOR_CODES)]
+            story_lines.append(StoryLine(id=story_m.id, text=story_m.text, color_hexa=color))
 
         chapters: List[Chapter] = []
         for chapter_m in novel_model.chapters:
@@ -238,6 +315,7 @@ class SqlClient:
     def update_character(self, character: Character):
         character_m: CharacterModel = CharacterModel.get_by_id(character.id)
         character_m.name = character.name
+        character_m.avatar = character.avatar
 
         character_m.save()
 
@@ -332,6 +410,7 @@ class SqlClient:
     def insert_story_line(self, novel: Novel, story_line: StoryLine):
         m = NovelStoryLinesModel.create(text=story_line.text, novel=novel.id)
         story_line.id = m.id
+        story_line.color_hexa = story_line.color_hexa
 
     def delete_story_line(self, story_line: StoryLine):
         m = NovelStoryLinesModel.get(id=story_line.id)
@@ -340,10 +419,8 @@ class SqlClient:
     def update_story_line(self, story_line: StoryLine):
         m = NovelStoryLinesModel.get_by_id(story_line.id)
         m.text = story_line.text
+        m.color_hexa = story_line.color_hexa
         m.save()
-
-    def replace_scene_events(self, novel: Novel, scene: Scene, events: List[Event]):
-        return
 
 
 client = SqlClient()

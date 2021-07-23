@@ -116,10 +116,19 @@
       </layout>
      </item>
      <item>
-      <widget class="QListView" name="lstStoryLines">
-       <property name="movement">
-        <enum>QListView::Static</enum>
-       </property>
+      <widget class="QTableView" name="tblStoryLines">
+       <attribute name="horizontalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>20</number>
+       </attribute>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>20</number>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
       </widget>
      </item>
     </layout>

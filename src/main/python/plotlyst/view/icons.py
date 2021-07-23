@@ -91,6 +91,10 @@ class IconRegistry:
         return qtawesome.icon('mdi.movie-open', color_on='darkBlue')
 
     @staticmethod
+    def chapter_icon() -> QIcon:
+        return qtawesome.icon('ei.book')
+
+    @staticmethod
     def book_icon() -> QIcon:
         return qtawesome.icon('fa5s.book-open', color_on='darkBlue')
 
@@ -104,15 +108,15 @@ class IconRegistry:
 
     @staticmethod
     def custom_scene_icon() -> QIcon:
-        return qtawesome.icon('fa5s.yin-yang', color='magenta')
+        return qtawesome.icon('fa5s.yin-yang', color='#c0c2ce')
 
     @staticmethod
     def action_scene_icon() -> QIcon:
-        return qtawesome.icon('fa5s.yin-yang', color='red')
+        return qtawesome.icon('fa5s.yin-yang', color='#fe4a49')
 
     @staticmethod
     def reaction_scene_icon() -> QIcon:
-        return qtawesome.icon('fa5s.yin-yang', color='darkblue')
+        return qtawesome.icon('fa5s.yin-yang', color='#4b86b4')
 
     @staticmethod
     def hashtag_icon() -> QIcon:
@@ -223,6 +227,14 @@ class IconRegistry:
 
         return qtawesome.icon('mdi.emoticon-neutral', color='grey')
 
+    @staticmethod
+    def upload_icon() -> QIcon:
+        return qtawesome.icon('fa5s.file-upload')
+
+    @staticmethod
+    def portrait_icon() -> QIcon:
+        return qtawesome.icon('fa5s.portrait')
+
 
 class AvatarsRegistry:
     def __init__(self):
@@ -242,6 +254,13 @@ class AvatarsRegistry:
                 self._avatars[character.id] = icon.pixmap(QSize(64, 64))
 
         return self._avatars[character.id]
+
+    def update(self, character: Character):
+        array = character.avatar
+        pixmap = QPixmap()
+        if array:
+            pixmap.loadFromData(array)
+        self._avatars[character.id] = rounded_pixmap(pixmap)
 
 
 avatars = AvatarsRegistry()

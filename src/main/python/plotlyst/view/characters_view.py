@@ -20,23 +20,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QItemSelection
-from PyQt5.QtWidgets import QWidget
+from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, CharacterChangedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
-from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.view.common import ask_confirmation, busy
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
-class CharactersView:
+class CharactersView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        self.novel = novel
-        self.widget = QWidget()
+        super().__init__(novel)
         self.ui = Ui_CharactersView()
         self.ui.setupUi(self.widget)
         self.editor: Optional[CharacterEditor] = None
@@ -54,6 +56,7 @@ class CharactersView:
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
+    @overrides
     def refresh(self):
         self.model.modelReset.emit()
 
@@ -76,40 +79,20 @@ class CharactersView:
         self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
 
     def _on_close_editor(self):
+        character = self.editor.character
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.editor.widget.deleteLater()
         self.editor = None
-
-        self.model.modelReset.emit()
+        emit_event(CharacterChangedEvent(self, character))
+        self.refresh()
 
     def _on_new(self):
         self.editor = CharacterEditor(self.novel)
         self._switch_to_editor()
 
-    def _move_character_up(self):
-        indexes = self.ui.listCharacters.selectedIndexes()
-        if indexes:
-            index: int = indexes[0].row()
-            if index < 1:
-                return
-            character = indexes[0].data(role=CharactersTableModel.CharacterRole)
-            self.novel.characters.remove(character)
-            self.novel.characters.insert(index - 1, character)
-            self.model.modelReset.emit()
-
-    def _move_character_down(self):
-        indexes = self.ui.listCharacters.selectedIndexes()
-        if indexes:
-            index: int = indexes[0].row()
-            if index >= len(self.novel.characters) - 1:
-                return
-            character = indexes[0].data(role=CharactersTableModel.CharacterRole)
-            self.novel.characters.remove(character)
-            self.novel.characters.insert(index + 1, character)
-            self.model.modelReset.emit()
-
-    def _on_delete(self):
+    @busy
+    def _on_delete(self, checked: bool):
         indexes = self.ui.listCharacters.selectedIndexes()
         if indexes:
             character = indexes[0].data(role=CharactersTableModel.CharacterRole)
@@ -117,4 +100,4 @@ class CharactersView:
                 return
             self.novel.characters.remove(character)
             client.delete_character(character)
-            self.refresh()
+            emit_event(NovelReloadRequestedEvent(self))

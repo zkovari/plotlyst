@@ -19,141 +19,135 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Dict, Optional
 
-from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal
-from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap, QMouseEvent
+from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal, QSize
+from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap, QMouseEvent, QColor
 from PyQt5.QtWidgets import QWidget, QMenu, QAction, QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Scene
+from src.main.python.plotlyst.core.domain import Scene, Novel
 
 
 class StoryLinesMapWidget(QWidget):
-    colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
-
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
-        self.setStyleSheet('background-color:white;')
-        self.setMouseTracking(True)
-        self.novel = None
-        self._scene_coord_y: Dict[int, int] = {}
-
-    @overrides
-    def event(self, event: QEvent) -> bool:
-        if event.type() == QEvent.ToolTip:
-            pos: QPoint = event.pos()
-            index = int((pos.x() / 25) - 1)
-            self.setToolTip(self.novel.scenes[index].title)
-
-            return super().event(event)
-        return super().event(event)
-
-    @overrides
-    def paintEvent(self, event: QPaintEvent) -> None:
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        for i, story in enumerate(self.novel.story_lines):
-            y = 50 * (i + 1)
-            path = QPainterPath()
-            painter.setPen(QPen(self.colors[i], 4, Qt.SolidLine))
-            path.moveTo(0, y)
-            path.lineTo(5, y)
-
-            for j, scene in enumerate(self.novel.scenes):
-                x = 25 * (j + 1)
-                if story in scene.story_lines:
-                    if j not in self._scene_coord_y.keys():
-                        self._scene_coord_y[j] = y
-                    if i == 1 and j == 2:
-                        path.arcTo(x, self._scene_coord_y[j], 20, 20, 25, 25)
-                    else:
-                        path.lineTo(x, self._scene_coord_y[j])
-                    painter.drawPath(path)
-
-        for j, scene in enumerate(self.novel.scenes):
-            x = 25 * (j + 1)
-            if j not in self._scene_coord_y.keys():
-                continue
-            if len(scene.story_lines) == 1:
-                painter.setPen(QPen(Qt.black, 3, Qt.SolidLine))
-                painter.setBrush(Qt.black)
-                painter.drawEllipse(x, self._scene_coord_y[j] - 7, 14, 14)
-            else:
-                painter.setPen(QPen(Qt.black, 3, Qt.SolidLine))
-                painter.setBrush(Qt.white)
-                painter.drawEllipse(x, self._scene_coord_y[j] - 10, 20, 20)
-
-
-class StoryLinesLinearMapWidget(QWidget):
-    colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
-
     scene_selected = pyqtSignal(Scene)
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setMouseTracking(True)
-        self.novel = None
+        self.novel: Optional[Novel] = None
+        self._scene_coord_y: Dict[int, int] = {}
         self._clicked_scene: Optional[Scene] = None
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu_requested)
 
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+
+    @overrides
+    def minimumSizeHint(self) -> QSize:
+        if self.novel:
+            x = self._scene_x(len(self.novel.scenes) - 1) + 50
+            y = self._story_line_y(len(self.novel.story_lines)) * 2
+            return QSize(x, y)
+        return super().minimumSizeHint()
+
     @overrides
     def event(self, event: QEvent) -> bool:
         if event.type() == QEvent.ToolTip:
-            pos: QPoint = event.pos()
-            index = int((pos.x() / 25) - 1)
-            self.setToolTip(self.novel.scenes[index].title)
+            index = self._index_from_pos(event.pos())
+            if index < len(self.novel.scenes):
+                self.setToolTip(self.novel.scenes[index].title)
 
             return super().event(event)
         return super().event(event)
 
+    @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        pos: QPoint = event.pos()
-        index = int((pos.x() / 25) - 1)
+        index = self._index_from_pos(event.pos())
         if index < len(self.novel.scenes):
             self._clicked_scene = self.novel.scenes[index]
-            self.repaint()
+            self.update()
             self.scene_selected.emit(self._clicked_scene)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
-        rect = self.rect()
-        w = rect.width()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        for i, story in enumerate(self.novel.story_lines):
-            y = 50 * (i + 1) + 25
-            painter.setPen(QPen(self.colors[i], 4, Qt.SolidLine))
-            painter.drawLine(0, y, w, y)
+        painter.fillRect(self.rect(), Qt.white)
+        self._scene_coord_y.clear()
+        y = 0
+        for sl_i, story in enumerate(self.novel.story_lines):
+            # previous_y = 0
+            # previous_x = 0
+            y = self._story_line_y(sl_i)
+            path = QPainterPath()
+            painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
+            path.moveTo(0, y)
+            path.lineTo(5, y)
+
+            for sc_i, scene in enumerate(self.novel.scenes):
+                x = self._scene_x(sc_i)
+                if story in scene.story_lines:
+                    if sc_i not in self._scene_coord_y.keys():
+                        self._scene_coord_y[sc_i] = y
+                    # if previous_y > self._scene_coord_y[sc_i] or (previous_y == 0 and y > self._scene_coord_y[sc_i]):
+                    #     path.lineTo(x - 25, y)
+                    # elif 0 < previous_y < self._scene_coord_y[sc_i]:
+                    #     path.lineTo(previous_x + 25, y)
+                    path.lineTo(x, self._scene_coord_y[sc_i])
+                    painter.drawPath(path)
+                    # previous_y = self._scene_coord_y[sc_i]
+                    # previous_x = x
+
+        for sc_i, scene in enumerate(self.novel.scenes):
+            if sc_i not in self._scene_coord_y.keys():
+                continue
+            self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), self._scene_coord_y[sc_i])
+
+        base_y = y
+        for sl_i, story in enumerate(self.novel.story_lines):
+            y = 50 * (sl_i + 1) + 25 + base_y
+            painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
+            painter.drawLine(0, y, self.rect().width(), y)
             painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
             painter.drawText(5, y - 15, story.text)
 
-            for j, scene in enumerate(self.novel.scenes):
-                x = 25 * (j + 1)
+            for sc_i, scene in enumerate(self.novel.scenes):
                 if story in scene.story_lines:
-                    if scene == self._clicked_scene:
-                        pen = Qt.red
-                    else:
-                        pen = Qt.black
-                    if len(scene.story_lines) == 1:
-                        painter.setPen(QPen(pen, 3, Qt.SolidLine))
-                        painter.setBrush(Qt.black)
-                        painter.drawEllipse(x, y - 7, 14, 14)
-                    else:
-                        painter.setPen(QPen(pen, 3, Qt.SolidLine))
-                        painter.setBrush(Qt.white)
-                        painter.drawEllipse(x, y - 10, 20, 20)
+                    self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), y)
 
-        for j, scene in enumerate(self.novel.scenes):
-            x = 25 * (j + 1)
+        for sc_i, scene in enumerate(self.novel.scenes):
             if not scene.story_lines:
-                if scene == self._clicked_scene:
-                    pen = Qt.red
-                else:
-                    pen = Qt.gray
+                self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), 3)
+
+    def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
+        if scene.story_lines:
+            pen = Qt.red if scene is self._clicked_scene else Qt.black
+            if len(scene.story_lines) == 1:
                 painter.setPen(QPen(pen, 3, Qt.SolidLine))
-                painter.setBrush(Qt.gray)
-                painter.drawEllipse(x, 3, 14, 14)
+                painter.setBrush(Qt.black)
+                painter.drawEllipse(x, y - 7, 14, 14)
+            else:
+                painter.setPen(QPen(pen, 3, Qt.SolidLine))
+                painter.setBrush(Qt.white)
+                painter.drawEllipse(x, y - 10, 20, 20)
+        else:
+            pen = Qt.red if scene is self._clicked_scene else Qt.gray
+            painter.setPen(QPen(pen, 3, Qt.SolidLine))
+            painter.setBrush(Qt.gray)
+            painter.drawEllipse(x, y, 14, 14)
+
+    @staticmethod
+    def _story_line_y(index: int) -> int:
+        return 50 * (index + 1)
+
+    @staticmethod
+    def _scene_x(index: int) -> int:
+        return 25 * (index + 1)
+
+    @staticmethod
+    def _index_from_pos(pos: QPoint) -> int:
+        return int((pos.x() / 25) - 1)
 
     def _context_menu_requested(self, pos: QPoint):
         menu = QMenu(self)
