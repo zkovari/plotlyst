@@ -259,7 +259,8 @@ class AvatarsRegistry:
         return self._avatars[character.id]
 
     def update(self, character: Character):
-        self._avatars.pop(character.id)
+        if character.id in self._avatars.keys():
+            self._avatars.pop(character.id)
         self.pixmap(character)
 
 

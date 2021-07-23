@@ -51,17 +51,7 @@ class CharacterEditor:
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
 
-        self.ui.lineName.textChanged.connect(self._name_changed)
-
         self._update_avatar()
-
-    def _name_changed(self, text: str):
-        if self.character.avatar:
-            return
-        if text:
-            self.character.name = text
-            # initial avatar needs to be updated
-            avatars.update(self.character)
 
     def _upload_avatar(self):
         filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
@@ -79,12 +69,12 @@ class CharacterEditor:
         image.save(buffer, 'PNG')
         self.character.avatar = array
 
+        avatars.update(self.character)
         self._update_avatar()
         self._save()
 
     def _update_avatar(self):
         if self.character.avatar:
-            avatars.update(self.character)
             self.ui.lblAvatar.setPixmap(
                 avatars.pixmap(self.character).scaled(256, 256, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         else:
