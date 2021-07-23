@@ -70,9 +70,9 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ${{secrets.KEYCHAIN_PWD}} build.keychain
           /usr/bin/codesign -v --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.app -v
       
-      - name: Check history
-        run: |
-          xcrun notarytool history --keychain-profile ${{ secrets.NOTARIZATION_PASSWORD }}
+#       - name: Check history
+#         run: |
+#           xcrun notarytool history --keychain-profile ${{ secrets.NOTARIZATION_PASSWORD }}
       
       - name: "Notarize Release Build"
         uses: devbotsxyz/xcode-notarize@v1
