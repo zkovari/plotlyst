@@ -68,7 +68,7 @@ jobs:
           security unlock-keychain -p ${{secrets.KEYCHAIN_PWD}} build.keychain
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ${{secrets.KEYCHAIN_PWD}} build.keychain
-          /usr/bin/codesign -v --timestamp --deep --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.app
+          /usr/bin/codesign -v --timestamp --options=runtime --deep --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.app
       
 #       - name: Check history
 #         run: |
