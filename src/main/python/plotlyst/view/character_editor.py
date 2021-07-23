@@ -69,12 +69,12 @@ class CharacterEditor:
         image.save(buffer, 'PNG')
         self.character.avatar = array
 
+        avatars.update(self.character)
         self._update_avatar()
         self._save()
 
     def _update_avatar(self):
         if self.character.avatar:
-            avatars.update(self.character)
             self.ui.lblAvatar.setPixmap(
                 avatars.pixmap(self.character).scaled(256, 256, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         else:

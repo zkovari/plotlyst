@@ -32,7 +32,7 @@ from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
 from src.main.python.plotlyst.view.common import ask_confirmation, busy
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 
 class CharactersView(AbstractNovelView):
@@ -80,6 +80,8 @@ class CharactersView(AbstractNovelView):
 
     def _on_close_editor(self):
         character = self.editor.character
+        if not character.avatar:
+            avatars.update(character)
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.editor.widget.deleteLater()

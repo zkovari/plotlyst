@@ -67,3 +67,14 @@ STORY_LINE_COLOR_CODES: List[str] = [
     '#b388eb',
     '#8093f1',
 ]
+
+CHARACTER_INITIAL_AVATAR_COLOR_CODES: List[str] = [
+    '#03396c',
+    '#0e9aa7',
+    '#62c370',
+    '#cc3363',
+    '#f5e960',
+    '#3c4f76',
+    '#b388eb',
+    '#8093f1',
+]

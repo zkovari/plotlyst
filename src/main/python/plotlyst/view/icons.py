@@ -20,9 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict
 
 import qtawesome
+from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon, QPixmap
 
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
+from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
 
 
@@ -241,16 +243,25 @@ class AvatarsRegistry:
 
     def pixmap(self, character: Character) -> QPixmap:
         if character.id not in self._avatars:
-            self.update(character)
+            if character.avatar:
+                array = character.avatar
+                pixmap = QPixmap()
+                if array:
+                    pixmap.loadFromData(array)
+                self._avatars[character.id] = rounded_pixmap(pixmap)
+            else:
+                _sum = sum([ord(x) for x in character.name])
+                color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_sum % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]
+                icon: QIcon = qtawesome.icon(f'mdi.alpha-{character.name[0].lower()}-circle-outline',
+                                             options=[{'scale_factor': 1.2}], color=color)
+                self._avatars[character.id] = icon.pixmap(QSize(64, 64))
 
         return self._avatars[character.id]
 
     def update(self, character: Character):
-        array = character.avatar
-        pixmap = QPixmap()
-        if array:
-            pixmap.loadFromData(array)
-        self._avatars[character.id] = rounded_pixmap(pixmap)
+        if character.id in self._avatars.keys():
+            self._avatars.pop(character.id)
+        self.pixmap(character)
 
 
 avatars = AvatarsRegistry()
