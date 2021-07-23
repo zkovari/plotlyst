@@ -70,10 +70,6 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ${{secrets.KEYCHAIN_PWD}} build.keychain
           /usr/bin/codesign -v --timestamp --options=runtime --deep --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.app
       
-#       - name: Check history
-#         run: |
-#           xcrun notarytool history --keychain-profile ${{ secrets.NOTARIZATION_PASSWORD }}
-      
       - name: "Notarize Release Build"
         uses: devbotsxyz/xcode-notarize@v1
         with:
@@ -81,6 +77,7 @@ jobs:
           appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
           appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
           verbose: "true"
+        continue-on-error: true
       
       - name: "Staple Release Build"
         uses: devbotsxyz/xcode-staple@v1
