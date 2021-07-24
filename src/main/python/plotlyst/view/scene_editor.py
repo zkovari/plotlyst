@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget
 
 from src.main.python.plotlyst.core.client import client
@@ -30,7 +31,7 @@ from src.main.python.plotlyst.model.characters_model import CharactersSceneAssoc
 from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 
 class SceneEditor(QObject):
@@ -54,7 +55,7 @@ class SceneEditor(QObject):
 
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
-            self.ui.cbPov.addItem(char.name, char)
+            self.ui.cbPov.addItem(QIcon(avatars.pixmap(char)), char.name, char)
 
         self.ui.cbType.setItemIcon(0, IconRegistry.custom_scene_icon())
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
