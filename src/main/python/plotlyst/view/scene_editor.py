@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
+import fbs_runtime.platform
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget
@@ -44,8 +45,10 @@ class SceneEditor(QObject):
         self.ui.setupUi(self.widget)
         self.novel = novel
 
-        self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabGeneral), IconRegistry.general_info_icon())
-        self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabNotes), IconRegistry.notes_icon())
+        if not fbs_runtime.platform.is_mac():
+            self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabGeneral),
+                                         IconRegistry.general_info_icon())
+            self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabNotes), IconRegistry.notes_icon())
 
         self.ui.btnVeryUnhappy.setIcon(IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY))
         self.ui.btnUnHappy.setIcon(IconRegistry.emotion_icon_from_feeling(UNHAPPY))
