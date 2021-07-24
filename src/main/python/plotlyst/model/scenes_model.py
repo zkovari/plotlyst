@@ -129,6 +129,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColMiddle:
                 if self._data[index.row()].type == ACTION_SCENE:
+                    if self._data[index.row()].without_action_conflict:
+                        return QVariant()
                     if self._data[index.row()].middle:
                         return IconRegistry.conflict_icon()
                     else:
@@ -138,6 +140,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColEnd:
                 if self._data[index.row()].type == ACTION_SCENE:
+                    if self._data[index.row()].action_resolution:
+                        return IconRegistry.success_icon()
                     return IconRegistry.disaster_icon()
                 if self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.decision_icon()
@@ -177,6 +181,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         if index.column() == self.ColBeginning:
             return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColMiddle:
+            if self._data[index.row()].type == ACTION_SCENE and self._data[index.row()].without_action_conflict:
+                return Qt.ItemIsEnabled
             return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColEnd:
             return Qt.ItemIsEnabled | Qt.ItemIsEditable

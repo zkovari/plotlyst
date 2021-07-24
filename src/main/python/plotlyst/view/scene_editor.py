@@ -83,6 +83,7 @@ class SceneEditor(QObject):
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
         self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene_icon())
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
+        self.ui.cbConflict.toggled.connect(self._on_conflict_toggled)
 
         self.ui.cbPivotal.insertSeparator(1)
         self.ui.cbPivotal.view().setRowHidden(0, True)
@@ -123,7 +124,6 @@ class SceneEditor(QObject):
         self.ui.btnGroupArc.buttonClicked.connect(self._save_scene)
         self.ui.btnDisaster.toggled.connect(self._on_disaster_toggled)
         self.ui.btnResolution.toggled.connect(self._on_resolution_toggled)
-        self.ui.cbConflict.toggled.connect(self._on_conflict_toggled)
 
     def _update_view(self, scene: Optional[Scene] = None):
         if scene:
@@ -208,7 +208,12 @@ class SceneEditor(QObject):
             self.ui.lblType1.setText('Goal:')
             self.ui.textEvent1.setPlaceholderText('Scene goal')
             self.ui.lblType2.setText('Conflict:')
-            self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
+            if not self.scene.without_action_conflict:
+                self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
+            if self.scene.action_resolution:
+                self.ui.btnResolution.setChecked(True)
+            else:
+                self.ui.btnDisaster.setChecked(True)
             if self.ui.btnDisaster.isChecked():
                 self.ui.lblType3.setText('Disaster:')
                 self.ui.textEvent3.setPlaceholderText('Disaster in the end')
@@ -218,6 +223,7 @@ class SceneEditor(QObject):
             self.ui.btnDisaster.setVisible(True)
             self.ui.btnResolution.setVisible(True)
             self.ui.cbConflict.setVisible(True)
+            self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
 
             return
         elif text == REACTION_SCENE:
@@ -251,11 +257,12 @@ class SceneEditor(QObject):
         self.ui.textEvent3.setPlaceholderText('Resolution in the end')
 
     def _on_conflict_toggled(self, toggled: bool):
-        self.ui.textEvent2.setEnabled(toggled)
         if toggled:
             self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
         else:
+            self.ui.textEvent2.setText('')
             self.ui.textEvent2.setPlaceholderText('There is no conflict in this scene')
+        self.ui.textEvent2.setEnabled(toggled)
 
     def _pending_save(self):
         if self._save_enabled:
@@ -289,6 +296,9 @@ class SceneEditor(QObject):
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.scene.type = self.ui.cbType.currentText()
         self.scene.beginning = self.ui.textEvent1.toPlainText()
+        if self.scene.type == ACTION_SCENE:
+            self.scene.without_action_conflict = not self.ui.cbConflict.isChecked()
+            self.scene.action_resolution = self.ui.btnResolution.isChecked()
         self.scene.middle = self.ui.textEvent2.toPlainText()
         self.scene.end = self.ui.textEvent3.toPlainText()
         self.scene.day = self.ui.sbDay.value()
