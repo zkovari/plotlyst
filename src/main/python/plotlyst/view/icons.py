@@ -176,8 +176,8 @@ class IconRegistry:
         return qtawesome.icon('fa.shield')
 
     @staticmethod
-    def disaster_icon() -> QIcon:
-        return qtawesome.icon('fa.bomb', color='red')
+    def disaster_icon(color: str = 'red', color_on: str = 'red') -> QIcon:
+        return qtawesome.icon('fa.bomb', color=color, color_on=color_on)
 
     @staticmethod
     def dilemma_icon() -> QIcon:
@@ -186,6 +186,10 @@ class IconRegistry:
     @staticmethod
     def conflict_icon(color: str = 'orange') -> QIcon:
         return qtawesome.icon('mdi.sword-cross', color=color)
+
+    @staticmethod
+    def success_icon(color: str = 'darkGreen', color_on: str = 'darkGreen') -> QIcon:
+        return qtawesome.icon('fa5s.trophy', color=color, color_on=color_on)
 
     @staticmethod
     def home_icon() -> QIcon:

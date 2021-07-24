@@ -23,7 +23,7 @@ from enum import Enum
 from typing import Optional, Any
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor
+from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy
 
 
@@ -95,3 +95,7 @@ def busy(func):
             QApplication.restoreOverrideCursor()
 
     return wrapper_timer
+
+
+def emoji_font(size: int = 12) -> QFont:
+    return QFont('Noto Emoji', size)
