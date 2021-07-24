@@ -55,7 +55,8 @@ class ScenesOutlineView(AbstractNovelView):
         self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
                                  ScenesTableModel.ColCharacters,
                                  ScenesTableModel.ColSynopsis]
-        self._actions_view_columns = [ScenesTableModel.ColPov, ScenesTableModel.ColTitle, ScenesTableModel.ColBeginning,
+        self._actions_view_columns = [ScenesTableModel.ColPov, ScenesTableModel.ColTitle, ScenesTableModel.ColType,
+                                      ScenesTableModel.ColBeginning,
                                       ScenesTableModel.ColMiddle, ScenesTableModel.ColEnd]
         self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.tblModel)
@@ -103,8 +104,6 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnTableView.toggled.connect(self._switch_view)
-        self.ui.btnSynopsisView.setIcon(IconRegistry.synopsis_icon())
-        self.ui.btnSynopsisView.toggled.connect(self._switch_view)
         self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
         self.ui.btnActionsView.toggled.connect(self._switch_view)
         self.ui.btnTableView.setChecked(True)
@@ -198,10 +197,7 @@ class ScenesOutlineView(AbstractNovelView):
         relax_colors = False
         columns = self._default_columns
 
-        if self.ui.btnSynopsisView.isChecked():
-            columns = [ScenesTableModel.ColSynopsis, ScenesTableModel.ColPov]
-
-        elif self.ui.btnActionsView.isChecked():
+        if self.ui.btnActionsView.isChecked():
             columns = self._actions_view_columns
             height = 60
             relax_colors = True

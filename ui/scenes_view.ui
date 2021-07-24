@@ -99,22 +99,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="btnSynopsisView">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupViews</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
            <widget class="QToolButton" name="btnActionsView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>

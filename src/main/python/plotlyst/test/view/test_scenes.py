@@ -99,9 +99,6 @@ def test_insert_new_scene_after(qtbot, filled_window: MainWindow):
 def test_switch_views(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
 
-    view.ui.btnSynopsisView.click()
-    assert_data(view.tblModel, 'Scene 1 synopsis', 0, ScenesTableModel.ColSynopsis)
-
     view.ui.btnActionsView.click()
     assert_data(view.tblModel, 'Beginning', 0, ScenesTableModel.ColBeginning)
     assert_data(view.tblModel, 'Middle', 0, ScenesTableModel.ColMiddle)
