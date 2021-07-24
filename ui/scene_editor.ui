@@ -337,11 +337,15 @@
             </property>
             <property name="styleSheet">
              <string notr="true">QToolButton:checked {
-	background-color: rgb(136, 255, 115);
+	background-color: rgb(239, 0, 0);
 }
 
 QToolButton:hover {
-	border: 1px solid red;
+	border: 1px solid rgb(239, 0, 0);
+}
+
+QToolButton:disabled {   
+	font: grey;
 }</string>
             </property>
             <property name="text">
@@ -383,11 +387,11 @@ QToolButton:hover {
             </property>
             <property name="styleSheet">
              <string notr="true">QToolButton:checked {
-	background-color: rgb(136, 255, 115);
+	background-color: rgb(255, 142, 43);
 }
 
 QToolButton:hover {
-	border: 1px solid red;
+	border: 1px solid rgb(255, 142, 43);
 }</string>
             </property>
             <property name="text">
@@ -429,7 +433,11 @@ QToolButton:hover {
             </property>
             <property name="styleSheet">
              <string notr="true">QToolButton::checked {
-	background-color: rgb(136, 255, 115);
+	background-color: rgb(171, 171, 171);
+}
+
+QToolButton:hover {
+	border: 1px solid rgb(171, 171, 171);
 }</string>
             </property>
             <property name="text">
@@ -442,6 +450,9 @@ QToolButton:hover {
              </size>
             </property>
             <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
              <bool>true</bool>
             </property>
             <property name="toolButtonStyle">
@@ -475,7 +486,7 @@ QToolButton:hover {
 }
 
 QToolButton:hover {
-	border: 1px solid green;
+	border: 1px solid rgb(136, 255, 115);
 }</string>
             </property>
             <property name="text">
@@ -517,12 +528,14 @@ QToolButton:hover {
             </property>
             <property name="styleSheet">
              <string notr="true">QToolButton:checked {
-	background-color: rgb(136, 255, 115);
+	background-color: rgb(0, 202, 148);
 }
 
 QToolButton:hover {
-	border: 1px solid green;
-}</string>
+	border: 1px solid rgb(0, 202, 148);
+}
+
+</string>
             </property>
             <property name="text">
              <string/>
@@ -587,7 +600,7 @@ QToolButton:hover {
             </property>
             <item>
              <property name="text">
-              <string>Select story beat</string>
+              <string>Select story beat...</string>
              </property>
             </item>
             <item>

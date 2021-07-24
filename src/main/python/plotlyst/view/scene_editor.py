@@ -73,9 +73,11 @@ class SceneEditor(QObject):
         self.ui.lblBeatEmoji.setFont(self._emoji_font)
         self.ui.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
 
+        self.ui.cbPov.addItem('Select POV...', None)
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
             self.ui.cbPov.addItem(QIcon(avatars.pixmap(char)), char.name, char)
+        self.ui.cbPov.view().setRowHidden(0, True)
 
         self.ui.cbType.setItemIcon(0, IconRegistry.custom_scene_icon())
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
@@ -260,12 +262,12 @@ class SceneEditor(QObject):
             self._save_timer.start(500)
 
     def _enable_arc_buttons(self, enabled: bool):
-        self.ui.lblArc.setEnabled(enabled)
-        self.ui.btnVeryUnhappy.setEnabled(enabled)
-        self.ui.btnUnHappy.setEnabled(enabled)
-        self.ui.btnNeutral.setEnabled(enabled)
-        self.ui.btnHappy.setEnabled(enabled)
-        self.ui.btnVeryHappy.setEnabled(enabled)
+        self.ui.lblArc.setVisible(enabled)
+        self.ui.btnVeryUnhappy.setVisible(enabled)
+        self.ui.btnUnHappy.setVisible(enabled)
+        self.ui.btnNeutral.setVisible(enabled)
+        self.ui.btnHappy.setVisible(enabled)
+        self.ui.btnVeryHappy.setVisible(enabled)
 
     def _on_pov_changed(self):
         pov = self.ui.cbPov.currentData()
@@ -292,7 +294,8 @@ class SceneEditor(QObject):
         self.scene.day = self.ui.sbDay.value()
         self.scene.notes = self.ui.textNotes.toPlainText()
 
-        self.scene.pivotal = self.ui.cbPivotal.currentText()
+        if self.ui.cbPivotal.currentIndex() > 0:
+            self.scene.pivotal = self.ui.cbPivotal.currentText()
         self.scene.story_lines.clear()
         for story_line in self.story_line_model.selected:
             self.scene.story_lines.append(story_line)
