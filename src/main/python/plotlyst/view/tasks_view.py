@@ -19,7 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
 
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QWidget
+from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Task
 from src.main.python.plotlyst.model.tasks_model import TasksTableModel
@@ -40,11 +42,15 @@ class TasksWidget(QWidget, Ui_TasksWidget):
 
         self.updateTasks()
 
+    @overrides
+    def showEvent(self, event: QtGui.QShowEvent) -> None:
+        self.updateTasks()
+
     def updateTasks(self):
         self.tasks.clear()
         if not self.novel:
             return
-        
+
         for scene in self.novel.scenes:
             if scene.wip:
                 continue
