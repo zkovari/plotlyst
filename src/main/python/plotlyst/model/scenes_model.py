@@ -129,7 +129,10 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColMiddle:
                 if self._data[index.row()].type == ACTION_SCENE:
-                    return IconRegistry.conflict_icon()
+                    if self._data[index.row()].middle:
+                        return IconRegistry.conflict_icon()
+                    else:
+                        return IconRegistry.conflict_icon(color='lightgrey')
                 if self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.dilemma_icon()
                 return IconRegistry.invisible_white_icon()
@@ -172,11 +175,11 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         if index.column() == self.ColSynopsis:
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColBeginning:
-            return flags | Qt.ItemIsEditable
+            return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColMiddle:
-            return flags | Qt.ItemIsEditable
+            return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColEnd:
-            return flags | Qt.ItemIsEditable
+            return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColArc:
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColTime:

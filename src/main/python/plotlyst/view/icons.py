@@ -129,7 +129,7 @@ class IconRegistry:
 
     @staticmethod
     def wip_icon() -> QIcon:
-        return qtawesome.icon('mdi.progress-question')
+        return qtawesome.icon('mdi.progress-question', options=[{'scale_factor': 1.2}])
 
     @staticmethod
     def tasks_icon() -> QIcon:
@@ -184,8 +184,8 @@ class IconRegistry:
         return qtawesome.icon('fa.question-circle-o')
 
     @staticmethod
-    def conflict_icon() -> QIcon:
-        return qtawesome.icon('mdi.sword-cross', color='orange')
+    def conflict_icon(color: str = 'orange') -> QIcon:
+        return qtawesome.icon('mdi.sword-cross', color=color)
 
     @staticmethod
     def home_icon() -> QIcon:
