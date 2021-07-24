@@ -67,7 +67,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
 
         self._action_icon = IconRegistry.action_scene_icon()
         self._reaction_icon = IconRegistry.reaction_scene_icon()
-        self._custom_scene_icon = IconRegistry.custom_scene_icon()
         self._wip_brush = QBrush(QColor('#f6cd61'))
         self._pivotal_brush = QBrush(QColor('#3da4ab'))
 
@@ -116,8 +115,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return self._action_icon
                 elif self._data[index.row()].type == REACTION_SCENE:
                     return self._reaction_icon
-                else:
-                    return self._custom_scene_icon
             elif index.column() == self.ColPov:
                 if self._data[index.row()].pov:
                     return QIcon(avatars.pixmap(self._data[index.row()].pov))

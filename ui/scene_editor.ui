@@ -806,7 +806,7 @@ QToolButton:hover {
                   </property>
                   <item>
                    <property name="text">
-                    <string>custom</string>
+                    <string/>
                    </property>
                   </item>
                   <item>

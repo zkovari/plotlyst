@@ -79,7 +79,6 @@ class SceneEditor(QObject):
             self.ui.cbPov.addItem(QIcon(avatars.pixmap(char)), char.name, char)
         self.ui.cbPov.view().setRowHidden(0, True)
 
-        self.ui.cbType.setItemIcon(0, IconRegistry.custom_scene_icon())
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
         self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene_icon())
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
