@@ -22,7 +22,7 @@ from PyQt5.QtChart import QPieSeries, QChart, QChartView
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QHeaderView
 from matplotlib import ticker
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from overrides import overrides
 
@@ -73,8 +73,6 @@ class ReportsView(AbstractNovelView):
         self.ui.listView.setModel(self.story_line_model)
 
         self.story_lines_canvas = StoryLinesCanvas(self.novel, parent=self)
-        toolbar = NavigationToolbar(self.story_lines_canvas, self.ui.tabStoryDistribution)
-        self.ui.tabStoryDistribution.layout().addWidget(toolbar)
         self.ui.tabStoryDistribution.layout().addWidget(self.story_lines_canvas)
 
         self.scenes_model = ScenesTableModel(self.novel)
