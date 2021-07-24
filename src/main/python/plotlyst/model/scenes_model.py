@@ -67,7 +67,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
 
         self._action_icon = IconRegistry.action_scene_icon()
         self._reaction_icon = IconRegistry.reaction_scene_icon()
-        self._custom_scene_icon = IconRegistry.custom_scene_icon()
         self._wip_brush = QBrush(QColor('#f6cd61'))
         self._pivotal_brush = QBrush(QColor('#3da4ab'))
 
@@ -116,8 +115,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                     return self._action_icon
                 elif self._data[index.row()].type == REACTION_SCENE:
                     return self._reaction_icon
-                else:
-                    return self._custom_scene_icon
             elif index.column() == self.ColPov:
                 if self._data[index.row()].pov:
                     return QIcon(avatars.pixmap(self._data[index.row()].pov))
@@ -129,12 +126,19 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColMiddle:
                 if self._data[index.row()].type == ACTION_SCENE:
-                    return IconRegistry.conflict_icon()
+                    if self._data[index.row()].without_action_conflict:
+                        return QVariant()
+                    if self._data[index.row()].middle:
+                        return IconRegistry.conflict_icon()
+                    else:
+                        return IconRegistry.conflict_icon(color='lightgrey')
                 if self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.dilemma_icon()
                 return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColEnd:
                 if self._data[index.row()].type == ACTION_SCENE:
+                    if self._data[index.row()].action_resolution:
+                        return IconRegistry.success_icon()
                     return IconRegistry.disaster_icon()
                 if self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.decision_icon()
@@ -172,11 +176,13 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         if index.column() == self.ColSynopsis:
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColBeginning:
-            return flags | Qt.ItemIsEditable
+            return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColMiddle:
-            return flags | Qt.ItemIsEditable
+            if self._data[index.row()].type == ACTION_SCENE and self._data[index.row()].without_action_conflict:
+                return Qt.ItemIsEnabled
+            return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColEnd:
-            return flags | Qt.ItemIsEditable
+            return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColArc:
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColTime:

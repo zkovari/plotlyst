@@ -24,10 +24,10 @@ from typing import Dict
 
 from PyQt5.QtCore import QObject, pyqtSignal
 from overrides import overrides
-from peewee import SqliteDatabase, TextField
+from peewee import SqliteDatabase, TextField, BooleanField
 from playhouse.migrate import SqliteMigrator, migrate
 
-from src.main.python.plotlyst.core.client import ApplicationModel, ApplicationDbVersion, LATEST
+from src.main.python.plotlyst.core.client import ApplicationModel, ApplicationDbVersion, LATEST, SceneModel
 
 
 @dataclass
@@ -101,6 +101,28 @@ class _R2MigrationHandler(_MigrationHandler):
         return 'Add color_hex column to NovelStoryLines table'
 
 
+class _R3MigrationHandler(_MigrationHandler):
+
+    @overrides
+    def migrate(self, db: SqliteDatabase):
+        migrator = SqliteMigrator(db)
+        without_action_conflict: BooleanField = SceneModel.without_action_conflict
+        action_resolution: BooleanField = SceneModel.action_resolution
+        with db.atomic():
+            migrate(
+                migrator.add_column('Scenes', 'without_action_conflict', without_action_conflict),
+                migrator.add_column('Scenes', 'action_resolution', action_resolution)
+            )
+
+    @overrides
+    def verify(self, db: SqliteDatabase) -> bool:
+        return True
+
+    @overrides
+    def description(self) -> str:
+        return 'Add without_action_conflict and action_resolution columns to Scenes table'
+
+
 class Migration(QObject):
     stepFinished = pyqtSignal(ApplicationDbVersion)
     migrationFailed = pyqtSignal(str)
@@ -110,7 +132,8 @@ class Migration(QObject):
         super().__init__(parent)
         self._migrations: Dict[ApplicationDbVersion, _MigrationHandler] = {
             ApplicationDbVersion.R1: _R1MigrationHandler(),
-            ApplicationDbVersion.R2: _R2MigrationHandler()}
+            ApplicationDbVersion.R2: _R2MigrationHandler(),
+            ApplicationDbVersion.R3: _R3MigrationHandler()}
 
     def migrate(self, db: SqliteDatabase, version: AppDbSchemaVersion):
         revision: int = version.revision.value

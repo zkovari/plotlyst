@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-import fbs_runtime.platform
+import emoji
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget
@@ -31,6 +31,7 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REA
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
@@ -45,25 +46,45 @@ class SceneEditor(QObject):
         self.ui.setupUi(self.widget)
         self.novel = novel
 
-        if not fbs_runtime.platform.is_mac():
-            self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabGeneral),
-                                         IconRegistry.general_info_icon())
-            self.ui.tabWidget.setTabIcon(self.ui.tabWidget.indexOf(self.ui.tabNotes), IconRegistry.notes_icon())
+        self._emoji_font = emoji_font(24)
 
-        self.ui.btnVeryUnhappy.setIcon(IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY))
-        self.ui.btnUnHappy.setIcon(IconRegistry.emotion_icon_from_feeling(UNHAPPY))
-        self.ui.btnNeutral.setIcon(IconRegistry.emotion_icon_from_feeling(NEUTRAL))
-        self.ui.btnHappy.setIcon(IconRegistry.emotion_icon_from_feeling(HAPPY))
-        self.ui.btnVeryHappy.setIcon(IconRegistry.emotion_icon_from_feeling(VERY_HAPPY))
+        self.ui.btnVeryUnhappy.setFont(self._emoji_font)
+        self.ui.btnVeryUnhappy.setText(emoji.emojize(':fearful_face:'))
+        self.ui.btnUnHappy.setFont(self._emoji_font)
+        self.ui.btnUnHappy.setText(emoji.emojize(':worried_face:'))
+        self.ui.btnNeutral.setFont(self._emoji_font)
+        self.ui.btnNeutral.setText(emoji.emojize(':neutral_face:'))
+        self.ui.btnHappy.setFont(self._emoji_font)
+        self.ui.btnHappy.setText(emoji.emojize(':slightly_smiling_face:'))
+        self.ui.btnVeryHappy.setFont(self._emoji_font)
+        self.ui.btnVeryHappy.setText(emoji.emojize(':smiling_face_with_smiling_eyes:'))
 
+        self.ui.btnDisaster.setIcon(IconRegistry.disaster_icon(color='grey'))
+        self.ui.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
+
+        self.ui.lblDayEmoji.setFont(self._emoji_font)
+        self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
+        self.ui.lblPovEmoji.setFont(self._emoji_font)
+        self.ui.lblPovEmoji.setText(emoji.emojize(':bust_in_silhouette:'))
+        self.ui.lblTitleEmoji.setFont(self._emoji_font)
+        self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
+        self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
+        self.ui.lblSynopsisEmoji.setText(emoji.emojize(':scroll:'))
+        self.ui.lblBeatEmoji.setFont(self._emoji_font)
+        self.ui.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
+
+        self.ui.cbPov.addItem('Select POV...', None)
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
             self.ui.cbPov.addItem(QIcon(avatars.pixmap(char)), char.name, char)
+        self.ui.cbPov.view().setRowHidden(0, True)
 
-        self.ui.cbType.setItemIcon(0, IconRegistry.custom_scene_icon())
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
         self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene_icon())
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
+        self.ui.cbConflict.toggled.connect(self._on_conflict_toggled)
+
+        self.ui.cbPivotal.view().setRowHidden(0, True)
 
         self.story_line_model = NovelStoryLinesListModel(self.novel)
         self.ui.lstStoryLines.setModel(self.story_line_model)
@@ -88,12 +109,9 @@ class SceneEditor(QObject):
         self._save_enabled = False
         self._update_view(scene)
 
-        self.ui.cbWip.clicked.connect(self._save_scene)
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.sbDay.valueChanged.connect(self._save_scene)
         self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
-        self.ui.cbBeginningType.currentIndexChanged.connect(self._save_scene)
-        self.ui.cbEndingHook.currentIndexChanged.connect(self._save_scene)
         self.ui.cbType.currentIndexChanged.connect(self._save_scene)
         self.ui.textEvent1.textChanged.connect(self._pending_save)
         self.ui.textEvent2.textChanged.connect(self._pending_save)
@@ -101,7 +119,9 @@ class SceneEditor(QObject):
         self.ui.lineTitle.textEdited.connect(self._pending_save)
         self.ui.textSynopsis.textChanged.connect(self._pending_save)
         self.ui.textNotes.textChanged.connect(self._pending_save)
-        self.ui.buttonGroup.buttonClicked.connect(self._save_scene)
+        self.ui.btnGroupArc.buttonClicked.connect(self._save_scene)
+        self.ui.btnDisaster.toggled.connect(self._on_disaster_toggled)
+        self.ui.btnResolution.toggled.connect(self._on_resolution_toggled)
 
     def _update_view(self, scene: Optional[Scene] = None):
         if scene:
@@ -134,10 +154,10 @@ class SceneEditor(QObject):
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
-        self.ui.cbWip.setChecked(self.scene.wip)
-        self.ui.cbPivotal.setCurrentText(self.scene.pivotal)
-        self.ui.cbBeginningType.setCurrentText(self.scene.beginning_type)
-        self.ui.cbEndingHook.setCurrentText(self.scene.ending_hook)
+        if self.scene.pivotal:
+            self.ui.cbPivotal.setCurrentText(self.scene.pivotal)
+        else:
+            self.ui.cbPivotal.setCurrentIndex(0)
         self.ui.textNotes.setPlainText(self.scene.notes)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
@@ -184,27 +204,75 @@ class SceneEditor(QObject):
     def _on_type_changed(self, text: str):
         if text == ACTION_SCENE:
             self.ui.lblType1.setText('Goal:')
+            self.ui.textEvent1.setPlaceholderText('Scene goal')
             self.ui.lblType2.setText('Conflict:')
-            self.ui.lblType3.setText('Disaster:')
+            if not self.scene.without_action_conflict:
+                self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
+            if self.scene.action_resolution:
+                self.ui.btnResolution.setChecked(True)
+            else:
+                self.ui.btnDisaster.setChecked(True)
+            if self.ui.btnDisaster.isChecked():
+                self.ui.lblType3.setText('Disaster:')
+                self.ui.textEvent3.setPlaceholderText('Disaster in the end')
+            elif self.ui.btnResolution.isChecked():
+                self.ui.lblType3.setText('Resolution:')
+                self.ui.textEvent3.setPlaceholderText('Resolution in the end')
+            self.ui.btnDisaster.setVisible(True)
+            self.ui.btnResolution.setVisible(True)
+            self.ui.cbConflict.setVisible(True)
+            self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
+
+            return
         elif text == REACTION_SCENE:
+            self.ui.btnDisaster.setHidden(True)
+            self.ui.btnResolution.setHidden(True)
             self.ui.lblType1.setText('Reaction:')
+            self.ui.textEvent1.setPlaceholderText('Reaction in the beginning')
             self.ui.lblType2.setText('Dilemma:')
+            self.ui.textEvent2.setPlaceholderText('Dilemma throughout the scene')
             self.ui.lblType3.setText('Decision:')
+            self.ui.textEvent3.setPlaceholderText('Decision in the end')
         else:
             self.ui.lblType1.setText('Beginning:')
+            self.ui.textEvent1.setPlaceholderText('Beginning event of the scene')
             self.ui.lblType2.setText('Middle:')
+            self.ui.textEvent2.setPlaceholderText('Middle part of the scene')
             self.ui.lblType3.setText('End:')
+            self.ui.textEvent3.setPlaceholderText('Ending of the scene')
+
+        self.ui.lblType2.setVisible(True)
+        self.ui.btnDisaster.setHidden(True)
+        self.ui.btnResolution.setHidden(True)
+        self.ui.cbConflict.setHidden(True)
+
+    def _on_disaster_toggled(self):
+        self.ui.lblType3.setText('Disaster:')
+        self.ui.textEvent3.setPlaceholderText('Disaster in the end')
+
+    def _on_resolution_toggled(self):
+        self.ui.lblType3.setText('Resolution:')
+        self.ui.textEvent3.setPlaceholderText('Resolution in the end')
+
+    def _on_conflict_toggled(self, toggled: bool):
+        if toggled:
+            self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
+        else:
+            self.ui.textEvent2.setText('')
+            self.ui.textEvent2.setPlaceholderText('There is no conflict in this scene')
+        self.ui.textEvent2.setEnabled(toggled)
 
     def _pending_save(self):
         if self._save_enabled:
             self._save_timer.start(500)
 
     def _enable_arc_buttons(self, enabled: bool):
-        self.ui.btnVeryUnhappy.setEnabled(enabled)
-        self.ui.btnUnHappy.setEnabled(enabled)
-        self.ui.btnNeutral.setEnabled(enabled)
-        self.ui.btnHappy.setEnabled(enabled)
-        self.ui.btnVeryHappy.setEnabled(enabled)
+        self.ui.lblArc.setVisible(enabled)
+        self.ui.btnVeryUnhappy.setVisible(enabled)
+        self.ui.btnUnHappy.setVisible(enabled)
+        self.ui.btnNeutral.setVisible(enabled)
+        self.ui.btnHappy.setVisible(enabled)
+        self.ui.btnVeryHappy.setVisible(enabled)
 
     def _on_pov_changed(self):
         pov = self.ui.cbPov.currentData()
@@ -226,15 +294,16 @@ class SceneEditor(QObject):
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.scene.type = self.ui.cbType.currentText()
         self.scene.beginning = self.ui.textEvent1.toPlainText()
+        if self.scene.type == ACTION_SCENE:
+            self.scene.without_action_conflict = not self.ui.cbConflict.isChecked()
+            self.scene.action_resolution = self.ui.btnResolution.isChecked()
         self.scene.middle = self.ui.textEvent2.toPlainText()
         self.scene.end = self.ui.textEvent3.toPlainText()
         self.scene.day = self.ui.sbDay.value()
         self.scene.notes = self.ui.textNotes.toPlainText()
 
-        self.scene.wip = self.ui.cbWip.isChecked()
-        self.scene.pivotal = self.ui.cbPivotal.currentText()
-        self.scene.beginning_type = self.ui.cbBeginningType.currentText()
-        self.scene.ending_hook = self.ui.cbEndingHook.currentText()
+        if self.ui.cbPivotal.currentIndex() > 0:
+            self.scene.pivotal = self.ui.cbPivotal.currentText()
         self.scene.story_lines.clear()
         for story_line in self.story_line_model.selected:
             self.scene.story_lines.append(story_line)

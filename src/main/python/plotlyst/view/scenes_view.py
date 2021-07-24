@@ -225,9 +225,9 @@ class ScenesOutlineView(AbstractNovelView):
 
         menu = QMenu(self.ui.tblScenes)
 
-        wip_action = QAction('Toggle WIP status', menu)
+        wip_action = QAction(IconRegistry.wip_icon(), 'Toggle WIP status', menu)
         wip_action.triggered.connect(lambda: toggle_wip(scene))
-        insert_action = QAction('Insert new scene', menu)
+        insert_action = QAction(IconRegistry.plus_icon(), 'Insert new scene', menu)
         insert_action.triggered.connect(lambda: self._insert_scene_after(index))
         menu.addAction(wip_action)
         menu.addAction(insert_action)
