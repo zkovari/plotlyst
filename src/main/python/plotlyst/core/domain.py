@@ -82,6 +82,8 @@ class Scene:
     notes: str = ''
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
+    action_resolution: bool = False
+    without_action_conflict: bool = False
 
     def pov_arc(self) -> int:
         for arc in self.arcs:

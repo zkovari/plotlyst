@@ -1,8 +1,7 @@
 import shutil
 import sys
 
-from src.main.python.plotlyst.core.client import LATEST, ApplicationModel, context, client, ApplicationDbVersion
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.client import LATEST, ApplicationModel, context, ApplicationDbVersion
 from src.main.python.plotlyst.core.migration import app_db_schema_version, AppDbSchemaVersion, Migration
 
 
@@ -28,8 +27,6 @@ def test_migration_from_rev2(tmp_path):
 
     version: AppDbSchemaVersion = app_db_schema_version()
     assert version.revision == ApplicationDbVersion.R2
-    novel: Novel = client.fetch_novel(1)
-    assert novel.scenes
 
     migration = Migration()
     migration.migrate(context.db(), version)

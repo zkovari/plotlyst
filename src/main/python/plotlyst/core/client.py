@@ -35,9 +35,10 @@ class ApplicationDbVersion(Enum):
     R0 = 0  # before ApplicationModel existed
     R1 = 1
     R2 = 2
+    R3 = 3
 
 
-LATEST = ApplicationDbVersion.R2
+LATEST = ApplicationDbVersion.R3
 
 
 class DbContext:
@@ -147,6 +148,8 @@ class SceneModel(Model):
     notes = TextField(null=True)
     draft_status = TextField(null=True)
     edition_status = TextField(null=True)
+    action_resolution = BooleanField(null=True)
+    without_action_conflict = BooleanField(null=True)
 
     class Meta:
         table_name = 'Scenes'
@@ -292,12 +295,15 @@ class SqlClient:
 
             day = scene_m.day if scene_m.day else 0
             end_event = scene_m.end_event if scene_m.end_event else True
+            without_action_conflict = scene_m.without_action_conflict if scene_m.without_action_conflict else False
+            action_resolution = scene_m.action_resolution if scene_m.action_resolution else False
             scenes.append(Scene(id=scene_m.id, title=scene_m.title, synopsis=scene_m.synopsis, type=scene_m.type,
                                 pivotal=scene_m.pivotal, sequence=scene_m.sequence, beginning=scene_m.beginning,
                                 middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
                                 end_event=end_event, characters=scene_characters, pov=pov,
                                 story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
-                                ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter, arcs=arcs))
+                                ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter, arcs=arcs,
+                                without_action_conflict=without_action_conflict, action_resolution=action_resolution))
 
         scenes = sorted(scenes, key=lambda x: x.sequence)
         novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
@@ -339,6 +345,8 @@ class SqlClient:
         scene_m.beginning_type = scene.beginning_type
         scene_m.ending_hook = scene.ending_hook
         scene_m.notes = scene.notes
+        scene_m.without_action_conflict = scene.without_action_conflict
+        scene_m.action_resolution = scene.action_resolution
 
         scene_m.save()
 
