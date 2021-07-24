@@ -84,7 +84,6 @@ class SceneEditor(QObject):
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
         self.ui.cbConflict.toggled.connect(self._on_conflict_toggled)
 
-        self.ui.cbPivotal.insertSeparator(1)
         self.ui.cbPivotal.view().setRowHidden(0, True)
 
         self.story_line_model = NovelStoryLinesListModel(self.novel)
