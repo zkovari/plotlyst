@@ -65,6 +65,12 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         self._third_act_start: Optional[QModelIndex] = None
         self._relax_colors = False
 
+        self._action_icon = IconRegistry.action_scene_icon()
+        self._reaction_icon = IconRegistry.reaction_scene_icon()
+        self._custom_scene_icon = IconRegistry.custom_scene_icon()
+        self._wip_brush = QBrush(QColor('#f6cd61'))
+        self._pivotal_brush = QBrush(QColor('#3da4ab'))
+
         self._find_acts()
 
     @overrides
@@ -86,9 +92,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         elif role == Qt.BackgroundRole:
             if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
                 if self._data[index.row()].wip:
-                    return QBrush(QColor('#f6cd61'))
+                    return self._wip_brush
                 elif self._data[index.row()].pivotal:
-                    return QBrush(QColor('#3da4ab'))
+                    return self._pivotal_brush
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
                 return self._data[index.row()].title
@@ -107,11 +113,11 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
                 if self._data[index.row()].wip:
                     return IconRegistry.wip_icon()
                 elif self._data[index.row()].type == ACTION_SCENE:
-                    return IconRegistry.action_scene_icon()
+                    return self._action_icon
                 elif self._data[index.row()].type == REACTION_SCENE:
-                    return IconRegistry.reaction_scene_icon()
+                    return self._reaction_icon
                 else:
-                    return IconRegistry.custom_scene_icon()
+                    return self._custom_scene_icon
             elif index.column() == self.ColPov:
                 if self._data[index.row()].pov:
                     return QIcon(avatars.pixmap(self._data[index.row()].pov))
@@ -303,9 +309,13 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
 
 class ScenesNotesTableModel(ScenesTableModel):
 
+    def __init__(self, novel: Novel):
+        super(ScenesNotesTableModel, self).__init__(novel)
+        self._note_icon = IconRegistry.notes_icon()
+
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if role == Qt.DecorationRole:
             if self._data[index.row()].notes:
-                return IconRegistry.notes_icon()
+                return self._note_icon
         return super(ScenesNotesTableModel, self).data(index, role)
