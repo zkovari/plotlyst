@@ -30,7 +30,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
@@ -76,6 +76,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
         event_sender.send.connect(event_dispatcher.dispatch)
         event_dispatcher.register(self, NovelReloadRequestedEvent)
+        event_dispatcher.register(self, NovelDeletedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -83,6 +84,13 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             updated_novel = client.fetch_novel(self.novel.id)
             self.novel.update_from(updated_novel)
             emit_event(NovelReloadedEvent(self))
+        elif isinstance(event, NovelDeletedEvent):
+            if self.novel and event.novel.id == self.novel.id:
+                self.novel = None
+                self._clear_novel_views()
+                for btn in self.buttonGroup.buttons():
+                    if btn is not self.btnHome:
+                        btn.setHidden(True)
 
     def _init_views(self):
         self.home_view = HomeView()
@@ -203,16 +211,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.pageHome.layout().removeWidget(self.home_view.widget)
         if self.novel:
-            self.pageNovel.layout().removeWidget(self.novel_view.widget)
-            self.pageCharacters.layout().removeWidget(self.characters_view.widget)
-            self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
-            self.pageTimeline.layout().removeWidget(self.timeline_view.widget)
-            self.pageNotes.layout().removeWidget(self.notes_view.widget)
-            self.pageReports.layout().removeWidget(self.reports_view.widget)
+            self._clear_novel_views()
 
         self.novel = client.fetch_novel(novel.id)
         self._init_views()
         settings.set_last_novel_id(self.novel.id)
+
+    def _clear_novel_views(self):
+        self.pageNovel.layout().removeWidget(self.novel_view.widget)
+        self.pageCharacters.layout().removeWidget(self.characters_view.widget)
+        self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
+        self.pageTimeline.layout().removeWidget(self.timeline_view.widget)
+        self.pageNotes.layout().removeWidget(self.notes_view.widget)
+        self.pageReports.layout().removeWidget(self.reports_view.widget)
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
