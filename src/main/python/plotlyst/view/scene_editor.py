@@ -109,6 +109,9 @@ class SceneEditor(QObject):
         self.ui.treeInventory.setModel(self._scene_builder_inventory_model)
         self.ui.treeInventory.expandAll()
         self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)
+        self.ui.treeSceneBuilder.setColumnWidth(0, 300)
+        self.ui.treeSceneBuilder.setColumnWidth(1, 40)
+        self.ui.treeSceneBuilder.setColumnWidth(2, 100)
 
         self._save_timer = QTimer()
         self._save_timer.setInterval(500)

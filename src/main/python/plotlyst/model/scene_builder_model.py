@@ -80,6 +80,14 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
         SceneInventoryNode('Dialog', ':speaking_head:', self.root)
         sensor = Node('Sensor', self.root)
         SceneInventoryNode('Sight', ':eyes:', sensor)
+        SceneInventoryNode('Sound', ':speaker_high_volume:', sensor)
+        SceneInventoryNode('Smell', ':nose:', sensor)
+        SceneInventoryNode('Taste', ':tongue:', sensor)
+        SceneInventoryNode('Touch', ':handshake:', sensor)
+        reaction = SceneInventoryNode('Reaction', ':blue_circle:', self.root)
+        SceneInventoryNode('Feeling', ':broken_heart:', reaction)
+        SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', reaction)
+        SceneInventoryNode('Rational action', ':left-facing_fist:', reaction)
         # SceneInventoryNode('External conflict', ':crossed_swords:', self.root)
         # SceneInventoryNode('Internal conflict', ':angry_face_with_horns:', self.root)
         SceneInventoryNode('Emotional change', ':chart_increasing:', self.root)
@@ -107,6 +115,11 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
 
 
 class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
+
+    @overrides
+    def columnCount(self, parent: QModelIndex) -> int:
+        return 3
+
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
@@ -141,24 +154,32 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
         dropped_node: SceneInventoryNode = pickle.loads(data.data(self.MimeType))
         if isinstance(data, InternalSceneElementMimeData):
             print('internal drop')
-            return True
-        if not parent.isValid() and row < 0:  # to the end
+            node: SceneInventoryNode = data.node
+            if not parent.isValid() and row < 0:
+                node.parent = None
+                node.parent = self.root
+            elif row >= 0:
+                self._repositionNodeUnder(node, self.root, row)
+
+        elif not parent.isValid() and row < 0:  # to the end
             print(f'not valid parent {row}')
             SceneInventoryNode(dropped_node.name, dropped_node.emoji, self.root)
         elif row >= 0:
             print('in between')
-            # parent_node: Node = parent.internalPointer()
             new_node = SceneInventoryNode(dropped_node.name, dropped_node.emoji, self.root)
-            children_list = list(self.root.children)
-            old_index = children_list.index(new_node)
-            new_index = row
-            # if old_parent_node is parent_node and new_index > old_index:
-            #     new_index -= 1
-            children_list[old_index], children_list[new_index] = children_list[new_index], children_list[old_index]
-            self.root.children = children_list
+            self._repositionNodeUnder(new_node, self.root, row)
         else:
             print('on parent')
             return False
         self.layoutAboutToBeChanged.emit([QPersistentModelIndex(parent)])
         self.layoutChanged.emit([QPersistentModelIndex(parent)])
         return True
+
+    def _repositionNodeUnder(self, node, parent, row: int):
+        children_list = list(parent.children)
+        old_index = children_list.index(node)
+        new_index = row
+        if old_index < new_index:
+            new_index -= 1
+        children_list[old_index], children_list[new_index] = children_list[new_index], children_list[old_index]
+        parent.children = children_list
