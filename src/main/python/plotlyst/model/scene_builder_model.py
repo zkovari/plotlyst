@@ -18,10 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
-from typing import Any, List
+from typing import Any, List, Optional
 
 import emoji
-from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray, QPersistentModelIndex
+from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray
 from anytree import Node
 from overrides import overrides
 
@@ -151,28 +151,27 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
     @overrides
     def dropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int,
                      parent: QModelIndex) -> bool:
-        dropped_node: SceneInventoryNode = pickle.loads(data.data(self.MimeType))
+        dragged_node: SceneInventoryNode = pickle.loads(data.data(self.MimeType))
+        node: Optional[SceneInventoryNode] = None
         if isinstance(data, InternalSceneElementMimeData):
-            print('internal drop')
-            node: SceneInventoryNode = data.node
-            if not parent.isValid() and row < 0:
-                node.parent = None
+            node = data.node
+            node.parent = None
+            if not parent.isValid():
                 node.parent = self.root
-            elif row >= 0:
-                self._repositionNodeUnder(node, self.root, row)
+            else:
+                node.parent = parent.internalPointer()
+        else:  # to the end
+            if not parent.isValid():
+                node = SceneInventoryNode(dragged_node.name, dragged_node.emoji, self.root)
+            else:
+                node = SceneInventoryNode(dragged_node.name, dragged_node.emoji, parent.internalPointer())
+            for child in dragged_node.children:
+                SceneInventoryNode(child.name, child.emoji, node)
 
-        elif not parent.isValid() and row < 0:  # to the end
-            print(f'not valid parent {row}')
-            SceneInventoryNode(dropped_node.name, dropped_node.emoji, self.root)
-        elif row >= 0:
-            print('in between')
-            new_node = SceneInventoryNode(dropped_node.name, dropped_node.emoji, self.root)
-            self._repositionNodeUnder(new_node, self.root, row)
-        else:
-            print('on parent')
-            return False
-        self.layoutAboutToBeChanged.emit([QPersistentModelIndex(parent)])
-        self.layoutChanged.emit([QPersistentModelIndex(parent)])
+        if node and row >= 0:
+            self._repositionNodeUnder(node, self.root, row)
+
+        self.modelReset.emit()
         return True
 
     def _repositionNodeUnder(self, node, parent, row: int):

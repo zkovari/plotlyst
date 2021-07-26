@@ -1222,7 +1222,7 @@ QToolButton:hover {
           <widget class="QTreeView" name="treeInventory">
            <property name="maximumSize">
             <size>
-             <width>250</width>
+             <width>220</width>
              <height>16777215</height>
             </size>
            </property>
