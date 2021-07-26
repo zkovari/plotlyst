@@ -30,6 +30,8 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REA
     UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
+from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
+    SceneBuilderPaletteTreeModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
@@ -101,6 +103,12 @@ class SceneEditor(QObject):
         self.ui.btnPrevious.clicked.connect(self._on_previous_scene)
         self.ui.btnNext.setIcon(IconRegistry.arrow_right_thick_icon())
         self.ui.btnNext.clicked.connect(self._on_next_scene)
+
+        self._scene_builder_inventory_model = SceneBuilderInventoryTreeModel()
+        self._scene_builder_palette_model = SceneBuilderPaletteTreeModel()
+        self.ui.treeInventory.setModel(self._scene_builder_inventory_model)
+        self.ui.treeInventory.expandAll()
+        self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)
 
         self._save_timer = QTimer()
         self._save_timer.setInterval(500)
