@@ -21,18 +21,42 @@ import pickle
 from typing import Any, List, Optional
 
 import emoji
-from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray
+from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray, QSize
+from PyQt5.QtGui import QIcon
 from anytree import Node
 from overrides import overrides
 
+from src.main.python.plotlyst.core.domain import Character, Scene, NpcCharacter
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneElementEditionDialog, DialogEditionDialog, \
+    CharacterBasedEditionDialog
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
 
 class SceneInventoryNode(Node):
     def __init__(self, name: str, emoji_name: str, parent):
         super().__init__(name, parent)
         self.emoji = emoji.emojize(emoji_name)
+        self.character: Optional[Character] = None
+        self.tension: bool = False
+        self.suspense: bool = False
+        self.stakes: bool = False
+
+
+class CharacterEntryNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Character entry', ':door:', parent)
+
+
+class DialogSpeechNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Speech', ':speaking_head:', parent)
+
+
+class DialogActionBeatNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Action beat', ':clapping_hands:', parent)
 
 
 class InternalSceneElementMimeData(QMimeData):
@@ -58,6 +82,15 @@ class _SceneBuilderTreeModel(TreeItemModel):
         if column == 0:
             if role == Qt.DisplayRole:
                 return f'{node.emoji}{node.name}'
+            if role == Qt.SizeHintRole:
+                rows = int(len(node.name) / 35)
+                height = 20 + 20 * rows
+                return QSize(150, height)
+            if role == Qt.DecorationRole:
+                if node.character:
+                    if isinstance(node.character, NpcCharacter):
+                        return IconRegistry.portrait_icon()
+                    return QIcon(avatars.pixmap(node.character))
 
     @overrides
     def mimeData(self, indexes: List[QModelIndex]) -> QMimeData:
@@ -70,15 +103,23 @@ class _SceneBuilderTreeModel(TreeItemModel):
     def mimeTypes(self) -> List[str]:
         return [self.MimeType]
 
+    def deleteItem(self, index: QModelIndex):
+        node = index.internalPointer()
+        node.parent = None
+
+        self.modelReset.emit()
+
 
 class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
 
     def __init__(self):
         super(SceneBuilderInventoryTreeModel, self).__init__()
 
-        SceneInventoryNode('Character entry', ':door:', self.root)
-        SceneInventoryNode('Dialog', ':speaking_head:', self.root)
-        sensor = Node('Sensor', self.root)
+        CharacterEntryNode(self.root)
+        dialog = Node('Dialog', self.root)
+        DialogSpeechNode(dialog)
+        DialogActionBeatNode(dialog)
+        sensor = Node('Sensors', self.root)
         SceneInventoryNode('Sight', ':eyes:', sensor)
         SceneInventoryNode('Sound', ':speaker_high_volume:', sensor)
         SceneInventoryNode('Smell', ':nose:', sensor)
@@ -88,6 +129,7 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
         SceneInventoryNode('Feeling', ':broken_heart:', reaction)
         SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', reaction)
         SceneInventoryNode('Rational action', ':left-facing_fist:', reaction)
+        SceneInventoryNode('Action', ':play_button:', self.root)
         # SceneInventoryNode('External conflict', ':crossed_swords:', self.root)
         # SceneInventoryNode('Internal conflict', ':angry_face_with_horns:', self.root)
         SceneInventoryNode('Emotional change', ':chart_increasing:', self.root)
@@ -100,10 +142,6 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
         # SceneInventoryNode('Monolog', ':thinking_face:', self.root)
         SceneInventoryNode('Decision', ':brain:', self.root)
         SceneInventoryNode('Ending', ':chequered_flag:', self.root)
-        # SceneInventoryNode('Dialog', ':speech_balloon:', self.root)
-        # SceneInventoryNode('Dialog', ':speech_balloon:', self.root)
-        # SceneInventoryNode('Dialog', ':speech_balloon:', self.root)
-        # SceneInventoryNode('Dialog', ':speech_balloon:', self.root)
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -116,17 +154,40 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
 
 class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
 
+    def __init__(self, scene: Scene):
+        super(SceneBuilderPaletteTreeModel, self).__init__(None)
+        self.scene = scene
+
     @overrides
     def columnCount(self, parent: QModelIndex) -> int:
         return 3
+
+    # def _dataForInventoryNode(self, node: SceneInventoryNode, column: int, role: int):
+    #     if column == 0:
+    #         if role == Qt.DecorationRole and isinstance(node, CharacterEntryNode):
+    #             if node.character:
+    #                 return QIcon(avatars.pixmap(node.character))
+    #     return super(SceneBuilderPaletteTreeModel, self)._dataForInventoryNode(node, column, role)
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
         node = index.internalPointer()
         if isinstance(node, SceneInventoryNode):
-            return flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+            return flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled | Qt.ItemIsEditable
         return flags | Qt.ItemIsDropEnabled
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
+        node = index.internalPointer()
+        if isinstance(node, CharacterEntryNode):
+            node.name = value.name
+            node.character = value
+        else:
+            node.name = value
+
+        self.modelReset.emit()
+        return True
 
     @overrides
     def mimeData(self, indexes: List[QModelIndex]) -> QMimeData:
@@ -151,25 +212,34 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
     @overrides
     def dropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int,
                      parent: QModelIndex) -> bool:
-        dragged_node: SceneInventoryNode = pickle.loads(data.data(self.MimeType))
-        node: Optional[SceneInventoryNode] = None
+        node: Optional[SceneInventoryNode] = pickle.loads(data.data(self.MimeType))
+        parent_node = self.root
         if isinstance(data, InternalSceneElementMimeData):
             node = data.node
             node.parent = None
-            if not parent.isValid():
-                node.parent = self.root
-            else:
-                node.parent = parent.internalPointer()
+            if parent.isValid():
+                parent_node = parent.internalPointer()
+            node.parent = parent_node
         else:  # to the end
-            if not parent.isValid():
-                node = SceneInventoryNode(dragged_node.name, dragged_node.emoji, self.root)
+            if parent.isValid():
+                parent_node = parent.internalPointer()
+
+            if isinstance(node, (DialogSpeechNode, DialogActionBeatNode)):
+                result = DialogEditionDialog().display(self.scene)
+            elif isinstance(node, CharacterEntryNode):
+                result = CharacterBasedEditionDialog().display(self.scene)
             else:
-                node = SceneInventoryNode(dragged_node.name, dragged_node.emoji, parent.internalPointer())
-            for child in dragged_node.children:
-                SceneInventoryNode(child.name, child.emoji, node)
+                result = SceneElementEditionDialog().display(self.scene)
+            if result is None:
+                return False
+
+            node.parent = None
+            node.parent = parent_node
+            node.character = result.character
+            node.name = result.text
 
         if node and row >= 0:
-            self._repositionNodeUnder(node, self.root, row)
+            self._repositionNodeUnder(node, parent_node, row)
 
         self.modelReset.emit()
         return True

@@ -33,6 +33,10 @@ class Character:
     age: int = 0
 
 
+class NpcCharacter(Character):
+    pass
+
+
 @dataclass(unsafe_hash=True)
 class StoryLine:
     text: str

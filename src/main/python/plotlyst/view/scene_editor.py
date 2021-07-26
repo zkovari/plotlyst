@@ -20,9 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import emoji
-from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel
+from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel, \
+    QAbstractItemModel, Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox
+from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
@@ -31,7 +33,7 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REA
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
-    SceneBuilderPaletteTreeModel
+    SceneBuilderPaletteTreeModel, CharacterEntryNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
@@ -107,14 +109,9 @@ class SceneEditor(QObject):
         self._scene_builder_inventory_model = SceneBuilderInventoryTreeModel()
         self.ui.treeInventory.setModel(self._scene_builder_inventory_model)
         self.ui.treeInventory.expandAll()
-        
-        self._scene_builder_palette_model = SceneBuilderPaletteTreeModel()
-        self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)
-        self._scene_builder_palette_model.modelReset.connect(self.ui.treeSceneBuilder.expandAll)
-        self.ui.treeSceneBuilder.setColumnWidth(0, 300)
-        self.ui.treeSceneBuilder.setColumnWidth(1, 40)
-        self.ui.treeSceneBuilder.setColumnWidth(2, 100)
-        self.ui.treeSceneBuilder.expandAll()
+
+        self.ui.btnDelete.setIcon(IconRegistry.minus_icon())
+        self.ui.btnDelete.clicked.connect(self._on_delete_scene_builder_element)
 
         self._save_timer = QTimer()
         self._save_timer.setInterval(500)
@@ -122,6 +119,16 @@ class SceneEditor(QObject):
 
         self._save_enabled = False
         self._update_view(scene)
+
+        self._scene_builder_palette_model = SceneBuilderPaletteTreeModel(self.scene)
+        self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)
+        self.ui.treeSceneBuilder.selectionModel().selectionChanged.connect(self._on_scene_builder_selection_changed)
+        self._scene_builder_palette_model.modelReset.connect(self.ui.treeSceneBuilder.expandAll)
+        self.ui.treeSceneBuilder.setColumnWidth(0, 400)
+        self.ui.treeSceneBuilder.setColumnWidth(1, 40)
+        self.ui.treeSceneBuilder.setColumnWidth(2, 40)
+        self.ui.treeSceneBuilder.expandAll()
+        self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self.scene))
 
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.sbDay.valueChanged.connect(self._save_scene)
@@ -363,3 +370,50 @@ class SceneEditor(QObject):
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
         self._save_enabled = False
         self._update_view(scene)
+
+    def _on_scene_builder_selection_changed(self):
+        indexes = self.ui.treeSceneBuilder.selectedIndexes()
+        self.ui.btnDelete.setEnabled(bool(indexes))
+
+    def _on_delete_scene_builder_element(self):
+        indexes = self.ui.treeSceneBuilder.selectedIndexes()
+        if not indexes:
+            return
+        self._scene_builder_palette_model.deleteItem(indexes[0])
+        self.ui.btnDelete.setDisabled(True)
+
+
+class ScenesBuilderDelegate(QStyledItemDelegate):
+
+    def __init__(self, scene: Scene, parent=None):
+        super(ScenesBuilderDelegate, self).__init__(parent)
+        self.scene = scene
+
+    @overrides
+    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
+        node = index.internalPointer()
+        if isinstance(node, CharacterEntryNode):
+            return QComboBox(parent)
+        return QLineEdit(parent)
+
+    @overrides
+    def setEditorData(self, editor: QWidget, index: QModelIndex):
+        if isinstance(editor, QTextEdit) or isinstance(editor, QLineEdit):
+            node = index.internalPointer()
+            editor.setText(node.name)
+        elif isinstance(editor, QComboBox):
+            for char in self.scene.characters:
+                editor.addItem(QIcon(avatars.pixmap(char)), char.name, char)
+            editor.activated.connect(lambda: self._commit_and_close(editor))
+            editor.showPopup()
+
+    @overrides
+    def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
+        if isinstance(editor, QComboBox):
+            model.setData(index, editor.currentData(Qt.UserRole))
+        elif isinstance(editor, QLineEdit):
+            model.setData(index, editor.text())
+
+    def _commit_and_close(self, editor):
+        self.commitData.emit(editor)
+        self.closeEditor.emit(editor)
