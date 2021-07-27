@@ -31,8 +31,8 @@ from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
 @dataclass
 class SceneElementEditionResult:
-    character: Character
-    text: str
+    text: str = ''
+    character: Optional[Character] = None
 
 
 class SceneElementEditionDialog(QDialog, Ui_SceneElementEditionDialog):
@@ -47,7 +47,7 @@ class SceneElementEditionDialog(QDialog, Ui_SceneElementEditionDialog):
         result = self.exec()
         if result == QDialog.Rejected:
             return None
-        return SceneElementEditionResult(self.cbCharacter.currentData(), self.lineText.text())
+        return SceneElementEditionResult(text=self.lineText.text(), character=self.cbCharacter.currentData())
 
     def _setup(self, scene: Scene):
         pass

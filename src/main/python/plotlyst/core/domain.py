@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Optional, Any
 
 ACTION_SCENE = 'action'
@@ -115,6 +116,25 @@ class Novel:
         self.chapters.extend(updated_novel.chapters)
         self.story_lines.clear()
         self.story_lines.extend(updated_novel.story_lines)
+
+
+class SceneBuilderElementType(Enum):
+    DIALOG = 'dialog'
+
+
+@dataclass
+class SceneBuilderElement:
+    scene: Scene
+    type: SceneBuilderElementType
+    sequence: int
+    text: str = ''
+    children: List['SceneBuilderElement'] = field(default_factory=list)
+    # parent: Optional['SceneBuilderElement'] = None
+    character: Optional[Character] = None
+    id: Optional[int] = None
+    has_suspense: bool = False
+    has_tension: bool = False
+    has_stakes: bool = False
 
 
 @dataclass

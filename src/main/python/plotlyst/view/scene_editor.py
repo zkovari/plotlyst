@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, List
 
 import emoji
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel, \
@@ -29,11 +29,11 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
-    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
+    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, SceneBuilderElementType
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
-    SceneBuilderPaletteTreeModel, CharacterEntryNode
+    SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
@@ -129,6 +129,11 @@ class SceneEditor(QObject):
         self.ui.treeSceneBuilder.setColumnWidth(2, 40)
         self.ui.treeSceneBuilder.expandAll()
         self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self.scene))
+        if self._new_scene:
+            self._builder_elements = []
+        else:
+            self._builder_elements = client.fetch_scene_builder_elements(self.novel, self.scene)
+        self._scene_builder_palette_model.setElements(self._builder_elements)
 
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.sbDay.valueChanged.connect(self._save_scene)
@@ -353,6 +358,19 @@ class SceneEditor(QObject):
 
     def _on_close(self):
         self._save_scene()
+        elements: List[SceneBuilderElement] = []
+        for seq, node in enumerate(self._scene_builder_palette_model.root.children):
+            elements.append(self.__get_scene_builder_element(self.scene, node, seq))
+        client.update_scene_builder_elements(self.scene, elements)
+
+    def __get_scene_builder_element(self, scene: Scene, node: SceneInventoryNode, seq: int) -> SceneBuilderElement:
+        children = []
+        for child_seq, child in enumerate(node.children):
+            children.append(self.__get_scene_builder_element(self.scene, child, child_seq))
+        type = SceneBuilderElementType.DIALOG  # TODO
+        return SceneBuilderElement(scene=scene, type=type, sequence=seq, text=node.name, children=children,
+                                   character=node.character, has_suspense=node.suspense, has_tension=node.tension,
+                                   has_stakes=node.stakes)
 
     def _on_previous_scene(self):
         row = self.scene.sequence - 1

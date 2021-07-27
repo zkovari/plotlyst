@@ -20,14 +20,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import time
 from enum import Enum
-from typing import List
+from typing import List, Dict
 
 from PyQt5.QtCore import QTimer, Qt
 from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
     DoesNotExist
 from playhouse.sqlite_ext import CSqliteExtDatabase
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
+    SceneBuilderElement, SceneBuilderElementType
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -36,9 +37,10 @@ class ApplicationDbVersion(Enum):
     R1 = 1
     R2 = 2
     R3 = 3
+    R4 = 4  # add SceneBuilderElementModel
 
 
-LATEST = ApplicationDbVersion.R3
+LATEST = ApplicationDbVersion.R4
 
 
 class DbContext:
@@ -74,7 +76,7 @@ class DbContext:
                 [ApplicationModel, NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel,
                  NovelStoryLinesModel,
                  SceneStoryLinesModel,
-                 NovelCharactersModel, SceneCharactersModel])
+                 NovelCharactersModel, SceneCharactersModel, SceneBuilderElementModel])
             ApplicationModel.create(revision=LATEST.value)
             NovelModel.create(title='My First Novel')
 
@@ -195,7 +197,7 @@ class SceneStoryLinesModel(Model):
 
 
 class NovelCharactersModel(Model):
-    novel = ForeignKeyField(NovelModel, backref='characters', on_delete='CASCADE')  # on_delete='CASCADE'
+    novel = ForeignKeyField(NovelModel, backref='characters', on_delete='CASCADE')
     character = ForeignKeyField(CharacterModel, on_delete='CASCADE')
 
     class Meta:
@@ -210,6 +212,22 @@ class SceneCharactersModel(Model):
 
     class Meta:
         table_name = 'SceneCharacters'
+        database = context.db()
+
+
+class SceneBuilderElementModel(Model):
+    sequence = IntegerField()
+    type = TextField()
+    text = TextField(null=True)
+    scene = ForeignKeyField(SceneModel, backref='elements', on_delete='CASCADE')
+    character = ForeignKeyField(CharacterModel, null=True, on_delete='CASCADE')
+    parent = ForeignKeyField('self', related_name='children', null=True, on_delete='CASCADE')
+    suspense = BooleanField(default=False)
+    tension = BooleanField(default=False)
+    stakes = BooleanField(default=False)
+
+    class Meta:
+        table_name = 'SceneBuilderElements'
         database = context.db()
 
 
@@ -429,6 +447,58 @@ class SqlClient:
         m.text = story_line.text
         m.color_hexa = story_line.color_hexa
         m.save()
+
+    def fetch_scene_builder_elements(self, novel: Novel, scene: Scene) -> List[SceneBuilderElement]:
+        scene_m = SceneModel.get_by_id(scene.id)
+        parents_by_id: Dict[int, SceneBuilderElement] = {}
+
+        elements: List[SceneBuilderElement] = []
+        for element_m in scene_m.elements:
+            element = self.__get_scene_builder_element(scene, element_m, parents_by_id)
+            if not element_m.parent:
+                elements.append(parents_by_id[element.id])
+        return elements
+
+    def __get_scene_builder_element(self, scene: Scene, element_m,
+                                    parents_by_id: Dict[int, SceneBuilderElement]) -> SceneBuilderElement:
+        if element_m.parent:
+            if element_m.parent.id not in parents_by_id.keys():
+                self.__get_scene_builder_element(scene, element_m.parent, parents_by_id)
+            parent = parents_by_id[element_m.parent.id]
+        else:
+            parent = None
+        new_element = SceneBuilderElement(scene=scene, type=SceneBuilderElementType.DIALOG, sequence=element_m.sequence,
+                                          text=element_m.text,
+                                          has_suspense=element_m.suspense,
+                                          has_tension=element_m.tension,
+                                          has_stakes=element_m.stakes, id=element_m.id)
+        if new_element.id not in parents_by_id.keys():
+            parents_by_id[new_element.id] = new_element
+        if parent:
+            parent.children.append(new_element)
+        return new_element
+
+    def update_scene_builder_elements(self, scene: Scene, elements: List[SceneBuilderElement]):
+        scene_m = SceneModel.get_by_id(scene.id)
+        for el_m in scene_m.elements:
+            el_m.delete_instance()
+
+        for seq, el in enumerate(elements):
+            self._create_scene_builder_element(scene, el, seq)
+
+    def _create_scene_builder_element(self, scene: Scene, element: SceneBuilderElement, sequence: int, parent_id=None):
+        if element.character:
+            char_id = element.character.id
+        else:
+            char_id = None
+        el_parent = SceneBuilderElementModel.create(scene=scene.id, character=char_id, text=element.text,
+                                                    parent=parent_id,
+                                                    sequence=sequence,
+                                                    type=element.type.value, suspense=element.has_suspense,
+                                                    stakes=element.has_stakes,
+                                                    tension=element.has_tension)
+        for seq_child, el_child in enumerate(element.children):
+            self._create_scene_builder_element(scene, el_child, seq_child, el_parent.id)
 
 
 client = SqlClient()

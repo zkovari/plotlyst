@@ -26,11 +26,11 @@ from PyQt5.QtGui import QIcon
 from anytree import Node
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Character, Scene, NpcCharacter
+from src.main.python.plotlyst.core.domain import Character, Scene, NpcCharacter, SceneBuilderElement
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneElementEditionDialog, DialogEditionDialog, \
-    CharacterBasedEditionDialog
+    CharacterBasedEditionDialog, SceneElementEditionResult
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
 
@@ -57,6 +57,16 @@ class DialogSpeechNode(SceneInventoryNode):
 class DialogActionBeatNode(SceneInventoryNode):
     def __init__(self, parent: Node):
         super().__init__('Action beat', ':clapping_hands:', parent)
+
+
+class ReactionNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Reaction', ':blue_circle:', parent)
+        SceneInventoryNode('Feeling', ':broken_heart:', self)
+        SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', self)
+        SceneInventoryNode('Rational action', ':play_button:', self)
+        SceneInventoryNode('Monolog', ':thinking_face:', self)
+        DialogSpeechNode(self)
 
 
 class InternalSceneElementMimeData(QMimeData):
@@ -125,10 +135,12 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
         SceneInventoryNode('Smell', ':nose:', sensor)
         SceneInventoryNode('Taste', ':tongue:', sensor)
         SceneInventoryNode('Touch', ':handshake:', sensor)
-        reaction = SceneInventoryNode('Reaction', ':blue_circle:', self.root)
-        SceneInventoryNode('Feeling', ':broken_heart:', reaction)
-        SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', reaction)
-        SceneInventoryNode('Rational action', ':left-facing_fist:', reaction)
+        ReactionNode(self.root)
+        # SceneInventoryNode('Feeling', ':broken_heart:', reaction)
+        # SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', reaction)
+        # SceneInventoryNode('Rational action', ':play_button:', reaction)
+        # SceneInventoryNode('Monolog', ':thinking_face:', reaction)
+
         SceneInventoryNode('Action', ':play_button:', self.root)
         # SceneInventoryNode('External conflict', ':crossed_swords:', self.root)
         # SceneInventoryNode('Internal conflict', ':angry_face_with_horns:', self.root)
@@ -158,16 +170,25 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
         super(SceneBuilderPaletteTreeModel, self).__init__(None)
         self.scene = scene
 
+    def setElements(self, elements: List[SceneBuilderElement]):
+        for el in elements:
+            self._createNode(el, self.root)
+
+        self.modelReset.emit()
+
+    def _createNode(self, element: SceneBuilderElement, parent: Node):
+        node = DialogSpeechNode(parent)
+        node.name = element.text
+        node.stakes = element.has_stakes
+        node.tension = element.has_tension
+        node.suspense = element.has_suspense
+
+        for child in element.children:
+            self._createNode(child, node)
+
     @overrides
     def columnCount(self, parent: QModelIndex) -> int:
         return 3
-
-    # def _dataForInventoryNode(self, node: SceneInventoryNode, column: int, role: int):
-    #     if column == 0:
-    #         if role == Qt.DecorationRole and isinstance(node, CharacterEntryNode):
-    #             if node.character:
-    #                 return QIcon(avatars.pixmap(node.character))
-    #     return super(SceneBuilderPaletteTreeModel, self)._dataForInventoryNode(node, column, role)
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -228,6 +249,8 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
                 result = DialogEditionDialog().display(self.scene)
             elif isinstance(node, CharacterEntryNode):
                 result = CharacterBasedEditionDialog().display(self.scene)
+            elif isinstance(node, ReactionNode):
+                result = SceneElementEditionResult('Reaction')
             else:
                 result = SceneElementEditionDialog().display(self.scene)
             if result is None:

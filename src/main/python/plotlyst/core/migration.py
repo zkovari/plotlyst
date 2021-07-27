@@ -27,7 +27,8 @@ from overrides import overrides
 from peewee import SqliteDatabase, TextField, BooleanField
 from playhouse.migrate import SqliteMigrator, migrate
 
-from src.main.python.plotlyst.core.client import ApplicationModel, ApplicationDbVersion, LATEST, SceneModel
+from src.main.python.plotlyst.core.client import ApplicationModel, ApplicationDbVersion, LATEST, SceneModel, \
+    SceneBuilderElementModel
 
 
 @dataclass
@@ -123,6 +124,21 @@ class _R3MigrationHandler(_MigrationHandler):
         return 'Add without_action_conflict and action_resolution columns to Scenes table'
 
 
+class _R4MigrationHandler(_MigrationHandler):
+
+    @overrides
+    def migrate(self, db: SqliteDatabase):
+        db.create_tables([SceneBuilderElementModel])
+
+    @overrides
+    def verify(self, db: SqliteDatabase) -> bool:
+        return SceneBuilderElementModel.table_exists()
+
+    @overrides
+    def description(self) -> str:
+        return 'Create SceneBuilderElements table'
+
+
 class Migration(QObject):
     stepFinished = pyqtSignal(ApplicationDbVersion)
     migrationFailed = pyqtSignal(str)
@@ -133,7 +149,8 @@ class Migration(QObject):
         self._migrations: Dict[ApplicationDbVersion, _MigrationHandler] = {
             ApplicationDbVersion.R1: _R1MigrationHandler(),
             ApplicationDbVersion.R2: _R2MigrationHandler(),
-            ApplicationDbVersion.R3: _R3MigrationHandler()}
+            ApplicationDbVersion.R3: _R3MigrationHandler(),
+            ApplicationDbVersion.R4: _R4MigrationHandler()}
 
     def migrate(self, db: SqliteDatabase, version: AppDbSchemaVersion):
         revision: int = version.revision.value
