@@ -147,7 +147,6 @@ class SceneBuilderElement:
     sequence: int
     text: str = ''
     children: List['SceneBuilderElement'] = field(default_factory=list)
-    # parent: Optional['SceneBuilderElement'] = None
     character: Optional[Character] = None
     id: Optional[int] = None
     has_suspense: bool = False
