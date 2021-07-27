@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Optional, Any
 
 ACTION_SCENE = 'action'
@@ -31,6 +32,10 @@ class Character:
     avatar: Optional[Any] = None
     personality: str = ''
     age: int = 0
+
+
+class NpcCharacter(Character):
+    pass
 
 
 @dataclass(unsafe_hash=True)
@@ -111,6 +116,42 @@ class Novel:
         self.chapters.extend(updated_novel.chapters)
         self.story_lines.clear()
         self.story_lines.extend(updated_novel.story_lines)
+
+
+class SceneBuilderElementType(Enum):
+    SPEECH = 'speech'
+    ACTION_BEAT = 'action_beat'
+    CHARACTER_ENTRY = 'character_entry'
+    REACTION = 'reaction'
+    SIGHT = 'sight'
+    SOUND = 'sound'
+    SMELL = 'smell'
+    TASTE = 'taste'
+    TOUCH = 'touch'
+    FEELING = 'feeling'
+    REFLEX = 'reflex'
+    ACTION = 'action'
+    MONOLOG = 'monolog'
+    EMOTIONAL_CHANGE = 'emotional_change'
+    GOAL = 'goal'
+    DISASTER = 'disaster'
+    RESOLUTION = 'resolution'
+    DECISION = 'decision'
+    ENDING = 'ending'
+
+
+@dataclass
+class SceneBuilderElement:
+    scene: Scene
+    type: SceneBuilderElementType
+    sequence: int
+    text: str = ''
+    children: List['SceneBuilderElement'] = field(default_factory=list)
+    character: Optional[Character] = None
+    id: Optional[int] = None
+    has_suspense: bool = False
+    has_tension: bool = False
+    has_stakes: bool = False
 
 
 @dataclass
