@@ -93,11 +93,6 @@ class ActionNode(SceneInventoryNode):
 class ReactionNode(SceneInventoryNode):
     def __init__(self, parent: Node):
         super().__init__('Reaction', ':blue_circle:', parent)
-        # SceneInventoryNode('Feeling', ':broken_heart:', self)
-        # SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', self)
-        # SceneInventoryNode('Rational action', ':play_button:', self)
-        # SceneInventoryNode('Monolog', ':thinking_face:', self)
-        # DialogSpeechNode(self)
 
 
 class FeelingNode(SceneInventoryNode):
@@ -321,7 +316,6 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
         GoalNode(self.root)
         DisasterNode(self.root)
         ResolutionNode(self.root)
-        # SceneInventoryNode('Monolog', ':thinking_face:', self.root)
         DecisionNode(self.root)
         EndingNode(self.root)
 
@@ -386,14 +380,6 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
     def canDropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int,
                         parent: QModelIndex) -> bool:
         return True
-        # if row >= 0 and parent.internalPointer() == self.root:
-        #     return False
-        # if not data.hasFormat(self.MimeType):
-        #     return False
-        # if not isinstance(parent.internalPointer(), (ChapterNode, UncategorizedChapterNode)):
-        #     return False
-
-        # return True
 
     @overrides
     def dropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int,

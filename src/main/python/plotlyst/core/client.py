@@ -28,7 +28,7 @@ from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField,
 from playhouse.sqlite_ext import CSqliteExtDatabase
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
-    SceneBuilderElement, SceneBuilderElementType
+    SceneBuilderElement, SceneBuilderElementType, NpcCharacter
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -476,6 +476,8 @@ class SqlClient:
             parent = None
         if element_m.character:
             character = characters[element_m.character.id]
+        elif element_m.type == SceneBuilderElementType.SPEECH.value:
+            character = NpcCharacter('Other')
         else:
             character = None
         new_element = SceneBuilderElement(scene=scene, type=SceneBuilderElementType(element_m.type),
