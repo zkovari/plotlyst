@@ -451,23 +451,36 @@ class SqlClient:
     def fetch_scene_builder_elements(self, novel: Novel, scene: Scene) -> List[SceneBuilderElement]:
         scene_m = SceneModel.get_by_id(scene.id)
         parents_by_id: Dict[int, SceneBuilderElement] = {}
+        characters: Dict[int, Character] = {}
+        for char in novel.characters:
+            if char.id:
+                characters[char.id] = char
 
         elements: List[SceneBuilderElement] = []
         for element_m in scene_m.elements:
-            element = self.__get_scene_builder_element(scene, element_m, parents_by_id)
+            element = self.__get_scene_builder_element(scene, element_m, parents_by_id, characters)
             if not element_m.parent:
                 elements.append(parents_by_id[element.id])
+        for el in elements:
+            self._sort_children(el)
         return elements
 
     def __get_scene_builder_element(self, scene: Scene, element_m,
-                                    parents_by_id: Dict[int, SceneBuilderElement]) -> SceneBuilderElement:
+                                    parents_by_id: Dict[int, SceneBuilderElement],
+                                    characters: Dict[int, Character]) -> SceneBuilderElement:
         if element_m.parent:
             if element_m.parent.id not in parents_by_id.keys():
-                self.__get_scene_builder_element(scene, element_m.parent, parents_by_id)
+                self.__get_scene_builder_element(scene, element_m.parent, parents_by_id, characters)
             parent = parents_by_id[element_m.parent.id]
         else:
             parent = None
-        new_element = SceneBuilderElement(scene=scene, type=SceneBuilderElementType.DIALOG, sequence=element_m.sequence,
+        if element_m.character:
+            character = characters[element_m.character.id]
+        else:
+            character = None
+        new_element = SceneBuilderElement(scene=scene, type=SceneBuilderElementType(element_m.type),
+                                          sequence=element_m.sequence,
+                                          character=character,
                                           text=element_m.text,
                                           has_suspense=element_m.suspense,
                                           has_tension=element_m.tension,
@@ -477,6 +490,11 @@ class SqlClient:
         if parent:
             parent.children.append(new_element)
         return new_element
+
+    def _sort_children(self, element: SceneBuilderElement):
+        element.children = sorted(element.children, key=lambda x: x.sequence)
+        for child in element.children:
+            self._sort_children(child)
 
     def update_scene_builder_elements(self, scene: Scene, elements: List[SceneBuilderElement]):
         scene_m = SceneModel.get_by_id(scene.id)

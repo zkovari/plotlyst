@@ -26,7 +26,8 @@ from PyQt5.QtGui import QIcon
 from anytree import Node
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Character, Scene, NpcCharacter, SceneBuilderElement
+from src.main.python.plotlyst.core.domain import Character, Scene, NpcCharacter, SceneBuilderElement, \
+    SceneBuilderElementType
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneElementEditionDialog, DialogEditionDialog, \
@@ -59,14 +60,182 @@ class DialogActionBeatNode(SceneInventoryNode):
         super().__init__('Action beat', ':clapping_hands:', parent)
 
 
+class SightNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Sight', ':eyes:', parent)
+
+
+class SoundNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Sound', ':speaker_high_volume:', parent)
+
+
+class SmellNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Smell', ':nose:', parent)
+
+
+class TasteNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Taste', ':tongue:', parent)
+
+
+class TouchNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Touch', ':handshake:', parent)
+
+
+class ActionNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Action', ':play_button:', parent)
+
+
 class ReactionNode(SceneInventoryNode):
     def __init__(self, parent: Node):
         super().__init__('Reaction', ':blue_circle:', parent)
-        SceneInventoryNode('Feeling', ':broken_heart:', self)
-        SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', self)
-        SceneInventoryNode('Rational action', ':play_button:', self)
-        SceneInventoryNode('Monolog', ':thinking_face:', self)
-        DialogSpeechNode(self)
+        # SceneInventoryNode('Feeling', ':broken_heart:', self)
+        # SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', self)
+        # SceneInventoryNode('Rational action', ':play_button:', self)
+        # SceneInventoryNode('Monolog', ':thinking_face:', self)
+        # DialogSpeechNode(self)
+
+
+class FeelingNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Feeling', ':broken_heart:', parent)
+
+
+class ReflexNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Reflex', ':hand_with_fingers_splayed:', parent)
+
+
+class MonologNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Monolog', ':thinking_face:', parent)
+
+
+class EmotionalChangeNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Emotional change', ':chart_increasing:', parent)
+
+
+class GoalNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Goal', ':bullseye:', parent)
+
+
+class DisasterNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Disaster', ':bomb:', parent)
+
+
+class ResolutionNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Resolution', ':trophy:', parent)
+
+
+class DecisionNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Decision', ':brain:', parent)
+
+
+class EndingNode(SceneInventoryNode):
+    def __init__(self, parent: Node):
+        super().__init__('Ending', ':chequered_flag:', parent)
+
+
+def convert_to_node(element: SceneBuilderElement, parent: Node) -> SceneInventoryNode:
+    if element.type == SceneBuilderElementType.SPEECH:
+        node = DialogSpeechNode(parent)
+    elif element.type == SceneBuilderElementType.ACTION_BEAT:
+        node = DialogActionBeatNode(parent)
+    elif element.type == SceneBuilderElementType.CHARACTER_ENTRY:
+        node = CharacterEntryNode(parent)
+    elif element.type == SceneBuilderElementType.REACTION:
+        node = ReactionNode(parent)
+    elif element.type == SceneBuilderElementType.SIGHT:
+        node = SightNode(parent)
+    elif element.type == SceneBuilderElementType.SOUND:
+        node = SoundNode(parent)
+    elif element.type == SceneBuilderElementType.SMELL:
+        node = SmellNode(parent)
+    elif element.type == SceneBuilderElementType.TASTE:
+        node = TasteNode(parent)
+    elif element.type == SceneBuilderElementType.TOUCH:
+        node = TouchNode(parent)
+    elif element.type == SceneBuilderElementType.FEELING:
+        node = FeelingNode(parent)
+    elif element.type == SceneBuilderElementType.REFLEX:
+        node = ReflexNode(parent)
+    elif element.type == SceneBuilderElementType.ACTION:
+        node = ActionNode(parent)
+    elif element.type == SceneBuilderElementType.MONOLOG:
+        node = MonologNode(parent)
+    elif element.type == SceneBuilderElementType.EMOTIONAL_CHANGE:
+        node = EmotionalChangeNode(parent)
+    elif element.type == SceneBuilderElementType.GOAL:
+        node = GoalNode(parent)
+    elif element.type == SceneBuilderElementType.DISASTER:
+        node = DisasterNode(parent)
+    elif element.type == SceneBuilderElementType.RESOLUTION:
+        node = ResolutionNode(parent)
+    elif element.type == SceneBuilderElementType.DECISION:
+        node = DecisionNode(parent)
+    elif element.type == SceneBuilderElementType.ENDING:
+        node = EndingNode(parent)
+    else:
+        raise ValueError('Unknown SceneBuilderElement type')
+
+    node.name = element.text
+    node.character = element.character
+    node.stakes = element.has_stakes
+    node.tension = element.has_tension
+    node.suspense = element.has_suspense
+    return node
+
+
+def convert_to_element_type(node: SceneInventoryNode) -> SceneBuilderElementType:
+    if isinstance(node, DialogActionBeatNode):
+        return SceneBuilderElementType.ACTION_BEAT
+    elif isinstance(node, DialogSpeechNode):
+        return SceneBuilderElementType.SPEECH
+    elif isinstance(node, ReactionNode):
+        return SceneBuilderElementType.REACTION
+    elif isinstance(node, CharacterEntryNode):
+        return SceneBuilderElementType.CHARACTER_ENTRY
+    elif isinstance(node, SightNode):
+        return SceneBuilderElementType.SIGHT
+    elif isinstance(node, SoundNode):
+        return SceneBuilderElementType.SOUND
+    elif isinstance(node, SmellNode):
+        return SceneBuilderElementType.SMELL
+    elif isinstance(node, TasteNode):
+        return SceneBuilderElementType.TASTE
+    elif isinstance(node, TouchNode):
+        return SceneBuilderElementType.TOUCH
+    elif isinstance(node, FeelingNode):
+        return SceneBuilderElementType.FEELING
+    elif isinstance(node, ReflexNode):
+        return SceneBuilderElementType.REFLEX
+    elif isinstance(node, ActionNode):
+        return SceneBuilderElementType.ACTION
+    elif isinstance(node, MonologNode):
+        return SceneBuilderElementType.MONOLOG
+    elif isinstance(node, EmotionalChangeNode):
+        return SceneBuilderElementType.EMOTIONAL_CHANGE
+    elif isinstance(node, DisasterNode):
+        return SceneBuilderElementType.DISASTER
+    elif isinstance(node, ResolutionNode):
+        return SceneBuilderElementType.RESOLUTION
+    elif isinstance(node, GoalNode):
+        return SceneBuilderElementType.GOAL
+    elif isinstance(node, DecisionNode):
+        return SceneBuilderElementType.DECISION
+    elif isinstance(node, EndingNode):
+        return SceneBuilderElementType.ENDING
+    else:
+        raise ValueError('Unknown node type')
 
 
 class InternalSceneElementMimeData(QMimeData):
@@ -130,30 +299,31 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
         DialogSpeechNode(dialog)
         DialogActionBeatNode(dialog)
         sensor = Node('Sensors', self.root)
-        SceneInventoryNode('Sight', ':eyes:', sensor)
-        SceneInventoryNode('Sound', ':speaker_high_volume:', sensor)
-        SceneInventoryNode('Smell', ':nose:', sensor)
-        SceneInventoryNode('Taste', ':tongue:', sensor)
-        SceneInventoryNode('Touch', ':handshake:', sensor)
-        ReactionNode(self.root)
-        # SceneInventoryNode('Feeling', ':broken_heart:', reaction)
-        # SceneInventoryNode('Reflex', ':hand_with_fingers_splayed:', reaction)
-        # SceneInventoryNode('Rational action', ':play_button:', reaction)
-        # SceneInventoryNode('Monolog', ':thinking_face:', reaction)
+        SightNode(sensor)
+        SoundNode(sensor)
+        SmellNode(sensor)
+        TasteNode(sensor)
+        TouchNode(sensor)
+        reaction = ReactionNode(self.root)
+        FeelingNode(reaction)
+        ReflexNode(reaction)
+        ActionNode(reaction)
+        MonologNode(reaction)
+        DialogSpeechNode(reaction)
 
-        SceneInventoryNode('Action', ':play_button:', self.root)
+        ActionNode(self.root)
         # SceneInventoryNode('External conflict', ':crossed_swords:', self.root)
         # SceneInventoryNode('Internal conflict', ':angry_face_with_horns:', self.root)
-        SceneInventoryNode('Emotional change', ':chart_increasing:', self.root)
+        EmotionalChangeNode(self.root)
         # SceneInventoryNode('Tension', ':confounded_face:', self.root)
         # SceneInventoryNode('Suspense', ':flushed_face:', self.root)
         # SceneInventoryNode('Stakes', ':face_screaming_in_fear:', self.root)
-        SceneInventoryNode('Goal', ':bullseye:', self.root)
-        SceneInventoryNode('Disaster', ':bomb:', self.root)
-        SceneInventoryNode('Resolution', ':trophy:', self.root)
+        GoalNode(self.root)
+        DisasterNode(self.root)
+        ResolutionNode(self.root)
         # SceneInventoryNode('Monolog', ':thinking_face:', self.root)
-        SceneInventoryNode('Decision', ':brain:', self.root)
-        SceneInventoryNode('Ending', ':chequered_flag:', self.root)
+        DecisionNode(self.root)
+        EndingNode(self.root)
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -177,12 +347,7 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
         self.modelReset.emit()
 
     def _createNode(self, element: SceneBuilderElement, parent: Node):
-        node = DialogSpeechNode(parent)
-        node.name = element.text
-        node.stakes = element.has_stakes
-        node.tension = element.has_tension
-        node.suspense = element.has_suspense
-
+        node = convert_to_node(element, parent)
         for child in element.children:
             self._createNode(child, node)
 

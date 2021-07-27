@@ -29,11 +29,11 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
-    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, SceneBuilderElementType
+    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
-    SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode
+    SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
@@ -367,8 +367,9 @@ class SceneEditor(QObject):
         children = []
         for child_seq, child in enumerate(node.children):
             children.append(self.__get_scene_builder_element(self.scene, child, child_seq))
-        type = SceneBuilderElementType.DIALOG  # TODO
-        return SceneBuilderElement(scene=scene, type=type, sequence=seq, text=node.name, children=children,
+
+        return SceneBuilderElement(scene=scene, type=convert_to_element_type(node), sequence=seq, text=node.name,
+                                   children=children,
                                    character=node.character, has_suspense=node.suspense, has_tension=node.tension,
                                    has_stakes=node.stakes)
 

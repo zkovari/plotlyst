@@ -119,7 +119,25 @@ class Novel:
 
 
 class SceneBuilderElementType(Enum):
-    DIALOG = 'dialog'
+    SPEECH = 'speech'
+    ACTION_BEAT = 'action_beat'
+    CHARACTER_ENTRY = 'character_entry'
+    REACTION = 'reaction'
+    SIGHT = 'sight'
+    SOUND = 'sound'
+    SMELL = 'smell'
+    TASTE = 'taste'
+    TOUCH = 'touch'
+    FEELING = 'feeling'
+    REFLEX = 'reflex'
+    ACTION = 'action'
+    MONOLOG = 'monolog'
+    EMOTIONAL_CHANGE = 'emotional_change'
+    GOAL = 'goal'
+    DISASTER = 'disaster'
+    RESOLUTION = 'resolution'
+    DECISION = 'decision'
+    ENDING = 'ending'
 
 
 @dataclass
