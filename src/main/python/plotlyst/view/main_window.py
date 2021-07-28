@@ -54,6 +54,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.resize(1200, 830)
         if app_env.is_prod():
             self.showFullScreen()
+            self.showMinimized()
+            self.showFullScreen()
             # self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
         self.novel = None
