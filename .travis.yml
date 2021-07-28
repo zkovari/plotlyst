@@ -28,5 +28,6 @@ deploy:
   name: "Plotlyst-$TRAVIS_OSX_IMAGE.dmg"
   skip_cleanup: true
   draft: true
+  overwrite: true
   on:
     branch: feature/travis
