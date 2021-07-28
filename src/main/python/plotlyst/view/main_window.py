@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List
 
 import qtawesome
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction
 from overrides import overrides
 
@@ -54,7 +53,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if app_env.is_dev():
             self.resize(1200, 830)
         if app_env.is_prod():
-            self.setWindowState(Qt.WindowMaximized)
+            self.showFullScreen()
+            # self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
         self.novel = None
         last_novel_id = settings.last_novel_id()
