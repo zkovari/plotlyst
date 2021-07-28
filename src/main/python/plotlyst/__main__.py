@@ -91,6 +91,9 @@ class CustomCombox(QComboBox):
         popup = QApplication.activePopupWidget()
         self.text.setText(self.text.toPlainText() + f'{popup}\n')
         self.text.setText(self.text.toPlainText() + f'{popup.isVisible()}\n')
+        popup.setEnabled(False)
+        popup.repaint()
+        popup.setEnabled(True)
         popup.show()
 
     def showPopup(self) -> None:
