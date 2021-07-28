@@ -18,18 +18,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
-import time
 from enum import Enum
 from typing import List, Dict
 
 from PyQt5.QtCore import QTimer, Qt
 from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
     DoesNotExist
-from playhouse.sqlite_ext import CSqliteExtDatabase
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
+
+
+# from playhouse.sqlite_ext import CSqliteExtDatabase
 
 
 class ApplicationDbVersion(Enum):
@@ -52,7 +53,7 @@ class DbContext:
         self._backup_timer = QTimer()
         self._backup_timer.setInterval(2 * 60 * 1000 * 60)  # 2 hours
         self._backup_timer.setTimerType(Qt.VeryCoarseTimer)
-        self._backup_timer.timeout.connect(self._backup)
+        # self._backup_timer.timeout.connect(self._backup)
 
     def init(self, workspace: str):
         if workspace == ':memory:':
@@ -80,26 +81,26 @@ class DbContext:
             ApplicationModel.create(revision=LATEST.value)
             NovelModel.create(title='My First Novel')
 
-        self._ext_db = CSqliteExtDatabase(db_file_name)
+        # self._ext_db = CSqliteExtDatabase(db_file_name)
         self.workspace = workspace
-        self._backup_timer.start()
+        # self._backup_timer.start()
 
     def db(self):
         return self._db
 
-    def _backup(self):
-        backup_dir = os.path.join(self.workspace, 'backups')
-        if not os.path.exists(backup_dir):
-            os.mkdir(backup_dir)
-        elif os.path.isfile(backup_dir):
-            os.remove(backup_dir)
-            os.mkdir(backup_dir)
-        files = os.listdir(backup_dir)
-        if len(files) >= 10:
-            os.remove(os.path.join(backup_dir, sorted(files)[0]))
-        backup_file = os.path.join(backup_dir, f'{time.time()}.sqlite')
-        backup_db = CSqliteExtDatabase(backup_file)
-        self._ext_db.backup(backup_db)
+    # def _backup(self):
+    #     backup_dir = os.path.join(self.workspace, 'backups')
+    #     if not os.path.exists(backup_dir):
+    #         os.mkdir(backup_dir)
+    #     elif os.path.isfile(backup_dir):
+    #         os.remove(backup_dir)
+    #         os.mkdir(backup_dir)
+    #     files = os.listdir(backup_dir)
+    #     if len(files) >= 10:
+    #         os.remove(os.path.join(backup_dir, sorted(files)[0]))
+    #     backup_file = os.path.join(backup_dir, f'{time.time()}.sqlite')
+    #     backup_db = CSqliteExtDatabase(backup_file)
+    #     self._ext_db.backup(backup_db)
 
 
 context = DbContext()
