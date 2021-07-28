@@ -4,9 +4,12 @@ env:
 language: generic
 
 install:
-  - git clone https://github.com/matthew-brett/multibuild.git
-  - source multibuild/osx_utils.sh
+  #- git clone https://github.com/matthew-brett/multibuild.git
+  #- source multibuild/osx_utils.sh
   - python3 -m pip install --upgrade pip
+  - python3 -m venv venv
+  - source venv/activate/bin
+  - python3 -V
   - pip3 install gdown pyqt5ac
   - pip3 install -e .
 
