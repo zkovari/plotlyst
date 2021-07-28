@@ -18,41 +18,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-try:
-    import argparse
-    import os
-    import subprocess
-    import sys
-    import traceback
-    from typing import Optional
+# try:
+import argparse
+import os
+import subprocess
+import sys
+import traceback
 
-    from overrides import overrides
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMessageBox, QMainWindow, QComboBox
+from fbs_runtime import PUBLIC_SETTINGS
+from fbs_runtime.application_context import cached_property, is_frozen
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
+from fbs_runtime.excepthook.sentry import SentryExceptionHandler
+from overrides import overrides
 
-    from src.main.python.plotlyst.env import AppMode, app_env
-    from src.main.python.plotlyst.settings import settings
-    from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
+from src.main.python.plotlyst.common import EXIT_CODE_RESTART
+from src.main.python.plotlyst.env import AppMode, app_env
+from src.main.python.plotlyst.event.handler import DialogExceptionHandler
 
-    from PyQt5 import QtWidgets, QtGui
-    from PyQt5.QtCore import Qt
-    from PyQt5.QtGui import QFont
-    from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox, QMainWindow, QComboBox
-    from fbs_runtime.application_context.PyQt5 import ApplicationContext
-    from fbs_runtime import PUBLIC_SETTINGS
-    from fbs_runtime.application_context import cached_property, is_frozen
-    from fbs_runtime.excepthook.sentry import SentryExceptionHandler
-
-    from src.main.python.plotlyst.core.migration import app_db_schema_version, AppDbSchemaVersion
-    from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
-    from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-    from src.main.python.plotlyst.core.client import context
-    from src.main.python.plotlyst.event.handler import DialogExceptionHandler
-    from src.main.python.plotlyst.view.dialog.about import AboutDialog
-    from src.main.python.plotlyst.view.main_window import MainWindow
-    from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
-except Exception as ex:
-    appctxt = ApplicationContext()
-    QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
-    raise ex
+# except Exception as ex:
+#     appctxt = ApplicationContext()
+#     QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
+#     raise ex
 
 QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
 QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
