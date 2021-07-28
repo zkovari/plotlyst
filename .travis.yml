@@ -6,9 +6,9 @@ language: generic
 install:
   - git clone https://github.com/matthew-brett/multibuild.git
   - source multibuild/osx_utils.sh
-  - python -m pip install --upgrade pip
-  - pip install gdown, pyqt5ac
-  - pip install -e .
+  - python3 -m pip install --upgrade pip
+  - pip3 install gdown, pyqt5ac
+  - pip3 install -e .
 
 script:
   - echo "hello"
