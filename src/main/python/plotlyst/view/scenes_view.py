@@ -232,7 +232,7 @@ class ScenesOutlineView(AbstractNovelView):
         menu.addAction(wip_action)
         menu.addAction(insert_action)
 
-        menu.popup(self.ui.tblScenes.viewport().mapToGlobal(pos))
+        menu.exec(self.ui.tblScenes.viewport().mapToGlobal(pos))
 
     def _insert_scene_after(self, index: QModelIndex):
         scene = index.data(ScenesTableModel.SceneRole)

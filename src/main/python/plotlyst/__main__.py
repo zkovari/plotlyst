@@ -18,38 +18,44 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-# try:
-import argparse
-import os
-import subprocess
-import sys
-import traceback
+try:
+    import argparse
+    import os
+    import subprocess
+    import sys
+    import traceback
+    from typing import Optional
 
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMessageBox, QMainWindow, QComboBox, QWidget, QVBoxLayout, QTextEdit, QApplication
-from fbs_runtime import PUBLIC_SETTINGS
-from fbs_runtime.application_context import cached_property, is_frozen
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
-from fbs_runtime.excepthook.sentry import SentryExceptionHandler
-from overrides import overrides
+    from overrides import overrides
 
-from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-from src.main.python.plotlyst.env import AppMode, app_env
-from src.main.python.plotlyst.event.handler import DialogExceptionHandler
+    from src.main.python.plotlyst.env import AppMode, app_env
+    from src.main.python.plotlyst.settings import settings
+    from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
 
-os.environ['QT_MAC_WANTS_LAYER'] = '1'
+    from PyQt5 import QtWidgets, QtGui
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtGui import QFont
+    from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
+    from fbs_runtime.application_context.PyQt5 import ApplicationContext
+    from fbs_runtime import PUBLIC_SETTINGS
+    from fbs_runtime.application_context import cached_property, is_frozen
+    from fbs_runtime.excepthook.sentry import SentryExceptionHandler
 
-# except Exception as ex:
-#     appctxt = ApplicationContext()
-#     QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
-#     raise ex
+    from src.main.python.plotlyst.core.migration import app_db_schema_version, AppDbSchemaVersion
+    from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
+    from src.main.python.plotlyst.common import EXIT_CODE_RESTART
+    from src.main.python.plotlyst.core.client import context
+    from src.main.python.plotlyst.event.handler import DialogExceptionHandler
+    from src.main.python.plotlyst.view.dialog.about import AboutDialog
+    from src.main.python.plotlyst.view.main_window import MainWindow
+    from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
+except Exception as ex:
+    appctxt = ApplicationContext()
+    QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
+    raise ex
 
-QtWidgets.QApplication.setAttribute(Qt.WA_MacShowFocusRect, True)
-QtWidgets.QApplication.setAttribute(Qt.WA_MacAlwaysShowToolWindow, True)
-
-
-# QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
+QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
 
 class AppContext(ApplicationContext):
@@ -84,33 +90,11 @@ class AppContext(ApplicationContext):
         scope.set_extra('os', platform.name())
 
 
-class CustomCombox(QComboBox):
-
-    def __init__(self, text: QTextEdit, parent):
-        super(CustomCombox, self).__init__(parent)
-        self.text = text
-
-    def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
-        self.text.setText(self.text.toPlainText() + 'pressed\n')
-        self.showPopup()
-        popup = QApplication.activePopupWidget()
-        self.text.setText(self.text.toPlainText() + f'{popup}\n')
-        self.text.setText(self.text.toPlainText() + f'{popup.isVisible()}\n')
-        popup.setEnabled(False)
-        popup.repaint()
-        popup.setEnabled(True)
-        popup.show()
-
-    def showPopup(self) -> None:
-        self.text.setText(self.text.toPlainText() + 'popup\n')
-        super(CustomCombox, self).showPopup()
-
-
 if __name__ == '__main__':
     appctxt = AppContext()
 
-    # QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
-    # QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
+    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
+    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
@@ -118,89 +102,70 @@ if __name__ == '__main__':
     app_env.mode = args.mode
     while True:
         app = appctxt.app
-        # font = QFont('Noto Sans')
-        # QApplication.setFont(font)
-        # app.setStyleSheet(APP_STYLESHEET)
-        # settings.init_org()
-        #
-        # workspace: Optional[str] = settings.workspace()
-        #
-        # changed_dir = False
-        # while True:
-        #     if not workspace:
-        #         picker = DirectoryPickerDialog()
-        #         picker.display()
-        #         workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
-        #         changed_dir = True
-        #
-        #     if not workspace:
-        #         exit(0)
-        #
-        #     if not os.path.exists(workspace):
-        #         QMessageBox.warning(None, 'Invalid project directory',
-        #                             f"The chosen directory doesn't exist: {workspace}")
-        #     elif os.path.isfile(workspace):
-        #         QMessageBox.warning(None, 'Invalid project directory',
-        #                             f"The chosen path should be a directory, not a file: {workspace}")
-        #     elif not os.access(workspace, os.W_OK):
-        #         QMessageBox.warning(None, 'Invalid project directory',
-        #                             f"The chosen directory cannot be written: {workspace}")
-        #     else:
-        #         if changed_dir:
-        #             settings.set_workspace(workspace)
-        #         break
-        #     workspace = None
-        #
-        # try:
-        #     context.init(workspace)
-        # except Exception as ex:
-        #     QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
-        #     raise ex
-        #
-        # try:
-        #     version: AppDbSchemaVersion = app_db_schema_version()
-        #     if not version.up_to_date:
-        #         migration_diag = MigrationDialog(version)
-        #         if not migration_diag.display():
-        #             exit(1)
-        # except Exception as ex:
-        #     QMessageBox.critical(None, 'Could not finish database migration', traceback.format_exc())
-        #     raise ex
+        font = QFont('Noto Sans')
+        QApplication.setFont(font)
+        app.setStyleSheet(APP_STYLESHEET)
+        settings.init_org()
+
+        workspace: Optional[str] = settings.workspace()
+
+        changed_dir = False
+        while True:
+            if not workspace:
+                picker = DirectoryPickerDialog()
+                picker.display()
+                workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
+                changed_dir = True
+
+            if not workspace:
+                exit(0)
+
+            if not os.path.exists(workspace):
+                QMessageBox.warning(None, 'Invalid project directory',
+                                    f"The chosen directory doesn't exist: {workspace}")
+            elif os.path.isfile(workspace):
+                QMessageBox.warning(None, 'Invalid project directory',
+                                    f"The chosen path should be a directory, not a file: {workspace}")
+            elif not os.access(workspace, os.W_OK):
+                QMessageBox.warning(None, 'Invalid project directory',
+                                    f"The chosen directory cannot be written: {workspace}")
+            else:
+                if changed_dir:
+                    settings.set_workspace(workspace)
+                break
+            workspace = None
 
         try:
-            window = QMainWindow()
+            context.init(workspace)
+        except Exception as ex:
+            QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
+            raise ex
+
+        try:
+            version: AppDbSchemaVersion = app_db_schema_version()
+            if not version.up_to_date:
+                migration_diag = MigrationDialog(version)
+                if not migration_diag.display():
+                    exit(1)
+        except Exception as ex:
+            QMessageBox.critical(None, 'Could not finish database migration', traceback.format_exc())
+            raise ex
+
+        try:
+            window = MainWindow()
         except Exception as ex:
             QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
             raise ex
 
-        central = QWidget(window)
-        layout = QVBoxLayout()
-        central.setLayout(layout)
-        text = QTextEdit(central)
-        cb = CustomCombox(text, central)
-        cb.addItem('Test1')
-        cb.addItem('Test2')
-        cb.addItem('Test3')
-        # window.setLayout(layout)
-        layout.addWidget(cb)
-        layout.addWidget(text)
-        window.setCentralWidget(central)
         window.show()
-        # window.activateWindow()
+        window.activateWindow()
 
-        # first_launch = settings.first_launch()
-        # if first_launch:
-        #     AboutDialog().exec()
-        #     settings.set_launched_before()
+        first_launch = settings.first_launch()
+        if first_launch:
+            AboutDialog().exec()
+            settings.set_launched_before()
 
-        # QTimer.singleShot(100, lambda: window.setHidden(True))
-        # QTimer.singleShot(400, lambda: window.setVisible(True))
-
-        window.setEnabled(False)
-        window.repaint()
-        window.setEnabled(True)
-        window.show()
-        exit_code = appctxt.app.exec()
+        exit_code = appctxt.app.exec_()
         if exit_code < EXIT_CODE_RESTART:
             break
 
