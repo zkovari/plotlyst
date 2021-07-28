@@ -25,7 +25,8 @@ import subprocess
 import sys
 import traceback
 
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox, QMainWindow, QComboBox, QWidget, QVBoxLayout, QTextEdit, QApplication
 from fbs_runtime import PUBLIC_SETTINGS
 from fbs_runtime.application_context import cached_property, is_frozen
@@ -39,13 +40,15 @@ from src.main.python.plotlyst.event.handler import DialogExceptionHandler
 
 os.environ['QT_MAC_WANTS_LAYER'] = '1'
 
-
 # except Exception as ex:
 #     appctxt = ApplicationContext()
 #     QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
 #     raise ex
 
-# QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+QtWidgets.QApplication.setAttribute(Qt.WA_MacShowFocusRect, True)
+QtWidgets.QApplication.setAttribute(Qt.WA_MacAlwaysShowToolWindow, True)
+
+
 # QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
 
