@@ -18,3 +18,10 @@ script:
   - pyqt5ac --config .pyqt5ac.yml
   - fbs freeze
   - fbs installer
+
+deploy:
+  provider: releases
+  api_key: "GITHUB OAUTH TOKEN"
+  file: "target/Plotlyst.dmg"
+  skip_cleanup: true
+  draft: true
