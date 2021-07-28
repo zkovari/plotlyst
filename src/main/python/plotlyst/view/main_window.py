@@ -17,9 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import time
 from typing import List
 
 import qtawesome
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction
 from overrides import overrides
 
@@ -54,9 +56,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.resize(1200, 830)
         if app_env.is_prod():
             self.showFullScreen()
-            self.showMinimized()
-            self.showFullScreen()
-            # self.setWindowState(Qt.WindowMaximized)
+            time.sleep(1)
+            # self.showMinimized()
+            # self.showFullScreen()
+            self.setWindowState(Qt.WindowMinimized)
+            time.sleep(1)
+            self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
         self.novel = None
         last_novel_id = settings.last_novel_id()
