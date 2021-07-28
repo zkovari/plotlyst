@@ -25,8 +25,7 @@ import subprocess
 import sys
 import traceback
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox, QMainWindow, QComboBox
 from fbs_runtime import PUBLIC_SETTINGS
 from fbs_runtime.application_context import cached_property, is_frozen
@@ -38,13 +37,14 @@ from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.env import AppMode, app_env
 from src.main.python.plotlyst.event.handler import DialogExceptionHandler
 
+
 # except Exception as ex:
 #     appctxt = ApplicationContext()
 #     QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
 #     raise ex
 
-QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
-QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
+# QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
+# QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
 
 class AppContext(ApplicationContext):
@@ -158,6 +158,9 @@ if __name__ == '__main__':
         # if first_launch:
         #     AboutDialog().exec()
         #     settings.set_launched_before()
+
+        QTimer.singleShot(100, lambda: window.setHidden(True))
+        QTimer.singleShot(400, lambda: window.setVisible(True))
 
         exit_code = appctxt.app.exec_()
         if exit_code < EXIT_CODE_RESTART:
