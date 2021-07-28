@@ -37,6 +37,8 @@ from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.env import AppMode, app_env
 from src.main.python.plotlyst.event.handler import DialogExceptionHandler
 
+os.environ['QT_MAC_WANTS_LAYER'] = '1'
+
 
 # except Exception as ex:
 #     appctxt = ApplicationContext()
