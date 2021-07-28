@@ -1,6 +1,4 @@
 os: osx
-env:
-  - MB_PYTHON_VERSION=3.7
 language: generic
 
 install:
@@ -8,7 +6,7 @@ install:
   #- source multibuild/osx_utils.sh
   - python3 -m pip install --upgrade pip
   - python3 -m venv venv
-  - source venv/activate/bin
+  - source venv/bin/activate
   - python3 -V
   - pip3 install gdown pyqt5ac
   - pip3 install -e .
