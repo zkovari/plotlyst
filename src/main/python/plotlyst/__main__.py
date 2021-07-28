@@ -186,6 +186,10 @@ if __name__ == '__main__':
         # QTimer.singleShot(100, lambda: window.setHidden(True))
         # QTimer.singleShot(400, lambda: window.setVisible(True))
 
+        window.setEnabled(False)
+        window.repaint()
+        window.setEnabled(True)
+        window.show()
         exit_code = appctxt.app.exec_()
         if exit_code < EXIT_CODE_RESTART:
             break
