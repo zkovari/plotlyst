@@ -7,9 +7,10 @@ install:
   - python3 -m pip install --upgrade pip
   - python3 -m venv venv
   - source venv/bin/activate
+  - gem install --no-document fpm
   - python3 -V
-  - pip3 install gdown pyqt5ac
-  - pip3 install -e .
+  # - pip3 install gdown pyqt5ac
+  #- pip3 install -e .
 
 script:
   - echo "hello"
