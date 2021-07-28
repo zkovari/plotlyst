@@ -192,7 +192,7 @@ if __name__ == '__main__':
         window.repaint()
         window.setEnabled(True)
         window.show()
-        exit_code = appctxt.app.exec_()
+        exit_code = appctxt.app.exec()
         if exit_code < EXIT_CODE_RESTART:
             break
 
