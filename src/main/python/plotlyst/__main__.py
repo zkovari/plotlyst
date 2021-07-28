@@ -25,8 +25,8 @@ import subprocess
 import sys
 import traceback
 
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QMessageBox, QMainWindow, QComboBox
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QMessageBox, QMainWindow, QComboBox, QWidget, QVBoxLayout, QTextEdit, QApplication
 from fbs_runtime import PUBLIC_SETTINGS
 from fbs_runtime.application_context import cached_property, is_frozen
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -77,6 +77,23 @@ class AppContext(ApplicationContext):
         scope = self.sentry_exception_handler.scope
         from fbs_runtime import platform
         scope.set_extra('os', platform.name())
+
+
+class CustomCombox(QComboBox):
+
+    def __init__(self, text: QTextEdit, parent):
+        super(CustomCombox, self).__init__(parent)
+        self.text = text
+
+    def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
+        self.text.setText(self.text.toPlainText() + 'pressed\n')
+        self.showPopup()
+        popup = QApplication.activePopupWidget()
+        self.text.setText(self.text.toPlainText() + f'{popup}\n')
+
+    def showPopup(self) -> None:
+        self.text.setText(self.text.toPlainText() + 'popup\n')
+        super(CustomCombox, self).showPopup()
 
 
 if __name__ == '__main__':
@@ -146,11 +163,18 @@ if __name__ == '__main__':
             QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
             raise ex
 
-        cb = QComboBox(window)
+        central = QWidget(window)
+        layout = QVBoxLayout()
+        central.setLayout(layout)
+        text = QTextEdit(central)
+        cb = CustomCombox(text, central)
         cb.addItem('Test1')
         cb.addItem('Test2')
         cb.addItem('Test3')
-        window.setCentralWidget(cb)
+        # window.setLayout(layout)
+        layout.addWidget(cb)
+        layout.addWidget(text)
+        window.setCentralWidget(central)
         window.show()
         # window.activateWindow()
 
@@ -159,8 +183,8 @@ if __name__ == '__main__':
         #     AboutDialog().exec()
         #     settings.set_launched_before()
 
-        QTimer.singleShot(100, lambda: window.setHidden(True))
-        QTimer.singleShot(400, lambda: window.setVisible(True))
+        # QTimer.singleShot(100, lambda: window.setHidden(True))
+        # QTimer.singleShot(400, lambda: window.setVisible(True))
 
         exit_code = appctxt.app.exec_()
         if exit_code < EXIT_CODE_RESTART:
