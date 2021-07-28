@@ -35,6 +35,7 @@ from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
+from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
@@ -231,8 +232,18 @@ class ScenesOutlineView(AbstractNovelView):
         insert_action.triggered.connect(lambda: self._insert_scene_after(index))
         menu.addAction(wip_action)
         menu.addAction(insert_action)
-        menu.show()
-        menu.move(self.ui.tblScenes.viewport().mapToGlobal(pos))
+        # menu.show()
+        # menu.move(self.ui.tblScenes.viewport().mapToGlobal(pos))
+        # self.btn = QPushButton()
+        # self.btn.setText('Test btn')
+        # self.btn.setWindowFlag(Qt.Popup)
+        # self.btn.show()
+        self.dialog = AboutDialog()
+        self.dialog.setWindowFlag(Qt.FramelessWindowHint)
+        self.dialog.show()
+        self.dialog.move(self.ui.tblScenes.viewport().mapToGlobal(pos))
+        # btn.move(self.ui.btnNew.mapToGlobal(self.ui.btnNew.rect().topLeft()))
+        # menu.move(self.ui.btnNew.mapToGlobal(self.ui.btnNew.rect().topLeft()))
 
     def _insert_scene_after(self, index: QModelIndex):
         scene = index.data(ScenesTableModel.SceneRole)

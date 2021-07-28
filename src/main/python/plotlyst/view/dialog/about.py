@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 
 from src.main.python.plotlyst.view.generated.about_dialog_ui import Ui_AboutDialog
@@ -27,3 +28,9 @@ class AboutDialog(Ui_AboutDialog, QDialog):
         super(AboutDialog, self).__init__(parent)
 
         self.setupUi(self)
+
+
+class DummyDialog(QDialog):
+    def __init__(self):
+        super(DummyDialog, self).__init__()
+        self.setWindowFlag(Qt.FramelessWindowHint)
