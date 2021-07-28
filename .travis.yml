@@ -1,12 +1,14 @@
 os: osx
-language: python
-python:
-  - "3.7"
+env:
+  - MB_PYTHON_VERSION=3.7
+language: generic
 
 install:
+  - git clone https://github.com/matthew-brett/multibuild.git
+  - source multibuild/osx_utils.sh
   - python -m pip install --upgrade pip
   - pip install gdown, pyqt5ac
   - pip install -e .
 
 script:
-  - echo "hellp"
+  - echo "hello"
