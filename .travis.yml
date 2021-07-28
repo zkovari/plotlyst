@@ -1,6 +1,6 @@
 os: osx
 osx_image:
-  - xcode12
+  #- xcode12
   - xcode12.5
 language: generic
 
