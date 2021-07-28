@@ -2,17 +2,18 @@ os: osx
 language: generic
 
 install:
-  #- git clone https://github.com/matthew-brett/multibuild.git
-  #- source multibuild/osx_utils.sh
+  - gem install --no-document fpm
   - python3 -m pip install --upgrade pip
   - python3 -m venv venv
   - source venv/bin/activate
-  #- gem install --no-document fpm
   - python3 -V
-  - pip3 install gdown pyqt5ac
+  - pip3 install gdown
   - gdown $FBS_PROXY_URL -q -O fbs.tar.gz
   - pip3 install fbs.tar.gz
-  #- pip3 install -e .
+  - pip3 install pyqt5ac
+  - pip3 install -e .
 
 script:
-  - echo "hello"
+  - pyqt5ac --config .pyqt5ac.yml
+  - fbs freeze
+  - fbs installer
