@@ -25,5 +25,8 @@ deploy:
   provider: releases
   api_key: "GITHUB OAUTH TOKEN"
   file: "target/Plotlyst.dmg"
+  name: "Plotlyst-$TRAVIS_OSX_IMAGE.dmg"
   skip_cleanup: true
   draft: true
+  on:
+    branch: feature/travis
