@@ -146,7 +146,7 @@ if __name__ == '__main__':
             QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
             raise ex
 
-        cb = QComboBox()
+        cb = QComboBox(window)
         cb.addItem('Test1')
         cb.addItem('Test2')
         cb.addItem('Test3')
