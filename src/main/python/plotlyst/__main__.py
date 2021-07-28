@@ -35,7 +35,7 @@ try:
     from PyQt5 import QtWidgets, QtGui
     from PyQt5.QtCore import Qt
     from PyQt5.QtGui import QFont
-    from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
+    from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox, QMainWindow, QComboBox
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
     from fbs_runtime import PUBLIC_SETTINGS
     from fbs_runtime.application_context import cached_property, is_frozen
@@ -93,8 +93,8 @@ class AppContext(ApplicationContext):
 if __name__ == '__main__':
     appctxt = AppContext()
 
-    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
-    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
+    # QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
+    # QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
@@ -102,68 +102,73 @@ if __name__ == '__main__':
     app_env.mode = args.mode
     while True:
         app = appctxt.app
-        font = QFont('Noto Sans')
-        QApplication.setFont(font)
-        app.setStyleSheet(APP_STYLESHEET)
-        settings.init_org()
-
-        workspace: Optional[str] = settings.workspace()
-
-        changed_dir = False
-        while True:
-            if not workspace:
-                picker = DirectoryPickerDialog()
-                picker.display()
-                workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
-                changed_dir = True
-
-            if not workspace:
-                exit(0)
-
-            if not os.path.exists(workspace):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen directory doesn't exist: {workspace}")
-            elif os.path.isfile(workspace):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen path should be a directory, not a file: {workspace}")
-            elif not os.access(workspace, os.W_OK):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen directory cannot be written: {workspace}")
-            else:
-                if changed_dir:
-                    settings.set_workspace(workspace)
-                break
-            workspace = None
+        # font = QFont('Noto Sans')
+        # QApplication.setFont(font)
+        # app.setStyleSheet(APP_STYLESHEET)
+        # settings.init_org()
+        #
+        # workspace: Optional[str] = settings.workspace()
+        #
+        # changed_dir = False
+        # while True:
+        #     if not workspace:
+        #         picker = DirectoryPickerDialog()
+        #         picker.display()
+        #         workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
+        #         changed_dir = True
+        #
+        #     if not workspace:
+        #         exit(0)
+        #
+        #     if not os.path.exists(workspace):
+        #         QMessageBox.warning(None, 'Invalid project directory',
+        #                             f"The chosen directory doesn't exist: {workspace}")
+        #     elif os.path.isfile(workspace):
+        #         QMessageBox.warning(None, 'Invalid project directory',
+        #                             f"The chosen path should be a directory, not a file: {workspace}")
+        #     elif not os.access(workspace, os.W_OK):
+        #         QMessageBox.warning(None, 'Invalid project directory',
+        #                             f"The chosen directory cannot be written: {workspace}")
+        #     else:
+        #         if changed_dir:
+        #             settings.set_workspace(workspace)
+        #         break
+        #     workspace = None
+        #
+        # try:
+        #     context.init(workspace)
+        # except Exception as ex:
+        #     QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
+        #     raise ex
+        #
+        # try:
+        #     version: AppDbSchemaVersion = app_db_schema_version()
+        #     if not version.up_to_date:
+        #         migration_diag = MigrationDialog(version)
+        #         if not migration_diag.display():
+        #             exit(1)
+        # except Exception as ex:
+        #     QMessageBox.critical(None, 'Could not finish database migration', traceback.format_exc())
+        #     raise ex
 
         try:
-            context.init(workspace)
-        except Exception as ex:
-            QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
-            raise ex
-
-        try:
-            version: AppDbSchemaVersion = app_db_schema_version()
-            if not version.up_to_date:
-                migration_diag = MigrationDialog(version)
-                if not migration_diag.display():
-                    exit(1)
-        except Exception as ex:
-            QMessageBox.critical(None, 'Could not finish database migration', traceback.format_exc())
-            raise ex
-
-        try:
-            window = MainWindow()
+            window = QMainWindow()
         except Exception as ex:
             QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
             raise ex
 
+        cb = QComboBox()
+        cb.addItem('Test1')
+        cb.addItem('Test2')
+        cb.addItem('Test3')
+        window.setCentralWidget(cb)
         window.show()
-        window.activateWindow()
+        # window.activateWindow()
 
-        first_launch = settings.first_launch()
-        if first_launch:
-            AboutDialog().exec()
-            settings.set_launched_before()
+        # first_launch = settings.first_launch()
+        # if first_launch:
+        #     AboutDialog().exec()
+        #     settings.set_launched_before()
 
         exit_code = appctxt.app.exec_()
         if exit_code < EXIT_CODE_RESTART:
