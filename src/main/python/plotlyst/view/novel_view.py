@@ -57,7 +57,7 @@ class NovelView(AbstractNovelView):
         self.ui.tblStoryLines.horizontalHeader().setDefaultSectionSize(25)
         self.ui.tblStoryLines.setModel(self.story_lines_model)
         self.ui.tblStoryLines.horizontalHeader().setSectionResizeMode(EditableNovelStoryLinesListModel.ColText,
-                                                                      QHeaderView.ResizeToContents)
+                                                                      QHeaderView.Stretch)
         self.ui.tblStoryLines.setItemDelegate(StoryLineDelegate())
         self.ui.tblStoryLines.selectionModel().selectionChanged.connect(self._on_story_line_selected)
         self.ui.tblStoryLines.clicked.connect(self._on_story_line_clicked)
@@ -111,6 +111,7 @@ class NovelView(AbstractNovelView):
             if color.isValid():
                 storyline.color_hexa = color.name()
                 client.update_story_line(storyline)
+            self.ui.tblStoryLines.clearSelection()
 
 
 class StoryLineDelegate(QStyledItemDelegate):

@@ -29,6 +29,7 @@ from src.main.python.plotlyst.core.domain import Novel, StoryLine
 class NovelStoryLinesListModel(QAbstractTableModel):
     StoryLineRole = Qt.UserRole + 1
     selection_changed = pyqtSignal()
+    ColText: int = 0
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -50,7 +51,7 @@ class NovelStoryLinesListModel(QAbstractTableModel):
 
         if role == self.StoryLineRole:
             return self.novel.story_lines[index.row()]
-        if index.column() == 0:
+        if index.column() == self.ColText:
             if role == Qt.DisplayRole:
                 return self.novel.story_lines[index.row()].text
             if role == Qt.CheckStateRole:
@@ -76,8 +77,8 @@ class NovelStoryLinesListModel(QAbstractTableModel):
 
 
 class EditableNovelStoryLinesListModel(NovelStoryLinesListModel):
-    ColText: int = 0
-    ColColor: int = 1
+    ColColor: int = 0
+    ColText: int = 1
 
     @overrides
     def columnCount(self, parent: QModelIndex = ...) -> int:
