@@ -145,6 +145,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.chaptersModel.update()
         self.chaptersModel.modelReset.emit()
         self._distribution_widget.refresh()
+        self.ui.btnEdit.setDisabled(True)
+        self.ui.btnDelete.setDisabled(True)
 
     def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
