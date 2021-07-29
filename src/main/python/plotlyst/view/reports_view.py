@@ -26,10 +26,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Scene, Character
+from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent
-from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
@@ -45,7 +43,6 @@ class ReportsView(AbstractNovelView):
         self.scene_selected = None
 
         self.ui.storyLinesMap.setNovel(novel)
-        self.ui.storyLinesMap.scene_selected.connect(self._on_scene_selected)
         self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
         self.ui.btnAct2.setIcon(IconRegistry.act_two_icon())
         self.ui.btnAct3.setIcon(IconRegistry.act_three_icon())
@@ -68,9 +65,6 @@ class ReportsView(AbstractNovelView):
         self.ui.tabCharacterSceneDistribution.layout().addWidget(chartview)
 
         self.ui.tabWidget.setCurrentIndex(3)
-        self.story_line_model = NovelStoryLinesListModel(self.novel)
-        self.story_line_model.selection_changed.connect(self._story_line_selection_changed)
-        self.ui.listView.setModel(self.story_line_model)
 
         self.story_lines_canvas = StoryLinesCanvas(self.novel, parent=self)
         self.ui.tabStoryDistribution.layout().addWidget(self.story_lines_canvas)
@@ -101,24 +95,6 @@ class ReportsView(AbstractNovelView):
     def refresh(self):
         self._update_characters_chart()
         self.story_lines_canvas.refresh_plot()
-
-    def _on_scene_selected(self, scene: Scene):
-        self.scene_selected = scene
-        self.ui.lineEdit.setText(scene.title)
-        self.story_line_model.selected.clear()
-        for story_line in scene.story_lines:
-            self.story_line_model.selected.add(story_line)
-        self.story_line_model.modelReset.emit()
-
-    def _story_line_selection_changed(self):
-        if not self.scene_selected:
-            return
-        self.scene_selected.story_lines.clear()
-        for story_line in self.story_line_model.selected:
-            self.scene_selected.story_lines.append(story_line)
-
-        client.update_scene(self.scene_selected)
-        self.ui.storyLinesMap.update()
 
     def _update_characters_chart(self):
         for k in self.pov_number.keys():

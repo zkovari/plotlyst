@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Dict, Optional
 
 from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal, QSize
@@ -24,7 +25,9 @@ from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap, QMou
 from PyQt5.QtWidgets import QWidget, QMenu, QAction, QApplication
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Scene, Novel
+from src.main.python.plotlyst.common import truncate_string
+from src.main.python.plotlyst.core.domain import Scene, Novel, StoryLine
+from src.main.python.plotlyst.view.common import busy
 
 
 class StoryLinesMapWidget(QWidget):
@@ -65,9 +68,35 @@ class StoryLinesMapWidget(QWidget):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         index = self._index_from_pos(event.pos())
         if index < len(self.novel.scenes):
-            self._clicked_scene = self.novel.scenes[index]
+            self._clicked_scene: Scene = self.novel.scenes[index]
             self.update()
-            self.scene_selected.emit(self._clicked_scene)
+
+            menu = QMenu(self)
+
+            # info_action = QAction(IconRegistry.general_info_icon(), 'Info', menu)
+            # info_action.triggered.connect(lambda: self.scene_selected.emit(self._clicked_scene))
+            # menu.addAction(info_action)
+
+            if self.novel.story_lines:
+                # menu.addSeparator()
+                for sl in self.novel.story_lines:
+                    sl_action = QAction(truncate_string(sl.text, 70), menu)
+                    sl_action.setCheckable(True)
+                    if sl in self._clicked_scene.story_lines:
+                        sl_action.setChecked(True)
+                    sl_action.triggered.connect(partial(self._story_line_changed, sl))
+                    menu.addAction(sl_action)
+
+                menu.popup(self.mapToGlobal(event.pos()))
+
+    @busy
+    def _story_line_changed(self, storyline: StoryLine, checked: bool):
+        if checked:
+            self._clicked_scene.story_lines.append(storyline)
+        else:
+            self._clicked_scene.story_lines.remove(storyline)
+
+        self.update()
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
