@@ -24,6 +24,7 @@ from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMime
 from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from overrides import overrides
 
+from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Character, CharacterArc
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -67,8 +68,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
 
         self._action_icon = IconRegistry.action_scene_icon()
         self._reaction_icon = IconRegistry.reaction_scene_icon()
-        self._wip_brush = QBrush(QColor('#f6cd61'))
-        self._pivotal_brush = QBrush(QColor('#3da4ab'))
+        self._wip_brush = QBrush(QColor(WIP_COLOR))
+        self._pivotal_brush = QBrush(QColor(PIVOTAL_COLOR))
 
         self._find_acts()
 

@@ -23,6 +23,7 @@ from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant, pyqtSig
 from PyQt5.QtGui import QFont, QIcon, QBrush, QColor
 from overrides import overrides
 
+from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene
 from src.main.python.plotlyst.view.icons import avatars
 
@@ -163,9 +164,9 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
                     if not all([self._match_by_row_col(x.row(), index.column()) for x in self._highlighted_characters]):
                         return QBrush(QColor(Qt.gray))
                 if self.novel.scenes[index.column() - 1].wip:
-                    return QBrush(QColor('#f2f763'))
+                    return QBrush(QColor(WIP_COLOR))
                 if self.novel.scenes[index.column() - 1].pivotal:
-                    return QBrush(QColor('#f07762'))
+                    return QBrush(QColor(PIVOTAL_COLOR))
                 return QBrush(QColor('darkblue'))
         return QVariant()
 

@@ -21,6 +21,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QGraphicsScene, QFrame, QHeaderView
 from overrides import overrides
 
+from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
@@ -105,9 +106,9 @@ class SceneCardWidget(QFrame, Ui_SceneCardWidget):
 
         border = '4px'
         if scene.wip:
-            color = 'yellow'
+            color = WIP_COLOR
         elif scene.pivotal:
-            color = 'red'
+            color = PIVOTAL_COLOR
         else:
             color = '#8f8f91'
             border = '2px'
