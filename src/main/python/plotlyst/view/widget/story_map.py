@@ -133,6 +133,13 @@ class StoryLinesMapWidget(QWidget):
                 continue
             self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), self._scene_coord_y[sc_i])
 
+        for sc_i, scene in enumerate(self.novel.scenes):
+            if not scene.story_lines:
+                self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), 3)
+
+        if len(self.novel.story_lines) <= 1:
+            return
+
         base_y = y
         for sl_i, story in enumerate(self.novel.story_lines):
             y = 50 * (sl_i + 1) + 25 + base_y
@@ -144,10 +151,6 @@ class StoryLinesMapWidget(QWidget):
             for sc_i, scene in enumerate(self.novel.scenes):
                 if story in scene.story_lines:
                     self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), y)
-
-        for sc_i, scene in enumerate(self.novel.scenes):
-            if not scene.story_lines:
-                self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), 3)
 
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
         if scene.story_lines:

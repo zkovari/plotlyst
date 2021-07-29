@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt5.QtCore import QItemSelection, QModelIndex, QAbstractItemModel, Qt, QItemSelectionModel
+from PyQt5.QtCore import QModelIndex, QAbstractItemModel, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QLineEdit, QColorDialog, QHeaderView
 from overrides import overrides
@@ -66,6 +66,8 @@ class NovelView(AbstractNovelView):
     def refresh(self):
         self.ui.lineTitle.setText(self.novel.title)
         self.story_lines_model.modelReset.emit()
+        self.ui.btnEdit.setEnabled(False)
+        self.ui.btnRemove.setEnabled(False)
 
     def _on_add_story_line(self):
         story_line = StoryLine(text='Unknown')
@@ -74,11 +76,8 @@ class NovelView(AbstractNovelView):
         client.insert_story_line(self.novel, story_line)
         self.story_lines_model.modelReset.emit()
 
-        self.ui.tblStoryLines.selectionModel().select(
-            self.story_lines_model.index(self.story_lines_model.rowCount() - 1, 0),
-            QItemSelectionModel.Select)
-
-        self.ui.tblStoryLines.edit(self.ui.tblStoryLines.selectionModel().selectedIndexes()[0])
+        self.ui.tblStoryLines.edit(self.story_lines_model.index(self.story_lines_model.rowCount() - 1,
+                                                                EditableNovelStoryLinesListModel.ColText))
 
     def _on_edit_story_line(self):
         indexes = self.ui.tblStoryLines.selectedIndexes()
@@ -97,11 +96,12 @@ class NovelView(AbstractNovelView):
         self.novel.story_lines.remove(story_line)
         client.delete_story_line(story_line)
         emit_event(NovelReloadRequestedEvent(self))
+        self.refresh()
 
-    def _on_story_line_selected(self, selection: QItemSelection):
-        if selection.indexes():
-            self.ui.btnEdit.setEnabled(True)
-            self.ui.btnRemove.setEnabled(True)
+    def _on_story_line_selected(self):
+        selection = len(self.ui.tblStoryLines.selectedIndexes()) > 0
+        self.ui.btnEdit.setEnabled(selection)
+        self.ui.btnRemove.setEnabled(selection)
 
     def _on_story_line_clicked(self, index: QModelIndex):
         if index.column() == EditableNovelStoryLinesListModel.ColColor:

@@ -13,7 +13,7 @@ def test_create_story_line(qtbot, window: MainWindow):
 def test_delete_storyline(qtbot, filled_window: MainWindow, monkeypatch):
     view: NovelView = go_to_novel(filled_window)
 
-    click_on_item(qtbot, view.ui.tblStoryLines, 0, 0)
+    click_on_item(qtbot, view.ui.tblStoryLines, 0, 1)
     assert len(view.novel.story_lines) == 3
     storyline = view.novel.story_lines[0]
     assert storyline in view.novel.scenes[0].story_lines
