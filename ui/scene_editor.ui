@@ -758,6 +758,9 @@ QToolButton:hover {
          <property name="spacing">
           <number>3</number>
          </property>
+         <property name="leftMargin">
+          <number>2</number>
+         </property>
          <property name="topMargin">
           <number>3</number>
          </property>
@@ -787,7 +790,7 @@ QToolButton:hover {
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_3">
                 <property name="spacing">
-                 <number>4</number>
+                 <number>2</number>
                 </property>
                 <item>
                  <widget class="QLabel" name="lblType">
@@ -1177,6 +1180,9 @@ QToolButton:hover {
               <property name="spacing">
                <number>1</number>
               </property>
+              <property name="leftMargin">
+               <number>1</number>
+              </property>
               <property name="topMargin">
                <number>1</number>
               </property>
@@ -1201,6 +1207,21 @@ QToolButton:hover {
          <string>Notes</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_7">
+         <property name="spacing">
+          <number>2</number>
+         </property>
+         <property name="leftMargin">
+          <number>2</number>
+         </property>
+         <property name="topMargin">
+          <number>2</number>
+         </property>
+         <property name="rightMargin">
+          <number>2</number>
+         </property>
+         <property name="bottomMargin">
+          <number>2</number>
+         </property>
          <item>
           <widget class="QTextEdit" name="textNotes">
            <property name="autoFormatting">
@@ -1225,7 +1246,7 @@ QToolButton:hover {
           <number>2</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>2</number>
@@ -1298,6 +1319,9 @@ QToolButton:hover {
              </property>
              <property name="selectionMode">
               <enum>QAbstractItemView::SingleSelection</enum>
+             </property>
+             <property name="expandsOnDoubleClick">
+              <bool>false</bool>
              </property>
              <attribute name="headerVisible">
               <bool>false</bool>

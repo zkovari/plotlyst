@@ -25,6 +25,8 @@ from overrides import overrides
 
 
 class TreeItemModel(QAbstractItemModel):
+    NodeRole = Qt.UserRole + 1
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.root = Node('root')
@@ -94,6 +96,8 @@ class TreeItemModel(QAbstractItemModel):
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if not index.isValid():
             return QVariant()
+        if role == self.NodeRole:
+            return index.internalPointer()
         if role == Qt.DisplayRole:
             node: Node = index.internalPointer()
             return node.name
