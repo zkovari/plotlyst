@@ -17,11 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 import pickle
 from typing import Any, List, Optional
 
 import emoji
-from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray, QSize
+from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray
 from PyQt5.QtGui import QIcon
 from anytree import Node
 from overrides import overrides
@@ -246,6 +247,8 @@ class _SceneBuilderTreeModel(TreeItemModel):
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if role == Qt.FontRole:
             return emoji_font(12)
+        if role == self.NodeRole:
+            return super(_SceneBuilderTreeModel, self).data(index, role)
         node = index.internalPointer()
         if isinstance(node, SceneInventoryNode):
             return self._dataForInventoryNode(node, index.column(), role)
@@ -256,10 +259,10 @@ class _SceneBuilderTreeModel(TreeItemModel):
         if column == 0:
             if role == Qt.DisplayRole:
                 return f'{node.emoji}{node.name}'
-            if role == Qt.SizeHintRole:
-                rows = int(len(node.name) / 35)
-                height = 20 + 20 * rows
-                return QSize(150, height)
+            # if role == Qt.SizeHintRole:
+            #     rows = int(len(node.name) / 35)
+            #     height = 20 + 20 * rows
+            #     return QSize(150, height)
             if role == Qt.DecorationRole:
                 if node.character:
                     if isinstance(node.character, NpcCharacter):
@@ -302,8 +305,8 @@ class SceneBuilderInventoryTreeModel(_SceneBuilderTreeModel):
         reaction = ReactionNode(self.root)
         FeelingNode(reaction)
         ReflexNode(reaction)
-        ActionNode(reaction)
         MonologNode(reaction)
+        ActionNode(reaction)
         DialogSpeechNode(reaction)
 
         ActionNode(self.root)
@@ -346,10 +349,6 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
             self._createNode(child, node)
 
     @overrides
-    def columnCount(self, parent: QModelIndex) -> int:
-        return 3
-
-    @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
         node = index.internalPointer()
@@ -379,43 +378,57 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
     @overrides
     def canDropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int,
                         parent: QModelIndex) -> bool:
+        if isinstance(data, InternalSceneElementMimeData) and parent.isValid():
+            return data.node is not parent.internalPointer()
         return True
 
     @overrides
     def dropMimeData(self, data: QMimeData, action: Qt.DropAction, row: int, column: int,
                      parent: QModelIndex) -> bool:
-        node: Optional[SceneInventoryNode] = pickle.loads(data.data(self.MimeType))
-        parent_node = self.root
-        if isinstance(data, InternalSceneElementMimeData):
-            node = data.node
-            node.parent = None
-            if parent.isValid():
-                parent_node = parent.internalPointer()
-            node.parent = parent_node
-        else:  # to the end
-            if parent.isValid():
-                parent_node = parent.internalPointer()
+        if parent.isValid():
+            parent_node = parent.internalPointer()
+        else:
+            parent_node = self.root
 
-            if isinstance(node, (DialogSpeechNode, DialogActionBeatNode)):
-                result = DialogEditionDialog().display(self.scene)
-            elif isinstance(node, CharacterEntryNode):
-                result = CharacterBasedEditionDialog().display(self.scene)
-            elif isinstance(node, ReactionNode):
-                result = SceneElementEditionResult('Reaction')
-            else:
-                result = SceneElementEditionDialog().display(self.scene)
-            if result is None:
+        if isinstance(data, InternalSceneElementMimeData):
+            node: Optional[SceneInventoryNode] = data.node
+        else:  # from the inventory
+            node = pickle.loads(data.data(self.MimeType))
+            if not self._initNode(node):
                 return False
 
-            node.parent = None
-            node.parent = parent_node
-            node.character = result.character
-            node.name = result.text
-
+        node.parent = parent_node
         if node and row >= 0:
             self._repositionNodeUnder(node, parent_node, row)
 
         self.modelReset.emit()
+        return True
+
+    def insertNode(self, node: SceneInventoryNode):
+        new_node = copy.deepcopy(node)
+        if not self._initNode(new_node):
+            return
+        new_node.parent = self.root
+        self.modelReset.emit()
+
+    def _initNode(self, node: SceneInventoryNode) -> bool:
+        if isinstance(node, (DialogSpeechNode, DialogActionBeatNode)):
+            result = DialogEditionDialog().display(self.scene)
+        elif isinstance(node, CharacterEntryNode):
+            result = CharacterBasedEditionDialog().display(self.scene)
+        elif isinstance(node, ReactionNode):
+            result = SceneElementEditionResult('Reaction')
+            for child in node.children:
+                if isinstance(child, DialogSpeechNode) and self.scene.pov:
+                    child.character = self.scene.pov
+        else:
+            result = SceneElementEditionDialog().display(self.scene)
+
+        if result is None:  # edition cancelled
+            return False
+        node.character = result.character
+        node.name = result.text
+
         return True
 
     def _repositionNodeUnder(self, node, parent, row: int):
@@ -424,5 +437,6 @@ class SceneBuilderPaletteTreeModel(_SceneBuilderTreeModel):
         new_index = row
         if old_index < new_index:
             new_index -= 1
-        children_list[old_index], children_list[new_index] = children_list[new_index], children_list[old_index]
+        children_list.pop(old_index)
+        children_list.insert(new_index, node)
         parent.children = children_list

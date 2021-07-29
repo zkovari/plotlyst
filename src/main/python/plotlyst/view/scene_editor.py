@@ -108,6 +108,7 @@ class SceneEditor(QObject):
 
         self._scene_builder_inventory_model = SceneBuilderInventoryTreeModel()
         self.ui.treeInventory.setModel(self._scene_builder_inventory_model)
+        self.ui.treeInventory.doubleClicked.connect(self._on_dclick_scene_builder_inventory)
         self.ui.treeInventory.expandAll()
 
         self.ui.btnDelete.setIcon(IconRegistry.minus_icon())
@@ -119,21 +120,6 @@ class SceneEditor(QObject):
 
         self._save_enabled = False
         self._update_view(scene)
-
-        self._scene_builder_palette_model = SceneBuilderPaletteTreeModel(self.scene)
-        self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)
-        self.ui.treeSceneBuilder.selectionModel().selectionChanged.connect(self._on_scene_builder_selection_changed)
-        self._scene_builder_palette_model.modelReset.connect(self.ui.treeSceneBuilder.expandAll)
-        self.ui.treeSceneBuilder.setColumnWidth(0, 400)
-        self.ui.treeSceneBuilder.setColumnWidth(1, 40)
-        self.ui.treeSceneBuilder.setColumnWidth(2, 40)
-        self.ui.treeSceneBuilder.expandAll()
-        self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self.scene))
-        if self._new_scene:
-            self._builder_elements = []
-        else:
-            self._builder_elements = client.fetch_scene_builder_elements(self.novel, self.scene)
-        self._scene_builder_palette_model.setElements(self._builder_elements)
 
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.sbDay.valueChanged.connect(self._save_scene)
@@ -224,6 +210,21 @@ class SceneEditor(QObject):
                     self.ui.btnHappy.setChecked(True)
                 elif char_arc.arc == VERY_HAPPY:
                     self.ui.btnVeryHappy.setChecked(True)
+
+        self._scene_builder_palette_model = SceneBuilderPaletteTreeModel(self.scene)
+        self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)
+        self.ui.treeSceneBuilder.selectionModel().selectionChanged.connect(self._on_scene_builder_selection_changed)
+        self._scene_builder_palette_model.modelReset.connect(self.ui.treeSceneBuilder.expandAll)
+        self.ui.treeSceneBuilder.setColumnWidth(0, 400)
+        self.ui.treeSceneBuilder.setColumnWidth(1, 40)
+        self.ui.treeSceneBuilder.setColumnWidth(2, 40)
+        self.ui.treeSceneBuilder.expandAll()
+        self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self.scene))
+        if self._new_scene:
+            self._builder_elements = []
+        else:
+            self._builder_elements = client.fetch_scene_builder_elements(self.novel, self.scene)
+        self._scene_builder_palette_model.setElements(self._builder_elements)
 
         self._save_enabled = True
 
@@ -386,9 +387,19 @@ class SceneEditor(QObject):
         self._new_scene_selected(self.scenes_model.index(row, 0))
 
     def _new_scene_selected(self, index: QModelIndex):
+        elements: List[SceneBuilderElement] = []
+        for seq, node in enumerate(self._scene_builder_palette_model.root.children):
+            elements.append(self.__get_scene_builder_element(self.scene, node, seq))
+        client.update_scene_builder_elements(self.scene, elements)
+
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
         self._save_enabled = False
         self._update_view(scene)
+
+    def _on_dclick_scene_builder_inventory(self, index: QModelIndex):
+        node = index.data(SceneBuilderInventoryTreeModel.NodeRole)
+        if isinstance(node, SceneInventoryNode):
+            self._scene_builder_palette_model.insertNode(node)
 
     def _on_scene_builder_selection_changed(self):
         indexes = self.ui.treeSceneBuilder.selectedIndexes()
