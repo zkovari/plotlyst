@@ -478,6 +478,8 @@ class SqlClient:
             character = characters[element_m.character.id]
         elif element_m.type == SceneBuilderElementType.SPEECH.value:
             character = NpcCharacter('Other')
+        elif element_m.type == SceneBuilderElementType.CHARACTER_ENTRY.value:
+            character = NpcCharacter('Other')
         else:
             character = None
         new_element = SceneBuilderElement(scene=scene, type=SceneBuilderElementType(element_m.type),

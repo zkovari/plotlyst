@@ -18,13 +18,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtCore import QVariantAnimation, QVariant, pyqtSlot, QEasingCurve, QEventLoop, QTimer
+from PyQt5.QtGui import QIcon, QPalette, QColor
+from PyQt5.QtWidgets import QDialog, QApplication, QLabel
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Scene, Character, NpcCharacter
+from src.main.python.plotlyst.core.domain import Scene, Character, NpcCharacter, SceneBuilderElement
+from src.main.python.plotlyst.core.text import generate_text_from_scene_builder
+from src.main.python.plotlyst.view.generated.scene_builder_preview_dialog_ui import Ui_SceneBuilderPreviewDialog
 from src.main.python.plotlyst.view.generated.scene_element_edition_dialog_ui import Ui_SceneElementEditionDialog
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
@@ -39,6 +42,7 @@ class SceneElementEditionDialog(QDialog, Ui_SceneElementEditionDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+        self.lineText.textEdited.connect(self._on_text_edit)
 
     def display(self, scene: Scene) -> Optional[SceneElementEditionResult]:
         self._setup(scene)
@@ -51,6 +55,10 @@ class SceneElementEditionDialog(QDialog, Ui_SceneElementEditionDialog):
 
     def _setup(self, scene: Scene):
         pass
+
+    def _on_text_edit(self, text: str):
+        if len(text) == 1:
+            self.lineText.setText(text.upper())
 
 
 class CharacterBasedEditionDialog(SceneElementEditionDialog):
@@ -72,3 +80,60 @@ class DialogEditionDialog(CharacterBasedEditionDialog):
             self.cbCharacter.addItem(QIcon(avatars.pixmap(scene.pov)), scene.pov.name, scene.pov)
             self.cbCharacter.insertSeparator(1)
         super()._setup(scene)
+
+
+class FadingLabel(QLabel):
+    def __init__(self):
+        super(FadingLabel, self).__init__()
+        self.animation = QVariantAnimation()
+        self.animation.valueChanged.connect(self.changeColor)
+
+    @pyqtSlot(QVariant)
+    def changeColor(self, color):
+        palette = self.palette()
+        palette.setColor(QPalette.WindowText, color)
+        self.setPalette(palette)
+
+    def _startFadeIn(self):
+        self.animation.stop()
+        self.animation.setStartValue(QColor(0, 0, 0, 0))
+        self.animation.setEndValue(QColor(0, 0, 0, 255))
+        self.animation.setDuration(200)
+        self.animation.setEasingCurve(QEasingCurve.InBack)
+        self.animation.start()
+
+    def _startFadeOut(self):
+        self.animation.stop()
+        self.animation.setStartValue(QColor(0, 0, 0, 255))
+        self.animation.setEndValue(QColor(0, 0, 0, 0))
+        self.animation.setDuration(200)
+        self.animation.setEasingCurve(QEasingCurve.OutBack)
+        self.animation.start()
+
+    def startAnimation(self):
+        self._startFadeIn()
+        loop = QEventLoop()
+        self.animation.finished.connect(loop.quit)
+        loop.exec_()
+        QTimer.singleShot(350, self._startFadeOut)
+
+
+class SceneBuilderPreviewDialog(QDialog, Ui_SceneBuilderPreviewDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.lblAnimated = FadingLabel()
+        self.lblAnimated.setText('Copied!')
+        self.lblAnimated.setVisible(False)
+        self.horizontalLayout.insertWidget(1, self.lblAnimated)
+        self.btnCopy.setIcon(IconRegistry.copy_icon())
+        self.btnCopy.clicked.connect(self._copy)
+
+    def display(self, elements: List[SceneBuilderElement]):
+        self.textBrowser.setText(generate_text_from_scene_builder(elements))
+        self.exec()
+
+    def _copy(self):
+        QApplication.clipboard().setText(self.textBrowser.toPlainText())
+        self.lblAnimated.setVisible(True)
+        self.lblAnimated.startAnimation()

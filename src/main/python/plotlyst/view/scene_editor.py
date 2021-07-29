@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional, List
 
 import emoji
@@ -36,6 +37,7 @@ from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInven
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuilderPreviewDialog
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
@@ -113,6 +115,9 @@ class SceneEditor(QObject):
 
         self.ui.btnDelete.setIcon(IconRegistry.minus_icon())
         self.ui.btnDelete.clicked.connect(self._on_delete_scene_builder_element)
+        self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
+        self.ui.btnEdit.clicked.connect(self._on_edit_scene_builder_element)
+        self.ui.btnPreview.clicked.connect(self._on_preview_scene_builder)
 
         self._save_timer = QTimer()
         self._save_timer.setInterval(500)
@@ -359,10 +364,7 @@ class SceneEditor(QObject):
 
     def _on_close(self):
         self._save_scene()
-        elements: List[SceneBuilderElement] = []
-        for seq, node in enumerate(self._scene_builder_palette_model.root.children):
-            elements.append(self.__get_scene_builder_element(self.scene, node, seq))
-        client.update_scene_builder_elements(self.scene, elements)
+        client.update_scene_builder_elements(self.scene, self._scene_builder_elements())
 
     def __get_scene_builder_element(self, scene: Scene, node: SceneInventoryNode, seq: int) -> SceneBuilderElement:
         children = []
@@ -387,14 +389,18 @@ class SceneEditor(QObject):
         self._new_scene_selected(self.scenes_model.index(row, 0))
 
     def _new_scene_selected(self, index: QModelIndex):
-        elements: List[SceneBuilderElement] = []
-        for seq, node in enumerate(self._scene_builder_palette_model.root.children):
-            elements.append(self.__get_scene_builder_element(self.scene, node, seq))
-        client.update_scene_builder_elements(self.scene, elements)
+        client.update_scene_builder_elements(self.scene, self._scene_builder_elements())
 
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
         self._save_enabled = False
         self._update_view(scene)
+
+    def _scene_builder_elements(self) -> List[SceneBuilderElement]:
+        elements: List[SceneBuilderElement] = []
+        for seq, node in enumerate(self._scene_builder_palette_model.root.children):
+            elements.append(self.__get_scene_builder_element(self.scene, node, seq))
+
+        return elements
 
     def _on_dclick_scene_builder_inventory(self, index: QModelIndex):
         node = index.data(SceneBuilderInventoryTreeModel.NodeRole)
@@ -404,6 +410,7 @@ class SceneEditor(QObject):
     def _on_scene_builder_selection_changed(self):
         indexes = self.ui.treeSceneBuilder.selectedIndexes()
         self.ui.btnDelete.setEnabled(bool(indexes))
+        self.ui.btnEdit.setEnabled(bool(indexes))
 
     def _on_delete_scene_builder_element(self):
         indexes = self.ui.treeSceneBuilder.selectedIndexes()
@@ -411,6 +418,15 @@ class SceneEditor(QObject):
             return
         self._scene_builder_palette_model.deleteItem(indexes[0])
         self.ui.btnDelete.setDisabled(True)
+
+    def _on_preview_scene_builder(self):
+        SceneBuilderPreviewDialog().display(self._scene_builder_elements())
+
+    def _on_edit_scene_builder_element(self):
+        indexes = self.ui.treeSceneBuilder.selectedIndexes()
+        if not indexes:
+            return
+        self.ui.treeSceneBuilder.edit(indexes[0])
 
 
 class ScenesBuilderDelegate(QStyledItemDelegate):
@@ -424,7 +440,9 @@ class ScenesBuilderDelegate(QStyledItemDelegate):
         node = index.internalPointer()
         if isinstance(node, CharacterEntryNode):
             return QComboBox(parent)
-        return QLineEdit(parent)
+        lineedit = QLineEdit(parent)
+        lineedit.textEdited.connect(partial(self._on_text_edit, lineedit))
+        return lineedit
 
     @overrides
     def setEditorData(self, editor: QWidget, index: QModelIndex):
@@ -443,6 +461,10 @@ class ScenesBuilderDelegate(QStyledItemDelegate):
             model.setData(index, editor.currentData(Qt.UserRole))
         elif isinstance(editor, QLineEdit):
             model.setData(index, editor.text())
+
+    def _on_text_edit(self, editor: QLineEdit, text: str):
+        if len(text) == 1:
+            editor.setText(text.upper())
 
     def _commit_and_close(self, editor):
         self.commitData.emit(editor)
