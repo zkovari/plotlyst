@@ -266,77 +266,86 @@
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QLabel" name="lblPovEmoji">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="cbPov">
-            <property name="maximumSize">
-             <size>
-              <width>141</width>
-              <height>16777215</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_10">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
             <property name="sizeType">
              <enum>QSizePolicy::Preferred</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>10</width>
+              <width>40</width>
               <height>20</height>
              </size>
             </property>
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="lblArc">
-            <property name="text">
-             <string>Character arc:</string>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <property name="spacing">
+             <number>3</number>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnVeryUnhappy">
-            <property name="minimumSize">
-             <size>
-              <width>40</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>32</width>
-              <height>32</height>
-             </size>
-            </property>
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton:checked {
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QLabel" name="lblAvatar">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QComboBox" name="cbPov">
+              <property name="maximumSize">
+               <size>
+                <width>141</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <property name="spacing">
+               <number>3</number>
+              </property>
+              <item>
+               <spacer name="horizontalSpacer_10">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Preferred</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>10</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QLabel" name="lblArc">
+                <property name="text">
+                 <string>Character arc:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnVeryUnhappy">
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>32</width>
+                  <height>32</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton:checked {
 	background-color: rgb(239, 0, 0);
 }
 
@@ -347,187 +356,187 @@ QToolButton:hover {
 QToolButton:disabled {   
 	font: grey;
 }</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>4</width>
-              <height>4</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextOnly</enum>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupArc</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnUnHappy">
-            <property name="minimumSize">
-             <size>
-              <width>40</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>32</width>
-              <height>32</height>
-             </size>
-            </property>
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton:checked {
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>4</width>
+                  <height>4</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextOnly</enum>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">btnGroupArc</string>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnUnHappy">
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>32</width>
+                  <height>32</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton:checked {
 	background-color: rgb(255, 142, 43);
 }
 
 QToolButton:hover {
 	border: 1px solid rgb(255, 142, 43);
 }</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>4</width>
-              <height>4</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextOnly</enum>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupArc</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnNeutral">
-            <property name="minimumSize">
-             <size>
-              <width>40</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>32</width>
-              <height>32</height>
-             </size>
-            </property>
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton::checked {
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>4</width>
+                  <height>4</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextOnly</enum>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">btnGroupArc</string>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnNeutral">
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>32</width>
+                  <height>32</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton::checked {
 	background-color: rgb(171, 171, 171);
 }
 
 QToolButton:hover {
 	border: 1px solid rgb(171, 171, 171);
 }</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>4</width>
-              <height>4</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextOnly</enum>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupArc</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnHappy">
-            <property name="minimumSize">
-             <size>
-              <width>40</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>32</width>
-              <height>32</height>
-             </size>
-            </property>
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton:checked {
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>4</width>
+                  <height>4</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextOnly</enum>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">btnGroupArc</string>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnHappy">
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>32</width>
+                  <height>32</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton:checked {
 	background-color: rgb(136, 255, 115);
 }
 
 QToolButton:hover {
 	border: 1px solid rgb(136, 255, 115);
 }</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>4</width>
-              <height>4</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextOnly</enum>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupArc</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnVeryHappy">
-            <property name="minimumSize">
-             <size>
-              <width>40</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>32</width>
-              <height>32</height>
-             </size>
-            </property>
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton:checked {
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>4</width>
+                  <height>4</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextOnly</enum>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">btnGroupArc</string>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnVeryHappy">
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>32</width>
+                  <height>32</height>
+                 </size>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton:checked {
 	background-color: rgb(0, 202, 148);
 }
 
@@ -536,39 +545,43 @@ QToolButton:hover {
 }
 
 </string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>4</width>
-              <height>4</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="toolButtonStyle">
-             <enum>Qt::ToolButtonTextOnly</enum>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupArc</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>4</width>
+                  <height>4</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="toolButtonStyle">
+                 <enum>Qt::ToolButtonTextOnly</enum>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">btnGroupArc</string>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -736,7 +749,7 @@ QToolButton:hover {
         <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <property name="iconSize">
         <size>
@@ -787,6 +800,21 @@ QToolButton:hover {
               <string>Scene structure:</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_5">
+              <property name="spacing">
+               <number>3</number>
+              </property>
+              <property name="leftMargin">
+               <number>2</number>
+              </property>
+              <property name="topMargin">
+               <number>2</number>
+              </property>
+              <property name="rightMargin">
+               <number>2</number>
+              </property>
+              <property name="bottomMargin">
+               <number>2</number>
+              </property>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_3">
                 <property name="spacing">
@@ -1382,7 +1410,7 @@ QToolButton:hover {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
   <buttongroup name="btnGroupArc"/>
+  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>

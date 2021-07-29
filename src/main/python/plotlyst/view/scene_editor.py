@@ -22,7 +22,7 @@ from typing import Optional, List
 
 import emoji
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel, \
-    QAbstractItemModel, Qt
+    QAbstractItemModel, Qt, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox
 from overrides import overrides
@@ -70,8 +70,6 @@ class SceneEditor(QObject):
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
         self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
-        self.ui.lblPovEmoji.setFont(self._emoji_font)
-        self.ui.lblPovEmoji.setText(emoji.emojize(':bust_in_silhouette:'))
         self.ui.lblTitleEmoji.setFont(self._emoji_font)
         self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
@@ -156,7 +154,7 @@ class SceneEditor(QObject):
         else:
             self.ui.cbPov.setCurrentIndex(0)
             self._enable_arc_buttons(False)
-
+        self._update_pov_avatar()
         self.ui.sbDay.setValue(self.scene.day)
 
         if self.scene.type:
@@ -316,8 +314,19 @@ class SceneEditor(QObject):
         else:
             self.scene.pov = None
             self._enable_arc_buttons(False)
+        self._update_pov_avatar()
         self._characters_model.update()
         self._save_scene()
+
+    def _update_pov_avatar(self):
+        if self.scene.pov:
+            pixmap = avatars.pixmap(self.scene.pov)
+            if self.scene.pov.avatar:
+                self.ui.lblAvatar.setPixmap(pixmap.scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            else:
+                self.ui.lblAvatar.setPixmap(pixmap)
+        else:
+            self.ui.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(128, 128)))
 
     def _save_scene(self):
         self._save_timer.stop()
