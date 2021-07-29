@@ -88,7 +88,7 @@ class SceneEditor(QObject):
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
         self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene_icon())
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
-        self.ui.cbConflict.toggled.connect(self._on_conflict_toggled)
+        self.ui.cbConflict.clicked.connect(self._on_conflict_toggled)
 
         self.ui.cbPivotal.view().setRowHidden(0, True)
 
@@ -254,6 +254,7 @@ class SceneEditor(QObject):
             self.ui.btnResolution.setVisible(True)
             self.ui.cbConflict.setVisible(True)
             self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
+            self._on_conflict_toggled(self.ui.cbConflict.isChecked())
 
             return
         elif text == REACTION_SCENE:
@@ -273,6 +274,7 @@ class SceneEditor(QObject):
             self.ui.lblType3.setText('End:')
             self.ui.textEvent3.setPlaceholderText('Ending of the scene')
 
+        self.ui.textEvent2.setEnabled(True)
         self.ui.lblType2.setVisible(True)
         self.ui.btnDisaster.setHidden(True)
         self.ui.btnResolution.setHidden(True)
