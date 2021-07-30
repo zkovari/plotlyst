@@ -168,6 +168,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="shortcut">
+             <string>Del</string>
+            </property>
             <property name="deconstructive" stdset="0">
              <bool>true</bool>
             </property>

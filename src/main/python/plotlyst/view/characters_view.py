@@ -59,6 +59,8 @@ class CharactersView(AbstractNovelView):
     @overrides
     def refresh(self):
         self.model.modelReset.emit()
+        self.ui.btnEdit.setDisabled(True)
+        self.ui.btnDelete.setDisabled(True)
 
     def _on_character_selected(self, selection: QItemSelection):
         selection = len(selection.indexes()) > 0
@@ -104,3 +106,4 @@ class CharactersView(AbstractNovelView):
             self.novel.characters.remove(character)
             client.delete_character(character)
             emit_event(NovelReloadRequestedEvent(self))
+            self.refresh()
