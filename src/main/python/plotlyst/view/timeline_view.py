@@ -23,7 +23,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene
-from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.scene_card_widget_ui import Ui_SceneCardWidget
@@ -36,7 +36,7 @@ class TimelineView(AbstractNovelView):
     colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent])
+        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent])
         self.ui = Ui_TimelineView()
         self.ui.setupUi(self.widget)
 
@@ -58,6 +58,7 @@ class TimelineView(AbstractNovelView):
 
     @overrides
     def refresh(self):
+        self.model.modelReset.emit()
         self._refresh_timeline()
 
     def _refresh_timeline(self):

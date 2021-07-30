@@ -29,7 +29,8 @@ from matplotlib.figure import Figure
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Character
-from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
+    StorylineCreatedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
@@ -40,7 +41,7 @@ from src.main.python.plotlyst.view.widget.characters import CharacterSelectorWid
 
 class ReportsView(AbstractNovelView):
     def __init__(self, novel: Novel):
-        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent])
+        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, StorylineCreatedEvent])
         self.ui = Ui_ReportsView()
         self.ui.setupUi(self.widget)
         self.scene_selected = None
@@ -72,6 +73,9 @@ class ReportsView(AbstractNovelView):
         self.story_lines_canvas = StoryLinesCanvas(self.novel, parent=self)
         self.ui.tabStoryDistribution.layout().addWidget(self.story_lines_canvas)
 
+        if not self.novel.story_lines:
+            self.ui.stackStoryMap.setCurrentWidget(self.ui.pageInfoStoryMap)
+
         self.scenes_model = ScenesTableModel(self.novel)
         self._scenes_proxy = ScenesFilterProxyModel()
         self._scenes_proxy.setSourceModel(self.scenes_model)
@@ -99,6 +103,8 @@ class ReportsView(AbstractNovelView):
 
     @overrides
     def refresh(self):
+        if self.novel.story_lines:
+            self.ui.stackStoryMap.setCurrentWidget(self.ui.pageStoryMap)
         self.scenes_model.modelReset.emit()
         self._update_characters_selectors()
         self._update_characters_chart()

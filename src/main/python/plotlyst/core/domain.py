@@ -81,7 +81,7 @@ class Scene:
     wip: bool = False
     story_lines: List[StoryLine] = field(default_factory=list)
     end_event: bool = True
-    day: int = 0
+    day: int = 1
     beginning_type: str = ''
     ending_hook: str = ''
     notes: str = ''
