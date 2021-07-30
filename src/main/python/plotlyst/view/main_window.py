@@ -209,7 +209,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if self.novel and self.novel.id == novel.id:
             return
 
+        event_dispatcher.clear()
         self.pageHome.layout().removeWidget(self.home_view.widget)
+        self.home_view.widget.deleteLater()
         if self.novel:
             self._clear_novel_views()
 
@@ -219,11 +221,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)
+        self.novel_view.widget.deleteLater()
         self.pageCharacters.layout().removeWidget(self.characters_view.widget)
+        self.characters_view.widget.deleteLater()
         self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
+        self.scenes_outline_view.widget.deleteLater()
         self.pageTimeline.layout().removeWidget(self.timeline_view.widget)
+        self.timeline_view.widget.deleteLater()
         self.pageNotes.layout().removeWidget(self.notes_view.widget)
+        self.notes_view.widget.deleteLater()
         self.pageReports.layout().removeWidget(self.reports_view.widget)
+        self.reports_view.widget.deleteLater()
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
