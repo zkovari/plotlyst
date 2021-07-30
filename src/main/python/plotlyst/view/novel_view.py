@@ -41,7 +41,7 @@ class NovelView(AbstractNovelView):
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
-        self.ui.lineTitle.setText(self.novel.title)
+        self.ui.lblTitle.setText(self.novel.title)
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
         self.ui.btnAdd.clicked.connect(self._on_add_story_line)
 
@@ -64,7 +64,7 @@ class NovelView(AbstractNovelView):
 
     @overrides
     def refresh(self):
-        self.ui.lineTitle.setText(self.novel.title)
+        self.ui.lblTitle.setText(self.novel.title)
         self.story_lines_model.modelReset.emit()
         self.ui.btnEdit.setEnabled(False)
         self.ui.btnRemove.setEnabled(False)
