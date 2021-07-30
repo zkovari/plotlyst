@@ -17,13 +17,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt5.QtCore import QItemSelection, Qt
-from PyQt5.QtWidgets import QWidget
+from functools import partial
+from typing import Iterable, List
 
-from src.main.python.plotlyst.core.domain import Novel
+from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup
+
+from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.view.common import spacer_widget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.icons import avatars
 
 
 class CharactersScenesDistributionWidget(QWidget):
@@ -84,3 +90,41 @@ class CharactersScenesDistributionWidget(QWidget):
             return
         self._model.highlightScene(self._scenes_proxy.mapToSource(indexes[0]))
         self.ui.tblCharacters.clearSelection()
+
+
+class CharacterSelectorWidget(QWidget):
+    characterClicked = pyqtSignal(Character)
+
+    def __init__(self, parent=None):
+        super(CharacterSelectorWidget, self).__init__(parent)
+        self._layout = QHBoxLayout()
+        self._btn_group = QButtonGroup()
+        self._buttons: List[QToolButton] = []
+        self.setLayout(self._layout)
+
+    def setCharacters(self, characters: Iterable[Character]):
+        item = self._layout.itemAt(0)
+        while item:
+            self._layout.removeItem(item)
+            item = self._layout.itemAt(0)
+        for btn in self._buttons:
+            self._btn_group.removeButton(btn)
+            btn.deleteLater()
+        self._buttons.clear()
+        self._update(characters)
+        if self._buttons:
+            self._buttons[0].setChecked(True)
+
+    def _update(self, characters: Iterable[Character]):
+        self._layout.addWidget(spacer_widget())
+        for char in characters:
+            tool_btn = QToolButton()
+            tool_btn.setIcon(QIcon(avatars.pixmap(char)))
+            tool_btn.setCheckable(True)
+            tool_btn.toggled.connect(partial(self.characterClicked.emit, char))
+
+            self._buttons.append(tool_btn)
+            self._btn_group.addButton(tool_btn)
+            self._btn_group.setExclusive(True)
+            self._layout.addWidget(tool_btn)
+        self._layout.addWidget(spacer_widget())

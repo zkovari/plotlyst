@@ -26,6 +26,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadedEvent
 from src.main.python.plotlyst.view.common import busy
 
@@ -40,6 +41,9 @@ class AbstractView(QObject, EventListener):
             self._event_types = event_types
         else:
             self._event_types = []
+
+        for event in self._event_types:
+            event_dispatcher.register(self, event)
 
     @overrides
     def event_received(self, event: Event):

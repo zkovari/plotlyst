@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Optional
+
 import numpy as np
 from PyQt5.QtChart import QPieSeries, QChart, QChartView
 from PyQt5.QtGui import QPainter
@@ -33,6 +35,7 @@ from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.scenes_view import ScenesViewDelegate
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorWidget
 
 
 class ReportsView(AbstractNovelView):
@@ -75,8 +78,6 @@ class ReportsView(AbstractNovelView):
         povs = set([x.pov for x in self.novel.scenes])
         for pov in povs:
             self._scenes_proxy.setCharacterFilter(pov, False)
-        if self.novel.characters:
-            self._scenes_proxy.setCharacterFilter(self.novel.characters[0], True)
 
         self.ui.tblScenes.setModel(self._scenes_proxy)
         for col in range(self.scenes_model.columnCount()):
@@ -85,16 +86,39 @@ class ReportsView(AbstractNovelView):
         self.ui.tblScenes.showColumn(ScenesTableModel.ColTitle)
         self.ui.tblScenes.showColumn(ScenesTableModel.ColArc)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
-        if self.novel.characters:
-            self.arc_canvas = CharacterArcCanvas(self.novel, self.novel.characters[0], parent=self)
-            self.ui.tabCharacterArcs.layout().addWidget(self.arc_canvas)
 
-            self.scenes_model.valueChanged.connect(self.arc_canvas.refresh_plot)
+        self.arc_canvas = CharacterArcCanvas(self.novel, parent=self)
+        self._characters_selector = CharacterSelectorWidget()
+        self._characters_selector.characterClicked.connect(self._arc_character_clicked)
+        self._update_characters_selectors()
+        self.ui.tabCharacterArcs.layout().insertWidget(0, self._characters_selector)
+        self.ui.wdgArc.layout().addWidget(self.arc_canvas)
+        self._arc_character: Optional[Character] = None
+
+        self.scenes_model.valueChanged.connect(lambda: self.arc_canvas.refresh_plot(self._arc_character))
 
     @overrides
     def refresh(self):
+        self.scenes_model.modelReset.emit()
+        self._update_characters_selectors()
         self._update_characters_chart()
         self.story_lines_canvas.refresh_plot()
+
+    def _update_characters_selectors(self):
+        pov_chars = []
+        for scene in self.novel.scenes:
+            if scene.pov and scene.pov not in pov_chars:
+                pov_chars.append(scene.pov)
+        self._characters_selector.setCharacters(pov_chars)
+
+    def _arc_character_clicked(self, character: Character):
+        self._arc_character = character
+        povs = set([x.pov for x in self.novel.scenes])
+        for pov in povs:
+            self._scenes_proxy.setCharacterFilter(pov, False)
+        if self.novel.characters:
+            self._scenes_proxy.setCharacterFilter(character, True)
+        self.arc_canvas.refresh_plot(self._arc_character)
 
     def _update_characters_chart(self):
         for k in self.pov_number.keys():
@@ -175,29 +199,29 @@ class StoryLinesCanvas(FigureCanvasQTAgg):
 
 
 class CharacterArcCanvas(FigureCanvasQTAgg):
-    def __init__(self, novel: Novel, character: Character, parent=None, width=5, height=4, dpi=100):
+    def __init__(self, novel: Novel, parent=None, width=5, height=4, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.novel = novel
-        self.character = character
         self.axes = None
 
         super().__init__(self.fig)
-        self.refresh_plot()
 
-    def refresh_plot(self):
+    def refresh_plot(self, character: Optional[Character]):
+        if not character:
+            return
         if self.axes:
             self.fig.clear()
 
         self.axes = self.fig.add_subplot(111)
 
-        x = np.arange(0, len([x for x in self.novel.scenes if x.pov == self.character]))
+        x = np.arange(0, len([x for x in self.novel.scenes if x.pov == character]))
         arc_value: int = 0
         y = []
         for scene in self.novel.scenes:
-            if scene.pov != self.character:
+            if scene.pov != character:
                 continue
             for arc in scene.arcs:
-                if arc.character == self.character:
+                if arc.character == character:
                     arc_value += arc.arc
             y.append(arc_value)
 
@@ -213,6 +237,6 @@ class CharacterArcCanvas(FigureCanvasQTAgg):
             self.axes.set_ylim([min_y - 3, abs(min_y) + 3])
         self.axes.yaxis.set_major_locator(ticker.NullLocator())
         self.axes.set(xlabel='Scenes', ylabel='Arc',
-                      title=f'Character arc for {self.character.name}')
+                      title=f'Character arc for {character.name}')
 
         self.draw()
