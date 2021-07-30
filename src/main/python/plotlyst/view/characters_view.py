@@ -80,13 +80,14 @@ class CharactersView(AbstractNovelView):
 
     def _on_close_editor(self):
         character = self.editor.character
-        if not character.avatar:
+        if not character.avatar and character.name:
             avatars.update(character)
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.editor.widget.deleteLater()
         self.editor = None
-        emit_event(CharacterChangedEvent(self, character))
+        if character.name:
+            emit_event(CharacterChangedEvent(self, character))
         self.refresh()
 
     def _on_new(self):
