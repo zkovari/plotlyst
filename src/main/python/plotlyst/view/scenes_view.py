@@ -28,7 +28,8 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QS
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY
+from src.main.python.plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, \
+    Character
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
@@ -264,6 +265,7 @@ class ScenesOutlineView(AbstractNovelView):
 
 
 class ScenesViewDelegate(QStyledItemDelegate):
+    avatarSize: int = 24
 
     @overrides
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
@@ -272,14 +274,10 @@ class ScenesViewDelegate(QStyledItemDelegate):
             scene: Scene = index.data(ScenesTableModel.SceneRole)
             x = 3
             if scene.pov:
-                painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
-                                   avatars.pixmap(scene.pov).scaled(24, 24, Qt.KeepAspectRatio,
-                                                                    Qt.SmoothTransformation))
+                self._drawAvatar(painter, option, x, scene.pov)
             x += 27
             for char in scene.characters:
-                painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
-                                   avatars.pixmap(char).scaled(24, 24, Qt.KeepAspectRatio,
-                                                               Qt.SmoothTransformation))
+                self._drawAvatar(painter, option, x, char)
                 x += 27
                 if x + 27 >= option.rect.width():
                     return
@@ -287,7 +285,17 @@ class ScenesViewDelegate(QStyledItemDelegate):
         elif index.column() == ScenesTableModel.ColArc:
             scene = index.data(ScenesTableModel.SceneRole)
             painter.drawPixmap(option.rect.x() + 3, option.rect.y() + 2,
-                               IconRegistry.emotion_icon_from_feeling(scene.pov_arc()).pixmap(QSize(24, 24)))
+                               IconRegistry.emotion_icon_from_feeling(scene.pov_arc()).pixmap(
+                                   QSize(self.avatarSize, self.avatarSize)))
+
+    def _drawAvatar(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', x: int, character: Character):
+        if character.avatar:
+            painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
+                               avatars.pixmap(character).scaled(self.avatarSize, self.avatarSize, Qt.KeepAspectRatio,
+                                                                Qt.SmoothTransformation))
+        else:
+            painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
+                               avatars.name_initial_icon(character).pixmap(QSize(self.avatarSize, self.avatarSize)))
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:

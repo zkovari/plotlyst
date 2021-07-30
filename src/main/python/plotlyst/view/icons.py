@@ -250,13 +250,16 @@ class AvatarsRegistry:
                     pixmap.loadFromData(array)
                 self._avatars[character.id] = rounded_pixmap(pixmap)
             else:
-                _sum = sum([ord(x) for x in character.name])
-                color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_sum % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]
-                icon: QIcon = qtawesome.icon(f'mdi.alpha-{character.name[0].lower()}-circle-outline',
-                                             options=[{'scale_factor': 1.2}], color=color)
+                icon = self.name_initial_icon(character)
                 self._avatars[character.id] = icon.pixmap(QSize(64, 64))
 
         return self._avatars[character.id]
+
+    def name_initial_icon(self, character: Character) -> QIcon:
+        _sum = sum([ord(x) for x in character.name])
+        color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_sum % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]
+        return qtawesome.icon(f'mdi.alpha-{character.name[0].lower()}-circle-outline',
+                              options=[{'scale_factor': 1.2}], color=color)
 
     def update(self, character: Character):
         if character.id in self._avatars.keys():
