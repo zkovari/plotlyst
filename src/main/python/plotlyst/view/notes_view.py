@@ -22,6 +22,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesNotesTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
@@ -30,7 +31,7 @@ from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 class NotesView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel)
+        super().__init__(novel, [SceneChangedEvent, SceneDeletedEvent])
         self.ui = Ui_NotesView()
         self.ui.setupUi(self.widget)
 

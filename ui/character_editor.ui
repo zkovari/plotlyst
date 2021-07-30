@@ -43,7 +43,7 @@
         <string>Back</string>
        </property>
        <property name="shortcut">
-        <string>Esc</string>
+        <string>Return</string>
        </property>
       </widget>
      </item>

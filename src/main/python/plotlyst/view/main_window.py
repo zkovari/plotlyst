@@ -30,7 +30,8 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
+    SceneChangedEvent, CharacterChangedEvent
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
@@ -77,6 +78,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_sender.send.connect(event_dispatcher.dispatch)
         event_dispatcher.register(self, NovelReloadRequestedEvent)
         event_dispatcher.register(self, NovelDeletedEvent)
+        if self.novel and not self.novel.scenes:
+            event_dispatcher.register(self, SceneChangedEvent)
+        if self.novel and not self.novel.characters:
+            event_dispatcher.register(self, CharacterChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -91,6 +96,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 for btn in self.buttonGroup.buttons():
                     if btn is not self.btnHome:
                         btn.setHidden(True)
+        elif isinstance(event, CharacterChangedEvent):
+            self.btnScenes.setEnabled(True)
+            event_dispatcher.deregister(self, CharacterChangedEvent)
+        elif isinstance(event, SceneChangedEvent):
+            self.btnNotes.setEnabled(True)
+            self.btnReport.setEnabled(True)
+            self.btnTimeline.setEnabled(True)
+            event_dispatcher.deregister(self, SceneChangedEvent)
 
     def _init_views(self):
         self.home_view = HomeView()
@@ -132,6 +145,13 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageTimeline.layout().addWidget(self.timeline_view.widget)
         self.pageNotes.layout().addWidget(self.notes_view.widget)
         self.pageReports.layout().addWidget(self.reports_view.widget)
+
+        if not self.novel.characters:
+            self.btnScenes.setDisabled(True)
+        if not self.novel.scenes:
+            self.btnNotes.setDisabled(True)
+            self.btnReport.setDisabled(True)
+            self.btnTimeline.setDisabled(True)
 
         self.btnScenes.setChecked(True)
 

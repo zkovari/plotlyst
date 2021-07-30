@@ -25,7 +25,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, StoryLine
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent
 from src.main.python.plotlyst.model.novel import EditableNovelStoryLinesListModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -78,6 +78,7 @@ class NovelView(AbstractNovelView):
 
         self.ui.tblStoryLines.edit(self.story_lines_model.index(self.story_lines_model.rowCount() - 1,
                                                                 EditableNovelStoryLinesListModel.ColText))
+        emit_event(StorylineCreatedEvent(self))
 
     def _on_edit_story_line(self):
         indexes = self.ui.tblStoryLines.selectedIndexes()
