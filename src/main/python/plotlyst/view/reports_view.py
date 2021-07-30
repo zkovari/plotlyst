@@ -236,7 +236,7 @@ class CharacterArcCanvas(FigureCanvasQTAgg):
         if min_y < 0 and abs(min_y) > max_y:
             self.axes.set_ylim([min_y - 3, abs(min_y) + 3])
         self.axes.yaxis.set_major_locator(ticker.NullLocator())
-        self.axes.set(xlabel='Scenes', ylabel='Arc',
-                      title=f'Character arc for {character.name}')
+        self.axes.xaxis.set_major_locator(ticker.NullLocator())
+        self.axes.set(title=f'Character arc for {character.name}')
 
         self.draw()
