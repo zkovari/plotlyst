@@ -615,7 +615,7 @@ class JsonClient:
         storylines = [StoryLine(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in novel_info.storylines]
         storylines_ids = {}
         for sl in storylines:
-            storylines_ids[sl.id] = sl
+            storylines_ids[str(sl.id)] = sl
 
         characters = []
         for char_id in novel_info.characters:
@@ -626,6 +626,9 @@ class JsonClient:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 characters.append(Character(name=info.name, id=info.id))
+        characters_ids = {}
+        for char in characters:
+            characters_ids[str(char.id)] = char
 
         scenes: List[Scene] = []
         for seq, scene_id in enumerate(novel_info.scenes):
@@ -635,18 +638,28 @@ class JsonClient:
             with open(path) as json_file:
                 data = json_file.read()
                 info: SceneInfo = SceneInfo.from_json(data)
+                scene_storylines = []
+                for sl_id in info.storylines:
+                    if str(sl_id) in storylines_ids.keys():
+                        scene_storylines.append(storylines_ids[str(sl_id)])
+                if info.pov and str(info.pov) in characters_ids.keys():
+                    pov = characters_ids[str(info.pov)]
+                else:
+                    pov = None
 
+                scene_characters = []
+                for char_id in info.characters:
+                    if str(char_id) in characters_ids.keys():
+                        scene_characters.append(characters_ids[str(char_id)])
+                print(scene_characters)
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, pivotal=info.pivotal, day=info.day,
                               notes=info.notes,
                               action_resolution=info.action_resolution,
-                              without_action_conflict=info.without_action_conflict, sequence=seq)
+                              without_action_conflict=info.without_action_conflict, sequence=seq,
+                              story_lines=scene_storylines, pov=pov, characters=scene_characters)
                 scenes.append(scene)
-
-        characters_ids = {}
-        for char in characters:
-            characters_ids[char.id] = char
 
         return Novel(title=novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
                      scenes=scenes)
@@ -685,12 +698,13 @@ class JsonClient:
         scene_infos = []
         for scene in novel.scenes:
             storylines = [x.id for x in scene.story_lines]
+            characters = [x.id for x in scene.characters]
             info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                              beginning=scene.beginning, middle=scene.middle,
                              end=scene.end, wip=scene.wip, pivotal=scene.pivotal, day=scene.day, notes=scene.notes,
                              action_resolution=scene.action_resolution,
                              without_action_conflict=scene.without_action_conflict,
-                             pov=scene.pov.id if scene.pov else None, storylines=storylines)
+                             pov=scene.pov.id if scene.pov else None, storylines=storylines, characters=characters)
             scene_infos.append(info)
         self.__persist_info(self.scenes_dir, scene_infos)
 
