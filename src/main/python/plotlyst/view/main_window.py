@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWi
 from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
@@ -185,6 +185,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
             self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
 
+        self.actionPersist.triggered.connect(lambda: json_client.persist(self.novel))
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)
         self.actionDecreaseFontSize.triggered.connect(self.decrease_font_size)

@@ -17,11 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Any
-
-from dataclasses_json import dataclass_json
 
 ACTION_SCENE = 'action'
 REACTION_SCENE = 'reaction'
@@ -30,7 +29,7 @@ REACTION_SCENE = 'reaction'
 @dataclass(unsafe_hash=True)
 class Character:
     name: str
-    id: Optional[int] = None
+    id: Optional[uuid.UUID] = None
     avatar: Optional[Any] = None
     personality: str = ''
     age: int = 0
@@ -44,7 +43,7 @@ class NpcCharacter(Character):
 class StoryLine:
     text: str
     color_hexa: str = ''
-    id: Optional[int] = None
+    id: Optional[uuid.UUID] = None
 
 
 @dataclass
@@ -70,7 +69,7 @@ VERY_HAPPY: int = 2
 @dataclass
 class Scene:
     title: str
-    id: Optional[int] = None
+    id: Optional[uuid.UUID] = None
     synopsis: str = ''
     type: str = ''
     pivotal: str = ''
@@ -99,11 +98,10 @@ class Scene:
         return NEUTRAL
 
 
-@dataclass_json
 @dataclass
 class Novel:
     title: str
-    id: Optional[int] = None
+    id: Optional[uuid.UUID] = None
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
     story_lines: List[StoryLine] = field(default_factory=list)
@@ -119,12 +117,6 @@ class Novel:
         self.chapters.extend(updated_novel.chapters)
         self.story_lines.clear()
         self.story_lines.extend(updated_novel.story_lines)
-
-
-@dataclass_json
-@dataclass
-class Project:
-    novels: List[Novel] = field(default_factory=list)
 
 
 class SceneBuilderElementType(Enum):

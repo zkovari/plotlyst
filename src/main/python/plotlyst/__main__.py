@@ -44,7 +44,7 @@ try:
     from src.main.python.plotlyst.core.migration import app_db_schema_version, AppDbSchemaVersion
     from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
     from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-    from src.main.python.plotlyst.core.client import context
+    from src.main.python.plotlyst.core.client import context, json_client
     from src.main.python.plotlyst.event.handler import DialogExceptionHandler
     from src.main.python.plotlyst.view.dialog.about import AboutDialog
     from src.main.python.plotlyst.view.main_window import MainWindow
@@ -137,6 +137,7 @@ if __name__ == '__main__':
 
         try:
             context.init(workspace)
+            json_client.init(workspace)
         except Exception as ex:
             QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
             raise ex

@@ -18,11 +18,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
+import pathlib
 import time
+import uuid
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Optional, Iterable, Any
 
 from PyQt5.QtCore import QTimer, Qt
+from atomicwrites import atomic_write
+from dataclasses_json import dataclass_json, Undefined
 from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
     DoesNotExist
 from playhouse.sqlite_ext import CSqliteExtDatabase
@@ -262,6 +267,7 @@ class SqlClient:
         novel_m.save()
 
     def fetch_novel(self, id: int) -> Novel:
+        return json_client.fetch_novel()
         novel_model = NovelModel.get_by_id(id)
 
         characters: List[Character] = []
@@ -526,19 +532,175 @@ class SqlClient:
 client = SqlClient()
 
 
+@dataclass_json
+@dataclass
+class CharacterInfo:
+    name: str
+    id: uuid.UUID
+
+
+@dataclass_json
+@dataclass
+class SceneInfo:
+    title: str
+    id: uuid.UUID
+    synopsis: str = ''
+    type: str = ''
+    pivotal: str = ''
+    beginning: str = ''
+    middle: str = ''
+    end: str = ''
+    pov: Optional[uuid.UUID] = None
+    characters: List[uuid.UUID] = field(default_factory=list)
+    wip: bool = False
+    storylines: List[uuid.UUID] = field(default_factory=list)
+    day: int = 1
+    notes: str = ''
+    # chapter: Optional[Chapter] = None
+    # arcs: List[CharacterArc] = field(default_factory=list)
+    action_resolution: bool = False
+    without_action_conflict: bool = False
+
+
+@dataclass
+class StorylineInfo:
+    text: str
+    id: uuid.UUID
+    color_hexa: str = ''
+
+
+@dataclass
+class NovelInfo:
+    title: str
+    id: uuid.UUID
+    scenes: List[uuid.UUID] = field(default_factory=list)
+    characters: List[uuid.UUID] = field(default_factory=list)
+    storylines: List[StorylineInfo] = field(default_factory=list)
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Project:
+    novels: List[NovelInfo] = field(default_factory=list)
+
+
 class JsonClient:
+
+    def __init__(self):
+        self.project: Optional[Project] = None
+        self._workspace = ''
+        self.project_file_path = ''
+        self.root_path: Optional[pathlib.Path] = None
+        self.scenes_dir: Optional[pathlib.Path] = None
+        self.characters_dir: Optional[pathlib.Path] = None
+
     def init(self, workspace: str):
-        project_file_name = os.path.join(workspace, 'project.plotlyst')
-        if not os.path.exists(project_file_name) or os.path.getsize(project_file_name) == 0:
-            self._db.create_tables(
-                [ApplicationModel, NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel,
-                 NovelStoryLinesModel,
-                 SceneStoryLinesModel,
-                 NovelCharactersModel, SceneCharactersModel, SceneBuilderElementModel])
-            ApplicationModel.create(revision=LATEST.value)
-            NovelModel.create(title='My First Novel')
+        self.project_file_path = os.path.join(workspace, 'project.plotlyst')
+
+        if not os.path.exists(self.project_file_path) or os.path.getsize(self.project_file_path) == 0:
+            self.project = Project()
+        else:
+            with open(self.project_file_path) as json_file:
+                data = json_file.read()
+                self.project = Project.from_json(data)
 
         self._workspace = workspace
+        self.root_path = pathlib.Path(self._workspace)
+        self.scenes_dir = self.root_path.joinpath('scenes')
+        self.characters_dir = self.root_path.joinpath('characters')
+
+    def fetch_novel(self) -> Novel:
+        novel_info = self.project.novels[0]
+
+        storylines = [StoryLine(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in novel_info.storylines]
+        storylines_ids = {}
+        for sl in storylines:
+            storylines_ids[sl.id] = sl
+
+        characters = []
+        for char_id in novel_info.characters:
+            path = self.characters_dir.joinpath(self.__json_file(char_id))
+            if not os.path.exists(path):
+                continue
+            with open(path) as json_file:
+                data = json_file.read()
+                info: CharacterInfo = CharacterInfo.from_json(data)
+                characters.append(Character(name=info.name, id=info.id))
+
+        scenes: List[Scene] = []
+        for seq, scene_id in enumerate(novel_info.scenes):
+            path = self.scenes_dir.joinpath(self.__json_file(scene_id))
+            if not os.path.exists(path):
+                continue
+            with open(path) as json_file:
+                data = json_file.read()
+                info: SceneInfo = SceneInfo.from_json(data)
+
+                scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
+                              beginning=info.beginning,
+                              middle=info.middle, end=info.end, wip=info.wip, pivotal=info.pivotal, day=info.day,
+                              notes=info.notes,
+                              action_resolution=info.action_resolution,
+                              without_action_conflict=info.without_action_conflict, sequence=seq)
+                scenes.append(scene)
+
+        characters_ids = {}
+        for char in characters:
+            characters_ids[char.id] = char
+
+        return Novel(title=novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
+                     scenes=scenes)
+
+    def persist(self, novel: Novel):
+        novel.id = uuid.uuid4()
+        for scene in novel.scenes:
+            scene.id = uuid.uuid4()
+        for char in novel.characters:
+            char.id = uuid.uuid4()
+        for storyline in novel.story_lines:
+            storyline.id = uuid.uuid4()
+
+        self.project.novels.clear()
+        novel_info = NovelInfo(title=novel.title, id=novel.id, scenes=[x.id for x in novel.scenes],
+                               storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
+                                           novel.story_lines], characters=[x.id for x in novel.characters])
+        self.project.novels.append(novel_info)
+        with atomic_write(self.project_file_path, overwrite=True) as f:
+            f.write(self.project.to_json())
+
+        self._persist_characters(self.root_path, novel)
+        self._persist_scenes(self.root_path, novel)
+
+    def _persist_characters(self, root_path: pathlib.Path, novel: Novel):
+        if not os.path.exists(str(self.characters_dir)):
+            os.mkdir(self.characters_dir)
+
+        infos = [CharacterInfo(id=x.id, name=x.name) for x in novel.characters]
+        self.__persist_info(self.characters_dir, infos)
+
+    def _persist_scenes(self, root_path: pathlib.Path, novel: Novel):
+        if not os.path.exists(str(self.scenes_dir)):
+            os.mkdir(self.scenes_dir)
+
+        scene_infos = []
+        for scene in novel.scenes:
+            storylines = [x.id for x in scene.story_lines]
+            info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
+                             beginning=scene.beginning, middle=scene.middle,
+                             end=scene.end, wip=scene.wip, pivotal=scene.pivotal, day=scene.day, notes=scene.notes,
+                             action_resolution=scene.action_resolution,
+                             without_action_conflict=scene.without_action_conflict,
+                             pov=scene.pov.id if scene.pov else None, storylines=storylines)
+            scene_infos.append(info)
+        self.__persist_info(self.scenes_dir, scene_infos)
+
+    def __json_file(self, uuid: uuid.UUID) -> str:
+        return f'{uuid}.json'
+
+    def __persist_info(self, dir, infos: Iterable[Any]):
+        for info in infos:
+            with atomic_write(dir.joinpath(self.__json_file(info.id)), overwrite=True) as f:
+                f.write(info.to_json())
 
 
 json_client = JsonClient()
