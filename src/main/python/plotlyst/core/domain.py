@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Any
 
+from dataclasses_json import dataclass_json
+
 ACTION_SCENE = 'action'
 REACTION_SCENE = 'reaction'
 
@@ -97,6 +99,7 @@ class Scene:
         return NEUTRAL
 
 
+@dataclass_json
 @dataclass
 class Novel:
     title: str
@@ -116,6 +119,12 @@ class Novel:
         self.chapters.extend(updated_novel.chapters)
         self.story_lines.clear()
         self.story_lines.extend(updated_novel.story_lines)
+
+
+@dataclass_json
+@dataclass
+class Project:
+    novels: List[Novel] = field(default_factory=list)
 
 
 class SceneBuilderElementType(Enum):

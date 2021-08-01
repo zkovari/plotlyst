@@ -524,3 +524,21 @@ class SqlClient:
 
 
 client = SqlClient()
+
+
+class JsonClient:
+    def init(self, workspace: str):
+        project_file_name = os.path.join(workspace, 'project.plotlyst')
+        if not os.path.exists(project_file_name) or os.path.getsize(project_file_name) == 0:
+            self._db.create_tables(
+                [ApplicationModel, NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel,
+                 NovelStoryLinesModel,
+                 SceneStoryLinesModel,
+                 NovelCharactersModel, SceneCharactersModel, SceneBuilderElementModel])
+            ApplicationModel.create(revision=LATEST.value)
+            NovelModel.create(title='My First Novel')
+
+        self._workspace = workspace
+
+
+json_client = JsonClient()
