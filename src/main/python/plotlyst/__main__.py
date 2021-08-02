@@ -41,8 +41,6 @@ try:
     from fbs_runtime.application_context import cached_property, is_frozen
     from fbs_runtime.excepthook.sentry import SentryExceptionHandler
 
-    from src.main.python.plotlyst.core.migration import app_db_schema_version, AppDbSchemaVersion
-    from src.main.python.plotlyst.view.dialog.migration import MigrationDialog
     from src.main.python.plotlyst.common import EXIT_CODE_RESTART
     from src.main.python.plotlyst.core.client import json_client
     from src.main.python.plotlyst.event.handler import DialogExceptionHandler
@@ -139,16 +137,6 @@ if __name__ == '__main__':
             json_client.init(workspace)
         except Exception as ex:
             QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
-            raise ex
-
-        try:
-            version: AppDbSchemaVersion = app_db_schema_version()
-            if not version.up_to_date:
-                migration_diag = MigrationDialog(version)
-                if not migration_diag.display():
-                    exit(1)
-        except Exception as ex:
-            QMessageBox.critical(None, 'Could not finish database migration', traceback.format_exc())
             raise ex
 
         try:
