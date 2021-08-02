@@ -92,8 +92,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self.ui.btnChaptersToggle.setChecked(True)
-        self.ui.btnNewChapter.setIcon(IconRegistry.plus_icon())
-        self.ui.btnNewChapter.clicked.connect(self._new_chapter)
 
         self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
         self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
@@ -164,6 +162,13 @@ class ScenesOutlineView(AbstractNovelView):
     def _hide_chapters_toggled(self, toggled: bool):
         self.ui.wgtChapters.setHidden(toggled)
         self.ui.btnChaptersToggle.setIcon(IconRegistry.eye_open_icon() if toggled else IconRegistry.eye_closed_icon())
+        if toggled:
+            self.ui.btnNew.setMenu(None)
+        else:
+            menu = QMenu(self.ui.btnNew)
+            menu.addAction(IconRegistry.scene_icon(), 'Add Scene', self._on_new)
+            menu.addAction(IconRegistry.chapter_icon(), 'Add Chapter', self._new_chapter)
+            self.ui.btnNew.setMenu(menu)
 
     def _on_edit(self):
         indexes = self.ui.tblScenes.selectedIndexes()
