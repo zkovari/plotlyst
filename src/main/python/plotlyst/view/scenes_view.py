@@ -192,8 +192,8 @@ class ScenesOutlineView(AbstractNovelView):
         self._switch_to_editor()
 
     def _new_chapter(self):
-        chapter = self.chaptersModel.newChapter()
-        client.insert_chapter(self.novel, chapter)
+        self.chaptersModel.newChapter()
+        client.update_novel(self.novel)
 
     def _switch_view(self):
         height = 50
@@ -254,7 +254,7 @@ class ScenesOutlineView(AbstractNovelView):
             if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
                 return
             self.novel.scenes.remove(scene)
-            client.delete_scene(scene)
+            client.delete_scene(self.novel, scene)
             self.refresh()
             self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
             emit_event(SceneDeletedEvent(self))

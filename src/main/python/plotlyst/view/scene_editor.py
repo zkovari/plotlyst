@@ -223,11 +223,7 @@ class SceneEditor(QObject):
         self.ui.treeSceneBuilder.setColumnWidth(2, 40)
         self.ui.treeSceneBuilder.expandAll()
         self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self.scene))
-        if self._new_scene:
-            self._builder_elements = []
-        else:
-            self._builder_elements = client.fetch_scene_builder_elements(self.novel, self.scene)
-        self._scene_builder_palette_model.setElements(self._builder_elements)
+        self._scene_builder_palette_model.setElements(self.scene.builder_elements)
 
         self._save_enabled = True
 
@@ -374,15 +370,16 @@ class SceneEditor(QObject):
         self._new_scene = False
 
     def _on_close(self):
+        self.scene.builder_elements.clear()
+        self.scene.builder_elements.extend(self._scene_builder_elements())
         self._save_scene()
-        client.update_scene_builder_elements(self.scene, self._scene_builder_elements())
 
     def __get_scene_builder_element(self, scene: Scene, node: SceneInventoryNode, seq: int) -> SceneBuilderElement:
         children = []
         for child_seq, child in enumerate(node.children):
             children.append(self.__get_scene_builder_element(self.scene, child, child_seq))
 
-        return SceneBuilderElement(scene=scene, type=convert_to_element_type(node), sequence=seq, text=node.name,
+        return SceneBuilderElement(type=convert_to_element_type(node), text=node.name,
                                    children=children,
                                    character=node.character, has_suspense=node.suspense, has_tension=node.tension,
                                    has_stakes=node.stakes)

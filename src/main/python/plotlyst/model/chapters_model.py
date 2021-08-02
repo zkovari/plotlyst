@@ -164,7 +164,7 @@ class ChaptersTreeModel(TreeItemModel):
         parent = self.rootIndex()
         self.layoutAboutToBeChanged.emit([QPersistentModelIndex(parent)])
         self.layoutChanged.emit([QPersistentModelIndex(parent)])
-        client.update_scene_chapter(node.scene)
+        client.update_scene(node.scene)
 
         return True
 

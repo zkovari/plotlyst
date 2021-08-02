@@ -1,13 +1,18 @@
-from src.main.python.plotlyst.core.domain import Character
+from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.test.common import create_character, go_to_characters, click_on_item, patch_confirmed, \
     go_to_scenes
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.main_window import MainWindow
 
 
-def test_create_character(qtbot, window: MainWindow):
-    create_character(qtbot, window, 'Tom')
-    assert window.novel.characters == [Character(id=1, name='Tom')]
+def test_create_character(qtbot, filled_window: MainWindow):
+    create_character(qtbot, filled_window, 'Tom')
+    assert filled_window.novel.characters
+    assert filled_window.novel.characters[-1].name == 'Tom'
+
+    saved_novel = client.fetch_novel(filled_window.novel.id)
+    assert len(saved_novel.characters) == len(filled_window.novel.characters)
+    assert saved_novel.characters[-1].name == 'Tom'
 
 
 def test_edit_character(qtbot, filled_window: MainWindow):

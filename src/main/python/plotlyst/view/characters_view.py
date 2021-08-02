@@ -104,6 +104,6 @@ class CharactersView(AbstractNovelView):
             if not ask_confirmation(f'Are you sure you want to delete character {character.name}?'):
                 return
             self.novel.characters.remove(character)
-            client.delete_character(character)
+            client.delete_character(self.novel, character)
             emit_event(NovelReloadRequestedEvent(self))
             self.refresh()

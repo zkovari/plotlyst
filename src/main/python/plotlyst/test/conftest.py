@@ -20,8 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import pytest
 
-from src.main.python.plotlyst.core.client import context, client
-from src.main.python.plotlyst.core.domain import Character, StoryLine, Scene, Chapter, ACTION_SCENE, REACTION_SCENE
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Character, StoryLine, Scene, Chapter, ACTION_SCENE, REACTION_SCENE, \
+    Novel
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
@@ -29,16 +30,11 @@ from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
 
 @pytest.fixture
 def test_client(tmp_path):
-    context.init(tmp_path)
+    json_client.init(tmp_path)
 
 
 @pytest.fixture
-def in_memory_test_client():
-    context.init(':memory:')
-
-
-@pytest.fixture
-def window(qtbot, in_memory_test_client):
+def window(qtbot, test_client):
     return get_main_window(qtbot)
 
 
@@ -48,14 +44,14 @@ def window_with_disk_db(qtbot, test_client):
 
 
 @pytest.fixture
-def filled_window(qtbot, in_memory_test_client):
-    init_db()
+def filled_window(qtbot, test_client):
+    init_project()
     return get_main_window(qtbot)
 
 
 def get_main_window(qtbot):
     event_dispatcher.clear()
-    
+
     main_window = MainWindow()
     main_window.setStyleSheet(APP_STYLESHEET)
     main_window.show()
@@ -65,30 +61,24 @@ def get_main_window(qtbot):
     return main_window
 
 
-def init_db():
-    novel = client.novels()[0]
+def init_project():
+    novel = Novel(title='Test Novel')
     char_a = Character(name='Alfred')
     char_b = Character(name='Babel')
     char_c = Character(name='Celine')
     char_d = Character(name='Delphine')
     char_e = Character(name='Edward')
-    client.insert_character(novel, char_a)
-    client.insert_character(novel, char_b)
-    client.insert_character(novel, char_c)
-    client.insert_character(novel, char_d)
-    client.insert_character(novel, char_e)
+    novel.characters.extend([char_a, char_b, char_c, char_d, char_e])
 
     storyline_main = StoryLine(text='Main')
     storyline_lesser = StoryLine(text='Lesser')
     storyline_love = StoryLine(text='Love')
-    client.insert_story_line(novel, storyline_main)
-    client.insert_story_line(novel, storyline_lesser)
-    client.insert_story_line(novel, storyline_love)
+    novel.story_lines.extend([storyline_main, storyline_lesser, storyline_love])
 
     chapter_1 = Chapter(title='1', sequence=0)
     chapter_2 = Chapter(title='2', sequence=1)
-    client.insert_chapter(novel, chapter_1)
-    client.insert_chapter(novel, chapter_2)
+    novel.chapters.append(chapter_1)
+    novel.chapters.append(chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
                     story_lines=[storyline_main], sequence=0, chapter=chapter_1, day=1, type=ACTION_SCENE,
                     beginning='Beginning', middle='Middle', end='End')
@@ -96,7 +86,7 @@ def init_db():
                     story_lines=[storyline_lesser, storyline_love], sequence=1, chapter=chapter_2, day=2,
                     type=REACTION_SCENE,
                     beginning='Beginning', middle='Middle', end='End')
-    client.insert_scene(novel, scene_1)
-    client.update_scene_chapter(scene_1)
-    client.insert_scene(novel, scene_2)
-    client.update_scene_chapter(scene_2)
+    novel.scenes.append(scene_1)
+    novel.scenes.append(scene_2)
+
+    json_client.migrate(novel)
