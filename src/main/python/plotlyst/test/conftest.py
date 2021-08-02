@@ -89,4 +89,8 @@ def init_project():
     novel.scenes.append(scene_1)
     novel.scenes.append(scene_2)
 
-    json_client.migrate(novel)
+    json_client.insert_novel(novel)
+    for char in novel.characters:
+        json_client.insert_character(novel, char)
+    for scene in novel.scenes:
+        json_client.insert_scene(novel, scene)

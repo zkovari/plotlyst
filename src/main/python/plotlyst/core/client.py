@@ -221,7 +221,6 @@ class JsonClient:
         return False
 
     def insert_novel(self, novel: Novel):
-        novel.id = uuid.uuid4()
         project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id)
         self.project.novels.append(project_novel_info)
         self._persist_project()
@@ -361,25 +360,6 @@ class JsonClient:
             data = json_file.read()
             return NovelInfo.from_json(data)
 
-    def migrate(self, novel: Novel):
-        novel.id = uuid.uuid4()
-        for scene in novel.scenes:
-            scene.id = uuid.uuid4()
-        for char in novel.characters:
-            char.id = uuid.uuid4()
-        for storyline in novel.story_lines:
-            storyline.id = uuid.uuid4()
-        for chapter in novel.chapters:
-            chapter.id = uuid.uuid4()
-
-        self.project.novels.clear()
-        self.project.novels.append(ProjectNovelInfo(title=novel.title, id=novel.id))
-        self._persist_project()
-        self._persist_novel(novel)
-
-        self._persist_characters(novel)
-        self._persist_scenes(novel)
-
     def _persist_project(self):
         with atomic_write(self.project_file_path, overwrite=True) as f:
             f.write(self.project.to_json())
@@ -392,23 +372,9 @@ class JsonClient:
 
         self.__persist_info(self.novels_dir, novel_info)
 
-    def _persist_characters(self, novel: Novel):
-        for char in novel.characters:
-            char_info = CharacterInfo(id=char.id, name=char.name)
-            if char.avatar:
-                char_info.avatar_id = uuid.uuid4()
-                image = QImage.fromData(char.avatar)
-                image.save(str(self.images_dir.joinpath(self.__image_file(char_info.avatar_id))))
-
-            self.__persist_info(self.characters_dir, char_info)
-
     def _persist_character(self, char: Character):
         char_info = CharacterInfo(id=char.id, name=char.name)
         self.__persist_info(self.characters_dir, char_info)
-
-    def _persist_scenes(self, novel: Novel):
-        for scene in novel.scenes:
-            self._persist_scene(scene)
 
     def _persist_scene(self, scene: Scene):
         storylines = [x.id for x in scene.story_lines]
