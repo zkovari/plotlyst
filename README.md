@@ -1,5 +1,5 @@
 [![Test](https://github.com/zkovari/plotlyst/actions/workflows/test.yml/badge.svg)](https://github.com/zkovari/plotlyst/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/zkovari/plotlyst/branch/main/graph/badge.svg?token=LRCKZ1FN65)](https://codecov.io/gh/zkovari/plotlyst)
+[![Coverage Status](https://coveralls.io/repos/github/zkovari/plotlyst/badge.svg?branch=feature/coveralls)](https://coveralls.io/github/zkovari/plotlyst?branch=feature/coveralls)
 # Plotlyst
 
 
