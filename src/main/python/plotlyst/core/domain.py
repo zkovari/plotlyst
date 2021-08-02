@@ -50,7 +50,7 @@ class StoryLine:
 class Chapter:
     title: str
     sequence: int
-    id: Optional[int] = None
+    id: Optional[uuid.UUID] = None
 
 
 @dataclass

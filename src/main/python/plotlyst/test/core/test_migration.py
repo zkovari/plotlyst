@@ -5,13 +5,13 @@ from src.main.python.plotlyst.core.client import LATEST, ApplicationModel, conte
 from src.main.python.plotlyst.core.migration import app_db_schema_version, AppDbSchemaVersion, Migration
 
 
-def test_schema_version(in_memory_test_client):
+def test_schema_version(test_client):
     version: AppDbSchemaVersion = app_db_schema_version()
     assert version.up_to_date
     assert version.revision == LATEST
 
 
-def test_old_schema_version(in_memory_test_client):
+def test_old_schema_version(test_client):
     m = ApplicationModel.get_by_id(1)
     m.revision = LATEST.value - 1
     m.save()

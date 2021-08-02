@@ -25,7 +25,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Optional, Iterable, Any
 
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QByteArray, QBuffer, QIODevice
+from PyQt5.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined
 from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
@@ -537,6 +538,13 @@ client = SqlClient()
 class CharacterInfo:
     name: str
     id: uuid.UUID
+    avatar_id: Optional[uuid.UUID] = None
+
+
+@dataclass
+class CharacterArcInfo:
+    arc: int
+    character: uuid.UUID
 
 
 @dataclass_json
@@ -556,8 +564,8 @@ class SceneInfo:
     storylines: List[uuid.UUID] = field(default_factory=list)
     day: int = 1
     notes: str = ''
-    # chapter: Optional[Chapter] = None
-    # arcs: List[CharacterArc] = field(default_factory=list)
+    chapter: Optional[uuid.UUID] = None
+    arcs: List[CharacterArcInfo] = field(default_factory=list)
     action_resolution: bool = False
     without_action_conflict: bool = False
 
@@ -570,12 +578,19 @@ class StorylineInfo:
 
 
 @dataclass
+class ChapterInfo:
+    title: str
+    id: uuid.UUID
+
+
+@dataclass
 class NovelInfo:
     title: str
     id: uuid.UUID
     scenes: List[uuid.UUID] = field(default_factory=list)
     characters: List[uuid.UUID] = field(default_factory=list)
     storylines: List[StorylineInfo] = field(default_factory=list)
+    chapters: List[ChapterInfo] = field(default_factory=list)
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -593,6 +608,7 @@ class JsonClient:
         self.root_path: Optional[pathlib.Path] = None
         self.scenes_dir: Optional[pathlib.Path] = None
         self.characters_dir: Optional[pathlib.Path] = None
+        self.images_dir: Optional[pathlib.Path] = None
 
     def init(self, workspace: str):
         self.project_file_path = os.path.join(workspace, 'project.plotlyst')
@@ -608,14 +624,25 @@ class JsonClient:
         self.root_path = pathlib.Path(self._workspace)
         self.scenes_dir = self.root_path.joinpath('scenes')
         self.characters_dir = self.root_path.joinpath('characters')
+        self.images_dir = self.root_path.joinpath('images')
 
     def fetch_novel(self) -> Novel:
         novel_info = self.project.novels[0]
 
-        storylines = [StoryLine(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in novel_info.storylines]
+        storylines = []
         storylines_ids = {}
-        for sl in storylines:
-            storylines_ids[str(sl.id)] = sl
+        for i, sl_info in enumerate(novel_info.storylines):
+            color = sl_info.color_hexa if sl_info.color_hexa else STORY_LINE_COLOR_CODES[
+                i % len(STORY_LINE_COLOR_CODES)]
+            sl = StoryLine(text=sl_info.text, id=sl_info.id, color_hexa=color)
+            storylines.append(sl)
+            storylines_ids[str(sl_info.id)] = sl
+        chapters = []
+        chapters_ids = {}
+        for seq, chapter_info in enumerate(novel_info.chapters):
+            chapter = Chapter(title=chapter_info.title, sequence=seq, id=chapter_info.id)
+            chapters.append(chapter)
+            chapters_ids[str(chapter.id)] = chapter
 
         characters = []
         for char_id in novel_info.characters:
@@ -625,7 +652,12 @@ class JsonClient:
             with open(path) as json_file:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
-                characters.append(Character(name=info.name, id=info.id))
+                character = Character(name=info.name, id=info.id)
+                if info.avatar_id:
+                    bytes = self._load_image(self.__image_file(info.avatar_id))
+                    if bytes:
+                        character.avatar = bytes
+                characters.append(character)
         characters_ids = {}
         for char in characters:
             characters_ids[str(char.id)] = char
@@ -651,18 +683,28 @@ class JsonClient:
                 for char_id in info.characters:
                     if str(char_id) in characters_ids.keys():
                         scene_characters.append(characters_ids[str(char_id)])
-                print(scene_characters)
+
+                if info.chapter and str(info.chapter) in chapters_ids.keys():
+                    chapter = chapters_ids[str(info.chapter)]
+                else:
+                    chapter = None
+
+                arcs = []
+                for arc in info.arcs:
+                    if str(arc.character) in characters_ids.keys():
+                        arcs.append(CharacterArc(arc=arc.arc, character=characters_ids[str(arc.character)]))
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, pivotal=info.pivotal, day=info.day,
                               notes=info.notes,
                               action_resolution=info.action_resolution,
                               without_action_conflict=info.without_action_conflict, sequence=seq,
-                              story_lines=scene_storylines, pov=pov, characters=scene_characters)
+                              story_lines=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
+                              chapter=chapter)
                 scenes.append(scene)
 
         return Novel(title=novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
-                     scenes=scenes)
+                     scenes=scenes, chapters=chapters)
 
     def persist(self, novel: Novel):
         novel.id = uuid.uuid4()
@@ -672,26 +714,40 @@ class JsonClient:
             char.id = uuid.uuid4()
         for storyline in novel.story_lines:
             storyline.id = uuid.uuid4()
+        for chapter in novel.chapters:
+            chapter.id = uuid.uuid4()
+
+        if not os.path.exists(str(self.images_dir)):
+            os.mkdir(self.images_dir)
 
         self.project.novels.clear()
         novel_info = NovelInfo(title=novel.title, id=novel.id, scenes=[x.id for x in novel.scenes],
                                storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
-                                           novel.story_lines], characters=[x.id for x in novel.characters])
+                                           novel.story_lines], characters=[x.id for x in novel.characters],
+                               chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters])
         self.project.novels.append(novel_info)
         with atomic_write(self.project_file_path, overwrite=True) as f:
             f.write(self.project.to_json())
 
-        self._persist_characters(self.root_path, novel)
-        self._persist_scenes(self.root_path, novel)
+        self._persist_characters(novel)
+        self._persist_scenes(novel)
 
-    def _persist_characters(self, root_path: pathlib.Path, novel: Novel):
+    def _persist_characters(self, novel: Novel):
         if not os.path.exists(str(self.characters_dir)):
             os.mkdir(self.characters_dir)
 
-        infos = [CharacterInfo(id=x.id, name=x.name) for x in novel.characters]
+        infos = []
+        for char in novel.characters:
+            char_info = CharacterInfo(id=char.id, name=char.name)
+            if char.avatar:
+                char_info.avatar_id = uuid.uuid4()
+                image = QImage.fromData(char.avatar)
+                image.save(str(self.images_dir.joinpath(self.__image_file(char_info.avatar_id))))
+            infos.append(char_info)
+
         self.__persist_info(self.characters_dir, infos)
 
-    def _persist_scenes(self, root_path: pathlib.Path, novel: Novel):
+    def _persist_scenes(self, novel: Novel):
         if not os.path.exists(str(self.scenes_dir)):
             os.mkdir(self.scenes_dir)
 
@@ -699,17 +755,34 @@ class JsonClient:
         for scene in novel.scenes:
             storylines = [x.id for x in scene.story_lines]
             characters = [x.id for x in scene.characters]
+            arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]
             info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                              beginning=scene.beginning, middle=scene.middle,
                              end=scene.end, wip=scene.wip, pivotal=scene.pivotal, day=scene.day, notes=scene.notes,
                              action_resolution=scene.action_resolution,
                              without_action_conflict=scene.without_action_conflict,
-                             pov=scene.pov.id if scene.pov else None, storylines=storylines, characters=characters)
+                             pov=scene.pov.id if scene.pov else None, storylines=storylines, characters=characters,
+                             arcs=arcs, chapter=scene.chapter.id if scene.chapter else None)
             scene_infos.append(info)
         self.__persist_info(self.scenes_dir, scene_infos)
 
     def __json_file(self, uuid: uuid.UUID) -> str:
         return f'{uuid}.json'
+
+    def __image_file(self, uuid: uuid.UUID) -> str:
+        return f'{uuid}.jpeg'
+
+    def _load_image(self, filename) -> Optional[Any]:
+        reader = QImageReader(str(self.images_dir.joinpath(filename)))
+        reader.setAutoTransform(True)
+        image: QImage = reader.read()
+        if image is None:
+            return None
+        array = QByteArray()
+        buffer = QBuffer(array)
+        buffer.open(QIODevice.WriteOnly)
+        image.save(buffer, 'PNG')
+        return array
 
     def __persist_info(self, dir, infos: Iterable[Any]):
         for info in infos:
