@@ -23,9 +23,12 @@ jobs:
           python -m pip install pytest-xvfb
           pip install -e .[dev]
       - name: Test with pytest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./test.sh
-          bash <(curl -s https://codecov.io/bash)
+          pip install coveralls
+          coveralls --service=github
 
   qa:
     runs-on: ubuntu-latest
