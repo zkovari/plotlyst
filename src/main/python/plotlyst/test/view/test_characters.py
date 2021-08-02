@@ -9,10 +9,12 @@ def test_create_character(qtbot, filled_window: MainWindow):
     create_character(qtbot, filled_window, 'Tom')
     assert filled_window.novel.characters
     assert filled_window.novel.characters[-1].name == 'Tom'
+    assert filled_window.novel.characters[-1].id
 
     saved_novel = client.fetch_novel(filled_window.novel.id)
     assert len(saved_novel.characters) == len(filled_window.novel.characters)
     assert saved_novel.characters[-1].name == 'Tom'
+    assert saved_novel.characters[-1].id
 
 
 def test_edit_character(qtbot, filled_window: MainWindow):
@@ -32,6 +34,9 @@ def test_edit_character(qtbot, filled_window: MainWindow):
     view.editor.ui.btnClose.click()
 
     assert view.novel.characters[0].name == name
+
+    saved_novel = client.fetch_novel(filled_window.novel.id)
+    assert saved_novel.characters[0].name == name
 
 
 def test_delete_character(qtbot, filled_window: MainWindow, monkeypatch):
@@ -54,3 +59,7 @@ def test_delete_character(qtbot, filled_window: MainWindow, monkeypatch):
     scenes_view = go_to_scenes(filled_window)
     assert not scenes_view.novel.scenes[0].pov
     assert alfred not in scenes_view.novel.scenes[1].characters
+
+    saved_novel = client.fetch_novel(filled_window.novel.id)
+    assert len(saved_novel.characters) == 4
+    assert alfred not in saved_novel.characters

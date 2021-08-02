@@ -29,7 +29,7 @@ REACTION_SCENE = 'reaction'
 @dataclass(unsafe_hash=True)
 class Character:
     name: str
-    id: Optional[uuid.UUID] = None
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     avatar: Optional[Any] = None
     personality: str = ''
     age: int = 0
@@ -43,14 +43,14 @@ class NpcCharacter(Character):
 class StoryLine:
     text: str
     color_hexa: str = ''
-    id: Optional[uuid.UUID] = None
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
 @dataclass
 class Chapter:
     title: str
     sequence: int
-    id: Optional[uuid.UUID] = None
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
 @dataclass
@@ -90,13 +90,10 @@ class SceneBuilderElementType(Enum):
 
 @dataclass
 class SceneBuilderElement:
-    # scene: Scene
     type: SceneBuilderElementType
-    # sequence: int
     text: str = ''
     children: List['SceneBuilderElement'] = field(default_factory=list)
     character: Optional[Character] = None
-    # id: Optional[int] = None
     has_suspense: bool = False
     has_tension: bool = False
     has_stakes: bool = False
@@ -105,7 +102,7 @@ class SceneBuilderElement:
 @dataclass
 class Scene:
     title: str
-    id: Optional[uuid.UUID] = None
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     synopsis: str = ''
     type: str = ''
     pivotal: str = ''
@@ -138,7 +135,7 @@ class Scene:
 @dataclass
 class Novel:
     title: str
-    id: Optional[uuid.UUID] = None
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
     story_lines: List[StoryLine] = field(default_factory=list)
