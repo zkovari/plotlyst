@@ -66,6 +66,42 @@ HAPPY: int = 1
 VERY_HAPPY: int = 2
 
 
+class SceneBuilderElementType(Enum):
+    SPEECH = 'speech'
+    ACTION_BEAT = 'action_beat'
+    CHARACTER_ENTRY = 'character_entry'
+    REACTION = 'reaction'
+    SIGHT = 'sight'
+    SOUND = 'sound'
+    SMELL = 'smell'
+    TASTE = 'taste'
+    TOUCH = 'touch'
+    FEELING = 'feeling'
+    REFLEX = 'reflex'
+    ACTION = 'action'
+    MONOLOG = 'monolog'
+    EMOTIONAL_CHANGE = 'emotional_change'
+    GOAL = 'goal'
+    DISASTER = 'disaster'
+    RESOLUTION = 'resolution'
+    DECISION = 'decision'
+    ENDING = 'ending'
+
+
+@dataclass
+class SceneBuilderElement:
+    # scene: Scene
+    type: SceneBuilderElementType
+    # sequence: int
+    text: str = ''
+    children: List['SceneBuilderElement'] = field(default_factory=list)
+    character: Optional[Character] = None
+    # id: Optional[int] = None
+    has_suspense: bool = False
+    has_tension: bool = False
+    has_stakes: bool = False
+
+
 @dataclass
 class Scene:
     title: str
@@ -90,6 +126,7 @@ class Scene:
     arcs: List[CharacterArc] = field(default_factory=list)
     action_resolution: bool = False
     without_action_conflict: bool = False
+    builder_elements: List[SceneBuilderElement] = field(default_factory=list)
 
     def pov_arc(self) -> int:
         for arc in self.arcs:
@@ -117,42 +154,6 @@ class Novel:
         self.chapters.extend(updated_novel.chapters)
         self.story_lines.clear()
         self.story_lines.extend(updated_novel.story_lines)
-
-
-class SceneBuilderElementType(Enum):
-    SPEECH = 'speech'
-    ACTION_BEAT = 'action_beat'
-    CHARACTER_ENTRY = 'character_entry'
-    REACTION = 'reaction'
-    SIGHT = 'sight'
-    SOUND = 'sound'
-    SMELL = 'smell'
-    TASTE = 'taste'
-    TOUCH = 'touch'
-    FEELING = 'feeling'
-    REFLEX = 'reflex'
-    ACTION = 'action'
-    MONOLOG = 'monolog'
-    EMOTIONAL_CHANGE = 'emotional_change'
-    GOAL = 'goal'
-    DISASTER = 'disaster'
-    RESOLUTION = 'resolution'
-    DECISION = 'decision'
-    ENDING = 'ending'
-
-
-@dataclass
-class SceneBuilderElement:
-    scene: Scene
-    type: SceneBuilderElementType
-    sequence: int
-    text: str = ''
-    children: List['SceneBuilderElement'] = field(default_factory=list)
-    character: Optional[Character] = None
-    id: Optional[int] = None
-    has_suspense: bool = False
-    has_tension: bool = False
-    has_stakes: bool = False
 
 
 @dataclass

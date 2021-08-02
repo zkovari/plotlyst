@@ -23,7 +23,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional, Any
+from typing import List, Optional, Any, Dict
 
 from PyQt5.QtCore import QTimer, Qt, QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QImage, QImageReader
@@ -340,106 +340,28 @@ class SqlClient:
         json_client.insert_character(novel, character)
 
     def update_character(self, character: Character):
-        pass
-        # character_m: CharacterModel = CharacterModel.get_by_id(character.id)
-        # character_m.name = character.name
-        # character_m.avatar = character.avatar
-        #
-        # character_m.save()
+        json_client.update_character(character)
 
     def delete_character(self, novel: Novel, character: Character):
         json_client.delete_character(novel, character)
-        # character_m = CharacterModel.get(id=character.id)
-        # character_m.delete_instance()
 
     def update_scene(self, scene: Scene):
-        pass
-        # scene_m: SceneModel = SceneModel.get_by_id(scene.id)
-        # scene_m.title = scene.title
-        # scene_m.synopsis = scene.synopsis
-        # scene_m.type = scene.type
-        # scene_m.pivotal = scene.pivotal
-        # scene_m.sequence = scene.sequence
-        # scene_m.beginning = scene.beginning
-        # scene_m.middle = scene.middle
-        # scene_m.end = scene.end
-        # scene_m.wip = scene.wip
-        # scene_m.end_event = scene.end_event
-        # scene_m.day = scene.day
-        # scene_m.beginning_type = scene.beginning_type
-        # scene_m.ending_hook = scene.ending_hook
-        # scene_m.notes = scene.notes
-        # scene_m.without_action_conflict = scene.without_action_conflict
-        # scene_m.action_resolution = scene.action_resolution
-        #
-        # scene_m.save()
-        #
-        # self._update_scene_characters(scene)
-        # self._update_scene_story_lines(scene)
-        # self._update_scene_character_arcs(scene)
+        json_client.update_scene(scene)
 
     def update_scene_chapter(self, scene: Scene):
-        pass
-        # scene_m: SceneModel = SceneModel.get_by_id(scene.id)
-        # if scene.chapter:
-        #     scene_m.chapter = scene.chapter.id
-        # else:
-        #     scene_m.chapter = None
-        #
-        # scene_m.save()
+        json_client.update_scene(scene)
 
     def update_scene_sequences(self, novel: Novel):
         json_client.update_novel(novel)
 
     def insert_scene(self, novel: Novel, scene: Scene):
         json_client.insert_scene(novel, scene)
-        pass
-        # scene_m: SceneModel = SceneModel.create(title=scene.title, synopsis=scene.synopsis, type=scene.type,
-        #                                         pivotal=scene.pivotal, sequence=scene.sequence,
-        #                                         beginning=scene.beginning,
-        #                                         middle=scene.middle, end=scene.end, novel=novel.id, wip=scene.wip,
-        #                                         end_event=scene.end_event, day=scene.day,
-        #                                         beginning_type=scene.beginning_type,
-        #                                         ending_hook=scene.ending_hook, notes=scene.notes)
-        # scene.id = scene_m.id
-        #
-        # self._update_scene_characters(scene)
-        # self._update_scene_story_lines(scene)
-
-    # def _update_scene_story_lines(self, scene: Scene):
-    # scene_m = SceneModel.get_by_id(scene.id)
-    # for story_line in scene_m.story_lines:
-    #     story_line.delete_instance()
-    #
-    # for story_line in scene.story_lines:
-    #     SceneStoryLinesModel.create(story_line=story_line.id, scene=scene.id)
-
-    # def _update_scene_character_arcs(self, scene: Scene):
-    #     scene_m = SceneModel.get_by_id(scene.id)
-    #     for arc in scene_m.arcs:
-    #         arc.delete_instance()
-    #
-    #     for character_arc in scene.arcs:
-    #         CharacterArcModel.create(arc=character_arc.arc, character=character_arc.character.id, scene=scene.id)
-    #
-    # def _update_scene_characters(self, scene: Scene):
-    #     scene_m = SceneModel.get_by_id(scene.id)
-    #     for char in scene_m.characters:
-    #         char.delete_instance()
-    #     for char in scene.characters:
-    #         SceneCharactersModel.create(scene=scene.id, character=char.id, type='active')
-    #     if scene.pov:
-    #         SceneCharactersModel.create(scene=scene.id, character=scene.pov.id, type='pov')
 
     def delete_scene(self, novel: Novel, scene: Scene):
         json_client.delete_scene(novel, scene)
-        # scene_m = SceneModel.get(id=scene.id)
-        # scene_m.delete_instance()
 
     def insert_chapter(self, novel: Novel, chapter: Chapter):
         json_client.update_novel(novel)
-        # m = ChapterModel.create(title=chapter.title, novel=novel.id, sequence=chapter.sequence)
-        # chapter.id = m.id
 
     def insert_story_line(self, novel: Novel, story_line: StoryLine):
         json_client.update_novel(novel)
@@ -449,82 +371,6 @@ class SqlClient:
 
     def update_story_line(self, novel: Novel, story_line: StoryLine):
         json_client.update_novel(novel)
-
-    def fetch_scene_builder_elements(self, novel: Novel, scene: Scene) -> List[SceneBuilderElement]:
-        return []
-        # scene_m = SceneModel.get_by_id(scene.id)
-        # parents_by_id: Dict[int, SceneBuilderElement] = {}
-        # characters: Dict[int, Character] = {}
-        # for char in novel.characters:
-        #     if char.id:
-        #         characters[char.id] = char
-        #
-        # elements: List[SceneBuilderElement] = []
-        # for element_m in scene_m.elements:
-        #     element = self.__get_scene_builder_element(scene, element_m, parents_by_id, characters)
-        #     if not element_m.parent:
-        #         elements.append(parents_by_id[element.id])
-        # for el in elements:
-        #     self._sort_children(el)
-        # return elements
-
-    def __get_scene_builder_element(self, scene: Scene, element_m,
-                                    parents_by_id: Dict[int, SceneBuilderElement],
-                                    characters: Dict[int, Character]) -> SceneBuilderElement:
-        if element_m.parent:
-            if element_m.parent.id not in parents_by_id.keys():
-                self.__get_scene_builder_element(scene, element_m.parent, parents_by_id, characters)
-            parent = parents_by_id[element_m.parent.id]
-        else:
-            parent = None
-        if element_m.character:
-            character = characters[element_m.character.id]
-        elif element_m.type == SceneBuilderElementType.SPEECH.value:
-            character = NpcCharacter('Other')
-        elif element_m.type == SceneBuilderElementType.CHARACTER_ENTRY.value:
-            character = NpcCharacter('Other')
-        else:
-            character = None
-        new_element = SceneBuilderElement(scene=scene, type=SceneBuilderElementType(element_m.type),
-                                          sequence=element_m.sequence,
-                                          character=character,
-                                          text=element_m.text,
-                                          has_suspense=element_m.suspense,
-                                          has_tension=element_m.tension,
-                                          has_stakes=element_m.stakes, id=element_m.id)
-        if new_element.id not in parents_by_id.keys():
-            parents_by_id[new_element.id] = new_element
-        if parent:
-            parent.children.append(new_element)
-        return new_element
-
-    def _sort_children(self, element: SceneBuilderElement):
-        element.children = sorted(element.children, key=lambda x: x.sequence)
-        for child in element.children:
-            self._sort_children(child)
-
-    def update_scene_builder_elements(self, scene: Scene, elements: List[SceneBuilderElement]):
-        return
-        scene_m = SceneModel.get_by_id(scene.id)
-        for el_m in scene_m.elements:
-            el_m.delete_instance()
-
-        for seq, el in enumerate(elements):
-            self._create_scene_builder_element(scene, el, seq)
-
-    def _create_scene_builder_element(self, scene: Scene, element: SceneBuilderElement, sequence: int, parent_id=None):
-        if element.character:
-            char_id = element.character.id
-        else:
-            char_id = None
-        el_parent = SceneBuilderElementModel.create(scene=scene.id, character=char_id, text=element.text,
-                                                    parent=parent_id,
-                                                    sequence=sequence,
-                                                    type=element.type.value, suspense=element.has_suspense,
-                                                    stakes=element.has_stakes,
-                                                    tension=element.has_tension)
-        for seq_child, el_child in enumerate(element.children):
-            self._create_scene_builder_element(scene, el_child, seq_child, el_parent.id)
 
 
 client = SqlClient()
@@ -542,6 +388,17 @@ class CharacterInfo:
 class CharacterArcInfo:
     arc: int
     character: uuid.UUID
+
+
+@dataclass
+class SceneBuilderElementInfo:
+    type: SceneBuilderElementType
+    text: str = ''
+    children: List['SceneBuilderElementInfo'] = field(default_factory=list)
+    character: Optional[uuid.UUID] = None
+    has_suspense: bool = False
+    has_tension: bool = False
+    has_stakes: bool = False
 
 
 @dataclass_json
@@ -565,6 +422,7 @@ class SceneInfo:
     arcs: List[CharacterArcInfo] = field(default_factory=list)
     action_resolution: bool = False
     without_action_conflict: bool = False
+    scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
 
 
 @dataclass
@@ -675,6 +533,9 @@ class JsonClient:
         self._persist_scene(scene)
         self._persist_novel(novel)
 
+    def update_scene(self, scene: Scene):
+        self._persist_scene(scene)
+
     def delete_scene(self, novel: Novel, scene: Scene):
         self._persist_novel(novel)
         self.__delete_info(self.scenes_dir, scene.id)
@@ -682,6 +543,9 @@ class JsonClient:
     def insert_character(self, novel: Novel, character: Character):
         self._persist_character(character)
         self._persist_novel(novel)
+
+    def update_character(self, character: Character):
+        self._persist_character(character)
 
     def delete_character(self, novel: Novel, character: Character):
         self._persist_novel(novel)
@@ -757,6 +621,10 @@ class JsonClient:
                 else:
                     chapter = None
 
+                builder_elements: List[SceneBuilderElement] = []
+                for builder_info in info.scene_builder_elements:
+                    builder_elements.append(self.__get_scene_builder_element(builder_info, characters_ids))
+
                 arcs = []
                 for arc in info.arcs:
                     if str(arc.character) in characters_ids.keys():
@@ -768,7 +636,7 @@ class JsonClient:
                               action_resolution=info.action_resolution,
                               without_action_conflict=info.without_action_conflict, sequence=seq,
                               story_lines=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
-                              chapter=chapter)
+                              chapter=chapter, builder_elements=builder_elements)
                 scenes.append(scene)
 
         return Novel(title=novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
@@ -835,14 +703,41 @@ class JsonClient:
         storylines = [x.id for x in scene.story_lines]
         characters = [x.id for x in scene.characters]
         arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]
+        builder_elements = [self.__get_scene_builder_element_info(x) for x in
+                            scene.builder_elements]
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          beginning=scene.beginning, middle=scene.middle,
                          end=scene.end, wip=scene.wip, pivotal=scene.pivotal, day=scene.day, notes=scene.notes,
                          action_resolution=scene.action_resolution,
                          without_action_conflict=scene.without_action_conflict,
                          pov=scene.pov.id if scene.pov else None, storylines=storylines, characters=characters,
-                         arcs=arcs, chapter=scene.chapter.id if scene.chapter else None)
+                         arcs=arcs, chapter=scene.chapter.id if scene.chapter else None,
+                         scene_builder_elements=builder_elements)
         self.__persist_info(self.scenes_dir, info)
+
+    def __get_scene_builder_element_info(self, el: SceneBuilderElement) -> SceneBuilderElementInfo:
+        info = SceneBuilderElementInfo(type=el.type, text=el.text, character=el.character.id if el.character else None,
+                                       has_suspense=el.has_suspense, has_stakes=el.has_stakes,
+                                       has_tension=el.has_tension)
+        for child in el.children:
+            info.children.append(self.__get_scene_builder_element_info(child))
+
+        return info
+
+    def __get_scene_builder_element(self, info: SceneBuilderElementInfo,
+                                    characters_ids: Dict[str, Character]) -> SceneBuilderElement:
+        el = SceneBuilderElement(type=info.type, text=info.text,
+                                 has_suspense=info.has_suspense, has_stakes=info.has_stakes,
+                                 has_tension=info.has_tension)
+        if info.character and str(info.character) in characters_ids.keys():
+            el.character = characters_ids[str(info.character)]
+        elif el.type == SceneBuilderElementType.SPEECH or el.type == SceneBuilderElementType.CHARACTER_ENTRY:
+            el.character = NpcCharacter('Other')
+
+        for child in info.children:
+            el.children.append(self.__get_scene_builder_element(child, characters_ids))
+
+        return el
 
     def __json_file(self, uuid: uuid.UUID) -> str:
         return f'{uuid}.json'
