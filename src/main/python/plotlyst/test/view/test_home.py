@@ -1,9 +1,7 @@
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QDialog, QApplication
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.test.common import go_to_home, patch_confirmed
-from src.main.python.plotlyst.view.dialog.new_novel import NovelEditionDialog
+from src.main.python.plotlyst.test.common import go_to_home, patch_confirmed, create_novel, edit_novel_dialog
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
 
@@ -21,26 +19,30 @@ def test_delete_novel(qtbot, filled_window: MainWindow, monkeypatch):
     assert len(view.novel_cards) == 0
 
 
-def _edit_novel(new_title: str):
-    dialog: QDialog = QApplication.instance().activeModalWidget()
-    try:
-        assert isinstance(dialog, NovelEditionDialog)
-        edition_dialog: NovelEditionDialog = dialog
-        edition_dialog.lineTitle.setText(new_title)
-        edition_dialog.btnConfirm.click()
-    finally:
-        dialog.close()
-
-
-def test_edit_novel(qtbot, filled_window: MainWindow, monkeypatch):
+def test_edit_novel(qtbot, filled_window: MainWindow):
     view: HomeView = go_to_home(filled_window)
 
     assert len(view.novel_cards) == 1
     card = view.novel_cards[0]
     qtbot.mouseClick(card, Qt.LeftButton)
     new_title = 'New title'
-    QTimer.singleShot(40, lambda: _edit_novel(new_title))
+    QTimer.singleShot(40, lambda: edit_novel_dialog(new_title))
     view.ui.btnEdit.click()
 
     assert card.label.text() == new_title
-    assert client.fetch_novel(1).title == new_title
+    assert client.novels()[0].title == new_title
+
+
+def test_create_new_novel(qtbot, filled_window: MainWindow):
+    view: HomeView = go_to_home(filled_window)
+    assert len(view.novel_cards) == 1
+
+    new_title = 'New title'
+    create_novel(filled_window, new_title)
+
+    assert len(view.novel_cards) == 2
+
+    novels = client.novels()
+    assert len(novels) == 2
+    assert novels[1].id
+    assert novels[1].title == new_title

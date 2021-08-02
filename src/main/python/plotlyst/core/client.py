@@ -62,8 +62,8 @@ class SqlClient:
     def update_novel(self, novel: Novel):
         json_client.update_novel(novel)
 
-    def fetch_novel(self, id: int) -> Novel:
-        return json_client.fetch_novel()
+    def fetch_novel(self, id: uuid.UUID) -> Novel:
+        return json_client.fetch_novel(id)
 
     def insert_character(self, novel: Novel, character: Character):
         json_client.insert_character(novel, character)
@@ -227,13 +227,13 @@ class JsonClient:
         self._persist_novel(novel)
 
     def delete_novel(self, novel: Novel):
-        novel_info = self._find_project_novel_info_or_fail(novel)
+        novel_info = self._find_project_novel_info_or_fail(novel.id)
         self.project.novels.remove(novel_info)
         self._persist_project()
         self.__delete_info(self.novels_dir, novel_info.id)
 
     def update_novel(self, novel: Novel):
-        novel_info = self._find_project_novel_info_or_fail(novel)
+        novel_info = self._find_project_novel_info_or_fail(novel.id)
         if novel_info.title != novel.title:
             novel_info.title = novel.title
             self._persist_project()
@@ -261,14 +261,14 @@ class JsonClient:
         self._persist_novel(novel)
         self.__delete_info(self.characters_dir, character.id)
 
-    def _find_project_novel_info_or_fail(self, novel: Novel) -> ProjectNovelInfo:
+    def _find_project_novel_info_or_fail(self, id: uuid.UUID) -> ProjectNovelInfo:
         for info in self.project.novels:
-            if info.id == novel.id:
+            if info.id == id:
                 return info
-        raise ValueError(f'Could not find novel with title {novel.title}')
+        raise ValueError(f'Could not find novel with id {id}')
 
-    def fetch_novel(self) -> Novel:
-        project_novel_info = self.project.novels[0]
+    def fetch_novel(self, id: uuid.UUID) -> Novel:
+        project_novel_info = self._find_project_novel_info_or_fail(id)
         novel_info = self._read_novel_info(project_novel_info.id)
 
         storylines = []

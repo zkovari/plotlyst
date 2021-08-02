@@ -20,10 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Any, List
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel, QCoreApplication
-from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction, QMessageBox
+from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel, QCoreApplication, QTimer
+from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction, QMessageBox, QDialog, QApplication
 
 from src.main.python.plotlyst.view.characters_view import CharactersView
+from src.main.python.plotlyst.view.dialog.new_novel import NovelEditionDialog
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.notes_view import NotesView
@@ -140,6 +141,23 @@ def go_to_timeline(window: MainWindow) -> TimelineView:
 def go_to_notes(window: MainWindow) -> NotesView:
     window.btnNotes.setChecked(True)
     return window.notes_view
+
+
+def edit_novel_dialog(new_title: str):
+    dialog: QDialog = QApplication.instance().activeModalWidget()
+    try:
+        assert isinstance(dialog, NovelEditionDialog)
+        edition_dialog: NovelEditionDialog = dialog
+        edition_dialog.lineTitle.setText(new_title)
+        edition_dialog.btnConfirm.click()
+    finally:
+        dialog.close()
+
+
+def create_novel(window: MainWindow, title: str):
+    view: HomeView = go_to_home(window)
+    QTimer.singleShot(40, lambda: edit_novel_dialog(title))
+    view.ui.btnAdd.click()
 
 
 def create_character(qtbot, window: MainWindow, name: str):

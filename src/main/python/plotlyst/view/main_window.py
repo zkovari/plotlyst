@@ -76,12 +76,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
         event_sender.send.connect(event_dispatcher.dispatch)
-        event_dispatcher.register(self, NovelReloadRequestedEvent)
-        event_dispatcher.register(self, NovelDeletedEvent)
-        if self.novel and not self.novel.scenes:
-            event_dispatcher.register(self, SceneChangedEvent)
-        if self.novel and not self.novel.characters:
-            event_dispatcher.register(self, CharacterChangedEvent)
+        self._register_events()
 
     @overrides
     def event_received(self, event: Event):
@@ -238,6 +233,15 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.novel = client.fetch_novel(novel.id)
         self._init_views()
         settings.set_last_novel_id(self.novel.id)
+        self._register_events()
+
+    def _register_events(self):
+        event_dispatcher.register(self, NovelReloadRequestedEvent)
+        event_dispatcher.register(self, NovelDeletedEvent)
+        if self.novel and not self.novel.scenes:
+            event_dispatcher.register(self, SceneChangedEvent)
+        if self.novel and not self.novel.characters:
+            event_dispatcher.register(self, CharacterChangedEvent)
 
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)
