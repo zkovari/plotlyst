@@ -73,7 +73,7 @@ class NovelView(AbstractNovelView):
         story_line = StoryLine(text='Unknown')
         self.novel.story_lines.append(story_line)
         story_line.color_hexa = STORY_LINE_COLOR_CODES[(len(self.novel.story_lines) - 1) % len(STORY_LINE_COLOR_CODES)]
-        client.insert_story_line(self.novel, story_line)
+        client.update_novel(self.novel)
         self.story_lines_model.modelReset.emit()
 
         self.ui.tblStoryLines.edit(self.story_lines_model.index(self.story_lines_model.rowCount() - 1,
@@ -95,7 +95,7 @@ class NovelView(AbstractNovelView):
             return
 
         self.novel.story_lines.remove(story_line)
-        client.delete_story_line(self.novel, story_line)
+        client.update_novel(self.novel)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()
 
@@ -111,7 +111,7 @@ class NovelView(AbstractNovelView):
                                                   options=QColorDialog.DontUseNativeDialog)
             if color.isValid():
                 storyline.color_hexa = color.name()
-                client.update_story_line(self.novel, storyline)
+                client.update_novel(self.novel)
             self.ui.tblStoryLines.clearSelection()
 
 
@@ -131,4 +131,4 @@ class StoryLineDelegate(QStyledItemDelegate):
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex) -> None:
         updated = model.setData(index, editor.text(), role=Qt.EditRole)
         if updated:
-            client.update_story_line(self.novel, index.data(EditableNovelStoryLinesListModel.StoryLineRole))
+            client.update_novel(self.novel)

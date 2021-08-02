@@ -223,10 +223,6 @@ class SceneEditor(QObject):
         self.ui.treeSceneBuilder.setColumnWidth(2, 40)
         self.ui.treeSceneBuilder.expandAll()
         self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self.scene))
-        # if self._new_scene:
-        # self._builder_elements = []
-        # else:
-        #     self._builder_elements = client.fetch_scene_builder_elements(self.novel, self.scene)
         self._scene_builder_palette_model.setElements(self.scene.builder_elements)
 
         self._save_enabled = True
@@ -374,10 +370,9 @@ class SceneEditor(QObject):
         self._new_scene = False
 
     def _on_close(self):
-        self._save_scene()
         self.scene.builder_elements.clear()
         self.scene.builder_elements.extend(self._scene_builder_elements())
-        # client.update_scene_builder_elements(self.scene, self._scene_builder_elements())
+        self._save_scene()
 
     def __get_scene_builder_element(self, scene: Scene, node: SceneInventoryNode, seq: int) -> SceneBuilderElement:
         children = []

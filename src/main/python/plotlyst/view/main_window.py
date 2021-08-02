@@ -259,4 +259,4 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
-                client.update_scene_sequences(self.novel)
+                client.update_novel(self.novel)

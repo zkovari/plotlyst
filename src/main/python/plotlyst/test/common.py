@@ -157,8 +157,6 @@ def create_story_line(qtbot, window: MainWindow, text: str):
     novels: NovelView = go_to_novel(window)
 
     novels.ui.btnAdd.click()
-    # click_on_item(qtbot, novels.ui.tblStoryLines, 0, 1)
-    # novels.ui.btnEdit.click()
     row = novels.ui.tblStoryLines.model().rowCount() - 1
     index = novels.ui.tblStoryLines.model().index(row, 1)
     editor = novels.ui.tblStoryLines.indexWidget(index)

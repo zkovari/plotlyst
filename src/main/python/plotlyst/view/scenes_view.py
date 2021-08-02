@@ -192,8 +192,8 @@ class ScenesOutlineView(AbstractNovelView):
         self._switch_to_editor()
 
     def _new_chapter(self):
-        chapter = self.chaptersModel.newChapter()
-        client.insert_chapter(self.novel, chapter)
+        self.chaptersModel.newChapter()
+        client.update_novel(self.novel)
 
     def _switch_view(self):
         height = 50

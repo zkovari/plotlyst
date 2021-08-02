@@ -30,7 +30,6 @@ from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
 
 @pytest.fixture
 def test_client(tmp_path):
-    # context.init(tmp_path)
     json_client.init(tmp_path)
 
 
@@ -70,26 +69,16 @@ def init_project():
     char_d = Character(name='Delphine')
     char_e = Character(name='Edward')
     novel.characters.extend([char_a, char_b, char_c, char_d, char_e])
-    # client.insert_character(novel, char_a)
-    # client.insert_character(novel, char_b)
-    # client.insert_character(novel, char_c)
-    # client.insert_character(novel, char_d)
-    # client.insert_character(novel, char_e)
 
     storyline_main = StoryLine(text='Main')
     storyline_lesser = StoryLine(text='Lesser')
     storyline_love = StoryLine(text='Love')
     novel.story_lines.extend([storyline_main, storyline_lesser, storyline_love])
-    # client.insert_story_line(novel, storyline_main)
-    # client.insert_story_line(novel, storyline_lesser)
-    # client.insert_story_line(novel, storyline_love)
 
     chapter_1 = Chapter(title='1', sequence=0)
     chapter_2 = Chapter(title='2', sequence=1)
     novel.chapters.append(chapter_1)
     novel.chapters.append(chapter_2)
-    # client.insert_chapter(novel, chapter_1)
-    # client.insert_chapter(novel, chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
                     story_lines=[storyline_main], sequence=0, chapter=chapter_1, day=1, type=ACTION_SCENE,
                     beginning='Beginning', middle='Middle', end='End')
@@ -99,9 +88,5 @@ def init_project():
                     beginning='Beginning', middle='Middle', end='End')
     novel.scenes.append(scene_1)
     novel.scenes.append(scene_2)
-    # client.insert_scene(novel, scene_1)
-    # client.update_scene_chapter(scene_1)
-    # client.insert_scene(novel, scene_2)
-    # client.update_scene_chapter(scene_2)
 
     json_client.migrate(novel)

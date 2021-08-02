@@ -348,29 +348,11 @@ class SqlClient:
     def update_scene(self, scene: Scene):
         json_client.update_scene(scene)
 
-    def update_scene_chapter(self, scene: Scene):
-        json_client.update_scene(scene)
-
-    def update_scene_sequences(self, novel: Novel):
-        json_client.update_novel(novel)
-
     def insert_scene(self, novel: Novel, scene: Scene):
         json_client.insert_scene(novel, scene)
 
     def delete_scene(self, novel: Novel, scene: Scene):
         json_client.delete_scene(novel, scene)
-
-    def insert_chapter(self, novel: Novel, chapter: Chapter):
-        json_client.update_novel(novel)
-
-    def insert_story_line(self, novel: Novel, story_line: StoryLine):
-        json_client.update_novel(novel)
-
-    def delete_story_line(self, novel: Novel, story_line: StoryLine):
-        json_client.update_novel(novel)
-
-    def update_story_line(self, novel: Novel, story_line: StoryLine):
-        json_client.update_novel(novel)
 
 
 client = SqlClient()
