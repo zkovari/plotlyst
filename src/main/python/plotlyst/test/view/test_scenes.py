@@ -2,7 +2,6 @@ from typing import List
 
 from PyQt5.QtWidgets import QMessageBox, QAction
 
-from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
     click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed
@@ -10,28 +9,32 @@ from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 
 
-def test_create_new_scene(qtbot, window: MainWindow):
-    scenes: ScenesOutlineView = start_new_scene_editor(window)
+def test_create_new_scene(qtbot, filled_window: MainWindow):
+    scenes: ScenesOutlineView = start_new_scene_editor(filled_window)
 
-    qtbot.keyClicks(scenes.editor.ui.lineTitle, 'Scene 1')
+    qtbot.keyClicks(scenes.editor.ui.lineTitle, 'New scene')
     scenes.editor.ui.sbDay.setValue(1)
 
     scenes.editor.ui.btnClose.click()
 
-    assert_data(scenes.ui.tblScenes.model(), 'Scene 1', 0, 1)
-    assert window.novel.scenes == [Scene(id=1, title='Scene 1', type='action', day=1)]
+    row = scenes.ui.tblScenes.model().rowCount() - 1
+    assert_data(scenes.ui.tblScenes.model(), 'New scene', row, 1)
+    assert filled_window.novel.scenes
+    assert filled_window.novel.scenes[row].title == 'New scene'
+    assert filled_window.novel.scenes[row].type == 'action'
+    assert filled_window.novel.scenes[row].day == 1
 
 
-def test_scene_characters(qtbot, window: MainWindow):
-    create_character(qtbot, window, 'Tom')
-    create_character(qtbot, window, 'Bob')
+def test_scene_characters(qtbot, filled_window: MainWindow):
+    create_character(qtbot, filled_window, 'Tom')
+    create_character(qtbot, filled_window, 'Bob')
 
-    scenes: ScenesOutlineView = start_new_scene_editor(window)
+    scenes: ScenesOutlineView = start_new_scene_editor(filled_window)
     qtbot.keyClicks(scenes.editor.ui.lineTitle, 'Scene 1')
     scenes.editor.ui.cbPov.setCurrentText('Tom')
     scenes.editor.ui.btnClose.click()
 
-    scenes: ScenesOutlineView = start_new_scene_editor(window)
+    scenes: ScenesOutlineView = start_new_scene_editor(filled_window)
     qtbot.keyClicks(scenes.editor.ui.lineTitle, 'Scene 2')
     scenes.editor.ui.cbPov.setCurrentText('Bob')
     scenes.editor.ui.btnClose.click()

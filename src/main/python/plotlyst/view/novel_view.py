@@ -58,7 +58,7 @@ class NovelView(AbstractNovelView):
         self.ui.tblStoryLines.setModel(self.story_lines_model)
         self.ui.tblStoryLines.horizontalHeader().setSectionResizeMode(EditableNovelStoryLinesListModel.ColText,
                                                                       QHeaderView.Stretch)
-        self.ui.tblStoryLines.setItemDelegate(StoryLineDelegate())
+        self.ui.tblStoryLines.setItemDelegate(StoryLineDelegate(self.novel))
         self.ui.tblStoryLines.selectionModel().selectionChanged.connect(self._on_story_line_selected)
         self.ui.tblStoryLines.clicked.connect(self._on_story_line_clicked)
 
@@ -95,7 +95,7 @@ class NovelView(AbstractNovelView):
             return
 
         self.novel.story_lines.remove(story_line)
-        client.delete_story_line(story_line)
+        client.delete_story_line(self.novel, story_line)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()
 
@@ -111,11 +111,15 @@ class NovelView(AbstractNovelView):
                                                   options=QColorDialog.DontUseNativeDialog)
             if color.isValid():
                 storyline.color_hexa = color.name()
-                client.update_story_line(storyline)
+                client.update_story_line(self.novel, storyline)
             self.ui.tblStoryLines.clearSelection()
 
 
 class StoryLineDelegate(QStyledItemDelegate):
+
+    def __init__(self, novel: Novel):
+        super(StoryLineDelegate, self).__init__()
+        self.novel = novel
 
     @overrides
     def setEditorData(self, editor: QWidget, index: QModelIndex):
@@ -127,4 +131,4 @@ class StoryLineDelegate(QStyledItemDelegate):
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex) -> None:
         updated = model.setData(index, editor.text(), role=Qt.EditRole)
         if updated:
-            client.update_story_line(index.data(EditableNovelStoryLinesListModel.StoryLineRole))
+            client.update_story_line(self.novel, index.data(EditableNovelStoryLinesListModel.StoryLineRole))

@@ -157,19 +157,19 @@ def create_story_line(qtbot, window: MainWindow, text: str):
     novels: NovelView = go_to_novel(window)
 
     novels.ui.btnAdd.click()
-    click_on_item(qtbot, novels.ui.tblStoryLines, 0, 1)
-    novels.ui.btnEdit.click()
-
-    index = novels.ui.tblStoryLines.model().index(0, 1)
+    # click_on_item(qtbot, novels.ui.tblStoryLines, 0, 1)
+    # novels.ui.btnEdit.click()
+    row = novels.ui.tblStoryLines.model().rowCount() - 1
+    index = novels.ui.tblStoryLines.model().index(row, 1)
     editor = novels.ui.tblStoryLines.indexWidget(index)
-    assert editor, "Editor should be open at position 0,0"
+    assert editor, "Editor should be open at position row,1"
     assert isinstance(editor, QLineEdit)
 
     qtbot.keyClicks(editor, text)
     novels.ui.tblStoryLines.itemDelegate().commitData.emit(editor)
     novels.ui.tblStoryLines.itemDelegate().closeEditor.emit(editor)
 
-    assert_data(novels.ui.tblStoryLines.model(), text, 0, 1)
+    assert_data(novels.ui.tblStoryLines.model(), text, row, 1)
 
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:

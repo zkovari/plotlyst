@@ -23,13 +23,14 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional, Iterable, Any
+from typing import List, Dict, Optional, Any
 
 from PyQt5.QtCore import QTimer, Qt, QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined
-from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
+from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
+    DoesNotExist
 from playhouse.sqlite_ext import CSqliteExtDatabase
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
@@ -239,114 +240,104 @@ class SceneBuilderElementModel(Model):
 class SqlClient:
 
     def novels(self) -> List[Novel]:
-        return json_client.novels()
-        # novels = []
-        # for novel_m in NovelModel.select():
-        #     novels.append(Novel(id=novel_m.id, title=novel_m.title))
-        #
-        # return novels
+        if os.path.exists(json_client.project_file_path):
+            return json_client.novels()
+        novels = []
+        for novel_m in NovelModel.select():
+            novels.append(Novel(id=novel_m.id, title=novel_m.title))
+
+        return novels
 
     def has_novel(self, id: uuid.UUID) -> bool:
-        return json_client.has_novel(id)
-        # try:
-        #     NovelModel.get_by_id(id)
-        #     return True
-        # except DoesNotExist:
-        #     return False
+        if os.path.exists(json_client.project_file_path):
+            return json_client.has_novel(id)
+        try:
+            NovelModel.get_by_id(id)
+            return True
+        except DoesNotExist:
+            return False
 
     def insert_novel(self, novel: Novel):
-        return json_client.insert_novel(novel)
-        # m = NovelModel.create(title=novel.title)
-        # novel.id = m.id
+        json_client.insert_novel(novel)
 
     def delete_novel(self, novel: Novel):
         json_client.delete_novel(novel)
-        # novel_m = NovelModel.get(id=novel.id)
-        # novel_m.delete_instance()
 
     def update_novel(self, novel: Novel):
         json_client.update_novel(novel)
-        # novel_m = NovelModel.get(id=novel.id)
-        # novel_m.title = novel.title
-        #
-        # novel_m.save()
 
     def fetch_novel(self, id: int) -> Novel:
-        return json_client.fetch_novel()
-        # novel_model = NovelModel.get_by_id(id)
-        #
-        # characters: List[Character] = []
-        # for char_m in novel_model.characters:
-        #     characters.append(
-        #         Character(id=char_m.character.id, name=char_m.character.name, avatar=char_m.character.avatar))
-        #
-        # story_lines: List[StoryLine] = []
-        # for i, story_m in enumerate(novel_model.story_lines):
-        #     if story_m.color_hexa:
-        #         color = story_m.color_hexa
-        #     else:
-        #         color = STORY_LINE_COLOR_CODES[i % len(STORY_LINE_COLOR_CODES)]
-        #     story_lines.append(StoryLine(id=story_m.id, text=story_m.text, color_hexa=color))
-        #
-        # chapters: List[Chapter] = []
-        # for chapter_m in novel_model.chapters:
-        #     chapters.append(Chapter(id=chapter_m.id, title=chapter_m.title, sequence=chapter_m.sequence))
-        #
-        # scenes: List[Scene] = []
-        # for scene_m in novel_model.scenes:
-        #     scene_characters = []
-        #     pov = None
-        #     for char_m in scene_m.characters:
-        #         for char in characters:
-        #             if char.id == char_m.character.id:
-        #                 if char_m.type == 'pov':
-        #                     pov = char
-        #                 else:
-        #                     scene_characters.append(char)
-        #
-        #     scene_story_lines = []
-        #     for story_m in scene_m.story_lines:
-        #         for story in story_lines:
-        #             if story.id == story_m.story_line.id:
-        #                 scene_story_lines.append(story)
-        #
-        #     scene_chapter = None
-        #     if scene_m.chapter:
-        #         for chapter in chapters:
-        #             if chapter.id == scene_m.chapter.id:
-        #                 scene_chapter = chapter
-        #                 break
-        #     arcs: List[CharacterArc] = []
-        #     for arc_m in scene_m.arcs:
-        #         for char in characters:
-        #             if char.id == arc_m.character.id:
-        #                 arcs.append(CharacterArc(arc_m.arc, char))
-        #
-        #     day = scene_m.day if scene_m.day else 0
-        #     end_event = scene_m.end_event if scene_m.end_event else True
-        #     without_action_conflict = scene_m.without_action_conflict if scene_m.without_action_conflict else False
-        #     action_resolution = scene_m.action_resolution if scene_m.action_resolution else False
-        #     scenes.append(Scene(id=scene_m.id, title=scene_m.title, synopsis=scene_m.synopsis, type=scene_m.type,
-        #                         pivotal=scene_m.pivotal, sequence=scene_m.sequence, beginning=scene_m.beginning,
-        #                         middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
-        #                         end_event=end_event, characters=scene_characters, pov=pov,
-        #                         story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
-        #                         ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter, arcs=arcs,
-        #                         without_action_conflict=without_action_conflict, action_resolution=action_resolution))
-        #
-        # scenes = sorted(scenes, key=lambda x: x.sequence)
-        # novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
-        #                      story_lines=story_lines, chapters=chapters)
-        #
-        # return novel
+        if os.path.exists(json_client.project_file_path):
+            return json_client.fetch_novel()
+        novel_model = NovelModel.get_by_id(id)
+
+        characters: List[Character] = []
+        for char_m in novel_model.characters:
+            characters.append(
+                Character(id=char_m.character.id, name=char_m.character.name, avatar=char_m.character.avatar))
+
+        story_lines: List[StoryLine] = []
+        for i, story_m in enumerate(novel_model.story_lines):
+            if story_m.color_hexa:
+                color = story_m.color_hexa
+            else:
+                color = STORY_LINE_COLOR_CODES[i % len(STORY_LINE_COLOR_CODES)]
+            story_lines.append(StoryLine(id=story_m.id, text=story_m.text, color_hexa=color))
+
+        chapters: List[Chapter] = []
+        for chapter_m in novel_model.chapters:
+            chapters.append(Chapter(id=chapter_m.id, title=chapter_m.title, sequence=chapter_m.sequence))
+
+        scenes: List[Scene] = []
+        for scene_m in novel_model.scenes:
+            scene_characters = []
+            pov = None
+            for char_m in scene_m.characters:
+                for char in characters:
+                    if char.id == char_m.character.id:
+                        if char_m.type == 'pov':
+                            pov = char
+                        else:
+                            scene_characters.append(char)
+
+            scene_story_lines = []
+            for story_m in scene_m.story_lines:
+                for story in story_lines:
+                    if story.id == story_m.story_line.id:
+                        scene_story_lines.append(story)
+
+            scene_chapter = None
+            if scene_m.chapter:
+                for chapter in chapters:
+                    if chapter.id == scene_m.chapter.id:
+                        scene_chapter = chapter
+                        break
+            arcs: List[CharacterArc] = []
+            for arc_m in scene_m.arcs:
+                for char in characters:
+                    if char.id == arc_m.character.id:
+                        arcs.append(CharacterArc(arc_m.arc, char))
+
+            day = scene_m.day if scene_m.day else 0
+            end_event = scene_m.end_event if scene_m.end_event else True
+            without_action_conflict = scene_m.without_action_conflict if scene_m.without_action_conflict else False
+            action_resolution = scene_m.action_resolution if scene_m.action_resolution else False
+            scenes.append(Scene(id=scene_m.id, title=scene_m.title, synopsis=scene_m.synopsis, type=scene_m.type,
+                                pivotal=scene_m.pivotal, sequence=scene_m.sequence, beginning=scene_m.beginning,
+                                middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
+                                end_event=end_event, characters=scene_characters, pov=pov,
+                                story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
+                                ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter, arcs=arcs,
+                                without_action_conflict=without_action_conflict, action_resolution=action_resolution))
+
+        scenes = sorted(scenes, key=lambda x: x.sequence)
+        novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
+                             story_lines=story_lines, chapters=chapters)
+
+        return novel
 
     def insert_character(self, novel: Novel, character: Character):
-        pass
-        # character_m = CharacterModel.create(name=character.name, avatar=character.avatar)
-        # character.id = character_m.id
-        #
-        # novel_m = NovelModel.get(id=novel.id)
-        # NovelCharactersModel.create(novel=novel_m, character=character_m)
+        json_client.insert_character(novel, character)
 
     def update_character(self, character: Character):
         pass
@@ -356,8 +347,8 @@ class SqlClient:
         #
         # character_m.save()
 
-    def delete_character(self, character: Character):
-        pass
+    def delete_character(self, novel: Novel, character: Character):
+        json_client.delete_character(novel, character)
         # character_m = CharacterModel.get(id=character.id)
         # character_m.delete_instance()
 
@@ -398,13 +389,10 @@ class SqlClient:
         # scene_m.save()
 
     def update_scene_sequences(self, novel: Novel):
-        pass
-        # for scene in novel.scenes:
-        #     m = SceneModel.get_by_id(scene.id)
-        #     m.sequence = scene.sequence
-        #     m.save()
+        json_client.update_novel(novel)
 
     def insert_scene(self, novel: Novel, scene: Scene):
+        json_client.insert_scene(novel, scene)
         pass
         # scene_m: SceneModel = SceneModel.create(title=scene.title, synopsis=scene.synopsis, type=scene.type,
         #                                         pivotal=scene.pivotal, sequence=scene.sequence,
@@ -443,33 +431,24 @@ class SqlClient:
     #     if scene.pov:
     #         SceneCharactersModel.create(scene=scene.id, character=scene.pov.id, type='pov')
 
-    def delete_scene(self, scene: Scene):
-        pass
+    def delete_scene(self, novel: Novel, scene: Scene):
+        json_client.delete_scene(novel, scene)
         # scene_m = SceneModel.get(id=scene.id)
         # scene_m.delete_instance()
 
     def insert_chapter(self, novel: Novel, chapter: Chapter):
-        pass
+        json_client.update_novel(novel)
         # m = ChapterModel.create(title=chapter.title, novel=novel.id, sequence=chapter.sequence)
         # chapter.id = m.id
 
     def insert_story_line(self, novel: Novel, story_line: StoryLine):
-        pass
-        # m = NovelStoryLinesModel.create(text=story_line.text, novel=novel.id)
-        # story_line.id = m.id
-        # story_line.color_hexa = story_line.color_hexa
+        json_client.update_novel(novel)
 
-    def delete_story_line(self, story_line: StoryLine):
-        pass
-        # m = NovelStoryLinesModel.get(id=story_line.id)
-        # m.delete_instance()
+    def delete_story_line(self, novel: Novel, story_line: StoryLine):
+        json_client.update_novel(novel)
 
-    def update_story_line(self, story_line: StoryLine):
-        pass
-        # m = NovelStoryLinesModel.get_by_id(story_line.id)
-        # m.text = story_line.text
-        # m.color_hexa = story_line.color_hexa
-        # m.save()
+    def update_story_line(self, novel: Novel, story_line: StoryLine):
+        json_client.update_novel(novel)
 
     def fetch_scene_builder_elements(self, novel: Novel, scene: Scene) -> List[SceneBuilderElement]:
         return []
@@ -601,6 +580,7 @@ class ChapterInfo:
     id: uuid.UUID
 
 
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class NovelInfo:
     title: str
@@ -611,10 +591,16 @@ class NovelInfo:
     chapters: List[ChapterInfo] = field(default_factory=list)
 
 
+@dataclass
+class ProjectNovelInfo:
+    title: str
+    id: uuid.UUID
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Project:
-    novels: List[NovelInfo] = field(default_factory=list)
+    novels: List[ProjectNovelInfo] = field(default_factory=list)
 
 
 class JsonClient:
@@ -624,6 +610,7 @@ class JsonClient:
         self._workspace = ''
         self.project_file_path = ''
         self.root_path: Optional[pathlib.Path] = None
+        self.novels_dir: Optional[pathlib.Path] = None
         self.scenes_dir: Optional[pathlib.Path] = None
         self.characters_dir: Optional[pathlib.Path] = None
         self.images_dir: Optional[pathlib.Path] = None
@@ -633,6 +620,7 @@ class JsonClient:
 
         if not os.path.exists(self.project_file_path) or os.path.getsize(self.project_file_path) == 0:
             self.project = Project()
+            self._persist_project()
         else:
             with open(self.project_file_path) as json_file:
                 data = json_file.read()
@@ -640,9 +628,19 @@ class JsonClient:
 
         self._workspace = workspace
         self.root_path = pathlib.Path(self._workspace)
+        self.novels_dir = self.root_path.joinpath('novels')
         self.scenes_dir = self.root_path.joinpath('scenes')
         self.characters_dir = self.root_path.joinpath('characters')
         self.images_dir = self.root_path.joinpath('images')
+
+        if not os.path.exists(str(self.novels_dir)):
+            os.mkdir(self.novels_dir)
+        if not os.path.exists(str(self.scenes_dir)):
+            os.mkdir(self.scenes_dir)
+        if not os.path.exists(str(self.characters_dir)):
+            os.mkdir(self.characters_dir)
+        if not os.path.exists(str(self.images_dir)):
+            os.mkdir(self.images_dir)
 
     def novels(self) -> List[Novel]:
         return [Novel(title=x.title, id=x.id) for x in self.project.novels]
@@ -655,28 +653,49 @@ class JsonClient:
 
     def insert_novel(self, novel: Novel):
         novel.id = uuid.uuid4()
-        info = NovelInfo(title=novel.title, id=novel.id)
-        self.project.novels.append(info)
+        project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id)
+        self.project.novels.append(project_novel_info)
         self._persist_project()
+        self._persist_novel(novel)
 
     def delete_novel(self, novel: Novel):
-        novel_info = self._find_novel_info_or_fail(novel)
+        novel_info = self._find_project_novel_info_or_fail(novel)
         self.project.novels.remove(novel_info)
         self._persist_project()
+        self.__delete_info(self.novels_dir, novel_info.id)
 
     def update_novel(self, novel: Novel):
-        novel_info = self._find_novel_info_or_fail(novel)
-        novel_info.title = novel.title
-        self._persist_project()
+        novel_info = self._find_project_novel_info_or_fail(novel)
+        if novel_info.title != novel.title:
+            novel_info.title = novel.title
+            self._persist_project()
+        self._persist_novel(novel)
 
-    def _find_novel_info_or_fail(self, novel: Novel) -> NovelInfo:
+    def insert_scene(self, novel: Novel, scene: Scene):
+        self._persist_scene(scene)
+        self._persist_novel(novel)
+
+    def delete_scene(self, novel: Novel, scene: Scene):
+        self._persist_novel(novel)
+        self.__delete_info(self.scenes_dir, scene.id)
+
+    def insert_character(self, novel: Novel, character: Character):
+        self._persist_character(character)
+        self._persist_novel(novel)
+
+    def delete_character(self, novel: Novel, character: Character):
+        self._persist_novel(novel)
+        self.__delete_info(self.characters_dir, character.id)
+
+    def _find_project_novel_info_or_fail(self, novel: Novel) -> ProjectNovelInfo:
         for info in self.project.novels:
             if info.id == novel.id:
                 return info
         raise ValueError(f'Could not find novel with title {novel.title}')
 
     def fetch_novel(self) -> Novel:
-        novel_info = self.project.novels[0]
+        project_novel_info = self.project.novels[0]
+        novel_info = self._read_novel_info(project_novel_info.id)
 
         storylines = []
         storylines_ids = {}
@@ -755,6 +774,14 @@ class JsonClient:
         return Novel(title=novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
                      scenes=scenes, chapters=chapters)
 
+    def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
+        path = self.novels_dir.joinpath(self.__json_file(id))
+        if not os.path.exists(path):
+            raise IOError(f'Could not find novel with id {id}')
+        with open(path) as json_file:
+            data = json_file.read()
+            return NovelInfo.from_json(data)
+
     def migrate(self, novel: Novel):
         novel.id = uuid.uuid4()
         for scene in novel.scenes:
@@ -766,16 +793,10 @@ class JsonClient:
         for chapter in novel.chapters:
             chapter.id = uuid.uuid4()
 
-        if not os.path.exists(str(self.images_dir)):
-            os.mkdir(self.images_dir)
-
         self.project.novels.clear()
-        novel_info = NovelInfo(title=novel.title, id=novel.id, scenes=[x.id for x in novel.scenes],
-                               storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
-                                           novel.story_lines], characters=[x.id for x in novel.characters],
-                               chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters])
-        self.project.novels.append(novel_info)
+        self.project.novels.append(ProjectNovelInfo(title=novel.title, id=novel.id))
         self._persist_project()
+        self._persist_novel(novel)
 
         self._persist_characters(novel)
         self._persist_scenes(novel)
@@ -784,39 +805,44 @@ class JsonClient:
         with atomic_write(self.project_file_path, overwrite=True) as f:
             f.write(self.project.to_json())
 
-    def _persist_characters(self, novel: Novel):
-        if not os.path.exists(str(self.characters_dir)):
-            os.mkdir(self.characters_dir)
+    def _persist_novel(self, novel: Novel):
+        novel_info = NovelInfo(title=novel.title, id=novel.id, scenes=[x.id for x in novel.scenes],
+                               storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
+                                           novel.story_lines], characters=[x.id for x in novel.characters],
+                               chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters])
 
-        infos = []
+        self.__persist_info(self.novels_dir, novel_info)
+
+    def _persist_characters(self, novel: Novel):
         for char in novel.characters:
             char_info = CharacterInfo(id=char.id, name=char.name)
             if char.avatar:
                 char_info.avatar_id = uuid.uuid4()
                 image = QImage.fromData(char.avatar)
                 image.save(str(self.images_dir.joinpath(self.__image_file(char_info.avatar_id))))
-            infos.append(char_info)
 
-        self.__persist_info(self.characters_dir, infos)
+            self.__persist_info(self.characters_dir, char_info)
+
+    def _persist_character(self, char: Character):
+        char_info = CharacterInfo(id=char.id, name=char.name)
+        self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scenes(self, novel: Novel):
-        if not os.path.exists(str(self.scenes_dir)):
-            os.mkdir(self.scenes_dir)
-
-        scene_infos = []
         for scene in novel.scenes:
-            storylines = [x.id for x in scene.story_lines]
-            characters = [x.id for x in scene.characters]
-            arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]
-            info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
-                             beginning=scene.beginning, middle=scene.middle,
-                             end=scene.end, wip=scene.wip, pivotal=scene.pivotal, day=scene.day, notes=scene.notes,
-                             action_resolution=scene.action_resolution,
-                             without_action_conflict=scene.without_action_conflict,
-                             pov=scene.pov.id if scene.pov else None, storylines=storylines, characters=characters,
-                             arcs=arcs, chapter=scene.chapter.id if scene.chapter else None)
-            scene_infos.append(info)
-        self.__persist_info(self.scenes_dir, scene_infos)
+            self._persist_scene(scene)
+
+    def _persist_scene(self, scene: Scene):
+        storylines = [x.id for x in scene.story_lines]
+        characters = [x.id for x in scene.characters]
+        arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]
+        info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
+                         beginning=scene.beginning, middle=scene.middle,
+                         end=scene.end, wip=scene.wip, pivotal=scene.pivotal, day=scene.day, notes=scene.notes,
+                         action_resolution=scene.action_resolution,
+                         without_action_conflict=scene.without_action_conflict,
+                         pov=scene.pov.id if scene.pov else None, storylines=storylines, characters=characters,
+                         arcs=arcs, chapter=scene.chapter.id if scene.chapter else None)
+        self.__persist_info(self.scenes_dir, info)
 
     def __json_file(self, uuid: uuid.UUID) -> str:
         return f'{uuid}.json'
@@ -836,10 +862,12 @@ class JsonClient:
         image.save(buffer, 'PNG')
         return array
 
-    def __persist_info(self, dir, infos: Iterable[Any]):
-        for info in infos:
-            with atomic_write(dir.joinpath(self.__json_file(info.id)), overwrite=True) as f:
-                f.write(info.to_json())
+    def __persist_info(self, dir, info: Any):
+        with atomic_write(dir.joinpath(self.__json_file(info.id)), overwrite=True) as f:
+            f.write(info.to_json())
+
+    def __delete_info(self, dir, id: uuid.UUID):
+        os.remove(dir.joinpath(self.__json_file(id)))
 
 
 json_client = JsonClient()
