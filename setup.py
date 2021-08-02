@@ -18,6 +18,8 @@ REQUIREMENTS: dict = {
         'numpy==1.21.1',
         'emoji==1.4.1',
         'fbs[sentry]',
+        'atomicwrites==1.4.0',
+        'dataclasses-json==0.5.2',
     ],
     'test': [
         'pytest==6.2.4',
