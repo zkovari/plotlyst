@@ -20,8 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import pytest
 
-from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Character, StoryLine, Scene, Chapter, ACTION_SCENE, REACTION_SCENE
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Character, StoryLine, Scene, Chapter, ACTION_SCENE, REACTION_SCENE, \
+    Novel
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
@@ -62,7 +63,7 @@ def get_main_window(qtbot):
 
 
 def init_project():
-    novel = client.novels()[0]
+    novel = Novel(title='Test Novel')
     char_a = Character(name='Alfred')
     char_b = Character(name='Babel')
     char_c = Character(name='Celine')
@@ -103,4 +104,4 @@ def init_project():
     # client.insert_scene(novel, scene_2)
     # client.update_scene_chapter(scene_2)
 
-    json_client.persist(novel)
+    json_client.migrate(novel)

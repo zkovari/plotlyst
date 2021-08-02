@@ -29,8 +29,7 @@ from PyQt5.QtCore import QTimer, Qt, QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined
-from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
-    DoesNotExist
+from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy
 from playhouse.sqlite_ext import CSqliteExtDatabase
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
@@ -240,237 +239,255 @@ class SceneBuilderElementModel(Model):
 class SqlClient:
 
     def novels(self) -> List[Novel]:
-        novels = []
-        for novel_m in NovelModel.select():
-            novels.append(Novel(id=novel_m.id, title=novel_m.title))
+        return json_client.novels()
+        # novels = []
+        # for novel_m in NovelModel.select():
+        #     novels.append(Novel(id=novel_m.id, title=novel_m.title))
+        #
+        # return novels
 
-        return novels
-
-    def has_novel(self, id: int) -> bool:
-        try:
-            NovelModel.get_by_id(id)
-            return True
-        except DoesNotExist:
-            return False
+    def has_novel(self, id: uuid.UUID) -> bool:
+        return json_client.has_novel(id)
+        # try:
+        #     NovelModel.get_by_id(id)
+        #     return True
+        # except DoesNotExist:
+        #     return False
 
     def insert_novel(self, novel: Novel):
-        m = NovelModel.create(title=novel.title)
-        novel.id = m.id
+        return json_client.insert_novel(novel)
+        # m = NovelModel.create(title=novel.title)
+        # novel.id = m.id
 
     def delete_novel(self, novel: Novel):
-        novel_m = NovelModel.get(id=novel.id)
-        novel_m.delete_instance()
+        json_client.delete_novel(novel)
+        # novel_m = NovelModel.get(id=novel.id)
+        # novel_m.delete_instance()
 
     def update_novel(self, novel: Novel):
-        novel_m = NovelModel.get(id=novel.id)
-        novel_m.title = novel.title
-
-        novel_m.save()
+        json_client.update_novel(novel)
+        # novel_m = NovelModel.get(id=novel.id)
+        # novel_m.title = novel.title
+        #
+        # novel_m.save()
 
     def fetch_novel(self, id: int) -> Novel:
         return json_client.fetch_novel()
-        novel_model = NovelModel.get_by_id(id)
-
-        characters: List[Character] = []
-        for char_m in novel_model.characters:
-            characters.append(
-                Character(id=char_m.character.id, name=char_m.character.name, avatar=char_m.character.avatar))
-
-        story_lines: List[StoryLine] = []
-        for i, story_m in enumerate(novel_model.story_lines):
-            if story_m.color_hexa:
-                color = story_m.color_hexa
-            else:
-                color = STORY_LINE_COLOR_CODES[i % len(STORY_LINE_COLOR_CODES)]
-            story_lines.append(StoryLine(id=story_m.id, text=story_m.text, color_hexa=color))
-
-        chapters: List[Chapter] = []
-        for chapter_m in novel_model.chapters:
-            chapters.append(Chapter(id=chapter_m.id, title=chapter_m.title, sequence=chapter_m.sequence))
-
-        scenes: List[Scene] = []
-        for scene_m in novel_model.scenes:
-            scene_characters = []
-            pov = None
-            for char_m in scene_m.characters:
-                for char in characters:
-                    if char.id == char_m.character.id:
-                        if char_m.type == 'pov':
-                            pov = char
-                        else:
-                            scene_characters.append(char)
-
-            scene_story_lines = []
-            for story_m in scene_m.story_lines:
-                for story in story_lines:
-                    if story.id == story_m.story_line.id:
-                        scene_story_lines.append(story)
-
-            scene_chapter = None
-            if scene_m.chapter:
-                for chapter in chapters:
-                    if chapter.id == scene_m.chapter.id:
-                        scene_chapter = chapter
-                        break
-            arcs: List[CharacterArc] = []
-            for arc_m in scene_m.arcs:
-                for char in characters:
-                    if char.id == arc_m.character.id:
-                        arcs.append(CharacterArc(arc_m.arc, char))
-
-            day = scene_m.day if scene_m.day else 0
-            end_event = scene_m.end_event if scene_m.end_event else True
-            without_action_conflict = scene_m.without_action_conflict if scene_m.without_action_conflict else False
-            action_resolution = scene_m.action_resolution if scene_m.action_resolution else False
-            scenes.append(Scene(id=scene_m.id, title=scene_m.title, synopsis=scene_m.synopsis, type=scene_m.type,
-                                pivotal=scene_m.pivotal, sequence=scene_m.sequence, beginning=scene_m.beginning,
-                                middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
-                                end_event=end_event, characters=scene_characters, pov=pov,
-                                story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
-                                ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter, arcs=arcs,
-                                without_action_conflict=without_action_conflict, action_resolution=action_resolution))
-
-        scenes = sorted(scenes, key=lambda x: x.sequence)
-        novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
-                             story_lines=story_lines, chapters=chapters)
-
-        return novel
+        # novel_model = NovelModel.get_by_id(id)
+        #
+        # characters: List[Character] = []
+        # for char_m in novel_model.characters:
+        #     characters.append(
+        #         Character(id=char_m.character.id, name=char_m.character.name, avatar=char_m.character.avatar))
+        #
+        # story_lines: List[StoryLine] = []
+        # for i, story_m in enumerate(novel_model.story_lines):
+        #     if story_m.color_hexa:
+        #         color = story_m.color_hexa
+        #     else:
+        #         color = STORY_LINE_COLOR_CODES[i % len(STORY_LINE_COLOR_CODES)]
+        #     story_lines.append(StoryLine(id=story_m.id, text=story_m.text, color_hexa=color))
+        #
+        # chapters: List[Chapter] = []
+        # for chapter_m in novel_model.chapters:
+        #     chapters.append(Chapter(id=chapter_m.id, title=chapter_m.title, sequence=chapter_m.sequence))
+        #
+        # scenes: List[Scene] = []
+        # for scene_m in novel_model.scenes:
+        #     scene_characters = []
+        #     pov = None
+        #     for char_m in scene_m.characters:
+        #         for char in characters:
+        #             if char.id == char_m.character.id:
+        #                 if char_m.type == 'pov':
+        #                     pov = char
+        #                 else:
+        #                     scene_characters.append(char)
+        #
+        #     scene_story_lines = []
+        #     for story_m in scene_m.story_lines:
+        #         for story in story_lines:
+        #             if story.id == story_m.story_line.id:
+        #                 scene_story_lines.append(story)
+        #
+        #     scene_chapter = None
+        #     if scene_m.chapter:
+        #         for chapter in chapters:
+        #             if chapter.id == scene_m.chapter.id:
+        #                 scene_chapter = chapter
+        #                 break
+        #     arcs: List[CharacterArc] = []
+        #     for arc_m in scene_m.arcs:
+        #         for char in characters:
+        #             if char.id == arc_m.character.id:
+        #                 arcs.append(CharacterArc(arc_m.arc, char))
+        #
+        #     day = scene_m.day if scene_m.day else 0
+        #     end_event = scene_m.end_event if scene_m.end_event else True
+        #     without_action_conflict = scene_m.without_action_conflict if scene_m.without_action_conflict else False
+        #     action_resolution = scene_m.action_resolution if scene_m.action_resolution else False
+        #     scenes.append(Scene(id=scene_m.id, title=scene_m.title, synopsis=scene_m.synopsis, type=scene_m.type,
+        #                         pivotal=scene_m.pivotal, sequence=scene_m.sequence, beginning=scene_m.beginning,
+        #                         middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
+        #                         end_event=end_event, characters=scene_characters, pov=pov,
+        #                         story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
+        #                         ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter, arcs=arcs,
+        #                         without_action_conflict=without_action_conflict, action_resolution=action_resolution))
+        #
+        # scenes = sorted(scenes, key=lambda x: x.sequence)
+        # novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
+        #                      story_lines=story_lines, chapters=chapters)
+        #
+        # return novel
 
     def insert_character(self, novel: Novel, character: Character):
-        character_m = CharacterModel.create(name=character.name, avatar=character.avatar)
-        character.id = character_m.id
-
-        novel_m = NovelModel.get(id=novel.id)
-        NovelCharactersModel.create(novel=novel_m, character=character_m)
+        pass
+        # character_m = CharacterModel.create(name=character.name, avatar=character.avatar)
+        # character.id = character_m.id
+        #
+        # novel_m = NovelModel.get(id=novel.id)
+        # NovelCharactersModel.create(novel=novel_m, character=character_m)
 
     def update_character(self, character: Character):
-        character_m: CharacterModel = CharacterModel.get_by_id(character.id)
-        character_m.name = character.name
-        character_m.avatar = character.avatar
-
-        character_m.save()
+        pass
+        # character_m: CharacterModel = CharacterModel.get_by_id(character.id)
+        # character_m.name = character.name
+        # character_m.avatar = character.avatar
+        #
+        # character_m.save()
 
     def delete_character(self, character: Character):
-        character_m = CharacterModel.get(id=character.id)
-        character_m.delete_instance()
+        pass
+        # character_m = CharacterModel.get(id=character.id)
+        # character_m.delete_instance()
 
     def update_scene(self, scene: Scene):
-        scene_m: SceneModel = SceneModel.get_by_id(scene.id)
-        scene_m.title = scene.title
-        scene_m.synopsis = scene.synopsis
-        scene_m.type = scene.type
-        scene_m.pivotal = scene.pivotal
-        scene_m.sequence = scene.sequence
-        scene_m.beginning = scene.beginning
-        scene_m.middle = scene.middle
-        scene_m.end = scene.end
-        scene_m.wip = scene.wip
-        scene_m.end_event = scene.end_event
-        scene_m.day = scene.day
-        scene_m.beginning_type = scene.beginning_type
-        scene_m.ending_hook = scene.ending_hook
-        scene_m.notes = scene.notes
-        scene_m.without_action_conflict = scene.without_action_conflict
-        scene_m.action_resolution = scene.action_resolution
-
-        scene_m.save()
-
-        self._update_scene_characters(scene)
-        self._update_scene_story_lines(scene)
-        self._update_scene_character_arcs(scene)
+        pass
+        # scene_m: SceneModel = SceneModel.get_by_id(scene.id)
+        # scene_m.title = scene.title
+        # scene_m.synopsis = scene.synopsis
+        # scene_m.type = scene.type
+        # scene_m.pivotal = scene.pivotal
+        # scene_m.sequence = scene.sequence
+        # scene_m.beginning = scene.beginning
+        # scene_m.middle = scene.middle
+        # scene_m.end = scene.end
+        # scene_m.wip = scene.wip
+        # scene_m.end_event = scene.end_event
+        # scene_m.day = scene.day
+        # scene_m.beginning_type = scene.beginning_type
+        # scene_m.ending_hook = scene.ending_hook
+        # scene_m.notes = scene.notes
+        # scene_m.without_action_conflict = scene.without_action_conflict
+        # scene_m.action_resolution = scene.action_resolution
+        #
+        # scene_m.save()
+        #
+        # self._update_scene_characters(scene)
+        # self._update_scene_story_lines(scene)
+        # self._update_scene_character_arcs(scene)
 
     def update_scene_chapter(self, scene: Scene):
-        scene_m: SceneModel = SceneModel.get_by_id(scene.id)
-        if scene.chapter:
-            scene_m.chapter = scene.chapter.id
-        else:
-            scene_m.chapter = None
-
-        scene_m.save()
+        pass
+        # scene_m: SceneModel = SceneModel.get_by_id(scene.id)
+        # if scene.chapter:
+        #     scene_m.chapter = scene.chapter.id
+        # else:
+        #     scene_m.chapter = None
+        #
+        # scene_m.save()
 
     def update_scene_sequences(self, novel: Novel):
-        for scene in novel.scenes:
-            m = SceneModel.get_by_id(scene.id)
-            m.sequence = scene.sequence
-            m.save()
+        pass
+        # for scene in novel.scenes:
+        #     m = SceneModel.get_by_id(scene.id)
+        #     m.sequence = scene.sequence
+        #     m.save()
 
     def insert_scene(self, novel: Novel, scene: Scene):
-        scene_m: SceneModel = SceneModel.create(title=scene.title, synopsis=scene.synopsis, type=scene.type,
-                                                pivotal=scene.pivotal, sequence=scene.sequence,
-                                                beginning=scene.beginning,
-                                                middle=scene.middle, end=scene.end, novel=novel.id, wip=scene.wip,
-                                                end_event=scene.end_event, day=scene.day,
-                                                beginning_type=scene.beginning_type,
-                                                ending_hook=scene.ending_hook, notes=scene.notes)
-        scene.id = scene_m.id
+        pass
+        # scene_m: SceneModel = SceneModel.create(title=scene.title, synopsis=scene.synopsis, type=scene.type,
+        #                                         pivotal=scene.pivotal, sequence=scene.sequence,
+        #                                         beginning=scene.beginning,
+        #                                         middle=scene.middle, end=scene.end, novel=novel.id, wip=scene.wip,
+        #                                         end_event=scene.end_event, day=scene.day,
+        #                                         beginning_type=scene.beginning_type,
+        #                                         ending_hook=scene.ending_hook, notes=scene.notes)
+        # scene.id = scene_m.id
+        #
+        # self._update_scene_characters(scene)
+        # self._update_scene_story_lines(scene)
 
-        self._update_scene_characters(scene)
-        self._update_scene_story_lines(scene)
+    # def _update_scene_story_lines(self, scene: Scene):
+    # scene_m = SceneModel.get_by_id(scene.id)
+    # for story_line in scene_m.story_lines:
+    #     story_line.delete_instance()
+    #
+    # for story_line in scene.story_lines:
+    #     SceneStoryLinesModel.create(story_line=story_line.id, scene=scene.id)
 
-    def _update_scene_story_lines(self, scene: Scene):
-        scene_m = SceneModel.get_by_id(scene.id)
-        for story_line in scene_m.story_lines:
-            story_line.delete_instance()
-
-        for story_line in scene.story_lines:
-            SceneStoryLinesModel.create(story_line=story_line.id, scene=scene.id)
-
-    def _update_scene_character_arcs(self, scene: Scene):
-        scene_m = SceneModel.get_by_id(scene.id)
-        for arc in scene_m.arcs:
-            arc.delete_instance()
-
-        for character_arc in scene.arcs:
-            CharacterArcModel.create(arc=character_arc.arc, character=character_arc.character.id, scene=scene.id)
-
-    def _update_scene_characters(self, scene: Scene):
-        scene_m = SceneModel.get_by_id(scene.id)
-        for char in scene_m.characters:
-            char.delete_instance()
-        for char in scene.characters:
-            SceneCharactersModel.create(scene=scene.id, character=char.id, type='active')
-        if scene.pov:
-            SceneCharactersModel.create(scene=scene.id, character=scene.pov.id, type='pov')
+    # def _update_scene_character_arcs(self, scene: Scene):
+    #     scene_m = SceneModel.get_by_id(scene.id)
+    #     for arc in scene_m.arcs:
+    #         arc.delete_instance()
+    #
+    #     for character_arc in scene.arcs:
+    #         CharacterArcModel.create(arc=character_arc.arc, character=character_arc.character.id, scene=scene.id)
+    #
+    # def _update_scene_characters(self, scene: Scene):
+    #     scene_m = SceneModel.get_by_id(scene.id)
+    #     for char in scene_m.characters:
+    #         char.delete_instance()
+    #     for char in scene.characters:
+    #         SceneCharactersModel.create(scene=scene.id, character=char.id, type='active')
+    #     if scene.pov:
+    #         SceneCharactersModel.create(scene=scene.id, character=scene.pov.id, type='pov')
 
     def delete_scene(self, scene: Scene):
-        scene_m = SceneModel.get(id=scene.id)
-        scene_m.delete_instance()
+        pass
+        # scene_m = SceneModel.get(id=scene.id)
+        # scene_m.delete_instance()
 
     def insert_chapter(self, novel: Novel, chapter: Chapter):
-        m = ChapterModel.create(title=chapter.title, novel=novel.id, sequence=chapter.sequence)
-        chapter.id = m.id
+        pass
+        # m = ChapterModel.create(title=chapter.title, novel=novel.id, sequence=chapter.sequence)
+        # chapter.id = m.id
 
     def insert_story_line(self, novel: Novel, story_line: StoryLine):
-        m = NovelStoryLinesModel.create(text=story_line.text, novel=novel.id)
-        story_line.id = m.id
-        story_line.color_hexa = story_line.color_hexa
+        pass
+        # m = NovelStoryLinesModel.create(text=story_line.text, novel=novel.id)
+        # story_line.id = m.id
+        # story_line.color_hexa = story_line.color_hexa
 
     def delete_story_line(self, story_line: StoryLine):
-        m = NovelStoryLinesModel.get(id=story_line.id)
-        m.delete_instance()
+        pass
+        # m = NovelStoryLinesModel.get(id=story_line.id)
+        # m.delete_instance()
 
     def update_story_line(self, story_line: StoryLine):
-        m = NovelStoryLinesModel.get_by_id(story_line.id)
-        m.text = story_line.text
-        m.color_hexa = story_line.color_hexa
-        m.save()
+        pass
+        # m = NovelStoryLinesModel.get_by_id(story_line.id)
+        # m.text = story_line.text
+        # m.color_hexa = story_line.color_hexa
+        # m.save()
 
     def fetch_scene_builder_elements(self, novel: Novel, scene: Scene) -> List[SceneBuilderElement]:
-        scene_m = SceneModel.get_by_id(scene.id)
-        parents_by_id: Dict[int, SceneBuilderElement] = {}
-        characters: Dict[int, Character] = {}
-        for char in novel.characters:
-            if char.id:
-                characters[char.id] = char
-
-        elements: List[SceneBuilderElement] = []
-        for element_m in scene_m.elements:
-            element = self.__get_scene_builder_element(scene, element_m, parents_by_id, characters)
-            if not element_m.parent:
-                elements.append(parents_by_id[element.id])
-        for el in elements:
-            self._sort_children(el)
-        return elements
+        return []
+        # scene_m = SceneModel.get_by_id(scene.id)
+        # parents_by_id: Dict[int, SceneBuilderElement] = {}
+        # characters: Dict[int, Character] = {}
+        # for char in novel.characters:
+        #     if char.id:
+        #         characters[char.id] = char
+        #
+        # elements: List[SceneBuilderElement] = []
+        # for element_m in scene_m.elements:
+        #     element = self.__get_scene_builder_element(scene, element_m, parents_by_id, characters)
+        #     if not element_m.parent:
+        #         elements.append(parents_by_id[element.id])
+        # for el in elements:
+        #     self._sort_children(el)
+        # return elements
 
     def __get_scene_builder_element(self, scene: Scene, element_m,
                                     parents_by_id: Dict[int, SceneBuilderElement],
@@ -508,6 +525,7 @@ class SqlClient:
             self._sort_children(child)
 
     def update_scene_builder_elements(self, scene: Scene, elements: List[SceneBuilderElement]):
+        return
         scene_m = SceneModel.get_by_id(scene.id)
         for el_m in scene_m.elements:
             el_m.delete_instance()
@@ -626,6 +644,37 @@ class JsonClient:
         self.characters_dir = self.root_path.joinpath('characters')
         self.images_dir = self.root_path.joinpath('images')
 
+    def novels(self) -> List[Novel]:
+        return [Novel(title=x.title, id=x.id) for x in self.project.novels]
+
+    def has_novel(self, id: uuid.UUID):
+        for novel in self.project.novels:
+            if novel.id == id:
+                return True
+        return False
+
+    def insert_novel(self, novel: Novel):
+        novel.id = uuid.uuid4()
+        info = NovelInfo(title=novel.title, id=novel.id)
+        self.project.novels.append(info)
+        self._persist_project()
+
+    def delete_novel(self, novel: Novel):
+        novel_info = self._find_novel_info_or_fail(novel)
+        self.project.novels.remove(novel_info)
+        self._persist_project()
+
+    def update_novel(self, novel: Novel):
+        novel_info = self._find_novel_info_or_fail(novel)
+        novel_info.title = novel.title
+        self._persist_project()
+
+    def _find_novel_info_or_fail(self, novel: Novel) -> NovelInfo:
+        for info in self.project.novels:
+            if info.id == novel.id:
+                return info
+        raise ValueError(f'Could not find novel with title {novel.title}')
+
     def fetch_novel(self) -> Novel:
         novel_info = self.project.novels[0]
 
@@ -706,7 +755,7 @@ class JsonClient:
         return Novel(title=novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
                      scenes=scenes, chapters=chapters)
 
-    def persist(self, novel: Novel):
+    def migrate(self, novel: Novel):
         novel.id = uuid.uuid4()
         for scene in novel.scenes:
             scene.id = uuid.uuid4()
@@ -726,11 +775,14 @@ class JsonClient:
                                            novel.story_lines], characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters])
         self.project.novels.append(novel_info)
-        with atomic_write(self.project_file_path, overwrite=True) as f:
-            f.write(self.project.to_json())
+        self._persist_project()
 
         self._persist_characters(novel)
         self._persist_scenes(novel)
+
+    def _persist_project(self):
+        with atomic_write(self.project_file_path, overwrite=True) as f:
+            f.write(self.project.to_json())
 
     def _persist_characters(self, novel: Novel):
         if not os.path.exists(str(self.characters_dir)):

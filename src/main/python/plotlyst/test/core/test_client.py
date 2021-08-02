@@ -12,9 +12,10 @@ def test_insert_novel(test_client):
 
 
 def test_delete_novel(test_client):
+    novel = Novel(title='test1')
+    client.insert_novel(novel)
     novels = client.novels()
     assert len(novels) == 1
-    assert novels[0].id == 1
 
     client.delete_novel(novels[0])
 
