@@ -397,7 +397,9 @@ class SceneEditor(QObject):
         self._new_scene_selected(self.scenes_model.index(row, 0))
 
     def _new_scene_selected(self, index: QModelIndex):
-        client.update_scene_builder_elements(self.scene, self._scene_builder_elements())
+        self.scene.builder_elements.clear()
+        self.scene.builder_elements.extend(self._scene_builder_elements())
+        self._save_scene()
 
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
         self._save_enabled = False
