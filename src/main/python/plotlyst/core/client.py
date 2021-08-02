@@ -19,19 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
 import pathlib
-import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Any, Dict
 
-from PyQt5.QtCore import QTimer, Qt, QByteArray, QBuffer, QIODevice
+from PyQt5.QtCore import QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined
-from peewee import Model, TextField, SqliteDatabase, IntegerField, BooleanField, ForeignKeyField, BlobField, Proxy, \
-    DoesNotExist
-from playhouse.sqlite_ext import CSqliteExtDatabase
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter
@@ -49,213 +45,13 @@ class ApplicationDbVersion(Enum):
 LATEST = ApplicationDbVersion.R4
 
 
-class DbContext:
-
-    def __init__(self):
-        self._db = Proxy()
-        self._ext_db = None
-        self.workspace = None
-        self._backup_timer = QTimer()
-        self._backup_timer.setInterval(2 * 60 * 1000 * 60)  # 2 hours
-        self._backup_timer.setTimerType(Qt.VeryCoarseTimer)
-        self._backup_timer.timeout.connect(self._backup)
-
-    def init(self, workspace: str):
-        if workspace == ':memory:':
-            db_file_name = workspace
-            _create_tables = True
-        else:
-            db_file_name = os.path.join(workspace, 'novels.sqlite')
-            _create_tables = False
-            if not os.path.exists(db_file_name) or os.path.getsize(db_file_name) == 0:
-                _create_tables = True
-        runtime_db = SqliteDatabase(db_file_name, pragmas={
-            'cache_size': 10000,  # 10000 pages, or ~40MB
-            'foreign_keys': 1,  # Enforce foreign-key constraints
-            'ignore_check_constraints': 0,
-        })
-        self._db.initialize(runtime_db)
-        self._db.connect()
-
-        if _create_tables:
-            self._db.create_tables(
-                [ApplicationModel, NovelModel, ChapterModel, SceneModel, CharacterModel, CharacterArcModel,
-                 NovelStoryLinesModel,
-                 SceneStoryLinesModel,
-                 NovelCharactersModel, SceneCharactersModel, SceneBuilderElementModel])
-            ApplicationModel.create(revision=LATEST.value)
-            NovelModel.create(title='My First Novel')
-
-        self._ext_db = CSqliteExtDatabase(db_file_name)
-        self.workspace = workspace
-        self._backup_timer.start()
-
-    def db(self):
-        return self._db
-
-    def _backup(self):
-        backup_dir = os.path.join(self.workspace, 'backups')
-        if not os.path.exists(backup_dir):
-            os.mkdir(backup_dir)
-        elif os.path.isfile(backup_dir):
-            os.remove(backup_dir)
-            os.mkdir(backup_dir)
-        files = os.listdir(backup_dir)
-        if len(files) >= 10:
-            os.remove(os.path.join(backup_dir, sorted(files)[0]))
-        backup_file = os.path.join(backup_dir, f'{time.time()}.sqlite')
-        backup_db = CSqliteExtDatabase(backup_file)
-        self._ext_db.backup(backup_db)
-
-
-context = DbContext()
-
-
-class ApplicationModel(Model):
-    revision = IntegerField()
-
-    class Meta:
-        table_name = 'Application'
-        database = context.db()
-
-
-class NovelModel(Model):
-    title = TextField()
-
-    class Meta:
-        table_name = 'Novels'
-        database = context.db()
-
-
-class ChapterModel(Model):
-    title = TextField()
-    sequence = IntegerField()
-    novel = ForeignKeyField(NovelModel, backref='chapters', on_delete='CASCADE')
-
-    class Meta:
-        table_name = 'Chapters'
-        database = context.db()
-
-
-class SceneModel(Model):
-    title = TextField()
-    novel = ForeignKeyField(NovelModel, backref='scenes', on_delete='CASCADE')
-    type = TextField(null=True)
-    synopsis = TextField(null=True)
-    wip = BooleanField(default=False)
-    pivotal = TextField(null=True)
-    sequence = IntegerField(null=True)
-    beginning = TextField(null=True)
-    middle = TextField(null=True)
-    end = TextField(null=True)
-    chapter = ForeignKeyField(ChapterModel, backref='scenes', null=True, default=None)
-    end_event = BooleanField(null=True)
-    day = IntegerField(null=True)
-    beginning_type = TextField(null=True)
-    ending_hook = TextField(null=True)
-    notes = TextField(null=True)
-    draft_status = TextField(null=True)
-    edition_status = TextField(null=True)
-    action_resolution = BooleanField(null=True)
-    without_action_conflict = BooleanField(null=True)
-
-    class Meta:
-        table_name = 'Scenes'
-        database = context.db()
-
-
-class CharacterModel(Model):
-    name = TextField()
-    avatar = BlobField(null=True)
-
-    class Meta:
-        table_name = 'Characters'
-        database = context.db()
-
-
-class CharacterArcModel(Model):
-    arc = IntegerField()
-    scene = ForeignKeyField(SceneModel, backref='arcs', on_delete='CASCADE')
-    character = ForeignKeyField(CharacterModel, on_delete='CASCADE')
-
-    class Meta:
-        table_name = 'CharacterArcs'
-        database = context.db()
-
-
-class NovelStoryLinesModel(Model):
-    text = TextField()
-    color_hexa = TextField(null=True)
-    novel = ForeignKeyField(NovelModel, backref='story_lines', on_delete='CASCADE')
-
-    class Meta:
-        table_name = 'NovelStoryLines'
-        database = context.db()
-
-
-class SceneStoryLinesModel(Model):
-    story_line = ForeignKeyField(NovelStoryLinesModel, on_delete='CASCADE')
-    scene = ForeignKeyField(SceneModel, backref='story_lines', on_delete='CASCADE')
-
-    class Meta:
-        table_name = 'StoryLinesScenes'
-        database = context.db()
-
-
-class NovelCharactersModel(Model):
-    novel = ForeignKeyField(NovelModel, backref='characters', on_delete='CASCADE')
-    character = ForeignKeyField(CharacterModel, on_delete='CASCADE')
-
-    class Meta:
-        table_name = 'NovelCharacters'
-        database = context.db()
-
-
-class SceneCharactersModel(Model):
-    scene = ForeignKeyField(SceneModel, backref='characters', on_delete='CASCADE')
-    character = ForeignKeyField(CharacterModel, on_delete='CASCADE')
-    type = TextField()
-
-    class Meta:
-        table_name = 'SceneCharacters'
-        database = context.db()
-
-
-class SceneBuilderElementModel(Model):
-    sequence = IntegerField()
-    type = TextField()
-    text = TextField(null=True)
-    scene = ForeignKeyField(SceneModel, backref='elements', on_delete='CASCADE')
-    character = ForeignKeyField(CharacterModel, null=True, on_delete='CASCADE')
-    parent = ForeignKeyField('self', related_name='children', null=True, on_delete='CASCADE')
-    suspense = BooleanField(default=False)
-    tension = BooleanField(default=False)
-    stakes = BooleanField(default=False)
-
-    class Meta:
-        table_name = 'SceneBuilderElements'
-        database = context.db()
-
-
 class SqlClient:
 
     def novels(self) -> List[Novel]:
-        if os.path.exists(json_client.project_file_path):
-            return json_client.novels()
-        novels = []
-        for novel_m in NovelModel.select():
-            novels.append(Novel(id=novel_m.id, title=novel_m.title))
-
-        return novels
+        return json_client.novels()
 
     def has_novel(self, id: uuid.UUID) -> bool:
-        if os.path.exists(json_client.project_file_path):
-            return json_client.has_novel(id)
-        try:
-            NovelModel.get_by_id(id)
-            return True
-        except DoesNotExist:
-            return False
+        return json_client.has_novel(id)
 
     def insert_novel(self, novel: Novel):
         json_client.insert_novel(novel)
@@ -267,74 +63,7 @@ class SqlClient:
         json_client.update_novel(novel)
 
     def fetch_novel(self, id: int) -> Novel:
-        if os.path.exists(json_client.project_file_path):
-            return json_client.fetch_novel()
-        novel_model = NovelModel.get_by_id(id)
-
-        characters: List[Character] = []
-        for char_m in novel_model.characters:
-            characters.append(
-                Character(id=char_m.character.id, name=char_m.character.name, avatar=char_m.character.avatar))
-
-        story_lines: List[StoryLine] = []
-        for i, story_m in enumerate(novel_model.story_lines):
-            if story_m.color_hexa:
-                color = story_m.color_hexa
-            else:
-                color = STORY_LINE_COLOR_CODES[i % len(STORY_LINE_COLOR_CODES)]
-            story_lines.append(StoryLine(id=story_m.id, text=story_m.text, color_hexa=color))
-
-        chapters: List[Chapter] = []
-        for chapter_m in novel_model.chapters:
-            chapters.append(Chapter(id=chapter_m.id, title=chapter_m.title, sequence=chapter_m.sequence))
-
-        scenes: List[Scene] = []
-        for scene_m in novel_model.scenes:
-            scene_characters = []
-            pov = None
-            for char_m in scene_m.characters:
-                for char in characters:
-                    if char.id == char_m.character.id:
-                        if char_m.type == 'pov':
-                            pov = char
-                        else:
-                            scene_characters.append(char)
-
-            scene_story_lines = []
-            for story_m in scene_m.story_lines:
-                for story in story_lines:
-                    if story.id == story_m.story_line.id:
-                        scene_story_lines.append(story)
-
-            scene_chapter = None
-            if scene_m.chapter:
-                for chapter in chapters:
-                    if chapter.id == scene_m.chapter.id:
-                        scene_chapter = chapter
-                        break
-            arcs: List[CharacterArc] = []
-            for arc_m in scene_m.arcs:
-                for char in characters:
-                    if char.id == arc_m.character.id:
-                        arcs.append(CharacterArc(arc_m.arc, char))
-
-            day = scene_m.day if scene_m.day else 0
-            end_event = scene_m.end_event if scene_m.end_event else True
-            without_action_conflict = scene_m.without_action_conflict if scene_m.without_action_conflict else False
-            action_resolution = scene_m.action_resolution if scene_m.action_resolution else False
-            scenes.append(Scene(id=scene_m.id, title=scene_m.title, synopsis=scene_m.synopsis, type=scene_m.type,
-                                pivotal=scene_m.pivotal, sequence=scene_m.sequence, beginning=scene_m.beginning,
-                                middle=scene_m.middle, end=scene_m.end, wip=scene_m.wip, day=day,
-                                end_event=end_event, characters=scene_characters, pov=pov,
-                                story_lines=scene_story_lines, beginning_type=scene_m.beginning_type,
-                                ending_hook=scene_m.ending_hook, notes=scene_m.notes, chapter=scene_chapter, arcs=arcs,
-                                without_action_conflict=without_action_conflict, action_resolution=action_resolution))
-
-        scenes = sorted(scenes, key=lambda x: x.sequence)
-        novel: Novel = Novel(id=novel_model.id, title=novel_model.title, scenes=scenes, characters=characters,
-                             story_lines=story_lines, chapters=chapters)
-
-        return novel
+        return json_client.fetch_novel()
 
     def insert_character(self, novel: Novel, character: Character):
         json_client.insert_character(novel, character)

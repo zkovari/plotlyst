@@ -12,7 +12,6 @@ REQUIREMENTS: dict = {
         'overrides==3.1.0',
         'qtawesome==1.0.3',
         'PyQtChart==5.15.4',
-        'peewee==3.14.4',
         'matplotlib==3.4.2',
         'anytree==2.8.0',
         'numpy==1.21.1',

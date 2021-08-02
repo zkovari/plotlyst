@@ -136,7 +136,6 @@ if __name__ == '__main__':
             workspace = None
 
         try:
-            context.init(workspace)
             json_client.init(workspace)
         except Exception as ex:
             QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
