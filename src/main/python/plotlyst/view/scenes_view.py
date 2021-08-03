@@ -33,7 +33,7 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNH
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
@@ -69,7 +69,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.verticalHeader().setStyleSheet(
             '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
                QHeaderView {background-color: white;}''')
-        self.ui.tblScenes.verticalHeader().sectionMoved.connect(self._on_scene_moved)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
         self.tblModel.orderChanged.connect(self._on_scene_moved)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
@@ -79,6 +78,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
+
+        self._stages_model: Optional[ScenesStageTableModel] = None
 
         self.ui.splitterLeft.setSizes([70, 500])
 
@@ -102,9 +103,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct3.toggled.connect(partial(self._proxy.setActsFilter, 3))
 
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
-        self.ui.btnTableView.toggled.connect(self._switch_view)
         self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
-        self.ui.btnActionsView.toggled.connect(self._switch_view)
+        self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
+        self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnTableView.setChecked(True)
 
         menu = QMenu(self.ui.btnGraphs)
@@ -146,6 +147,9 @@ class ScenesOutlineView(AbstractNovelView):
         self._distribution_widget.refresh()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
+
+        if self._stages_model:
+            self._stages_model.modelReset.emit()
 
     def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
@@ -205,6 +209,31 @@ class ScenesOutlineView(AbstractNovelView):
         relax_colors = False
         columns = self._default_columns
 
+        if self.ui.btnStatusView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
+            self.ui.tblScenes.clearSelection()
+            if not self._stages_model:
+                self._stages_model = ScenesStageTableModel(self.novel)
+                self._proxy.setSourceModel(self._stages_model)
+                self.ui.tblSceneStages.setModel(self._proxy)
+                self.ui.tblSceneStages.verticalHeader().setStyleSheet(
+                    '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
+                       QHeaderView {background-color: white;}''')
+                self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
+                self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
+
+                self.ui.tblSceneStages.clicked.connect(self._stages_model.changeStage)
+
+                for col in range(1, self._stages_model.columnCount()):
+                    self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+                    w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
+                    self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
+                    self.ui.tblSceneStages.setColumnWidth(col, w + 10)
+        else:
+            self._proxy.setSourceModel(self.tblModel)
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
+            self.ui.tblSceneStages.clearSelection()
+
         if self.ui.btnActionsView.isChecked():
             columns = self._actions_view_columns
             height = 60
@@ -213,7 +242,6 @@ class ScenesOutlineView(AbstractNovelView):
                                                                       QHeaderView.Stretch)
             self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColMiddle,
                                                                       QHeaderView.Stretch)
-
         self.tblModel.setRelaxColors(relax_colors)
         for col in range(self.tblModel.columnCount()):
             if col in columns:
