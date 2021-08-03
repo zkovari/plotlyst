@@ -40,6 +40,7 @@ from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 
 
 class ScenesOutlineView(AbstractNovelView):
@@ -80,6 +81,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
         self._stages_model: Optional[ScenesStageTableModel] = None
+        self._stages_progress: Optional[SceneStageProgressCharts] = None
 
         self.ui.splitterLeft.setSizes([70, 500])
 
@@ -150,6 +152,8 @@ class ScenesOutlineView(AbstractNovelView):
 
         if self._stages_model:
             self._stages_model.modelReset.emit()
+        if self._stages_progress:
+            self._stages_progress.refresh()
 
     def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
@@ -214,23 +218,28 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblScenes.clearSelection()
             if not self._stages_model:
                 self._stages_model = ScenesStageTableModel(self.novel)
-                self._proxy.setSourceModel(self._stages_model)
-                self.ui.tblSceneStages.setModel(self._proxy)
+                self.ui.tblSceneStages.setModel(self._stages_model)
                 self.ui.tblSceneStages.verticalHeader().setStyleSheet(
                     '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
                        QHeaderView {background-color: white;}''')
                 self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
                 self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
 
-                self.ui.tblSceneStages.clicked.connect(self._stages_model.changeStage)
-
                 for col in range(1, self._stages_model.columnCount()):
                     self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
                     w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
                     self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
                     self.ui.tblSceneStages.setColumnWidth(col, w + 10)
+                self._stages_progress = SceneStageProgressCharts(self.novel)
+                self.ui.wdgReports.layout().addWidget(self._stages_progress)
+
+                self.ui.tblSceneStages.clicked.connect(self._stages_model.changeStage)
+                self.ui.tblSceneStages.clicked.connect(self._stages_progress.refresh)
+
+                if self.novel.scenes:
+                    self._stages_progress.refresh()
+
         else:
-            self._proxy.setSourceModel(self.tblModel)
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
             self.ui.tblSceneStages.clearSelection()
 
