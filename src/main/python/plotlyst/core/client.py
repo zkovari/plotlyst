@@ -196,6 +196,7 @@ class JsonClient:
             with open(self.project_file_path) as json_file:
                 data = json_file.read()
                 self.project = Project.from_json(data)
+                self._persist_project()
 
         self._workspace = workspace
         self.root_path = pathlib.Path(self._workspace)
