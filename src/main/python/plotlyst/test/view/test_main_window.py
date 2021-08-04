@@ -60,3 +60,21 @@ def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
     assert not filled_window.btnNotes.isEnabled()
     assert filled_window.btnTimeline.isVisible()
     assert not filled_window.btnTimeline.isEnabled()
+
+    first_card = view.novel_cards[0]
+    assert first_card.novel.id
+    qtbot.mouseClick(first_card, Qt.LeftButton)
+
+    first_card.btnLoad.click()
+    assert filled_window.btnNovel.isEnabled()
+    assert filled_window.btnNovel.isVisible()
+    assert filled_window.btnCharacters.isVisible()
+    assert filled_window.btnCharacters.isEnabled()
+    assert filled_window.btnScenes.isVisible()
+    assert filled_window.btnScenes.isEnabled()
+    assert filled_window.btnReport.isVisible()
+    assert filled_window.btnReport.isEnabled()
+    assert filled_window.btnNotes.isVisible()
+    assert filled_window.btnNotes.isEnabled()
+    assert filled_window.btnTimeline.isVisible()
+    assert filled_window.btnTimeline.isEnabled()

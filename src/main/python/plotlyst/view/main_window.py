@@ -144,14 +144,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageNotes.layout().addWidget(self.notes_view.widget)
         self.pageReports.layout().addWidget(self.reports_view.widget)
 
-        if not self.novel.characters:
-            self.btnScenes.setDisabled(True)
-        if not self.novel.scenes:
-            self.btnNotes.setDisabled(True)
-            self.btnReport.setDisabled(True)
-            self.btnTimeline.setDisabled(True)
-
-        self.btnScenes.setChecked(True)
+        self.btnScenes.setEnabled(len(self.novel.characters) > 0)
+        self.btnNotes.setEnabled(len(self.novel.scenes) > 0)
+        self.btnReport.setEnabled(len(self.novel.scenes) > 0)
+        self.btnTimeline.setEnabled(len(self.novel.scenes) > 0)
+        if self.novel.scenes:
+            self.btnScenes.setChecked(True)
+        else:
+            self.btnCharacters.setChecked(True)
 
     def _on_view_changed(self):
         if self.btnHome.isChecked():
