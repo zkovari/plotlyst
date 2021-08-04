@@ -3,7 +3,7 @@ name: Test
 on: [ push ]
 
 jobs:
-  test:
+  gui_test:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,8 +29,11 @@ jobs:
           pip install coveralls
           coveralls --service=github
 
-  windows-test:
-    runs-on: windows-2016
+  core-test:
+    strategy:
+      matrix:
+        os: [ windows-2016, macos-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -45,7 +48,7 @@ jobs:
         run: |
           pyqt5ac --config .pyqt5ac.yml
           python -m pytest src/main/python/plotlyst/test/core --cov-report term -v --color=yes
-    
+
   qa:
     runs-on: ubuntu-latest
     steps:
