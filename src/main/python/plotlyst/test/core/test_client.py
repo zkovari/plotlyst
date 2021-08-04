@@ -1,5 +1,6 @@
-from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.test.conftest import init_project
 
 
 def test_insert_novel(test_client):
@@ -44,3 +45,9 @@ def test_insert_scene(test_client):
     saved_novel = client.fetch_novel(novel.id)
     assert novel == saved_novel
     assert scene == novel.scenes[0]
+
+
+def test_init_client(test_client):
+    init_project()
+
+    json_client.init(str(json_client.root_path))
