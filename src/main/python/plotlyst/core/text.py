@@ -27,7 +27,7 @@ class TextBuilder:
 
     def __init__(self):
         self.text: str = ''
-        self._last_is_nl: bool = False
+        self._last_is_nl: bool = True
 
     def nl(self):
         if not self.text:
