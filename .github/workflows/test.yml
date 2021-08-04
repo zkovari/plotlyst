@@ -4,7 +4,6 @@ on: [ push ]
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +29,23 @@ jobs:
           pip install coveralls
           coveralls --service=github
 
+  windows-test:
+    runs-on: windows-2016
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+      - name: Test with pytest
+        run: |
+          pyqt5ac --config .pyqt5ac.yml
+          python -m pytest src/main/python/plotlyst/test/core --cov-report term -v --color=yes
+    
   qa:
     runs-on: ubuntu-latest
     steps:
@@ -48,3 +64,4 @@ jobs:
           flake8 src/main/python/plotlyst --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 src/main/python/plotlyst --count --statistics
+  
