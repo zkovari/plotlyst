@@ -20,10 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import numpy as np
-from PyQt5.QtChart import QPieSeries, QChart, QChartView
+from PyQt5.QtChart import QPieSeries, QChart, QChartView, QLineSeries, QValueAxis
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QHeaderView
-from matplotlib import ticker
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from overrides import overrides
@@ -91,15 +90,16 @@ class ReportsView(AbstractNovelView):
         self.ui.tblScenes.showColumn(ScenesTableModel.ColArc)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
 
-        self.arc_canvas = CharacterArcCanvas(self.novel, parent=self)
+        self.arc_chart_view = CharacterArc(self.novel)
+
+        self._arc_character: Optional[Character] = None
         self._characters_selector = CharacterSelectorWidget()
-        self._characters_selector.characterClicked.connect(self._arc_character_clicked)
+        self._characters_selector.characterToggled.connect(self._arc_character_toggled)
         self._update_characters_selectors()
         self.ui.tabCharacterArcs.layout().insertWidget(0, self._characters_selector)
-        self.ui.wdgArc.layout().addWidget(self.arc_canvas)
-        self._arc_character: Optional[Character] = None
+        self.ui.wdgArc.layout().addWidget(self.arc_chart_view)
 
-        self.scenes_model.valueChanged.connect(lambda: self.arc_canvas.refresh_plot(self._arc_character))
+        self.scenes_model.valueChanged.connect(lambda: self.arc_chart_view.refresh(self._arc_character))
 
     @overrides
     def refresh(self):
@@ -117,14 +117,14 @@ class ReportsView(AbstractNovelView):
                 pov_chars.append(scene.pov)
         self._characters_selector.setCharacters(pov_chars)
 
-    def _arc_character_clicked(self, character: Character):
+    def _arc_character_toggled(self, character: Character):
         self._arc_character = character
         povs = set([x.pov for x in self.novel.scenes])
         for pov in povs:
             self._scenes_proxy.setCharacterFilter(pov, False)
         if self.novel.characters:
             self._scenes_proxy.setCharacterFilter(character, True)
-        self.arc_canvas.refresh_plot(self._arc_character)
+        self.arc_chart_view.refresh(self._arc_character)
 
     def _update_characters_chart(self):
         for k in self.pov_number.keys():
@@ -204,45 +204,44 @@ class StoryLinesCanvas(FigureCanvasQTAgg):
         self.draw()
 
 
-class CharacterArcCanvas(FigureCanvasQTAgg):
-    def __init__(self, novel: Novel, parent=None, width=5, height=4, dpi=100):
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
+class CharacterArc(QChartView):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
         self.novel = novel
-        self.axes = None
+        arc_chart = QChart()
+        arc_chart.createDefaultAxes()
+        arc_chart.legend().hide()
+        arc_chart.setAnimationOptions(QChart.SeriesAnimations)
+        self.setChart(arc_chart)
+        self.setRenderHint(QPainter.Antialiasing)
+        self.axis: Optional[QValueAxis] = None
 
-        super().__init__(self.fig)
+    def refresh(self, character: Character):
+        self.chart().removeAllSeries()
+        if self.axis:
+            self.chart().removeAxis(self.axis)
+        self.chart().setTitle(f'Character arc for {character.name}')
 
-    def refresh_plot(self, character: Optional[Character]):
-        if not character:
-            return
-        if self.axes:
-            self.fig.clear()
-
-        self.axes = self.fig.add_subplot(111)
-
-        x = np.arange(0, len([x for x in self.novel.scenes if x.pov == character]))
+        series = QLineSeries()
         arc_value: int = 0
-        y = []
+        series.append(0, 0)
         for scene in self.novel.scenes:
             if scene.pov != character:
                 continue
             for arc in scene.arcs:
-                if arc.character == character:
+                if arc.character.id == character.id:
                     arc_value += arc.arc
-            y.append(arc_value)
+                    series.append(len(series), arc_value)
 
-        self.axes.plot(x, y)
-        if y:
-            min_y = min(y)
-            max_y = max(y)
-        else:
-            min_y = -10
-            max_y = 10
+        points = series.pointsVector()
+        if not points:
+            return
 
-        if min_y < 0 and abs(min_y) > max_y:
-            self.axes.set_ylim([min_y - 3, abs(min_y) + 3])
-        self.axes.yaxis.set_major_locator(ticker.NullLocator())
-        self.axes.xaxis.set_major_locator(ticker.NullLocator())
-        self.axes.set(title=f'Character arc for {character.name}')
-
-        self.draw()
+        min_ = min([x.y() for x in points])
+        max_ = max([x.y() for x in points])
+        limit = max(abs(min_), max_)
+        self.axis = QValueAxis()
+        self.axis.setRange(-limit - 3, limit + 3)
+        self.chart().addSeries(series)
+        self.chart().setAxisY(self.axis, series)
+        self.axis.setVisible(False)

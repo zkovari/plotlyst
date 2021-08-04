@@ -93,7 +93,7 @@ class CharactersScenesDistributionWidget(QWidget):
 
 
 class CharacterSelectorWidget(QWidget):
-    characterClicked = pyqtSignal(Character)
+    characterToggled = pyqtSignal(Character)
 
     def __init__(self, parent=None):
         super(CharacterSelectorWidget, self).__init__(parent)
@@ -121,7 +121,7 @@ class CharacterSelectorWidget(QWidget):
             tool_btn = QToolButton()
             tool_btn.setIcon(QIcon(avatars.pixmap(char)))
             tool_btn.setCheckable(True)
-            tool_btn.toggled.connect(partial(self.characterClicked.emit, char))
+            tool_btn.toggled.connect(partial(self.characterToggled.emit, char))
 
             self._buttons.append(tool_btn)
             self._btn_group.addButton(tool_btn)
