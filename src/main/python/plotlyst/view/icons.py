@@ -240,10 +240,6 @@ class IconRegistry:
     def progress_check_icon() -> QIcon:
         return qtawesome.icon('mdi.progress-check', color='darkblue', options=[{'scale_factor': 1.2}])
 
-    @staticmethod
-    def check_icon() -> QIcon:
-        return qtawesome.icon('fa5.check-circle', color='darkblue')
-
 
 class AvatarsRegistry:
     def __init__(self):
