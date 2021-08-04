@@ -217,28 +217,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
             self.ui.tblScenes.clearSelection()
             if not self._stages_model:
-                self._stages_model = ScenesStageTableModel(self.novel)
-                self.ui.tblSceneStages.setModel(self._stages_model)
-                self.ui.tblSceneStages.verticalHeader().setStyleSheet(
-                    '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
-                       QHeaderView {background-color: white;}''')
-                self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
-                self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
-
-                for col in range(1, self._stages_model.columnCount()):
-                    self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
-                    w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
-                    self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
-                    self.ui.tblSceneStages.setColumnWidth(col, w + 10)
-                self._stages_progress = SceneStageProgressCharts(self.novel)
-                self.ui.wdgReports.layout().addWidget(self._stages_progress)
-
-                self.ui.tblSceneStages.clicked.connect(self._stages_model.changeStage)
-                self.ui.tblSceneStages.clicked.connect(self._stages_progress.refresh)
-
-                if self.novel.scenes:
-                    self._stages_progress.refresh()
-
+                self._init_stages_view()
         else:
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
             self.ui.tblSceneStages.clearSelection()
@@ -259,6 +238,30 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblScenes.hideColumn(col)
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
 
+    def _init_stages_view(self):
+        self._stages_model = ScenesStageTableModel(self.novel)
+        self.ui.tblSceneStages.setModel(self._stages_model)
+        self.ui.tblSceneStages.verticalHeader().setStyleSheet(
+            '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
+               QHeaderView {background-color: white;}''')
+        self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
+        self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
+
+        for col in range(1, self._stages_model.columnCount()):
+            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+            w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
+            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
+            self.ui.tblSceneStages.setColumnWidth(col, w + 10)
+        self._stages_progress = SceneStageProgressCharts(self.novel)
+
+        self.ui.tblSceneStages.clicked.connect(self._stages_model.changeStage)
+        self.ui.tblSceneStages.clicked.connect(self._stages_progress.refresh)
+
+        if self.novel.scenes:
+            self._stages_progress.refresh()
+            for i, chartview in enumerate(self._stages_progress.charts()):
+                self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
+
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):
             scene.wip = not scene.wip
@@ -269,13 +272,8 @@ class ScenesOutlineView(AbstractNovelView):
         scene: Scene = index.data(ScenesTableModel.SceneRole)
 
         menu = QMenu(self.ui.tblScenes)
-
-        wip_action = QAction(IconRegistry.wip_icon(), 'Toggle WIP status', menu)
-        wip_action.triggered.connect(lambda: toggle_wip(scene))
-        insert_action = QAction(IconRegistry.plus_icon(), 'Insert new scene', menu)
-        insert_action.triggered.connect(lambda: self._insert_scene_after(index))
-        menu.addAction(wip_action)
-        menu.addAction(insert_action)
+        menu.addAction(IconRegistry.wip_icon(), 'Toggle WIP status', lambda: toggle_wip(scene))
+        menu.addAction(IconRegistry.plus_icon(), 'Insert new scene', lambda: self._insert_scene_after(index))
 
         menu.popup(self.ui.tblScenes.viewport().mapToGlobal(pos))
 

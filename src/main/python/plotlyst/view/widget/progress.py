@@ -17,56 +17,55 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Tuple
+from typing import List
 
 from PyQt5.QtChart import QChart, QChartView, QPieSeries, QPieSlice
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QWidget, QHBoxLayout
-from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel
 
 
-class ProgressCharts(QWidget):
-
-    def __init__(self, number_of_charts: int, parent=None):
-        super(ProgressCharts, self).__init__(parent)
-        self._layout = QHBoxLayout()
-        self.setLayout(self._layout)
-
-        self.charts: List[QChart] = []
-        for _ in range(number_of_charts):
-            chart = QChart()
-            chart.legend().hide()
-            chart.setAnimationOptions(QChart.SeriesAnimations)
-
-            chartview = QChartView(chart)
-            chartview.setMaximumHeight(250)
-            chartview.setRenderHint(QPainter.Antialiasing)
-
-            self._layout.addWidget(chartview)
-            self.charts.append(chart)
-
-    def refresh(self, values: List[Tuple[int, int]]):
-        for i, value in enumerate(values):
-            self.charts[i].removeAllSeries()
-
-            series = QPieSeries()
-            series.setHoleSize(0.45)
-            percentage_slice = QPieSlice('Progress', value[0])
-            percentage_slice.setColor(Qt.darkBlue)
-            empty_slice = QPieSlice('', value[1] - value[0])
-            empty_slice.setColor(Qt.white)
-            series.append(percentage_slice)
-            series.append(empty_slice)
-            if i == 0:
-                title = "Overall:"
-            else:
-                title = f'Act {i}:'
-            self.charts[i].setTitle(title + " {:.1f}%".format(100 * percentage_slice.percentage()))
-
-            self.charts[i].addSeries(series)
+# class ProgressCharts(QWidget):
+#
+#     def __init__(self, number_of_charts: int, parent=None):
+#         super(ProgressCharts, self).__init__(parent)
+#         self._layout = QHBoxLayout()
+#         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+#         self.setLayout(self._layout)
+#
+#         self.charts: List[QChart] = []
+#         for _ in range(number_of_charts):
+#             chart = QChart()
+#             chart.legend().hide()
+#             chart.setAnimationOptions(QChart.SeriesAnimations)
+#
+#             chartview = QChartView(chart)
+#             chartview.setMaximumHeight(250)
+#             chartview.setRenderHint(QPainter.Antialiasing)
+#
+#             self._layout.addWidget(chartview)
+#             self.charts.append(chart)
+#
+#     def refresh(self, values: List[Tuple[int, int]]):
+#         for i, value in enumerate(values):
+#             self.charts[i].removeAllSeries()
+#
+#             series = QPieSeries()
+#             series.setHoleSize(0.45)
+#             percentage_slice = QPieSlice('Progress', value[0])
+#             percentage_slice.setColor(Qt.darkBlue)
+#             empty_slice = QPieSlice('', value[1] - value[0])
+#             empty_slice.setColor(Qt.white)
+#             series.append(percentage_slice)
+#             series.append(empty_slice)
+#             if i == 0:
+#                 title = "Overall:"
+#             else:
+#                 title = f'Act {i}:'
+#             self.charts[i].setTitle(title + " {:.1f}%".format(100 * percentage_slice.percentage()))
+#
+#             self.charts[i].addSeries(series)
 
 
 class ProgressChartView(QChartView):
@@ -77,7 +76,8 @@ class ProgressChartView(QChartView):
         self.chart.setAnimationOptions(QChart.SeriesAnimations)
 
         self.setChart(self.chart)
-        self.setMaximumHeight(250)
+        self.setMaximumHeight(150)
+        self.setMaximumWidth(250)
         self.setRenderHint(QPainter.Antialiasing)
 
         self.refresh(value, max, title_prefix)
@@ -97,15 +97,17 @@ class ProgressChartView(QChartView):
         self.chart.addSeries(series)
 
 
-class SceneStageProgressCharts(ProgressCharts):
+class SceneStageProgressCharts:
 
-    def __init__(self, novel: Novel, parent=None):
-        super().__init__(4, parent)
+    def __init__(self, novel: Novel):
         self.novel = novel
+        self._chartviews: List[ProgressChartView] = []
         self._stage = self.novel.stages[1]  # first draft
         self._stage_index = 1
 
-    @overrides
+    def charts(self) -> List[ProgressChartView]:
+        return self._chartviews
+
     def refresh(self):
         in_act_1 = True
         in_act_2 = False
@@ -152,4 +154,10 @@ class SceneStageProgressCharts(ProgressCharts):
         else:
             values.append((0, 1))
 
-        super(SceneStageProgressCharts, self).refresh(values)
+        if not self._chartviews:
+            for v in values:
+                view = ProgressChartView(v[0], v[1])
+                self._chartviews.append(view)
+        else:
+            for i, v in enumerate(values):
+                self._chartviews[i].refresh(v[0], v[1])
