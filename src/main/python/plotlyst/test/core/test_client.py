@@ -8,7 +8,8 @@ def test_insert_novel(test_client):
     assert novel.id
 
     novels = client.novels()
-    assert novel in novels
+    persisted_novel = client.fetch_novel(novels[0].id)
+    assert novel == persisted_novel
 
 
 def test_delete_novel(test_client):
