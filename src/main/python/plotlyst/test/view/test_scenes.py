@@ -103,14 +103,18 @@ def test_insert_new_scene_after(qtbot, filled_window: MainWindow):
 def test_switch_views(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
 
+    assert view.ui.tblScenes.verticalHeader().isVisible()
+
     view.ui.btnActionsView.click()
     assert_data(view.tblModel, 'Beginning', 0, ScenesTableModel.ColBeginning)
     assert_data(view.tblModel, 'Middle', 0, ScenesTableModel.ColMiddle)
     assert_data(view.tblModel, 'End', 0, ScenesTableModel.ColEnd)
+    assert view.ui.tblScenes.verticalHeader().isVisible()
 
     view.ui.btnStatusView.click()
     assert view.stagesModel
     assert view.stagesProgress
+    assert view.ui.tblSceneStages.verticalHeader().isVisible()
     charts = view.stagesProgress.charts()
     assert len(charts) == 4
     pie_series: QPieSeries = charts[0].chart.series()[0]

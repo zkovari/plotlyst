@@ -447,7 +447,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="pageDefault">
               <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -514,7 +514,7 @@
                   <bool>true</bool>
                  </attribute>
                  <attribute name="verticalHeaderVisible">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </attribute>
                  <attribute name="verticalHeaderDefaultSectionSize">
                   <number>50</number>
