@@ -447,7 +447,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="pageDefault">
               <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -547,22 +547,6 @@
                    <property name="spacing">
                     <number>1</number>
                    </property>
-                   <item alignment="Qt::AlignTop">
-                    <widget class="QComboBox" name="comboBox">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>150</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
                    <item>
                     <widget class="QWidget" name="wdgProgressCharts" native="true">
                      <property name="sizePolicy">
