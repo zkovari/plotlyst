@@ -59,6 +59,9 @@ class SqlClient:
     def delete_novel(self, novel: Novel):
         json_client.delete_novel(novel)
 
+    def update_project_novel(self, novel: Novel):
+        json_client.update_project_novel(novel)
+
     def update_novel(self, novel: Novel):
         json_client.update_novel(novel)
 
@@ -87,7 +90,7 @@ class SqlClient:
 client = SqlClient()
 
 
-@dataclass_json
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class CharacterInfo:
     name: str
@@ -112,7 +115,7 @@ class SceneBuilderElementInfo:
     has_stakes: bool = False
 
 
-@dataclass_json
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class SceneInfo:
     title: str
@@ -153,7 +156,6 @@ class ChapterInfo:
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class NovelInfo:
-    title: str
     id: uuid.UUID
     scenes: List[uuid.UUID] = field(default_factory=list)
     characters: List[uuid.UUID] = field(default_factory=list)
@@ -223,6 +225,12 @@ class JsonClient:
                 return True
         return False
 
+    def update_project_novel(self, novel: Novel):
+        novel_info = self._find_project_novel_info_or_fail(novel.id)
+        if novel_info.title != novel.title:
+            novel_info.title = novel.title
+            self._persist_project()
+
     def insert_novel(self, novel: Novel):
         project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id)
         self.project.novels.append(project_novel_info)
@@ -236,10 +244,10 @@ class JsonClient:
         self.__delete_info(self.novels_dir, novel_info.id)
 
     def update_novel(self, novel: Novel):
-        novel_info = self._find_project_novel_info_or_fail(novel.id)
-        if novel_info.title != novel.title:
-            novel_info.title = novel.title
-            self._persist_project()
+        # novel_info = self._find_project_novel_info_or_fail(novel.id)
+        # if novel_info.title != novel.title:
+        #     novel_info.title = novel.title
+        #     self._persist_project()
         self._persist_novel(novel)
 
     def insert_scene(self, novel: Novel, scene: Scene):
@@ -271,7 +279,7 @@ class JsonClient:
         raise ValueError(f'Could not find novel with id {id}')
 
     def fetch_novel(self, id: uuid.UUID) -> Novel:
-        project_novel_info = self._find_project_novel_info_or_fail(id)
+        project_novel_info: ProjectNovelInfo = self._find_project_novel_info_or_fail(id)
         novel_info = self._read_novel_info(project_novel_info.id)
         self.__persist_info(self.novels_dir, novel_info)
 
@@ -359,7 +367,7 @@ class JsonClient:
                               chapter=chapter, builder_elements=builder_elements, stage=stage)
                 scenes.append(scene)
 
-        return Novel(title=novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
+        return Novel(title=project_novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
@@ -375,7 +383,7 @@ class JsonClient:
             f.write(self.project.to_json())
 
     def _persist_novel(self, novel: Novel):
-        novel_info = NovelInfo(title=novel.title, id=novel.id, scenes=[x.id for x in novel.scenes],
+        novel_info = NovelInfo(id=novel.id, scenes=[x.id for x in novel.scenes],
                                storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
                                            novel.story_lines], characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],

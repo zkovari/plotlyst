@@ -31,7 +31,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
-    SceneChangedEvent, CharacterChangedEvent
+    SceneChangedEvent, CharacterChangedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
@@ -91,6 +91,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 for btn in self.buttonGroup.buttons():
                     if btn is not self.btnHome:
                         btn.setHidden(True)
+        elif isinstance(event, NovelUpdatedEvent):
+            if self.novel and event.novel.id == self.novel.id:
+                self.novel.title = event.novel.title
         elif isinstance(event, CharacterChangedEvent):
             self.btnScenes.setEnabled(True)
             event_dispatcher.deregister(self, CharacterChangedEvent)
@@ -238,6 +241,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _register_events(self):
         event_dispatcher.register(self, NovelReloadRequestedEvent)
         event_dispatcher.register(self, NovelDeletedEvent)
+        event_dispatcher.register(self, NovelUpdatedEvent)
         if self.novel and not self.novel.scenes:
             event_dispatcher.register(self, SceneChangedEvent)
         if self.novel and not self.novel.characters:

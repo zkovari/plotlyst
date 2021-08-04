@@ -49,6 +49,11 @@ class SceneDeletedEvent(Event):
 
 
 @dataclass
+class NovelUpdatedEvent(Event):
+    novel: Novel
+
+
+@dataclass
 class NovelDeletedEvent(Event):
     novel: Novel
 

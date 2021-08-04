@@ -25,7 +25,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, StoryLine
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.model.novel import EditableNovelStoryLinesListModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -37,7 +37,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel)
+        super().__init__(novel, [NovelUpdatedEvent])
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 

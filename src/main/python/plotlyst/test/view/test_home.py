@@ -1,9 +1,11 @@
 from PyQt5.QtCore import Qt, QTimer
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.test.common import go_to_home, patch_confirmed, create_novel, edit_novel_dialog
+from src.main.python.plotlyst.test.common import go_to_home, patch_confirmed, create_novel, edit_novel_dialog, \
+    go_to_novel
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
+from src.main.python.plotlyst.view.novel_view import NovelView
 
 
 def test_delete_novel(qtbot, filled_window: MainWindow, monkeypatch):
@@ -31,6 +33,9 @@ def test_edit_novel(qtbot, filled_window: MainWindow):
 
     assert card.label.text() == new_title
     assert client.novels()[0].title == new_title
+
+    novel_view: NovelView = go_to_novel(filled_window)
+    assert novel_view.ui.lblTitle.text() == new_title
 
 
 def test_create_new_novel(qtbot, filled_window: MainWindow):

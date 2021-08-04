@@ -27,7 +27,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelDeletedEvent
+from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.dialog.new_novel import NovelEditionDialog
@@ -86,7 +86,8 @@ class HomeView(AbstractView):
         if title:
             self.selected_card.novel.title = title
             self.selected_card.update()
-            client.update_novel(self.selected_card.novel)
+            client.update_project_novel(self.selected_card.novel)
+            emit_event(NovelUpdatedEvent(self, self.selected_card.novel))
 
     def _on_delete(self):
         if ask_confirmation(f'Are you sure you want to delete the novel "{self.selected_card.novel.title}"?'):
