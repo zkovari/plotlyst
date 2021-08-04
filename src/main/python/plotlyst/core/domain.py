@@ -100,6 +100,12 @@ class SceneBuilderElement:
 
 
 @dataclass
+class SceneStage:
+    stage: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -124,12 +130,19 @@ class Scene:
     action_resolution: bool = False
     without_action_conflict: bool = False
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
+    stage: Optional[SceneStage] = None
 
     def pov_arc(self) -> int:
         for arc in self.arcs:
             if arc.character == self.pov:
                 return arc.arc
         return NEUTRAL
+
+
+def default_stages() -> List[SceneStage]:
+    return [SceneStage('Outlined'), SceneStage('1st Draft'),
+            SceneStage('2nd Draft'), SceneStage('3rd Draft'), SceneStage('4th Draft'),
+            SceneStage('Edited'), SceneStage('Proofread'), SceneStage('Final')]
 
 
 @dataclass
@@ -140,6 +153,7 @@ class Novel:
     scenes: List[Scene] = field(default_factory=list)
     story_lines: List[StoryLine] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
+    stages: List[SceneStage] = field(default_factory=default_stages)
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title

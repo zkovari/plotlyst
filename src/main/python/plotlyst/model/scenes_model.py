@@ -20,17 +20,30 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from typing import List, Any, Dict, Optional
 
-from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMimeData, QByteArray, pyqtSignal
+import emoji
+from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMimeData, QByteArray, pyqtSignal, \
+    QAbstractTableModel
 from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
+from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Character, CharacterArc
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 
-class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
+class BaseScenesTableModel:
+
+    def verticalHeaderData(self, section: int, role: int = Qt.DisplayRole):
+        if role == Qt.DisplayRole:
+            return str(section + 1)
+        if role == Qt.DecorationRole:
+            return IconRegistry.hashtag_icon()
+
+
+class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableModel):
     orderChanged = pyqtSignal()
     valueChanged = pyqtSignal(QModelIndex)
     SceneRole = Qt.UserRole + 1
@@ -165,10 +178,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel):
         if orientation == Qt.Horizontal:
             return super(ScenesTableModel, self).headerData(section, orientation, role)
         else:
-            if role == Qt.DisplayRole:
-                return str(section + 1)
-            if role == Qt.DecorationRole:
-                return IconRegistry.hashtag_icon()
+            return self.verticalHeaderData(section, role)
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -326,3 +336,66 @@ class ScenesNotesTableModel(ScenesTableModel):
             if self._data[index.row()].notes:
                 return self._note_icon
         return super(ScenesNotesTableModel, self).data(index, role)
+
+
+class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
+    ColTitle: int = 0
+    ColNoneStage: int = 1
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.novel.scenes)
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.novel.stages) + 2  # stages + title + None stage
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if role == Qt.DecorationRole:
+            if not self._scene(index).stage and index.column() == self.ColNoneStage:
+                return IconRegistry.wip_icon()
+        if role == Qt.FontRole:
+            if index.column() > self.ColNoneStage:
+                return emoji_font()
+        if role == Qt.TextAlignmentRole:
+            if index.column() > self.ColNoneStage:
+                return Qt.AlignCenter
+        if role == Qt.DisplayRole:
+            if self._scene(index).stage and self._scene(index).stage.id == self._stage(index).id:
+                return emoji.emojize(':check_mark:')
+        if role == Qt.DisplayRole and index.column() == self.ColTitle:
+            return self._scene(index).title
+
+    @overrides
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
+        if orientation == Qt.Horizontal:
+            if role == Qt.DisplayRole:
+                if section == self.ColTitle:
+                    return 'Title'
+                if section == self.ColNoneStage:
+                    return 'None'
+                return self.novel.stages[section - 2].stage.replace(' ', '\n')
+        else:
+            return self.verticalHeaderData(section, role)
+
+    def changeStage(self, index: QModelIndex):
+        if index.column() == self.ColTitle:
+            return
+        if index.column() == self.ColNoneStage:
+            self._scene(index).stage = None
+        else:
+            self._scene(index).stage = self._stage(index)
+
+        client.update_scene(self._scene(index))
+        self.modelReset.emit()
+
+    def _scene(self, index: QModelIndex) -> Scene:
+        return self.novel.scenes[index.row()]
+
+    def _stage(self, index: QModelIndex):
+        return self.novel.stages[index.column() - 2]

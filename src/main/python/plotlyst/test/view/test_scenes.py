@@ -1,8 +1,9 @@
 from typing import List
 
+from PyQt5.QtChart import QPieSeries
 from PyQt5.QtWidgets import QMessageBox, QAction
 
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
     click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -106,3 +107,42 @@ def test_switch_views(qtbot, filled_window: MainWindow):
     assert_data(view.tblModel, 'Beginning', 0, ScenesTableModel.ColBeginning)
     assert_data(view.tblModel, 'Middle', 0, ScenesTableModel.ColMiddle)
     assert_data(view.tblModel, 'End', 0, ScenesTableModel.ColEnd)
+
+    view.ui.btnStatusView.click()
+    assert view.stagesModel
+    assert view.stagesProgress
+    charts = view.stagesProgress.charts()
+    assert len(charts) == 4
+    pie_series: QPieSeries = charts[0].chart.series()[0]
+    assert pie_series.count() == 2
+    assert pie_series.slices()[0].percentage() == 0.5
+
+
+def test_change_stage(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+
+    view.ui.btnStatusView.click()
+    assert view.stagesModel
+    assert view.stagesProgress
+
+    click_on_item(qtbot, view.ui.tblSceneStages, 0, ScenesStageTableModel.ColNoneStage)
+
+    assert view.novel.scenes[0].stage is None
+
+    charts = view.stagesProgress.charts()
+    assert len(charts) == 4
+    pie_series: QPieSeries = charts[0].chart.series()[0]
+    assert pie_series.count() == 2
+    assert pie_series.slices()[0].percentage() == 0.0
+
+    click_on_item(qtbot, view.ui.tblSceneStages, 0, ScenesStageTableModel.ColNoneStage + 2)
+    assert view.novel.scenes[0].stage == view.novel.stages[1]
+
+    pie_series = charts[0].chart.series()[0]
+    assert pie_series.slices()[0].percentage() == 0.5
+
+    click_on_item(qtbot, view.ui.tblSceneStages, 0, ScenesStageTableModel.ColNoneStage + 3)
+    assert view.novel.scenes[0].stage == view.novel.stages[2]
+
+    pie_series = charts[0].chart.series()[0]
+    assert pie_series.slices()[0].percentage() == 0.5

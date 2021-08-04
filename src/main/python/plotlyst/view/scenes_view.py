@@ -33,13 +33,14 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, VERY_UNHAPPY, UNH
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 
 
 class ScenesOutlineView(AbstractNovelView):
@@ -69,7 +70,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.verticalHeader().setStyleSheet(
             '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
                QHeaderView {background-color: white;}''')
-        self.ui.tblScenes.verticalHeader().sectionMoved.connect(self._on_scene_moved)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
         self.tblModel.orderChanged.connect(self._on_scene_moved)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
@@ -79,6 +79,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
+
+        self.stagesModel: Optional[ScenesStageTableModel] = None
+        self.stagesProgress: Optional[SceneStageProgressCharts] = None
 
         self.ui.splitterLeft.setSizes([70, 500])
 
@@ -102,9 +105,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct3.toggled.connect(partial(self._proxy.setActsFilter, 3))
 
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
-        self.ui.btnTableView.toggled.connect(self._switch_view)
         self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
-        self.ui.btnActionsView.toggled.connect(self._switch_view)
+        self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
+        self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnTableView.setChecked(True)
 
         menu = QMenu(self.ui.btnGraphs)
@@ -146,6 +149,11 @@ class ScenesOutlineView(AbstractNovelView):
         self._distribution_widget.refresh()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
+
+        if self.stagesModel:
+            self.stagesModel.modelReset.emit()
+        if self.stagesProgress:
+            self.stagesProgress.refresh()
 
     def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
@@ -205,6 +213,15 @@ class ScenesOutlineView(AbstractNovelView):
         relax_colors = False
         columns = self._default_columns
 
+        if self.ui.btnStatusView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
+            self.ui.tblScenes.clearSelection()
+            if not self.stagesModel:
+                self._init_stages_view()
+        else:
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
+            self.ui.tblSceneStages.clearSelection()
+
         if self.ui.btnActionsView.isChecked():
             columns = self._actions_view_columns
             height = 60
@@ -213,7 +230,6 @@ class ScenesOutlineView(AbstractNovelView):
                                                                       QHeaderView.Stretch)
             self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColMiddle,
                                                                       QHeaderView.Stretch)
-
         self.tblModel.setRelaxColors(relax_colors)
         for col in range(self.tblModel.columnCount()):
             if col in columns:
@@ -221,6 +237,30 @@ class ScenesOutlineView(AbstractNovelView):
                 continue
             self.ui.tblScenes.hideColumn(col)
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
+
+    def _init_stages_view(self):
+        self.stagesModel = ScenesStageTableModel(self.novel)
+        self.ui.tblSceneStages.setModel(self.stagesModel)
+        self.ui.tblSceneStages.verticalHeader().setStyleSheet(
+            '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
+               QHeaderView {background-color: white;}''')
+        self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
+        self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
+
+        for col in range(1, self.stagesModel.columnCount()):
+            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+            w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
+            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
+            self.ui.tblSceneStages.setColumnWidth(col, w + 10)
+        self.stagesProgress = SceneStageProgressCharts(self.novel)
+
+        self.ui.tblSceneStages.clicked.connect(self.stagesModel.changeStage)
+        self.ui.tblSceneStages.clicked.connect(self.stagesProgress.refresh)
+
+        if self.novel.scenes:
+            self.stagesProgress.refresh()
+            for i, chartview in enumerate(self.stagesProgress.charts()):
+                self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
 
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):
@@ -232,13 +272,8 @@ class ScenesOutlineView(AbstractNovelView):
         scene: Scene = index.data(ScenesTableModel.SceneRole)
 
         menu = QMenu(self.ui.tblScenes)
-
-        wip_action = QAction(IconRegistry.wip_icon(), 'Toggle WIP status', menu)
-        wip_action.triggered.connect(lambda: toggle_wip(scene))
-        insert_action = QAction(IconRegistry.plus_icon(), 'Insert new scene', menu)
-        insert_action.triggered.connect(lambda: self._insert_scene_after(index))
-        menu.addAction(wip_action)
-        menu.addAction(insert_action)
+        menu.addAction(IconRegistry.wip_icon(), 'Toggle WIP status', lambda: toggle_wip(scene))
+        menu.addAction(IconRegistry.plus_icon(), 'Insert new scene', lambda: self._insert_scene_after(index))
 
         menu.popup(self.ui.tblScenes.viewport().mapToGlobal(pos))
 
