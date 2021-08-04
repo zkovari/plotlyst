@@ -272,6 +272,7 @@ class JsonClient:
     def fetch_novel(self, id: uuid.UUID) -> Novel:
         project_novel_info = self._find_project_novel_info_or_fail(id)
         novel_info = self._read_novel_info(project_novel_info.id)
+        self.__persist_info(self.novels_dir, novel_info)
 
         storylines = []
         storylines_ids = {}
