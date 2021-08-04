@@ -81,7 +81,7 @@ def init_project():
     novel.chapters.append(chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
                     story_lines=[storyline_main], sequence=0, chapter=chapter_1, day=1, type=ACTION_SCENE,
-                    beginning='Beginning', middle='Middle', end='End')
+                    beginning='Beginning', middle='Middle', end='End', stage=novel.stages[1])
     scene_2 = Scene(title='Scene 2', synopsis='Scene 2 synopsis', pov=char_d, characters=[char_c, char_a],
                     story_lines=[storyline_lesser, storyline_love], sequence=1, chapter=chapter_2, day=2,
                     type=REACTION_SCENE,

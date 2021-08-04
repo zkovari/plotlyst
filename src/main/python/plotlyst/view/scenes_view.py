@@ -80,8 +80,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
-        self._stages_model: Optional[ScenesStageTableModel] = None
-        self._stages_progress: Optional[SceneStageProgressCharts] = None
+        self.stagesModel: Optional[ScenesStageTableModel] = None
+        self.stagesProgress: Optional[SceneStageProgressCharts] = None
 
         self.ui.splitterLeft.setSizes([70, 500])
 
@@ -150,10 +150,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
 
-        if self._stages_model:
-            self._stages_model.modelReset.emit()
-        if self._stages_progress:
-            self._stages_progress.refresh()
+        if self.stagesModel:
+            self.stagesModel.modelReset.emit()
+        if self.stagesProgress:
+            self.stagesProgress.refresh()
 
     def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
@@ -216,7 +216,7 @@ class ScenesOutlineView(AbstractNovelView):
         if self.ui.btnStatusView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageStages)
             self.ui.tblScenes.clearSelection()
-            if not self._stages_model:
+            if not self.stagesModel:
                 self._init_stages_view()
         else:
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
@@ -239,27 +239,27 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
 
     def _init_stages_view(self):
-        self._stages_model = ScenesStageTableModel(self.novel)
-        self.ui.tblSceneStages.setModel(self._stages_model)
+        self.stagesModel = ScenesStageTableModel(self.novel)
+        self.ui.tblSceneStages.setModel(self.stagesModel)
         self.ui.tblSceneStages.verticalHeader().setStyleSheet(
             '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
                QHeaderView {background-color: white;}''')
         self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
         self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
 
-        for col in range(1, self._stages_model.columnCount()):
+        for col in range(1, self.stagesModel.columnCount()):
             self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
             w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
             self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
             self.ui.tblSceneStages.setColumnWidth(col, w + 10)
-        self._stages_progress = SceneStageProgressCharts(self.novel)
+        self.stagesProgress = SceneStageProgressCharts(self.novel)
 
-        self.ui.tblSceneStages.clicked.connect(self._stages_model.changeStage)
-        self.ui.tblSceneStages.clicked.connect(self._stages_progress.refresh)
+        self.ui.tblSceneStages.clicked.connect(self.stagesModel.changeStage)
+        self.ui.tblSceneStages.clicked.connect(self.stagesProgress.refresh)
 
         if self.novel.scenes:
-            self._stages_progress.refresh()
-            for i, chartview in enumerate(self._stages_progress.charts()):
+            self.stagesProgress.refresh()
+            for i, chartview in enumerate(self.stagesProgress.charts()):
                 self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
 
     def _on_custom_menu_requested(self, pos: QPoint):
