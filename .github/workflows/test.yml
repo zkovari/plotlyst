@@ -29,11 +29,8 @@ jobs:
           pip install coveralls
           coveralls --service=github
 
-  core-test:
-    strategy:
-      matrix:
-        os: [ windows-2016, macos-latest ]
-    runs-on: ${{ matrix.os }}
+  core-windows-test:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
