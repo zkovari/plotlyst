@@ -21,11 +21,12 @@ from typing import List, Optional
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QFrame
+from PyQt5.QtWidgets import QFrame, QFileDialog
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.view._view import AbstractView
@@ -70,6 +71,17 @@ class HomeView(AbstractView):
             self.novel_cards.append(card)
             card.loadingRequested.connect(self.loadNovel.emit)
             card.selected.connect(self._card_selected)
+
+    def import_from_scrivener(self):
+        project = QFileDialog.getExistingDirectory(None, 'Choose a Scrivener project directory')
+        if not project:
+            return
+        importer = ScrivenerImporter()
+        novel: Novel = importer.import_project(project)
+        client.insert_novel(novel)
+        for scene in novel.scenes:
+            client.insert_scene(novel, scene)
+        self.refresh()
 
     def _add_new_novel(self):
         if self.selected_card:

@@ -501,6 +501,7 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionImportScrivener"/>
     <addaction name="actionRestart"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -571,6 +572,11 @@
   <action name="actionPersist">
    <property name="text">
     <string>Persist</string>
+   </property>
+  </action>
+  <action name="actionImportScrivener">
+   <property name="text">
+    <string>Import from Scrivener</string>
    </property>
   </action>
  </widget>

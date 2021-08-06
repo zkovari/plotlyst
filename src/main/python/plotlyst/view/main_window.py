@@ -144,7 +144,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageNotes.layout().addWidget(self.notes_view.widget)
         self.pageReports.layout().addWidget(self.reports_view.widget)
 
-        self.btnScenes.setEnabled(len(self.novel.characters) > 0)
+        self.btnScenes.setEnabled(len(self.novel.characters) > 0 or len(self.novel.scenes) > 0)
         self.btnNotes.setEnabled(len(self.novel.scenes) > 0)
         self.btnReport.setEnabled(len(self.novel.scenes) > 0)
         self.btnTimeline.setEnabled(len(self.novel.scenes) > 0)
@@ -183,6 +183,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
             self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
 
+        self.actionImportScrivener.triggered.connect(self._import_from_scrivener)
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)
         self.actionDecreaseFontSize.triggered.connect(self.decrease_font_size)
@@ -201,6 +202,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(spacer_widget(5))
         self.toolBar.addWidget(tasks_button)
         self.toolBar.addWidget(spacer_widget())
+
+    def _import_from_scrivener(self):
+        self.btnHome.click()
+        self.home_view.import_from_scrivener()
 
     def _increase_font_size(self):
         current_font = QApplication.font()
