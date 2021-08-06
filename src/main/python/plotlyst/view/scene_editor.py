@@ -51,7 +51,7 @@ class SceneEditor(QObject):
         self.ui = Ui_SceneEditor()
         self.ui.setupUi(self.widget)
         self.novel = novel
-
+        self.scene: Optional[Scene] = None
         self._emoji_font = emoji_font(24)
 
         self.ui.btnVeryUnhappy.setFont(self._emoji_font)

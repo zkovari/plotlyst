@@ -24,7 +24,7 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
     QAbstractItemModel, QPoint, QSize
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QStyledItemDelegate, \
-    QStyleOptionViewItem, QTextEdit, QMenu, QAction, QComboBox, QLineEdit, QSpinBox
+    QStyleOptionViewItem, QTextEdit, QMenu, QComboBox, QLineEdit, QSpinBox, QAction
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
@@ -121,12 +121,9 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.btnFilter.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
+
         for pov in set([x.pov for x in self.novel.scenes if x.pov]):
-            action = QAction(pov.name, self.ui.btnFilter)
-            action.setCheckable(True)
-            action.setChecked(True)
-            action.triggered.connect(partial(self._proxy.setCharacterFilter, pov))
-            self.ui.btnFilter.addAction(action)
+            self._add_pov_filter_action(pov)
 
         self.ui.tblScenes.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tblScenes.customContextMenuRequested.connect(self._on_custom_menu_requested)
@@ -140,6 +137,13 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnNew.clicked.connect(self._on_new)
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
+
+    def _add_pov_filter_action(self, pov):
+        action = QAction(pov.name, self.ui.btnFilter)
+        action.setCheckable(True)
+        action.setChecked(True)
+        action.triggered.connect(partial(self._proxy.setCharacterFilter, pov))
+        self.ui.btnFilter.addAction(action)
 
     @overrides
     def refresh(self):
@@ -193,6 +197,8 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _on_close_editor(self):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
+        if self.editor.scene.pov and self.editor.scene.pov.name not in [x.text() for x in self.ui.btnFilter.actions()]:
+            self._add_pov_filter_action(self.editor.scene.pov)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.editor.widget.deleteLater()
         self.editor = None
