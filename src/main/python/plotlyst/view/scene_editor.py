@@ -222,7 +222,7 @@ class SceneEditor(QObject):
         self.ui.treeSceneBuilder.setColumnWidth(1, 40)
         self.ui.treeSceneBuilder.setColumnWidth(2, 40)
         self.ui.treeSceneBuilder.expandAll()
-        self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self.scene))
+        self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self, self.scene))
         self._scene_builder_palette_model.setElements(self.scene.builder_elements)
 
         self._save_enabled = True
@@ -441,9 +441,11 @@ class SceneEditor(QObject):
 
 class ScenesBuilderDelegate(QStyledItemDelegate):
 
-    def __init__(self, scene: Scene, parent=None):
+    def __init__(self, view: SceneEditor, scene: Scene, parent=None):
         super(ScenesBuilderDelegate, self).__init__(parent)
         self.scene = scene
+        self.view = view
+        self._close_shortcut = self.view.ui.btnClose.shortcut()
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
@@ -452,6 +454,8 @@ class ScenesBuilderDelegate(QStyledItemDelegate):
             return QComboBox(parent)
         lineedit = QLineEdit(parent)
         lineedit.textEdited.connect(partial(self._on_text_edit, lineedit))
+        self.view.ui.btnClose.setShortcut('')
+        lineedit.destroyed.connect(lambda: self.view.ui.btnClose.setShortcut(self._close_shortcut))
         return lineedit
 
     @overrides
