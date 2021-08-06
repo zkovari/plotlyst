@@ -19,12 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-import numpy as np
-from PyQt5.QtChart import QPieSeries, QChart, QChartView, QLineSeries, QValueAxis
-from PyQt5.QtGui import QPainter
+from PyQt5.QtChart import QPieSeries, QChart, QChartView, QValueAxis, QSplineSeries, QBarSet, QStackedBarSeries, \
+    QBarCategoryAxis
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPainter, QColor
 from PyQt5.QtWidgets import QHeaderView
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Character
@@ -69,8 +68,8 @@ class ReportsView(AbstractNovelView):
 
         self.ui.tabWidget.setCurrentIndex(3)
 
-        self.story_lines_canvas = StoryLinesCanvas(self.novel, parent=self)
-        self.ui.tabStoryDistribution.layout().addWidget(self.story_lines_canvas)
+        self.storylines_distribution = StorylinesDistribution(self.novel)
+        self.ui.tabStoryDistribution.layout().addWidget(self.storylines_distribution)
 
         if not self.novel.story_lines:
             self.ui.stackStoryMap.setCurrentWidget(self.ui.pageInfoStoryMap)
@@ -108,7 +107,7 @@ class ReportsView(AbstractNovelView):
         self.scenes_model.modelReset.emit()
         self._update_characters_selectors()
         self._update_characters_chart()
-        self.story_lines_canvas.refresh_plot()
+        self.storylines_distribution.refresh()
 
     def _update_characters_selectors(self):
         pov_chars = []
@@ -160,27 +159,30 @@ class ReportsView(AbstractNovelView):
         self.chart.addSeries(series)
 
 
-class StoryLinesCanvas(FigureCanvasQTAgg):
-
-    def __init__(self, novel: Novel, parent=None, width=5, height=4, dpi=100):
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = None
+class StorylinesDistribution(QChartView):
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
         self.novel = novel
+        arc_chart = QChart()
+        arc_chart.createDefaultAxes()
+        arc_chart.setAnimationOptions(QChart.SeriesAnimations)
+        arc_chart.setTitle('Storylines and characters distribution')
+        self.setChart(arc_chart)
+        self.setRenderHint(QPainter.Antialiasing)
+        self.axis: Optional[QBarCategoryAxis] = None
 
-        super().__init__(self.fig)
-        self.refresh_plot()
+        self.refresh()
 
-    def refresh_plot(self):
-        if self.axes:
-            self.fig.clear()
-
-        self.axes = self.fig.add_subplot(111)
+    def refresh(self):
+        self.chart().removeAllSeries()
+        if self.axis:
+            self.chart().removeAxis(self.axis)
 
         character_names = [x.name for x in self.novel.characters]
-        width = 0.35  # the width of the bars: can also be len(x) sequence
-
-        bottoms = None
+        series = QStackedBarSeries()
         for i, story_line in enumerate(self.novel.story_lines):
+            set = QBarSet(story_line.text)
+            set.setColor(QColor(story_line.color_hexa))
             occurences = []
             for char in self.novel.characters:
                 v = 0
@@ -189,19 +191,13 @@ class StoryLinesCanvas(FigureCanvasQTAgg):
                         if char == scene.pov or char in scene.characters:
                             v += 1
                 occurences.append(v)
-            if bottoms is None:
-                self.axes.bar(character_names, occurences, width, label=story_line.text, color=story_line.color_hexa)
-                bottoms = np.array(occurences)
-            else:
-                self.axes.bar(character_names, occurences, width, label=story_line.text, bottom=bottoms,
-                              color=story_line.color_hexa)
-                bottoms += np.array(occurences)
-
-        self.axes.set_ylabel('# of scenes')
-        self.axes.set_title('Story lines and characters distribution')
-        self.axes.legend()
-
-        self.draw()
+                set.append(v)
+            series.append(set)
+        self.axis = QBarCategoryAxis()
+        self.axis.append(character_names)
+        self.chart().addAxis(self.axis, Qt.AlignBottom)
+        series.attachAxis(self.axis)
+        self.chart().addSeries(series)
 
 
 class CharacterArc(QChartView):
@@ -211,7 +207,7 @@ class CharacterArc(QChartView):
         arc_chart = QChart()
         arc_chart.createDefaultAxes()
         arc_chart.legend().hide()
-        arc_chart.setAnimationOptions(QChart.SeriesAnimations)
+        arc_chart.setAnimationOptions(QChart.AllAnimations)
         self.setChart(arc_chart)
         self.setRenderHint(QPainter.Antialiasing)
         self.axis: Optional[QValueAxis] = None
@@ -222,7 +218,7 @@ class CharacterArc(QChartView):
             self.chart().removeAxis(self.axis)
         self.chart().setTitle(f'Character arc for {character.name}')
 
-        series = QLineSeries()
+        series = QSplineSeries()
         arc_value: int = 0
         series.append(0, 0)
         for scene in self.novel.scenes:
