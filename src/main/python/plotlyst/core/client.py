@@ -244,10 +244,6 @@ class JsonClient:
         self.__delete_info(self.novels_dir, novel_info.id)
 
     def update_novel(self, novel: Novel):
-        # novel_info = self._find_project_novel_info_or_fail(novel.id)
-        # if novel_info.title != novel.title:
-        #     novel_info.title = novel.title
-        #     self._persist_project()
         self._persist_novel(novel)
 
     def insert_scene(self, novel: Novel, scene: Scene):
