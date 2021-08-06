@@ -108,7 +108,7 @@ class SceneCardWidget(QFrame, Ui_SceneCardWidget):
         border = '4px'
         if scene.wip:
             color = WIP_COLOR
-        elif scene.pivotal:
+        elif scene.beat:
             color = PIVOTAL_COLOR
         else:
             color = '#8f8f91'

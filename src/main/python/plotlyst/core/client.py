@@ -30,7 +30,8 @@ from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
-    SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages
+    SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
+    default_story_structure
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -122,7 +123,6 @@ class SceneInfo:
     id: uuid.UUID
     synopsis: str = ''
     type: str = ''
-    pivotal: str = ''
     beginning: str = ''
     middle: str = ''
     end: str = ''
@@ -138,6 +138,7 @@ class SceneInfo:
     without_action_conflict: bool = False
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
+    beat: Optional[uuid.UUID] = None
 
 
 @dataclass
@@ -162,6 +163,7 @@ class NovelInfo:
     storylines: List[StorylineInfo] = field(default_factory=list)
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
+    story_structure: StoryStructure = field(default_factory=default_story_structure)
 
 
 @dataclass
@@ -312,6 +314,10 @@ class JsonClient:
         for char in characters:
             characters_ids[str(char.id)] = char
 
+        beat_ids = {}
+        for beat in novel_info.story_structure.beats:
+            beat_ids[str(beat.id)] = beat
+
         scenes: List[Scene] = []
         for seq, scene_id in enumerate(novel_info.scenes):
             path = self.scenes_dir.joinpath(self.__json_file(scene_id))
@@ -353,18 +359,20 @@ class JsonClient:
                 for arc in info.arcs:
                     if str(arc.character) in characters_ids.keys():
                         arcs.append(CharacterArc(arc=arc.arc, character=characters_ids[str(arc.character)]))
+                beat = beat_ids.get(str(info.beat))
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
-                              middle=info.middle, end=info.end, wip=info.wip, pivotal=info.pivotal, day=info.day,
+                              middle=info.middle, end=info.end, wip=info.wip, day=info.day,
                               notes=info.notes,
                               action_resolution=info.action_resolution,
                               without_action_conflict=info.without_action_conflict, sequence=seq,
                               story_lines=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
-                              chapter=chapter, builder_elements=builder_elements, stage=stage)
+                              chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat)
                 scenes.append(scene)
 
         return Novel(title=project_novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
-                     scenes=scenes, chapters=chapters, stages=novel_info.stages)
+                     scenes=scenes, chapters=chapters, stages=novel_info.stages,
+                     story_structure=novel_info.story_structure)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -383,7 +391,7 @@ class JsonClient:
                                storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
                                            novel.story_lines], characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
-                               stages=novel.stages)
+                               stages=novel.stages, story_structure=novel.story_structure)
 
         self.__persist_info(self.novels_dir, novel_info)
 
@@ -399,14 +407,19 @@ class JsonClient:
                             scene.builder_elements]
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          beginning=scene.beginning, middle=scene.middle,
-                         end=scene.end, wip=scene.wip, pivotal=scene.pivotal, day=scene.day, notes=scene.notes,
+                         end=scene.end, wip=scene.wip, day=scene.day, notes=scene.notes,
                          action_resolution=scene.action_resolution,
                          without_action_conflict=scene.without_action_conflict,
-                         pov=scene.pov.id if scene.pov else None, storylines=storylines, characters=characters,
-                         arcs=arcs, chapter=scene.chapter.id if scene.chapter else None,
+                         pov=self.__id_or_none(scene.pov), storylines=storylines, characters=characters,
+                         arcs=arcs, chapter=self.__id_or_none(scene.chapter),
                          scene_builder_elements=builder_elements,
-                         stage=scene.stage.id if scene.stage else None)
+                         stage=self.__id_or_none(scene.stage),
+                         beat=self.__id_or_none(scene.beat))
         self.__persist_info(self.scenes_dir, info)
+
+    @staticmethod
+    def __id_or_none(item):
+        return item.id if item else None
 
     def __get_scene_builder_element_info(self, el: SceneBuilderElement) -> SceneBuilderElementInfo:
         info = SceneBuilderElementInfo(type=el.type, text=el.text, character=el.character.id if el.character else None,

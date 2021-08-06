@@ -82,10 +82,10 @@ class SceneStageProgressCharts:
         act3: List[bool] = []
 
         for scene in self.novel.scenes:
-            if scene.pivotal == 'First plot point':
+            if scene.beat and scene.beat.act == 1 and scene.beat.ends_act:
                 in_act_2 = True
                 in_act_1 = False
-            elif scene.pivotal == 'Dark moment':
+            elif scene.beat and scene.beat.act == 2 and scene.beat.ends_act:
                 in_act_3 = True
                 in_act_2 = False
             if scene.stage and self.novel.stages.index(scene.stage) >= self._stage_index:

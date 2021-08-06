@@ -38,7 +38,7 @@ def test_insert_scene(test_client):
 
     scene = Scene(title='Scene 1', synopsis='Test synopsis', type='action', wip=True, beginning='Beginning',
                   middle='Middle', end='End', action_resolution=True, without_action_conflict=True,
-                  stage=novel.stages[1])
+                  stage=novel.stages[1], beat=novel.story_structure.beats[0])
     novel.scenes.append(scene)
     client.insert_scene(novel, scene)
 
