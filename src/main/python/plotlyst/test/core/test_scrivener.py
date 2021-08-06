@@ -43,5 +43,5 @@ def test_import_with_acts():
               Scene(title='Scene', id=UUID('F5604565-3F9E-451B-98E0-142BE1BDE83D'), chapter=chapters[1]),
               Scene(title='Scene', id=UUID('156AAE33-5D68-4ACA-8469-6440CDFED4EA'), chapter=chapters[2])]
     expected_novel = Novel(title='Importer project', id=UUID('C4B3D990-B9C2-4FE6-861E-B06B498283A4'), chapters=chapters,
-                           scenes=scenes, stages=novel.stages)
+                           scenes=scenes, stages=novel.stages, story_structure=novel.story_structure)
     assert novel == expected_novel

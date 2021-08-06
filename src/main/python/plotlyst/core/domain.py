@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Any
 
+from src.main.python.plotlyst.common import PIVOTAL_COLOR
+
 ACTION_SCENE = 'action'
 REACTION_SCENE = 'reaction'
 
@@ -106,12 +108,20 @@ class SceneStage:
 
 
 @dataclass
+class StoryBeat:
+    text: str
+    act: int
+    ends_act: bool = False
+    color_hexa: str = PIVOTAL_COLOR
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     synopsis: str = ''
     type: str = ''
-    pivotal: str = ''
     sequence: int = 0
     beginning: str = ''
     middle: str = ''
@@ -131,6 +141,7 @@ class Scene:
     without_action_conflict: bool = False
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
+    beat: Optional[StoryBeat] = None
 
     def pov_arc(self) -> int:
         for arc in self.arcs:
@@ -146,6 +157,26 @@ def default_stages() -> List[SceneStage]:
 
 
 @dataclass
+class StoryStructure:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    beats: List[StoryBeat] = field(default_factory=list)
+    custom: bool = False
+
+
+def default_story_structure() -> StoryStructure:
+    return StoryStructure(
+        beats=[StoryBeat(text='Hook', act=1),
+               StoryBeat(text='Inciting incident', act=1),
+               StoryBeat(text='First plot point', act=1, ends_act=True),
+               StoryBeat(text='First pinch point', act=2),
+               StoryBeat(text='Midpoint', act=2),
+               StoryBeat(text='Second pinch point', act=2),
+               StoryBeat(text='Dark moment', act=2, ends_act=True),
+               StoryBeat(text='A-ha moment', act=3),
+               StoryBeat(text='Climax', act=3), ])
+
+
+@dataclass
 class Novel:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -154,6 +185,7 @@ class Novel:
     story_lines: List[StoryLine] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
+    story_structure: StoryStructure = field(default_factory=default_story_structure)
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title

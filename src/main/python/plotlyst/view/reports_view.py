@@ -141,9 +141,9 @@ class ReportsView(AbstractNovelView):
                 if scene.pov:
                     self.pov_number[scene.pov.name] += 1
 
-            if scene.pivotal == 'First plot point':
+            if scene.beat and scene.beat.act == 1 and scene.beat.ends_act:
                 in_act_2 = True
-            elif scene.pivotal == 'Dark moment':
+            elif scene.beat and scene.beat.act == 2 and scene.beat.ends_act:
                 in_act_3 = True
 
         series = QPieSeries()

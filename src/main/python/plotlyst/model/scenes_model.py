@@ -106,7 +106,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
             if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
                 if self._data[index.row()].wip:
                     return self._wip_brush
-                elif self._data[index.row()].pivotal:
+                elif self._data[index.row()].beat:
                     return self._pivotal_brush
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
@@ -276,6 +276,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
             return row <= self._second_act_start.row()
         elif act == 2 and self._second_act_start and self._third_act_start:
             return self._second_act_start.row() < row <= self._third_act_start.row()
+        elif act == 2 and self._second_act_start:
+            return self._second_act_start.row() < row
         elif act == 3 and self._third_act_start:
             return row > self._third_act_start.row()
 
@@ -283,9 +285,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
 
     def _find_acts(self):
         for index, scene in enumerate(self._data):
-            if scene.pivotal == 'First plot point':
+            if scene.beat and scene.beat.act == 1 and scene.beat.ends_act:
                 self._second_act_start = self.index(index, 0)
-            elif scene.pivotal == 'Dark moment':
+            elif scene.beat and scene.beat.act == 2 and scene.beat.ends_act:
                 self._third_act_start = self.index(index, 0)
 
 

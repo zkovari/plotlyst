@@ -77,6 +77,12 @@ class SceneEditor(QObject):
         self.ui.lblBeatEmoji.setFont(self._emoji_font)
         self.ui.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
 
+        self.ui.cbPivotal.addItem('Select story beat...', None)
+        self.ui.cbPivotal.addItem('', None)
+        for beat in self.novel.story_structure.beats:
+            self.ui.cbPivotal.addItem(beat.text, beat)
+        self.ui.cbPivotal.view().setRowHidden(0, True)
+
         self.ui.cbPov.addItem('Select POV...', None)
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
@@ -87,8 +93,6 @@ class SceneEditor(QObject):
         self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene_icon())
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
         self.ui.cbConflict.clicked.connect(self._on_conflict_toggled)
-
-        self.ui.cbPivotal.view().setRowHidden(0, True)
 
         self.story_line_model = NovelStoryLinesListModel(self.novel)
         self.ui.lstStoryLines.setModel(self.story_line_model)
@@ -169,8 +173,8 @@ class SceneEditor(QObject):
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
-        if self.scene.pivotal:
-            self.ui.cbPivotal.setCurrentText(self.scene.pivotal)
+        if self.scene.beat:
+            self.ui.cbPivotal.setCurrentText(self.scene.beat.text)
         else:
             self.ui.cbPivotal.setCurrentIndex(0)
         self.ui.textNotes.setPlainText(self.scene.notes)
@@ -342,7 +346,7 @@ class SceneEditor(QObject):
         self.scene.notes = self.ui.textNotes.toPlainText()
 
         if self.ui.cbPivotal.currentIndex() > 0:
-            self.scene.pivotal = self.ui.cbPivotal.currentText()
+            self.scene.beat = self.ui.cbPivotal.currentData()
         self.scene.story_lines.clear()
         for story_line in self.story_line_model.selected:
             self.scene.story_lines.append(story_line)

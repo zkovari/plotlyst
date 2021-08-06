@@ -611,61 +611,6 @@ QToolButton:hover {
             <property name="placeholderText">
              <string/>
             </property>
-            <item>
-             <property name="text">
-              <string>Select story beat...</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string/>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Hook</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Inciting incident</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>First plot point</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>First pinch point</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Midpoint</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Second pinch point</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Dark moment</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>A-ha moment</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Climax</string>
-             </property>
-            </item>
            </widget>
           </item>
           <item>

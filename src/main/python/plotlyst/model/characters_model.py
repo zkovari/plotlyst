@@ -152,8 +152,8 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
                     return QBrush(QColor(Qt.gray))
         elif role == Qt.ToolTipRole:
             tooltip = f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
-            if self.novel.scenes[index.column() - 1].pivotal:
-                tooltip += f' ({self.novel.scenes[index.column() - 1].pivotal})'
+            if self.novel.scenes[index.column() - 1].beat:
+                tooltip += f' ({self.novel.scenes[index.column() - 1].beat})'
             return tooltip
         elif role == Qt.BackgroundRole:
             if self._match(index):
@@ -165,7 +165,7 @@ class CharactersScenesDistributionTableModel(QAbstractTableModel):
                         return QBrush(QColor(Qt.gray))
                 if self.novel.scenes[index.column() - 1].wip:
                     return QBrush(QColor(WIP_COLOR))
-                if self.novel.scenes[index.column() - 1].pivotal:
+                if self.novel.scenes[index.column() - 1].beat:
                     return QBrush(QColor(PIVOTAL_COLOR))
                 return QBrush(QColor('darkblue'))
         return QVariant()
