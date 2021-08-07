@@ -57,7 +57,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
+          <width>10</width>
           <height>20</height>
          </size>
         </property>
@@ -167,7 +167,7 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>20</width>
+         <width>10</width>
          <height>20</height>
         </size>
        </property>
@@ -180,6 +180,9 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(255, 255, 255);</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::Box</enum>
