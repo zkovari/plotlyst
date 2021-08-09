@@ -14,7 +14,7 @@ def test_reports_display(qtbot, filled_window: MainWindow):
     assert view.ui.tabWidget.currentWidget() == view.ui.tabStorylines
     assert view.ui.tabNestedStorylines.currentWidget() == view.ui.tabStoryMap
 
-    qtbot.wait(100)  # wait until painted
+    view.ui.storyLinesMap.grab().toImage()
     view.ui.tabWidget.setCurrentWidget(view.ui.tabCharacters)
     view.ui.tabWidget_2.setCurrentWidget(view.ui.tabCharacterArcs)
     view.ui.tabWidget.setCurrentWidget(view.ui.tabStoryDistribution)

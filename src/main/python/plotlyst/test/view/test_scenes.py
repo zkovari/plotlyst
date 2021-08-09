@@ -1,11 +1,12 @@
 from typing import List
 
 from PyQt5.QtChart import QPieSeries
-from PyQt5.QtWidgets import QMessageBox, QAction
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMessageBox, QAction, QSpinBox
 
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel, ScenesNotesTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
-    click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed
+    click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed, edit_item
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 
@@ -150,3 +151,37 @@ def test_change_stage(qtbot, filled_window: MainWindow):
 
     pie_series = charts[0].chart.series()[0]
     assert pie_series.slices()[0].percentage() == 0.5
+
+
+def test_timeline_display(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+    view.ui.btnTimelineView.click()
+
+    assert view.ui.pageTimeline.isVisible()
+    view.timeline_view.timeline_widget.grab().toImage()
+    assert_data(view.timeline_view.model, 'Scene 1', 0, ScenesNotesTableModel.ColTitle)
+    assert_data(view.timeline_view.model, 'Scene 2', 1, ScenesNotesTableModel.ColTitle)
+
+    assert_data(view.timeline_view.model, 1, 0, ScenesNotesTableModel.ColTime)
+    assert_data(view.timeline_view.model, 2, 1, ScenesNotesTableModel.ColTime)
+
+    # mimic drawing curves
+    filled_window.setWindowState(Qt.WindowNoState)
+    filled_window.resize(300, 300)
+
+    view.timeline_view.timeline_widget.grab().toImage()
+
+
+def _edit_day(editor: QSpinBox):
+    editor.setValue(3)
+
+
+def test_edit_day(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+    view.ui.btnTimelineView.click()
+
+    view.timeline_view.timeline_widget.grab().toImage()
+
+    qtbot.wait(10)
+    edit_item(qtbot, view.timeline_view.ui.tblScenes, 0, ScenesTableModel.ColTime, QSpinBox, _edit_day)
+    assert view.novel.scenes[0].day == 3

@@ -18,7 +18,6 @@ def assert_views(window: MainWindow, visible: bool = True, scene_dependent_enabl
     assert window.btnScenes.isVisible() == visible
     assert window.btnReport.isVisible() == visible
     assert window.btnNotes.isVisible() == visible
-    assert window.btnTimeline.isVisible() == visible
 
     if not visible:
         return
@@ -28,7 +27,6 @@ def assert_views(window: MainWindow, visible: bool = True, scene_dependent_enabl
     assert window.btnScenes.isEnabled() == character_dependent_enabled
     assert window.btnReport.isEnabled() == scene_dependent_enabled
     assert window.btnNotes.isEnabled() == scene_dependent_enabled
-    assert window.btnTimeline.isEnabled() == scene_dependent_enabled
 
 
 def test_empty_window(qtbot, window: MainWindow):

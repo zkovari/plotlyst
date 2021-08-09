@@ -18,18 +18,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QGraphicsScene, QFrame, QHeaderView
+from PyQt5.QtWidgets import QHeaderView
 from overrides import overrides
 
-from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.generated.scene_card_widget_ui import Ui_SceneCardWidget
+from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.generated.timeline_view_ui import Ui_TimelineView
-from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.scenes_view import ScenesViewDelegate
+from src.main.python.plotlyst.view.widget.timeline import TimelineWidget
 
 
 class TimelineView(AbstractNovelView):
@@ -50,75 +48,13 @@ class TimelineView(AbstractNovelView):
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Stretch)
         self._delegate = ScenesViewDelegate()
 
+        self.timeline_widget = TimelineWidget(self.novel)
+        self.ui.scrollAreaWidgetContents.layout().addWidget(self.timeline_widget)
+
         self.ui.tblScenes.setItemDelegate(self._delegate)
 
         self._delegate.commitData.connect(self.refresh)
 
-        self.refresh()
-
     @overrides
     def refresh(self):
         self.model.modelReset.emit()
-        self._refresh_timeline()
-
-    def _refresh_timeline(self):
-        graphics_scene = QGraphicsScene()
-        scenes = [x for x in self.novel.scenes if x.day]
-        scenes = sorted(scenes, key=lambda x: x.day)
-        graphics_scene.addRect(-10, -500, 20, len(scenes) * 100, brush=Qt.darkRed)
-        last_day = 0
-        left = True
-        x = -50
-        empty_days_count = 0
-        for index, s in enumerate(scenes):
-            if s.day != last_day:
-                if s.day - 1 > last_day:
-                    empty_days_count += 1
-                text = graphics_scene.addText(str(s.day))
-                x = -50 if left else 50
-                text.moveBy(x, -500 + index * 80 + + empty_days_count * 80)
-                last_day = s.day
-                left = not left
-            scene_widget = SceneCardWidget(s)
-            if x > 0:
-                scene_x = x
-            else:
-                scene_x = x - scene_widget.size().width()
-
-            item = graphics_scene.addWidget(scene_widget)
-            item.moveBy(scene_x, -500 + index * 80 + 30 + empty_days_count * 80)
-            item.setToolTip(s.synopsis)
-        self.ui.graphicsTimeline.setScene(graphics_scene)
-
-
-class SceneCardWidget(QFrame, Ui_SceneCardWidget):
-    def __init__(self, scene: Scene, parent=None):
-        super(SceneCardWidget, self).__init__(parent)
-        self.setupUi(self)
-        self.setFrameShape(QFrame.StyledPanel)
-        self.lblTitle.setText(scene.title)
-        self.resize(len(scene.title) * 12, 40)
-
-        if scene.pov:
-            self.lblPic.setPixmap(avatars.pixmap(scene.pov).scaled(32, 32, Qt.KeepAspectRatio,
-                                                                   Qt.SmoothTransformation))
-
-        self.setMaximumHeight(80)
-
-        border = '4px'
-        if scene.wip:
-            color = WIP_COLOR
-        elif scene.beat:
-            color = PIVOTAL_COLOR
-        else:
-            color = '#8f8f91'
-            border = '2px'
-        self.setStyleSheet(f'''QFrame {{border: {border} solid {color};
-            border-radius: 12px;
-            background-color: #9e87de;
-            }}
-            QLabel {{
-            border: 0px;
-            border-radius: 0px;
-            }}
-        ''')

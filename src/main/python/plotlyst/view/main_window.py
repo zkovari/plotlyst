@@ -44,7 +44,6 @@ from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.tasks_view import TasksWidget
-from src.main.python.plotlyst.view.timeline_view import TimelineView
 
 
 class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
@@ -100,7 +99,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, SceneChangedEvent):
             self.btnNotes.setEnabled(True)
             self.btnReport.setEnabled(True)
-            self.btnTimeline.setEnabled(True)
             event_dispatcher.deregister(self, SceneChangedEvent)
 
     def _init_views(self):
@@ -126,28 +124,24 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.scenes_outline_view = ScenesOutlineView(self.novel)
         self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
 
-        self.timeline_view = TimelineView(self.novel)
         self.notes_view = NotesView(self.novel)
         self.reports_view = ReportsView(self.novel)
 
         self.btnNovel.setIcon(IconRegistry.book_icon())
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnScenes.setIcon(IconRegistry.scene_icon())
-        self.btnTimeline.setIcon(IconRegistry.timeline_icon())
         self.btnNotes.setIcon(IconRegistry.notes_icon())
         self.btnReport.setIcon(IconRegistry.reports_icon())
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)
         self.pageScenes.layout().addWidget(self.scenes_outline_view.widget)
-        self.pageTimeline.layout().addWidget(self.timeline_view.widget)
         self.pageNotes.layout().addWidget(self.notes_view.widget)
         self.pageReports.layout().addWidget(self.reports_view.widget)
 
         self.btnScenes.setEnabled(len(self.novel.characters) > 0 or len(self.novel.scenes) > 0)
         self.btnNotes.setEnabled(len(self.novel.scenes) > 0)
         self.btnReport.setEnabled(len(self.novel.scenes) > 0)
-        self.btnTimeline.setEnabled(len(self.novel.scenes) > 0)
         if self.novel.scenes:
             self.btnScenes.setChecked(True)
         else:
@@ -166,9 +160,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
             self.scenes_outline_view.activate()
-        elif self.btnTimeline.isChecked():
-            self.stackedWidget.setCurrentWidget(self.pageTimeline)
-            self.timeline_view.activate()
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
             self.notes_view.activate()
@@ -259,8 +250,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.characters_view.widget.deleteLater()
         self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
         self.scenes_outline_view.widget.deleteLater()
-        self.pageTimeline.layout().removeWidget(self.timeline_view.widget)
-        self.timeline_view.widget.deleteLater()
         self.pageNotes.layout().removeWidget(self.notes_view.widget)
         self.notes_view.widget.deleteLater()
         self.pageReports.layout().removeWidget(self.reports_view.widget)
