@@ -22,7 +22,9 @@ from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QColor
 from PyQt5.QtWidgets import QWidget
 from overrides import overrides
 
+from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.view.icons import avatars
 
 
 class TimelineWidget(QWidget):
@@ -31,7 +33,7 @@ class TimelineWidget(QWidget):
         super().__init__(parent=parent)
         self.novel: Novel = novel
         self.scene_start_x = 75
-        self.scene_dist = 175
+        self.scene_dist = 200
 
     @overrides
     def minimumSizeHint(self) -> QSize:
@@ -60,26 +62,31 @@ class TimelineWidget(QWidget):
         painter.drawEllipse(15, y - 15, 30, 30)
         last_day = scenes[0].day
         for i, scene in enumerate(scenes):
+            if i % scene_per_line == 0:
+                self._drawLine(painter, width, y)
             last_scene_x = self._drawScene(painter, y, scene, i, scene_per_line, forward)
             if scene.day != last_day:
                 self._drawDay(painter, last_scene_x, y, scene.day, forward)
                 last_day = scene.day
             painter.setPen(QPen(QColor('#02bcd4'), 20, Qt.SolidLine))
             painter.setBrush(QColor('#02bcd4'))
-            self._drawLine(painter, width, y, forward)
+
             if i % scene_per_line == scene_per_line - 1:
-                self._drawArc(painter, width, y, forward)
-                forward = not forward
-                y += 110
+                if i != len(scenes) - 1:
+                    self._drawArc(painter, width, y, forward)
+                    forward = not forward
+                    y += 110
+
+        if forward:
+            painter.drawEllipse(width - 70, y - 15, 30, 30)
+        else:
+            painter.drawEllipse(15, y - 15, 30, 30)
 
     def _scenesPerLine(self, width: int):
         return int((width - self.scene_start_x) / self.scene_dist)
 
-    def _drawLine(self, painter: QPainter, width: int, y: int, forward: bool):
-        if forward:
-            painter.drawLine(60, y, width - 70, y)
-        else:
-            painter.drawLine(60, y, width - 70, y)
+    def _drawLine(self, painter: QPainter, width: int, y: int):
+        painter.drawLine(60, y, width - 70, y)
 
     def _drawArc(self, painter: QPainter, width: int, y: int, forward: bool):
         if forward:
@@ -98,7 +105,7 @@ class TimelineWidget(QWidget):
             x = last_scene_x + self.scene_dist - 35
         painter.drawLine(x, y + 20, x, y - 20)
         painter.setPen(QPen(Qt.black, 13, Qt.SolidLine))
-        painter.drawText(QPoint(x, y - 25), str(day))
+        painter.drawText(QPoint(x - 5, y - 28), str(day))
 
     def _drawScene(self, painter: QPainter, y: int, scene: Scene, index: int, scene_per_line: int,
                    forward: bool) -> int:
@@ -107,6 +114,16 @@ class TimelineWidget(QWidget):
             x = self.scene_start_x + self.scene_dist * (index % scene_per_line)
         else:
             x = self.scene_start_x + self.scene_dist * (scene_per_line - 1 - ((index % scene_per_line)))
-        painter.drawText(QPoint(x, y - 15), scene.title)
+        painter.drawText(QPoint(x, y - 15), truncate_string(scene.title, 20))
 
+        if scene.pov:
+            if scene.pov.avatar:
+                painter.drawPixmap(QPoint(x, y - 10), avatars.pixmap(scene.pov).scaled(24, 24, Qt.KeepAspectRatio,
+                                                                                       Qt.SmoothTransformation))
+            else:
+                painter.setPen(QPen(Qt.white, 1, Qt.SolidLine))
+                painter.setBrush(Qt.white)
+                painter.drawEllipse(x, y - 10, 24, 24)
+                pixmap = avatars.name_initial_icon(scene.pov).pixmap(24, 24)
+                painter.drawPixmap(QPoint(x, y - 10), pixmap)
         return x

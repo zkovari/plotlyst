@@ -108,7 +108,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
-        self.ui.btnTimelineView.setChecked(True)
+        self.ui.btnTableView.setChecked(True)
 
         menu = QMenu(self.ui.btnGraphs)
         action = QWidgetAction(menu)
@@ -158,6 +158,8 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesModel.modelReset.emit()
         if self.stagesProgress:
             self.stagesProgress.refresh()
+        if self.timeline_view:
+            self.timeline_view.refresh()
 
     def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
