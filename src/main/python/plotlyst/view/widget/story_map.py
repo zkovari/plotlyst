@@ -21,8 +21,8 @@ from functools import partial
 from typing import Dict, Optional
 
 from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal, QSize
-from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QPixmap, QMouseEvent, QColor
-from PyQt5.QtWidgets import QWidget, QMenu, QAction, QApplication
+from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QColor, QMouseEvent
+from PyQt5.QtWidgets import QWidget, QMenu, QAction
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
@@ -72,34 +72,6 @@ class StoryLinesMapWidget(QWidget):
             self._clicked_scene: Scene = self.novel.scenes[index]
             self.update()
 
-            menu = QMenu(self)
-
-            # info_action = QAction(IconRegistry.general_info_icon(), 'Info', menu)
-            # info_action.triggered.connect(lambda: self.scene_selected.emit(self._clicked_scene))
-            # menu.addAction(info_action)
-
-            if self.novel.story_lines:
-                # menu.addSeparator()
-                for sl in self.novel.story_lines:
-                    sl_action = QAction(truncate_string(sl.text, 70), menu)
-                    sl_action.setCheckable(True)
-                    if sl in self._clicked_scene.story_lines:
-                        sl_action.setChecked(True)
-                    sl_action.triggered.connect(partial(self._story_line_changed, sl))
-                    menu.addAction(sl_action)
-
-                menu.popup(self.mapToGlobal(event.pos()))
-
-    @busy
-    def _story_line_changed(self, storyline: StoryLine, checked: bool):
-        if checked:
-            self._clicked_scene.story_lines.append(storyline)
-        else:
-            self._clicked_scene.story_lines.remove(storyline)
-        client.update_scene(self._clicked_scene)
-
-        self.update()
-
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
@@ -107,9 +79,10 @@ class StoryLinesMapWidget(QWidget):
         painter.fillRect(self.rect(), Qt.white)
         self._scene_coord_y.clear()
         y = 0
+        last_sc_x: Dict[int, int] = {}
         for sl_i, story in enumerate(self.novel.story_lines):
-            # previous_y = 0
-            # previous_x = 0
+            previous_y = 0
+            previous_x = 0
             y = self._story_line_y(sl_i)
             path = QPainterPath()
             painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
@@ -121,14 +94,22 @@ class StoryLinesMapWidget(QWidget):
                 if story in scene.story_lines:
                     if sc_i not in self._scene_coord_y.keys():
                         self._scene_coord_y[sc_i] = y
-                    # if previous_y > self._scene_coord_y[sc_i] or (previous_y == 0 and y > self._scene_coord_y[sc_i]):
-                    #     path.lineTo(x - 25, y)
-                    # elif 0 < previous_y < self._scene_coord_y[sc_i]:
-                    #     path.lineTo(previous_x + 25, y)
-                    path.lineTo(x, self._scene_coord_y[sc_i])
+                    if previous_y > self._scene_coord_y[sc_i] or (previous_y == 0 and y > self._scene_coord_y[sc_i]):
+                        path.lineTo(x - 25, y)
+                    elif 0 < previous_y < self._scene_coord_y[sc_i]:
+                        path.lineTo(previous_x + 25, y)
+
+                    if previous_y == self._scene_coord_y[sc_i] and previous_y != y:
+                        path.arcTo(previous_x + 4, self._scene_coord_y[sc_i] - 3, x - previous_x,
+                                   self._scene_coord_y[sc_i] - 25,
+                                   -180, 180)
+                    else:
+                        path.lineTo(x, self._scene_coord_y[sc_i])
+
                     painter.drawPath(path)
-                    # previous_y = self._scene_coord_y[sc_i]
-                    # previous_x = x
+                    previous_y = self._scene_coord_y[sc_i]
+                    previous_x = x
+                    last_sc_x[sl_i] = x
 
         for sc_i, scene in enumerate(self.novel.scenes):
             if sc_i not in self._scene_coord_y.keys():
@@ -146,7 +127,7 @@ class StoryLinesMapWidget(QWidget):
         for sl_i, story in enumerate(self.novel.story_lines):
             y = 50 * (sl_i + 1) + 25 + base_y
             painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
-            painter.drawLine(0, y, self.rect().width(), y)
+            painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
             painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
             painter.drawText(5, y - 15, story.text)
 
@@ -183,17 +164,31 @@ class StoryLinesMapWidget(QWidget):
     def _index_from_pos(pos: QPoint) -> int:
         return int((pos.x() / 25) - 1)
 
-    def _context_menu_requested(self, pos: QPoint):
-        menu = QMenu(self)
+    def _context_menu_requested(self, pos: QPoint) -> None:
+        index = self._index_from_pos(pos)
+        if index < len(self.novel.scenes):
+            self._clicked_scene: Scene = self.novel.scenes[index]
+            self.update()
 
-        wip_action = QAction('Copy image', menu)
-        wip_action.triggered.connect(self._copy_image)
-        menu.addAction(wip_action)
+            menu = QMenu(self)
 
-        menu.popup(self.mapToGlobal(pos))
+            if self.novel.story_lines:
+                for sl in self.novel.story_lines:
+                    sl_action = QAction(truncate_string(sl.text, 70), menu)
+                    sl_action.setCheckable(True)
+                    if sl in self._clicked_scene.story_lines:
+                        sl_action.setChecked(True)
+                    sl_action.triggered.connect(partial(self._story_line_changed, sl))
+                    menu.addAction(sl_action)
 
-    def _copy_image(self):
-        clipboard = QApplication.clipboard()
-        pixmap = QPixmap(self.size())
-        self.render(pixmap)
-        clipboard.setPixmap(pixmap)
+                menu.popup(self.mapToGlobal(pos))
+
+    @busy
+    def _story_line_changed(self, storyline: StoryLine, checked: bool):
+        if checked:
+            self._clicked_scene.story_lines.append(storyline)
+        else:
+            self._clicked_scene.story_lines.remove(storyline)
+        client.update_scene(self._clicked_scene)
+
+        self.update()
