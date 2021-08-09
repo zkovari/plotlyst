@@ -53,7 +53,6 @@ class TimelineWidget(QWidget):
             return
 
         y = 50
-        last_scene_x = 0
         forward = True
         scene_per_line = int((width - self.scene_start_x) / self.scene_dist)
         painter.setPen(QPen(QColor('#02bcd4'), 20, Qt.SolidLine))
@@ -61,11 +60,10 @@ class TimelineWidget(QWidget):
         painter.drawEllipse(15, y - 15, 30, 30)
         last_day = scenes[0].day
         for i, scene in enumerate(scenes):
-            if scene.day != last_day:
-                last_day = scene.day
-                # self._drawDaySeparator(painter, last_scene_x, y, forward)
-                self._drawDay(painter, last_scene_x, y, last_day, forward)
             last_scene_x = self._drawScene(painter, y, scene, i, scene_per_line, forward)
+            if scene.day != last_day:
+                self._drawDay(painter, last_scene_x, y, scene.day, forward)
+                last_day = scene.day
             painter.setPen(QPen(QColor('#02bcd4'), 20, Qt.SolidLine))
             painter.setBrush(QColor('#02bcd4'))
             self._drawLine(painter, width, y, forward)
@@ -89,32 +87,17 @@ class TimelineWidget(QWidget):
         else:
             painter.drawArc(QRect(10, y, 90, 110), -270 * 16, 180 * 16)
 
-    # def _drawDaySeparator(self, painter: QPainter, last_scene_x: int, y: int, forward: bool):
-    #     painter.setPen(QPen(QColor('#02bcd4'), 8, Qt.SolidLine))
-    #     if forward:
-    #         if last_scene_x == self.scene_start_x:
-    #             x = self.scene_start_x - 15
-    #         else:
-    #             x = last_scene_x + self.scene_dist - 35
-    #     else:
-    #         x = last_scene_x - 35
-    #     painter.drawLine(x, y + 20, x, y - 20)
-
     def _drawDay(self, painter: QPainter, last_scene_x: int, y: int, day: int, forward: bool):
         painter.setPen(QPen(QColor('#02bcd4'), 8, Qt.SolidLine))
         if forward:
             if last_scene_x == self.scene_start_x:
                 x = self.scene_start_x - 15
             else:
-                x = last_scene_x + self.scene_dist - 35
+                x = last_scene_x - 35
         else:
-            x = last_scene_x - 35
+            x = last_scene_x + self.scene_dist - 35
         painter.drawLine(x, y + 20, x, y - 20)
         painter.setPen(QPen(Qt.black, 13, Qt.SolidLine))
-        # if forward:
-        #     x = last_scene_x + self.scene_dist - 35
-        # else:
-        #     x = last_scene_x - 39
         painter.drawText(QPoint(x, y - 25), str(day))
 
     def _drawScene(self, painter: QPainter, y: int, scene: Scene, index: int, scene_per_line: int,
