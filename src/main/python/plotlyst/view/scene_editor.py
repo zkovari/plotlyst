@@ -163,6 +163,8 @@ class SceneEditor(QObject):
 
         if self.scene.type:
             self.ui.cbType.setCurrentText(self.scene.type)
+        elif not self._new_scene:
+            self.ui.cbType.setCurrentIndex(0)
         else:
             self.ui.cbType.setCurrentIndex(1)
         self._on_type_changed(self.ui.cbType.currentText())
