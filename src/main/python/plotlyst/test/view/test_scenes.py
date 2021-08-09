@@ -1,6 +1,7 @@
 from typing import List
 
 from PyQt5.QtChart import QPieSeries
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMessageBox, QAction, QSpinBox
 
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel, ScenesNotesTableModel
@@ -157,13 +158,18 @@ def test_timeline_display(qtbot, filled_window: MainWindow):
     view.ui.btnTimelineView.click()
 
     assert view.ui.pageTimeline.isVisible()
-    qtbot.wait(100)  # wait until painted
-    assert view.timeline_view.ui.tblScenes.isVisible()
+    view.timeline_view.timeline_widget.grab().toImage()
     assert_data(view.timeline_view.model, 'Scene 1', 0, ScenesNotesTableModel.ColTitle)
     assert_data(view.timeline_view.model, 'Scene 2', 1, ScenesNotesTableModel.ColTitle)
 
     assert_data(view.timeline_view.model, 1, 0, ScenesNotesTableModel.ColTime)
     assert_data(view.timeline_view.model, 2, 1, ScenesNotesTableModel.ColTime)
+
+    # mimic drawing curves
+    filled_window.setWindowState(Qt.WindowNoState)
+    filled_window.resize(300, 300)
+
+    view.timeline_view.timeline_widget.grab().toImage()
 
 
 def _edit_day(editor: QSpinBox):
@@ -173,6 +179,9 @@ def _edit_day(editor: QSpinBox):
 def test_edit_day(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
     view.ui.btnTimelineView.click()
-    qtbot.wait(100)  # wait until painted
+
+    view.timeline_view.timeline_widget.grab().toImage()
+
+    qtbot.wait(10)
     edit_item(qtbot, view.timeline_view.ui.tblScenes, 0, ScenesTableModel.ColTime, QSpinBox, _edit_day)
     assert view.novel.scenes[0].day == 3
