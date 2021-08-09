@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import QWidget, QMenu, QAction, QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
+from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel, StoryLine
 from src.main.python.plotlyst.view.common import busy
 
@@ -95,6 +96,7 @@ class StoryLinesMapWidget(QWidget):
             self._clicked_scene.story_lines.append(storyline)
         else:
             self._clicked_scene.story_lines.remove(storyline)
+        client.update_scene(self._clicked_scene)
 
         self.update()
 
