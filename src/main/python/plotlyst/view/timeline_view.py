@@ -26,10 +26,11 @@ from src.main.python.plotlyst.core.domain import Novel, Scene
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.generated.scene_card_widget_ui import Ui_SceneCardWidget
 from src.main.python.plotlyst.view.generated.timeline_view_ui import Ui_TimelineView
 from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.scenes_view import ScenesViewDelegate
+from src.main.python.plotlyst.view.widget.timeline import TimelineWidget
 
 
 class TimelineView(AbstractNovelView):
@@ -50,16 +51,17 @@ class TimelineView(AbstractNovelView):
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Stretch)
         self._delegate = ScenesViewDelegate()
 
+        self.timeline_widget = TimelineWidget(self.novel)
+        self.ui.scrollAreaWidgetContents.layout().addWidget(self.timeline_widget)
+
         self.ui.tblScenes.setItemDelegate(self._delegate)
 
         self._delegate.commitData.connect(self.refresh)
 
-        self.refresh()
-
     @overrides
     def refresh(self):
         self.model.modelReset.emit()
-        self._refresh_timeline()
+        self.timeline_widget.update()
 
     def _refresh_timeline(self):
         graphics_scene = QGraphicsScene()
@@ -88,7 +90,7 @@ class TimelineView(AbstractNovelView):
             item = graphics_scene.addWidget(scene_widget)
             item.moveBy(scene_x, -500 + index * 80 + 30 + empty_days_count * 80)
             item.setToolTip(s.synopsis)
-        self.ui.graphicsTimeline.setScene(graphics_scene)
+        # self.ui.graphicsTimeline.setScene(graphics_scene)
 
 
 class SceneCardWidget(QFrame, Ui_SceneCardWidget):
