@@ -33,7 +33,7 @@ try:
     from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
 
     from PyQt5 import QtWidgets, QtGui
-    from PyQt5.QtCore import Qt
+    from PyQt5.QtCore import Qt, QCoreApplication
     from PyQt5.QtGui import QFont
     from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -89,20 +89,21 @@ class AppContext(ApplicationContext):
 
 
 if __name__ == '__main__':
-    appctxt = AppContext()
+    # appctxt = AppContext()
 
-    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
-    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
+    # QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
+    # QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
     args = parser.parse_args()
     app_env.mode = args.mode
     while True:
-        app = appctxt.app
-        font = QFont('Noto Sans')
-        QApplication.setFont(font)
-        app.setStyleSheet(APP_STYLESHEET)
+        # app = appctxt.app
+        app = QCoreApplication(sys.argv)
+        # font = QFont('Noto Sans')
+        # QApplication.setFont(font)
+        # app.setStyleSheet(APP_STYLESHEET)
         settings.init_org()
 
         workspace: Optional[str] = settings.workspace()
@@ -139,13 +140,13 @@ if __name__ == '__main__':
             QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
             raise ex
 
+        exit(0)
         try:
             window = MainWindow()
         except Exception as ex:
             QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
             raise ex
 
-        exit(0)
         window.show()
         window.activateWindow()
 
@@ -154,7 +155,7 @@ if __name__ == '__main__':
             AboutDialog().exec()
             settings.set_launched_before()
 
-        exit_code = appctxt.app.exec_()
+        exit_code = app.exec_()
         if exit_code < EXIT_CODE_RESTART:
             break
 
