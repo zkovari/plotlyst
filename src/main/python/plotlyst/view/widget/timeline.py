@@ -57,6 +57,9 @@ class TimelineWidget(QWidget):
         y = 50
         forward = True
         scene_per_line = int((width - self.scene_start_x) / self.scene_dist)
+        # for initial draw, the size might be too small
+        if scene_per_line == 0:
+            scene_per_line = 1
         painter.setPen(QPen(QColor('#02bcd4'), 20, Qt.SolidLine))
         painter.setBrush(QColor('#02bcd4'))
         painter.drawEllipse(15, y - 15, 30, 30)
