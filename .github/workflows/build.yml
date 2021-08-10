@@ -11,7 +11,7 @@ jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ ubuntu-18.04, windows-2016, macos-latest ]
+        os: [ ubuntu-18.04 ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -65,7 +65,7 @@ jobs:
 
       - if: matrix.os == 'macos-latest'
         name: Sign Macos App
-        env: 
+        env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: |
@@ -76,7 +76,7 @@ jobs:
           security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ${{secrets.KEYCHAIN_PWD}} build.keychain
           /usr/bin/codesign -v --timestamp --options=runtime --entitlements entitlements.plist --deep --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.app
-      
+
       - if: matrix.os == 'macos-latest'
         name: "Notarize Macos App"
         uses: devbotsxyz/xcode-notarize@v1
@@ -86,13 +86,13 @@ jobs:
           appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
           verbose: "true"
         continue-on-error: true
-      
+
       - if: matrix.os == 'macos-latest'
         name: "Staple Macos App"
         uses: devbotsxyz/xcode-staple@v1
         with:
           product-path: "target/Plotlyst.app"
-      
+
       - name: Build installer
         run: |
           fbs installer
