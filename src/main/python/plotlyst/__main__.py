@@ -140,7 +140,7 @@ if __name__ == '__main__':
         #     QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
         #     raise ex
 
-        exit(0)
+        sys.exit(0)
         try:
             window = MainWindow()
         except Exception as ex:
