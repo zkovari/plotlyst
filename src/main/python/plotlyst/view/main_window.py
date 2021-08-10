@@ -21,7 +21,7 @@ from typing import List
 
 import qtawesome
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction
+from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction, QLineEdit, QTextEdit
 from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
@@ -57,6 +57,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle('Plotlyst')
         self.novel = None
+        self._current_text_widget = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
@@ -75,6 +76,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
         event_sender.send.connect(event_dispatcher.dispatch)
+        QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
 
     @overrides
@@ -176,8 +178,16 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.actionImportScrivener.triggered.connect(self._import_from_scrivener)
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
+        self.actionIncreaseFontSize.setIcon(IconRegistry.increase_font_size_icon())
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)
+        self.actionDecreaseFontSize.setIcon(IconRegistry.decrease_font_size_icon())
         self.actionDecreaseFontSize.triggered.connect(self.decrease_font_size)
+        self.actionCut.setIcon(IconRegistry.cut_icon())
+        self.actionCut.triggered.connect(self._cut_text)
+        self.actionCopy.setIcon(IconRegistry.copy_icon())
+        self.actionCopy.triggered.connect(self._copy_text)
+        self.actionPaste.setIcon(IconRegistry.paste_icon())
+        self.actionPaste.triggered.connect(self._paste_text)
 
     def _init_toolbar(self):
         tasks_button = QToolButton(self.toolBar)
@@ -261,3 +271,26 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
                 client.update_novel(self.novel)
+
+    def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
+        if isinstance(current_widget, (QLineEdit, QTextEdit)):
+            text_actions_enabled = True
+            self._current_text_widget = current_widget
+        else:
+            text_actions_enabled = False
+            self._current_text_widget = None
+        self.actionCut.setEnabled(text_actions_enabled)
+        self.actionCopy.setEnabled(text_actions_enabled)
+        self.actionPaste.setEnabled(text_actions_enabled)
+
+    def _cut_text(self):
+        if self._current_text_widget:
+            self._current_text_widget.cut()
+
+    def _copy_text(self):
+        if self._current_text_widget:
+            self._current_text_widget.copy()
+
+    def _paste_text(self):
+        if self._current_text_widget:
+            self._current_text_widget.paste()

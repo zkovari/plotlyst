@@ -60,6 +60,22 @@ class IconRegistry:
         return qtawesome.icon('fa5.copy')
 
     @staticmethod
+    def paste_icon() -> QIcon:
+        return qtawesome.icon('fa5s.paste')
+
+    @staticmethod
+    def cut_icon() -> QIcon:
+        return qtawesome.icon('fa5s.cut')
+
+    @staticmethod
+    def increase_font_size_icon() -> QIcon:
+        return qtawesome.icon('mdi.format-font-size-increase', options=[{'scale_factor': 1.2}])
+
+    @staticmethod
+    def decrease_font_size_icon() -> QIcon:
+        return qtawesome.icon('mdi.format-font-size-decrease', options=[{'scale_factor': 1.2}])
+
+    @staticmethod
     def filter_icon() -> QIcon:
         return qtawesome.icon('fa5s.filter')
 
