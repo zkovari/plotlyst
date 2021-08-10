@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, List
+from typing import Optional, List, Set
 
 import emoji
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel, \
@@ -175,6 +175,18 @@ class SceneEditor(QObject):
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
+
+        occupied_beats: Set[str] = set([x.beat.text for x in self.novel.scenes if x.beat])
+        for i in range(self.ui.cbPivotal.count()):
+            if i < 2:
+                continue
+            beat = self.ui.cbPivotal.itemData(i)
+            item = self.ui.cbPivotal.model().item(i)
+            if beat and beat.text in occupied_beats:
+                item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
+            else:
+                item.setFlags(item.flags() | Qt.ItemIsEnabled)
+
         if self.scene.beat:
             self.ui.cbPivotal.setCurrentText(self.scene.beat.text)
         else:
