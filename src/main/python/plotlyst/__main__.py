@@ -109,7 +109,7 @@ if __name__ == '__main__':
         workspace: Optional[str] = settings.workspace()
 
         changed_dir = False
-        while True:
+        while False:
             if not workspace:
                 picker = DirectoryPickerDialog()
                 picker.display()
@@ -133,12 +133,12 @@ if __name__ == '__main__':
                     settings.set_workspace(workspace)
                 break
             workspace = None
-
-        try:
-            json_client.init(workspace)
-        except Exception as ex:
-            QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
-            raise ex
+        workspace = './'
+        # try:
+        json_client.init(workspace)
+        # except Exception as ex:
+        #     QMessageBox.critical(None, 'Could not initialize database', traceback.format_exc())
+        #     raise ex
 
         exit(0)
         try:
