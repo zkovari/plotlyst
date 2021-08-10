@@ -1,7 +1,8 @@
 from typing import List
 
 from PyQt5.QtChart import QPieSeries
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QModelIndex
+from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QMessageBox, QAction, QSpinBox
 
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel, ScenesNotesTableModel
@@ -185,3 +186,37 @@ def test_edit_day(qtbot, filled_window: MainWindow):
     qtbot.wait(10)
     edit_item(qtbot, view.timeline_view.ui.tblScenes, 0, ScenesTableModel.ColTime, QSpinBox, _edit_day)
     assert view.novel.scenes[0].day == 3
+
+
+def test_character_distribution_display(qtbot, filled_window: MainWindow):
+    def assert_painted(index: QModelIndex):
+        assert index.data(role=Qt.BackgroundRole) == QBrush(QColor('darkblue'))
+
+    def assert_not_painted(index: QModelIndex):
+        assert index.data(role=Qt.BackgroundRole) is None
+
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+    view.ui.btnCharactersDistributionView.click()
+
+    assert view.characters_distribution.ui.spinAverage.value() == 3
+    model = view.characters_distribution.ui.tblSceneDistribution.model()
+    assert_painted(model.index(0, 1))
+    assert_painted(model.index(0, 2))
+    assert_painted(model.index(1, 1))
+    assert_painted(model.index(1, 2))
+    assert_painted(model.index(2, 1))
+    assert_not_painted(model.index(2, 2))
+    assert_not_painted(model.index(3, 1))
+    assert_painted(model.index(3, 2))
+    assert_not_painted(model.index(4, 1))
+    assert_not_painted(model.index(4, 2))
+
+    # click brushed scene cell
+    click_on_item(qtbot, view.characters_distribution.ui.tblSceneDistribution, 0, 1)
+    assert model.flags(model.index(3, 0)) == Qt.NoItemFlags
+    assert model.flags(model.index(4, 0)) == Qt.NoItemFlags
+
+    # click empty area
+    click_on_item(qtbot, view.characters_distribution.ui.tblSceneDistribution, 3, 1)
+    assert model.flags(model.index(3, 0)) & Qt.ItemIsEnabled
+    assert model.flags(model.index(4, 0)) & Qt.ItemIsEnabled

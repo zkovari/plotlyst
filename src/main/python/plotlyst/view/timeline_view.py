@@ -53,7 +53,7 @@ class TimelineView(AbstractNovelView):
 
         self.ui.tblScenes.setItemDelegate(self._delegate)
 
-        self._delegate.commitData.connect(self.refresh)
+        self._delegate.commitData.connect(self.timeline_widget.update)
 
     @overrides
     def refresh(self):

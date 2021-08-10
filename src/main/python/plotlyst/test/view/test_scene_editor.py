@@ -33,3 +33,10 @@ def test_editor_with_none_values(qtbot):
     view: SceneEditor = editor(qtbot, novel, scene)
 
     assert view.ui.cbType.currentIndex() == 0
+
+
+def test_display_scene_builder(qtbot):
+    novel = Novel('Test-novel')
+    view: SceneEditor = editor(qtbot, novel)
+
+    view.ui.tabWidget.setCurrentWidget(view.ui.tabBuilder)

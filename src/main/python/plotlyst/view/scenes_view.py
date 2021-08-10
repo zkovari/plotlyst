@@ -20,9 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional
 
+import qtawesome
 from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
     QPoint
-from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QWidgetAction, QMenu, QAction
+from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QMenu, QAction
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
@@ -54,6 +55,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.timeline_view: Optional[TimelineView] = None
         self.stagesModel: Optional[ScenesStageTableModel] = None
         self.stagesProgress: Optional[SceneStageProgressCharts] = None
+        self.characters_distribution: Optional[CharactersScenesDistributionWidget] = None
 
         self.tblModel = ScenesTableModel(novel)
         self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
@@ -95,7 +97,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self.ui.btnChaptersToggle.setChecked(True)
 
-        self.ui.btnGraphs.setIcon(IconRegistry.graph_icon())
         self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
         self.ui.btnAct2.setIcon(IconRegistry.act_two_icon())
         self.ui.btnAct3.setIcon(IconRegistry.act_three_icon())
@@ -106,18 +107,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
+        self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnTableView.setChecked(True)
-
-        menu = QMenu(self.ui.btnGraphs)
-        action = QWidgetAction(menu)
-        self._distribution_widget = CharactersScenesDistributionWidget(self.novel)
-        self._distribution_widget.setMinimumWidth(900)
-        self._distribution_widget.setMinimumHeight(600)
-        action.setDefaultWidget(self._distribution_widget)
-        menu.addAction(action)
-        self.ui.btnGraphs.setMenu(menu)
 
         self.ui.btnFilter.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
@@ -150,7 +143,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.tblModel.modelReset.emit()
         self.chaptersModel.update()
         self.chaptersModel.modelReset.emit()
-        self._distribution_widget.refresh()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
 
@@ -160,6 +152,8 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesProgress.refresh()
         if self.timeline_view:
             self.timeline_view.refresh()
+        if self.characters_distribution:
+            self.characters_distribution.refresh()
 
     def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
@@ -233,6 +227,13 @@ class ScenesOutlineView(AbstractNovelView):
             if not self.timeline_view:
                 self.timeline_view = TimelineView(self.novel)
                 self.ui.pageTimeline.layout().addWidget(self.timeline_view.widget)
+        elif self.ui.btnCharactersDistributionView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
+            self.ui.tblScenes.clearSelection()
+            self.ui.tblSceneStages.clearSelection()
+            if not self.characters_distribution:
+                self.characters_distribution = CharactersScenesDistributionWidget(self.novel)
+                self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
         else:
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
             self.ui.tblSceneStages.clearSelection()

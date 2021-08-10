@@ -115,7 +115,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="btnStatusView">
+           <widget class="QToolButton" name="btnCharactersDistributionView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
@@ -132,6 +132,29 @@
           </item>
           <item>
            <widget class="QToolButton" name="btnTimelineView">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btnGroupViews</string>
+            </attribute>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_5">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnStatusView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
@@ -273,19 +296,6 @@
              </size>
             </property>
            </spacer>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnGraphs">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="popupMode">
-             <enum>QToolButton::InstantPopup</enum>
-            </property>
-           </widget>
           </item>
           <item>
            <widget class="QToolButton" name="btnFilter">
@@ -620,6 +630,22 @@
                  </item>
                 </layout>
                </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="pageCharactersDistribution">
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
               </layout>
              </widget>
              <widget class="QWidget" name="pageTimeline">
