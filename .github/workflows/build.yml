@@ -11,7 +11,7 @@ jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ windows-2016 ]
+        os: [ macos-latest ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -65,7 +65,7 @@ jobs:
 
       - name: Launch
         run: |
-          target\Plotlyst\Plotlyst.exe
+          target/Plotlyst.app/Contents/MacOS/Plotlyst
 
       - if: matrix.os == 'macos-latest'
         name: Sign Macos App
