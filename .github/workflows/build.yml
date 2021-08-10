@@ -5,7 +5,7 @@ name: Build distributions
 
 on:
   push:
-    branches: [ 'release/**' ]
+    branches: [ 'feature/**' ]
 
 jobs:
   Build_distribution:
