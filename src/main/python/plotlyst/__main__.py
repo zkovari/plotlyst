@@ -145,6 +145,7 @@ if __name__ == '__main__':
             QMessageBox.critical(None, 'Could not create main window', traceback.format_exc())
             raise ex
 
+        exit(0)
         window.show()
         window.activateWindow()
 
