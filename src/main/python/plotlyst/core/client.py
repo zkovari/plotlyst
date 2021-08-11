@@ -468,7 +468,9 @@ class JsonClient:
             f.write(info.to_json())
 
     def __delete_info(self, dir, id: uuid.UUID):
-        os.remove(dir.joinpath(self.__json_file(id)))
+        path = dir.joinpath(self.__json_file(id))
+        if os.path.exists(path):
+            os.remove(path)
 
 
 json_client = JsonClient()
