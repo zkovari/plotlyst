@@ -154,6 +154,8 @@ class SceneEditor(QObject):
             self.ui.lstScenes.selectionModel().select(index, QItemSelectionModel.Select)
         else:
             self.scene = Scene('')
+            if len(self.novel.scenes) > 1:
+                self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
 
         if self.scene.pov:

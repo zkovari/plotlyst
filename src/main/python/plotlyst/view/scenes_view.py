@@ -294,12 +294,14 @@ class ScenesOutlineView(AbstractNovelView):
         menu.popup(self.ui.tblScenes.viewport().mapToGlobal(pos))
 
     def _insert_scene_after(self, index: QModelIndex):
-        scene = index.data(ScenesTableModel.SceneRole)
-        i = self.novel.scenes.index(scene)
-        scene = Scene('Untitled')
-        self.novel.scenes.insert(i + 1, scene)
-        scene.sequence = i + 1
-        client.insert_scene(self.novel, scene)
+        new_scene = index.data(ScenesTableModel.SceneRole)
+        i = self.novel.scenes.index(new_scene)
+        day = new_scene.day
+        
+        new_scene = Scene('Untitled', day=day)
+        self.novel.scenes.insert(i + 1, new_scene)
+        new_scene.sequence = i + 1
+        client.insert_scene(self.novel, new_scene)
         self.refresh()
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
