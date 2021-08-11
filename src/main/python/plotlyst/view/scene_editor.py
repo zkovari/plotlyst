@@ -327,7 +327,7 @@ class SceneEditor(QObject):
         pov = self.ui.cbPov.currentData()
         if pov:
             self.scene.pov = pov
-            self._enable_arc_buttons(False)
+            self._enable_arc_buttons(True)
         else:
             self.scene.pov = None
             self._enable_arc_buttons(False)
