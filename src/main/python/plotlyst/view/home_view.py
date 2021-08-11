@@ -52,6 +52,8 @@ class HomeView(AbstractView):
         self.selected_card: Optional['NovelCard'] = None
         self.refresh()
 
+        self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
+        self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self.selected_card.novel))
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAdd.clicked.connect(self._add_new_novel)
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
@@ -60,16 +62,19 @@ class HomeView(AbstractView):
         self.ui.btnDelete.clicked.connect(self._on_delete)
         self.ui.btnDelete.setDisabled(True)
         self.ui.btnEdit.setDisabled(True)
+        self.ui.btnActivate.setDisabled(True)
 
     @overrides
     def refresh(self):
         self._layout.clear()
         self.novel_cards.clear()
+        self.ui.btnDelete.setDisabled(True)
+        self.ui.btnEdit.setDisabled(True)
+        self.ui.btnActivate.setDisabled(True)
         for novel in client.novels():
             card = NovelCard(novel)
             self._layout.addWidget(card)
             self.novel_cards.append(card)
-            card.loadingRequested.connect(self.loadNovel.emit)
             card.selected.connect(self._card_selected)
 
     def import_from_scrivener(self):
@@ -117,10 +122,10 @@ class HomeView(AbstractView):
         self.selected_card = card
         self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
+        self.ui.btnActivate.setEnabled(True)
 
 
 class NovelCard(Ui_NovelCard, QFrame):
-    loadingRequested = pyqtSignal(Novel)
     selected = pyqtSignal(object)
 
     def __init__(self, novel: Novel, parent=None):
@@ -129,8 +134,6 @@ class NovelCard(Ui_NovelCard, QFrame):
         self.novel = novel
         self.label.setText(self.novel.title)
         self._setStyleSheet()
-
-        self.btnLoad.clicked.connect(lambda: self.loadingRequested.emit(self.novel))
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:

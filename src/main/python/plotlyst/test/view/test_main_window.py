@@ -60,14 +60,15 @@ def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
     assert card.novel.title == new_title
     qtbot.mouseClick(card, Qt.LeftButton)
 
-    card.btnLoad.click()
+    view.ui.btnActivate.click()
 
     assert_views(filled_window, scene_dependent_enabled=False, character_dependent_enabled=False)
     first_card = view.novel_cards[0]
     assert first_card.novel.id
     qtbot.mouseClick(first_card, Qt.LeftButton)
 
-    first_card.btnLoad.click()
+    qtbot.mouseClick(first_card, Qt.LeftButton)
+    view.ui.btnActivate.click()
     assert_views(filled_window)
 
 
@@ -86,5 +87,5 @@ def test_import_from_scrivener(qtbot, window: MainWindow, monkeypatch):
     assert card.novel.title == 'Importer project'
     qtbot.mouseClick(card, Qt.LeftButton)
 
-    card.btnLoad.click()
+    view.ui.btnActivate.click()
     assert_views(window)

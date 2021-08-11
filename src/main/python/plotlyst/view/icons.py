@@ -112,8 +112,8 @@ class IconRegistry:
         return qtawesome.icon('ei.book')
 
     @staticmethod
-    def book_icon() -> QIcon:
-        return qtawesome.icon('fa5s.book-open', color_on='darkBlue')
+    def book_icon(color='black', color_on='darkBlue') -> QIcon:
+        return qtawesome.icon('fa5s.book-open', color_on=color_on, color=color)
 
     @staticmethod
     def synopsis_icon() -> QIcon:

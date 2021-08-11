@@ -55,6 +55,16 @@ QPushButton[positive=true]:hover {
     background-color: #27ae60;
 }
 
+QPushButton[highlighted=true]:!disabled {
+    background-color: #384e77;
+    color: #fff;
+    font: bold;
+}
+
+QPushButton[highlighted=true]:hover {
+    background-color: #18314f;
+}
+
 QPushButton[deconstructive=true]:!disabled {
     background-color: #e74c3c;
     color: #fff;
