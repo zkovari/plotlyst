@@ -25,6 +25,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
     QAbstractItemModel, Qt, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox
+from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
@@ -52,7 +53,10 @@ class SceneEditor(QObject):
         self.ui.setupUi(self.widget)
         self.novel = novel
         self.scene: Optional[Scene] = None
-        self._emoji_font = emoji_font(20)
+        if platform.is_windows():
+            self._emoji_font = emoji_font(16)
+        else:
+            self._emoji_font = emoji_font(20)
 
         self.ui.btnVeryUnhappy.setFont(self._emoji_font)
         self.ui.btnVeryUnhappy.setText(emoji.emojize(':fearful_face:'))
