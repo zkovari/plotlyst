@@ -91,7 +91,6 @@ class AppContext(ApplicationContext):
 if __name__ == '__main__':
     appctxt = AppContext()
 
-    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoColorEmoji.ttf'))
     QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
 
     parser = argparse.ArgumentParser()
