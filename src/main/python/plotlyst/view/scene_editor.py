@@ -25,6 +25,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
     QAbstractItemModel, Qt, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox
+from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
@@ -52,7 +53,10 @@ class SceneEditor(QObject):
         self.ui.setupUi(self.widget)
         self.novel = novel
         self.scene: Optional[Scene] = None
-        self._emoji_font = emoji_font(24)
+        if platform.is_windows():
+            self._emoji_font = emoji_font(16)
+        else:
+            self._emoji_font = emoji_font(20)
 
         self.ui.btnVeryUnhappy.setFont(self._emoji_font)
         self.ui.btnVeryUnhappy.setText(emoji.emojize(':fearful_face:'))
@@ -313,7 +317,6 @@ class SceneEditor(QObject):
             self._save_timer.start(500)
 
     def _enable_arc_buttons(self, enabled: bool):
-        self.ui.lblArc.setVisible(enabled)
         self.ui.btnVeryUnhappy.setVisible(enabled)
         self.ui.btnUnHappy.setVisible(enabled)
         self.ui.btnNeutral.setVisible(enabled)
@@ -334,10 +337,11 @@ class SceneEditor(QObject):
 
     def _update_pov_avatar(self):
         if self.scene.pov:
-            pixmap = avatars.pixmap(self.scene.pov)
             if self.scene.pov.avatar:
+                pixmap = avatars.pixmap(self.scene.pov)
                 self.ui.lblAvatar.setPixmap(pixmap.scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation))
             else:
+                pixmap = avatars.name_initial_icon(self.scene.pov).pixmap(128, 128)
                 self.ui.lblAvatar.setPixmap(pixmap)
         else:
             self.ui.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(128, 128)))

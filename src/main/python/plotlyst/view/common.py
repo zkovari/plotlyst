@@ -25,6 +25,7 @@ from typing import Optional, Any
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy
+from fbs_runtime import platform
 
 
 class EditorCommandType(Enum):
@@ -97,5 +98,9 @@ def busy(func):
     return wrapper_timer
 
 
-def emoji_font(size: int = 12) -> QFont:
+def emoji_font(size: int = 13) -> QFont:
+    if platform.is_mac():
+        return QFont('Apple Color Emoji', size)
+    if platform.is_windows():
+        return QFont('Segoe UI Emoji', size)
     return QFont('Noto Emoji', size)

@@ -46,7 +46,7 @@ QPushButton:disabled {
 }
 
 QPushButton[positive=true]:!disabled {
-    background-color: #2ecc71;
+    background-color: #4fb477;
     color: #fff;
     font: bold;
 }
@@ -64,6 +64,33 @@ QPushButton[deconstructive=true]:!disabled {
 QPushButton[deconstructive=true]:hover {
     background-color: #c0392b;
 }
+
+QToolButton[base=true] {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #f6f7fa, stop: 1 #dadbde);
+    border: 1px solid #8f8f91;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+QToolButton:hover[base=true] {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #c3c4c7, stop: 1 #f6f7fa);
+}
+
+QToolButton:pressed[base=true] {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #d7d8db, stop: 1 #f6f7fa);
+}
+
+QToolButton:checked[base=true] {
+    background-color: lightgrey;
+}
+
+QToolButton:disabled[base=true] {
+    opacity: 0.65;
+}
+
 
 QDockWidget::float-button {
     subcontrol-position: top left;
