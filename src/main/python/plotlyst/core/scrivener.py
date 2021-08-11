@@ -24,6 +24,7 @@ from uuid import UUID
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
+from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter
 
 
@@ -47,7 +48,11 @@ class ScrivenerImporter:
         if not scrivener_file:
             raise ValueError(f'Could not find main Scrivener file with .scrivx extension under given folder: {folder}')
 
-        return self._parse_scrivx(Path(folder).joinpath(scrivener_file))
+        novel = self._parse_scrivx(Path(folder).joinpath(scrivener_file))
+        if client.has_novel(novel.id):
+            raise ValueError('Cannot import Scrivener project again because it is already imported in Plotlyst')
+
+        return novel
 
     def _parse_scrivx(self, scrivener_path: Path) -> Novel:
         tree = ElementTree.parse(scrivener_path)
