@@ -84,6 +84,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -92,6 +95,9 @@
             </property>
             <property name="checked">
              <bool>false</bool>
+            </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
             </property>
             <attribute name="buttonGroup">
              <string notr="true">btnGroupViews</string>
@@ -107,6 +113,9 @@
              <string/>
             </property>
             <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="base" stdset="0">
              <bool>true</bool>
             </property>
             <attribute name="buttonGroup">
@@ -125,6 +134,9 @@
             <property name="checkable">
              <bool>true</bool>
             </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
             <attribute name="buttonGroup">
              <string notr="true">btnGroupViews</string>
             </attribute>
@@ -139,6 +151,9 @@
              <string/>
             </property>
             <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="base" stdset="0">
              <bool>true</bool>
             </property>
             <attribute name="buttonGroup">
@@ -162,6 +177,9 @@
              <string/>
             </property>
             <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="base" stdset="0">
              <bool>true</bool>
             </property>
             <attribute name="buttonGroup">
@@ -305,6 +323,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -328,6 +349,9 @@
             <property name="checked">
              <bool>true</bool>
             </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -344,6 +368,9 @@
             <property name="checked">
              <bool>true</bool>
             </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -358,6 +385,9 @@
              <bool>true</bool>
             </property>
             <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="base" stdset="0">
              <bool>true</bool>
             </property>
            </widget>

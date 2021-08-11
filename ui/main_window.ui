@@ -96,6 +96,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="base" stdset="0">
+          <bool>true</bool>
+         </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup</string>
          </attribute>
@@ -140,6 +143,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="base" stdset="0">
+          <bool>true</bool>
+         </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup</string>
          </attribute>
@@ -175,6 +181,9 @@
           </size>
          </property>
          <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="base" stdset="0">
           <bool>true</bool>
          </property>
          <attribute name="buttonGroup">
@@ -214,6 +223,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="base" stdset="0">
+          <bool>true</bool>
+         </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup</string>
          </attribute>
@@ -251,6 +263,9 @@
          <property name="checkable">
           <bool>true</bool>
          </property>
+         <property name="base" stdset="0">
+          <bool>true</bool>
+         </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup</string>
          </attribute>
@@ -286,6 +301,9 @@
           </size>
          </property>
          <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="base" stdset="0">
           <bool>true</bool>
          </property>
          <attribute name="buttonGroup">
