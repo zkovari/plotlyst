@@ -24,7 +24,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QFrame, QFileDialog
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client, json_client
+from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, NovelDescriptor
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.event.core import emit_event
@@ -94,7 +94,7 @@ class HomeView(AbstractView):
             self.ui.btnEdit.setDisabled(True)
         title = NovelEditionDialog().display()
         if title:
-            client.insert_novel(Novel(title, story_structure=json_client.project.story_structures[0]))
+            client.insert_novel(Novel(title))
             self.refresh()
 
     def _on_edit(self):
