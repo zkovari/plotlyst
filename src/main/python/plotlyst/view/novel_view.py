@@ -28,7 +28,8 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, StoryLine
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent, NovelUpdatedEvent
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent, NovelUpdatedEvent, \
+    NovelStoryStructureUpdated
 from src.main.python.plotlyst.model.novel import EditableNovelStoryLinesListModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -56,18 +57,14 @@ class NovelView(AbstractNovelView):
         self.ui.btnRemove.setDisabled(True)
         self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
 
-        if platform.is_windows():
-            self._emoji_font = emoji_font(14)
-        else:
-            self._emoji_font = emoji_font(20)
+        self._emoji_font = emoji_font(14) if platform.is_windows() else emoji_font(20)
         self.ui.lblStoryStructureEmoji.setFont(self._emoji_font)
         self.ui.lblStoryStructureEmoji.setText(emoji.emojize(':performing_arts:'))
         for story_structure in json_client.project.story_structures:
-            if story_structure.icon:
-                icon = qtawesome.icon(story_structure.icon)
-            else:
-                icon = QIcon('')
+            icon = qtawesome.icon(story_structure.icon) if story_structure.icon else QIcon('')
             self.ui.cbStoryStructure.addItem(icon, story_structure.title, story_structure)
+        self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
+        self.ui.cbStoryStructure.currentIndexChanged.connect(self._story_structure_changed)
 
         self.ui.wdgStoryStructureInfo.setVisible(False)
         self._update_story_structure_info()
@@ -99,6 +96,22 @@ class NovelView(AbstractNovelView):
 <p>By selecting a story structure above, you will organize your scenes into <strong>Acts.</strong></p>
 <p>An Act consists of <strong>Beats&nbsp;</strong>which represent your story's pivotal moments.
 A Scene can be associated to such story beats.</p>''')
+
+    def _story_structure_changed(self):
+        structure = self.ui.cbStoryStructure.currentData()
+        if self.novel.story_structure.id == structure.id:
+            return
+        beats = [x for x in self.novel.scenes if x.beat]
+        if beats and not ask_confirmation(
+                'Scenes are already associated to your previous story beats. Continue?'):
+            self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
+            return
+        for scene in beats:
+            scene.beat = None
+            client.update_scene(scene)
+        self.novel.story_structure = structure
+        client.update_novel(self.novel)
+        emit_event(NovelStoryStructureUpdated(self))
 
     def _story_structure_info_clicked(self, checked: bool):
         if checked:

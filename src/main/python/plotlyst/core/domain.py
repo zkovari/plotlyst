@@ -266,10 +266,8 @@ class NovelDescriptor:
 
 
 @dataclass
-class Novel:
-    title: str
+class Novel(NovelDescriptor):
     story_structure: StoryStructure = default_story_structures[0]
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
     story_lines: List[StoryLine] = field(default_factory=list)
