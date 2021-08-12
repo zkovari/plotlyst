@@ -62,24 +62,24 @@ def test_editor_with_multiple_scenes(qtbot, test_client):
 
     view.ui.btnPrevious.click()
     assert view.ui.lineTitle.text() == 'Scene 2'
-    assert view.ui.cbPivotal.currentText() == 'Inciting incident'
+    assert view.ui.cbPivotal.currentText() == 'Inciting Incident'
     assert view.ui.btnPrevious.isEnabled()
     assert view.ui.btnNext.isEnabled()
 
     view.ui.btnPrevious.click()
     assert view.ui.lineTitle.text() == 'Scene 1'
-    assert view.ui.cbPivotal.currentText() == 'Hook'
+    assert view.ui.cbPivotal.currentText() == 'Exposition'
     assert not view.ui.btnPrevious.isEnabled()
     assert view.ui.btnNext.isEnabled()
 
     view.ui.btnNext.click()
     assert view.ui.lineTitle.text() == 'Scene 2'
-    assert view.ui.cbPivotal.currentText() == 'Inciting incident'
+    assert view.ui.cbPivotal.currentText() == 'Inciting Incident'
     assert view.ui.btnPrevious.isEnabled()
     assert view.ui.btnNext.isEnabled()
 
     click_on_item(qtbot, view.ui.lstScenes, 2)
     assert view.ui.lineTitle.text() == 'Scene 2'
-    assert view.ui.cbPivotal.currentText() == 'Inciting incident'
+    assert view.ui.cbPivotal.currentText() == 'Inciting Incident'
     assert view.ui.btnPrevious.isEnabled()
     assert view.ui.btnNext.isEnabled()

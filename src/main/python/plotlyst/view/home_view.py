@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import QFrame, QFileDialog
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, NovelDescriptor
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.view.layout import FlowLayout
 
 
 class HomeView(AbstractView):
-    loadNovel = pyqtSignal(Novel)
+    loadNovel = pyqtSignal(NovelDescriptor)
 
     def __init__(self):
         super(HomeView, self).__init__()
@@ -47,7 +47,6 @@ class HomeView(AbstractView):
         self.ui.setupUi(self.widget)
         self._layout = FlowLayout(spacing=9)
         self.ui.novels.setLayout(self._layout)
-
         self.novel_cards: List[NovelCard] = []
         self.selected_card: Optional['NovelCard'] = None
         self.refresh()
@@ -128,7 +127,7 @@ class HomeView(AbstractView):
 class NovelCard(Ui_NovelCard, QFrame):
     selected = pyqtSignal(object)
 
-    def __init__(self, novel: Novel, parent=None):
+    def __init__(self, novel: NovelDescriptor, parent=None):
         super().__init__(parent)
         self.setupUi(self)
         self.novel = novel

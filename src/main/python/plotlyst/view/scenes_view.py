@@ -29,7 +29,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -47,7 +47,7 @@ class ScenesOutlineView(AbstractNovelView):
     commands_sent = pyqtSignal(QWidget, list)
 
     def __init__(self, novel: Novel):
-        super().__init__(novel)
+        super().__init__(novel, [NovelStoryStructureUpdated])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -297,7 +297,7 @@ class ScenesOutlineView(AbstractNovelView):
         new_scene = index.data(ScenesTableModel.SceneRole)
         i = self.novel.scenes.index(new_scene)
         day = new_scene.day
-        
+
         new_scene = Scene('Untitled', day=day)
         self.novel.scenes.insert(i + 1, new_scene)
         new_scene.sequence = i + 1
