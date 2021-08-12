@@ -93,9 +93,9 @@ class NovelView(AbstractNovelView):
     def _update_story_structure_info(self):
         self.ui.textStoryStructureInfo.setText('''
         <h3>Info on Story structures</h3>
-<p>By selecting a story structure above, you will organize your scenes into <strong>Acts.</strong></p>
+<p>By selecting a story structure, you will organize your scenes into <strong>Acts.</strong></p>
 <p>An Act consists of <strong>Beats&nbsp;</strong>which represent your story's pivotal moments.
-A Scene can be associated to such story beats.</p>''')
+The scenes can be associated to such story beats.</p>''')
 
     def _story_structure_changed(self):
         structure = self.ui.cbStoryStructure.currentData()
