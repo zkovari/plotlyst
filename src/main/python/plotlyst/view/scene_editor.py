@@ -54,7 +54,7 @@ class SceneEditor(QObject):
         self.novel = novel
         self.scene: Optional[Scene] = None
         if platform.is_windows():
-            self._emoji_font = emoji_font(16)
+            self._emoji_font = emoji_font(14)
         else:
             self._emoji_font = emoji_font(20)
 

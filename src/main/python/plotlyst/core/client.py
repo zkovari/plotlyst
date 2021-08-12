@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import json
 import os
 import pathlib
 import uuid
@@ -31,7 +32,7 @@ from dataclasses_json import dataclass_json, Undefined
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
-    default_story_structure
+    default_story_structures, NovelDescriptor
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -48,7 +49,7 @@ LATEST = ApplicationDbVersion.R4
 
 class SqlClient:
 
-    def novels(self) -> List[Novel]:
+    def novels(self) -> List[NovelDescriptor]:
         return json_client.novels()
 
     def has_novel(self, id: uuid.UUID) -> bool:
@@ -158,12 +159,12 @@ class ChapterInfo:
 @dataclass
 class NovelInfo:
     id: uuid.UUID
+    story_structure: uuid.UUID = default_story_structures[0].id
     scenes: List[uuid.UUID] = field(default_factory=list)
     characters: List[uuid.UUID] = field(default_factory=list)
     storylines: List[StorylineInfo] = field(default_factory=list)
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
-    story_structure: StoryStructure = field(default_factory=default_story_structure)
 
 
 @dataclass
@@ -172,10 +173,15 @@ class ProjectNovelInfo:
     id: uuid.UUID
 
 
+def _default_story_structures():
+    return default_story_structures
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Project:
     novels: List[ProjectNovelInfo] = field(default_factory=list)
+    story_structures: List[StoryStructure] = field(default_factory=_default_story_structures)
 
 
 class JsonClient:
@@ -200,6 +206,8 @@ class JsonClient:
             with open(self.project_file_path) as json_file:
                 data = json_file.read()
                 self.project = Project.from_json(data)
+                self.project.story_structures = [x for x in self.project.story_structures if x.custom]
+                self.project.story_structures.extend(default_story_structures)
             self._persist_project()
 
         self._workspace = workspace
@@ -218,8 +226,8 @@ class JsonClient:
         if not os.path.exists(str(self.images_dir)):
             os.mkdir(self.images_dir)
 
-    def novels(self) -> List[Novel]:
-        return [Novel(title=x.title, id=x.id) for x in self.project.novels]
+    def novels(self) -> List[NovelDescriptor]:
+        return [NovelDescriptor(title=x.title, id=x.id) for x in self.project.novels]
 
     def has_novel(self, id: uuid.UUID):
         for novel in self.project.novels:
@@ -314,8 +322,12 @@ class JsonClient:
         for char in characters:
             characters_ids[str(char.id)] = char
 
+        story_structure: StoryStructure = self.project.story_structures[0]
+        for structure in self.project.story_structures:
+            if structure.id == novel_info.story_structure:
+                story_structure = structure
         beat_ids = {}
-        for beat in novel_info.story_structure.beats:
+        for beat in story_structure.beats:
             beat_ids[str(beat.id)] = beat
 
         scenes: List[Scene] = []
@@ -372,7 +384,7 @@ class JsonClient:
 
         return Novel(title=project_novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
-                     story_structure=novel_info.story_structure)
+                     story_structure=story_structure)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -380,7 +392,12 @@ class JsonClient:
             raise IOError(f'Could not find novel with id {id}')
         with open(path) as json_file:
             data = json_file.read()
-            return NovelInfo.from_json(data)
+            data_json = json.loads(data)
+            if isinstance(data_json['story_structure'], dict):
+                data_json['story_structure'] = self.project.story_structures[0].id
+                return NovelInfo.from_dict(data_json)
+            else:
+                return NovelInfo.from_json(data)
 
     def _persist_project(self):
         with atomic_write(self.project_file_path, overwrite=True) as f:
@@ -391,7 +408,7 @@ class JsonClient:
                                storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
                                            novel.story_lines], characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
-                               stages=novel.stages, story_structure=novel.story_structure)
+                               stages=novel.stages, story_structure=novel.story_structure.id)
 
         self.__persist_info(self.novels_dir, novel_info)
 
