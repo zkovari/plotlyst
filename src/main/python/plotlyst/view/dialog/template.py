@@ -26,7 +26,8 @@ from PyQt5.QtGui import QDrag, QMouseEvent
 from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType
+from src.main.python.plotlyst.core.domain import age_field, gender_field, \
+    enneagram_field, TemplateField, TemplateFieldType
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import TemplateProfileEditor
@@ -39,6 +40,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         super().__init__(parent)
 
         self.setupUi(self)
+        self.wdgFieldProperties.setVisible(False)
 
         self.btnAge.setIcon(qtawesome.icon('mdi.numeric', options=[{'scale_factor': 1.4}]))
         self.btnGender.setIcon(qtawesome.icon('mdi.gender-female', color='#fface4', options=[{'scale_factor': 1.4}]))
@@ -82,7 +84,14 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         if event.buttons() & Qt.LeftButton and self._dragged:
             drag = QDrag(self._dragged)
             pix = self._dragged.grab()
-            field = TemplateField(name=self._dragged.text(), type=TemplateFieldType.TEXT)
+            if self._dragged is self.btnAge:
+                field = age_field
+            elif self._dragged is self.btnGender:
+                field = gender_field
+            elif self._dragged is self.btnEnneagram:
+                field = enneagram_field
+            else:
+                field = TemplateField(name=self._dragged.text(), type=TemplateFieldType.TEXT)
             mimedata = QMimeData()
             mimedata.setData(self.MimeType, QByteArray(pickle.dumps(field)))
             drag.setMimeData(mimedata)

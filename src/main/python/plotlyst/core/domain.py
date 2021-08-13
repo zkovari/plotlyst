@@ -270,6 +270,7 @@ class TemplateFieldType(Enum):
     TEXT_AREA = 1
     TEXT_SELECTION = 2
     BUTTON_SELECTION = 3
+    NUMERIC = 4
 
 
 class SelectionType(Enum):
@@ -299,6 +300,24 @@ class TemplateField:
     required: bool = False
     exclusive: bool = False
     custom: bool = False
+    min_value: int = 0
+    max_value = 99999
+    compact: bool = False
+
+
+age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
+                          id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), compact=True)
+gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECTION,
+                             id=uuid.UUID('dd5421f5-b332-4295-8020-e69c482a2ac5'),
+                             selections=[SelectionItem('Male'), SelectionItem('Female')], compact=True, exclusive=True)
+enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
+                                id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
+                                selections=[SelectionItem('The Reformer'), SelectionItem('The Helper'),
+                                            SelectionItem('The Achiever'),
+                                            SelectionItem('The Individualist'), SelectionItem('The Investigator'),
+                                            SelectionItem('The Loyalist'),
+                                            SelectionItem('The Enthusiast'), SelectionItem('The Challenger'),
+                                            SelectionItem('The Peacemaker')], compact=True)
 
 
 @dataclass
