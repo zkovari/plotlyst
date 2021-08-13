@@ -22,8 +22,8 @@ from typing import Optional
 
 import emoji
 import qtawesome
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QIcon, QMouseEvent
+from PyQt5.QtCore import Qt, QPoint, pyqtSignal
+from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragMoveEvent, QDragEnterEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup
 from overrides import overrides
@@ -93,12 +93,13 @@ class ButtonSelectionWidget(QWidget):
         event.ignore()
 
 
-class TemplateFieldWidget(QWidget):
+class TemplateFieldWidget(QFrame):
     def __init__(self, field: TemplateField, parent=None):
         super(TemplateFieldWidget, self).__init__(parent)
         self.field = field
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
+        self.setProperty('mainFrame', True)
 
         if self.field.emoji:
             self.lblEmoji = QLabel()
@@ -116,21 +117,15 @@ class TemplateFieldWidget(QWidget):
         if self.field.compact:
             self.layout.addWidget(spacer_widget())
 
-    def setReadOnly(self, readOnly: bool):
-        self.wdgEditor.setDisabled(readOnly)
-        # if isinstance(self.wdgEditor, (QLineEdit, QSpinBox)):
-        #     self.wdgEditor.setReadOnly(readOnly)
-        # elif isinstance(self.wdgEditor, QComboBox):
-        #     for i in range(self.wdgEditor.count()):
-        #         item = self.wdgEditor.model().item(i)
-        #         if readOnly:
-        #             item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
-        #         else:
-        #             item.setFlags(item.flags() | Qt.ItemIsEnabled)
+    @overrides
+    def setEnabled(self, enabled: bool):
+        self.wdgEditor.setDisabled(enabled)
 
-    # @overrides
-    # def mouseReleaseEvent(self, event: QMouseEvent):
-    #     print(event.pos())
+    def select(self):
+        self.setStyleSheet('QFrame[mainFrame=true] {border: 2px dashed #0496ff;}')
+
+    def deselect(self):
+        self.setStyleSheet('')
 
     def _fieldWidget(self) -> QWidget:
         if self.field.type == TemplateFieldType.NUMERIC:
@@ -153,12 +148,16 @@ class TemplateFieldWidget(QWidget):
 class TemplateProfileEditor(TemplateProfile):
     MimeType: str = 'application/template-field'
 
+    fieldSelected = pyqtSignal(TemplateField)
+    fieldAdded = pyqtSignal(TemplateField)
+
     def __init__(self):
         super(TemplateProfileEditor, self).__init__()
         self.setAcceptDrops(True)
         self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
+        self._selected: Optional[TemplateFieldWidget] = None
 
-        for row in range(3):
+        for row in range(4):
             for col in range(2):
                 self.gridLayout.addWidget(placeholder(), row, col)
 
@@ -170,24 +169,60 @@ class TemplateProfileEditor(TemplateProfile):
             event.ignore()
 
     @overrides
+    def dragMoveEvent(self, event: QDragMoveEvent):
+        index = self._get_index(event.pos())
+        if index is None:
+            return event.ignore()
+        item = self.gridLayout.itemAt(index)
+        if isinstance(item.widget(), TemplateFieldWidget):
+            return event.ignore()
+
+        event.accept()
+
+    @overrides
     def dropEvent(self, event: QDropEvent):
-        index = self.get_index(event.pos())
+        index = self._get_index(event.pos())
         if index is None:
             return
 
         field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
         widget_to_drop = TemplateFieldWidget(field)
-        widget_to_drop.setReadOnly(True)
+        widget_to_drop.setEnabled(True)
         pos = self.gridLayout.getItemPosition(index)
         item: QLayoutItem = self.gridLayout.takeAt(index)
         item.widget().deleteLater()
         self.gridLayout.addWidget(widget_to_drop, *pos)
 
+        self.fieldAdded.emit(field)
+        self._select(widget_to_drop)
+
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent):
-        print(event.pos())
+        index = self._get_index(event.pos())
+        if index is None:
+            return
+        item = self.gridLayout.itemAt(index)
+        widget = item.widget()
+        if isinstance(widget, TemplateFieldWidget):
+            self._select(widget)
 
-    def get_index(self, pos) -> Optional[int]:
+    def _select(self, widget: TemplateFieldWidget):
+        if self._selected:
+            self._selected.deselect()
+        self._selected = widget
+        self._selected.select()
+        self.fieldSelected.emit(self._selected.field)
+
+    def removeSelected(self):
+        if self._selected:
+            index = self.gridLayout.indexOf(self._selected)
+            pos = self.gridLayout.getItemPosition(index)
+            self.gridLayout.removeWidget(self._selected)
+            self.gridLayout.addWidget(placeholder(), *pos)
+            self._selected.deleteLater()
+            self._selected = None
+
+    def _get_index(self, pos: QPoint) -> Optional[int]:
         for i in range(self.gridLayout.count()):
             if self.gridLayout.itemAt(i).geometry().contains(pos):
                 return i

@@ -53,6 +53,13 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.profile_editor = TemplateProfileEditor()
         self.wdgEditor.layout().addWidget(self.profile_editor)
 
+        self._selected_field: Optional[TemplateField] = None
+
+        self.profile_editor.fieldAdded.connect(self._field_added)
+        self.profile_editor.fieldSelected.connect(self._field_selected)
+        self.btnRemove.setIcon(IconRegistry.minus_icon())
+        self.btnRemove.clicked.connect(self._remove_field)
+
         self.btnAge.installEventFilter(self)
         self.btnGender.installEventFilter(self)
         self.btnFear.installEventFilter(self)
@@ -81,7 +88,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent):
-        if event.buttons() & Qt.LeftButton and self._dragged:
+        if event.buttons() & Qt.LeftButton and self._dragged and self._dragged.isEnabled():
             drag = QDrag(self._dragged)
             pix = self._dragged.grab()
             if self._dragged is self.btnAge:
@@ -105,3 +112,24 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
     def _dragDestroyed(self):
         self._dragged = None
+
+    def _field_added(self, field: TemplateField):
+        self._enable_in_inventory(field, False)
+
+    def _enable_in_inventory(self, field: TemplateField, enabled: bool):
+        if field.id == age_field.id:
+            self.btnAge.setEnabled(enabled)
+        if field.id == gender_field.id:
+            self.btnGender.setEnabled(enabled)
+        if field.id == enneagram_field.id:
+            self.btnEnneagram.setEnabled(enabled)
+
+    def _field_selected(self, field: TemplateField):
+        self._selected_field = field
+        self.btnRemove.setEnabled(True)
+
+    def _remove_field(self):
+        self._enable_in_inventory(self._selected_field, True)
+        self.profile_editor.removeSelected()
+        self._selected_field = None
+        self.btnRemove.setDisabled(True)

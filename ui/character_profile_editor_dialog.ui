@@ -559,13 +559,6 @@ border-radius: 6px;</string>
          <number>2</number>
         </property>
         <item>
-         <widget class="QToolButton" name="toolButton">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
          <spacer name="horizontalSpacer_6">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -579,7 +572,10 @@ border-radius: 6px;</string>
          </spacer>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton_3">
+         <widget class="QToolButton" name="btnRemove">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string/>
           </property>
