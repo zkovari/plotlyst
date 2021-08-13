@@ -19,14 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
+import emoji
 from PyQt5.QtCore import Qt, QByteArray, QBuffer, QIODevice, QSize
 from PyQt5.QtGui import QImageReader, QImage
-from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox, QHBoxLayout
+from fbs_runtime import platform
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.widget.template import TemplateProfileView
 
 
 class CharacterEditor:
@@ -45,6 +49,20 @@ class CharacterEditor:
         else:
             self.character = Character('')
             self._new_character = True
+
+        if platform.is_windows():
+            self._emoji_font = emoji_font(14)
+        else:
+            self._emoji_font = emoji_font(20)
+        self.ui.lblNameEmoji.setFont(self._emoji_font)
+        self.ui.lblNameEmoji.setText(emoji.emojize(':bust_in_silhouette:'))
+
+        self.profile = TemplateProfileView(self.novel.character_profiles[0])
+        self._profile_container = QWidget()
+        self._profile_container.setLayout(QHBoxLayout())
+        self._profile_container.layout().addWidget(self.profile)
+        self._profile_container.layout().addWidget(spacer_widget())
+        self.ui.wdgProfile.layout().insertWidget(0, self._profile_container)
 
         self.ui.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
         self.ui.btnUploadAvatar.clicked.connect(self._upload_avatar)

@@ -28,13 +28,18 @@ ACTION_SCENE = 'action'
 REACTION_SCENE = 'reaction'
 
 
+@dataclass
+class TemplateValue:
+    id: uuid.UUID
+    value: Any
+
+
 @dataclass(unsafe_hash=True)
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     avatar: Optional[Any] = None
-    personality: str = ''
-    age: int = 0
+    template_values: List[TemplateValue] = field(default_factory=list)
 
 
 class NpcCharacter(Character):
@@ -284,7 +289,7 @@ class SelectionType(Enum):
 class SelectionItem:
     text: str
     icon: str = ''
-    icon_color: str = ''
+    icon_color: str = 'black'
 
 
 @dataclass
@@ -309,22 +314,51 @@ age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
                           id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), compact=True)
 gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECTION,
                              id=uuid.UUID('dd5421f5-b332-4295-8020-e69c482a2ac5'),
-                             selections=[SelectionItem('Male'), SelectionItem('Female')], compact=True, exclusive=True)
+                             selections=[SelectionItem('Male', icon='mdi.gender-male', icon_color='#067bc2'),
+                                         SelectionItem('Female', icon='mdi.gender-female', icon_color='#832161')],
+                             compact=True, exclusive=True)
 enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
                                 id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
-                                selections=[SelectionItem('The Reformer'), SelectionItem('The Helper'),
-                                            SelectionItem('The Achiever'),
-                                            SelectionItem('The Individualist'), SelectionItem('The Investigator'),
-                                            SelectionItem('The Loyalist'),
-                                            SelectionItem('The Enthusiast'), SelectionItem('The Challenger'),
-                                            SelectionItem('The Peacemaker')], compact=True)
+                                selections=[SelectionItem('The Reformer', icon='mdi.numeric-1-box-outline',
+                                                          icon_color='#1f487e'),
+                                            SelectionItem('The Helper', icon='mdi.numeric-2-box-outline',
+                                                          icon_color='#7ae7c7'),
+                                            SelectionItem('The Achiever', icon='mdi.numeric-3-box-outline',
+                                                          icon_color='#297045'),
+                                            SelectionItem('The Individualist', icon='mdi.numeric-4-box-outline',
+                                                          icon_color='#4d8b31'),
+                                            SelectionItem('The Investigator', icon='mdi.numeric-5-box-outline',
+                                                          icon_color='#ffc600'),
+                                            SelectionItem('The Loyalist', icon='mdi.numeric-6-box-outline',
+                                                          icon_color='#ff6b35'),
+                                            SelectionItem('The Enthusiast', icon='mdi.numeric-7-box-outline',
+                                                          icon_color='#ec0b43'),
+                                            SelectionItem('The Challenger', icon='mdi.numeric-8-box-outline',
+                                                          icon_color='#4f0147'),
+                                            SelectionItem('The Peacemaker', icon='mdi.numeric-9-box-outline',
+                                                          icon_color='#3a015c')],
+                                compact=True)
 
 
 @dataclass
-class CharacterProfileTemplate:
+class ProfileElement:
+    field: TemplateField
+    row: int
+    col: int
+
+
+@dataclass
+class ProfileTemplate:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    fields: List[TemplateField] = field(default_factory=list)
+    elements: List[ProfileElement] = field(default_factory=list)
+
+
+def default_character_profiles() -> List[ProfileTemplate]:
+    fields = [ProfileElement(enneagram_field, 0, 0), ProfileElement(gender_field, 0, 1)]
+    return [ProfileTemplate(title='Default character template',
+                            id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
+                            elements=fields)]
 
 
 @dataclass
@@ -335,6 +369,7 @@ class Novel(NovelDescriptor):
     story_lines: List[StoryLine] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
+    character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title

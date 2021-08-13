@@ -28,7 +28,8 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem
+from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
+    ProfileTemplate
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 
 
@@ -64,7 +65,12 @@ def placeholder() -> QWidget:
 
 
 def _icon(item: SelectionItem) -> QIcon:
-    return QIcon(qtawesome.icon(item.icon)) if item.icon else QIcon('')
+    if item.icon:
+        if item.icon.startswith('md'):
+            return QIcon(qtawesome.icon(item.icon, color=item.icon_color, options=[{'scale_factor': 1.4}]))
+        return QIcon(qtawesome.icon(item.icon, color=item.icon_color))
+    else:
+        return QIcon('')
 
 
 class ButtonSelectionWidget(QWidget):
@@ -77,16 +83,17 @@ class ButtonSelectionWidget(QWidget):
         self.setLayout(self.layout)
 
         self.group = QButtonGroup()
+        self.group.setExclusive(self.field.exclusive)
         self.buttons = []
         for item in self.field.selections:
             btn = QToolButton()
             btn.setIcon(_icon(item))
             btn.setToolTip(item.text)
             btn.setCheckable(True)
+            btn.setCursor(Qt.PointingHandCursor)
             self.buttons.append(btn)
             self.layout.addWidget(btn)
-            if self.field.exclusive:
-                self.group.addButton(btn)
+            self.group.addButton(btn)
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent):
@@ -229,4 +236,12 @@ class TemplateProfileEditor(TemplateProfile):
 
 
 class TemplateProfileView(TemplateProfile):
-    pass
+    def __init__(self, profile: ProfileTemplate):
+        super(TemplateProfileView, self).__init__()
+        self.profile = profile
+
+        self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
+        self._selected: Optional[TemplateFieldWidget] = None
+
+        for el in self.profile.elements:
+            self.gridLayout.addWidget(TemplateFieldWidget(el.field), el.row, el.col)
