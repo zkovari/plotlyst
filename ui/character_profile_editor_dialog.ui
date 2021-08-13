@@ -591,7 +591,12 @@ border-radius: 6px;</string>
      <item>
       <widget class="QWidget" name="wdgEditor" native="true">
        <property name="styleSheet">
-        <string notr="true">background-color: rgb(255, 255, 255);</string>
+        <string notr="true">QWidget#wdgEditor {
+background-color: rgb(255, 255, 255);
+}</string>
+       </property>
+       <property name="whiteBg" stdset="0">
+        <bool>true</bool>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2"/>
       </widget>

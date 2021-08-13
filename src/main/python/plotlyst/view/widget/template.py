@@ -23,7 +23,7 @@ from typing import Optional
 import emoji
 import qtawesome
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QIcon
+from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QIcon, QMouseEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup
 from overrides import overrides
@@ -44,7 +44,6 @@ class TemplateProfile(QFrame):
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
-        self.setStyleSheet('QFrame#TemplateProfile {background-color: white;}')
 
 
 def placeholder() -> QWidget:
@@ -89,6 +88,10 @@ class ButtonSelectionWidget(QWidget):
             if self.field.exclusive:
                 self.group.addButton(btn)
 
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        event.ignore()
+
 
 class TemplateFieldWidget(QWidget):
     def __init__(self, field: TemplateField, parent=None):
@@ -114,15 +117,20 @@ class TemplateFieldWidget(QWidget):
             self.layout.addWidget(spacer_widget())
 
     def setReadOnly(self, readOnly: bool):
-        if isinstance(self.wdgEditor, (QLineEdit, QSpinBox)):
-            self.wdgEditor.setReadOnly(readOnly)
-        elif isinstance(self.wdgEditor, QComboBox):
-            for i in range(self.wdgEditor.count()):
-                item = self.wdgEditor.model().item(i)
-                if readOnly:
-                    item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
-                else:
-                    item.setFlags(item.flags() | Qt.ItemIsEnabled)
+        self.wdgEditor.setDisabled(readOnly)
+        # if isinstance(self.wdgEditor, (QLineEdit, QSpinBox)):
+        #     self.wdgEditor.setReadOnly(readOnly)
+        # elif isinstance(self.wdgEditor, QComboBox):
+        #     for i in range(self.wdgEditor.count()):
+        #         item = self.wdgEditor.model().item(i)
+        #         if readOnly:
+        #             item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
+        #         else:
+        #             item.setFlags(item.flags() | Qt.ItemIsEnabled)
+
+    # @overrides
+    # def mouseReleaseEvent(self, event: QMouseEvent):
+    #     print(event.pos())
 
     def _fieldWidget(self) -> QWidget:
         if self.field.type == TemplateFieldType.NUMERIC:
@@ -148,6 +156,7 @@ class TemplateProfileEditor(TemplateProfile):
     def __init__(self):
         super(TemplateProfileEditor, self).__init__()
         self.setAcceptDrops(True)
+        self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
 
         for row in range(3):
             for col in range(2):
@@ -173,6 +182,10 @@ class TemplateProfileEditor(TemplateProfile):
         item: QLayoutItem = self.gridLayout.takeAt(index)
         item.widget().deleteLater()
         self.gridLayout.addWidget(widget_to_drop, *pos)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        print(event.pos())
 
     def get_index(self, pos) -> Optional[int]:
         for i in range(self.gridLayout.count()):
