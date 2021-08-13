@@ -265,6 +265,49 @@ class NovelDescriptor:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
+class TemplateFieldType(Enum):
+    TEXT = 0
+    TEXT_AREA = 1
+    TEXT_SELECTION = 2
+    BUTTON_SELECTION = 3
+
+
+class SelectionType(Enum):
+    SINGLE_LIST = 0
+    CHECKBOX = 1
+    CHECKED_BUTTON = 2
+    TAGS = 3
+
+
+@dataclass
+class SelectionItem:
+    text: str
+    icon: str = ''
+    icon_color: str = ''
+
+
+@dataclass
+class TemplateField:
+    name: str
+    type: TemplateFieldType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    description: str = ''
+    emoji: str = ''
+    placeholder: str = ''
+    selections: List[SelectionItem] = field(default_factory=list)
+    highlighted: bool = False
+    required: bool = False
+    exclusive: bool = False
+    custom: bool = False
+
+
+@dataclass
+class CharacterProfileTemplate:
+    title: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    fields: List[TemplateField] = field(default_factory=list)
+
+
 @dataclass
 class Novel(NovelDescriptor):
     story_structure: StoryStructure = default_story_structures[0]
