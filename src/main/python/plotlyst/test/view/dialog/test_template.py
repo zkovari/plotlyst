@@ -3,8 +3,8 @@ from unittest.mock import create_autospec
 from PyQt5 import QtCore
 from PyQt5.QtGui import QMouseEvent
 
-from src.main.python.plotlyst.core.domain import ProfileTemplate, fear_field, goal_field, desire_field, misbelief_field, \
-    age_field, enneagram_field, gender_field, default_character_profiles
+from src.main.python.plotlyst.core.domain import ProfileTemplate, fear_field, goal_field, desire_field, \
+    misbelief_field, age_field, enneagram_field, gender_field, default_character_profiles
 from src.main.python.plotlyst.view.dialog.template import CharacterProfileEditorDialog
 
 
