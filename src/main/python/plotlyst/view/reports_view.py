@@ -77,8 +77,8 @@ class ReportsView(AbstractNovelView):
         self.scenes_model = ScenesTableModel(self.novel)
         self._scenes_proxy = ScenesFilterProxyModel()
         self._scenes_proxy.setSourceModel(self.scenes_model)
-        povs = set([x.pov for x in self.novel.scenes])
-        for pov in povs:
+
+        for pov in self.novel.pov_characters():
             self._scenes_proxy.setCharacterFilter(pov, False)
 
         self.ui.tblScenes.setModel(self._scenes_proxy)
@@ -118,8 +118,7 @@ class ReportsView(AbstractNovelView):
 
     def _arc_character_toggled(self, character: Character):
         self._arc_character = character
-        povs = set([x.pov for x in self.novel.scenes])
-        for pov in povs:
+        for pov in self.novel.pov_characters():
             self._scenes_proxy.setCharacterFilter(pov, False)
         if self.novel.characters:
             self._scenes_proxy.setCharacterFilter(character, True)

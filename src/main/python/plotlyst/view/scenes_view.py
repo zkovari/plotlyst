@@ -27,7 +27,7 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QMenu, QAction
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Scene, Novel
+from src.main.python.plotlyst.core.domain import Scene, Novel, Character
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
@@ -115,7 +115,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnFilter.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
 
-        for pov in set([x.pov for x in self.novel.scenes if x.pov]):
+        for pov in self.novel.pov_characters():
             self._add_pov_filter_action(pov)
 
         self.ui.tblScenes.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -131,7 +131,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-    def _add_pov_filter_action(self, pov):
+    def _add_pov_filter_action(self, pov: Character):
         action = QAction(pov.name, self.ui.btnFilter)
         action.setCheckable(True)
         action.setChecked(True)

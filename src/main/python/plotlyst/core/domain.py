@@ -28,13 +28,18 @@ ACTION_SCENE = 'action'
 REACTION_SCENE = 'reaction'
 
 
-@dataclass(unsafe_hash=True)
+@dataclass
+class TemplateValue:
+    id: uuid.UUID
+    value: Any
+
+
+@dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     avatar: Optional[Any] = None
-    personality: str = ''
-    age: int = 0
+    template_values: List[TemplateValue] = field(default_factory=list)
 
 
 class NpcCharacter(Character):
@@ -265,6 +270,105 @@ class NovelDescriptor:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
+class TemplateFieldType(Enum):
+    TEXT = 0
+    TEXT_AREA = 1
+    TEXT_SELECTION = 2
+    BUTTON_SELECTION = 3
+    NUMERIC = 4
+
+
+class SelectionType(Enum):
+    SINGLE_LIST = 0
+    CHECKBOX = 1
+    CHECKED_BUTTON = 2
+    TAGS = 3
+
+
+@dataclass
+class SelectionItem:
+    text: str
+    icon: str = ''
+    icon_color: str = 'black'
+
+
+@dataclass
+class TemplateField:
+    name: str
+    type: TemplateFieldType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    description: str = ''
+    emoji: str = ''
+    placeholder: str = ''
+    selections: List[SelectionItem] = field(default_factory=list)
+    highlighted: bool = False
+    required: bool = False
+    exclusive: bool = False
+    custom: bool = False
+    min_value: int = 0
+    max_value = 99999
+    compact: bool = False
+
+
+age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
+                          id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), compact=True)
+gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECTION,
+                             id=uuid.UUID('dd5421f5-b332-4295-8020-e69c482a2ac5'),
+                             selections=[SelectionItem('Male', icon='mdi.gender-male', icon_color='#067bc2'),
+                                         SelectionItem('Female', icon='mdi.gender-female', icon_color='#832161')],
+                             compact=True, exclusive=True)
+enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
+                                id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
+                                selections=[SelectionItem('Perfectionist', icon='mdi.numeric-1-box-outline',
+                                                          icon_color='#1f487e'),
+                                            SelectionItem('Giver', icon='mdi.numeric-2-box-outline',
+                                                          icon_color='#7ae7c7'),
+                                            SelectionItem('Achiever', icon='mdi.numeric-3-box-outline',
+                                                          icon_color='#297045'),
+                                            SelectionItem('Individualist', icon='mdi.numeric-4-box-outline',
+                                                          icon_color='#4d8b31'),
+                                            SelectionItem('Investigator', icon='mdi.numeric-5-box-outline',
+                                                          icon_color='#ffc600'),
+                                            SelectionItem('Skeptic', icon='mdi.numeric-6-box-outline',
+                                                          icon_color='#ff6b35'),
+                                            SelectionItem('Enthusiast', icon='mdi.numeric-7-box-outline',
+                                                          icon_color='#ec0b43'),
+                                            SelectionItem('Challenger', icon='mdi.numeric-8-box-outline',
+                                                          icon_color='#4f0147'),
+                                            SelectionItem('Peacemaker', icon='mdi.numeric-9-box-outline',
+                                                          icon_color='#3a015c')],
+                                compact=True)
+goal_field = TemplateField('Goal', type=TemplateFieldType.TEXT,
+                           id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'))
+misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.TEXT,
+                                id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'))
+fear_field = TemplateField('Fear', type=TemplateFieldType.TEXT,
+                           id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'))
+desire_field = TemplateField('Desire', type=TemplateFieldType.TEXT,
+                             id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'))
+
+
+@dataclass
+class ProfileElement:
+    field: TemplateField
+    row: int
+    col: int
+
+
+@dataclass
+class ProfileTemplate:
+    title: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    elements: List[ProfileElement] = field(default_factory=list)
+
+
+def default_character_profiles() -> List[ProfileTemplate]:
+    fields = [ProfileElement(enneagram_field, 0, 0), ProfileElement(gender_field, 0, 1)]
+    return [ProfileTemplate(title='Default character template',
+                            id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
+                            elements=fields)]
+
+
 @dataclass
 class Novel(NovelDescriptor):
     story_structure: StoryStructure = default_story_structures[0]
@@ -273,6 +377,7 @@ class Novel(NovelDescriptor):
     story_lines: List[StoryLine] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
+    character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title
@@ -284,6 +389,16 @@ class Novel(NovelDescriptor):
         self.chapters.extend(updated_novel.chapters)
         self.story_lines.clear()
         self.story_lines.extend(updated_novel.story_lines)
+
+    def pov_characters(self) -> List[Character]:
+        pov_ids = set()
+        povs: List[Character] = []
+        for scene in self.scenes:
+            if scene.pov and str(scene.pov.id) not in pov_ids:
+                povs.append(scene.pov)
+                pov_ids.add(str(scene.pov.id))
+
+        return povs
 
 
 @dataclass

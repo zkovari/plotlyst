@@ -32,7 +32,7 @@ from dataclasses_json import dataclass_json, Undefined
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
-    default_story_structures, NovelDescriptor
+    default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -98,6 +98,7 @@ class CharacterInfo:
     name: str
     id: uuid.UUID
     avatar_id: Optional[uuid.UUID] = None
+    template_values: List[TemplateValue] = field(default_factory=list)
 
 
 @dataclass
@@ -165,6 +166,7 @@ class NovelInfo:
     storylines: List[StorylineInfo] = field(default_factory=list)
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
+    character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
 
 
 @dataclass
@@ -312,7 +314,7 @@ class JsonClient:
             with open(path) as json_file:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
-                character = Character(name=info.name, id=info.id)
+                character = Character(name=info.name, id=info.id, template_values=info.template_values)
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -384,7 +386,7 @@ class JsonClient:
 
         return Novel(title=project_novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
-                     story_structure=story_structure)
+                     story_structure=story_structure, character_profiles=novel_info.character_profiles)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -408,12 +410,13 @@ class JsonClient:
                                storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
                                            novel.story_lines], characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
-                               stages=novel.stages, story_structure=novel.story_structure.id)
+                               stages=novel.stages, story_structure=novel.story_structure.id,
+                               character_profiles=novel.character_profiles)
 
         self.__persist_info(self.novels_dir, novel_info)
 
     def _persist_character(self, char: Character):
-        char_info = CharacterInfo(id=char.id, name=char.name)
+        char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
