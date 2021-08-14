@@ -27,7 +27,8 @@ from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
-    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate
+    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
+    desire_field
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
@@ -106,6 +107,14 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = gender_field
             elif self._dragged is self.btnEnneagram:
                 field = enneagram_field
+            elif self._dragged is self.btnGoal:
+                field = goal_field
+            elif self._dragged is self.btnFear:
+                field = fear_field
+            elif self._dragged is self.btnMisbelief:
+                field = misbelief_field
+            elif self._dragged is self.btnDesire:
+                field = desire_field
             else:
                 field = TemplateField(name=self._dragged.text(), type=TemplateFieldType.TEXT)
             mimedata = QMimeData()
@@ -133,10 +142,18 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
     def _enable_in_inventory(self, field: TemplateField, enabled: bool):
         if field.id == age_field.id:
             self.btnAge.setEnabled(enabled)
-        if field.id == gender_field.id:
+        elif field.id == gender_field.id:
             self.btnGender.setEnabled(enabled)
-        if field.id == enneagram_field.id:
+        elif field.id == enneagram_field.id:
             self.btnEnneagram.setEnabled(enabled)
+        elif field.id == goal_field.id:
+            self.btnGoal.setEnabled(enabled)
+        elif field.id == fear_field.id:
+            self.btnFear.setEnabled(enabled)
+        elif field.id == desire_field.id:
+            self.btnDesire.setEnabled(enabled)
+        elif field.id == misbelief_field.id:
+            self.btnMisbelief.setEnabled(enabled)
 
     def _field_selected(self, field: TemplateField):
         self._selected_field = field

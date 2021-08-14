@@ -338,6 +338,14 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                             SelectionItem('Peacemaker', icon='mdi.numeric-9-box-outline',
                                                           icon_color='#3a015c')],
                                 compact=True)
+goal_field = TemplateField('Goal', type=TemplateFieldType.TEXT,
+                           id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'))
+misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.TEXT,
+                                id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'))
+fear_field = TemplateField('Fear', type=TemplateFieldType.TEXT,
+                           id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'))
+desire_field = TemplateField('Desire', type=TemplateFieldType.TEXT,
+                             id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'))
 
 
 @dataclass
