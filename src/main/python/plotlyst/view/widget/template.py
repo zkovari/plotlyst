@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
-from typing import Optional
+from typing import Optional, List, Any
 
 import emoji
 import qtawesome
@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate
+    ProfileTemplate, TemplateValue
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 
 
@@ -85,7 +85,7 @@ class ButtonSelectionWidget(QWidget):
         self.group = QButtonGroup()
         self.group.setExclusive(self.field.exclusive)
         self.buttons = []
-        for item in self.field.selections:
+        for i, item in enumerate(self.field.selections):
             btn = QToolButton()
             btn.setIcon(_icon(item))
             btn.setToolTip(item.text)
@@ -93,11 +93,24 @@ class ButtonSelectionWidget(QWidget):
             btn.setCursor(Qt.PointingHandCursor)
             self.buttons.append(btn)
             self.layout.addWidget(btn)
-            self.group.addButton(btn)
+            self.group.addButton(btn, i)
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent):
         event.ignore()
+
+    def value(self) -> List[int]:
+        values = []
+        for btn in self.group.buttons():
+            if btn.isChecked():
+                values.append(self.group.id(btn))
+        return values
+
+    def setValue(self, value: List[int]):
+        for v in value:
+            btn = self.group.button(v)
+            if btn:
+                btn.setChecked(True)
 
 
 class TemplateFieldWidget(QFrame):
@@ -133,6 +146,26 @@ class TemplateFieldWidget(QFrame):
 
     def deselect(self):
         self.setStyleSheet('')
+
+    def value(self) -> Any:
+        if isinstance(self.wdgEditor, QSpinBox):
+            return self.wdgEditor.value()
+        if isinstance(self.wdgEditor, QLineEdit):
+            return self.wdgEditor.text()
+        if isinstance(self.wdgEditor, QComboBox):
+            return self.wdgEditor.currentText()
+        if isinstance(self.wdgEditor, ButtonSelectionWidget):
+            return self.wdgEditor.value()
+
+    def setValue(self, value: Any):
+        if isinstance(self.wdgEditor, QSpinBox):
+            self.wdgEditor.setValue(value)
+        if isinstance(self.wdgEditor, QLineEdit):
+            self.wdgEditor.setText(value)
+        if isinstance(self.wdgEditor, QComboBox):
+            self.wdgEditor.setCurrentText(value)
+        if isinstance(self.wdgEditor, ButtonSelectionWidget):
+            self.wdgEditor.setValue(value)
 
     def _fieldWidget(self) -> QWidget:
         if self.field.type == TemplateFieldType.NUMERIC:
@@ -243,5 +276,28 @@ class TemplateProfileView(TemplateProfile):
         self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
         self._selected: Optional[TemplateFieldWidget] = None
 
+        self.widgets = []
         for el in self.profile.elements:
-            self.gridLayout.addWidget(TemplateFieldWidget(el.field), el.row, el.col)
+            widget = TemplateFieldWidget(el.field)
+            self.widgets.append(widget)
+            self.gridLayout.addWidget(widget, el.row, el.col)
+
+    def values(self) -> List[TemplateValue]:
+        values: List[TemplateValue] = []
+        for widget in self.widgets:
+            # item = self.gridLayout.itemAt(i)
+            # if item:
+            #     widget = item.widget()
+            #     if isinstance(widget, TemplateFieldWidget):
+            values.append(TemplateValue(id=widget.field.id, value=widget.value()))
+
+        return values
+
+    def setValues(self, values: List[TemplateValue]):
+        ids = {}
+        for value in values:
+            ids[str(value.id)] = value.value
+
+        for widget in self.widgets:
+            if str(widget.field.id) in ids.keys():
+                widget.setValue(ids[str(widget.field.id)])

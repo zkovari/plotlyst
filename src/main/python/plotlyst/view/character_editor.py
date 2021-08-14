@@ -58,6 +58,7 @@ class CharacterEditor:
         self.ui.lblNameEmoji.setText(emoji.emojize(':bust_in_silhouette:'))
 
         self.profile = TemplateProfileView(self.novel.character_profiles[0])
+        self.profile.setValues(self.character.template_values)
         self._profile_container = QWidget()
         self._profile_container.setLayout(QHBoxLayout())
         self._profile_container.layout().addWidget(self.profile)
@@ -103,6 +104,7 @@ class CharacterEditor:
         if not name:
             return
         self.character.name = name
+        self.character.template_values = self.profile.values()
         if self._new_character:
             self.novel.characters.append(self.character)
             client.insert_character(self.novel, self.character)
