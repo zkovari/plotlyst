@@ -36,7 +36,6 @@ from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
-from src.main.python.plotlyst.view.dialog.template import CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -45,6 +44,7 @@ from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.tasks_view import TasksWidget
+from src.main.python.plotlyst.worker.persistence import customize_character_profile
 
 
 class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
@@ -190,7 +190,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionPaste.setIcon(IconRegistry.paste_icon())
         self.actionPaste.triggered.connect(self._paste_text)
 
-        self.actionCharacterTemplateEditor.triggered.connect(lambda: CharacterProfileEditorDialog().display())
+        self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
         tasks_button = QToolButton(self.toolBar)

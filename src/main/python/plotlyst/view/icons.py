@@ -256,10 +256,14 @@ class IconRegistry:
     def progress_check_icon() -> QIcon:
         return qtawesome.icon('mdi.progress-check', color='darkblue', options=[{'scale_factor': 1.2}])
 
+    @staticmethod
+    def customization_icon() -> QIcon:
+        return qtawesome.icon('fa5s.sliders-h')
+
 
 class AvatarsRegistry:
     def __init__(self):
-        self._avatars: Dict[int, QPixmap] = {}
+        self._avatars: Dict[str, QPixmap] = {}
 
     def pixmap(self, character: Character) -> QPixmap:
         if character.id not in self._avatars:
@@ -268,12 +272,12 @@ class AvatarsRegistry:
                 pixmap = QPixmap()
                 if array:
                     pixmap.loadFromData(array)
-                self._avatars[character.id] = rounded_pixmap(pixmap)
+                self._avatars[str(character.id)] = rounded_pixmap(pixmap)
             else:
                 icon = self.name_initial_icon(character)
-                self._avatars[character.id] = icon.pixmap(QSize(64, 64))
+                self._avatars[str(character.id)] = icon.pixmap(QSize(64, 64))
 
-        return self._avatars[character.id]
+        return self._avatars[str(character.id)]
 
     def name_initial_icon(self, character: Character) -> QIcon:
         _sum = sum([ord(x) for x in character.name])
@@ -288,7 +292,7 @@ class AvatarsRegistry:
 
     def update(self, character: Character):
         if character.id in self._avatars.keys():
-            self._avatars.pop(character.id)
+            self._avatars.pop(str(character.id))
         self.pixmap(character)
 
 

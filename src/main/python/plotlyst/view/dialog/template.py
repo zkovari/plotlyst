@@ -27,20 +27,21 @@ from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
-    enneagram_field, TemplateField, TemplateFieldType
+    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.template import TemplateProfileEditor
+from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
 
 
 class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
     MimeType: str = 'application/template-field'
 
-    def __init__(self, parent=None):
+    def __init__(self, profile: ProfileTemplate, parent=None):
         super().__init__(parent)
 
         self.setupUi(self)
         self.wdgFieldProperties.setVisible(False)
+        self.profile = profile
 
         self.btnAge.setIcon(qtawesome.icon('mdi.numeric', options=[{'scale_factor': 1.4}]))
         self.btnGender.setIcon(qtawesome.icon('mdi.gender-female', color='#fface4', options=[{'scale_factor': 1.4}]))
@@ -50,10 +51,15 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnMbti.setIcon(qtawesome.icon('fa.group'))
         self.btnDesire.setIcon(qtawesome.icon('fa5s.coins', color='#e1bc29'))
         self.btnMisbelief.setIcon(IconRegistry.error_icon())
-        self.profile_editor = TemplateProfileEditor()
+        self.profile_editor = ProfileTemplateEditor(self.profile)
         self.wdgEditor.layout().addWidget(self.profile_editor)
 
+        for w in self.profile_editor.widgets:
+            self._field_added(w.field)
+
         self._selected_field: Optional[TemplateField] = None
+
+        self.lineName.setText(self.profile.title)
 
         self.profile_editor.fieldAdded.connect(self._field_added)
         self.profile_editor.fieldSelected.connect(self._field_selected)
@@ -70,6 +76,9 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnMisbelief.installEventFilter(self)
 
         self._dragged: Optional[QToolButton] = None
+
+        self.btnCancel.clicked.connect(self.reject)
+        self.btnSave.clicked.connect(self.accept)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -107,8 +116,13 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             drag.destroyed.connect(self._dragDestroyed)
             drag.exec_()
 
-    def display(self):
-        self.exec()
+    def display(self) -> Optional[ProfileTemplate]:
+        result = self.exec()
+
+        if result == QDialog.Rejected:
+            return None
+
+        return self.profile_editor.profile()
 
     def _dragDestroyed(self):
         self._dragged = None

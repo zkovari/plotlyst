@@ -29,15 +29,15 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate, TemplateValue
+    ProfileTemplate, TemplateValue, ProfileElement
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 
 
-class TemplateProfile(QFrame):
+class _ProfileTemplateBase(QFrame):
 
-    def __init__(self, parent=None):
+    def __init__(self, profile: ProfileTemplate, parent=None):
         super().__init__(parent)
-
+        self._profile = profile
         self.layout = QHBoxLayout(self)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
@@ -45,6 +45,15 @@ class TemplateProfile(QFrame):
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
+
+        self.widgets = []
+        self._initGrid()
+
+    def _initGrid(self):
+        for el in self._profile.elements:
+            widget = TemplateFieldWidget(el.field)
+            self.widgets.append(widget)
+            self.gridLayout.addWidget(widget, el.row, el.col)
 
 
 def placeholder() -> QWidget:
@@ -139,7 +148,7 @@ class TemplateFieldWidget(QFrame):
 
     @overrides
     def setEnabled(self, enabled: bool):
-        self.wdgEditor.setDisabled(enabled)
+        self.wdgEditor.setEnabled(enabled)
 
     def select(self):
         self.setStyleSheet('QFrame[mainFrame=true] {border: 2px dashed #0496ff;}')
@@ -185,21 +194,36 @@ class TemplateFieldWidget(QFrame):
         return widget
 
 
-class TemplateProfileEditor(TemplateProfile):
+class ProfileTemplateEditor(_ProfileTemplateBase):
     MimeType: str = 'application/template-field'
 
     fieldSelected = pyqtSignal(TemplateField)
     fieldAdded = pyqtSignal(TemplateField)
 
-    def __init__(self):
-        super(TemplateProfileEditor, self).__init__()
+    def __init__(self, profile: ProfileTemplate):
+        super(ProfileTemplateEditor, self).__init__(profile)
         self.setAcceptDrops(True)
         self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
         self._selected: Optional[TemplateFieldWidget] = None
 
+        for w in self.widgets:
+            w.setEnabled(False)
+
         for row in range(4):
             for col in range(2):
-                self.gridLayout.addWidget(placeholder(), row, col)
+                if not self.gridLayout.itemAtPosition(row, col):
+                    self.gridLayout.addWidget(placeholder(), row, col)
+
+    def profile(self) -> ProfileTemplate:
+        elements = []
+        for i in range(self.gridLayout.count()):
+            item = self.gridLayout.itemAt(i)
+            if item and isinstance(item.widget(), TemplateFieldWidget):
+                pos = self.gridLayout.getItemPosition(i)
+                elements.append(ProfileElement(item.widget().field, row=pos[0], col=pos[1]))
+
+        self._profile.elements = elements
+        return self._profile
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent):
@@ -227,11 +251,12 @@ class TemplateProfileEditor(TemplateProfile):
 
         field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
         widget_to_drop = TemplateFieldWidget(field)
-        widget_to_drop.setEnabled(True)
+        widget_to_drop.setEnabled(False)
         pos = self.gridLayout.getItemPosition(index)
         item: QLayoutItem = self.gridLayout.takeAt(index)
         item.widget().deleteLater()
         self.gridLayout.addWidget(widget_to_drop, *pos)
+        self.widgets.append(widget_to_drop)
 
         self.fieldAdded.emit(field)
         self._select(widget_to_drop)
@@ -259,6 +284,7 @@ class TemplateProfileEditor(TemplateProfile):
             pos = self.gridLayout.getItemPosition(index)
             self.gridLayout.removeWidget(self._selected)
             self.gridLayout.addWidget(placeholder(), *pos)
+            self.widgets.remove(self._selected)
             self._selected.deleteLater()
             self._selected = None
 
@@ -268,27 +294,16 @@ class TemplateProfileEditor(TemplateProfile):
                 return i
 
 
-class TemplateProfileView(TemplateProfile):
+class ProfileTemplateView(_ProfileTemplateBase):
     def __init__(self, profile: ProfileTemplate):
-        super(TemplateProfileView, self).__init__()
-        self.profile = profile
+        super(ProfileTemplateView, self).__init__(profile)
 
         self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
         self._selected: Optional[TemplateFieldWidget] = None
 
-        self.widgets = []
-        for el in self.profile.elements:
-            widget = TemplateFieldWidget(el.field)
-            self.widgets.append(widget)
-            self.gridLayout.addWidget(widget, el.row, el.col)
-
     def values(self) -> List[TemplateValue]:
         values: List[TemplateValue] = []
         for widget in self.widgets:
-            # item = self.gridLayout.itemAt(i)
-            # if item:
-            #     widget = item.widget()
-            #     if isinstance(widget, TemplateFieldWidget):
             values.append(TemplateValue(id=widget.field.id, value=widget.value()))
 
         return values
