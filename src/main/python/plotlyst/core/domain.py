@@ -34,7 +34,7 @@ class TemplateValue:
     value: Any
 
 
-@dataclass(unsafe_hash=True)
+@dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -319,23 +319,23 @@ gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECT
                              compact=True, exclusive=True)
 enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
                                 id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
-                                selections=[SelectionItem('The Reformer', icon='mdi.numeric-1-box-outline',
+                                selections=[SelectionItem('Perfectionist', icon='mdi.numeric-1-box-outline',
                                                           icon_color='#1f487e'),
-                                            SelectionItem('The Helper', icon='mdi.numeric-2-box-outline',
+                                            SelectionItem('Giver', icon='mdi.numeric-2-box-outline',
                                                           icon_color='#7ae7c7'),
-                                            SelectionItem('The Achiever', icon='mdi.numeric-3-box-outline',
+                                            SelectionItem('Achiever', icon='mdi.numeric-3-box-outline',
                                                           icon_color='#297045'),
-                                            SelectionItem('The Individualist', icon='mdi.numeric-4-box-outline',
+                                            SelectionItem('Individualist', icon='mdi.numeric-4-box-outline',
                                                           icon_color='#4d8b31'),
-                                            SelectionItem('The Investigator', icon='mdi.numeric-5-box-outline',
+                                            SelectionItem('Investigator', icon='mdi.numeric-5-box-outline',
                                                           icon_color='#ffc600'),
-                                            SelectionItem('The Loyalist', icon='mdi.numeric-6-box-outline',
+                                            SelectionItem('Skeptic', icon='mdi.numeric-6-box-outline',
                                                           icon_color='#ff6b35'),
-                                            SelectionItem('The Enthusiast', icon='mdi.numeric-7-box-outline',
+                                            SelectionItem('Enthusiast', icon='mdi.numeric-7-box-outline',
                                                           icon_color='#ec0b43'),
-                                            SelectionItem('The Challenger', icon='mdi.numeric-8-box-outline',
+                                            SelectionItem('Challenger', icon='mdi.numeric-8-box-outline',
                                                           icon_color='#4f0147'),
-                                            SelectionItem('The Peacemaker', icon='mdi.numeric-9-box-outline',
+                                            SelectionItem('Peacemaker', icon='mdi.numeric-9-box-outline',
                                                           icon_color='#3a015c')],
                                 compact=True)
 
@@ -381,6 +381,16 @@ class Novel(NovelDescriptor):
         self.chapters.extend(updated_novel.chapters)
         self.story_lines.clear()
         self.story_lines.extend(updated_novel.story_lines)
+
+    def pov_characters(self) -> List[Character]:
+        pov_ids = set()
+        povs: List[Character] = []
+        for scene in self.scenes:
+            if scene.pov and str(scene.pov.id) not in pov_ids:
+                povs.append(scene.pov)
+                pov_ids.add(str(scene.pov.id))
+
+        return povs
 
 
 @dataclass

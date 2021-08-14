@@ -28,7 +28,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, Character, CharacterArc
+from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, Character
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -295,11 +295,11 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
 
     def __init__(self):
         super().__init__()
-        self.character_filter: Dict[Character, bool] = {}
+        self.character_filter: Dict[str, bool] = {}
         self.acts_filter: Dict[int, bool] = {}
 
     def setCharacterFilter(self, character: Character, filter: bool):
-        self.character_filter[character] = filter
+        self.character_filter[str(character.id)] = filter
         self.invalidateFilter()
 
     def setActsFilter(self, act: int, filter: bool):
@@ -316,7 +316,7 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
         scene: Scene = self.sourceModel().data(self.sourceModel().index(source_row, 0), role=ScenesTableModel.SceneRole)
         if not scene:
             return filtered
-        if not self.character_filter.get(scene.pov, True):
+        if scene.pov and not self.character_filter.get(str(scene.pov.id), True):
             return False
 
         for act, toggled in self.acts_filter.items():
