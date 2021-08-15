@@ -373,7 +373,6 @@ class ProfileTemplateView(_ProfileTemplateBase):
         self._avatar_widget.setCharacter(self.character)
         self.setProperty('mainFrame', True)
 
-        # self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
         self._selected: Optional[TemplateFieldWidget] = None
 
         self.setName(self.character.name)

@@ -72,7 +72,7 @@ class CharacterEditor:
         self._profile_with_toolbar.layout().setContentsMargins(0, 0, 0, 0)
         self._profile_with_toolbar.layout().addWidget(self._toolbar)
         self._profile_with_toolbar.layout().addWidget(self.profile)
-        self._profile_container = ProfileContainerWidget()
+        self._profile_container = QWidget()
         self._profile_container.setLayout(QHBoxLayout())
         self._profile_container.layout().setContentsMargins(0, 0, 0, 0)
         self._profile_container.layout().addWidget(self._profile_with_toolbar)
@@ -102,7 +102,3 @@ class CharacterEditor:
         else:
             client.update_character(self.character)
         self._new_character = False
-
-
-class ProfileContainerWidget(QWidget):
-    pass
