@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field
+    ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field, SelectionItemType
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
@@ -229,7 +229,10 @@ class TemplateFieldWidget(QFrame):
         elif self.field.type == TemplateFieldType.TEXT_SELECTION:
             widget = QComboBox()
             for item in self.field.selections:
-                widget.addItem(_icon(item), item.text)
+                if item.type == SelectionItemType.CHOICE:
+                    widget.addItem(_icon(item), item.text)
+                if item.type == SelectionItemType.SEPARATOR:
+                    widget.insertSeparator(widget.count())
         elif self.field.type == TemplateFieldType.BUTTON_SELECTION:
             widget = ButtonSelectionWidget(self.field)
         elif self.field.type == TemplateFieldType.IMAGE:

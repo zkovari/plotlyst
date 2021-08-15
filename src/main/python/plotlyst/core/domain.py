@@ -286,9 +286,15 @@ class SelectionType(Enum):
     TAGS = 3
 
 
+class SelectionItemType(Enum):
+    CHOICE = 0
+    SEPARATOR = 1
+
+
 @dataclass
 class SelectionItem:
     text: str
+    type: SelectionItemType = SelectionItemType.CHOICE
     icon: str = ''
     icon_color: str = 'black'
 
@@ -355,6 +361,21 @@ fear_field = TemplateField('Fear', type=TemplateFieldType.TEXT,
                            id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'))
 desire_field = TemplateField('Desire', type=TemplateFieldType.TEXT,
                              id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'))
+role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION,
+                           id=uuid.UUID('131b9de6-ac95-4db5-b9a1-33200100b676'),
+                           selections=[SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c'),
+                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
+                                       SelectionItem('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b'),
+                                       SelectionItem('Villain', icon='mdi.emoticon-devil', icon_color='#694966'),
+                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
+                                       SelectionItem('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a'),
+                                       SelectionItem('Confidant', icon='fa5s.user-friends', icon_color='#304d6d'),
+                                       SelectionItem('Love Interest', icon='ei.heart', icon_color='#d1495b'),
+                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
+                                       SelectionItem('Foil', icon='fa5s.yin-yang', icon_color='#947eb0'),
+                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
+                                       SelectionItem('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68'),
+                                       ], compact=True)
 
 
 @dataclass
@@ -375,8 +396,9 @@ class ProfileTemplate:
 
 def default_character_profiles() -> List[ProfileTemplate]:
     fields = [ProfileElement(name_field, 0, 0), ProfileElement(avatar_field, 0, 1, row_span=2),
-              ProfileElement(enneagram_field, 2, 0),
-              ProfileElement(gender_field, 2, 1)]
+              ProfileElement(role_field, 2, 0),
+              ProfileElement(enneagram_field, 3, 0),
+              ProfileElement(gender_field, 3, 1)]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
                             elements=fields)]

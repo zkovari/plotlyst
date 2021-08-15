@@ -4,7 +4,8 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QMouseEvent
 
 from src.main.python.plotlyst.core.domain import ProfileTemplate, fear_field, goal_field, desire_field, \
-    misbelief_field, age_field, enneagram_field, gender_field, default_character_profiles, name_field, avatar_field
+    misbelief_field, age_field, enneagram_field, gender_field, default_character_profiles, name_field, avatar_field, \
+    role_field
 from src.main.python.plotlyst.view.dialog.template import CharacterProfileEditorDialog
 
 
@@ -57,6 +58,7 @@ def test_default_template(qtbot):
 
     assert not diag.btnEnneagram.isEnabled()
     assert not diag.btnGender.isEnabled()
+    assert not diag.btnRole.isEnabled()
     assert diag.btnGoal.isEnabled()
     assert diag.btnFear.isEnabled()
     assert diag.btnDesire.isEnabled()
@@ -65,8 +67,10 @@ def test_default_template(qtbot):
     assert diag.btnMbti.isEnabled()
 
     assert diag.profile_editor.profile().elements
-    assert len(diag.profile_editor.profile().elements) == 4
-    assert name_field.id == diag.profile_editor.profile().elements[0].field.id
-    assert avatar_field.id == diag.profile_editor.profile().elements[1].field.id
-    assert enneagram_field.id == diag.profile_editor.profile().elements[2].field.id
-    assert gender_field.id == diag.profile_editor.profile().elements[3].field.id
+    assert len(diag.profile_editor.profile().elements) == 5
+    ids = [x.field.id for x in diag.profile_editor.profile().elements]
+    assert name_field.id in ids
+    assert avatar_field.id in ids
+    assert role_field.id in ids
+    assert enneagram_field.id in ids
+    assert gender_field.id in ids
