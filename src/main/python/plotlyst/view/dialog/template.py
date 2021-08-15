@@ -28,7 +28,8 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
-    desire_field
+    desire_field, default_character_profiles
+from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
@@ -41,8 +42,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         super().__init__(parent)
 
         self.setupUi(self)
-        self.wdgFieldProperties.setVisible(False)
         self.profile = profile
+        self._restore_requested: bool = False
 
         self.btnAge.setIcon(qtawesome.icon('mdi.numeric', options=[{'scale_factor': 1.4}]))
         self.btnGender.setIcon(qtawesome.icon('mdi.gender-female', color='#fface4', options=[{'scale_factor': 1.4}]))
@@ -52,8 +53,13 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnMbti.setIcon(qtawesome.icon('fa.group'))
         self.btnDesire.setIcon(qtawesome.icon('fa5s.coins', color='#e1bc29'))
         self.btnMisbelief.setIcon(IconRegistry.error_icon())
+        self.btnCustomText.setIcon(qtawesome.icon('mdi.format-text', options=[{'scale_factor': 1.2}]))
+
         self.profile_editor = ProfileTemplateEditor(self.profile)
         self.wdgEditor.layout().addWidget(self.profile_editor)
+
+        self.btnRestore.setIcon(IconRegistry.restore_alert_icon('white'))
+        self.btnRestore.clicked.connect(self._restore_default)
 
         for w in self.profile_editor.widgets:
             self._field_added(w.field)
@@ -67,6 +73,9 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnRemove.setIcon(IconRegistry.minus_icon())
         self.btnRemove.clicked.connect(self._remove_field)
 
+        self.lineLabel.setHidden(True)
+        self.lineLabel.textEdited.connect(self._label_edited)
+
         self.btnAge.installEventFilter(self)
         self.btnGender.installEventFilter(self)
         self.btnFear.installEventFilter(self)
@@ -75,9 +84,10 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnMbti.installEventFilter(self)
         self.btnDesire.installEventFilter(self)
         self.btnMisbelief.installEventFilter(self)
+        self.btnCustomText.installEventFilter(self)
 
         self._dragged: Optional[QToolButton] = None
-
+        self.cbShowLabel.clicked.connect(self._show_label_clicked)
         self.btnCancel.clicked.connect(self.reject)
         self.btnSave.clicked.connect(self.accept)
 
@@ -115,6 +125,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = misbelief_field
             elif self._dragged is self.btnDesire:
                 field = desire_field
+            elif self._dragged is self.btnCustomText:
+                field = TemplateField(name='Label', type=TemplateFieldType.TEXT, custom=True)
             else:
                 field = TemplateField(name=self._dragged.text(), type=TemplateFieldType.TEXT)
             mimedata = QMimeData()
@@ -130,7 +142,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
         if result == QDialog.Rejected:
             return None
-
+        if self._restore_requested:
+            return default_character_profiles()[0]
         return self.profile_editor.profile()
 
     def _dragDestroyed(self):
@@ -157,10 +170,37 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
     def _field_selected(self, field: TemplateField):
         self._selected_field = field
-        self.btnRemove.setEnabled(True)
+        self.btnRemove.setEnabled(not field.frozen)
+        self.cbShowLabel.setEnabled(True)
+        self.cbShowLabel.setChecked(field.show_label)
+        if field.custom:
+            self.lineLabel.setVisible(True)
+            self.lineLabel.setEnabled(field.show_label)
+            self.lineLabel.setText(field.name)
+        else:
+            self.lineLabel.setHidden(True)
 
     def _remove_field(self):
         self._enable_in_inventory(self._selected_field, True)
         self.profile_editor.removeSelected()
         self._selected_field = None
         self.btnRemove.setDisabled(True)
+        self.cbShowLabel.setDisabled(True)
+        self.lineLabel.setHidden(True)
+
+    def _restore_default(self):
+        if ask_confirmation('Are you sure you want to restore the default profile? Your current changes will be lost.'):
+            self._restore_requested = True
+            self.accept()
+
+    def _show_label_clicked(self, checked: bool):
+        if self._selected_field:
+            self._selected_field.show_label = checked
+            self.profile_editor.setShowLabelForSelected(checked)
+            if self._selected_field.custom:
+                self.lineLabel.setEnabled(checked)
+
+    def _label_edited(self, text: str):
+        if self._selected_field:
+            self._selected_field.name = text
+            self.profile_editor.updateLabelForSelected(text)

@@ -260,6 +260,10 @@ class IconRegistry:
     def customization_icon() -> QIcon:
         return qtawesome.icon('fa5s.sliders-h')
 
+    @staticmethod
+    def restore_alert_icon(color='black') -> QIcon:
+        return qtawesome.icon('mdi.restore-alert', color=color, options=[{'scale_factor': 1.2}])
+
 
 class AvatarsRegistry:
     def __init__(self):

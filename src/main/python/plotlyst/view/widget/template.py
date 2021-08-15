@@ -22,15 +22,17 @@ from typing import Optional, List, Any
 
 import emoji
 import qtawesome
-from PyQt5.QtCore import Qt, QPoint, pyqtSignal
-from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragMoveEvent, QDragEnterEvent
+from PyQt5.QtCore import Qt, QPoint, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice
+from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragMoveEvent, QDragEnterEvent, QImageReader, QImage
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
-    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup
+    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate, TemplateValue, ProfileElement
+    ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
+from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
 
 class _ProfileTemplateBase(QFrame):
@@ -46,14 +48,14 @@ class _ProfileTemplateBase(QFrame):
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
 
-        self.widgets = []
+        self.widgets: List[TemplateFieldWidget] = []
         self._initGrid()
 
     def _initGrid(self):
         for el in self._profile.elements:
             widget = TemplateFieldWidget(el.field)
             self.widgets.append(widget)
-            self.gridLayout.addWidget(widget, el.row, el.col)
+            self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span)
 
 
 def placeholder() -> QWidget:
@@ -62,13 +64,13 @@ def placeholder() -> QWidget:
     frame.setLayout(layout)
 
     btn = QToolButton()
-    btn.setIcon(qtawesome.icon('ei.plus-sign', color='grey'))
+    btn.setIcon(qtawesome.icon('ei.plus-sign', color='lightgrey'))
     btn.setText('<Drop here>')
     btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
     btn.setStyleSheet('''
         background-color: rgb(255, 255, 255);
         border: 0px;
-        color: grey;''')
+        color: lightgrey;''')
     layout.addWidget(btn)
     return frame
 
@@ -80,6 +82,46 @@ def _icon(item: SelectionItem) -> QIcon:
         return QIcon(qtawesome.icon(item.icon, color=item.icon_color))
     else:
         return QIcon('')
+
+
+class AvatarWidget(QWidget, Ui_AvatarWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super(AvatarWidget, self).__init__(parent)
+        self.setupUi(self)
+        self.field = field
+        self.character: Optional[Character] = None
+        self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
+        self.btnUploadAvatar.clicked.connect(self._upload_avatar)
+
+    def setCharacter(self, character: Character):
+        self.character = character
+        self._update_avatar()
+
+    def _upload_avatar(self):
+        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
+        if not filename:
+            return
+        reader = QImageReader(filename[0])
+        reader.setAutoTransform(True)
+        image: QImage = reader.read()
+        if image is None:
+            QMessageBox.warning(self.widget, 'Error while uploading image', 'Could not upload image')
+            return
+        array = QByteArray()
+        buffer = QBuffer(array)
+        buffer.open(QIODevice.WriteOnly)
+        image.save(buffer, 'PNG')
+        self.character.avatar = array
+
+        avatars.update(self.character)
+        self._update_avatar()
+
+    def _update_avatar(self):
+        if self.character.avatar:
+            self.lblAvatar.setPixmap(
+                avatars.pixmap(self.character).scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            self.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(128, 128)))
 
 
 class ButtonSelectionWidget(QWidget):
@@ -140,6 +182,9 @@ class TemplateFieldWidget(QFrame):
         self.lblName.setText(self.field.name)
         self.layout.addWidget(self.lblName)
 
+        if not field.show_label:
+            self.lblName.setHidden(True)
+
         self.wdgEditor = self._fieldWidget()
         self.layout.addWidget(self.wdgEditor)
 
@@ -187,6 +232,8 @@ class TemplateFieldWidget(QFrame):
                 widget.addItem(_icon(item), item.text)
         elif self.field.type == TemplateFieldType.BUTTON_SELECTION:
             widget = ButtonSelectionWidget(self.field)
+        elif self.field.type == TemplateFieldType.IMAGE:
+            return AvatarWidget(self.field)
         else:
             widget = QLineEdit()
             widget.setPlaceholderText(self.field.placeholder)
@@ -209,7 +256,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         for w in self.widgets:
             w.setEnabled(False)
 
-        for row in range(4):
+        for row in range(6):
             for col in range(2):
                 if not self.gridLayout.itemAtPosition(row, col):
                     self.gridLayout.addWidget(placeholder(), row, col)
@@ -220,7 +267,8 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             item = self.gridLayout.itemAt(i)
             if item and isinstance(item.widget(), TemplateFieldWidget):
                 pos = self.gridLayout.getItemPosition(i)
-                elements.append(ProfileElement(item.widget().field, row=pos[0], col=pos[1]))
+                elements.append(
+                    ProfileElement(item.widget().field, row=pos[0], col=pos[1], row_span=pos[2], col_span=pos[3]))
 
         self._profile.elements = elements
         return self._profile
@@ -247,6 +295,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
     def dropEvent(self, event: QDropEvent):
         index = self._get_index(event.pos())
         if index is None:
+            event.ignore()
             return
 
         field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
@@ -260,6 +309,8 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
         self.fieldAdded.emit(field)
         self._select(widget_to_drop)
+
+        event.accept()
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent):
@@ -288,6 +339,14 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             self._selected.deleteLater()
             self._selected = None
 
+    def setShowLabelForSelected(self, enabled: bool):
+        if self._selected:
+            self._selected.lblName.setVisible(enabled)
+
+    def updateLabelForSelected(self, text: str):
+        if self._selected:
+            self._selected.lblName.setText(text)
+
     def _get_index(self, pos: QPoint) -> Optional[int]:
         for i in range(self.gridLayout.count()):
             if self.gridLayout.itemAt(i).geometry().contains(pos):
@@ -295,15 +354,41 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
 
 class ProfileTemplateView(_ProfileTemplateBase):
-    def __init__(self, profile: ProfileTemplate):
+    def __init__(self, character: Character, profile: ProfileTemplate):
         super(ProfileTemplateView, self).__init__(profile)
+        self.setObjectName('profileView')
+        self.character = character
+        self._name_widget: Optional[TemplateFieldWidget] = None
+        self._avatar_widget: Optional[AvatarWidget] = None
+        for widget in self.widgets:
+            if widget.field.id == name_field.id:
+                self._name_widget = widget
+            elif widget.field.id == avatar_field.id:
+                self._avatar_widget = widget.wdgEditor
+        if not self._name_widget:
+            raise ValueError('Obligatory name field is missing from profile')
+        if not self._avatar_widget:
+            raise ValueError('Obligatory avatar field is missing from profile')
 
-        self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
+        self._avatar_widget.setCharacter(self.character)
+        self.setProperty('mainFrame', True)
+
         self._selected: Optional[TemplateFieldWidget] = None
+
+        self.setName(self.character.name)
+        self.setValues(self.character.template_values)
+
+    def name(self) -> str:
+        return self._name_widget.value()
+
+    def setName(self, value: str):
+        self._name_widget.setValue(value)
 
     def values(self) -> List[TemplateValue]:
         values: List[TemplateValue] = []
         for widget in self.widgets:
+            if widget is self._name_widget:
+                continue
             values.append(TemplateValue(id=widget.field.id, value=widget.value()))
 
         return values

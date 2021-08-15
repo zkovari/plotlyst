@@ -4,7 +4,7 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QMouseEvent
 
 from src.main.python.plotlyst.core.domain import ProfileTemplate, fear_field, goal_field, desire_field, \
-    misbelief_field, age_field, enneagram_field, gender_field, default_character_profiles
+    misbelief_field, age_field, enneagram_field, gender_field, default_character_profiles, name_field, avatar_field
 from src.main.python.plotlyst.view.dialog.template import CharacterProfileEditorDialog
 
 
@@ -65,6 +65,8 @@ def test_default_template(qtbot):
     assert diag.btnMbti.isEnabled()
 
     assert diag.profile_editor.profile().elements
-    assert len(diag.profile_editor.profile().elements) == 2
-    assert enneagram_field.id == diag.profile_editor.profile().elements[0].field.id
-    assert gender_field.id == diag.profile_editor.profile().elements[1].field.id
+    assert len(diag.profile_editor.profile().elements) == 4
+    assert name_field.id == diag.profile_editor.profile().elements[0].field.id
+    assert avatar_field.id == diag.profile_editor.profile().elements[1].field.id
+    assert enneagram_field.id == diag.profile_editor.profile().elements[2].field.id
+    assert gender_field.id == diag.profile_editor.profile().elements[3].field.id

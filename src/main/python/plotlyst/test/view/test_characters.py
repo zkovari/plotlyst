@@ -30,7 +30,7 @@ def test_edit_character(qtbot, filled_window: MainWindow):
     assert view.editor
 
     name = 'New name'
-    view.editor.ui.lineName.setText(name)
+    view.editor.profile.setName(name)
     view.editor.ui.btnClose.click()
 
     assert view.novel.characters[0].name == name

@@ -19,17 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-import emoji
-from PyQt5.QtCore import Qt, QByteArray, QBuffer, QIODevice, QSize
-from PyQt5.QtGui import QImageReader, QImage
-from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox, QHBoxLayout, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from fbs_runtime import platform
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import customize_character_profile
 
@@ -45,7 +42,6 @@ class CharacterEditor:
 
         if character:
             self.character = character
-            self.ui.lineName.setText(self.character.name)
             self._new_character = False
         else:
             self.character = Character('')
@@ -55,24 +51,17 @@ class CharacterEditor:
             self._emoji_font = emoji_font(14)
         else:
             self._emoji_font = emoji_font(20)
-        self.ui.lblNameEmoji.setFont(self._emoji_font)
-        self.ui.lblNameEmoji.setText(emoji.emojize(':bust_in_silhouette:'))
         self.ui.btnCustomize.setIcon(IconRegistry.customization_icon())
         self.ui.btnCustomize.clicked.connect(self._customize_profile)
 
-        self.profile = ProfileTemplateView(self.novel.character_profiles[0])
+        self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[0])
 
         self._init_profile_view()
 
-        self.ui.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
-        self.ui.btnUploadAvatar.clicked.connect(self._upload_avatar)
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
 
-        self._update_avatar()
-
     def _init_profile_view(self):
-        self.profile.setValues(self.character.template_values)
         self._profile_with_toolbar = QWidget()
         self._toolbar = QWidget()
         self._toolbar.setLayout(QHBoxLayout())
@@ -90,46 +79,19 @@ class CharacterEditor:
         self._profile_container.layout().addWidget(spacer_widget())
         self.ui.wdgProfile.layout().insertWidget(0, self._profile_container)
 
-    def _upload_avatar(self):
-        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
-        if not filename:
-            return
-        reader = QImageReader(filename[0])
-        reader.setAutoTransform(True)
-        image: QImage = reader.read()
-        if image is None:
-            QMessageBox.warning(self.widget, 'Error while uploading image', 'Could not upload image')
-            return
-        array = QByteArray()
-        buffer = QBuffer(array)
-        buffer.open(QIODevice.WriteOnly)
-        image.save(buffer, 'PNG')
-        self.character.avatar = array
-
-        avatars.update(self.character)
-        self._update_avatar()
-        self._save()
-
-    def _update_avatar(self):
-        if self.character.avatar:
-            self.ui.lblAvatar.setPixmap(
-                avatars.pixmap(self.character).scaled(256, 256, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        else:
-            self.ui.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(256, 256)))
-
     def _customize_profile(self):
         i = 0
         updated = customize_character_profile(self.novel, i, self.widget)
         if not updated:
             return
-        self.profile = ProfileTemplateView(self.novel.character_profiles[0])
+        self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[0])
 
         self.ui.wdgProfile.layout().takeAt(0)
         self._profile_container.deleteLater()
         self._init_profile_view()
 
     def _save(self):
-        name = self.ui.lineName.text()
+        name = self.profile.name()
         if not name:
             return
         self.character.name = name

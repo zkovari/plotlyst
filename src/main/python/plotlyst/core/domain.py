@@ -276,6 +276,7 @@ class TemplateFieldType(Enum):
     TEXT_SELECTION = 2
     BUTTON_SELECTION = 3
     NUMERIC = 4
+    IMAGE = 5
 
 
 class SelectionType(Enum):
@@ -308,8 +309,16 @@ class TemplateField:
     min_value: int = 0
     max_value = 99999
     compact: bool = False
+    frozen: bool = False
+    show_label: bool = True
 
 
+name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT,
+                           id=uuid.UUID('45525d2e-3ba7-40e4-b072-e367f96a6eb4'), required=True, highlighted=True,
+                           frozen=True, compact=True)
+avatar_field = TemplateField(name='Avatar', type=TemplateFieldType.IMAGE,
+                             id=uuid.UUID('c3b5c7b5-6fd2-4ae1-959d-6fabd659cb3c'), required=True, highlighted=True,
+                             frozen=True, compact=True, show_label=False)
 age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
                           id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), compact=True)
 gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECTION,
@@ -353,6 +362,8 @@ class ProfileElement:
     field: TemplateField
     row: int
     col: int
+    row_span: int = 1
+    col_span: int = 1
 
 
 @dataclass
@@ -363,7 +374,9 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(enneagram_field, 0, 0), ProfileElement(gender_field, 0, 1)]
+    fields = [ProfileElement(name_field, 0, 0), ProfileElement(avatar_field, 0, 1, row_span=2),
+              ProfileElement(enneagram_field, 2, 0),
+              ProfileElement(gender_field, 2, 1)]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
                             elements=fields)]
