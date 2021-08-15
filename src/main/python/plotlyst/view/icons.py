@@ -270,7 +270,7 @@ class AvatarsRegistry:
         self._avatars: Dict[str, QPixmap] = {}
 
     def pixmap(self, character: Character) -> QPixmap:
-        if character.id not in self._avatars:
+        if str(character.id) not in self._avatars:
             if character.avatar:
                 array = character.avatar
                 pixmap = QPixmap()
