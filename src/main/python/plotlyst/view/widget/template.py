@@ -295,6 +295,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
     def dropEvent(self, event: QDropEvent):
         index = self._get_index(event.pos())
         if index is None:
+            event.ignore()
             return
 
         field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
@@ -308,6 +309,8 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
         self.fieldAdded.emit(field)
         self._select(widget_to_drop)
+
+        event.accept()
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent):
@@ -339,6 +342,10 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
     def setShowLabelForSelected(self, enabled: bool):
         if self._selected:
             self._selected.lblName.setVisible(enabled)
+
+    def updateLabelForSelected(self, text: str):
+        if self._selected:
+            self._selected.lblName.setText(text)
 
     def _get_index(self, pos: QPoint) -> Optional[int]:
         for i in range(self.gridLayout.count()):

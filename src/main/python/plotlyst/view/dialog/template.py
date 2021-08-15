@@ -53,6 +53,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnMbti.setIcon(qtawesome.icon('fa.group'))
         self.btnDesire.setIcon(qtawesome.icon('fa5s.coins', color='#e1bc29'))
         self.btnMisbelief.setIcon(IconRegistry.error_icon())
+        self.btnCustomText.setIcon(qtawesome.icon('mdi.format-text', options=[{'scale_factor': 1.2}]))
+
         self.profile_editor = ProfileTemplateEditor(self.profile)
         self.wdgEditor.layout().addWidget(self.profile_editor)
 
@@ -71,6 +73,9 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnRemove.setIcon(IconRegistry.minus_icon())
         self.btnRemove.clicked.connect(self._remove_field)
 
+        self.lineLabel.setHidden(True)
+        self.lineLabel.textEdited.connect(self._label_edited)
+
         self.btnAge.installEventFilter(self)
         self.btnGender.installEventFilter(self)
         self.btnFear.installEventFilter(self)
@@ -79,6 +84,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnMbti.installEventFilter(self)
         self.btnDesire.installEventFilter(self)
         self.btnMisbelief.installEventFilter(self)
+        self.btnCustomText.installEventFilter(self)
 
         self._dragged: Optional[QToolButton] = None
         self.cbShowLabel.clicked.connect(self._show_label_clicked)
@@ -119,6 +125,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = misbelief_field
             elif self._dragged is self.btnDesire:
                 field = desire_field
+            elif self._dragged is self.btnCustomText:
+                field = TemplateField(name='Label', type=TemplateFieldType.TEXT, custom=True)
             else:
                 field = TemplateField(name=self._dragged.text(), type=TemplateFieldType.TEXT)
             mimedata = QMimeData()
@@ -165,6 +173,12 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnRemove.setEnabled(not field.frozen)
         self.cbShowLabel.setEnabled(True)
         self.cbShowLabel.setChecked(field.show_label)
+        if field.custom:
+            self.lineLabel.setVisible(True)
+            self.lineLabel.setEnabled(field.show_label)
+            self.lineLabel.setText(field.name)
+        else:
+            self.lineLabel.setHidden(True)
 
     def _remove_field(self):
         self._enable_in_inventory(self._selected_field, True)
@@ -172,6 +186,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self._selected_field = None
         self.btnRemove.setDisabled(True)
         self.cbShowLabel.setDisabled(True)
+        self.lineLabel.setHidden(True)
 
     def _restore_default(self):
         if ask_confirmation('Are you sure you want to restore the default profile? Your current changes will be lost.'):
@@ -182,3 +197,10 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         if self._selected_field:
             self._selected_field.show_label = checked
             self.profile_editor.setShowLabelForSelected(checked)
+            if self._selected_field.custom:
+                self.lineLabel.setEnabled(checked)
+
+    def _label_edited(self, text: str):
+        if self._selected_field:
+            self._selected_field.name = text
+            self.profile_editor.updateLabelForSelected(text)
