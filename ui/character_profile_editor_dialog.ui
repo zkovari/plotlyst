@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Character Profile Editor</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <layout class="QHBoxLayout" name="horizontalLayout_6">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -67,7 +70,8 @@
        </property>
        <property name="styleSheet">
         <string notr="true">background-color: rgb(255, 255, 255);
-border-radius: 6px;</string>
+border-radius: 6px;
+border: 1 px solid black;</string>
        </property>
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -534,6 +538,25 @@ border-radius: 6px;</string>
        </layout>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="btnRestore">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>Restore</string>
+       </property>
+       <property name="deconstructive" stdset="0">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -683,7 +706,14 @@ background-color: rgb(255, 255, 255);
       <widget class="QWidget" name="wdgFieldProperties" native="true">
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <widget class="QTableView" name="tableView_2"/>
+         <widget class="QCheckBox" name="cbShowLabel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Show label</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
