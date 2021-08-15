@@ -71,6 +71,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
         self.profile_editor.fieldAdded.connect(self._field_added)
         self.profile_editor.fieldSelected.connect(self._field_selected)
+        self.profile_editor.placeholderSelected.connect(self._placeholder_selected)
         self.btnRemove.setIcon(IconRegistry.minus_icon())
         self.btnRemove.clicked.connect(self._remove_field)
 
@@ -185,6 +186,12 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.lineLabel.setText(field.name)
         else:
             self.lineLabel.setHidden(True)
+
+    def _placeholder_selected(self):
+        self._selected_field = None
+        self.btnRemove.setDisabled(True)
+        self.cbShowLabel.setDisabled(True)
+        self.lineLabel.setHidden(True)
 
     def _remove_field(self):
         self._enable_in_inventory(self._selected_field, True)

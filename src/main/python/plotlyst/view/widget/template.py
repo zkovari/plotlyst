@@ -22,8 +22,8 @@ from typing import Optional, List, Any
 
 import emoji
 import qtawesome
-from PyQt5.QtCore import Qt, QPoint, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice
-from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragMoveEvent, QDragEnterEvent, QImageReader, QImage
+from PyQt5.QtCore import Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice, QObject, QEvent
+from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox
 from overrides import overrides
@@ -58,21 +58,25 @@ class _ProfileTemplateBase(QFrame):
             self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span)
 
 
-def placeholder() -> QWidget:
-    frame = QFrame()
-    layout = QHBoxLayout(frame)
-    frame.setLayout(layout)
+class _PlaceHolder(QFrame):
+    def __init__(self):
+        super(_PlaceHolder, self).__init__()
+        layout = QHBoxLayout(self)
+        self.setLayout(layout)
 
-    btn = QToolButton()
-    btn.setIcon(qtawesome.icon('ei.plus-sign', color='lightgrey'))
-    btn.setText('<Drop here>')
-    btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
-    btn.setStyleSheet('''
-        background-color: rgb(255, 255, 255);
-        border: 0px;
-        color: lightgrey;''')
-    layout.addWidget(btn)
-    return frame
+        self.btn = QToolButton()
+        self.btn.setIcon(qtawesome.icon('ei.plus-sign', color='lightgrey'))
+        self.btn.setText('<Drop here>')
+        self.btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.btn.setStyleSheet('''
+                background-color: rgb(255, 255, 255);
+                border: 0px;
+                color: lightgrey;''')
+        layout.addWidget(self.btn)
+
+
+def is_placeholder(widget: QWidget) -> bool:
+    return isinstance(widget, _PlaceHolder) or isinstance(widget.parent(), _PlaceHolder)
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -248,6 +252,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
     MimeType: str = 'application/template-field'
 
     fieldSelected = pyqtSignal(TemplateField)
+    placeholderSelected = pyqtSignal()
     fieldAdded = pyqtSignal(TemplateField)
 
     def __init__(self, profile: ProfileTemplate):
@@ -255,14 +260,17 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         self.setAcceptDrops(True)
         self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
         self._selected: Optional[TemplateFieldWidget] = None
+        self._target_to_drop: Optional[QWidget] = None
 
         for w in self.widgets:
             w.setEnabled(False)
+            w.setAcceptDrops(True)
+            w.installEventFilter(self)
 
-        for row in range(6):
+        for row in range(max(6, self.gridLayout.rowCount() + 1)):
             for col in range(2):
                 if not self.gridLayout.itemAtPosition(row, col):
-                    self.gridLayout.addWidget(placeholder(), row, col)
+                    self._addPlaceholder(row, col)
 
     def profile(self) -> ProfileTemplate:
         elements = []
@@ -285,21 +293,28 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
     @overrides
     def dragMoveEvent(self, event: QDragMoveEvent):
-        index = self._get_index(event.pos())
-        if index is None:
-            return event.ignore()
-        item = self.gridLayout.itemAt(index)
-        if isinstance(item.widget(), TemplateFieldWidget):
-            return event.ignore()
-
-        event.accept()
+        if not self._target_to_drop:
+            event.ignore()
+            return
+        if is_placeholder(self._target_to_drop):
+            event.accept()
+        else:
+            event.ignore()
 
     @overrides
     def dropEvent(self, event: QDropEvent):
-        index = self._get_index(event.pos())
-        if index is None:
+        if not self._target_to_drop:
             event.ignore()
             return
+
+        if isinstance(self._target_to_drop, _PlaceHolder):
+            placeholder = self._target_to_drop
+        elif isinstance(self._target_to_drop.parent(), _PlaceHolder):
+            placeholder = self._target_to_drop.parent()
+        else:
+            event.ignore()
+            return
+        index = self.gridLayout.indexOf(placeholder)
 
         field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
         widget_to_drop = TemplateFieldWidget(field)
@@ -308,26 +323,38 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         item: QLayoutItem = self.gridLayout.takeAt(index)
         item.widget().deleteLater()
         self.gridLayout.addWidget(widget_to_drop, *pos)
+        widget_to_drop.installEventFilter(self)
         self.widgets.append(widget_to_drop)
 
         self.fieldAdded.emit(field)
         self._select(widget_to_drop)
 
+        if pos[0] == self.gridLayout.rowCount() - 1:
+            self._addPlaceholder(pos[0] + 1, 0)
+            self._addPlaceholder(pos[0] + 1, 1)
+            self.gridLayout.update()
+
         event.accept()
 
     @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent):
-        index = self._get_index(event.pos())
-        if index is None:
-            return
-        item = self.gridLayout.itemAt(index)
-        widget = item.widget()
-        if isinstance(widget, TemplateFieldWidget):
-            self._select(widget)
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.MouseButtonRelease:
+            self._select(watched)
+        elif event.type() == QEvent.DragEnter:
+            self._target_to_drop = watched
+            self.dragMoveEvent(event)
+        elif event.type() == QEvent.Drop:
+            self.dropEvent(event)
+            self._target_to_drop = None
+        return super().eventFilter(watched, event)
 
     def _select(self, widget: TemplateFieldWidget):
         if self._selected:
             self._selected.deselect()
+        if is_placeholder(widget):
+            self._selected = None
+            self.placeholderSelected.emit()
+            return
         self._selected = widget
         self._selected.select()
         self.fieldSelected.emit(self._selected.field)
@@ -337,7 +364,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             index = self.gridLayout.indexOf(self._selected)
             pos = self.gridLayout.getItemPosition(index)
             self.gridLayout.removeWidget(self._selected)
-            self.gridLayout.addWidget(placeholder(), *pos)
+            self._addPlaceholder(pos[0], pos[1])
             self.widgets.remove(self._selected)
             self._selected.deleteLater()
             self._selected = None
@@ -350,10 +377,13 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         if self._selected:
             self._selected.lblName.setText(text)
 
-    def _get_index(self, pos: QPoint) -> Optional[int]:
-        for i in range(self.gridLayout.count()):
-            if self.gridLayout.itemAt(i).geometry().contains(pos):
-                return i
+    def _addPlaceholder(self, row: int, col: int):
+        _placeholder = _PlaceHolder()
+        self.gridLayout.addWidget(_placeholder, row, col)
+        _placeholder.setAcceptDrops(True)
+        _placeholder.btn.setAcceptDrops(True)
+        _placeholder.installEventFilter(self)
+        _placeholder.btn.installEventFilter(self)
 
 
 class ProfileTemplateView(_ProfileTemplateBase):

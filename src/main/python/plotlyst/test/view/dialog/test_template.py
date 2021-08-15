@@ -1,10 +1,11 @@
 from unittest.mock import create_autospec
 
 from PyQt5 import QtCore
+from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QMouseEvent
 
-from src.main.python.plotlyst.core.domain import ProfileTemplate, fear_field, goal_field, desire_field, \
-    misbelief_field, age_field, enneagram_field, gender_field, default_character_profiles, name_field, avatar_field, \
+from src.main.python.plotlyst.core.domain import ProfileTemplate, fear_field, enneagram_field, gender_field, \
+    default_character_profiles, name_field, avatar_field, \
     role_field
 from src.main.python.plotlyst.view.dialog.template import CharacterProfileEditorDialog
 
@@ -19,8 +20,8 @@ def new_diag(qtbot, template: ProfileTemplate) -> CharacterProfileEditorDialog:
 
 
 def drop(qtbot, diag: CharacterProfileEditorDialog):
-    qtbot.mouseMove(diag.wdgEditor)
-    qtbot.mouseRelease(diag.wdgEditor, QtCore.Qt.LeftButton, delay=15)
+    qtbot.mouseMove(diag.wdgEditor, QPoint(50, 50))
+    qtbot.mouseRelease(diag.wdgEditor, QtCore.Qt.LeftButton, delay=30)
 
 
 def test_drop(qtbot):
@@ -29,20 +30,15 @@ def test_drop(qtbot):
 
     assert diag.lineName.text() == template.title
 
-    for btn, field in [(diag.btnFear, fear_field), (diag.btnGoal, goal_field), (diag.btnDesire, desire_field),
-                       (diag.btnMisbelief, misbelief_field), (diag.btnAge, age_field),
-                       (diag.btnEnneagram, enneagram_field),
-                       (diag.btnGender, gender_field)]:
+    for btn, field in [(diag.btnFear, fear_field)]:
         diag._dragged = btn
         event = create_autospec(QMouseEvent)
         event.pos.side_effect = lambda: diag.btnFear.pos()
 
-        QtCore.QTimer.singleShot(40, lambda: drop(qtbot, diag))
+        QtCore.QTimer.singleShot(30, lambda: drop(qtbot, diag))
         diag.mouseMoveEvent(event)
 
-        qtbot.wait(10)
-
-        assert not btn.isEnabled()
+        assert not btn.isEnabled(), f'Expected disabled button for field {field.name}'
         assert diag.profile_editor.profile().elements
         assert len(diag.profile_editor.profile().elements) == 1
         assert field.id == diag.profile_editor.profile().elements[0].field.id, f'Expected field {field.name}'
