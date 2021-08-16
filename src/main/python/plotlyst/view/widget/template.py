@@ -91,6 +91,7 @@ def _icon(item: SelectionItem) -> QIcon:
 
 
 class AvatarWidget(QWidget, Ui_AvatarWidget):
+
     def __init__(self, field: TemplateField, parent=None):
         super(AvatarWidget, self).__init__(parent)
         self.setupUi(self)
@@ -98,6 +99,7 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         self.character: Optional[Character] = None
         self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
+        self.avatarUpdated: bool = False
 
     def setCharacter(self, character: Character):
         self.character = character
@@ -121,6 +123,8 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
 
         avatars.update(self.character)
         set_avatar(self.lblAvatar, self.character)
+
+        self.avatarUpdated = True
 
 
 class ButtonSelectionWidget(QWidget):
@@ -416,6 +420,9 @@ class ProfileTemplateView(_ProfileTemplateBase):
 
     def setName(self, value: str):
         self._name_widget.setValue(value)
+
+    def avatarUpdated(self) -> bool:
+        return self._avatar_widget.avatarUpdated
 
     def values(self) -> List[TemplateValue]:
         values: List[TemplateValue] = []

@@ -80,11 +80,11 @@ class CharacterEditor:
         self.ui.wdgProfile.layout().insertWidget(0, self._profile_container)
 
     def _customize_profile(self):
-        i = 0
-        updated = customize_character_profile(self.novel, i, self.widget)
+        profile_index = 0
+        updated = customize_character_profile(self.novel, profile_index, self.widget)
         if not updated:
             return
-        self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[0])
+        self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[profile_index])
 
         self.ui.wdgProfile.layout().takeAt(0)
         self._profile_container.deleteLater()
@@ -96,9 +96,11 @@ class CharacterEditor:
             return
         self.character.name = name
         self.character.template_values = self.profile.values()
+
         if self._new_character:
             self.novel.characters.append(self.character)
             client.insert_character(self.novel, self.character)
         else:
-            client.update_character(self.character)
+            client.update_character(self.character, self.profile.avatarUpdated())
+
         self._new_character = False

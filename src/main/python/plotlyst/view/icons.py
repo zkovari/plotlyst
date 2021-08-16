@@ -306,7 +306,7 @@ class AvatarsRegistry:
         return qtawesome.icon(icon, options=[{'scale_factor': 1.2}], color=color)
 
     def update(self, character: Character):
-        if character.id in self._avatars.keys():
+        if str(character.id) in self._avatars.keys():
             self._avatars.pop(str(character.id))
         self.pixmap(character)
 

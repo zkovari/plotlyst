@@ -74,8 +74,8 @@ class SqlClient:
     def insert_character(self, novel: Novel, character: Character):
         json_client.insert_character(novel, character)
 
-    def update_character(self, character: Character):
-        json_client.update_character(character)
+    def update_character(self, character: Character, update_avatar: bool = False):
+        json_client.update_character(character, update_avatar)
 
     def delete_character(self, novel: Novel, character: Character):
         json_client.delete_character(novel, character)
@@ -266,11 +266,29 @@ class JsonClient:
         self.__delete_info(self.scenes_dir, scene.id)
 
     def insert_character(self, novel: Novel, character: Character):
-        self._persist_character(character)
+        self.update_character(character, True)
         self._persist_novel(novel)
 
-    def update_character(self, character: Character):
-        self._persist_character(character)
+    def update_character(self, character: Character, update_avatar: bool = False):
+        avatar_id: Optional[uuid.UUID] = None
+
+        path = self.characters_dir.joinpath(self.__json_file(character.id))
+        if os.path.exists(path):
+            with open(path) as json_file:
+                data = json_file.read()
+                info: CharacterInfo = CharacterInfo.from_json(data)
+                avatar_id = info.avatar_id
+
+        if update_avatar:
+            if avatar_id:
+                self.__delete_image(avatar_id)
+                avatar_id = None
+            if character.avatar:
+                avatar_id = uuid.uuid4()
+                image = QImage.fromData(character.avatar)
+                image.save(str(self.images_dir.joinpath(self.__image_file(avatar_id))))
+
+        self._persist_character(character, avatar_id)
 
     def delete_character(self, novel: Novel, character: Character):
         self._persist_novel(novel)
@@ -416,8 +434,8 @@ class JsonClient:
 
         self.__persist_info(self.novels_dir, novel_info)
 
-    def _persist_character(self, char: Character):
-        char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values)
+    def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
+        char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
@@ -473,7 +491,10 @@ class JsonClient:
         return f'{uuid}.jpeg'
 
     def _load_image(self, filename) -> Optional[Any]:
-        reader = QImageReader(str(self.images_dir.joinpath(filename)))
+        path = self.images_dir.joinpath(filename)
+        if not os.path.exists(path):
+            return None
+        reader = QImageReader(str(path))
         reader.setAutoTransform(True)
         image: QImage = reader.read()
         if image is None:
@@ -490,6 +511,11 @@ class JsonClient:
 
     def __delete_info(self, dir, id: uuid.UUID):
         path = dir.joinpath(self.__json_file(id))
+        if os.path.exists(path):
+            os.remove(path)
+
+    def __delete_image(self, id: uuid.UUID):
+        path = self.images_dir.joinpath(self.__image_file(id))
         if os.path.exists(path):
             os.remove(path)
 
