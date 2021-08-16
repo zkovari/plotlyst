@@ -43,6 +43,7 @@ class _ProfileTemplateBase(QFrame):
         self.layout = QHBoxLayout(self)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setFocusPolicy(Qt.NoFocus)
         self.scrollAreaWidgetContents = QWidget()
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
@@ -403,6 +404,7 @@ class ProfileTemplateView(_ProfileTemplateBase):
         if not self._avatar_widget:
             raise ValueError('Obligatory avatar field is missing from profile')
 
+        self._name_widget.wdgEditor.setFocusPolicy(Qt.StrongFocus)
         self._avatar_widget.setCharacter(self.character)
         self.setProperty('mainFrame', True)
 
