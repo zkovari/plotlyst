@@ -1,7 +1,7 @@
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import default_story_structures
-from src.main.python.plotlyst.test.common import create_dramatic_question, go_to_novel, click_on_item, patch_confirmed, \
-    go_to_scenes
+from src.main.python.plotlyst.test.common import create_dramatic_question, go_to_novel, click_on_item, \
+    patch_confirmed, go_to_scenes
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
 
