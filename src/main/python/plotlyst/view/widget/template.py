@@ -26,6 +26,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice, 
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox
+from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
@@ -178,8 +179,12 @@ class TemplateFieldWidget(QFrame):
         self.setProperty('mainFrame', True)
 
         if self.field.emoji:
+            if platform.is_windows():
+                emoji_size = 14
+            else:
+                emoji_size = 20
             self.lblEmoji = QLabel()
-            self.lblEmoji.setFont(emoji_font())
+            self.lblEmoji.setFont(emoji_font(emoji_size))
             self.lblEmoji.setText(emoji.emojize(self.field.emoji))
             self.layout.addWidget(self.lblEmoji)
 

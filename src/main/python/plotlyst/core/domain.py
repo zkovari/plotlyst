@@ -319,9 +319,9 @@ class TemplateField:
     show_label: bool = True
 
 
-name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT,
+name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':bust_in_silhouette:', placeholder='Name',
                            id=uuid.UUID('45525d2e-3ba7-40e4-b072-e367f96a6eb4'), required=True, highlighted=True,
-                           frozen=True, compact=True)
+                           frozen=True, compact=True, show_label=False)
 avatar_field = TemplateField(name='Avatar', type=TemplateFieldType.IMAGE,
                              id=uuid.UUID('c3b5c7b5-6fd2-4ae1-959d-6fabd659cb3c'), required=True, highlighted=True,
                              frozen=True, compact=True, show_label=False)
@@ -357,10 +357,10 @@ goal_field = TemplateField('Goal', type=TemplateFieldType.TEXT,
                            id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'))
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'))
-fear_field = TemplateField('Fear', type=TemplateFieldType.TEXT,
-                           id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'))
-desire_field = TemplateField('Desire', type=TemplateFieldType.TEXT,
-                             id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'))
+fear_field = TemplateField('Fear', type=TemplateFieldType.TEXT, emoji=':face_screaming_in_fear:', placeholder='Fear',
+                           id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'), show_label=False)
+desire_field = TemplateField('Desire', type=TemplateFieldType.TEXT, emoji=':star-struck:', placeholder='Desire',
+                             id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'), show_label=False)
 role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('131b9de6-ac95-4db5-b9a1-33200100b676'),
                            selections=[SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c'),
