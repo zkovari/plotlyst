@@ -47,6 +47,8 @@ class _ProfileTemplateBase(QFrame):
         self.scrollArea.setFocusPolicy(Qt.NoFocus)
         self.scrollAreaWidgetContents = QWidget()
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout.setSpacing(1)
+        self.gridLayout.setContentsMargins(2, 0, 2, 0)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
 
