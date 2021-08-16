@@ -20,8 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict
 
 import qtawesome
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QLabel
 
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
@@ -264,6 +265,10 @@ class IconRegistry:
     def restore_alert_icon(color='black') -> QIcon:
         return qtawesome.icon('mdi.restore-alert', color=color, options=[{'scale_factor': 1.2}])
 
+    @staticmethod
+    def cards_icon() -> QIcon:
+        return qtawesome.icon('mdi.cards', options=[{'scale_factor': 1.2}])
+
 
 class AvatarsRegistry:
     def __init__(self):
@@ -301,3 +306,13 @@ class AvatarsRegistry:
 
 
 avatars = AvatarsRegistry()
+
+
+def set_avatar(label: QLabel, character: Character, size: int = 128):
+    if character.avatar:
+        label.setPixmap(
+            avatars.pixmap(character).scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+    elif character.name:
+        label.setPixmap(avatars.name_initial_icon(character).pixmap(QSize(size, size)))
+    else:
+        label.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(size, size)))

@@ -20,6 +20,8 @@ def test_create_character(qtbot, filled_window: MainWindow):
 def test_edit_character(qtbot, filled_window: MainWindow):
     view: CharactersView = go_to_characters(filled_window)
 
+    view.ui.btnTableView.click()
+
     assert not view.ui.btnEdit.isEnabled()
     assert not view.ui.btnDelete.isEnabled()
     click_on_item(qtbot, view.ui.listCharacters, 0)
@@ -41,6 +43,8 @@ def test_edit_character(qtbot, filled_window: MainWindow):
 
 def test_delete_character(qtbot, filled_window: MainWindow, monkeypatch):
     view: CharactersView = go_to_characters(filled_window)
+
+    view.ui.btnTableView.click()
 
     click_on_item(qtbot, view.ui.listCharacters, 0)
 

@@ -38,6 +38,8 @@ def test_drop(qtbot):
         QtCore.QTimer.singleShot(30, lambda: drop(qtbot, diag))
         diag.mouseMoveEvent(event)
 
+        qtbot.wait(50)
+
         assert not btn.isEnabled(), f'Expected disabled button for field {field.name}'
         assert diag.profile_editor.profile().elements
         assert len(diag.profile_editor.profile().elements) == 1

@@ -41,6 +41,16 @@ class Character:
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
 
+    def enneagram(self) -> Optional['SelectionItem']:
+        for value in self.template_values:
+            if value.id == enneagram_field.id:
+                return _enneagram_choices.get(value.value)
+
+    def role(self) -> Optional['SelectionItem']:
+        for value in self.template_values:
+            if value.id == role_field.id:
+                return _role_choices.get(value.value)
+
 
 class NpcCharacter(Character):
     pass
@@ -318,6 +328,9 @@ class TemplateField:
     frozen: bool = False
     show_label: bool = True
 
+    def sid(self) -> str:
+        return str(self.id)
+
 
 name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':bust_in_silhouette:', placeholder='Name',
                            id=uuid.UUID('45525d2e-3ba7-40e4-b072-e367f96a6eb4'), required=True, highlighted=True,
@@ -353,6 +366,10 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                             SelectionItem('Peacemaker', icon='mdi.numeric-9-circle',
                                                           icon_color='#3a015c')],
                                 compact=True)
+_enneagram_choices = {}
+for item in enneagram_field.selections:
+    _enneagram_choices[item.text] = item
+
 goal_field = TemplateField('Goal', type=TemplateFieldType.TEXT,
                            id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'))
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.TEXT,
@@ -376,6 +393,10 @@ role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION,
                                        SelectionItem('', type=SelectionItemType.SEPARATOR),
                                        SelectionItem('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68'),
                                        ], compact=True)
+
+_role_choices = {}
+for item in role_field.selections:
+    _role_choices[item.text] = item
 
 
 @dataclass
