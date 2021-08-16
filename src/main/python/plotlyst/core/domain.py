@@ -49,7 +49,18 @@ class Character:
     def role(self) -> Optional['SelectionItem']:
         for value in self.template_values:
             if value.id == role_field.id:
-                return _role_choices.get(value.value)
+                item = _role_choices.get(value.value)
+                if not item:
+                    return None
+                if item.text == 'Protagonist' and self.gender() == 1:
+                    return SelectionItem(item.text, item.type, 'fa5s.chess-queen', item.icon_color)
+                return item
+
+    def gender(self) -> int:
+        for value in self.template_values:
+            if value.id == gender_field.id:
+                return value.value[0] if value.value else -1
+        return -1
 
 
 class NpcCharacter(Character):
