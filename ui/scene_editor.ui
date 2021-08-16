@@ -1223,7 +1223,7 @@ QToolButton:disabled {
                  <item>
                   <widget class="QLabel" name="label_2">
                    <property name="text">
-                    <string>Storylines:</string>
+                    <string>Associated dramatic questions</string>
                    </property>
                   </widget>
                  </item>
@@ -1544,7 +1544,7 @@ QToolButton:disabled {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupArc"/>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="btnGroupArc"/>
  </buttongroups>
 </ui>

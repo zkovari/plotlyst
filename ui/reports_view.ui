@@ -104,7 +104,7 @@
                <item>
                 <widget class="QLabel" name="label">
                  <property name="text">
-                  <string>Click on a circle to change the storylines associated to that scene.</string>
+                  <string>Right-click on a circle to change the dramatic questions associated to that scene.</string>
                  </property>
                 </widget>
                </item>
@@ -159,7 +159,7 @@
                <item>
                 <widget class="QLabel" name="label_2">
                  <property name="text">
-                  <string>To visualize story map, first you need to create a storyline under the Novel view.</string>
+                  <string>To visualize story map, first you need to create a dramatic question under the Novel view.</string>
                  </property>
                  <property name="wordWrap">
                   <bool>true</bool>

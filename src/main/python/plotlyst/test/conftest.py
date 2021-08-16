@@ -21,7 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Character, StoryLine, Scene, Chapter, ACTION_SCENE, REACTION_SCENE, \
+from src.main.python.plotlyst.core.domain import Character, DramaticQuestion, Scene, Chapter, ACTION_SCENE, \
+    REACTION_SCENE, \
     Novel
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -70,20 +71,20 @@ def init_project():
     char_e = Character(name='Edward')
     novel.characters.extend([char_a, char_b, char_c, char_d, char_e])
 
-    storyline_main = StoryLine(text='Main')
-    storyline_lesser = StoryLine(text='Lesser')
-    storyline_love = StoryLine(text='Love')
-    novel.story_lines.extend([storyline_main, storyline_lesser, storyline_love])
+    dq_main = DramaticQuestion(text='Main')
+    dq_lesser = DramaticQuestion(text='Lesser')
+    dq_love = DramaticQuestion(text='Love')
+    novel.dramatic_questions.extend([dq_main, dq_lesser, dq_love])
 
     chapter_1 = Chapter(title='1', sequence=0)
     chapter_2 = Chapter(title='2', sequence=1)
     novel.chapters.append(chapter_1)
     novel.chapters.append(chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
-                    story_lines=[storyline_main], sequence=0, chapter=chapter_1, day=1, type=ACTION_SCENE,
+                    dramatic_questions=[dq_main], sequence=0, chapter=chapter_1, day=1, type=ACTION_SCENE,
                     beginning='Beginning', middle='Middle', end='End', stage=novel.stages[1])
     scene_2 = Scene(title='Scene 2', synopsis='Scene 2 synopsis', pov=char_d, characters=[char_c, char_a],
-                    story_lines=[storyline_lesser, storyline_love], sequence=1, chapter=chapter_2, day=2,
+                    dramatic_questions=[dq_lesser, dq_love], sequence=1, chapter=chapter_2, day=2,
                     type=REACTION_SCENE,
                     beginning='Beginning', middle='Middle', end='End')
     novel.scenes.append(scene_1)

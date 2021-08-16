@@ -27,7 +27,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Scene, Novel, StoryLine
+from src.main.python.plotlyst.core.domain import Scene, Novel, DramaticQuestion
 from src.main.python.plotlyst.view.common import busy
 
 
@@ -51,7 +51,7 @@ class StoryLinesMapWidget(QWidget):
     def minimumSizeHint(self) -> QSize:
         if self.novel:
             x = self._scene_x(len(self.novel.scenes) - 1) + 50
-            y = self._story_line_y(len(self.novel.story_lines)) * 2
+            y = self._story_line_y(len(self.novel.dramatic_questions)) * 2
             return QSize(x, y)
         return super().minimumSizeHint()
 
@@ -80,7 +80,7 @@ class StoryLinesMapWidget(QWidget):
         self._scene_coord_y.clear()
         y = 0
         last_sc_x: Dict[int, int] = {}
-        for sl_i, story in enumerate(self.novel.story_lines):
+        for sl_i, story in enumerate(self.novel.dramatic_questions):
             previous_y = 0
             previous_x = 0
             y = self._story_line_y(sl_i)
@@ -91,7 +91,7 @@ class StoryLinesMapWidget(QWidget):
 
             for sc_i, scene in enumerate(self.novel.scenes):
                 x = self._scene_x(sc_i)
-                if story in scene.story_lines:
+                if story in scene.dramatic_questions:
                     if sc_i not in self._scene_coord_y.keys():
                         self._scene_coord_y[sc_i] = y
                     if previous_y > self._scene_coord_y[sc_i] or (previous_y == 0 and y > self._scene_coord_y[sc_i]):
@@ -117,14 +117,14 @@ class StoryLinesMapWidget(QWidget):
             self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), self._scene_coord_y[sc_i])
 
         for sc_i, scene in enumerate(self.novel.scenes):
-            if not scene.story_lines:
+            if not scene.dramatic_questions:
                 self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), 3)
 
-        if len(self.novel.story_lines) <= 1:
+        if len(self.novel.dramatic_questions) <= 1:
             return
 
         base_y = y
-        for sl_i, story in enumerate(self.novel.story_lines):
+        for sl_i, story in enumerate(self.novel.dramatic_questions):
             y = 50 * (sl_i + 1) + 25 + base_y
             painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
             painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
@@ -132,13 +132,13 @@ class StoryLinesMapWidget(QWidget):
             painter.drawText(5, y - 15, story.text)
 
             for sc_i, scene in enumerate(self.novel.scenes):
-                if story in scene.story_lines:
+                if story in scene.dramatic_questions:
                     self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), y)
 
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
-        if scene.story_lines:
+        if scene.dramatic_questions:
             pen = Qt.red if scene is self._clicked_scene else Qt.black
-            if len(scene.story_lines) == 1:
+            if len(scene.dramatic_questions) == 1:
                 painter.setPen(QPen(pen, 3, Qt.SolidLine))
                 painter.setBrush(Qt.black)
                 painter.drawEllipse(x, y - 7, 14, 14)
@@ -172,23 +172,23 @@ class StoryLinesMapWidget(QWidget):
 
             menu = QMenu(self)
 
-            if self.novel.story_lines:
-                for sl in self.novel.story_lines:
+            if self.novel.dramatic_questions:
+                for sl in self.novel.dramatic_questions:
                     sl_action = QAction(truncate_string(sl.text, 70), menu)
                     sl_action.setCheckable(True)
-                    if sl in self._clicked_scene.story_lines:
+                    if sl in self._clicked_scene.dramatic_questions:
                         sl_action.setChecked(True)
-                    sl_action.triggered.connect(partial(self._story_line_changed, sl))
+                    sl_action.triggered.connect(partial(self._dramatic_question_changed, sl))
                     menu.addAction(sl_action)
 
                 menu.popup(self.mapToGlobal(pos))
 
     @busy
-    def _story_line_changed(self, storyline: StoryLine, checked: bool):
+    def _dramatic_question_changed(self, dramatic_question: DramaticQuestion, checked: bool):
         if checked:
-            self._clicked_scene.story_lines.append(storyline)
+            self._clicked_scene.dramatic_questions.append(dramatic_question)
         else:
-            self._clicked_scene.story_lines.remove(storyline)
+            self._clicked_scene.dramatic_questions.remove(dramatic_question)
         client.update_scene(self._clicked_scene)
 
         self.update()

@@ -171,21 +171,21 @@ def create_character(qtbot, window: MainWindow, name: str):
     characters.editor.ui.btnClose.click()
 
 
-def create_story_line(qtbot, window: MainWindow, text: str):
+def create_dramatic_question(qtbot, window: MainWindow, text: str):
     novels: NovelView = go_to_novel(window)
 
     novels.ui.btnAdd.click()
-    row = novels.ui.tblStoryLines.model().rowCount() - 1
-    index = novels.ui.tblStoryLines.model().index(row, 1)
-    editor = novels.ui.tblStoryLines.indexWidget(index)
+    row = novels.ui.tblDramaticQuestions.model().rowCount() - 1
+    index = novels.ui.tblDramaticQuestions.model().index(row, 1)
+    editor = novels.ui.tblDramaticQuestions.indexWidget(index)
     assert editor, "Editor should be open at position row,1"
     assert isinstance(editor, QLineEdit)
 
     qtbot.keyClicks(editor, text)
-    novels.ui.tblStoryLines.itemDelegate().commitData.emit(editor)
-    novels.ui.tblStoryLines.itemDelegate().closeEditor.emit(editor)
+    novels.ui.tblDramaticQuestions.itemDelegate().commitData.emit(editor)
+    novels.ui.tblDramaticQuestions.itemDelegate().closeEditor.emit(editor)
 
-    assert_data(novels.ui.tblStoryLines.model(), text, row, 1)
+    assert_data(novels.ui.tblDramaticQuestions.model(), text, row, 1)
 
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:

@@ -47,7 +47,7 @@ class NpcCharacter(Character):
 
 
 @dataclass(unsafe_hash=True)
-class StoryLine:
+class DramaticQuestion:
     text: str
     color_hexa: str = ''
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -134,7 +134,7 @@ class Scene:
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
     wip: bool = False
-    story_lines: List[StoryLine] = field(default_factory=list)
+    dramatic_questions: List[DramaticQuestion] = field(default_factory=list)
     end_event: bool = True
     day: int = 1
     beginning_type: str = ''
@@ -409,7 +409,7 @@ class Novel(NovelDescriptor):
     story_structure: StoryStructure = default_story_structures[0]
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
-    story_lines: List[StoryLine] = field(default_factory=list)
+    dramatic_questions: List[DramaticQuestion] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
@@ -422,8 +422,12 @@ class Novel(NovelDescriptor):
         self.characters.extend(updated_novel.characters)
         self.chapters.clear()
         self.chapters.extend(updated_novel.chapters)
-        self.story_lines.clear()
-        self.story_lines.extend(updated_novel.story_lines)
+        self.dramatic_questions.clear()
+        self.dramatic_questions.extend(updated_novel.dramatic_questions)
+        self.stages.clear()
+        self.stages.extend(updated_novel.stages)
+        self.character_profiles.clear()
+        self.character_profiles.extend(updated_novel.character_profiles)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
