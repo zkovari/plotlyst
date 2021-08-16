@@ -25,7 +25,7 @@ import qtawesome
 from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
-    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox
+    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -36,16 +36,19 @@ from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWi
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 
 
-class _ProfileTemplateBase(QFrame):
+class _ProfileTemplateBase(QWidget):
 
     def __init__(self, profile: ProfileTemplate, parent=None):
         super().__init__(parent)
         self._profile = profile
-        self.layout = QHBoxLayout(self)
+        self.layout = QVBoxLayout(self)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.scrollArea = QScrollArea(self)
+        self.scrollArea.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setFocusPolicy(Qt.NoFocus)
         self.scrollAreaWidgetContents = QWidget()
+        self.scrollAreaWidgetContents.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setSpacing(1)
         self.gridLayout.setContentsMargins(2, 0, 2, 0)
@@ -85,7 +88,7 @@ def is_placeholder(widget: QWidget) -> bool:
 
 def _icon(item: SelectionItem) -> QIcon:
     if item.icon:
-        return IconRegistry.from_name(item.icon, item.icon_color, mdi_scale=1.4)
+        return IconRegistry.from_name(item.icon, item.icon_color)
     else:
         return QIcon('')
 
@@ -100,6 +103,7 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
         self.avatarUpdated: bool = False
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
     def setCharacter(self, character: Character):
         self.character = character
@@ -193,6 +197,7 @@ class TemplateFieldWidget(QFrame):
             self.lblName.setHidden(True)
 
         self.wdgEditor = self._fieldWidget()
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.layout.addWidget(self.wdgEditor)
 
         if self.field.compact:
@@ -243,7 +248,7 @@ class TemplateFieldWidget(QFrame):
         elif self.field.type == TemplateFieldType.BUTTON_SELECTION:
             widget = ButtonSelectionWidget(self.field)
         elif self.field.type == TemplateFieldType.IMAGE:
-            return AvatarWidget(self.field)
+            widget = AvatarWidget(self.field)
         else:
             widget = QLineEdit()
             widget.setPlaceholderText(self.field.placeholder)

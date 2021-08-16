@@ -14,15 +14,7 @@
    <string>Form</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">.QWidget {
-
-background-color: rgb(255, 255, 255);
-}
-
-.QFrame {
-
-background-color: rgb(255, 255, 255);
-}</string>
+   <string notr="true"/>
   </property>
   <property name="mainFrame" stdset="0">
    <bool>true</bool>
@@ -131,10 +123,10 @@ background-color: rgb(255, 255, 255);
           </sizepolicy>
          </property>
          <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-         <property name="mainFrame" stdset="0">
-          <bool>true</bool>
+          <string notr="true">.Frame {
+border: 0px;
+
+}</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
@@ -164,10 +156,13 @@ background-color: rgb(255, 255, 255);
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::MinimumExpanding</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>30</height>
       </size>
      </property>
     </spacer>
