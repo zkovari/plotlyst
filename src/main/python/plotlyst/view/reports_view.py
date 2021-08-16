@@ -71,7 +71,7 @@ class ReportsView(AbstractNovelView):
         self.storylines_distribution = StorylinesDistribution(self.novel)
         self.ui.tabStoryDistribution.layout().addWidget(self.storylines_distribution)
 
-        if not self.novel.story_lines:
+        if not self.novel.dramatic_questions:
             self.ui.stackStoryMap.setCurrentWidget(self.ui.pageInfoStoryMap)
 
         self.scenes_model = ScenesTableModel(self.novel)
@@ -102,7 +102,7 @@ class ReportsView(AbstractNovelView):
 
     @overrides
     def refresh(self):
-        if self.novel.story_lines:
+        if self.novel.dramatic_questions:
             self.ui.stackStoryMap.setCurrentWidget(self.ui.pageStoryMap)
         self.scenes_model.modelReset.emit()
         self._update_characters_selectors()
@@ -179,14 +179,14 @@ class StorylinesDistribution(QChartView):
 
         character_names = [x.name for x in self.novel.characters]
         series = QStackedBarSeries()
-        for i, story_line in enumerate(self.novel.story_lines):
+        for i, story_line in enumerate(self.novel.dramatic_questions):
             set = QBarSet(story_line.text)
             set.setColor(QColor(story_line.color_hexa))
             occurences = []
             for char in self.novel.characters:
                 v = 0
                 for scene in self.novel.scenes:
-                    if story_line in scene.story_lines:
+                    if story_line in scene.dramatic_questions:
                         if char == scene.pov or char in scene.characters:
                             v += 1
                 occurences.append(v)

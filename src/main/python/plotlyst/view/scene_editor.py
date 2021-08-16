@@ -208,7 +208,7 @@ class SceneEditor(QObject):
         self.ui.tblCharacters.setModel(self._characters_proxy_model)
 
         self.story_line_model.selected.clear()
-        for story_line in self.scene.story_lines:
+        for story_line in self.scene.dramatic_questions:
             self.story_line_model.selected.add(story_line)
         self.story_line_model.modelReset.emit()
 
@@ -369,9 +369,9 @@ class SceneEditor(QObject):
 
         if self.ui.cbPivotal.currentIndex() > 0:
             self.scene.beat = self.ui.cbPivotal.currentData()
-        self.scene.story_lines.clear()
+        self.scene.dramatic_questions.clear()
         for story_line in self.story_line_model.selected:
-            self.scene.story_lines.append(story_line)
+            self.scene.dramatic_questions.append(story_line)
 
         arc = NEUTRAL
         if self.ui.btnVeryUnhappy.isChecked():

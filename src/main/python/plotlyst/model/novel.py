@@ -23,7 +23,7 @@ from PyQt5.QtCore import QModelIndex, Qt, QVariant, pyqtSignal, QAbstractTableMo
 from PyQt5.QtGui import QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, StoryLine
+from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion
 
 
 class NovelStoryLinesListModel(QAbstractTableModel):
@@ -34,11 +34,11 @@ class NovelStoryLinesListModel(QAbstractTableModel):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
-        self.selected: Set[StoryLine] = set()
+        self.selected: Set[DramaticQuestion] = set()
 
     @overrides
     def rowCount(self, parent: QModelIndex = ...) -> int:
-        return len(self.novel.story_lines)
+        return len(self.novel.dramatic_questions)
 
     @overrides
     def columnCount(self, parent: QModelIndex = ...) -> int:
@@ -50,12 +50,12 @@ class NovelStoryLinesListModel(QAbstractTableModel):
             return
 
         if role == self.StoryLineRole:
-            return self.novel.story_lines[index.row()]
+            return self.novel.dramatic_questions[index.row()]
         if index.column() == self.ColText:
             if role == Qt.DisplayRole:
-                return self.novel.story_lines[index.row()].text
+                return self.novel.dramatic_questions[index.row()].text
             if role == Qt.CheckStateRole:
-                if self.novel.story_lines[index.row()] in self.selected:
+                if self.novel.dramatic_questions[index.row()] in self.selected:
                     return Qt.Checked
                 return Qt.Unchecked
 
@@ -68,9 +68,9 @@ class NovelStoryLinesListModel(QAbstractTableModel):
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
         if role == Qt.CheckStateRole:
             if value == Qt.Checked:
-                self.selected.add(self.novel.story_lines[index.row()])
+                self.selected.add(self.novel.dramatic_questions[index.row()])
             elif value == Qt.Unchecked:
-                self.selected.remove(self.novel.story_lines[index.row()])
+                self.selected.remove(self.novel.dramatic_questions[index.row()])
             self.selection_changed.emit()
             return True
         return False
@@ -99,13 +99,13 @@ class EditableNovelStoryLinesListModel(NovelStoryLinesListModel):
 
         if index.column() == self.ColColor:
             if role == Qt.BackgroundRole:
-                return QBrush(QColor(self.novel.story_lines[index.row()].color_hexa))
+                return QBrush(QColor(self.novel.dramatic_questions[index.row()].color_hexa))
 
         return super(EditableNovelStoryLinesListModel, self).data(index, role)
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
         if role == Qt.EditRole:
-            self.novel.story_lines[index.row()].text = value
+            self.novel.dramatic_questions[index.row()].text = value
             return True
         return False

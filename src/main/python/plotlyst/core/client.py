@@ -30,9 +30,10 @@ from PyQt5.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, StoryLine, Chapter, CharacterArc, \
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
-    default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue
+    default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
+    DramaticQuestion
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -131,6 +132,7 @@ class SceneInfo:
     pov: Optional[uuid.UUID] = None
     characters: List[uuid.UUID] = field(default_factory=list)
     wip: bool = False
+    dramatic_questions: List[uuid.UUID] = field(default_factory=list)
     storylines: List[uuid.UUID] = field(default_factory=list)
     day: int = 1
     notes: str = ''
@@ -141,13 +143,6 @@ class SceneInfo:
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
     beat: Optional[uuid.UUID] = None
-
-
-@dataclass
-class StorylineInfo:
-    text: str
-    id: uuid.UUID
-    color_hexa: str = ''
 
 
 @dataclass
@@ -163,7 +158,8 @@ class NovelInfo:
     story_structure: uuid.UUID = default_story_structures[0].id
     scenes: List[uuid.UUID] = field(default_factory=list)
     characters: List[uuid.UUID] = field(default_factory=list)
-    storylines: List[StorylineInfo] = field(default_factory=list)
+    storylines: List[DramaticQuestion] = field(default_factory=list)
+    dramatic_questions: List[DramaticQuestion] = field(default_factory=list)
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
@@ -291,14 +287,15 @@ class JsonClient:
         novel_info = self._read_novel_info(project_novel_info.id)
         self.__persist_info(self.novels_dir, novel_info)
 
-        storylines = []
-        storylines_ids = {}
-        for i, sl_info in enumerate(novel_info.storylines):
+        dramatic_questions = []
+        dq_ids = {}
+        questions = novel_info.storylines if novel_info.storylines else novel_info.dramatic_questions
+        for i, sl_info in enumerate(questions):
             color = sl_info.color_hexa if sl_info.color_hexa else STORY_LINE_COLOR_CODES[
                 i % len(STORY_LINE_COLOR_CODES)]
-            sl = StoryLine(text=sl_info.text, id=sl_info.id, color_hexa=color)
-            storylines.append(sl)
-            storylines_ids[str(sl_info.id)] = sl
+            dq = DramaticQuestion(text=sl_info.text, id=sl_info.id, color_hexa=color)
+            dramatic_questions.append(dq)
+            dq_ids[str(sl_info.id)] = dq
         chapters = []
         chapters_ids = {}
         for seq, chapter_info in enumerate(novel_info.chapters):
@@ -341,9 +338,10 @@ class JsonClient:
                 data = json_file.read()
                 info: SceneInfo = SceneInfo.from_json(data)
                 scene_storylines = []
-                for sl_id in info.storylines:
-                    if str(sl_id) in storylines_ids.keys():
-                        scene_storylines.append(storylines_ids[str(sl_id)])
+                questions = info.storylines if info.storylines else info.dramatic_questions
+                for sl_id in questions:
+                    if str(sl_id) in dq_ids.keys():
+                        scene_storylines.append(dq_ids[str(sl_id)])
                 if info.pov and str(info.pov) in characters_ids.keys():
                     pov = characters_ids[str(info.pov)]
                 else:
@@ -380,11 +378,12 @@ class JsonClient:
                               notes=info.notes,
                               action_resolution=info.action_resolution,
                               without_action_conflict=info.without_action_conflict, sequence=seq,
-                              story_lines=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
+                              dramatic_questions=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat)
                 scenes.append(scene)
 
-        return Novel(title=project_novel_info.title, id=novel_info.id, story_lines=storylines, characters=characters,
+        return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=dramatic_questions,
+                     characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
                      story_structure=story_structure, character_profiles=novel_info.character_profiles)
 
@@ -407,8 +406,10 @@ class JsonClient:
 
     def _persist_novel(self, novel: Novel):
         novel_info = NovelInfo(id=novel.id, scenes=[x.id for x in novel.scenes],
-                               storylines=[StorylineInfo(text=x.text, id=x.id, color_hexa=x.color_hexa) for x in
-                                           novel.story_lines], characters=[x.id for x in novel.characters],
+                               dramatic_questions=[DramaticQuestion(text=x.text, id=x.id, color_hexa=x.color_hexa) for x
+                                                   in
+                                                   novel.dramatic_questions],
+                               characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
                                stages=novel.stages, story_structure=novel.story_structure.id,
                                character_profiles=novel.character_profiles)
@@ -420,7 +421,7 @@ class JsonClient:
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
-        storylines = [x.id for x in scene.story_lines]
+        dramatic_questions = [x.id for x in scene.dramatic_questions]
         characters = [x.id for x in scene.characters]
         arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]
         builder_elements = [self.__get_scene_builder_element_info(x) for x in
@@ -430,7 +431,7 @@ class JsonClient:
                          end=scene.end, wip=scene.wip, day=scene.day, notes=scene.notes,
                          action_resolution=scene.action_resolution,
                          without_action_conflict=scene.without_action_conflict,
-                         pov=self.__id_or_none(scene.pov), storylines=storylines, characters=characters,
+                         pov=self.__id_or_none(scene.pov), dramatic_questions=dramatic_questions, characters=characters,
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),

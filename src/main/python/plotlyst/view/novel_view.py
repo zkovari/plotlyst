@@ -26,7 +26,7 @@ from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, StoryLine
+from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent, NovelUpdatedEvent, \
     NovelStoryStructureUpdated
@@ -60,6 +60,8 @@ class NovelView(AbstractNovelView):
         self._emoji_font = emoji_font(14) if platform.is_windows() else emoji_font(20)
         self.ui.lblStoryStructureEmoji.setFont(self._emoji_font)
         self.ui.lblStoryStructureEmoji.setText(emoji.emojize(':performing_arts:'))
+        self.ui.lblDramaticQuestionEmoji.setFont(self._emoji_font)
+        self.ui.lblDramaticQuestionEmoji.setText(emoji.emojize(':red_question_mark:'))
         for story_structure in json_client.project.story_structures:
             icon = qtawesome.icon(story_structure.icon) if story_structure.icon else QIcon('')
             self.ui.cbStoryStructure.addItem(icon, story_structure.title, story_structure)
@@ -70,13 +72,13 @@ class NovelView(AbstractNovelView):
         self._update_story_structure_info()
 
         self.story_lines_model = EditableNovelStoryLinesListModel(self.novel)
-        self.ui.tblStoryLines.horizontalHeader().setDefaultSectionSize(25)
-        self.ui.tblStoryLines.setModel(self.story_lines_model)
-        self.ui.tblStoryLines.horizontalHeader().setSectionResizeMode(EditableNovelStoryLinesListModel.ColText,
-                                                                      QHeaderView.Stretch)
-        self.ui.tblStoryLines.setItemDelegate(StoryLineDelegate(self.novel))
-        self.ui.tblStoryLines.selectionModel().selectionChanged.connect(self._on_story_line_selected)
-        self.ui.tblStoryLines.clicked.connect(self._on_story_line_clicked)
+        self.ui.tblDramaticQuestions.horizontalHeader().setDefaultSectionSize(25)
+        self.ui.tblDramaticQuestions.setModel(self.story_lines_model)
+        self.ui.tblDramaticQuestions.horizontalHeader().setSectionResizeMode(EditableNovelStoryLinesListModel.ColText,
+                                                                             QHeaderView.Stretch)
+        self.ui.tblDramaticQuestions.setItemDelegate(StoryLineDelegate(self.novel))
+        self.ui.tblDramaticQuestions.selectionModel().selectionChanged.connect(self._on_dramatic_question_selected)
+        self.ui.tblDramaticQuestions.clicked.connect(self._on_dramatic_question_clicked)
 
         self.ui.btnStoryStructureInfo.setText(u'\u00BB')
         self.ui.btnStoryStructureInfo.setIcon(IconRegistry.general_info_icon())
@@ -129,49 +131,50 @@ The scenes can be associated to such story beats.</p>''')
         self.ui.btnStoryStructureInfo.setText(u'\u02C7' if checked else u'\u00BB')
 
     def _on_add_story_line(self):
-        story_line = StoryLine(text='Unknown')
-        self.novel.story_lines.append(story_line)
-        story_line.color_hexa = STORY_LINE_COLOR_CODES[(len(self.novel.story_lines) - 1) % len(STORY_LINE_COLOR_CODES)]
+        story_line = DramaticQuestion(text='Unknown')
+        self.novel.dramatic_questions.append(story_line)
+        story_line.color_hexa = STORY_LINE_COLOR_CODES[
+            (len(self.novel.dramatic_questions) - 1) % len(STORY_LINE_COLOR_CODES)]
         client.update_novel(self.novel)
         self.story_lines_model.modelReset.emit()
 
-        self.ui.tblStoryLines.edit(self.story_lines_model.index(self.story_lines_model.rowCount() - 1,
-                                                                EditableNovelStoryLinesListModel.ColText))
+        self.ui.tblDramaticQuestions.edit(self.story_lines_model.index(self.story_lines_model.rowCount() - 1,
+                                                                       EditableNovelStoryLinesListModel.ColText))
         emit_event(StorylineCreatedEvent(self))
 
     def _on_edit_story_line(self):
-        indexes = self.ui.tblStoryLines.selectedIndexes()
+        indexes = self.ui.tblDramaticQuestions.selectedIndexes()
         if not indexes:
             return
-        self.ui.tblStoryLines.edit(indexes[0])
+        self.ui.tblDramaticQuestions.edit(indexes[0])
 
     def _on_remove_story_line(self):
-        indexes = self.ui.tblStoryLines.selectedIndexes()
+        indexes = self.ui.tblDramaticQuestions.selectedIndexes()
         if not indexes:
             return
-        story_line: StoryLine = indexes[0].data(EditableNovelStoryLinesListModel.StoryLineRole)
+        story_line: DramaticQuestion = indexes[0].data(EditableNovelStoryLinesListModel.StoryLineRole)
         if not ask_confirmation(f'Are you sure you want to remove story line "{story_line.text}"?'):
             return
 
-        self.novel.story_lines.remove(story_line)
+        self.novel.dramatic_questions.remove(story_line)
         client.update_novel(self.novel)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()
 
-    def _on_story_line_selected(self):
-        selection = len(self.ui.tblStoryLines.selectedIndexes()) > 0
+    def _on_dramatic_question_selected(self):
+        selection = len(self.ui.tblDramaticQuestions.selectedIndexes()) > 0
         self.ui.btnEdit.setEnabled(selection)
         self.ui.btnRemove.setEnabled(selection)
 
-    def _on_story_line_clicked(self, index: QModelIndex):
+    def _on_dramatic_question_clicked(self, index: QModelIndex):
         if index.column() == EditableNovelStoryLinesListModel.ColColor:
-            storyline: StoryLine = index.data(EditableNovelStoryLinesListModel.StoryLineRole)
-            color: QColor = QColorDialog.getColor(QColor(storyline.color_hexa),
+            dq: DramaticQuestion = index.data(EditableNovelStoryLinesListModel.StoryLineRole)
+            color: QColor = QColorDialog.getColor(QColor(dq.color_hexa),
                                                   options=QColorDialog.DontUseNativeDialog)
             if color.isValid():
-                storyline.color_hexa = color.name()
+                dq.color_hexa = color.name()
                 client.update_novel(self.novel)
-            self.ui.tblStoryLines.clearSelection()
+            self.ui.tblDramaticQuestions.clearSelection()
 
 
 class StoryLineDelegate(QStyledItemDelegate):
