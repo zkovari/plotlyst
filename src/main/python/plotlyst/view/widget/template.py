@@ -22,7 +22,7 @@ from typing import Optional, List, Any
 
 import emoji
 import qtawesome
-from PyQt5.QtCore import Qt, pyqtSignal, QSize, QByteArray, QBuffer, QIODevice, QObject, QEvent
+from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox
@@ -33,7 +33,7 @@ from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldTyp
     ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field, SelectionItemType
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
-from src.main.python.plotlyst.view.icons import avatars, IconRegistry
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 
 
 class _ProfileTemplateBase(QFrame):
@@ -101,7 +101,7 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
 
     def setCharacter(self, character: Character):
         self.character = character
-        self._update_avatar()
+        set_avatar(self.lblAvatar, self.character)
 
     def _upload_avatar(self):
         filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
@@ -120,14 +120,7 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         self.character.avatar = array
 
         avatars.update(self.character)
-        self._update_avatar()
-
-    def _update_avatar(self):
-        if self.character.avatar:
-            self.lblAvatar.setPixmap(
-                avatars.pixmap(self.character).scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        else:
-            self.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(128, 128)))
+        set_avatar(self.lblAvatar, self.character)
 
 
 class ButtonSelectionWidget(QWidget):

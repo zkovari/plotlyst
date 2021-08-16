@@ -48,7 +48,7 @@ class HomeView(AbstractView):
         self._layout = FlowLayout(spacing=9)
         self.ui.novels.setLayout(self._layout)
         self.novel_cards: List[NovelCard] = []
-        self.selected_card: Optional['NovelCard'] = None
+        self.selected_card: Optional[NovelCard] = None
         self.refresh()
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
@@ -65,7 +65,10 @@ class HomeView(AbstractView):
 
     @overrides
     def refresh(self):
-        self._layout.clear()
+        while self._layout.count():
+            item = self._layout.takeAt(0)
+            if item:
+                item.widget().deleteLater()
         self.novel_cards.clear()
         self.ui.btnDelete.setDisabled(True)
         self.ui.btnEdit.setDisabled(True)
