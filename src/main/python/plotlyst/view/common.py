@@ -78,9 +78,12 @@ def ask_confirmation(message: str, parent: Optional[QWidget] = None) -> bool:
     return False
 
 
-def spacer_widget(max_width: Optional[int] = None) -> QWidget:
+def spacer_widget(max_width: Optional[int] = None, vertical: bool = False) -> QWidget:
     spacer = QWidget()
-    spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+    if vertical:
+        spacer.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+    else:
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
     if max_width:
         spacer.setMaximumWidth(max_width)
     return spacer

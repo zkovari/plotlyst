@@ -63,6 +63,7 @@ class _ProfileTemplateBase(QWidget):
             widget = TemplateFieldWidget(el.field)
             self.widgets.append(widget)
             self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span)
+        self.gridLayout.addWidget(spacer_widget(vertical=True), self.gridLayout.rowCount(), 0)
 
 
 class _PlaceHolder(QFrame):
