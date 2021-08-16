@@ -440,10 +440,25 @@
         </item>
         <item>
          <widget class="QFrame" name="wdgPov">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>190</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>190</height>
+           </size>
+          </property>
           <property name="styleSheet">
-           <string notr="true">#wdgPov {border: 1px solid black;
+           <string notr="true">#wdgPov {border: 0px solid black;
 border-radius: 15px;
 }</string>
+          </property>
+          <property name="lineWidth">
+           <number>0</number>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_18">
            <property name="spacing">
@@ -479,6 +494,19 @@ border-radius: 15px;
               <number>3</number>
              </property>
              <item>
+              <spacer name="verticalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item alignment="Qt::AlignBottom">
               <widget class="QToolButton" name="btnVeryHappy">
                <property name="minimumSize">
                 <size>

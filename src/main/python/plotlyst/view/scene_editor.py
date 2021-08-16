@@ -22,7 +22,7 @@ from typing import Optional, List, Set
 
 import emoji
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel, \
-    QAbstractItemModel, Qt, QSize
+    QAbstractItemModel, Qt, QSize, QEvent
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox
 from fbs_runtime import platform
@@ -134,6 +134,8 @@ class SceneEditor(QObject):
         self._save_enabled = False
         self._update_view(scene)
 
+        self.ui.wdgPov.installEventFilter(self)
+
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.sbDay.valueChanged.connect(self._save_scene)
         self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
@@ -147,6 +149,15 @@ class SceneEditor(QObject):
         self.ui.btnGroupArc.buttonClicked.connect(self._save_scene)
         self.ui.btnDisaster.toggled.connect(self._on_disaster_toggled)
         self.ui.btnResolution.toggled.connect(self._on_resolution_toggled)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Enter:
+            self._enabled_pov_arc_widgets(True)
+        if event.type() == QEvent.Leave:
+            self._enabled_pov_arc_widgets(False)
+
+        return super(SceneEditor, self).eventFilter(watched, event)
 
     def _update_view(self, scene: Optional[Scene] = None):
         if scene:
@@ -162,10 +173,9 @@ class SceneEditor(QObject):
 
         if self.scene.pov:
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
-            self._enable_arc_buttons(True)
         else:
             self.ui.cbPov.setCurrentIndex(0)
-            self._enable_arc_buttons(False)
+        self._enabled_pov_arc_widgets(False)
         self._update_pov_avatar()
         self.ui.sbDay.setValue(self.scene.day)
 
@@ -320,23 +330,39 @@ class SceneEditor(QObject):
         if self._save_enabled:
             self._save_timer.start(500)
 
-    def _enable_arc_buttons(self, enabled: bool):
-        self.ui.btnVeryUnhappy.setVisible(enabled)
-        self.ui.btnUnHappy.setVisible(enabled)
-        self.ui.btnNeutral.setVisible(enabled)
-        self.ui.btnHappy.setVisible(enabled)
-        self.ui.btnVeryHappy.setVisible(enabled)
+    def _enabled_pov_arc_widgets(self, edition: bool):
+        if self.scene.pov:
+            self.ui.btnVeryUnhappy.setVisible(edition)
+            self.ui.btnUnHappy.setVisible(edition)
+            self.ui.btnNeutral.setVisible(edition)
+            self.ui.btnHappy.setVisible(edition)
+            self.ui.btnVeryHappy.setVisible(edition)
+
+            if not edition:
+                self.ui.cbPov.setStyleSheet('border: 0px;')
+                for btn in self.ui.btnGroupArc.buttons():
+                    if btn.isChecked():
+                        btn.setVisible(True)
+        else:
+            self.ui.btnVeryUnhappy.setVisible(False)
+            self.ui.btnUnHappy.setVisible(False)
+            self.ui.btnNeutral.setVisible(False)
+            self.ui.btnHappy.setVisible(False)
+            self.ui.btnVeryHappy.setVisible(False)
 
     def _on_pov_changed(self):
         pov = self.ui.cbPov.currentData()
         if pov:
             self.scene.pov = pov
-            self._enable_arc_buttons(True)
+            self._enabled_pov_arc_widgets(True)
         else:
             self.scene.pov = None
-            self._enable_arc_buttons(False)
+            self._enabled_pov_arc_widgets(False)
         self._update_pov_avatar()
         self._characters_model.update()
+        self.ui.cbPov.setStyleSheet('''
+                        QComboBox {border: 0px black solid;}
+                        ''')
         self._save_scene()
 
     def _update_pov_avatar(self):
