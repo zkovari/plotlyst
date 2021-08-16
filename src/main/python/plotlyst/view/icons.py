@@ -269,6 +269,12 @@ class IconRegistry:
     def cards_icon() -> QIcon:
         return qtawesome.icon('mdi.cards', options=[{'scale_factor': 1.2}])
 
+    @staticmethod
+    def from_name(name: str, color: str = 'black', mdi_scale: float = 1.2) -> QIcon:
+        if name.startswith('md'):
+            return QIcon(qtawesome.icon(name, color=color, options=[{'scale_factor': mdi_scale}]))
+        return QIcon(qtawesome.icon(name, color=color))
+
 
 class AvatarsRegistry:
     def __init__(self):

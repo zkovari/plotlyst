@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional, List
 
-import qtawesome
 from PyQt5 import QtGui
 from PyQt5.QtCore import QItemSelection, pyqtSignal, QSize
 from PyQt5.QtWidgets import QFrame
@@ -184,10 +183,10 @@ class CharacterCard(Ui_CharacterCard, QFrame):
         enneagram = self.character.enneagram()
         if enneagram:
             self.lblEnneagram.setPixmap(
-                qtawesome.icon(enneagram.icon, color=enneagram.icon_color).pixmap(QSize(32, 32)))
+                IconRegistry.from_name(enneagram.icon, enneagram.icon_color).pixmap(QSize(28, 28)))
         role = self.character.role()
         if role:
-            self.lblRole.setPixmap(qtawesome.icon(role.icon, color=role.icon_color).pixmap(QSize(24, 24)))
+            self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
         self._setStyleSheet()
 
     @overrides

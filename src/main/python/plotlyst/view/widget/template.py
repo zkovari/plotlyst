@@ -85,9 +85,7 @@ def is_placeholder(widget: QWidget) -> bool:
 
 def _icon(item: SelectionItem) -> QIcon:
     if item.icon:
-        if item.icon.startswith('md'):
-            return QIcon(qtawesome.icon(item.icon, color=item.icon_color, options=[{'scale_factor': 1.4}]))
-        return QIcon(qtawesome.icon(item.icon, color=item.icon_color))
+        return IconRegistry.from_name(item.icon, item.icon_color, mdi_scale=1.4)
     else:
         return QIcon('')
 
