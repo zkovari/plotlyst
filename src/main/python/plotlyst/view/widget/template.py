@@ -121,14 +121,6 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
 
         avatars.update(self.character)
         set_avatar(self.lblAvatar, self.character)
-        # self._update_avatar()
-
-    # def _update_avatar(self):
-    #     if self.character.avatar:
-    #         self.lblAvatar.setPixmap(
-    #             avatars.pixmap(self.character).scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-    #     else:
-    #         self.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(128, 128)))
 
 
 class ButtonSelectionWidget(QWidget):

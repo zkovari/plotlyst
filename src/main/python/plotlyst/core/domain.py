@@ -328,9 +328,6 @@ class TemplateField:
     frozen: bool = False
     show_label: bool = True
 
-    def sid(self) -> str:
-        return str(self.id)
-
 
 name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':bust_in_silhouette:', placeholder='Name',
                            id=uuid.UUID('45525d2e-3ba7-40e4-b072-e367f96a6eb4'), required=True, highlighted=True,

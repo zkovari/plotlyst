@@ -201,9 +201,6 @@ class CharacterCard(Ui_CharacterCard, QFrame):
         self.selected.emit(self)
         self.doubleClicked.emit(self)
 
-    # def update(self):
-    #     self.label.setText(self.novel.title)
-
     def clearSelection(self):
         self._setStyleSheet()
 
