@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Any
 
+from PyQt5.QtCore import Qt
+
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
 
 ACTION_SCENE = 'action'
@@ -407,6 +409,18 @@ for item in role_field.selections:
     _role_choices[item.text] = item
 
 
+class HAlignment(Enum):
+    LEFT = Qt.AlignLeft
+    RIGHT = Qt.AlignRight
+    CENTER = Qt.AlignHCenter
+
+
+class VAlignment(Enum):
+    TOP = Qt.AlignTop
+    BOTTOM = Qt.AlignBottom
+    CENTER = Qt.AlignVCenter
+
+
 @dataclass
 class ProfileElement:
     field: TemplateField
@@ -414,6 +428,8 @@ class ProfileElement:
     col: int
     row_span: int = 1
     col_span: int = 1
+    h_alignment: HAlignment = HAlignment.LEFT
+    v_alignment: VAlignment = VAlignment.CENTER
 
 
 @dataclass

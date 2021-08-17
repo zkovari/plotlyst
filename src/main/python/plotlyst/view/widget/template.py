@@ -60,7 +60,8 @@ class _ProfileTemplateBase(QWidget):
         for el in self._profile.elements:
             widget = TemplateFieldWidget(el.field)
             self.widgets.append(widget)
-            self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span)
+            self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span,
+                                      el.h_alignment.value | el.v_alignment.value)
 
         self.gridLayout.addItem(QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding),
                                 self.gridLayout.rowCount(), 0)
