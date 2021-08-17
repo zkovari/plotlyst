@@ -43,13 +43,13 @@ class _ProfileTemplateBase(QWidget):
         super().__init__(parent)
         self._profile = profile
         self.layout = QVBoxLayout(self)
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        # self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.scrollArea = QScrollArea(self)
-        self.scrollArea.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        # self.scrollArea.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setFocusPolicy(Qt.NoFocus)
         self.scrollAreaWidgetContents = QWidget()
-        self.scrollAreaWidgetContents.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        # self.scrollAreaWidgetContents.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setSpacing(0)
         self.gridLayout.setContentsMargins(2, 0, 2, 0)
@@ -182,8 +182,8 @@ class TemplateFieldWidget(QFrame):
         super(TemplateFieldWidget, self).__init__(parent)
         self.field = field
         self.layout = QHBoxLayout()
+
         self.setLayout(self.layout)
-        self.setProperty('mainFrame', True)
 
         if self.field.emoji:
             if platform.is_windows():
@@ -208,6 +208,9 @@ class TemplateFieldWidget(QFrame):
 
         if self.field.compact:
             self.layout.addWidget(spacer_widget())
+
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(1, 2, 1, 2)
 
     @overrides
     def setEnabled(self, enabled: bool):
