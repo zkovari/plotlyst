@@ -25,7 +25,8 @@ import qtawesome
 from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
-    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout
+    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
+    QSpacerItem
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -50,7 +51,7 @@ class _ProfileTemplateBase(QWidget):
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
-        self.gridLayout.setSpacing(1)
+        self.gridLayout.setSpacing(0)
         self.gridLayout.setContentsMargins(2, 0, 2, 0)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
@@ -63,8 +64,11 @@ class _ProfileTemplateBase(QWidget):
             widget = TemplateFieldWidget(el.field)
             self.widgets.append(widget)
             self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span)
-        self.gridLayout.addWidget(spacer_widget(vertical=True), self.gridLayout.rowCount(), 0)
-        self.gridLayout.setRowStretch(self.gridLayout.rowCount(), 1)
+
+        # self.gridLayout.addWidget(spacer_widget(vertical=True), self.gridLayout.rowCount(), 0)
+        self.gridLayout.addItem(QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding),
+                                self.gridLayout.rowCount(), 0)
+        self.gridLayout.setRowStretch(self.gridLayout.rowCount() - 1, 1)
 
 
 class _PlaceHolder(QFrame):
