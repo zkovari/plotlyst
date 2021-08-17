@@ -26,7 +26,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
-    QSpacerItem
+    QSpacerItem, QTextEdit
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -191,7 +191,7 @@ class TemplateFieldWidget(QFrame):
             self.lblEmoji = QLabel()
             self.lblEmoji.setFont(emoji_font(emoji_size))
             self.lblEmoji.setText(emoji.emojize(self.field.emoji))
-            self.layout.addWidget(self.lblEmoji)
+            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
 
         self.lblName = QLabel()
         self.lblName.setText(self.field.name)
@@ -201,14 +201,13 @@ class TemplateFieldWidget(QFrame):
             self.lblName.setHidden(True)
 
         self.wdgEditor = self._fieldWidget()
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.layout.addWidget(self.wdgEditor)
 
         if self.field.compact:
             self.layout.addWidget(spacer_widget())
 
         self.layout.setSpacing(4)
-        self.layout.setContentsMargins(1, 2, 1, 2)
+        self.layout.setContentsMargins(2, 2, 1, 2)
 
     @overrides
     def setEnabled(self, enabled: bool):
@@ -225,6 +224,8 @@ class TemplateFieldWidget(QFrame):
             return self.wdgEditor.value()
         if isinstance(self.wdgEditor, QLineEdit):
             return self.wdgEditor.text()
+        if isinstance(self.wdgEditor, QTextEdit):
+            return self.wdgEditor.toPlainText()
         if isinstance(self.wdgEditor, QComboBox):
             return self.wdgEditor.currentText()
         if isinstance(self.wdgEditor, ButtonSelectionWidget):
@@ -233,7 +234,7 @@ class TemplateFieldWidget(QFrame):
     def setValue(self, value: Any):
         if isinstance(self.wdgEditor, QSpinBox):
             self.wdgEditor.setValue(value)
-        if isinstance(self.wdgEditor, QLineEdit):
+        if isinstance(self.wdgEditor, (QLineEdit, QTextEdit)):
             self.wdgEditor.setText(value)
         if isinstance(self.wdgEditor, QComboBox):
             self.wdgEditor.setCurrentText(value)
@@ -256,6 +257,10 @@ class TemplateFieldWidget(QFrame):
             widget = ButtonSelectionWidget(self.field)
         elif self.field.type == TemplateFieldType.IMAGE:
             widget = AvatarWidget(self.field)
+        elif self.field.type == TemplateFieldType.SMALL_TEXT:
+            widget = QTextEdit()
+            widget.setMaximumHeight(60)
+            widget.setPlaceholderText(self.field.placeholder)
         else:
             widget = QLineEdit()
             widget.setPlaceholderText(self.field.placeholder)

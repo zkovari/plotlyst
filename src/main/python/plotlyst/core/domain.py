@@ -295,7 +295,7 @@ class NovelDescriptor:
 
 class TemplateFieldType(Enum):
     TEXT = 0
-    TEXT_AREA = 1
+    SMALL_TEXT = 1
     TEXT_SELECTION = 2
     BUTTON_SELECTION = 3
     NUMERIC = 4
@@ -382,11 +382,12 @@ for item in enneagram_field.selections:
 
 goal_field = TemplateField('Goal', type=TemplateFieldType.TEXT,
                            id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'))
-misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.TEXT,
+misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'))
-fear_field = TemplateField('Fear', type=TemplateFieldType.TEXT, emoji=':face_screaming_in_fear:', placeholder='Fear',
+fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':face_screaming_in_fear:',
+                           placeholder='Fear',
                            id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'), show_label=False)
-desire_field = TemplateField('Desire', type=TemplateFieldType.TEXT, emoji=':star-struck:', placeholder='Desire',
+desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:', placeholder='Desire',
                              id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'), show_label=False)
 role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('131b9de6-ac95-4db5-b9a1-33200100b676'),
@@ -410,9 +411,11 @@ for item in role_field.selections:
 
 
 class HAlignment(Enum):
+    DEFAULT = 0
     LEFT = Qt.AlignLeft
     RIGHT = Qt.AlignRight
     CENTER = Qt.AlignHCenter
+    JUSTIFY = Qt.AlignJustify
 
 
 class VAlignment(Enum):
@@ -428,7 +431,7 @@ class ProfileElement:
     col: int
     row_span: int = 1
     col_span: int = 1
-    h_alignment: HAlignment = HAlignment.LEFT
+    h_alignment: HAlignment = HAlignment.DEFAULT
     v_alignment: VAlignment = VAlignment.CENTER
 
 
