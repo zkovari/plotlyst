@@ -376,6 +376,24 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                             SelectionItem('Peacemaker', icon='mdi.numeric-9-circle',
                                                           icon_color='#3a015c')],
                                 compact=True)
+mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
+                           id=uuid.UUID('bc5408a4-c2bd-4370-b46b-95f20018af01'),
+                           selections=[SelectionItem('INTJ'),
+                                       SelectionItem('INTP'),
+                                       SelectionItem('ENTJ'),
+                                       SelectionItem('ENTP'),
+                                       SelectionItem('INFJ'),
+                                       SelectionItem('INFP'),
+                                       SelectionItem('ENFJ'),
+                                       SelectionItem('ENFP'),
+                                       SelectionItem('ISTJ'),
+                                       SelectionItem('ISFJ'),
+                                       SelectionItem('ESTJ'),
+                                       SelectionItem('ESFJ'),
+                                       SelectionItem('ISTP'),
+                                       SelectionItem('ISFP'),
+                                       SelectionItem('ESTP'),
+                                       SelectionItem('ESFP'), ], compact=True)
 _enneagram_choices = {}
 for item in enneagram_field.selections:
     _enneagram_choices[item.text] = item
@@ -450,7 +468,8 @@ def default_character_profiles() -> List[ProfileTemplate]:
     fields = [ProfileElement(name_field, 0, 0), ProfileElement(avatar_field, 0, 1, row_span=2),
               ProfileElement(role_field, 2, 0),
               ProfileElement(enneagram_field, 3, 0),
-              ProfileElement(gender_field, 3, 1)]
+              ProfileElement(gender_field, 3, 1),
+              ProfileElement(mbti_field, 4, 0)]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
                             elements=fields)]

@@ -28,7 +28,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
-    desire_field, default_character_profiles, role_field
+    desire_field, default_character_profiles, role_field, mbti_field
 from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -122,6 +122,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = role_field
             elif self._dragged is self.btnEnneagram:
                 field = enneagram_field
+            elif self._dragged is self.btnMbti:
+                field = mbti_field
             elif self._dragged is self.btnGoal:
                 field = goal_field
             elif self._dragged is self.btnFear:
@@ -166,6 +168,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.btnRole.setEnabled(enabled)
         elif field.id == enneagram_field.id:
             self.btnEnneagram.setEnabled(enabled)
+        elif field.id == mbti_field.id:
+            self.btnMbti.setEnabled(enabled)
         elif field.id == goal_field.id:
             self.btnGoal.setEnabled(enabled)
         elif field.id == fear_field.id:
