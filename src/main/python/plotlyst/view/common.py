@@ -24,7 +24,7 @@ from typing import Optional, Any
 
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont
-from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame
 from fbs_runtime import platform
 
 
@@ -87,6 +87,17 @@ def spacer_widget(max_width: Optional[int] = None, vertical: bool = False) -> QW
     if max_width:
         spacer.setMaximumWidth(max_width)
     return spacer
+
+
+def line(vertical: bool = False) -> QFrame:
+    line = QFrame()
+    if vertical:
+        line.setFrameShape(QFrame.VLine)
+    else:
+        line.setFrameShape(QFrame.HLine)
+    line.setFrameShadow(QFrame.Sunken)
+
+    return line
 
 
 def busy(func):

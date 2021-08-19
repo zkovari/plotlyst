@@ -25,7 +25,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
     QAbstractItemModel, Qt, QSize, QEvent
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
-    QWidgetAction, QListView
+    QWidgetAction, QListView, QTableView
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuilderPreviewDialog
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 
 
 class SceneEditor(QObject):
@@ -72,6 +73,8 @@ class SceneEditor(QObject):
 
         self.ui.btnDisaster.setIcon(IconRegistry.disaster_icon(color='grey'))
         self.ui.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
+        self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.edit_icon())
+        self.ui.btnEditCharacters.setIcon(IconRegistry.edit_icon())
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
         self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
@@ -106,10 +109,19 @@ class SceneEditor(QObject):
         self.lstDramaticQuestions.setModel(self.dq_model)
         self.dq_model.selection_changed.connect(self._dramatic_question_selection_changed)
         self.dq_model.modelReset.connect(self._dramatic_question_selection_changed)
-        self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.edit_icon())
         action = QWidgetAction(self.ui.btnEditDramaticQuestions)
         action.setDefaultWidget(self.lstDramaticQuestions)
         self.ui.btnEditDramaticQuestions.addAction(action)
+
+        self.tblCharacters = QTableView()
+        self.tblCharacters.setShowGrid(False)
+        self.tblCharacters.verticalHeader().setVisible(False)
+        self.tblCharacters.horizontalHeader().setVisible(False)
+        self.tblCharacters.horizontalHeader().setDefaultSectionSize(200)
+
+        action = QWidgetAction(self.ui.btnEditCharacters)
+        action.setDefaultWidget(self.tblCharacters)
+        self.ui.btnEditCharacters.addAction(action)
 
         self.scenes_model = ScenesTableModel(self.novel)
         self.ui.lstScenes.setModel(self.scenes_model)
@@ -219,10 +231,11 @@ class SceneEditor(QObject):
         self.ui.textNotes.setPlainText(self.scene.notes)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
-        self._characters_model.selection_changed.connect(self._save_scene)
+        self._characters_model.selection_changed.connect(self._character_changed)
         self._characters_proxy_model = QSortFilterProxyModel()
         self._characters_proxy_model.setSourceModel(self._characters_model)
-        self.ui.tblCharacters.setModel(self._characters_proxy_model)
+        self.tblCharacters.setModel(self._characters_proxy_model)
+        self._character_changed()
 
         self.dq_model.selected.clear()
         for dq in self.scene.dramatic_questions:
@@ -370,7 +383,7 @@ class SceneEditor(QObject):
         self.ui.cbPov.setStyleSheet('''
                         QComboBox {border: 0px black solid;}
                         ''')
-        self._save_scene()
+        self._character_changed()
 
     def _update_pov_avatar(self):
         if self.scene.pov:
@@ -387,6 +400,16 @@ class SceneEditor(QObject):
         self.ui.wdgDramaticQuestions.clear()
         for dq in self.dq_model.selected:
             self.ui.wdgDramaticQuestions.addText(dq.text, dq.color_hexa)
+        self._save_scene()
+
+    def _character_changed(self):
+        self.ui.wdgCharacters.clear()
+
+        if self.scene.pov:
+            self.ui.wdgCharacters.addLabel(CharacterLabel(self.scene.pov, pov=True))
+        for character in self.scene.characters:
+            self.ui.wdgCharacters.addLabel(CharacterLabel(character))
+
         self._save_scene()
 
     def _save_scene(self):
