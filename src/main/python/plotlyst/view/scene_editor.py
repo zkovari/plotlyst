@@ -24,7 +24,8 @@ import emoji
 from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel, \
     QAbstractItemModel, Qt, QSize, QEvent
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox
+from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
+    QWidgetAction, QListView
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -33,7 +34,7 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REA
     VERY_UNHAPPY, \
     UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
-from src.main.python.plotlyst.model.novel import NovelStoryLinesListModel
+from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsListModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
@@ -100,9 +101,15 @@ class SceneEditor(QObject):
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
         self.ui.cbConflict.clicked.connect(self._on_conflict_toggled)
 
-        self.story_line_model = NovelStoryLinesListModel(self.novel)
-        self.ui.lstStoryLines.setModel(self.story_line_model)
-        self.story_line_model.selection_changed.connect(self._save_scene)
+        self.dq_model = NovelDramaticQuestionsListModel(self.novel)
+        self.lstDramaticQuestions = QListView()
+        self.lstDramaticQuestions.setModel(self.dq_model)
+        self.dq_model.selection_changed.connect(self._dramatic_question_selection_changed)
+        self.dq_model.modelReset.connect(self._dramatic_question_selection_changed)
+        self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.edit_icon())
+        action = QWidgetAction(self.ui.btnEditDramaticQuestions)
+        action.setDefaultWidget(self.lstDramaticQuestions)
+        self.ui.btnEditDramaticQuestions.addAction(action)
 
         self.scenes_model = ScenesTableModel(self.novel)
         self.ui.lstScenes.setModel(self.scenes_model)
@@ -217,10 +224,10 @@ class SceneEditor(QObject):
         self._characters_proxy_model.setSourceModel(self._characters_model)
         self.ui.tblCharacters.setModel(self._characters_proxy_model)
 
-        self.story_line_model.selected.clear()
-        for story_line in self.scene.dramatic_questions:
-            self.story_line_model.selected.add(story_line)
-        self.story_line_model.modelReset.emit()
+        self.dq_model.selected.clear()
+        for dq in self.scene.dramatic_questions:
+            self.dq_model.selected.add(dq)
+        self.dq_model.modelReset.emit()
 
         if self._new_scene:
             self.ui.btnPrevious.setDisabled(True)
@@ -376,6 +383,12 @@ class SceneEditor(QObject):
         else:
             self.ui.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(128, 128)))
 
+    def _dramatic_question_selection_changed(self):
+        self.ui.wdgDramaticQuestions.clear()
+        for dq in self.dq_model.selected:
+            self.ui.wdgDramaticQuestions.addText(dq.text, dq.color_hexa)
+        self._save_scene()
+
     def _save_scene(self):
         self._save_timer.stop()
         if not self._save_enabled:
@@ -396,7 +409,7 @@ class SceneEditor(QObject):
         if self.ui.cbPivotal.currentIndex() > 0:
             self.scene.beat = self.ui.cbPivotal.currentData()
         self.scene.dramatic_questions.clear()
-        for story_line in self.story_line_model.selected:
+        for story_line in self.dq_model.selected:
             self.scene.dramatic_questions.append(story_line)
 
         arc = NEUTRAL

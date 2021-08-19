@@ -26,7 +26,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion
 
 
-class NovelStoryLinesListModel(QAbstractTableModel):
+class NovelDramaticQuestionsListModel(QAbstractTableModel):
     StoryLineRole = Qt.UserRole + 1
     selection_changed = pyqtSignal()
     ColText: int = 0
@@ -76,7 +76,7 @@ class NovelStoryLinesListModel(QAbstractTableModel):
         return False
 
 
-class EditableNovelStoryLinesListModel(NovelStoryLinesListModel):
+class EditableNovelDramaticQuestionsListModel(NovelDramaticQuestionsListModel):
     ColColor: int = 0
     ColText: int = 1
 
@@ -101,7 +101,7 @@ class EditableNovelStoryLinesListModel(NovelStoryLinesListModel):
             if role == Qt.BackgroundRole:
                 return QBrush(QColor(self.novel.dramatic_questions[index.row()].color_hexa))
 
-        return super(EditableNovelStoryLinesListModel, self).data(index, role)
+        return super(EditableNovelDramaticQuestionsListModel, self).data(index, role)
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:

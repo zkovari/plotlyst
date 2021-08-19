@@ -30,7 +30,7 @@ from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent, NovelUpdatedEvent, \
     NovelStoryStructureUpdated
-from src.main.python.plotlyst.model.novel import EditableNovelStoryLinesListModel
+from src.main.python.plotlyst.model.novel import EditableNovelDramaticQuestionsListModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
@@ -71,11 +71,12 @@ class NovelView(AbstractNovelView):
         self.ui.wdgStoryStructureInfo.setVisible(False)
         self._update_story_structure_info()
 
-        self.story_lines_model = EditableNovelStoryLinesListModel(self.novel)
+        self.story_lines_model = EditableNovelDramaticQuestionsListModel(self.novel)
         self.ui.tblDramaticQuestions.horizontalHeader().setDefaultSectionSize(25)
         self.ui.tblDramaticQuestions.setModel(self.story_lines_model)
-        self.ui.tblDramaticQuestions.horizontalHeader().setSectionResizeMode(EditableNovelStoryLinesListModel.ColText,
-                                                                             QHeaderView.Stretch)
+        self.ui.tblDramaticQuestions.horizontalHeader().setSectionResizeMode(
+            EditableNovelDramaticQuestionsListModel.ColText,
+            QHeaderView.Stretch)
         self.ui.tblDramaticQuestions.setItemDelegate(StoryLineDelegate(self.novel))
         self.ui.tblDramaticQuestions.selectionModel().selectionChanged.connect(self._on_dramatic_question_selected)
         self.ui.tblDramaticQuestions.clicked.connect(self._on_dramatic_question_clicked)
@@ -139,7 +140,7 @@ The scenes can be associated to such story beats.</p>''')
         self.story_lines_model.modelReset.emit()
 
         self.ui.tblDramaticQuestions.edit(self.story_lines_model.index(self.story_lines_model.rowCount() - 1,
-                                                                       EditableNovelStoryLinesListModel.ColText))
+                                                                       EditableNovelDramaticQuestionsListModel.ColText))
         emit_event(StorylineCreatedEvent(self))
 
     def _on_edit_story_line(self):
@@ -152,7 +153,7 @@ The scenes can be associated to such story beats.</p>''')
         indexes = self.ui.tblDramaticQuestions.selectedIndexes()
         if not indexes:
             return
-        story_line: DramaticQuestion = indexes[0].data(EditableNovelStoryLinesListModel.StoryLineRole)
+        story_line: DramaticQuestion = indexes[0].data(EditableNovelDramaticQuestionsListModel.StoryLineRole)
         if not ask_confirmation(f'Are you sure you want to remove story line "{story_line.text}"?'):
             return
 
@@ -167,8 +168,8 @@ The scenes can be associated to such story beats.</p>''')
         self.ui.btnRemove.setEnabled(selection)
 
     def _on_dramatic_question_clicked(self, index: QModelIndex):
-        if index.column() == EditableNovelStoryLinesListModel.ColColor:
-            dq: DramaticQuestion = index.data(EditableNovelStoryLinesListModel.StoryLineRole)
+        if index.column() == EditableNovelDramaticQuestionsListModel.ColColor:
+            dq: DramaticQuestion = index.data(EditableNovelDramaticQuestionsListModel.StoryLineRole)
             color: QColor = QColorDialog.getColor(QColor(dq.color_hexa),
                                                   options=QColorDialog.DontUseNativeDialog)
             if color.isValid():
