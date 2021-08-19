@@ -1004,6 +1004,9 @@ QToolButton:disabled {
                  </widget>
                 </item>
                 <item>
+                 <widget class="LabelsWidget" name="wdgConflicts" native="true"/>
+                </item>
+                <item>
                  <spacer name="horizontalSpacer_17">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
@@ -1015,6 +1018,19 @@ QToolButton:disabled {
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item>
+                 <widget class="QToolButton" name="btnAddConflict">
+                  <property name="text">
+                   <string>Add conflict</string>
+                  </property>
+                  <property name="popupMode">
+                   <enum>QToolButton::InstantPopup</enum>
+                  </property>
+                  <property name="toolButtonStyle">
+                   <enum>Qt::ToolButtonTextBesideIcon</enum>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>

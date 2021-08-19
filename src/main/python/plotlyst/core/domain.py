@@ -144,6 +144,22 @@ class StoryBeat:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
+class ConflictType(Enum):
+    CHARACTER = 0
+    SOCIETY = 1
+    NATURE = 2
+    TECHNOLOGY = 3
+    SUPERNATURAL = 4
+    SELF = 5
+
+
+@dataclass
+class Conflict:
+    keyphrase: str
+    type: ConflictType
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+
 @dataclass
 class Scene:
     title: str
@@ -170,6 +186,7 @@ class Scene:
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
     beat: Optional[StoryBeat] = None
+    conflicts: List[Conflict] = field(default_factory=list)
 
     def pov_arc(self) -> int:
         for arc in self.arcs:
@@ -485,6 +502,7 @@ class Novel(NovelDescriptor):
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
+    conflicts: List[Conflict] = field(default_factory=list)
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title
