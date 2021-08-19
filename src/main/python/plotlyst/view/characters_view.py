@@ -82,10 +82,7 @@ class CharactersView(AbstractNovelView):
     def _update_cards(self):
         self.character_cards.clear()
         self.selected_card = None
-        while self._cards_layout.count():
-            item = self._cards_layout.takeAt(0)
-            if item:
-                item.widget().deleteLater()
+        self._cards_layout.clear()
 
         for character in self.novel.characters:
             card = CharacterCard(character)

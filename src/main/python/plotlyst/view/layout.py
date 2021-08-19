@@ -41,6 +41,12 @@ class FlowLayout(QLayout):
     def count(self) -> int:
         return len(self._items)
 
+    def clear(self):
+        while self.count():
+            item = self.takeAt(0)
+            if item:
+                item.widget().deleteLater()
+
     @overrides
     def itemAt(self, index: int) -> Optional[QLayoutItem]:
         if 0 <= index < self.count():
@@ -80,13 +86,6 @@ class FlowLayout(QLayout):
         size += QSize(left + right, top + bottom)
 
         return size
-
-    def clear(self):
-        if not self._items:
-            return
-        item = self.takeAt(0)
-        while item:
-            item = self.takeAt(0)
 
     def _arrange(self, rect: QRect, testOnly: bool) -> int:
         left, top, right, bottom = self.getContentsMargins()
