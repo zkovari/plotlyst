@@ -33,7 +33,7 @@ from dataclasses_json import dataclass_json, Undefined
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    DramaticQuestion
+    DramaticQuestion, ConflictType, Conflict
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -143,12 +143,22 @@ class SceneInfo:
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
     beat: Optional[uuid.UUID] = None
+    conflicts: List[uuid.UUID] = field(default_factory=list)
 
 
 @dataclass
 class ChapterInfo:
     title: str
     id: uuid.UUID
+
+
+@dataclass
+class ConflictInfo:
+    keyphrase: str
+    type: ConflictType
+    id: uuid.UUID
+    pov: uuid.UUID
+    character: Optional[uuid.UUID] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -163,6 +173,7 @@ class NovelInfo:
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
+    conflicts: List[ConflictInfo] = field(default_factory=list)
 
 
 @dataclass
@@ -339,6 +350,24 @@ class JsonClient:
         for char in characters:
             characters_ids[str(char.id)] = char
 
+        conflicts = []
+        conflict_ids = {}
+        for conflict_info in novel_info.conflicts:
+            pov = characters_ids.get(str(conflict_info.pov))
+            if not pov:
+                continue
+            character = None
+            if conflict_info.character:
+                character = characters_ids.get(str(conflict_info.character))
+                if character is None:
+                    continue
+
+            conflict = Conflict(keyphrase=conflict_info.keyphrase, type=conflict_info.type, id=conflict_info.id,
+                                pov=pov,
+                                character=character)
+            conflicts.append(conflict)
+            conflict_ids[str(conflict.id)] = conflict
+
         story_structure: StoryStructure = self.project.story_structures[0]
         for structure in self.project.story_structures:
             if structure.id == novel_info.story_structure:
@@ -370,6 +399,11 @@ class JsonClient:
                     if str(char_id) in characters_ids.keys():
                         scene_characters.append(characters_ids[str(char_id)])
 
+                scene_conflicts = []
+                for conflict_id in info.conflicts:
+                    if str(conflict_id) in conflict_ids.keys():
+                        scene_conflicts.append(conflict_ids[str(conflict_id)])
+
                 if info.chapter and str(info.chapter) in chapters_ids.keys():
                     chapter = chapters_ids[str(info.chapter)]
                 else:
@@ -389,6 +423,7 @@ class JsonClient:
                 for arc in info.arcs:
                     if str(arc.character) in characters_ids.keys():
                         arcs.append(CharacterArc(arc=arc.arc, character=characters_ids[str(arc.character)]))
+
                 beat = beat_ids.get(str(info.beat))
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
@@ -397,13 +432,14 @@ class JsonClient:
                               action_resolution=info.action_resolution,
                               without_action_conflict=info.without_action_conflict, sequence=seq,
                               dramatic_questions=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
-                              chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat)
+                              chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
+                              conflicts=scene_conflicts)
                 scenes.append(scene)
-
         return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=dramatic_questions,
                      characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
-                     story_structure=story_structure, character_profiles=novel_info.character_profiles)
+                     story_structure=story_structure, character_profiles=novel_info.character_profiles,
+                     conflicts=conflicts)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -430,7 +466,11 @@ class JsonClient:
                                characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
                                stages=novel.stages, story_structure=novel.story_structure.id,
-                               character_profiles=novel.character_profiles)
+                               character_profiles=novel.character_profiles,
+                               conflicts=[ConflictInfo(x.keyphrase, x.type, x.id,
+                                                       pov=x.pov.id,
+                                                       character=x.character.id if x.character else None) for x in
+                                          novel.conflicts])
 
         self.__persist_info(self.novels_dir, novel_info)
 
@@ -444,6 +484,7 @@ class JsonClient:
         arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]
         builder_elements = [self.__get_scene_builder_element_info(x) for x in
                             scene.builder_elements]
+        conflicts = [x.id for x in scene.conflicts]
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          beginning=scene.beginning, middle=scene.middle,
                          end=scene.end, wip=scene.wip, day=scene.day, notes=scene.notes,
@@ -453,7 +494,8 @@ class JsonClient:
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
-                         beat=self.__id_or_none(scene.beat))
+                         beat=self.__id_or_none(scene.beat),
+                         conflicts=conflicts)
         self.__persist_info(self.scenes_dir, info)
 
     @staticmethod

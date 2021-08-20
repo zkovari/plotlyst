@@ -39,6 +39,7 @@ class EventLogHandler:
         self._error_event = asyncio.Event()
 
     def on_error_event(self, event: EventLog, time: int) -> None:
+        print(event)
         if not self._error_event.is_set():
             if not event.highlighted:
                 self.statusbar.showMessage(event.message, time)

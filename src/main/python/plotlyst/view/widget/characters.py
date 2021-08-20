@@ -22,14 +22,18 @@ from typing import Iterable, List
 
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QHeaderView
 
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene
+from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
 from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
-from src.main.python.plotlyst.view.icons import avatars
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
 
 class CharactersScenesDistributionWidget(QWidget):
@@ -128,3 +132,95 @@ class CharacterSelectorWidget(QWidget):
             self._btn_group.setExclusive(True)
             self._layout.addWidget(tool_btn)
         self._layout.addWidget(spacer_widget())
+
+
+class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
+    new_conflict_added = pyqtSignal(Conflict)
+    conflict_selection_changed = pyqtSignal()
+
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
+        super(CharacterConflictWidget, self).__init__(parent)
+        self.novel = novel
+        self.scene = scene
+        self.setupUi(self)
+        self.setMaximumWidth(270)
+
+        self.btnCharacter.setIcon(IconRegistry.conflict_character_icon())
+        self.btnSociety.setIcon(IconRegistry.conflict_society_icon())
+        self.btnNature.setIcon(IconRegistry.conflict_nature_icon())
+        self.btnTechnology.setIcon(IconRegistry.conflict_technology_icon())
+        self.btnSupernatural.setIcon(IconRegistry.conflict_supernatural_icon())
+        self.btnSelf.setIcon(IconRegistry.conflict_self_icon())
+
+        self._update_characters()
+
+        self.btnAddNew.setIcon(IconRegistry.ok_icon())
+        self.btnAddNew.setDisabled(True)
+        self.btnConfirm.setHidden(True)
+
+        self.lineKey.textChanged.connect(self._keyphrase_edited)
+
+        self.btnGroupConflicts.buttonToggled.connect(self._type_toggled)
+        self._type = ConflictType.CHARACTER
+        self.btnCharacter.setChecked(True)
+
+        self._model = SceneConflictsTableModel(self.novel, self.scene)
+        self._model.selection_changed.connect(self.conflict_selection_changed.emit)
+        self.tblConflicts.verticalHeader().setDefaultSectionSize(20)
+        self.tblConflicts.setModel(self._model)
+        self.tblConflicts.setColumnWidth(SceneConflictsTableModel.ColType, 50)
+        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsTableModel.ColPhrase,
+                                                                  QHeaderView.Stretch)
+
+        self.btnAddNew.clicked.connect(self._add_new)
+
+    def refresh(self):
+        self.cbCharacter.clear()
+        self._update_characters()
+        self._model.update()
+        self._model.modelReset.emit()
+
+    def _update_characters(self):
+        for char in self.novel.characters:
+            if self.scene.pov and char.id != self.scene.pov.id:
+                self.cbCharacter.addItem(QIcon(avatars.pixmap(char)), char.name, char)
+
+    def _type_toggled(self):
+        lbl_prefix = 'Character vs.'
+        self.cbCharacter.setVisible(self.btnCharacter.isChecked())
+        if self.btnCharacter.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Character')
+            self._type = ConflictType.CHARACTER
+        elif self.btnSociety.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Society')
+            self._type = ConflictType.SOCIETY
+        elif self.btnNature.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Nature')
+            self._type = ConflictType.NATURE
+        elif self.btnTechnology.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Technology')
+            self._type = ConflictType.TECHNOLOGY
+        elif self.btnSupernatural.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Supernatural')
+            self._type = ConflictType.SUPERNATURAL
+        elif self.btnSelf.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Self')
+            self._type = ConflictType.SELF
+
+    def _keyphrase_edited(self, text: str):
+        self.btnAddNew.setEnabled(len(text) > 0)
+
+    def _add_new(self):
+        if not self.scene.pov:
+            return emit_critical('Select POV character first')
+        conflict = Conflict(self.lineKey.text(), self._type, pov=self.scene.pov)
+        if self._type == ConflictType.CHARACTER:
+            conflict.character = self.cbCharacter.currentData()
+
+        self.novel.conflicts.append(conflict)
+        self.scene.conflicts.append(conflict)
+        client.update_novel(self.novel)
+        client.update_scene(self.scene)
+        self.new_conflict_added.emit(conflict)
+        self.refresh()
+        self.lineKey.clear()

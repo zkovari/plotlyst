@@ -25,14 +25,14 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
     QAbstractItemModel, Qt, QSize, QEvent
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
-    QWidgetAction, QListView, QTableView
+    QWidgetAction, QListView, QTableView, QMenu
 from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
-    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement
+    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, Conflict
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsListModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
@@ -42,7 +42,8 @@ from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuilderPreviewDialog
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.labels import CharacterLabel
+from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
+from src.main.python.plotlyst.view.widget.labels import CharacterLabel, ConflictLabel
 
 
 class SceneEditor(QObject):
@@ -75,6 +76,7 @@ class SceneEditor(QObject):
         self.ui.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
         self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.edit_icon())
         self.ui.btnEditCharacters.setIcon(IconRegistry.edit_icon())
+        self.ui.btnAddConflict.setIcon(IconRegistry.conflict_icon())
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
         self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
@@ -237,6 +239,16 @@ class SceneEditor(QObject):
         self.tblCharacters.setModel(self._characters_proxy_model)
         self._character_changed()
 
+        action = QWidgetAction(self.ui.btnAddConflict)
+        self._character_conflict_widget = CharacterConflictWidget(self.novel, self.scene)
+        self._character_conflict_widget.new_conflict_added.connect(self._new_conflict)
+        self._character_conflict_widget.conflict_selection_changed.connect(self._conflicts_changed)
+        action.setDefaultWidget(self._character_conflict_widget)
+        menu = QMenu(self.ui.btnAddConflict)
+        menu.addAction(action)
+        self.ui.btnAddConflict.setMenu(menu)
+        self._conflicts_changed()
+
         self.dq_model.selected.clear()
         for dq in self.scene.dramatic_questions:
             self.dq_model.selected.add(dq)
@@ -305,17 +317,19 @@ class SceneEditor(QObject):
             self.ui.cbConflict.setVisible(True)
             self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
             self._on_conflict_toggled(self.ui.cbConflict.isChecked())
+            self.ui.btnAddConflict.setText('Add conflict')
 
             return
         elif text == REACTION_SCENE:
             self.ui.btnDisaster.setHidden(True)
             self.ui.btnResolution.setHidden(True)
             self.ui.lblType1.setText('Reaction:')
-            self.ui.textEvent1.setPlaceholderText('Reaction in the beginning')
+            self.ui.textEvent1.setPlaceholderText('Reaction at the beginning')
             self.ui.lblType2.setText('Dilemma:')
             self.ui.textEvent2.setPlaceholderText('Dilemma throughout the scene')
             self.ui.lblType3.setText('Decision:')
             self.ui.textEvent3.setPlaceholderText('Decision in the end')
+            self.ui.btnAddConflict.setText('Add cause')
         else:
             self.ui.lblType1.setText('Beginning:')
             self.ui.textEvent1.setPlaceholderText('Beginning event of the scene')
@@ -323,12 +337,16 @@ class SceneEditor(QObject):
             self.ui.textEvent2.setPlaceholderText('Middle part of the scene')
             self.ui.lblType3.setText('End:')
             self.ui.textEvent3.setPlaceholderText('Ending of the scene')
+            self.ui.btnAddConflict.setText('Add conflict')
 
         self.ui.textEvent2.setEnabled(True)
         self.ui.lblType2.setVisible(True)
         self.ui.btnDisaster.setHidden(True)
         self.ui.btnResolution.setHidden(True)
         self.ui.cbConflict.setHidden(True)
+
+        self.ui.btnAddConflict.setVisible(True)
+        self.ui.wdgConflicts.setVisible(True)
 
     def _on_disaster_toggled(self):
         self.ui.lblType3.setText('Disaster:')
@@ -343,8 +361,9 @@ class SceneEditor(QObject):
             self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
         else:
             self.ui.textEvent2.setText('')
-            self.ui.textEvent2.setPlaceholderText('There is no conflict in this scene')
-        self.ui.textEvent2.setEnabled(toggled)
+            self.ui.textEvent2.setPlaceholderText('Middle part of the scene')
+        self.ui.btnAddConflict.setVisible(toggled)
+        self.ui.wdgConflicts.setVisible(toggled)
 
     def _pending_save(self):
         if self._save_enabled:
@@ -384,6 +403,10 @@ class SceneEditor(QObject):
                         QComboBox {border: 0px black solid;}
                         ''')
         self._character_changed()
+        self._character_conflict_widget.refresh()
+        if self._save_enabled:
+            self.scene.conflicts.clear()
+            self._conflicts_changed()
 
     def _update_pov_avatar(self):
         if self.scene.pov:
@@ -456,6 +479,15 @@ class SceneEditor(QObject):
         else:
             client.update_scene(self.scene)
         self._new_scene = False
+
+    def _conflicts_changed(self):
+        self.ui.wdgConflicts.clear()
+        for conflict in self.scene.conflicts:
+            self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))
+
+    def _new_conflict(self, conflict: Conflict):
+        self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))
+        self.ui.btnAddConflict.menu().hide()
 
     def _on_close(self):
         self.scene.builder_elements.clear()

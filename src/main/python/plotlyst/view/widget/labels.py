@@ -24,7 +24,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character
+from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType
 from src.main.python.plotlyst.view.common import line
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout
@@ -40,7 +40,7 @@ class LabelsWidget(QWidget):
         super(LabelsWidget, self).__init__(parent)
         self.setLayout(FlowLayout())
 
-    def addText(self, text: str, color: str):
+    def addText(self, text: str, color: str = '#7c98b3'):
         label = QLabel(truncate_string(text, 40))
         rgb = QColor(color).getRgb()
         r = rgb[0]
@@ -91,3 +91,46 @@ class CharacterLabel(Label):
             border: {border_size}px solid {border_color}; 
             border-radius: 8px; padding-left: 3px; padding-right: 3px;}}
         ''')
+
+
+class ConflictLabel(Label):
+    def __init__(self, conflict: Conflict, parent=None):
+        super(ConflictLabel, self).__init__(parent)
+        self.conflict = conflict
+
+        _layout = QHBoxLayout()
+        _layout.setSpacing(2)
+        _layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(_layout)
+
+        self.lblConflict = QLabel()
+        self.lblConflict.setPixmap(IconRegistry.conflict_icon().pixmap(QSize(24, 24)))
+        _layout.addWidget(self.lblConflict)
+
+        self.lblAvatar = QLabel()
+        if self.conflict.character:
+            set_avatar(self.lblAvatar, self.conflict.character, 24)
+        else:
+            if self.conflict.type == ConflictType.CHARACTER:
+                icon = IconRegistry.conflict_character_icon()
+            elif self.conflict.type == ConflictType.SOCIETY:
+                icon = IconRegistry.conflict_society_icon()
+            elif self.conflict.type == ConflictType.NATURE:
+                icon = IconRegistry.conflict_nature_icon()
+            elif self.conflict.type == ConflictType.TECHNOLOGY:
+                icon = IconRegistry.conflict_technology_icon()
+            elif self.conflict.type == ConflictType.SUPERNATURAL:
+                icon = IconRegistry.conflict_supernatural_icon()
+            elif self.conflict.type == ConflictType.SELF:
+                icon = IconRegistry.conflict_self_icon()
+            else:
+                icon = IconRegistry.conflict_icon()
+            self.lblAvatar.setPixmap(icon.pixmap(QSize(24, 24)))
+        _layout.addWidget(self.lblAvatar)
+        _layout.addWidget(QLabel(self.conflict.keyphrase))
+
+        self.setStyleSheet('''
+                ConflictLabel {
+                    border: 2px solid #f3a712;
+                    border-radius: 8px; padding-left: 3px; padding-right: 3px;}
+                ''')

@@ -28,7 +28,8 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, Character
+from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, Character, \
+    ConflictType
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -401,3 +402,80 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
 
     def _stage(self, index: QModelIndex):
         return self.novel.stages[index.column() - 2]
+
+
+class SceneConflictsTableModel(QAbstractTableModel):
+    selection_changed = pyqtSignal()
+    ColType = 0
+    ColPhrase = 1
+
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+        self.scene = scene
+        self._conflicts = []
+        self.update()
+
+    def update(self):
+        if self.scene.pov:
+            self._conflicts = [x for x in self.novel.conflicts if x.pov.id == self.scene.pov.id]
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return len(self._conflicts)
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = None) -> int:
+        return 2
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        conflict = self._conflicts[index.row()]
+        if index.column() == self.ColType:
+            if role == Qt.DecorationRole:
+                if conflict.character:
+                    if conflict.character.avatar:
+                        return QIcon(avatars.pixmap(conflict.character))
+                    else:
+                        return avatars.name_initial_icon(conflict.character)
+                elif conflict.type == ConflictType.CHARACTER:
+                    return IconRegistry.conflict_character_icon()
+                elif conflict.type == ConflictType.SOCIETY:
+                    return IconRegistry.conflict_society_icon()
+                elif conflict.type == ConflictType.NATURE:
+                    return IconRegistry.conflict_nature_icon()
+                elif conflict.type == ConflictType.TECHNOLOGY:
+                    return IconRegistry.conflict_technology_icon()
+                elif conflict.type == ConflictType.SUPERNATURAL:
+                    return IconRegistry.conflict_supernatural_icon()
+                elif conflict.type == ConflictType.SELF:
+                    return IconRegistry.conflict_self_icon()
+                else:
+                    return IconRegistry.conflict_icon()
+            if role == Qt.CheckStateRole:
+                if conflict in self.scene.conflicts:
+                    return Qt.Checked
+                else:
+                    return Qt.Unchecked
+        if index.column() == self.ColPhrase:
+            if role == Qt.DisplayRole:
+                return conflict.keyphrase
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        flags = super().flags(index)
+        if index.column() == 0:
+            return flags | Qt.ItemIsUserCheckable
+        return flags
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
+        if role == Qt.CheckStateRole:
+            if value == Qt.Checked:
+                self.scene.conflicts.append(self._conflicts[index.row()])
+            else:
+                self.scene.conflicts.remove(self._conflicts[index.row()])
+            self.selection_changed.emit()
+            return True
+        else:
+            return super().setData(index, value, role)
