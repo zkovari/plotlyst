@@ -23,7 +23,7 @@ import pytest
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Character, DramaticQuestion, Scene, Chapter, ACTION_SCENE, \
     REACTION_SCENE, \
-    Novel
+    Novel, Conflict, ConflictType
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
@@ -75,6 +75,8 @@ def init_project():
     dq_lesser = DramaticQuestion(text='Lesser')
     dq_love = DramaticQuestion(text='Love')
     novel.dramatic_questions.extend([dq_main, dq_lesser, dq_love])
+    conflict = Conflict('Test', ConflictType.SOCIETY, pov=char_a)
+    novel.conflicts.append(conflict)
 
     chapter_1 = Chapter(title='1', sequence=0)
     chapter_2 = Chapter(title='2', sequence=1)
@@ -82,7 +84,7 @@ def init_project():
     novel.chapters.append(chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
                     dramatic_questions=[dq_main], sequence=0, chapter=chapter_1, day=1, type=ACTION_SCENE,
-                    beginning='Beginning', middle='Middle', end='End', stage=novel.stages[1])
+                    beginning='Beginning', middle='Middle', end='End', stage=novel.stages[1], conflicts=[conflict])
     scene_2 = Scene(title='Scene 2', synopsis='Scene 2 synopsis', pov=char_d, characters=[char_c, char_a],
                     dramatic_questions=[dq_lesser, dq_love], sequence=1, chapter=chapter_2, day=2,
                     type=REACTION_SCENE,
