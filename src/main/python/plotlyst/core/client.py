@@ -157,6 +157,7 @@ class ConflictInfo:
     keyphrase: str
     type: ConflictType
     id: uuid.UUID
+    pov: uuid.UUID
     character: Optional[uuid.UUID] = None
 
 
@@ -352,11 +353,18 @@ class JsonClient:
         conflicts = []
         conflict_ids = {}
         for conflict_info in novel_info.conflicts:
+            pov = characters_ids.get(str(conflict_info.pov))
+            if not pov:
+                continue
+            character = None
             if conflict_info.character:
                 character = characters_ids.get(str(conflict_info.character))
-            else:
-                character = None
-            conflict = Conflict(conflict_info.keyphrase, conflict_info.type, conflict_info.id, character)
+                if character is None:
+                    continue
+
+            conflict = Conflict(keyphrase=conflict_info.keyphrase, type=conflict_info.type, id=conflict_info.id,
+                                pov=pov,
+                                character=character)
             conflicts.append(conflict)
             conflict_ids[str(conflict.id)] = conflict
 
@@ -460,6 +468,7 @@ class JsonClient:
                                stages=novel.stages, story_structure=novel.story_structure.id,
                                character_profiles=novel.character_profiles,
                                conflicts=[ConflictInfo(x.keyphrase, x.type, x.id,
+                                                       pov=x.pov.id,
                                                        character=x.character.id if x.character else None) for x in
                                           novel.conflicts])
 

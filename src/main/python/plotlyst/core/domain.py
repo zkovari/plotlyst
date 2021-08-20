@@ -157,6 +157,7 @@ class ConflictType(Enum):
 class Conflict:
     keyphrase: str
     type: ConflictType
+    pov: Character
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     character: Optional[Character] = None
 

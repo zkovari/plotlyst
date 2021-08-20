@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>297</width>
-    <height>185</height>
+    <height>199</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -65,7 +65,7 @@ QToolBox {
         <x>0</x>
         <y>0</y>
         <width>297</width>
-        <height>135</height>
+        <height>149</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -76,7 +76,7 @@ QToolBox {
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <property name="spacing">
-        <number>2</number>
+        <number>3</number>
        </property>
        <property name="leftMargin">
         <number>2</number>
@@ -285,7 +285,7 @@ QToolBox {
         <x>0</x>
         <y>0</y>
         <width>297</width>
-        <height>135</height>
+        <height>149</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -318,6 +318,30 @@ QToolBox {
            <height>100</height>
           </size>
          </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::NoSelection</enum>
+         </property>
+         <property name="showGrid">
+          <bool>false</bool>
+         </property>
+         <attribute name="horizontalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="horizontalHeaderMinimumSectionSize">
+          <number>15</number>
+         </attribute>
+         <attribute name="horizontalHeaderDefaultSectionSize">
+          <number>20</number>
+         </attribute>
+         <attribute name="verticalHeaderVisible">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="verticalHeaderMinimumSectionSize">
+          <number>15</number>
+         </attribute>
+         <attribute name="verticalHeaderDefaultSectionSize">
+          <number>20</number>
+         </attribute>
         </widget>
        </item>
        <item>

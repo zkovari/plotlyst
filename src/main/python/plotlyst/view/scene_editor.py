@@ -242,13 +242,12 @@ class SceneEditor(QObject):
         action = QWidgetAction(self.ui.btnAddConflict)
         self._character_conflict_widget = CharacterConflictWidget(self.novel, self.scene)
         self._character_conflict_widget.new_conflict_added.connect(self._new_conflict)
+        self._character_conflict_widget.conflict_selection_changed.connect(self._conflicts_changed)
         action.setDefaultWidget(self._character_conflict_widget)
         menu = QMenu(self.ui.btnAddConflict)
         menu.addAction(action)
         self.ui.btnAddConflict.setMenu(menu)
-        self.ui.wdgConflicts.clear()
-        for conflict in self.scene.conflicts:
-            self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))
+        self._conflicts_changed()
 
         self.dq_model.selected.clear()
         for dq in self.scene.dramatic_questions:
@@ -404,6 +403,9 @@ class SceneEditor(QObject):
                         QComboBox {border: 0px black solid;}
                         ''')
         self._character_changed()
+        self._character_conflict_widget.refresh()
+        self.scene.conflicts.clear()
+        self._conflicts_changed()
 
     def _update_pov_avatar(self):
         if self.scene.pov:
@@ -476,6 +478,11 @@ class SceneEditor(QObject):
         else:
             client.update_scene(self.scene)
         self._new_scene = False
+
+    def _conflicts_changed(self):
+        self.ui.wdgConflicts.clear()
+        for conflict in self.scene.conflicts:
+            self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))
 
     def _new_conflict(self, conflict: Conflict):
         self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))

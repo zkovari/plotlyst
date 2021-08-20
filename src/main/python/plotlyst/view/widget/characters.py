@@ -22,12 +22,14 @@ from typing import Iterable, List
 
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QHeaderView
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene
+from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
 from src.main.python.plotlyst.view.common import spacer_widget
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
@@ -134,6 +136,7 @@ class CharacterSelectorWidget(QWidget):
 
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
     new_conflict_added = pyqtSignal(Conflict)
+    conflict_selection_changed = pyqtSignal()
 
     def __init__(self, novel: Novel, scene: Scene, parent=None):
         super(CharacterConflictWidget, self).__init__(parent)
@@ -162,7 +165,19 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self._type = ConflictType.CHARACTER
         self.btnCharacter.setChecked(True)
 
+        self._model = SceneConflictsTableModel(self.novel, self.scene)
+        self._model.selection_changed.connect(self.conflict_selection_changed.emit)
+        self.tblConflicts.verticalHeader().setDefaultSectionSize(20)
+        self.tblConflicts.setModel(self._model)
+        self.tblConflicts.setColumnWidth(SceneConflictsTableModel.ColType, 50)
+        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsTableModel.ColPhrase,
+                                                                  QHeaderView.Stretch)
+
         self.btnAddNew.clicked.connect(self._add_new)
+
+    def refresh(self):
+        self._model.update()
+        self._model.modelReset.emit()
 
     def _type_toggled(self):
         lbl_prefix = 'Character vs.'
@@ -190,7 +205,9 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.btnAddNew.setEnabled(len(text) > 0)
 
     def _add_new(self):
-        conflict = Conflict(self.lineKey.text(), self._type)
+        if not self.scene.pov:
+            return emit_critical('Select POV character first')
+        conflict = Conflict(self.lineKey.text(), self._type, pov=self.scene.pov)
         if self._type == ConflictType.CHARACTER:
             conflict.character = self.cbCharacter.currentData()
 
@@ -199,5 +216,5 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         client.update_novel(self.novel)
         client.update_scene(self.scene)
         self.new_conflict_added.emit(conflict)
-
+        self.refresh()
         self.lineKey.clear()
