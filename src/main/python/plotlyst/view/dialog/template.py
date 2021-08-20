@@ -45,16 +45,17 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.profile = profile
         self._restore_requested: bool = False
 
-        self.btnAge.setIcon(qtawesome.icon('mdi.numeric', options=[{'scale_factor': 1.4}]))
-        self.btnGender.setIcon(qtawesome.icon('mdi.gender-female', color='#fface4', options=[{'scale_factor': 1.4}]))
-        self.btnRole.setIcon(qtawesome.icon('fa5s.user-tag'))
-        self.btnFear.setIcon(qtawesome.icon('mdi.spider-thread', options=[{'scale_factor': 1.2}]))
+        self.btnAge.setIcon(IconRegistry.from_name('mdi.numeric'))
+        self.btnGender.setIcon(IconRegistry.from_name('mdi.gender-female', color='#fface4'))
+        self.btnRole.setIcon(IconRegistry.from_name('fa5s.user-tag'))
+        self.btnFear.setIcon(IconRegistry.from_name('mdi.spider-thread'))
         self.btnGoal.setIcon(IconRegistry.goal_icon())
-        self.btnEnneagram.setIcon(qtawesome.icon('mdi.numeric-9-box-outline', options=[{'scale_factor': 1.2}]))
+        self.btnEnneagram.setIcon(IconRegistry.from_name('mdi.numeric-9-box-outline'))
         self.btnMbti.setIcon(qtawesome.icon('fa.group'))
-        self.btnDesire.setIcon(qtawesome.icon('fa5s.coins', color='#e1bc29'))
+        self.btnDesire.setIcon(IconRegistry.from_name('fa5s.coins', color='#e1bc29'))
         self.btnMisbelief.setIcon(IconRegistry.error_icon())
-        self.btnCustomText.setIcon(qtawesome.icon('mdi.format-text', options=[{'scale_factor': 1.2}]))
+        self.btnCustomText.setIcon(IconRegistry.from_name('mdi.format-text'))
+        self.btnCustomNumber.setIcon(IconRegistry.from_name('mdi.numeric'))
 
         self.profile_editor = ProfileTemplateEditor(self.profile)
         self.wdgEditor.layout().addWidget(self.profile_editor)
@@ -88,6 +89,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnDesire.installEventFilter(self)
         self.btnMisbelief.installEventFilter(self)
         self.btnCustomText.installEventFilter(self)
+        self.btnCustomNumber.installEventFilter(self)
 
         self._dragged: Optional[QToolButton] = None
         self.cbShowLabel.clicked.connect(self._show_label_clicked)
@@ -134,6 +136,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = desire_field
             elif self._dragged is self.btnCustomText:
                 field = TemplateField(name='Label', type=TemplateFieldType.TEXT, custom=True)
+            elif self._dragged is self.btnCustomNumber:
+                field = TemplateField(name='Label', type=TemplateFieldType.NUMERIC, custom=True, compact=True)
             else:
                 field = TemplateField(name=self._dragged.text(), type=TemplateFieldType.TEXT)
             mimedata = QMimeData()

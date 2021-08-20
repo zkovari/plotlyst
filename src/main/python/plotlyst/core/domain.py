@@ -355,7 +355,7 @@ class TemplateField:
     exclusive: bool = False
     custom: bool = False
     min_value: int = 0
-    max_value = 99999
+    max_value = 2_147_483_647
     compact: bool = False
     frozen: bool = False
     show_label: bool = True
