@@ -25,7 +25,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType
+from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene
 from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.common import spacer_widget
@@ -135,9 +135,10 @@ class CharacterSelectorWidget(QWidget):
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
     new_conflict_added = pyqtSignal(Conflict)
 
-    def __init__(self, novel: Novel, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
         super(CharacterConflictWidget, self).__init__(parent)
         self.novel = novel
+        self.scene = scene
         self.setupUi(self)
         self.setMaximumWidth(250)
 
@@ -194,7 +195,9 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
             conflict.character = self.cbCharacter.currentData()
 
         self.novel.conflicts.append(conflict)
+        self.scene.conflicts.append(conflict)
         client.update_novel(self.novel)
+        client.update_scene(self.scene)
         self.new_conflict_added.emit(conflict)
 
         self.lineKey.clear()

@@ -24,7 +24,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character
+from src.main.python.plotlyst.core.domain import Character, Conflict
 from src.main.python.plotlyst.view.common import line
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout
@@ -91,3 +91,24 @@ class CharacterLabel(Label):
             border: {border_size}px solid {border_color}; 
             border-radius: 8px; padding-left: 3px; padding-right: 3px;}}
         ''')
+
+
+class ConflictLabel(Label):
+    def __init__(self, conflict: Conflict, parent=None):
+        super(ConflictLabel, self).__init__(parent)
+        self.conflict = conflict
+
+        _layout = QHBoxLayout()
+        _layout.setSpacing(2)
+        _layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(_layout)
+        self.lblAvatar = QLabel()
+        self.lblAvatar.setPixmap(IconRegistry.conflict_icon().pixmap(QSize(24, 24)))
+        _layout.addWidget(self.lblAvatar)
+        _layout.addWidget(QLabel(self.conflict.keyphrase))
+
+        self.setStyleSheet('''
+                ConflictLabel {
+                    border: 2px solid black; 
+                    border-radius: 8px; padding-left: 3px; padding-right: 3px;}
+                ''')

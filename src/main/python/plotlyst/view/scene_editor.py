@@ -43,7 +43,7 @@ from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuil
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
-from src.main.python.plotlyst.view.widget.labels import CharacterLabel
+from src.main.python.plotlyst.view.widget.labels import CharacterLabel, ConflictLabel
 
 
 class SceneEditor(QObject):
@@ -124,14 +124,6 @@ class SceneEditor(QObject):
         action = QWidgetAction(self.ui.btnEditCharacters)
         action.setDefaultWidget(self.tblCharacters)
         self.ui.btnEditCharacters.addAction(action)
-
-        action = QWidgetAction(self.ui.btnAddConflict)
-        self._character_conflict_widget = CharacterConflictWidget(self.novel)
-        self._character_conflict_widget.new_conflict_added.connect(self._new_conflict)
-        action.setDefaultWidget(self._character_conflict_widget)
-        menu = QMenu(self.ui.btnAddConflict)
-        menu.addAction(action)
-        self.ui.btnAddConflict.setMenu(menu)
 
         self.scenes_model = ScenesTableModel(self.novel)
         self.ui.lstScenes.setModel(self.scenes_model)
@@ -246,6 +238,17 @@ class SceneEditor(QObject):
         self._characters_proxy_model.setSourceModel(self._characters_model)
         self.tblCharacters.setModel(self._characters_proxy_model)
         self._character_changed()
+
+        action = QWidgetAction(self.ui.btnAddConflict)
+        self._character_conflict_widget = CharacterConflictWidget(self.novel, self.scene)
+        self._character_conflict_widget.new_conflict_added.connect(self._new_conflict)
+        action.setDefaultWidget(self._character_conflict_widget)
+        menu = QMenu(self.ui.btnAddConflict)
+        menu.addAction(action)
+        self.ui.btnAddConflict.setMenu(menu)
+        self.ui.wdgConflicts.clear()
+        for conflict in self.scene.conflicts:
+            self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))
 
         self.dq_model.selected.clear()
         for dq in self.scene.dramatic_questions:
@@ -475,7 +478,7 @@ class SceneEditor(QObject):
         self._new_scene = False
 
     def _new_conflict(self, conflict: Conflict):
-        self.ui.wdgConflicts.addText(conflict.keyphrase)
+        self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))
         self.ui.btnAddConflict.menu().hide()
 
     def _on_close(self):
