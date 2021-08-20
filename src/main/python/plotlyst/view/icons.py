@@ -97,8 +97,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.history')
 
     @staticmethod
-    def character_icon() -> QIcon:
-        return qtawesome.icon('fa5s.user', color_on='darkBlue')
+    def character_icon(color: str = 'black', color_on: str = 'darkBlue') -> QIcon:
+        return qtawesome.icon('fa5s.user', color=color, color_on=color_on)
 
     @staticmethod
     def location_icon() -> QIcon:
@@ -201,7 +201,7 @@ class IconRegistry:
         return qtawesome.icon('fa.question-circle-o')
 
     @staticmethod
-    def conflict_icon(color: str = 'orange') -> QIcon:
+    def conflict_icon(color: str = '#f3a712') -> QIcon:
         return qtawesome.icon('mdi.sword-cross', color=color)
 
     @staticmethod
@@ -272,6 +272,30 @@ class IconRegistry:
     @staticmethod
     def cards_icon() -> QIcon:
         return qtawesome.icon('mdi.cards', options=[{'scale_factor': 1.2}])
+
+    @staticmethod
+    def conflict_character_icon() -> QIcon:
+        return IconRegistry.character_icon(color='#c1666b', color_on='#c1666b')
+
+    @staticmethod
+    def conflict_society_icon() -> QIcon:
+        return IconRegistry.from_name('ei.group-alt', color='#69306d')
+
+    @staticmethod
+    def conflict_nature_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.weather-hurricane', color='#157a6e')
+
+    @staticmethod
+    def conflict_technology_icon() -> QIcon:
+        return IconRegistry.from_name('fa.gears', color='#4a5859')
+
+    @staticmethod
+    def conflict_supernatural_icon() -> QIcon:
+        return IconRegistry.from_name('ei.magic', color='#ac7b84')
+
+    @staticmethod
+    def conflict_self_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.mirror', color='#94b0da')
 
     @staticmethod
     def from_name(name: str, color: str = 'black', mdi_scale: float = 1.2) -> QIcon:

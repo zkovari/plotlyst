@@ -140,14 +140,14 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.novel = novel
         self.scene = scene
         self.setupUi(self)
-        self.setMaximumWidth(250)
+        self.setMaximumWidth(270)
 
-        self.btnCharacter.setIcon(IconRegistry.character_icon())
-        self.btnSociety.setIcon(IconRegistry.from_name('ei.group-alt'))
-        self.btnNature.setIcon(IconRegistry.from_name('mdi.weather-hurricane'))
-        self.btnTechnology.setIcon(IconRegistry.from_name('fa.gears'))
-        self.btnSupernatural.setIcon(IconRegistry.from_name('ei.magic'))
-        self.btnSelf.setIcon(IconRegistry.portrait_icon())
+        self.btnCharacter.setIcon(IconRegistry.conflict_character_icon())
+        self.btnSociety.setIcon(IconRegistry.conflict_society_icon())
+        self.btnNature.setIcon(IconRegistry.conflict_nature_icon())
+        self.btnTechnology.setIcon(IconRegistry.conflict_technology_icon())
+        self.btnSupernatural.setIcon(IconRegistry.conflict_supernatural_icon())
+        self.btnSelf.setIcon(IconRegistry.conflict_self_icon())
 
         for char in self.novel.characters:
             self.cbCharacter.addItem(char.name, char)

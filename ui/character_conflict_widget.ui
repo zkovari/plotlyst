@@ -6,252 +6,329 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>222</width>
-    <height>249</height>
+    <width>297</width>
+    <height>185</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Frame</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <property name="styleSheet">
+   <string notr="true">QToolBox::tab {
+    background: #f3a712;
+    border-radius: 5px;
+    color: black;
+   font: italic;
+
+}
+
+QToolBox::tab:selected {
+    font: bold;
+    color: black;
+}
+
+QToolBox {
+	background-color: white;
+}
+</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout_3">
    <property name="spacing">
-    <number>4</number>
+    <number>0</number>
    </property>
    <property name="leftMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="topMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="rightMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <item>
-    <widget class="QLabel" name="lblConflictType">
-     <property name="text">
-      <string>Character vs. </string>
+    <widget class="QToolBox" name="toolBox">
+     <property name="styleSheet">
+      <string notr="true"/>
      </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QToolButton" name="btnCharacter">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupConflicts</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnSociety">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupConflicts</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnNature">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupConflicts</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnTechnology">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupConflicts</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnSupernatural">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupConflicts</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnSelf">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupConflicts</string>
-       </attribute>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="Line" name="line">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QComboBox" name="cbCharacter">
-       <property name="maximumSize">
-        <size>
-         <width>100</width>
-         <height>16777215</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="lineKey">
-       <property name="placeholderText">
-        <string>Keyhprase</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnAddNew">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="Line" name="line_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+     <property name="tabSpacing">
+      <number>2</number>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Recent:</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QTableView" name="tblConflicts">
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>100</height>
-      </size>
-     </property>
-    </widget>
-   </item>
-   <item alignment="Qt::AlignRight">
-    <widget class="QToolButton" name="btnConfirm">
-     <property name="text">
-      <string/>
-     </property>
+     <widget class="QWidget" name="page">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>297</width>
+        <height>135</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">#page {background-color: rgb(255, 255, 255);}</string>
+      </property>
+      <attribute name="label">
+       <string>Add new conflict...</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>2</number>
+       </property>
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="lblConflictType">
+         <property name="text">
+          <string>Character vs. </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QToolButton" name="btnCharacter">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">btnGroupConflicts</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnSociety">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">btnGroupConflicts</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnNature">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">btnGroupConflicts</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnTechnology">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">btnGroupConflicts</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnSupernatural">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">btnGroupConflicts</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnSelf">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">btnGroupConflicts</string>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbCharacter">
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineKey">
+           <property name="placeholderText">
+            <string>Keyphrase</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="btnAddNew">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="page_2">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>297</width>
+        <height>135</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">#page_2 {background-color: rgb(255, 255, 255);}</string>
+      </property>
+      <attribute name="label">
+       <string>Select a previous conflict...</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>2</number>
+       </property>
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="QTableView" name="tblConflicts">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnConfirm">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>

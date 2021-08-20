@@ -427,7 +427,6 @@ class JsonClient:
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
                               conflicts=scene_conflicts)
                 scenes.append(scene)
-                print(scene_conflicts)
         return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=dramatic_questions,
                      characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,

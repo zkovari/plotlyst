@@ -24,7 +24,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character, Conflict
+from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType
 from src.main.python.plotlyst.view.common import line
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout
@@ -103,12 +103,30 @@ class ConflictLabel(Label):
         _layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(_layout)
         self.lblAvatar = QLabel()
-        self.lblAvatar.setPixmap(IconRegistry.conflict_icon().pixmap(QSize(24, 24)))
+
+        if self.conflict.character:
+            set_avatar(self.lblAvatar, self.conflict.character, 24)
+        else:
+            if self.conflict.type == ConflictType.CHARACTER:
+                icon = IconRegistry.conflict_character_icon()
+            elif self.conflict.type == ConflictType.SOCIETY:
+                icon = IconRegistry.conflict_society_icon()
+            elif self.conflict.type == ConflictType.NATURE:
+                icon = IconRegistry.conflict_nature_icon()
+            elif self.conflict.type == ConflictType.TECHNOLOGY:
+                icon = IconRegistry.conflict_technology_icon()
+            elif self.conflict.type == ConflictType.SUPERNATURAL:
+                icon = IconRegistry.conflict_supernatural_icon()
+            elif self.conflict.type == ConflictType.SELF:
+                icon = IconRegistry.conflict_self_icon()
+            else:
+                icon = IconRegistry.conflict_icon()
+            self.lblAvatar.setPixmap(icon.pixmap(QSize(24, 24)))
         _layout.addWidget(self.lblAvatar)
         _layout.addWidget(QLabel(self.conflict.keyphrase))
 
         self.setStyleSheet('''
                 ConflictLabel {
-                    border: 2px solid black; 
+                    border: 2px solid #f3a712;
                     border-radius: 8px; padding-left: 3px; padding-right: 3px;}
                 ''')
