@@ -22,14 +22,16 @@ from typing import Iterable, List
 
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame
 
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType
 from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
-from src.main.python.plotlyst.view.icons import avatars
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
 
 class CharactersScenesDistributionWidget(QWidget):
@@ -128,3 +130,71 @@ class CharacterSelectorWidget(QWidget):
             self._btn_group.setExclusive(True)
             self._layout.addWidget(tool_btn)
         self._layout.addWidget(spacer_widget())
+
+
+class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
+    new_conflict_added = pyqtSignal(Conflict)
+
+    def __init__(self, novel: Novel, parent=None):
+        super(CharacterConflictWidget, self).__init__(parent)
+        self.novel = novel
+        self.setupUi(self)
+        self.setMaximumWidth(250)
+
+        self.btnCharacter.setIcon(IconRegistry.character_icon())
+        self.btnSociety.setIcon(IconRegistry.from_name('ei.group-alt'))
+        self.btnNature.setIcon(IconRegistry.from_name('mdi.weather-hurricane'))
+        self.btnTechnology.setIcon(IconRegistry.from_name('fa.gears'))
+        self.btnSupernatural.setIcon(IconRegistry.from_name('ei.magic'))
+        self.btnSelf.setIcon(IconRegistry.portrait_icon())
+
+        for char in self.novel.characters:
+            self.cbCharacter.addItem(char.name, char)
+
+        self.btnAddNew.setIcon(IconRegistry.ok_icon())
+        self.btnAddNew.setDisabled(True)
+        self.btnConfirm.setHidden(True)
+
+        self.lineKey.textChanged.connect(self._keyphrase_edited)
+
+        self.btnGroupConflicts.buttonToggled.connect(self._type_toggled)
+        self._type = ConflictType.CHARACTER
+        self.btnCharacter.setChecked(True)
+
+        self.btnAddNew.clicked.connect(self._add_new)
+
+    def _type_toggled(self):
+        lbl_prefix = 'Character vs.'
+        self.cbCharacter.setVisible(self.btnCharacter.isChecked())
+        if self.btnCharacter.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Character')
+            self._type = ConflictType.CHARACTER
+        elif self.btnSociety.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Society')
+            self._type = ConflictType.SOCIETY
+        elif self.btnNature.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Nature')
+            self._type = ConflictType.NATURE
+        elif self.btnTechnology.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Technology')
+            self._type = ConflictType.TECHNOLOGY
+        elif self.btnSupernatural.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Supernatural')
+            self._type = ConflictType.SUPERNATURAL
+        elif self.btnSelf.isChecked():
+            self.lblConflictType.setText(f'{lbl_prefix} Self')
+            self._type = ConflictType.SELF
+
+    def _keyphrase_edited(self, text: str):
+        self.btnAddNew.setEnabled(len(text) > 0)
+
+    def _add_new(self):
+        conflict = Conflict(self.lineKey.text(), self._type)
+        if self._type == ConflictType.CHARACTER:
+            conflict.character = self.cbCharacter.currentData()
+
+        self.novel.conflicts.append(conflict)
+        client.update_novel(self.novel)
+        self.new_conflict_added.emit(conflict)
+
+        self.lineKey.clear()

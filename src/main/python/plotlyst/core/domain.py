@@ -158,6 +158,7 @@ class Conflict:
     keyphrase: str
     type: ConflictType
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    character: Optional[Character] = None
 
 
 @dataclass

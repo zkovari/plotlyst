@@ -32,7 +32,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
-    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, ConflictType
+    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, Conflict
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsListModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuilderPreviewDialog
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 
 
@@ -75,7 +76,7 @@ class SceneEditor(QObject):
         self.ui.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
         self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.edit_icon())
         self.ui.btnEditCharacters.setIcon(IconRegistry.edit_icon())
-        self.ui.btnAddConflict.setIcon(IconRegistry.plus_icon())
+        self.ui.btnAddConflict.setIcon(IconRegistry.conflict_icon())
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
         self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
@@ -124,20 +125,12 @@ class SceneEditor(QObject):
         action.setDefaultWidget(self.tblCharacters)
         self.ui.btnEditCharacters.addAction(action)
 
+        action = QWidgetAction(self.ui.btnAddConflict)
+        self._character_conflict_widget = CharacterConflictWidget(self.novel)
+        self._character_conflict_widget.new_conflict_added.connect(self._new_conflict)
+        action.setDefaultWidget(self._character_conflict_widget)
         menu = QMenu(self.ui.btnAddConflict)
-
-        submenu = menu.addMenu(IconRegistry.character_icon(), 'vs. Character')
-        submenu.addAction('Add new', partial(self._new_conflict, ConflictType.CHARACTER))
-        submenu = menu.addMenu(IconRegistry.from_name('ei.group-alt'), 'vs. Society')
-        submenu.addAction('Add new', partial(self._new_conflict, ConflictType.SOCIETY))
-        submenu = menu.addMenu(IconRegistry.from_name('mdi.weather-hurricane'), 'vs. Nature')
-        submenu.addAction('Add new', partial(self._new_conflict, ConflictType.NATURE))
-        submenu = menu.addMenu(IconRegistry.from_name('fa.gears'), 'vs. Technology')
-        submenu.addAction('Add new', partial(self._new_conflict, ConflictType.TECHNOLOGY))
-        submenu = menu.addMenu(IconRegistry.from_name('ei.magic'), 'vs. Supernatural')
-        submenu.addAction('Add new', partial(self._new_conflict, ConflictType.SUPERNATURAL))
-        submenu = menu.addMenu(IconRegistry.portrait_icon(), 'vs. Self')
-        submenu.addAction('Add new', partial(self._new_conflict, ConflictType.SELF))
+        menu.addAction(action)
         self.ui.btnAddConflict.setMenu(menu)
 
         self.scenes_model = ScenesTableModel(self.novel)
@@ -481,8 +474,9 @@ class SceneEditor(QObject):
             client.update_scene(self.scene)
         self._new_scene = False
 
-    def _new_conflict(self, type: ConflictType):
-        pass
+    def _new_conflict(self, conflict: Conflict):
+        self.ui.wdgConflicts.addText(conflict.keyphrase)
+        self.ui.btnAddConflict.menu().hide()
 
     def _on_close(self):
         self.scene.builder_elements.clear()

@@ -984,14 +984,13 @@ QToolButton:disabled {
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_10">
                 <item>
-                 <widget class="QLabel" name="lblType2">
-                  <property name="text">
-                   <string>Conflict:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <widget class="QCheckBox" name="cbConflict">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="text">
                    <string/>
                   </property>
@@ -1004,20 +1003,11 @@ QToolButton:disabled {
                  </widget>
                 </item>
                 <item>
-                 <widget class="LabelsWidget" name="wdgConflicts" native="true"/>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_17">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                 <widget class="QLabel" name="lblType2">
+                  <property name="text">
+                   <string>Conflict:</string>
                   </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QToolButton" name="btnAddConflict">
@@ -1031,6 +1021,29 @@ QToolButton:disabled {
                    <enum>Qt::ToolButtonTextBesideIcon</enum>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <widget class="LabelsWidget" name="wdgConflicts" native="true">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_17">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
                 </item>
                </layout>
               </item>
@@ -1308,6 +1321,9 @@ QToolButton:disabled {
                      <width>0</width>
                      <height>50</height>
                     </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true"/>
                    </property>
                   </widget>
                  </item>
