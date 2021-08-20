@@ -152,8 +152,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.btnSupernatural.setIcon(IconRegistry.conflict_supernatural_icon())
         self.btnSelf.setIcon(IconRegistry.conflict_self_icon())
 
-        for char in self.novel.characters:
-            self.cbCharacter.addItem(char.name, char)
+        self._update_characters()
 
         self.btnAddNew.setIcon(IconRegistry.ok_icon())
         self.btnAddNew.setDisabled(True)
@@ -176,8 +175,15 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.btnAddNew.clicked.connect(self._add_new)
 
     def refresh(self):
+        self.cbCharacter.clear()
+        self._update_characters()
         self._model.update()
         self._model.modelReset.emit()
+
+    def _update_characters(self):
+        for char in self.novel.characters:
+            if self.scene.pov and char.id != self.scene.pov.id:
+                self.cbCharacter.addItem(QIcon(avatars.pixmap(char)), char.name, char)
 
     def _type_toggled(self):
         lbl_prefix = 'Character vs.'

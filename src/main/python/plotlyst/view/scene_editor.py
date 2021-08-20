@@ -404,8 +404,9 @@ class SceneEditor(QObject):
                         ''')
         self._character_changed()
         self._character_conflict_widget.refresh()
-        self.scene.conflicts.clear()
-        self._conflicts_changed()
+        if self._save_enabled:
+            self.scene.conflicts.clear()
+            self._conflicts_changed()
 
     def _update_pov_avatar(self):
         if self.scene.pov:

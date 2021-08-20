@@ -102,8 +102,12 @@ class ConflictLabel(Label):
         _layout.setSpacing(2)
         _layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(_layout)
-        self.lblAvatar = QLabel()
 
+        self.lblConflict = QLabel()
+        self.lblConflict.setPixmap(IconRegistry.conflict_icon().pixmap(QSize(24, 24)))
+        _layout.addWidget(self.lblConflict)
+
+        self.lblAvatar = QLabel()
         if self.conflict.character:
             set_avatar(self.lblAvatar, self.conflict.character, 24)
         else:

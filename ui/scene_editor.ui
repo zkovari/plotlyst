@@ -842,6 +842,9 @@ QToolButton:disabled {
               </size>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_5">
+              <property name="spacing">
+               <number>4</number>
+              </property>
               <property name="leftMargin">
                <number>2</number>
               </property>
