@@ -796,25 +796,6 @@ background-color: rgb(255, 255, 255);
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_5">
-     <item alignment="Qt::AlignRight">
-      <widget class="QPushButton" name="pushButton">
-       <property name="maximumSize">
-        <size>
-         <width>300</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string>Preview in character editor</string>
-       </property>
-       <property name="highlighted" stdset="0">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item>
       <spacer name="verticalSpacer_6">
        <property name="orientation">
@@ -865,6 +846,37 @@ background-color: rgb(255, 255, 255);
         </item>
        </layout>
       </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_11">
+       <item alignment="Qt::AlignLeft">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Emoji:</string>
+         </property>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignLeft">
+        <widget class="QLineEdit" name="lineEmoji">
+         <property name="maximumSize">
+          <size>
+           <width>40</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="btnUpdateEmoji">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <spacer name="verticalSpacer_5">

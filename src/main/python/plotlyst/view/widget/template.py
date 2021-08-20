@@ -397,6 +397,10 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         if self._selected:
             self._selected.lblName.setText(text)
 
+    def updateEmojiForSelected(self, text: str):
+        if self._selected:
+            self._selected.lblEmoji.setText(emoji.emojize(text))
+
     def _addPlaceholder(self, row: int, col: int):
         _placeholder = _PlaceHolder()
         self.gridLayout.addWidget(_placeholder, row, col)

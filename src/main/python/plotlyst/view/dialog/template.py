@@ -20,16 +20,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from typing import Optional
 
+import emoji
 import qtawesome
 from PyQt5.QtCore import Qt, QMimeData, QObject, QEvent, QByteArray
-from PyQt5.QtGui import QDrag, QMouseEvent
-from PyQt5.QtWidgets import QDialog, QToolButton
+from PyQt5.QtGui import QDrag, QMouseEvent, QKeyEvent
+from PyQt5.QtWidgets import QDialog, QToolButton, QApplication
+from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
     desire_field, default_character_profiles, role_field, mbti_field
-from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
@@ -78,6 +80,10 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
         self.lineLabel.setHidden(True)
         self.lineLabel.textEdited.connect(self._label_edited)
+        self.lineEmoji.setFont(emoji_font(16))
+        self.lineEmoji.textEdited.connect(self._emoji_edited)
+        self.btnUpdateEmoji.setIcon(IconRegistry.edit_icon())
+        self.btnUpdateEmoji.clicked.connect(self._show_emoji_picker)
 
         self.btnAge.installEventFilter(self)
         self.btnGender.installEventFilter(self)
@@ -192,8 +198,13 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.lineLabel.setVisible(True)
             self.lineLabel.setEnabled(field.show_label)
             self.lineLabel.setText(field.name)
+
+            self.lineEmoji.setVisible(True)
+            if field.emoji:
+                self.lineEmoji.setText(emoji.emojize(field.emoji))
         else:
             self.lineLabel.setHidden(True)
+            self.lineEmoji.setHidden(True)
 
     def _placeholder_selected(self):
         self._selected_field = None
@@ -225,3 +236,20 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         if self._selected_field:
             self._selected_field.name = text
             self.profile_editor.updateLabelForSelected(text)
+
+    def _emoji_edited(self, emoji_str: str):
+        alias = emoji.demojize(emoji_str)
+        if alias.startswith(':'):
+            self._selected.field.emoji = alias
+            self.profile_editor.updateEmojiForSelected(alias)
+        else:
+            self.lineEmoji.clear()
+        self.lineEmoji.setReadOnly(True)
+
+    def _show_emoji_picker(self):
+        if platform.is_mac():
+            self.lineEmoji.setReadOnly(False)
+            self.lineEmoji.setFocus()
+            self.lineEmoji.clear()
+            key_press = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.ControlModifier | Qt.MetaModifier, ' ')
+            QApplication.sendEvent(self.lineEmoji, key_press)
