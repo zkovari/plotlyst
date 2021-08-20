@@ -240,7 +240,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
     def _emoji_edited(self, emoji_str: str):
         alias = emoji.demojize(emoji_str)
         if alias.startswith(':'):
-            self._selected.field.emoji = alias
+            self._selected_field.emoji = alias
             self.profile_editor.updateEmojiForSelected(alias)
         else:
             self.lineEmoji.clear()
