@@ -77,7 +77,17 @@
     </spacer>
    </item>
    <item>
-    <widget class="QListView" name="lstIcons"/>
+    <widget class="QListView" name="lstIcons">
+     <property name="cursor" stdset="0">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>24</width>
+       <height>24</height>
+      </size>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
