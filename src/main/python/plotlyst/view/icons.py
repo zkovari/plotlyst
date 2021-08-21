@@ -82,7 +82,11 @@ class IconRegistry:
 
     @staticmethod
     def edit_icon() -> QIcon:
-        return qtawesome.icon('mdi.pencil')
+        return IconRegistry.from_name('mdi.pencil')
+
+    @staticmethod
+    def plus_edit_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.pencil-plus', color='#004385')
 
     @staticmethod
     def plus_icon(color: str = 'green') -> QIcon:

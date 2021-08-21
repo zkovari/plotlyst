@@ -74,8 +74,8 @@ class SceneEditor(QObject):
 
         self.ui.btnDisaster.setIcon(IconRegistry.disaster_icon(color='grey'))
         self.ui.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
-        self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.edit_icon())
-        self.ui.btnEditCharacters.setIcon(IconRegistry.edit_icon())
+        self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.plus_edit_icon())
+        self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
         self.ui.btnAddConflict.setIcon(IconRegistry.conflict_icon())
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
