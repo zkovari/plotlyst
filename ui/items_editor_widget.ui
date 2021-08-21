@@ -106,7 +106,10 @@
         <number>20</number>
        </attribute>
        <attribute name="horizontalHeaderDefaultSectionSize">
-        <number>20</number>
+        <number>24</number>
+       </attribute>
+       <attribute name="horizontalHeaderStretchLastSection">
+        <bool>true</bool>
        </attribute>
        <attribute name="verticalHeaderVisible">
         <bool>false</bool>
