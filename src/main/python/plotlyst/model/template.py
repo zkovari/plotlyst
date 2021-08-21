@@ -24,6 +24,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, SelectionItem
 from src.main.python.plotlyst.model.common import EditableItemsModel
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class TemplateFieldSelectionModel(EditableItemsModel):
@@ -44,9 +45,14 @@ class TemplateFieldSelectionModel(EditableItemsModel):
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if index.column() == self.ColName:
-            if role == Qt.DisplayRole:
-                return self._field.selections[index.row()].text
+        item = self._field.selections[index.row()]
+        if index.column() == self.ColIcon and role == Qt.DecorationRole:
+            if item.icon:
+                return IconRegistry.from_name(item.icon,
+                                              item.icon_color)
+            return IconRegistry.from_name('fa5s.icons', color='lightgrey')
+        if index.column() == self.ColName and role == Qt.DisplayRole:
+            return item.text
 
     @overrides
     def add(self):
@@ -70,5 +76,9 @@ class TemplateFieldSelectionModel(EditableItemsModel):
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
         if role == Qt.EditRole:
             self._field.selections[index.row()].text = value
+            return True
+        if role == Qt.DecorationRole:
+            self._field.selections[index.row()].icon = value[0]
+            self._field.selections[index.row()].icon_color = value[1]
             return True
         return False
