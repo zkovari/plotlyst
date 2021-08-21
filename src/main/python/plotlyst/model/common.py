@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from typing import List, Any
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel
@@ -50,3 +51,27 @@ def proxy(model: QAbstractItemModel) -> QSortFilterProxyModel:
     _proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
 
     return _proxy
+
+
+class EditableItemsModel(QAbstractTableModel):
+
+    def add(self):
+        self.modelReset.emit()
+
+    def remove(self, index: QModelIndex):
+        self.modelReset.emit()
+
+    def defaultEditableColumn(self) -> int:
+        return -1
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        flags = super().flags(index)
+        if self.columnIsEditable(index.column()):
+            return flags | Qt.ItemIsEditable
+        else:
+            return flags
+
+    @abstractmethod
+    def columnIsEditable(self, column: int) -> bool:
+        pass

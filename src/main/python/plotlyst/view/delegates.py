@@ -117,3 +117,12 @@ class ScenesViewDelegate(QStyledItemDelegate):
     def _commit_and_close(self, editor):
         self.commitData.emit(editor)
         self.closeEditor.emit(editor)
+
+
+class TextItemDelegate(QStyledItemDelegate):
+
+    @overrides
+    def setEditorData(self, editor: QWidget, index: QModelIndex):
+        if isinstance(editor, QLineEdit):
+            editor.deselect()
+            editor.setText(index.data())
