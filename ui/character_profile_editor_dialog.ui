@@ -360,13 +360,6 @@ border: 1 px solid black;</string>
          </widget>
         </item>
         <item>
-         <widget class="Line" name="line_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <property name="spacing">
            <number>12</number>
@@ -609,13 +602,6 @@ border: 1 px solid black;</string>
          </layout>
         </item>
         <item>
-         <widget class="Line" name="line_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
           <property name="spacing">
            <number>12</number>
@@ -635,6 +621,25 @@ border: 1 px solid black;</string>
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnCustomChoices">
+            <property name="cursor">
+             <cursorShape>OpenHandCursor</cursorShape>
+            </property>
+            <property name="text">
+             <string>Choices</string>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextUnderIcon</enum>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer_15">
@@ -879,6 +884,9 @@ background-color: rgb(255, 255, 255);
       </layout>
      </item>
      <item>
+      <widget class="ItemsEditorWidget" name="wdgChoicesEditor" native="true"/>
+     </item>
+     <item>
       <spacer name="verticalSpacer_5">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -922,6 +930,14 @@ background-color: rgb(255, 255, 255);
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ItemsEditorWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.items_editor</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -31,6 +31,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
     desire_field, default_character_profiles, role_field, mbti_field
+from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -58,6 +59,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnMisbelief.setIcon(IconRegistry.error_icon())
         self.btnCustomText.setIcon(IconRegistry.from_name('mdi.format-text'))
         self.btnCustomNumber.setIcon(IconRegistry.from_name('mdi.numeric'))
+        self.btnCustomChoices.setIcon(IconRegistry.from_name('mdi.format-list-bulleted-type'))
 
         self.profile_editor = ProfileTemplateEditor(self.profile)
         self.wdgEditor.layout().addWidget(self.profile_editor)
@@ -84,6 +86,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.lineEmoji.textEdited.connect(self._emoji_edited)
         self.btnUpdateEmoji.setIcon(IconRegistry.edit_icon())
         self.btnUpdateEmoji.clicked.connect(self._show_emoji_picker)
+        self.wdgChoicesEditor.setHidden(True)
 
         self.btnAge.installEventFilter(self)
         self.btnGender.installEventFilter(self)
@@ -96,6 +99,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnMisbelief.installEventFilter(self)
         self.btnCustomText.installEventFilter(self)
         self.btnCustomNumber.installEventFilter(self)
+        self.btnCustomChoices.installEventFilter(self)
 
         self._dragged: Optional[QToolButton] = None
         self.cbShowLabel.clicked.connect(self._show_label_clicked)
@@ -144,6 +148,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = TemplateField(name='Label', type=TemplateFieldType.TEXT, custom=True)
             elif self._dragged is self.btnCustomNumber:
                 field = TemplateField(name='Label', type=TemplateFieldType.NUMERIC, custom=True, compact=True)
+            elif self._dragged is self.btnCustomChoices:
+                field = TemplateField(name='Label', type=TemplateFieldType.TEXT_SELECTION, custom=True, compact=True)
             else:
                 field = TemplateField(name=self._dragged.text(), type=TemplateFieldType.TEXT)
             mimedata = QMimeData()
@@ -202,6 +208,11 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.lineEmoji.setVisible(True)
             if field.emoji:
                 self.lineEmoji.setText(emoji.emojize(field.emoji))
+            if field.type == TemplateFieldType.TEXT_SELECTION:
+                self.wdgChoicesEditor.setModel(TemplateFieldSelectionModel(field))
+                self.wdgChoicesEditor.setVisible(True)
+            else:
+                self.wdgChoicesEditor.setHidden(True)
         else:
             self.lineLabel.setHidden(True)
             self.lineEmoji.setHidden(True)
