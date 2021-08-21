@@ -21,7 +21,7 @@ from typing import List, Any
 
 import qtawesome
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal
-from PyQt5.QtGui import QIcon, QColor
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView, QColorDialog
 from overrides import overrides
 
@@ -30,7 +30,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
-    iconSelected = pyqtSignal(QIcon, QColor)
+    iconSelected = pyqtSignal(str, QColor)
 
     def __init__(self, parent=None):
         super(IconSelectorWidget, self).__init__(parent)
@@ -68,10 +68,12 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
             self._update_button_color()
 
     def _icon_clicked(self, index: QModelIndex):
-        icon: QIcon = index.data(role=Qt.DecorationRole)
-        self.iconSelected.emit(icon, self._color)
+        icon_alias: str = index.data(role=self._Model.IconAliasRole)
+        self.iconSelected.emit(icon_alias, self._color)
 
     class _Model(QAbstractListModel):
+
+        IconAliasRole = Qt.UserRole + 1
 
         def __init__(self, icons: List[str]):
             super().__init__()
@@ -83,5 +85,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
 
         @overrides
         def data(self, index: QModelIndex, role: int) -> Any:
+            if role == self.IconAliasRole:
+                return self.icons[index.row()]
             if role == Qt.DecorationRole:
                 return IconRegistry.from_name(self.icons[index.row()])
