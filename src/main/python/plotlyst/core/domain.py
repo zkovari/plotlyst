@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 
 from PyQt5.QtCore import Qt
 
@@ -339,6 +339,7 @@ class SelectionItem:
     type: SelectionItemType = SelectionItemType.CHOICE
     icon: str = ''
     icon_color: str = 'black'
+    meta: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -377,23 +378,53 @@ gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECT
 enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
                                 id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
                                 selections=[SelectionItem('Perfectionist', icon='mdi.numeric-1-circle',
-                                                          icon_color='#1f487e'),
+                                                          icon_color='#1f487e',
+                                                          meta={'positive': ['Rational', 'Principled', 'Objective',
+                                                                             'Structured'],
+                                                                'negative': ['Strict']}),
                                             SelectionItem('Giver', icon='mdi.numeric-2-circle',
-                                                          icon_color='#7ae7c7'),
+                                                          icon_color='#7ae7c7',
+                                                          meta={'positive': ['Generous', 'Warm', 'Caring'],
+                                                                'negative': ['Possessive']}
+                                                          ),
                                             SelectionItem('Achiever', icon='mdi.numeric-3-circle',
-                                                          icon_color='#297045'),
+                                                          icon_color='#297045',
+                                                          meta={'positive': ['Pragmatic', 'Driven', 'Ambitious'],
+                                                                'negative': ['Image-conscious']}
+                                                          ),
                                             SelectionItem('Individualist', icon='mdi.numeric-4-circle',
-                                                          icon_color='#4d8b31'),
+                                                          icon_color='#4d8b31',
+                                                          meta={'positive': ['Self-aware', 'Sensitive', 'Expressive'],
+                                                                'negative': ['Temperamental']}
+                                                          ),
                                             SelectionItem('Investigator', icon='mdi.numeric-5-circle',
-                                                          icon_color='#ffc600'),
+                                                          icon_color='#ffc600',
+                                                          meta={'positive': ['Perceptive', 'Curious', 'Innovative'],
+                                                                'negative': ['Isolated']}
+                                                          ),
                                             SelectionItem('Skeptic', icon='mdi.numeric-6-circle',
-                                                          icon_color='#ff6b35'),
+                                                          icon_color='#ff6b35',
+                                                          meta={'positive': ['Committed', 'Responsible', 'Organized'],
+                                                                'negative': ['Anxious']}
+                                                          ),
                                             SelectionItem('Enthusiast', icon='mdi.numeric-7-circle',
-                                                          icon_color='#ec0b43'),
+                                                          icon_color='#ec0b43',
+                                                          meta={'positive': ['Optimistic', 'Flexible', 'Practical',
+                                                                             'Adventurous'],
+                                                                'negative': ['Impulsive', 'Self-centered']}
+                                                          ),
                                             SelectionItem('Challenger', icon='mdi.numeric-8-circle',
-                                                          icon_color='#4f0147'),
+                                                          icon_color='#4f0147',
+                                                          meta={'positive': ['Decisive', 'Powerful', 'Assertive',
+                                                                             'Independent'],
+                                                                'negative': ['Confrontational']}
+                                                          ),
                                             SelectionItem('Peacemaker', icon='mdi.numeric-9-circle',
-                                                          icon_color='#3a015c')],
+                                                          icon_color='#3a015c',
+                                                          meta={'positive': ['Easygoing', 'Understanding', 'Patient',
+                                                                             'Supportive'],
+                                                                'negative': ['Lazy', 'Indecisive']}
+                                                          )],
                                 compact=True)
 mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('bc5408a4-c2bd-4370-b46b-95f20018af01'),
