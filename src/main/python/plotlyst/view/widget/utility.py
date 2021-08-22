@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Any
 
-import qtawesome
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView, QColorDialog
@@ -27,6 +26,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget._icons import icons_registry
 
 
 class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
@@ -36,16 +36,12 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         super(IconSelectorWidget, self).__init__(parent)
         self.setupUi(self)
 
-        qtawesome._instance()
-        fonts_maps = qtawesome._resource['iconic'].charmap
-
-        icons: List[str] = []
-        for font, font_data in fonts_maps.items():
-            if font == 'fa5b':
-                continue
-            for icon in font_data:
-                icons.append(f'{font}.{icon}')
-        self.model = self._Model(icons)
+        fitlered_icons = []
+        for icons_list in icons_registry.values():
+            for icon in icons_list:
+                if icon != 'fa5s.':
+                    fitlered_icons.append(icon)
+        self.model = self._Model(fitlered_icons)
         self.lstIcons.setModel(self.model)
         self.lstIcons.setViewMode(QListView.IconMode)
         self.lstIcons.clicked.connect(self._icon_clicked)
