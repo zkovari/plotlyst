@@ -31,7 +31,12 @@ from src.main.python.plotlyst.view.layout import FlowLayout
 
 
 class Label(QFrame):
-    pass
+    def __init__(self, parent=None):
+        super(Label, self).__init__(parent)
+        _layout = QHBoxLayout()
+        _layout.setSpacing(2)
+        _layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(_layout)
 
 
 class LabelsWidget(QWidget):
@@ -74,7 +79,7 @@ class CharacterLabel(Label):
         self.lblAvatar = QLabel()
         set_avatar(self.lblAvatar, self.character, 24)
         _layout.addWidget(self.lblAvatar)
-        _layout.addWidget(QLabel(truncate_string(character.name, 25)))
+        _layout.addWidget(QLabel(truncate_string(character.name)))
 
         role = self.character.role()
         if role:
@@ -98,14 +103,9 @@ class ConflictLabel(Label):
         super(ConflictLabel, self).__init__(parent)
         self.conflict = conflict
 
-        _layout = QHBoxLayout()
-        _layout.setSpacing(2)
-        _layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(_layout)
-
         self.lblConflict = QLabel()
         self.lblConflict.setPixmap(IconRegistry.conflict_icon().pixmap(QSize(24, 24)))
-        _layout.addWidget(self.lblConflict)
+        self.layout().addWidget(self.lblConflict)
 
         self.lblAvatar = QLabel()
         if self.conflict.character:
@@ -126,11 +126,32 @@ class ConflictLabel(Label):
             else:
                 icon = IconRegistry.conflict_icon()
             self.lblAvatar.setPixmap(icon.pixmap(QSize(24, 24)))
-        _layout.addWidget(self.lblAvatar)
-        _layout.addWidget(QLabel(self.conflict.keyphrase))
+        self.layout().addWidget(self.lblAvatar)
+        self.layout().addWidget(QLabel(self.conflict.keyphrase))
 
         self.setStyleSheet('''
                 ConflictLabel {
                     border: 2px solid #f3a712;
                     border-radius: 8px; padding-left: 3px; padding-right: 3px;}
                 ''')
+
+
+class TraitLabel(QLabel):
+    def __init__(self, trait: str, positive: bool = True, parent=None):
+        super(TraitLabel, self).__init__(parent)
+
+        self.setText(trait)
+
+        if positive:
+            bg_color = '#519872'
+            border_color = '#034732'
+        else:
+            bg_color = '#db5461'
+            border_color = '#ef2917'
+        self.setStyleSheet(f'''TraitLabel {{
+            background-color: {bg_color};
+            border: 2px solid {border_color};
+            border-radius: 8px;
+            color: white;
+            padding-left: 0px; padding-right: 0px; padding-top: 0px; padding-bottom: 0px;
+        }}''')
