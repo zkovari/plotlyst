@@ -32,8 +32,8 @@ from src.main.python.plotlyst.view.common import rounded_pixmap
 class IconRegistry:
 
     @staticmethod
-    def ok_icon() -> QIcon:
-        return qtawesome.icon('ei.ok', color='green')
+    def ok_icon(color: str = 'green') -> QIcon:
+        return qtawesome.icon('ei.ok', color=color)
 
     @staticmethod
     def wrong_icon() -> QIcon:

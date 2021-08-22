@@ -28,6 +28,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class TemplateFieldSelectionModel(EditableItemsModel):
+    ItemRole: int = Qt.UserRole + 1
+
     ColIcon: int = 0
     ColName: int = 1
 
@@ -46,6 +48,8 @@ class TemplateFieldSelectionModel(EditableItemsModel):
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         item = self._field.selections[index.row()]
+        if role == self.ItemRole:
+            return item
         if index.column() == self.ColIcon and role == Qt.DecorationRole:
             if item.icon:
                 return IconRegistry.from_name(item.icon,
