@@ -319,6 +319,7 @@ class TemplateFieldType(Enum):
     BUTTON_SELECTION = 3
     NUMERIC = 4
     IMAGE = 5
+    LABELS = 6
 
 
 class SelectionType(Enum):
@@ -340,6 +341,9 @@ class SelectionItem:
     icon: str = ''
     icon_color: str = 'black'
     meta: Dict[str, Any] = field(default_factory=dict)
+
+    def __hash__(self):
+        return hash(self.text)
 
 
 @dataclass
@@ -444,6 +448,18 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                                        SelectionItem('ISFP'),
                                        SelectionItem('ESTP'),
                                        SelectionItem('ESFP'), ], compact=True)
+
+positive_traits = ['Objective', 'Principled', 'Rational',
+                   'Structured']
+negative_traits = ['Anxious', 'Confrontational', 'Indecisive']
+
+traits_field = TemplateField(name='Traits', type=TemplateFieldType.LABELS,
+                             id=uuid.UUID('76faae5f-b1e4-47f4-9e3f-ed8497f6c6d3'))
+for trait in positive_traits:
+    traits_field.selections.append(SelectionItem(trait, meta={'positive': True}))
+for trait in negative_traits:
+    traits_field.selections.append(SelectionItem(trait, meta={'positive': False}))
+
 _enneagram_choices = {}
 for item in enneagram_field.selections:
     _enneagram_choices[item.text] = item
@@ -516,11 +532,15 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(name_field, 0, 0), ProfileElement(avatar_field, 0, 1, row_span=2),
-              ProfileElement(role_field, 2, 0),
+    fields = [ProfileElement(name_field, 0, 0), ProfileElement(avatar_field, 0, 1, row_span=3),
+              ProfileElement(gender_field, 1, 0, v_alignment=VAlignment.BOTTOM),
+              ProfileElement(role_field, 2, 0, v_alignment=VAlignment.TOP),
               ProfileElement(enneagram_field, 3, 0),
-              ProfileElement(gender_field, 3, 1),
-              ProfileElement(mbti_field, 4, 0)]
+              ProfileElement(mbti_field, 3, 1),
+              ProfileElement(desire_field, 4, 0),
+              ProfileElement(fear_field, 4, 1),
+              ProfileElement(traits_field, 5, 0, col_span=2),
+              ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
                             elements=fields)]

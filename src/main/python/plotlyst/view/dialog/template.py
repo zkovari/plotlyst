@@ -21,7 +21,6 @@ import pickle
 from typing import Optional
 
 import emoji
-import qtawesome
 from PyQt5.QtCore import Qt, QMimeData, QObject, QEvent, QByteArray, QModelIndex
 from PyQt5.QtGui import QDrag, QMouseEvent, QKeyEvent
 from PyQt5.QtWidgets import QDialog, QToolButton, QApplication
@@ -30,7 +29,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
-    desire_field, default_character_profiles, role_field, mbti_field
+    desire_field, default_character_profiles, role_field, mbti_field, traits_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
@@ -55,7 +54,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnFear.setIcon(IconRegistry.from_name('mdi.spider-thread'))
         self.btnGoal.setIcon(IconRegistry.goal_icon())
         self.btnEnneagram.setIcon(IconRegistry.from_name('mdi.numeric-9-box-outline'))
-        self.btnMbti.setIcon(qtawesome.icon('fa.group'))
+        self.btnMbti.setIcon(IconRegistry.from_name('fa.group'))
+        self.btnTraits.setIcon(IconRegistry.from_name('ei.adjust'))
         self.btnDesire.setIcon(IconRegistry.from_name('fa5s.coins', color='#e1bc29'))
         self.btnMisbelief.setIcon(IconRegistry.error_icon())
         self.btnCustomText.setIcon(IconRegistry.from_name('mdi.format-text'))
@@ -98,6 +98,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnGoal.installEventFilter(self)
         self.btnEnneagram.installEventFilter(self)
         self.btnMbti.installEventFilter(self)
+        self.btnTraits.installEventFilter(self)
         self.btnDesire.installEventFilter(self)
         self.btnMisbelief.installEventFilter(self)
         self.btnCustomText.installEventFilter(self)
@@ -139,6 +140,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = enneagram_field
             elif self._dragged is self.btnMbti:
                 field = mbti_field
+            elif self._dragged is self.btnTraits:
+                field = traits_field
             elif self._dragged is self.btnGoal:
                 field = goal_field
             elif self._dragged is self.btnFear:
@@ -195,6 +198,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.btnEnneagram.setEnabled(enabled)
         elif field.id == mbti_field.id:
             self.btnMbti.setEnabled(enabled)
+        elif field.id == traits_field.id:
+            self.btnTraits.setEnabled(enabled)
         elif field.id == goal_field.id:
             self.btnGoal.setEnabled(enabled)
         elif field.id == fear_field.id:

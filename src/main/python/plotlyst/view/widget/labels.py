@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
+from typing import Union
 
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QColor
@@ -61,7 +62,7 @@ class LabelsWidget(QWidget):
 
         self.layout().addWidget(label)
 
-    def addLabel(self, label: Label):
+    def addLabel(self, label: Union[Label, QLabel]):
         self.layout().addWidget(label)
 
     def clear(self):
