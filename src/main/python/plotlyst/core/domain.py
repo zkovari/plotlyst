@@ -489,7 +489,7 @@ _enneagram_choices = {}
 for item in enneagram_field.selections:
     _enneagram_choices[item.text] = item
 
-goal_field = TemplateField('Goal', type=TemplateFieldType.TEXT,
+goal_field = TemplateField('Goal', type=TemplateFieldType.SMALL_TEXT,
                            id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'))
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'))
@@ -557,14 +557,17 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(name_field, 0, 0), ProfileElement(avatar_field, 0, 1, row_span=3),
+    fields = [ProfileElement(name_field, 0, 0),
+              ProfileElement(avatar_field, 0, 1, row_span=3, h_alignment=HAlignment.RIGHT),
               ProfileElement(gender_field, 1, 0, v_alignment=VAlignment.BOTTOM),
-              ProfileElement(role_field, 2, 0, v_alignment=VAlignment.TOP),
-              ProfileElement(enneagram_field, 3, 0),
-              ProfileElement(mbti_field, 3, 1),
-              ProfileElement(desire_field, 4, 0),
-              ProfileElement(fear_field, 4, 1),
-              ProfileElement(traits_field, 5, 0, col_span=2),
+              ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
+              ProfileElement(role_field, 3, 0, v_alignment=VAlignment.BOTTOM),
+              ProfileElement(goal_field, 4, 0, col_span=2, v_alignment=VAlignment.TOP),
+              ProfileElement(enneagram_field, 5, 0),
+              ProfileElement(mbti_field, 5, 1),
+              ProfileElement(desire_field, 6, 0),
+              ProfileElement(fear_field, 6, 1),
+              ProfileElement(traits_field, 7, 0, col_span=2),
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
