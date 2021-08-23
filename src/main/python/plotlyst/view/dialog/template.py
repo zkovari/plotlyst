@@ -22,9 +22,8 @@ from typing import Optional
 
 import emoji
 from PyQt5.QtCore import Qt, QMimeData, QObject, QEvent, QByteArray, QModelIndex
-from PyQt5.QtGui import QDrag, QMouseEvent, QKeyEvent
-from PyQt5.QtWidgets import QDialog, QToolButton, QApplication
-from fbs_runtime import platform
+from PyQt5.QtGui import QDrag, QMouseEvent
+from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
@@ -62,6 +61,9 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnCustomNumber.setIcon(IconRegistry.from_name('mdi.numeric'))
         self.btnCustomChoices.setIcon(IconRegistry.from_name('mdi.format-list-bulleted-type'))
 
+        self.btnSettings.setIcon(IconRegistry.from_name('ei.cog'))
+        self.btnSettings.toggled.connect(self.wdgSettings.setVisible)
+
         self.profile_editor = ProfileTemplateEditor(self.profile)
         self.wdgEditor.layout().addWidget(self.profile_editor)
 
@@ -73,21 +75,15 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
         self._selected_field: Optional[TemplateField] = None
 
-        self.lineName.setText(self.profile.title)
-
         self.profile_editor.fieldAdded.connect(self._field_added)
         self.profile_editor.fieldSelected.connect(self._field_selected)
         self.profile_editor.placeholderSelected.connect(self._placeholder_selected)
         self.btnRemove.setIcon(IconRegistry.minus_icon())
         self.btnRemove.clicked.connect(self._remove_field)
 
-        self.lineLabel.setHidden(True)
         self.lineLabel.textEdited.connect(self._label_edited)
         self.lineEmoji.setFont(emoji_font(16))
         self.lineEmoji.textEdited.connect(self._emoji_edited)
-        self.btnUpdateEmoji.setIcon(IconRegistry.edit_icon())
-        self.btnUpdateEmoji.clicked.connect(self._show_emoji_picker)
-        self.wdgChoicesEditor.setHidden(True)
 
         self.wdgChoicesEditor.tableView.clicked.connect(self._choice_clicked)
 
@@ -109,6 +105,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.cbShowLabel.clicked.connect(self._show_label_clicked)
         self.btnCancel.clicked.connect(self.reject)
         self.btnSave.clicked.connect(self.accept)
+
+        self.stackedSettings.setCurrentWidget(self.pageInfo)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -180,6 +178,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
     def _field_added(self, field: TemplateField):
         self._enable_in_inventory(field, False)
+        if field.custom:
+            self.btnSettings.setChecked(True)
 
     def _choice_clicked(self, index: QModelIndex):
         if index.column() == TemplateFieldSelectionModel.ColIcon:
@@ -211,39 +211,35 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
     def _field_selected(self, field: TemplateField):
         self._selected_field = field
+        self.stackedSettings.setCurrentWidget(self.pageSettings)
+        self.btnRemove.setVisible(not field.frozen)
         self.btnRemove.setEnabled(not field.frozen)
-        self.cbShowLabel.setEnabled(True)
         self.cbShowLabel.setChecked(field.show_label)
+        self.lineLabel.setText(field.name)
+        if field.emoji:
+            self.lineEmoji.setText(emoji.emojize(field.emoji))
+        else:
+            self.lineEmoji.clear()
         if field.custom:
-            self.lineLabel.setVisible(True)
-            self.lineLabel.setEnabled(field.show_label)
-            self.lineLabel.setText(field.name)
-
-            self.lineEmoji.setVisible(True)
-            if field.emoji:
-                self.lineEmoji.setText(emoji.emojize(field.emoji))
             if field.type == TemplateFieldType.TEXT_SELECTION:
                 self.wdgChoicesEditor.setModel(TemplateFieldSelectionModel(field))
                 self.wdgChoicesEditor.setVisible(True)
             else:
                 self.wdgChoicesEditor.setHidden(True)
         else:
-            self.lineLabel.setHidden(True)
-            self.lineEmoji.setHidden(True)
+            self.wdgChoicesEditor.setHidden(True)
 
     def _placeholder_selected(self):
         self._selected_field = None
+        self.stackedSettings.setCurrentWidget(self.pageInfo)
         self.btnRemove.setDisabled(True)
-        self.cbShowLabel.setDisabled(True)
-        self.lineLabel.setHidden(True)
 
     def _remove_field(self):
         self._enable_in_inventory(self._selected_field, True)
         self.profile_editor.removeSelected()
         self._selected_field = None
+        self.stackedSettings.setCurrentWidget(self.pageInfo)
         self.btnRemove.setDisabled(True)
-        self.cbShowLabel.setDisabled(True)
-        self.lineLabel.setHidden(True)
 
     def _restore_default(self):
         if ask_confirmation('Are you sure you want to restore the default profile? Your current changes will be lost.'):
@@ -269,12 +265,3 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.profile_editor.updateEmojiForSelected(alias)
         else:
             self.lineEmoji.clear()
-        self.lineEmoji.setReadOnly(True)
-
-    def _show_emoji_picker(self):
-        if platform.is_mac():
-            self.lineEmoji.setReadOnly(False)
-            self.lineEmoji.setFocus()
-            self.lineEmoji.clear()
-            key_press = QKeyEvent(QEvent.KeyPress, Qt.Key_Space, Qt.ControlModifier | Qt.MetaModifier, ' ')
-            QApplication.sendEvent(self.lineEmoji, key_press)

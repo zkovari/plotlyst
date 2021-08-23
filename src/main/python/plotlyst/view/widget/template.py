@@ -36,7 +36,7 @@ from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldTyp
     enneagram_field, traits_field, desire_field, fear_field
 from src.main.python.plotlyst.core.help import enneagram_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
-from src.main.python.plotlyst.view.common import emoji_font, spacer_widget, ask_confirmation
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -360,15 +360,10 @@ class TemplateFieldWidget(QFrame):
 
         self.setLayout(self.layout)
 
+        self.lblEmoji = QLabel()
         if self.field.emoji:
-            if platform.is_windows():
-                emoji_size = 14
-            else:
-                emoji_size = 20
-            self.lblEmoji = QLabel()
-            self.lblEmoji.setFont(emoji_font(emoji_size))
-            self.lblEmoji.setText(emoji.emojize(self.field.emoji))
-            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
+            self.updateEmoji(emoji.emojize(self.field.emoji))
+        self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
 
         self.lblName = QLabel()
         self.lblName.setText(self.field.name)
@@ -417,6 +412,15 @@ class TemplateFieldWidget(QFrame):
             self.wdgEditor.setCurrentText(value)
         if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
             self.wdgEditor.setValue(value)
+
+    def updateEmoji(self, emoji: str):
+        if platform.is_windows():
+            emoji_size = 14
+        else:
+            emoji_size = 20
+
+        self.lblEmoji.setFont(emoji_font(emoji_size))
+        self.lblEmoji.setText(emoji)
 
     def _fieldWidget(self) -> QWidget:
         if self.field.id == enneagram_field.id:
@@ -588,7 +592,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
     def updateEmojiForSelected(self, text: str):
         if self._selected:
-            self._selected.lblEmoji.setText(emoji.emojize(text))
+            self._selected.updateEmoji(emoji.emojize(text))
 
     def _installEventFilter(self, widget: TemplateFieldWidget):
         widget.installEventFilter(self)

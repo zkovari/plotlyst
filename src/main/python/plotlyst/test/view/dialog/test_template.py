@@ -26,8 +26,6 @@ def test_drop(qtbot):
     template = ProfileTemplate(title='Test Template')
     diag = new_diag(qtbot, template)
 
-    assert diag.lineName.text() == template.title
-
     for btn, field in [(diag.btnFear, fear_field)]:
         diag._dragged = btn
         event = create_autospec(QMouseEvent)
