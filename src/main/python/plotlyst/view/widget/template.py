@@ -45,7 +45,7 @@ from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsWidget
 
 class _ProfileTemplateBase(QWidget):
 
-    def __init__(self, profile: ProfileTemplate, parent=None):
+    def __init__(self, profile: ProfileTemplate, editor_mode: bool = False, parent=None):
         super().__init__(parent)
         self._profile = profile
         self.layout = QVBoxLayout(self)
@@ -54,7 +54,7 @@ class _ProfileTemplateBase(QWidget):
         self.scrollArea.setFocusPolicy(Qt.NoFocus)
         self.scrollAreaWidgetContents = QWidget()
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
-        self.gridLayout.setSpacing(0)
+        self.gridLayout.setSpacing(4)
         self.gridLayout.setContentsMargins(2, 0, 2, 0)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
@@ -62,11 +62,11 @@ class _ProfileTemplateBase(QWidget):
         self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
 
         self.widgets: List[TemplateFieldWidget] = []
-        self._initGrid()
+        self._initGrid(editor_mode)
 
-    def _initGrid(self):
+    def _initGrid(self, editor_mode: bool):
         for el in self._profile.elements:
-            widget = TemplateFieldWidget(el.field)
+            widget = TemplateFieldWidget(el.field, editor_mode)
             self.widgets.append(widget)
             self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span,
                                       el.h_alignment.value | el.v_alignment.value)
@@ -352,7 +352,7 @@ class ButtonSelectionWidget(QWidget):
 
 
 class TemplateFieldWidget(QFrame):
-    def __init__(self, field: TemplateField, parent=None):
+    def __init__(self, field: TemplateField, editor_mode: bool = False, parent=None):
         super(TemplateFieldWidget, self).__init__(parent)
         self.field = field
         self.layout = QHBoxLayout()
@@ -363,7 +363,9 @@ class TemplateFieldWidget(QFrame):
         self.lblEmoji = QLabel()
         if self.field.emoji:
             self.updateEmoji(emoji.emojize(self.field.emoji))
-        self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
+            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
+        elif editor_mode:
+            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
 
         self.lblName = QLabel()
         self.lblName.setText(self.field.name)
@@ -461,7 +463,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
     fieldAdded = pyqtSignal(TemplateField)
 
     def __init__(self, profile: ProfileTemplate):
-        super(ProfileTemplateEditor, self).__init__(profile)
+        super(ProfileTemplateEditor, self).__init__(profile, editor_mode=True)
         self.setAcceptDrops(True)
         self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
         self._selected: Optional[TemplateFieldWidget] = None
