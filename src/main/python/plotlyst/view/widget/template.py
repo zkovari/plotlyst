@@ -59,6 +59,8 @@ class _ProfileTemplateBase(QWidget):
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
 
+        self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
+
         self.widgets: List[TemplateFieldWidget] = []
         self._initGrid()
 
@@ -69,7 +71,10 @@ class _ProfileTemplateBase(QWidget):
             self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span,
                                       el.h_alignment.value | el.v_alignment.value)
 
-        self.gridLayout.addItem(QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding),
+        self._addSpacerToEnd()
+
+    def _addSpacerToEnd(self):
+        self.gridLayout.addItem(self._spacer_item,
                                 self.gridLayout.rowCount(), 0)
         self.gridLayout.setRowStretch(self.gridLayout.rowCount() - 1, 1)
 
@@ -463,6 +468,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             w.setAcceptDrops(True)
             self._installEventFilter(w)
 
+        self.gridLayout.removeItem(self._spacer_item)
         for row in range(max(6, self.gridLayout.rowCount() + 1)):
             for col in range(2):
                 if not self.gridLayout.itemAtPosition(row, col):
