@@ -33,10 +33,10 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field, SelectionItemType, \
-    enneagram_field, traits_field
+    enneagram_field, traits_field, desire_field, fear_field
 from src.main.python.plotlyst.core.help import enneagram_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
-from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
+from src.main.python.plotlyst.view.common import emoji_font, spacer_widget, ask_confirmation
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -144,6 +144,7 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
 
 class TextSelectionWidget(QToolButton):
     placeholder_text: str = 'Select...'
+    selectionChanged = pyqtSignal(object, object)
 
     def __init__(self, field: TemplateField, help: Dict[Any, str], parent=None):
         super(TextSelectionWidget, self).__init__(parent)
@@ -180,7 +181,9 @@ class TextSelectionWidget(QToolButton):
 
     def _selection_changed(self, item: SelectionItem):
         self.menu().hide()
+        previous = self._selected
         self.setValue(item.text)
+        self.selectionChanged.emit(previous, self._selected)
 
     class Popup(QFrame, Ui_FieldTextSelectionWidget):
         selected = pyqtSignal(SelectionItem)
@@ -586,11 +589,20 @@ class ProfileTemplateView(_ProfileTemplateBase):
         self.character = character
         self._name_widget: Optional[TemplateFieldWidget] = None
         self._avatar_widget: Optional[AvatarWidget] = None
+        self._enneagram_widget: Optional[TextSelectionWidget] = None
+        self._desire_widget: Optional[TemplateFieldWidget] = None
+        self._fear_widget: Optional[TemplateFieldWidget] = None
         for widget in self.widgets:
             if widget.field.id == name_field.id:
                 self._name_widget = widget
             elif widget.field.id == avatar_field.id:
                 self._avatar_widget = widget.wdgEditor
+            elif widget.field.id == enneagram_field.id:
+                self._enneagram_widget = widget.wdgEditor
+            elif widget.field.id == desire_field.id:
+                self._desire_widget = widget
+            elif widget.field.id == fear_field.id:
+                self._fear_widget = widget
         if not self._name_widget:
             raise ValueError('Obligatory name field is missing from profile')
         if not self._avatar_widget:
@@ -598,6 +610,8 @@ class ProfileTemplateView(_ProfileTemplateBase):
 
         self._name_widget.wdgEditor.setFocusPolicy(Qt.StrongFocus)
         self._avatar_widget.setCharacter(self.character)
+        if self._enneagram_widget:
+            self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
         self.setProperty('mainFrame', True)
 
         self._selected: Optional[TemplateFieldWidget] = None
@@ -631,3 +645,27 @@ class ProfileTemplateView(_ProfileTemplateBase):
         for widget in self.widgets:
             if str(widget.field.id) in ids.keys():
                 widget.setValue(ids[str(widget.field.id)])
+
+    def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
+        update_desire = False
+        update_fear = False
+        if self._desire_widget:
+            update_desire = True
+            if previous:
+                current_value = self._desire_widget.value()
+                if current_value and current_value != previous.meta['desire']:
+                    if not ask_confirmation("Do you want to update your character's DESIRE based on their Enneagram?"):
+                        update_desire = False
+
+        if self._fear_widget:
+            update_fear = True
+            if previous:
+                current_value = self._fear_widget.value()
+                if current_value and current_value != previous.meta['fear']:
+                    if not ask_confirmation("Do you want to update your character's FEAR based on their Enneagram?"):
+                        update_fear = False
+
+        if update_desire:
+            self._desire_widget.setValue(current.meta['desire'])
+        if update_fear:
+            self._fear_widget.setValue(current.meta['fear'])

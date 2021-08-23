@@ -385,49 +385,67 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                           icon_color='#1f487e',
                                                           meta={'positive': ['Rational', 'Principled', 'Objective',
                                                                              'Structured'],
-                                                                'negative': ['Strict']}),
+                                                                'negative': ['Strict'],
+                                                                'desire': 'Being good, balanced, have integrity',
+                                                                'fear': 'Being incorrect, corrupt, evil'}),
                                             SelectionItem('Giver', icon='mdi.numeric-2-circle',
                                                           icon_color='#7ae7c7',
                                                           meta={'positive': ['Generous', 'Warm', 'Caring'],
-                                                                'negative': ['Possessive']}
+                                                                'negative': ['Possessive'],
+                                                                'desire': 'To be loved and appreciated',
+                                                                'fear': 'Being unloved, unwanted'}
                                                           ),
                                             SelectionItem('Achiever', icon='mdi.numeric-3-circle',
                                                           icon_color='#297045',
                                                           meta={'positive': ['Pragmatic', 'Driven', 'Ambitious'],
-                                                                'negative': ['Image-conscious']}
+                                                                'negative': ['Image-conscious'],
+                                                                'desire': 'Be valuable and worthwhile',
+                                                                'fear': 'Being worthless'}
                                                           ),
                                             SelectionItem('Individualist', icon='mdi.numeric-4-circle',
                                                           icon_color='#4d8b31',
                                                           meta={'positive': ['Self-aware', 'Sensitive', 'Expressive'],
-                                                                'negative': ['Temperamental']}
+                                                                'negative': ['Temperamental'],
+                                                                'desire': 'Express their individuality',
+                                                                'fear': 'Having no identity or significance'}
                                                           ),
                                             SelectionItem('Investigator', icon='mdi.numeric-5-circle',
                                                           icon_color='#ffc600',
                                                           meta={'positive': ['Perceptive', 'Curious', 'Innovative'],
-                                                                'negative': ['Isolated']}
+                                                                'negative': ['Isolated'],
+                                                                'desire': 'Be competent',
+                                                                'fear': 'Being useless, incompetent'}
                                                           ),
                                             SelectionItem('Skeptic', icon='mdi.numeric-6-circle',
                                                           icon_color='#ff6b35',
                                                           meta={'positive': ['Committed', 'Responsible', 'Organized'],
-                                                                'negative': ['Anxious']}
+                                                                'negative': ['Anxious'],
+                                                                'desire': 'Have security and support',
+                                                                'fear': 'Being vulnerable and unprepared'}
                                                           ),
                                             SelectionItem('Enthusiast', icon='mdi.numeric-7-circle',
                                                           icon_color='#ec0b43',
                                                           meta={'positive': ['Optimistic', 'Flexible', 'Practical',
                                                                              'Adventurous'],
-                                                                'negative': ['Impulsive', 'Self-centered']}
+                                                                'negative': ['Impulsive', 'Self-centered'],
+                                                                'desire': 'Be stimulated, engaged, satisfied',
+                                                                'fear': 'Being deprived'}
                                                           ),
                                             SelectionItem('Challenger', icon='mdi.numeric-8-circle',
                                                           icon_color='#4f0147',
                                                           meta={'positive': ['Decisive', 'Powerful', 'Assertive',
                                                                              'Independent'],
-                                                                'negative': ['Confrontational']}
+                                                                'negative': ['Confrontational'],
+                                                                'desire': 'Be independent and in control',
+                                                                'fear': 'Being vulnerable, controlled, harmed'}
                                                           ),
                                             SelectionItem('Peacemaker', icon='mdi.numeric-9-circle',
                                                           icon_color='#3a015c',
                                                           meta={'positive': ['Easygoing', 'Understanding', 'Patient',
                                                                              'Supportive'],
-                                                                'negative': ['Lazy', 'Indecisive']}
+                                                                'negative': ['Lazy', 'Indecisive'],
+                                                                'desire': 'Internal peace, harmony',
+                                                                'fear': 'Loss, separation'}
                                                           )],
                                 compact=True)
 mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
