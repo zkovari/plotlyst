@@ -27,7 +27,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QTextEdit, QWidgetAction, QMenu, QListView
+    QSpacerItem, QTextEdit, QWidgetAction, QMenu, QListView, QPushButton
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -461,7 +461,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         for w in self.widgets:
             w.setEnabled(False)
             w.setAcceptDrops(True)
-            w.installEventFilter(self)
+            self._installEventFilter(w)
 
         for row in range(max(6, self.gridLayout.rowCount() + 1)):
             for col in range(2):
@@ -519,7 +519,8 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         item: QLayoutItem = self.gridLayout.takeAt(index)
         item.widget().deleteLater()
         self.gridLayout.addWidget(widget_to_drop, *pos)
-        widget_to_drop.installEventFilter(self)
+        self._installEventFilter(widget_to_drop)
+
         self.widgets.append(widget_to_drop)
 
         self.fieldAdded.emit(field)
@@ -535,7 +536,13 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.MouseButtonRelease:
-            self._select(watched)
+            if isinstance(watched, (QToolButton, QPushButton)):
+                if isinstance(watched.parent(), AvatarWidget):
+                    self._select(watched.parent().parent())
+                else:
+                    self._select(watched.parent())
+            else:
+                self._select(watched)
         elif event.type() == QEvent.DragEnter:
             self._target_to_drop = watched
             self.dragMoveEvent(event)
@@ -576,6 +583,13 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
     def updateEmojiForSelected(self, text: str):
         if self._selected:
             self._selected.lblEmoji.setText(emoji.emojize(text))
+
+    def _installEventFilter(self, widget: TemplateFieldWidget):
+        widget.installEventFilter(self)
+        if isinstance(widget.wdgEditor, AvatarWidget):
+            widget.wdgEditor.btnUploadAvatar.installEventFilter(self)
+        if isinstance(widget.wdgEditor, TextSelectionWidget):
+            widget.wdgEditor.installEventFilter(self)
 
     def _addPlaceholder(self, row: int, col: int):
         _placeholder = _PlaceHolder()
