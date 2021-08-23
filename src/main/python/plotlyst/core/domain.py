@@ -490,13 +490,16 @@ for item in enneagram_field.selections:
     _enneagram_choices[item.text] = item
 
 goal_field = TemplateField('Goal', type=TemplateFieldType.SMALL_TEXT,
-                           id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'))
+                           id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'),
+                           placeholder='Character goal throughout the story')
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
-                                id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'))
+                                id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
+                                placeholder='The misbelief/lie the character believes in')
 fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':face_screaming_in_fear:',
-                           placeholder='Fear',
+                           placeholder='Fear (select Enneagram to autofill)',
                            id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'), show_label=False)
-desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:', placeholder='Desire',
+desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
+                             placeholder='Desire (select Enneagram to autofill)',
                              id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'), show_label=False)
 role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('131b9de6-ac95-4db5-b9a1-33200100b676'),

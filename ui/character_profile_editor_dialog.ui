@@ -871,6 +871,20 @@ background-color: rgb(255, 255, 255);
             <widget class="QWidget" name="pageSettings">
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Settings</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="Line" name="line_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QWidget" name="wdgFieldProperties" native="true">
                 <property name="maximumSize">
                  <size>
