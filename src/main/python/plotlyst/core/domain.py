@@ -467,9 +467,16 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                                        SelectionItem('ESTP'),
                                        SelectionItem('ESFP'), ], compact=True)
 
-positive_traits = ['Objective', 'Principled', 'Rational',
-                   'Structured']
-negative_traits = ['Anxious', 'Confrontational', 'Indecisive']
+positive_traits = sorted(['Generous', 'Objective', 'Principled', 'Rational',
+                          'Structured', 'Caring', 'Warm', 'Driven', 'Ambitious', 'Self-aware', 'Sensitive',
+                          'Expressive', 'Perceptive', 'Curious', 'Innovative', 'Committed', 'Responsible', 'Organized',
+                          'Optimistic', 'Flexible', 'Practical',
+                          'Adventurous', 'Decisive', 'Powerful', 'Assertive',
+                          'Independent', 'Easygoing', 'Understanding', 'Patient',
+                          'Supportive'])
+negative_traits = sorted(
+    ['Anxious', 'Confrontational', 'Indecisive', 'Strict', 'Possessive', 'Image-conscious', 'Temperamental',
+     'Isolated', 'Impulsive', 'Self-centered', 'Lazy'])
 
 traits_field = TemplateField(name='Traits', type=TemplateFieldType.LABELS,
                              id=uuid.UUID('76faae5f-b1e4-47f4-9e3f-ed8497f6c6d3'))

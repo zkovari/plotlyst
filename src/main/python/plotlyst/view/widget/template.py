@@ -259,10 +259,13 @@ class LabelsSelectionWidget(QFrame):
         self._btnEdit = QToolButton()
         self._btnEdit.setIcon(IconRegistry.plus_edit_icon())
         self._lstTraitsView = QListView()
+        self._lstTraitsView.setMaximumHeight(300)
+        self._lstTraitsView.setMaximumWidth(300)
+        self._lstTraitsView.setMinimumWidth(300)
+        self._lstTraitsView.setMinimumHeight(300)
         self._model = TraitsFieldItemsSelectionModel(self.field)
         self._model.setCheckable(True, TemplateFieldSelectionModel.ColName)
         self._lstTraitsView.setModel(self._model)
-        self._lstTraitsView.setMaximumWidth(250)
         self._lstTraitsView.setModelColumn(TemplateFieldSelectionModel.ColName)
         self._lstTraitsView.setViewMode(QListView.IconMode)
 
@@ -285,6 +288,7 @@ class LabelsSelectionWidget(QFrame):
         return [x.text for x in self._model.selections()]
 
     def setValue(self, values: List[str]):
+        self._model.uncheckAll()
         for v in values:
             item = self._labels_index.get(v)
             if item:
@@ -592,6 +596,7 @@ class ProfileTemplateView(_ProfileTemplateBase):
         self._enneagram_widget: Optional[TextSelectionWidget] = None
         self._desire_widget: Optional[TemplateFieldWidget] = None
         self._fear_widget: Optional[TemplateFieldWidget] = None
+        self._traits_widget: Optional[LabelsSelectionWidget] = None
         for widget in self.widgets:
             if widget.field.id == name_field.id:
                 self._name_widget = widget
@@ -603,6 +608,8 @@ class ProfileTemplateView(_ProfileTemplateBase):
                 self._desire_widget = widget
             elif widget.field.id == fear_field.id:
                 self._fear_widget = widget
+            elif widget.field.id == traits_field.id:
+                self._traits_widget = widget.wdgEditor
         if not self._name_widget:
             raise ValueError('Obligatory name field is missing from profile')
         if not self._avatar_widget:
@@ -664,6 +671,23 @@ class ProfileTemplateView(_ProfileTemplateBase):
                 if current_value and current_value != previous.meta['fear']:
                     if not ask_confirmation("Do you want to update your character's FEAR based on their Enneagram?"):
                         update_fear = False
+
+        if self._traits_widget:
+            traits: List[str] = self._traits_widget.value()
+            if previous:
+                for pos_trait in previous.meta['positive']:
+                    if pos_trait in traits:
+                        traits.remove(pos_trait)
+                for neg_trait in previous.meta['negative']:
+                    if neg_trait in traits:
+                        traits.remove(neg_trait)
+            for pos_trait in current.meta['positive']:
+                if pos_trait not in traits:
+                    traits.append(pos_trait)
+            for neg_trait in current.meta['negative']:
+                if neg_trait not in traits:
+                    traits.append(neg_trait)
+            self._traits_widget.setValue(traits)
 
         if update_desire:
             self._desire_widget.setValue(current.meta['desire'])

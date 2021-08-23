@@ -54,6 +54,10 @@ class TemplateFieldSelectionModel(EditableItemsModel):
         if self._checkable:
             self._checked.add(item)
 
+    def uncheckAll(self):
+        self._checked.clear()
+        self.modelReset.emit()
+
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
         return len(self._field.selections)
@@ -134,6 +138,7 @@ class TraitsFieldItemsSelectionModel(TemplateFieldSelectionModel):
             return Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
         return flags
 
+    @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if role == Qt.ForegroundRole:
             item = self._field.selections[index.row()]
