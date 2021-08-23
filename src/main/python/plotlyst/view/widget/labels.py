@@ -73,21 +73,17 @@ class CharacterLabel(Label):
     def __init__(self, character: Character, pov: bool = False, parent=None):
         super(CharacterLabel, self).__init__(parent)
         self.character = character
-        _layout = QHBoxLayout()
-        _layout.setSpacing(2)
-        _layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(_layout)
         self.lblAvatar = QLabel()
         set_avatar(self.lblAvatar, self.character, 24)
-        _layout.addWidget(self.lblAvatar)
-        _layout.addWidget(QLabel(truncate_string(character.name)))
+        self.layout().addWidget(self.lblAvatar)
+        self.layout().addWidget(QLabel(truncate_string(character.name)))
 
         role = self.character.role()
         if role:
             self.lblRole = QLabel()
             self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
-            _layout.addWidget(line(vertical=True))
-            _layout.addWidget(self.lblRole)
+            self.layout().addWidget(line(vertical=True))
+            self.layout().addWidget(self.lblRole)
 
         border_size = 3 if pov else 2
         border_color = '#3f7cac' if pov else '#bad7f2'
