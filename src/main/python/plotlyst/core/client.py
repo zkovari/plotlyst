@@ -33,7 +33,7 @@ from dataclasses_json import dataclass_json, Undefined
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    DramaticQuestion, ConflictType, Conflict
+    DramaticQuestion, ConflictType, Conflict, BackstoryEvent
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -100,6 +100,7 @@ class CharacterInfo:
     id: uuid.UUID
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
+    backstory: List[BackstoryEvent] = field(default_factory=list)
 
 
 @dataclass
@@ -340,7 +341,8 @@ class JsonClient:
             with open(path) as json_file:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
-                character = Character(name=info.name, id=info.id, template_values=info.template_values)
+                character = Character(name=info.name, id=info.id, template_values=info.template_values,
+                                      backstory=info.backstory)
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -475,7 +477,8 @@ class JsonClient:
         self.__persist_info(self.novels_dir, novel_info)
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
-        char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id)
+        char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id,
+                                  backstory=char.backstory)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):

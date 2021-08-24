@@ -36,8 +36,8 @@ class IconRegistry:
         return qtawesome.icon('ei.ok', color=color)
 
     @staticmethod
-    def wrong_icon() -> QIcon:
-        return qtawesome.icon('ei.remove', color='red')
+    def wrong_icon(color: str = 'red') -> QIcon:
+        return qtawesome.icon('ei.remove', color=color)
 
     @staticmethod
     def cancel_icon() -> QIcon:
@@ -300,6 +300,22 @@ class IconRegistry:
     @staticmethod
     def conflict_self_icon() -> QIcon:
         return IconRegistry.from_name('mdi.mirror', color='#94b0da')
+
+    @staticmethod
+    def baby_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.baby')
+
+    @staticmethod
+    def child_icon() -> QIcon:
+        return IconRegistry.from_name('fa.child')
+
+    @staticmethod
+    def teenager_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.human')
+
+    @staticmethod
+    def adult_icon() -> QIcon:
+        return IconRegistry.from_name('ei.adult')
 
     @staticmethod
     def from_name(name: str, color: str = 'black', mdi_scale: float = 1.2) -> QIcon:

@@ -37,11 +37,29 @@ class TemplateValue:
 
 
 @dataclass
+class Event:
+    keyphrase: str
+    synopsis: str
+    conflicts: List['Conflict'] = field(default_factory=list)
+    emotion: int = 0
+
+
+@dataclass
+class BackstoryEvent(Event):
+    age: int = 0
+    as_baby: bool = False
+    as_child: bool = False
+    as_teenager: bool = False
+    as_adult: bool = False
+
+
+@dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
+    backstory: List[BackstoryEvent] = field(default_factory=list)
 
     def enneagram(self) -> Optional['SelectionItem']:
         for value in self.template_values:
