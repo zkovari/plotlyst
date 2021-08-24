@@ -33,7 +33,7 @@ from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
-from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
@@ -232,6 +232,8 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
+    deleteRequested = pyqtSignal(object)
+
     def __init__(self, backstory: BackstoryEvent, parent=None):
         super(CharacterBackstoryCard, self).__init__(parent)
         self.setupUi(self)
@@ -245,6 +247,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.btnAddConflict.setVisible(False)
         self.btnAddConflict.setIcon(IconRegistry.conflict_icon())
         self.textSummary.textChanged.connect(self._synopsis_changed)
+        self.btnRemove.clicked.connect(self._remove)
 
         self.refresh()
 
@@ -313,3 +316,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
             self.backstory.as_teenager = backstory.as_teenager
             self.backstory.as_adult = backstory.as_adult
             self.refresh()
+
+    def _remove(self):
+        if ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
+            self.deleteRequested.emit(self)
