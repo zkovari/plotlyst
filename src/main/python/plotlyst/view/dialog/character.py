@@ -67,14 +67,15 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
             self.lineKeyphrase.setText(backstory.keyphrase)
             if backstory.age > 0:
                 self.sbAge.setValue(backstory.age)
-            if backstory.as_baby:
+            elif backstory.as_baby:
                 self.btnBaby.setChecked(True)
-            if backstory.as_child:
+            elif backstory.as_child:
                 self.btnChild.setChecked(True)
-            if backstory.as_teenager:
+            elif backstory.as_teenager:
                 self.btnTeenager.setChecked(True)
-            if backstory.as_adult:
+            elif backstory.as_adult:
                 self.btnAdult.setChecked(True)
+
             if backstory.emotion == VERY_UNHAPPY:
                 self.btnVeryUnhappy.setChecked(True)
             if backstory.emotion == UNHAPPY:
@@ -101,7 +102,7 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
         elif self.btnVeryHappy.isChecked():
             emotion = VERY_HAPPY
 
-        return BackstoryEvent(self.lineKeyphrase.text(), synopsis='', emotion=emotion,
+        return BackstoryEvent(self.lineKeyphrase.text(), synopsis='', age=self.sbAge.value(), emotion=emotion,
                               as_baby=self.btnBaby.isChecked(), as_child=self.btnChild.isChecked(),
                               as_teenager=self.btnTeenager.isChecked(), as_adult=self.btnAdult.isChecked())
 

@@ -59,8 +59,11 @@ class CharacterEditor:
         self.ui.btnNewBackstory.clicked.connect(self._new_backstory)
 
         self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[0])
-
         self._init_profile_view()
+
+        for backstory in self.character.backstory:
+            card = CharacterBackstoryCard(backstory)
+            self.ui.wdgBackstory.layout().addWidget(card)
 
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
@@ -98,6 +101,7 @@ class CharacterEditor:
         if backstory:
             card = CharacterBackstoryCard(backstory)
             self.ui.wdgBackstory.layout().addWidget(card)
+        self.character.backstory.append(backstory)
 
     def _save(self):
         name = self.profile.name()

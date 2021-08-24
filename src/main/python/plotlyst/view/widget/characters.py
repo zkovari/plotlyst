@@ -244,6 +244,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.btnRemove.setIcon(IconRegistry.wrong_icon(color='black'))
         self.btnAddConflict.setVisible(False)
         self.btnAddConflict.setIcon(IconRegistry.conflict_icon())
+        self.textSummary.textChanged.connect(self._synopsis_changed)
 
         self.refresh()
 
@@ -276,6 +277,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
                     ''')
 
         self.lblKeyphrase.setText(self.backstory.keyphrase)
+        self.textSummary.setText(self.backstory.synopsis)
         if self.backstory.age > 0:
             self.lblAge.setText(str(self.backstory.age))
         elif self.backstory.as_baby:
@@ -289,14 +291,25 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
             self.lblAgeIcon.setPixmap(IconRegistry.teenager_icon().pixmap(24, 24))
         elif self.backstory.as_adult:
             self.lblAgeIcon.setPixmap(IconRegistry.adult_icon().pixmap(24, 24))
+        else:
+            self.lblAge.clear()
 
     def _enableActionButtons(self, enabled: bool):
         self.btnEdit.setVisible(enabled)
         self.btnRemove.setVisible(enabled)
-        self.btnAddConflict.setVisible(enabled)
+        # self.btnAddConflict.setVisible(enabled)
+
+    def _synopsis_changed(self):
+        self.backstory.synopsis = self.textSummary.toPlainText()
 
     def _edit(self):
         backstory = BackstoryEditorDialog(self.backstory).display()
         if backstory:
-            self.backstory = backstory
+            self.backstory.keyphrase = backstory.keyphrase
+            self.backstory.age = backstory.age
+            self.backstory.emotion = backstory.emotion
+            self.backstory.as_baby = backstory.as_baby
+            self.backstory.as_child = backstory.as_child
+            self.backstory.as_teenager = backstory.as_teenager
+            self.backstory.as_adult = backstory.as_adult
             self.refresh()
