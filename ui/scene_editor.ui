@@ -573,11 +573,11 @@ QToolButton:hover {
                </property>
                <property name="styleSheet">
                 <string notr="true">QToolButton:checked {
-	background-color: rgb(136, 255, 115);
+	background-color: #93e5ab;
 }
 
 QToolButton:hover {
-	border: 1px solid rgb(136, 255, 115);
+	border: 1px solid #93e5ab;
 }</string>
                </property>
                <property name="text">

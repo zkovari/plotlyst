@@ -23,10 +23,12 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from fbs_runtime import platform
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEvent
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
+from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.characters import CharacterBackstoryCard
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import customize_character_profile
 
@@ -53,6 +55,8 @@ class CharacterEditor:
             self._emoji_font = emoji_font(20)
         self.ui.btnCustomize.setIcon(IconRegistry.customization_icon())
         self.ui.btnCustomize.clicked.connect(self._customize_profile)
+        self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon())
+        self.ui.btnNewBackstory.clicked.connect(self._new_backstory)
 
         self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[0])
 
@@ -76,7 +80,6 @@ class CharacterEditor:
         self._profile_container.setLayout(QHBoxLayout())
         self._profile_container.layout().setContentsMargins(0, 0, 0, 0)
         self._profile_container.layout().addWidget(self._profile_with_toolbar)
-        self._profile_container.layout().addWidget(spacer_widget())
         self.ui.wdgProfile.layout().insertWidget(0, self._profile_container)
 
     def _customize_profile(self):
@@ -89,6 +92,12 @@ class CharacterEditor:
         self.ui.wdgProfile.layout().takeAt(0)
         self._profile_container.deleteLater()
         self._init_profile_view()
+
+    def _new_backstory(self):
+        backstory: Optional[BackstoryEvent] = BackstoryEditorDialog().display()
+        if backstory:
+            card = CharacterBackstoryCard(backstory)
+            self.ui.wdgBackstory.layout().addWidget(card)
 
     def _save(self):
         name = self.profile.name()

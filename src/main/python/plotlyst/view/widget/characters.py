@@ -20,17 +20,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Iterable, List
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QHeaderView
+from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene
+from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene, BackstoryEvent, \
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
 from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
+from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
@@ -224,3 +229,74 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.new_conflict_added.emit(conflict)
         self.refresh()
         self.lineKey.clear()
+
+
+class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
+    def __init__(self, backstory: BackstoryEvent, parent=None):
+        super(CharacterBackstoryCard, self).__init__(parent)
+        self.setupUi(self)
+        self.backstory = backstory
+
+        self.btnEdit.setVisible(False)
+        self.btnEdit.setIcon(IconRegistry.edit_icon())
+        self.btnEdit.clicked.connect(self._edit)
+        self.btnRemove.setVisible(False)
+        self.btnRemove.setIcon(IconRegistry.wrong_icon(color='black'))
+        self.btnAddConflict.setVisible(False)
+        self.btnAddConflict.setIcon(IconRegistry.conflict_icon())
+
+        self.refresh()
+
+        self.setMinimumWidth(100)
+
+    @overrides
+    def enterEvent(self, event: QtCore.QEvent) -> None:
+        self._enableActionButtons(True)
+
+    @overrides
+    def leaveEvent(self, event: QtCore.QEvent) -> None:
+        self._enableActionButtons(False)
+
+    def refresh(self):
+        bg_color: str = 'rgb(171, 171, 171)'
+        if self.backstory.emotion == VERY_HAPPY:
+            bg_color = 'rgb(0, 202, 148)'
+        elif self.backstory.emotion == HAPPY:
+            bg_color = '#93e5ab'
+        elif self.backstory.emotion == UNHAPPY:
+            bg_color = 'rgb(255, 142, 43)'
+        elif self.backstory.emotion == VERY_UNHAPPY:
+            bg_color = '#df2935'
+        self.setStyleSheet(f'''
+                    CharacterBackstoryCard {{
+                        border: 0px;
+                        border-radius: 12px;
+                        background-color: {bg_color};
+                        }}
+                    ''')
+
+        self.lblKeyphrase.setText(self.backstory.keyphrase)
+        if self.backstory.age > 0:
+            self.lblAge.setText(str(self.backstory.age))
+        elif self.backstory.as_baby:
+            self.lblAge.setText('0-3')
+            self.lblAgeIcon.setPixmap(IconRegistry.baby_icon().pixmap(24, 24))
+        elif self.backstory.as_child:
+            self.lblAge.setText('3-12')
+            self.lblAgeIcon.setPixmap(IconRegistry.child_icon().pixmap(24, 24))
+        elif self.backstory.as_teenager:
+            self.lblAge.setText('12-18')
+            self.lblAgeIcon.setPixmap(IconRegistry.teenager_icon().pixmap(24, 24))
+        elif self.backstory.as_adult:
+            self.lblAgeIcon.setPixmap(IconRegistry.adult_icon().pixmap(24, 24))
+
+    def _enableActionButtons(self, enabled: bool):
+        self.btnEdit.setVisible(enabled)
+        self.btnRemove.setVisible(enabled)
+        self.btnAddConflict.setVisible(enabled)
+
+    def _edit(self):
+        backstory = BackstoryEditorDialog(self.backstory).display()
+        if backstory:
+            self.backstory = backstory
+            self.refresh()
