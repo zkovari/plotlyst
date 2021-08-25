@@ -125,8 +125,6 @@ class SceneCard(Ui_SceneCard, _Card):
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
         if self.scene.beat:
-            self.lblBeat.clear()
-            # self.lblBeat.setText(self.scene.beat.text)
             if platform.is_windows():
                 self._emoji_font = emoji_font(14)
             else:
@@ -134,8 +132,6 @@ class SceneCard(Ui_SceneCard, _Card):
             self.lblBeatEmoji.setFont(self._emoji_font)
             self.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
         else:
-            self.lblBeat.clear()
-            self.lblBeat.setHidden(True)
             self.lblBeatEmoji.clear()
             self.lblBeatEmoji.setHidden(True)
 
@@ -152,12 +148,6 @@ class SceneCard(Ui_SceneCard, _Card):
             self.lblType.clear()
 
         self._setStyleSheet()
-
-    # @overrides
-    # def _bgColor(self, selected: bool = False) -> str:
-    #     if self.scene.beat:
-    #         return '#8eaf9d' if selected else '#a6d8d4'
-    #     return super(SceneCard, self)._bgColor(selected)
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
