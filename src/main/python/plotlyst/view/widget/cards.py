@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import emoji
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QSize, Qt
-from PyQt5.QtWidgets import QFrame
+from PyQt5.QtWidgets import QFrame, QApplication
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -113,15 +113,16 @@ class SceneCard(Ui_SceneCard, _Card):
 
         self.wdgCharacters.layout().setSpacing(1)
 
+        self.textTitle.setFontPointSize(QApplication.font().pointSize() + 1)
         self.textTitle.setText(self.scene.title)
         self.textTitle.setAlignment(Qt.AlignCenter)
         if scene.pov:
-            set_avatar(self.lblPov, scene.pov, 64)
+            set_avatar(self.lblPov, scene.pov, 32)
         else:
             self.lblPov.clear()
             self.lblPov.setHidden(True)
         for char in scene.characters:
-            self.wdgCharacters.addLabel(CharacterAvatarLabel(char))
+            self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 18))
 
         if self.scene.beat:
             self.lblBeat.clear()
@@ -152,11 +153,11 @@ class SceneCard(Ui_SceneCard, _Card):
 
         self._setStyleSheet()
 
-    @overrides
-    def _bgColor(self, selected: bool = False) -> str:
-        if self.scene.beat:
-            return '#8eaf9d' if selected else '#a6d8d4'
-        return super(SceneCard, self)._bgColor(selected)
+    # @overrides
+    # def _bgColor(self, selected: bool = False) -> str:
+    #     if self.scene.beat:
+    #         return '#8eaf9d' if selected else '#a6d8d4'
+    #     return super(SceneCard, self)._bgColor(selected)
 
     @overrides
     def _borderSize(self, selected: bool = False) -> int:

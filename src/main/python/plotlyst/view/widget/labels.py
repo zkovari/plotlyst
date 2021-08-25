@@ -96,9 +96,9 @@ class CharacterLabel(Label):
 
 
 class CharacterAvatarLabel(QLabel):
-    def __init__(self, character: Character, parent=None):
+    def __init__(self, character: Character, size: int = 24, parent=None):
         super(CharacterAvatarLabel, self).__init__(parent)
-        set_avatar(self, character, 24)
+        set_avatar(self, character, size)
 
 
 class ConflictLabel(Label):

@@ -103,12 +103,12 @@ class CharacterEditor:
             card = CharacterBackstoryCard(backstory)
             card.deleteRequested.connect(self._remove_backstory)
             self.ui.wdgBackstory.layout().addWidget(card)
-        self.character.backstory.append(backstory)
+            self.character.backstory.append(backstory)
 
     def _remove_backstory(self, card: CharacterBackstoryCard):
         if card.backstory in self.character.backstory:
             self.character.backstory.remove(card.backstory)
-        
+
         self.ui.wdgBackstory.layout().removeWidget(card)
 
     def _save(self):
