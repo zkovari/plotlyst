@@ -127,7 +127,7 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
 
     def _upload_avatar(self):
         filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
-        if not filename:
+        if not filename or not filename[0]:
             return
         reader = QImageReader(filename[0])
         reader.setAutoTransform(True)
