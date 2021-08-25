@@ -63,6 +63,7 @@ def test_scene_deletion(qtbot, filled_window: MainWindow, monkeypatch):
 
 def test_scene_edition(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
+    view.ui.btnTableView.click()
     click_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle)
     assert view.ui.btnEdit.isEnabled()
 
@@ -105,6 +106,7 @@ def test_insert_new_scene_after(qtbot, filled_window: MainWindow):
 def test_switch_views(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
 
+    view.ui.btnTableView.click()
     assert view.ui.tblScenes.verticalHeader().isVisible()
 
     view.ui.btnActionsView.click()

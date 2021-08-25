@@ -77,6 +77,7 @@ class ScenesOutlineView(AbstractNovelView):
             '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
                QHeaderView {background-color: white;}''')
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
+        self.ui.tblScenes.verticalHeader().setVisible(True)
         self.tblModel.orderChanged.connect(self._on_scene_moved)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTitle, 250)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColCharacters, 170)
