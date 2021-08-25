@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import emoji
 from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal, QSize, Qt
+from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent
 from PyQt5.QtWidgets import QFrame, QApplication
 from fbs_runtime import platform
 from overrides import overrides
@@ -122,7 +122,7 @@ class SceneCard(Ui_SceneCard, _Card):
             self.lblPov.clear()
             self.lblPov.setHidden(True)
         for char in scene.characters:
-            self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 18))
+            self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
         if self.scene.beat:
             self.lblBeat.clear()
@@ -140,7 +140,7 @@ class SceneCard(Ui_SceneCard, _Card):
             self.lblBeatEmoji.setHidden(True)
 
         if scene.notes:
-            self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#4f5d75'))
+            self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#fb8b24'))
         else:
             self.btnComments.setHidden(True)
 
@@ -158,6 +158,14 @@ class SceneCard(Ui_SceneCard, _Card):
     #     if self.scene.beat:
     #         return '#8eaf9d' if selected else '#a6d8d4'
     #     return super(SceneCard, self)._bgColor(selected)
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        self.wdgCharacters.setEnabled(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.wdgCharacters.setEnabled(False)
 
     @overrides
     def _borderSize(self, selected: bool = False) -> int:
