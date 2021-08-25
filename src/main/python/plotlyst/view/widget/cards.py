@@ -17,15 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import emoji
 from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal, QSize
+from PyQt5.QtCore import pyqtSignal, QSize, Qt
 from PyQt5.QtWidgets import QFrame
+from fbs_runtime import platform
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Character
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, ACTION_SCENE, REACTION_SCENE
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
+from src.main.python.plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
+from src.main.python.plotlyst.view.widget.labels import CharacterAvatarLabel
 
 
 class _Card(QFrame):
@@ -49,13 +54,16 @@ class _Card(QFrame):
     def _setStyleSheet(self, selected: bool = False):
         border_color = '#2a4d69' if selected else '#adcbe3'
         border_size = 4 if selected else 2
-        background_color = '#dec3c3' if selected else '#f9f4f4'
+        background_color = self._bgColor(selected)
         self.setStyleSheet(f'''
            QFrame[mainFrame=true] {{
                border: {border_size}px solid {border_color};
                border-radius: 15px;
                background-color: {background_color};
            }}''')
+
+    def _bgColor(self, selected: bool = False):
+        return '#dec3c3' if selected else '#f9f4f4'
 
 
 class NovelCard(Ui_NovelCard, _Card):
@@ -88,3 +96,63 @@ class CharacterCard(Ui_CharacterCard, _Card):
         if role:
             self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
         self._setStyleSheet()
+
+
+class SceneCard(Ui_SceneCard, _Card):
+    def __init__(self, scene: Scene, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.scene = scene
+
+        self.wdgCharacters.layout().setSpacing(1)
+
+        self.textTitle.setText(self.scene.title)
+        self.textTitle.setAlignment(Qt.AlignCenter)
+        if scene.pov:
+            set_avatar(self.lblPov, scene.pov, 64)
+        else:
+            self.lblPov.clear()
+            self.lblPov.setHidden(True)
+        for char in scene.characters:
+            self.wdgCharacters.addLabel(CharacterAvatarLabel(char))
+
+        if self.scene.beat:
+            self.lblBeat.clear()
+            # self.lblBeat.setText(self.scene.beat.text)
+            if platform.is_windows():
+                self._emoji_font = emoji_font(14)
+            else:
+                self._emoji_font = emoji_font(20)
+            self.lblBeatEmoji.setFont(self._emoji_font)
+            self.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
+        else:
+            self.lblBeat.clear()
+            self.lblBeat.setHidden(True)
+            self.lblBeatEmoji.clear()
+            self.lblBeatEmoji.setHidden(True)
+
+        if scene.notes:
+            self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#587792'))
+        else:
+            self.btnComments.setHidden(True)
+
+        if self.scene.type == ACTION_SCENE:
+            self.lblType.setPixmap(IconRegistry.action_scene_icon().pixmap(QSize(24, 24, )))
+        elif self.scene.type == REACTION_SCENE:
+            self.lblType.setPixmap(IconRegistry.reaction_scene_icon().pixmap(QSize(24, 24, )))
+        else:
+            self.lblType.clear()
+
+        self._setStyleSheet()
+
+#     def _setStyleSheet(self, selected: bool = False):
+#         super(SceneCard, self)._setStyleSheet(selected)
+#         if self.scene.beat:
+#             self.wdgBottom.setStyleSheet(f'''
+#             background-color: {PIVOTAL_COLOR};
+#             border: 1px solid {PIVOTAL_COLOR};
+#             border-top-left-radius: 0px;
+#             border-top-right-radius: 0px;
+#             border-bottom-left-radius: 15px;
+#             border-bottom-right-radius: 15px;
+# ''')

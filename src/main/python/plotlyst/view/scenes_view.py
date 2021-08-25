@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 import qtawesome
 from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
@@ -37,8 +37,10 @@ from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import FlowLayout
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
+from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 
@@ -104,13 +106,21 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct2.toggled.connect(partial(self._proxy.setActsFilter, 2))
         self.ui.btnAct3.toggled.connect(partial(self._proxy.setActsFilter, 3))
 
+        self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
+
+        self._cards_layout = FlowLayout(spacing=9)
+        self.ui.cards.setLayout(self._cards_layout)
+        self.scene_cards: List[SceneCard] = []
+        self.selected_card: Optional[SceneCard] = None
+        self._update_cards()
+
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
-        self.ui.btnTableView.setChecked(True)
+        self.ui.btnCardsView.setChecked(True)
 
         self.ui.btnFilter.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
@@ -155,6 +165,8 @@ class ScenesOutlineView(AbstractNovelView):
         if self.characters_distribution:
             self.characters_distribution.refresh()
 
+        self._update_cards()
+
     def _on_scene_selected(self):
         selection = len(self.ui.tblScenes.selectedIndexes()) > 0
         self.ui.btnDelete.setEnabled(selection)
@@ -179,11 +191,19 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.btnNew.setMenu(menu)
 
     def _on_edit(self):
-        indexes = self.ui.tblScenes.selectedIndexes()
-        if indexes:
-            scene = indexes[0].data(role=ScenesTableModel.SceneRole)
-            self.editor = SceneEditor(self.novel, scene)
-            self._switch_to_editor()
+        if self.ui.btnTableView.isChecked():
+            indexes = self.ui.tblScenes.selectedIndexes()
+            if indexes:
+                scene = indexes[0].data(role=ScenesTableModel.SceneRole)
+            else:
+                return
+        elif self.ui.btnCardsView.isChecked():
+            scene = self.selected_card.scene
+        else:
+            return
+
+        self.editor = SceneEditor(self.novel, scene)
+        self._switch_to_editor()
 
     def _switch_to_editor(self):
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
@@ -210,6 +230,25 @@ class ScenesOutlineView(AbstractNovelView):
         self.chaptersModel.newChapter()
         client.update_novel(self.novel)
 
+    def _update_cards(self):
+        self.scene_cards.clear()
+        self.selected_card = None
+        self._cards_layout.clear()
+
+        for scene in self.novel.scenes:
+            card = SceneCard(scene)
+            self._cards_layout.addWidget(card)
+            self.scene_cards.append(card)
+            card.selected.connect(self._card_selected)
+            card.doubleClicked.connect(self._on_edit)
+
+    def _card_selected(self, card: SceneCard):
+        if self.selected_card and self.selected_card is not card:
+            self.selected_card.clearSelection()
+        self.selected_card = card
+        self.ui.btnDelete.setEnabled(True)
+        self.ui.btnEdit.setEnabled(True)
+
     def _switch_view(self):
         height = 50
         relax_colors = False
@@ -220,6 +259,9 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblScenes.clearSelection()
             if not self.stagesModel:
                 self._init_stages_view()
+        elif self.ui.btnCardsView.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
+            self.ui.tblScenes.clearSelection()
         elif self.ui.btnTimelineView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageTimeline)
             self.ui.tblScenes.clearSelection()

@@ -95,6 +95,12 @@ class CharacterLabel(Label):
         ''')
 
 
+class CharacterAvatarLabel(QLabel):
+    def __init__(self, character: Character, parent=None):
+        super(CharacterAvatarLabel, self).__init__(parent)
+        set_avatar(self, character, 24)
+
+
 class ConflictLabel(Label):
     def __init__(self, conflict: Conflict, parent=None):
         super(ConflictLabel, self).__init__(parent)
