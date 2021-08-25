@@ -24,6 +24,7 @@ from PyQt5.QtWidgets import QFrame
 from fbs_runtime import platform
 from overrides import overrides
 
+from src.main.python.plotlyst.common import PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, ACTION_SCENE, REACTION_SCENE
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
@@ -52,8 +53,8 @@ class _Card(QFrame):
         self._setStyleSheet()
 
     def _setStyleSheet(self, selected: bool = False):
-        border_color = '#2a4d69' if selected else '#adcbe3'
-        border_size = 4 if selected else 2
+        border_color = self._borderColor(selected)
+        border_size = self._borderSize(selected)
         background_color = self._bgColor(selected)
         self.setStyleSheet(f'''
            QFrame[mainFrame=true] {{
@@ -62,8 +63,14 @@ class _Card(QFrame):
                background-color: {background_color};
            }}''')
 
-    def _bgColor(self, selected: bool = False):
+    def _bgColor(self, selected: bool = False) -> str:
         return '#dec3c3' if selected else '#f9f4f4'
+
+    def _borderSize(self, selected: bool = False) -> int:
+        return 4 if selected else 2
+
+    def _borderColor(self, selected: bool = False) -> str:
+        return '#2a4d69' if selected else '#adcbe3'
 
 
 class NovelCard(Ui_NovelCard, _Card):
@@ -132,7 +139,7 @@ class SceneCard(Ui_SceneCard, _Card):
             self.lblBeatEmoji.setHidden(True)
 
         if scene.notes:
-            self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#587792'))
+            self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#4f5d75'))
         else:
             self.btnComments.setHidden(True)
 
@@ -145,14 +152,20 @@ class SceneCard(Ui_SceneCard, _Card):
 
         self._setStyleSheet()
 
-#     def _setStyleSheet(self, selected: bool = False):
-#         super(SceneCard, self)._setStyleSheet(selected)
-#         if self.scene.beat:
-#             self.wdgBottom.setStyleSheet(f'''
-#             background-color: {PIVOTAL_COLOR};
-#             border: 1px solid {PIVOTAL_COLOR};
-#             border-top-left-radius: 0px;
-#             border-top-right-radius: 0px;
-#             border-bottom-left-radius: 15px;
-#             border-bottom-right-radius: 15px;
-# ''')
+    @overrides
+    def _bgColor(self, selected: bool = False) -> str:
+        if self.scene.beat:
+            return '#8eaf9d' if selected else '#a6d8d4'
+        return super(SceneCard, self)._bgColor(selected)
+
+    @overrides
+    def _borderSize(self, selected: bool = False) -> int:
+        if self.scene.beat:
+            return 7 if selected else 5
+        return super(SceneCard, self)._borderSize(selected)
+
+    @overrides
+    def _borderColor(self, selected: bool = False) -> str:
+        if self.scene.beat:
+            return '#6b7d7d' if selected else PIVOTAL_COLOR
+        return super(SceneCard, self)._borderColor(selected)
