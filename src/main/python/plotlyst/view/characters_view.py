@@ -19,13 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional, List
 
-from PyQt5 import QtGui
-from PyQt5.QtCore import QItemSelection, pyqtSignal, QSize
-from PyQt5.QtWidgets import QFrame
+from PyQt5.QtCore import QItemSelection
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, CharacterChangedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
@@ -33,10 +31,10 @@ from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
 from src.main.python.plotlyst.view.common import ask_confirmation, busy
-from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars, set_avatar
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.view.widget.cards import CharacterCard
 
 
 class CharactersView(AbstractNovelView):
@@ -98,7 +96,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
 
-    def _card_selected(self, card: 'CharacterCard'):
+    def _card_selected(self, card: CharacterCard):
         if self.selected_card and self.selected_card is not card:
             self.selected_card.clearSelection()
         self.selected_card = card
@@ -164,49 +162,3 @@ class CharactersView(AbstractNovelView):
         client.delete_character(self.novel, character)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()
-
-
-class CharacterCard(Ui_CharacterCard, QFrame):
-    selected = pyqtSignal(object)
-    doubleClicked = pyqtSignal(object)
-
-    def __init__(self, character: Character, parent=None):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.character = character
-        self.lblName.setText(self.character.name)
-        set_avatar(self.lblPic, self.character)
-
-        enneagram = self.character.enneagram()
-        if enneagram:
-            self.lblEnneagram.setPixmap(
-                IconRegistry.from_name(enneagram.icon, enneagram.icon_color).pixmap(QSize(28, 28)))
-        role = self.character.role()
-        if role:
-            self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
-        self._setStyleSheet()
-
-    @overrides
-    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        self._setStyleSheet(selected=True)
-        self.selected.emit(self)
-
-    @overrides
-    def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
-        self._setStyleSheet(selected=True)
-        self.selected.emit(self)
-        self.doubleClicked.emit(self)
-
-    def clearSelection(self):
-        self._setStyleSheet()
-
-    def _setStyleSheet(self, selected: bool = False):
-        border_color = '#2a4d69' if selected else '#adcbe3'
-        border_size = 4 if selected else 2
-        background_color = '#dec3c3' if selected else '#f9f4f4'
-        self.setStyleSheet(f'''
-           QFrame[mainFrame=true] {{
-               border: {border_size}px solid {border_color};
-               border-radius: 15px;
-               background-color: {background_color};
-           }}''')

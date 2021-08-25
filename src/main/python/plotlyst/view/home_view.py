@@ -19,9 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QFrame, QFileDialog
+from PyQt5.QtWidgets import QFileDialog
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
@@ -33,9 +32,9 @@ from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.dialog.new_novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
-from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.view.widget.cards import NovelCard
 
 
 class HomeView(AbstractView):
@@ -104,7 +103,7 @@ class HomeView(AbstractView):
         title = NovelEditionDialog().display(self.selected_card.novel)
         if title:
             self.selected_card.novel.title = title
-            self.selected_card.update()
+            self.selected_card.refresh()
             client.update_project_novel(self.selected_card.novel)
             emit_event(NovelUpdatedEvent(self, self.selected_card.novel))
 
@@ -118,43 +117,10 @@ class HomeView(AbstractView):
             self.ui.btnDelete.setDisabled(True)
             self.refresh()
 
-    def _card_selected(self, card: 'NovelCard'):
+    def _card_selected(self, card: NovelCard):
         if self.selected_card and self.selected_card is not card:
             self.selected_card.clearSelection()
         self.selected_card = card
         self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
         self.ui.btnActivate.setEnabled(True)
-
-
-class NovelCard(Ui_NovelCard, QFrame):
-    selected = pyqtSignal(object)
-
-    def __init__(self, novel: NovelDescriptor, parent=None):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.novel = novel
-        self.label.setText(self.novel.title)
-        self._setStyleSheet()
-
-    @overrides
-    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        self._setStyleSheet(selected=True)
-        self.selected.emit(self)
-
-    def update(self):
-        self.label.setText(self.novel.title)
-
-    def clearSelection(self):
-        self._setStyleSheet()
-
-    def _setStyleSheet(self, selected: bool = False):
-        border_color = '#2a4d69' if selected else '#adcbe3'
-        border_size = 4 if selected else 2
-        background_color = '#dec3c3' if selected else '#f9f4f4'
-        self.setStyleSheet(f'''
-        QFrame[mainFrame=true] {{
-            border: {border_size}px solid {border_color};
-            border-radius: 15px;
-            background-color: {background_color};
-        }}''')
