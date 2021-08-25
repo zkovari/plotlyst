@@ -505,6 +505,8 @@ for trait in negative_traits:
 
 _enneagram_choices = {}
 for item in enneagram_field.selections:
+    if item.type != SelectionItemType.CHOICE:
+        continue
     _enneagram_choices[item.text] = item
 
 goal_field = TemplateField('Goal', type=TemplateFieldType.SMALL_TEXT,
@@ -542,6 +544,8 @@ role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION,
 
 _role_choices = {}
 for item in role_field.selections:
+    if item.type != SelectionItemType.CHOICE:
+        continue
     _role_choices[item.text] = item
 
 

@@ -435,6 +435,8 @@ class TemplateFieldWidget(QFrame):
             widget.setMaximum(self.field.max_value)
         elif self.field.type == TemplateFieldType.TEXT_SELECTION:
             widget = QComboBox()
+            if not self.field.required:
+                widget.addItem('')
             for item in self.field.selections:
                 if item.type == SelectionItemType.CHOICE:
                     widget.addItem(_icon(item), item.text)
