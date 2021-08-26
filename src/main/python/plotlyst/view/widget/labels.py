@@ -21,13 +21,13 @@ import math
 from typing import Union
 
 from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame
+from PyQt5.QtGui import QColor, QIcon
+from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType
 from src.main.python.plotlyst.view.common import line
-from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry
+from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import FlowLayout
 
 
@@ -73,9 +73,14 @@ class CharacterLabel(Label):
     def __init__(self, character: Character, pov: bool = False, parent=None):
         super(CharacterLabel, self).__init__(parent)
         self.character = character
-        self.lblAvatar = QLabel()
-        set_avatar(self.lblAvatar, self.character, 24)
-        self.layout().addWidget(self.lblAvatar)
+        # self.lblAvatar = QLabel()
+        self.btnAvatar = QToolButton()
+        self.btnAvatar.setStyleSheet('border: 0px;')
+        # set_avatar(self.lblAvatar, self.character, 24)
+        self.btnAvatar.setIcon(QIcon(avatars.pixmap(self.character)))
+        self.btnAvatar.setIconSize(QSize(24, 24))
+        # self.layout().addWidget(self.lblAvatar)
+        self.layout().addWidget(self.btnAvatar)
         self.layout().addWidget(QLabel(truncate_string(character.name)))
 
         role = self.character.role()
@@ -95,10 +100,13 @@ class CharacterLabel(Label):
         ''')
 
 
-class CharacterAvatarLabel(QLabel):
+class CharacterAvatarLabel(QToolButton):
     def __init__(self, character: Character, size: int = 24, parent=None):
         super(CharacterAvatarLabel, self).__init__(parent)
-        set_avatar(self, character, size)
+        self.setStyleSheet('border: 0px;')
+        # set_avatar(self.lblAvatar, self.character, 24)
+        self.setIcon(QIcon(avatars.pixmap(character)))
+        self.setIconSize(QSize(size, size))
 
 
 class ConflictLabel(Label):

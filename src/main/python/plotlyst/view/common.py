@@ -58,12 +58,17 @@ def rounded_pixmap(original: QPixmap) -> QPixmap:
     path = QPainterPath()
     path.addEllipse(QRectF(rounded.rect()))
     painter = QPainter(rounded)
+    painter.setRenderHint(QPainter.Antialiasing)
     painter.setClipPath(path)
     painter.fillRect(rounded.rect(), Qt.black)
     x = int((original.width() - size) / 2)
     y = int((original.height() - size) / 2)
 
     painter.drawPixmap(x, y, original.width(), original.height(), original)
+    painter.end()
+    # pr = QWindow().devicePixelRatio()
+    # print(pr)
+    # rounded.setDevicePixelRatio(pr)
 
     return rounded
 
