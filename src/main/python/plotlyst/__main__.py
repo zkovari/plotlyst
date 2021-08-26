@@ -32,12 +32,12 @@ try:
     from src.main.python.plotlyst.settings import settings
     from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
 
-    from PyQt5 import QtWidgets, QtGui
+    from PyQt5 import QtWidgets
     from PyQt5.QtCore import Qt
     from PyQt5.QtGui import QFont
     from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
-    from fbs_runtime import PUBLIC_SETTINGS
+    from fbs_runtime import PUBLIC_SETTINGS, platform
     from fbs_runtime.application_context import cached_property, is_frozen
     from fbs_runtime.excepthook.sentry import SentryExceptionHandler
 
@@ -91,20 +91,16 @@ class AppContext(ApplicationContext):
 if __name__ == '__main__':
     appctxt = AppContext()
 
-    # QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
     args = parser.parse_args()
     app_env.mode = args.mode
     while True:
         app = appctxt.app
-        print(QApplication.font().pointSize())
-        font = QFont('Helvetica')
-        QApplication.setFont(font)
-        print(QApplication.font().pointSize())
+        if platform.is_linux() and QApplication.font().pointSize() < 12:
+            font = QFont('Helvetica', 12)
+            QApplication.setFont(font)
         app.setStyleSheet(APP_STYLESHEET)
-        print(QApplication.font().pointSize())
         settings.init_org()
 
         workspace: Optional[str] = settings.workspace()
