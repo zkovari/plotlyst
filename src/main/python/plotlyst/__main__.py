@@ -99,9 +99,11 @@ if __name__ == '__main__':
     app_env.mode = args.mode
     while True:
         app = appctxt.app
+        print(QApplication.font().family())
         print(QApplication.font().pointSize())
-        font = QFont('Helvetica')
-        QApplication.setFont(font)
+        if QApplication.font().pointSize() < 12:
+            font = QFont('Helvetica', 12)
+            QApplication.setFont(font)
         print(QApplication.font().pointSize())
         app.setStyleSheet(APP_STYLESHEET)
         print(QApplication.font().pointSize())
