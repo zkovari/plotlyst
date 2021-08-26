@@ -91,7 +91,7 @@ class AppContext(ApplicationContext):
 if __name__ == '__main__':
     appctxt = AppContext()
 
-    QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
+    # QtGui.QFontDatabase.addApplicationFont(appctxt.get_resource('NotoSans-Light.ttf'))
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
@@ -99,9 +99,12 @@ if __name__ == '__main__':
     app_env.mode = args.mode
     while True:
         app = appctxt.app
-        font = QFont('Noto Sans')
+        print(QApplication.font().pointSize())
+        font = QFont('Helvetica')
         QApplication.setFont(font)
+        print(QApplication.font().pointSize())
         app.setStyleSheet(APP_STYLESHEET)
+        print(QApplication.font().pointSize())
         settings.init_org()
 
         workspace: Optional[str] = settings.workspace()
