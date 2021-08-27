@@ -129,9 +129,13 @@ class IconRegistry:
         return qtawesome.icon('fa5s.info-circle', color='darkBlue')
 
     @staticmethod
-    def action_scene_icon() -> QIcon:
+    def action_scene_icon(resolved: bool = False) -> QIcon:
+        if resolved:
+            color = '#0b6e4f'
+        else:
+            color = '#fe4a49'
         return qtawesome.icon('fa.circle', 'fa5s.yin-yang',
-                              options=[{'color': 'white', 'scale_factor': 1}, {'color': '#fe4a49'}])
+                              options=[{'color': 'white', 'scale_factor': 1}, {'color': color}])
 
     @staticmethod
     def reaction_scene_icon() -> QIcon:
