@@ -93,8 +93,11 @@ class CharacterCard(Ui_CharacterCard, _Card):
         super().__init__(parent)
         self.setupUi(self)
         self.character = character
-        self.lblName.setText(self.character.name)
-        set_avatar(self.lblPic, self.character)
+        self.textName.setContentsMargins(0, 0, 0, 0)
+        self.textName.document().setDocumentMargin(0)
+        self.textName.setText(self.character.name)
+        self.textName.setAlignment(Qt.AlignCenter)
+        set_avatar(self.lblPic, self.character, size=118)
 
         enneagram = self.character.enneagram()
         if enneagram:
