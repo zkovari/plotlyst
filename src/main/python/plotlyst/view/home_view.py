@@ -77,6 +77,7 @@ class HomeView(AbstractView):
             self._layout.addWidget(card)
             self.novel_cards.append(card)
             card.selected.connect(self._card_selected)
+            card.doubleClicked.connect(self.ui.btnActivate.click)
 
     def import_from_scrivener(self):
         project = QFileDialog.getExistingDirectory(None, 'Choose a Scrivener project directory')
