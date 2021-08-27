@@ -194,6 +194,19 @@ class SceneEditor(QObject):
                 self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
 
+        for char_arc in self.scene.arcs:
+            if scene.pov and char_arc.character == scene.pov:
+                if char_arc.arc == VERY_UNHAPPY:
+                    self.ui.btnVeryUnhappy.setChecked(True)
+                elif char_arc.arc == UNHAPPY:
+                    self.ui.btnUnHappy.setChecked(True)
+                elif char_arc.arc == NEUTRAL:
+                    self.ui.btnNeutral.setChecked(True)
+                elif char_arc.arc == HAPPY:
+                    self.ui.btnHappy.setChecked(True)
+                elif char_arc.arc == VERY_HAPPY:
+                    self.ui.btnVeryHappy.setChecked(True)
+
         if self.scene.pov:
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
         else:
@@ -270,19 +283,6 @@ class SceneEditor(QObject):
                 self.ui.btnNext.setDisabled(True)
             else:
                 self.ui.btnNext.setEnabled(True)
-
-        for char_arc in self.scene.arcs:
-            if scene.pov and char_arc.character == scene.pov:
-                if char_arc.arc == VERY_UNHAPPY:
-                    self.ui.btnVeryUnhappy.setChecked(True)
-                elif char_arc.arc == UNHAPPY:
-                    self.ui.btnUnHappy.setChecked(True)
-                elif char_arc.arc == NEUTRAL:
-                    self.ui.btnNeutral.setChecked(True)
-                elif char_arc.arc == HAPPY:
-                    self.ui.btnHappy.setChecked(True)
-                elif char_arc.arc == VERY_HAPPY:
-                    self.ui.btnVeryHappy.setChecked(True)
 
         self._scene_builder_palette_model = SceneBuilderPaletteTreeModel(self.scene)
         self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)
