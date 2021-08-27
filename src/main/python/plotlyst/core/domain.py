@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Any, Dict
 
@@ -42,6 +43,15 @@ class Event:
     synopsis: str
     conflicts: List['Conflict'] = field(default_factory=list)
     emotion: int = 0
+
+
+@dataclass
+class Comment:
+    text: str
+    created_at: datetime = datetime.now()
+    major: bool = False
+    resolved: bool = False
+    character: Optional['Character'] = None
 
 
 @dataclass
@@ -207,6 +217,7 @@ class Scene:
     stage: Optional[SceneStage] = None
     beat: Optional[StoryBeat] = None
     conflicts: List[Conflict] = field(default_factory=list)
+    comments: List[Comment] = field(default_factory=list)
 
     def pov_arc(self) -> int:
         for arc in self.arcs:

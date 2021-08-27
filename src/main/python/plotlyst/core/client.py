@@ -33,7 +33,7 @@ from dataclasses_json import dataclass_json, Undefined
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    DramaticQuestion, ConflictType, Conflict, BackstoryEvent
+    DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -145,6 +145,7 @@ class SceneInfo:
     stage: Optional[uuid.UUID] = None
     beat: Optional[uuid.UUID] = None
     conflicts: List[uuid.UUID] = field(default_factory=list)
+    comments: List[Comment] = field(default_factory=list)
 
 
 @dataclass
@@ -435,7 +436,7 @@ class JsonClient:
                               without_action_conflict=info.without_action_conflict, sequence=seq,
                               dramatic_questions=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
-                              conflicts=scene_conflicts)
+                              conflicts=scene_conflicts, comments=info.comments)
                 scenes.append(scene)
         return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=dramatic_questions,
                      characters=characters,
@@ -498,7 +499,7 @@ class JsonClient:
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
                          beat=self.__id_or_none(scene.beat),
-                         conflicts=conflicts)
+                         conflicts=conflicts, comments=scene.comments)
         self.__persist_info(self.scenes_dir, info)
 
     @staticmethod

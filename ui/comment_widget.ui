@@ -85,7 +85,10 @@
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
+        <string notr="true">QToolButton {border: 0px;
+}
+
+QToolButton::menu-indicator{width:0px;}</string>
        </property>
        <property name="text">
         <string/>
@@ -96,12 +99,15 @@
          <height>24</height>
         </size>
        </property>
+       <property name="popupMode">
+        <enum>QToolButton::InstantPopup</enum>
+       </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QTextEdit" name="textEdit">
+    <widget class="QTextBrowser" name="textComment">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
        <horstretch>0</horstretch>

@@ -206,8 +206,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         btn_comments = QToolButton(self.toolBar)
         btn_comments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
-        btn_comments.setText('Comments')
-        btn_comments.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        btn_comments.setMinimumWidth(80)
         btn_comments.setCursor(Qt.PointingHandCursor)
         btn_comments.setCheckable(True)
         btn_comments.toggled.connect(self.wdgSidebar.setVisible)
