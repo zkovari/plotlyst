@@ -36,6 +36,7 @@ from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
+from src.main.python.plotlyst.view.dialog.utility import ArtbreederDialog
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -192,6 +193,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionPaste.triggered.connect(self._paste_text)
 
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
+        self.actionArtbreeder.triggered.connect(lambda: ArtbreederDialog().display())
 
     def _init_toolbar(self):
         tasks_button = QToolButton(self.toolBar)

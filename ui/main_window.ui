@@ -448,6 +448,45 @@
       </widget>
      </widget>
     </item>
+    <item>
+     <widget class="QStackedWidget" name="wdgSidebar">
+      <property name="minimumSize">
+       <size>
+        <width>220</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>220</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="pageDocuments"/>
+      <widget class="QWidget" name="pageComments">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -492,6 +531,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionCharacterTemplateEditor"/>
+    <addaction name="actionArtbreeder"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -573,6 +613,11 @@
   <action name="actionCharacterTemplateEditor">
    <property name="text">
     <string>Character template editor</string>
+   </property>
+  </action>
+  <action name="actionArtbreeder">
+   <property name="text">
+    <string>Artbreeder</string>
    </property>
   </action>
  </widget>
