@@ -119,9 +119,6 @@ class SceneCard(Ui_SceneCard, _Card):
         self.textTitle.setAlignment(Qt.AlignCenter)
         if scene.pov:
             self.btnPov.setIcon(QIcon(avatars.pixmap(scene.pov)))
-        # else:
-        #     self.lblPov.clear()
-        #     self.lblPov.setHidden(True)
         for char in scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 

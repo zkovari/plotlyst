@@ -66,9 +66,6 @@ def rounded_pixmap(original: QPixmap) -> QPixmap:
 
     painter.drawPixmap(x, y, original.width(), original.height(), original)
     painter.end()
-    # pr = QWindow().devicePixelRatio()
-    # print(pr)
-    # rounded.setDevicePixelRatio(pr)
 
     return rounded
 

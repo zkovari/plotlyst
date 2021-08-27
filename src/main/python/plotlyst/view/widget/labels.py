@@ -73,13 +73,10 @@ class CharacterLabel(Label):
     def __init__(self, character: Character, pov: bool = False, parent=None):
         super(CharacterLabel, self).__init__(parent)
         self.character = character
-        # self.lblAvatar = QLabel()
         self.btnAvatar = QToolButton()
         self.btnAvatar.setStyleSheet('border: 0px;')
-        # set_avatar(self.lblAvatar, self.character, 24)
         self.btnAvatar.setIcon(QIcon(avatars.pixmap(self.character)))
         self.btnAvatar.setIconSize(QSize(24, 24))
-        # self.layout().addWidget(self.lblAvatar)
         self.layout().addWidget(self.btnAvatar)
         self.layout().addWidget(QLabel(truncate_string(character.name)))
 
@@ -104,7 +101,6 @@ class CharacterAvatarLabel(QToolButton):
     def __init__(self, character: Character, size: int = 24, parent=None):
         super(CharacterAvatarLabel, self).__init__(parent)
         self.setStyleSheet('border: 0px;')
-        # set_avatar(self.lblAvatar, self.character, 24)
         self.setIcon(QIcon(avatars.pixmap(character)))
         self.setIconSize(QSize(size, size))
 
