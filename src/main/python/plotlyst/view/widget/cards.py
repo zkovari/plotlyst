@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import emoji
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFrame, QApplication
 from fbs_runtime import platform
 from overrides import overrides
@@ -30,7 +31,7 @@ from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
 from src.main.python.plotlyst.view.generated.scene_card_ui import Ui_SceneCard
-from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar
+from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar, avatars
 from src.main.python.plotlyst.view.widget.labels import CharacterAvatarLabel
 
 
@@ -117,10 +118,7 @@ class SceneCard(Ui_SceneCard, _Card):
         self.textTitle.setText(self.scene.title)
         self.textTitle.setAlignment(Qt.AlignCenter)
         if scene.pov:
-            set_avatar(self.lblPov, scene.pov, 32)
-        else:
-            self.lblPov.clear()
-            self.lblPov.setHidden(True)
+            self.btnPov.setIcon(QIcon(avatars.pixmap(scene.pov)))
         for char in scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
