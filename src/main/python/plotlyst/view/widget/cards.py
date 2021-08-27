@@ -41,14 +41,16 @@ class _Card(QFrame):
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        self._setStyleSheet(selected=True)
-        self.selected.emit(self)
+        self.select()
 
     @overrides
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+        self.select()
+        self.doubleClicked.emit(self)
+
+    def select(self):
         self._setStyleSheet(selected=True)
         self.selected.emit(self)
-        self.doubleClicked.emit(self)
 
     def clearSelection(self):
         self._setStyleSheet()
@@ -120,6 +122,10 @@ class SceneCard(Ui_SceneCard, _Card):
         self.textTitle.setFontPointSize(QApplication.font().pointSize() + 1)
         self.textTitle.setText(self.scene.title)
         self.textTitle.setAlignment(Qt.AlignCenter)
+
+        self.btnPov.clicked.connect(self.select)
+        self.btnComments.clicked.connect(self.select)
+
         if scene.pov:
             self.btnPov.setIcon(QIcon(avatars.pixmap(scene.pov)))
         for char in scene.characters:
