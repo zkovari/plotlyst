@@ -25,7 +25,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
     QAbstractItemModel, Qt, QSize, QEvent
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
-    QWidgetAction, QListView, QTableView, QMenu
+    QWidgetAction, QListView, QTableView, QMenu, QApplication
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -77,6 +77,7 @@ class SceneEditor(QObject):
         self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.plus_edit_icon())
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
         self.ui.btnAddConflict.setIcon(IconRegistry.conflict_icon())
+        self.ui.btnAddConflict.setFont(QApplication.font())
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
         self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
