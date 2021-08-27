@@ -160,6 +160,8 @@ class StoryBeat:
     ends_act: bool = False
     color_hexa: str = PIVOTAL_COLOR
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    icon: str = ''
+    icon_color: str = 'black'
 
 
 class ConflictType(Enum):
@@ -225,6 +227,7 @@ def default_stages() -> List[SceneStage]:
 class StoryStructure:
     title: str
     icon: str = ''
+    icon_color: str = 'black'
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     beats: List[StoryBeat] = field(default_factory=list)
     custom: bool = False
@@ -233,31 +236,50 @@ class StoryStructure:
 default_story_structures = [StoryStructure(title='Three Act Structure',
                                            id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
                                            icon='mdi.numeric-3-circle-outline',
+                                           icon_color='#ff7800',
                                            beats=[StoryBeat(text='Exposition',
+                                                            icon='fa5.image',
+                                                            icon_color='#1ea896',
                                                             id=uuid.UUID('40365047-e7df-4543-8816-f9f8dcce12da'),
                                                             act=1),
                                                   StoryBeat(text='Inciting Incident',
+                                                            icon='mdi.bell-alert-outline',
+                                                            icon_color='#a2ad59',
                                                             id=uuid.UUID('a0c2d94a-b53c-485e-a279-f2548bdb38ec'),
                                                             act=1),
                                                   StoryBeat(text='Plot Point One',
+                                                            icon='mdi.dice-1',
+                                                            icon_color='#2a4494',
                                                             id=uuid.UUID('8d85c960-1c63-44d4-812d-545d3ba4d153'), act=1,
                                                             ends_act=True),
                                                   StoryBeat(text='Rising Action',
+                                                            icon='fa5s.chart-line',
+                                                            icon_color='#08605f',
                                                             id=uuid.UUID('991354ea-2e8e-46f2-bd42-11fa56f73801'),
                                                             act=2),
                                                   StoryBeat(text='Midpoint',
+                                                            icon='mdi.middleware-outline',
+                                                            icon_color='#bb0a21',
                                                             id=uuid.UUID('3f817e10-85d1-46af-91c6-70f1ad5c0542'),
                                                             act=2),
-                                                  StoryBeat(text='Plot Point Two',
+                                                  StoryBeat(text='Dark Night of the Soul',
+                                                            icon='mdi.weather-night',
+                                                            icon_color='#494368',
                                                             id=uuid.UUID('4ded5006-c90a-4825-9de7-e16bf62017a3'), act=2,
                                                             ends_act=True),
                                                   StoryBeat(text='Pre Climax',
+                                                            icon='mdi.escalator-up',
+                                                            icon_color='#f4b393',
                                                             id=uuid.UUID('17a85b2a-76fb-44ec-a367-bccf6cd5f8aa'),
                                                             act=3),
                                                   StoryBeat(text='Climax',
+                                                            icon='mdi.triangle-outline',
+                                                            icon_color='#ce2d4f',
                                                             id=uuid.UUID('342eb27c-52ff-40c2-8c5e-cf563d4e38bc'),
                                                             act=3),
                                                   StoryBeat(text='Denouement',
+                                                            icon='fa5s.water',
+                                                            icon_color='#7192be',
                                                             id=uuid.UUID('996695b1-8db6-4c68-8dc4-51bbfe720e8b'),
                                                             act=3),
                                                   ]),

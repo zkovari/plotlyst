@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import emoji
-import qtawesome
 from PyQt5.QtCore import QModelIndex, QAbstractItemModel, Qt, QPropertyAnimation
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QLineEdit, QColorDialog, QHeaderView
@@ -63,7 +62,8 @@ class NovelView(AbstractNovelView):
         self.ui.lblDramaticQuestionEmoji.setFont(self._emoji_font)
         self.ui.lblDramaticQuestionEmoji.setText(emoji.emojize(':red_question_mark:'))
         for story_structure in json_client.project.story_structures:
-            icon = qtawesome.icon(story_structure.icon) if story_structure.icon else QIcon('')
+            icon = IconRegistry.from_name(story_structure.icon,
+                                          story_structure.icon_color) if story_structure.icon else QIcon('')
             self.ui.cbStoryStructure.addItem(icon, story_structure.title, story_structure)
         self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
         self.ui.cbStoryStructure.currentIndexChanged.connect(self._story_structure_changed)
