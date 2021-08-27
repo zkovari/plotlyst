@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QObject, QEvent, QPoint, pyqtSignal, Qt
+from PyQt5.QtCore import QObject, QEvent, QPoint, pyqtSignal
 from PyQt5.QtWidgets import QFrame, QMenu
 from overrides import overrides
 
@@ -49,12 +49,20 @@ class CommentsView(AbstractNovelView):
         pass
 
     def _new_comment(self):
-        self._addComment(Comment(''))
+        wdg = self._addComment(Comment(''))
+        wdg.edit()
 
-    def _addComment(self, comment: Comment, scene: Optional[Scene] = None):
+    def _addComment(self, comment: Comment, scene: Optional[Scene] = None) -> 'CommentWidget':
         comment_wdg = CommentWidget(comment, scene)
         self.ui.wdgComments.layout().addWidget(comment_wdg)
+        comment_wdg.changed.connect(self._comment_changed)
         comment_wdg.removed.connect(self._comment_removed)
+
+        return comment_wdg
+
+    def _comment_changed(self, comment_wdg: 'CommentWidget'):
+        if comment_wdg.scene:
+            client.update_scene(comment_wdg.scene)
 
     def _comment_removed(self, comment_wdg: 'CommentWidget'):
         self.ui.wdgComments.layout().removeWidget(comment_wdg)
@@ -66,6 +74,10 @@ class CommentsView(AbstractNovelView):
 
 class CommentWidget(QFrame, Ui_CommentWidget):
     removed = pyqtSignal(object)
+    changed = pyqtSignal(object)
+
+    width: int = 200
+    height: int = 100
 
     def __init__(self, comment: Comment, scene: Optional[Scene] = None, parent=None):
         super(CommentWidget, self).__init__(parent)
@@ -73,14 +85,25 @@ class CommentWidget(QFrame, Ui_CommentWidget):
         self.comment = comment
         self.scene: Optional[Scene] = scene
 
-        self.setMinimumSize(200, 100)
-        self.setMaximumSize(200, 100)
+        self._edit_mode: bool = False
+
+        self.setFixedSize(self.width, self.height)
 
         self.btnResolve.setHidden(True)
-        self.btnImportant.setHidden(True)
+        self.btnMajor.setHidden(True)
+        self.btnMajor.toggled.connect(self._major_toggled)
+        self.btnApply.setIcon(IconRegistry.ok_icon())
+        self.btnApply.clicked.connect(self._apply)
+        self.btnCancel.setIcon(IconRegistry.cancel_icon())
+        self.btnCancel.clicked.connect(self._toggle_editor_mode)
+        self.btnMajor.setIcon(IconRegistry.from_name('fa5s.exclamation', color='red'))
+        self.btnApply.setHidden(True)
+        self.btnCancel.setHidden(True)
+        self.textEditor.setHidden(True)
+
         self.btnMenu.setIcon(IconRegistry.from_name('mdi.dots-horizontal'))
         menu = _CommentsMenu(self.btnMenu)
-        menu.addAction(IconRegistry.edit_icon(), '', self._edit)
+        menu.addAction(IconRegistry.edit_icon(), '', self.edit)
         menu.addSeparator()
         menu.addAction(IconRegistry.trash_can_icon(), '', self._remove)
         self.btnMenu.setMenu(menu)
@@ -89,7 +112,7 @@ class CommentWidget(QFrame, Ui_CommentWidget):
         self.btnMenu.installEventFilter(self)
 
         self.textComment.setText(self.comment.text)
-        self.textComment.setCursor(Qt.ArrowCursor)
+        self.btnMajor.setChecked(self.comment.major)
 
         self.setStyleSheet('''
         QFrame[mainFrame=true] {
@@ -100,10 +123,14 @@ class CommentWidget(QFrame, Ui_CommentWidget):
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
+        if self._edit_mode:
+            return
         self.btnMenu.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
+        if self._edit_mode:
+            return
         self.btnMenu.setHidden(True)
 
     @overrides
@@ -114,11 +141,37 @@ class CommentWidget(QFrame, Ui_CommentWidget):
             self.btnMenu.setIcon(IconRegistry.from_name('mdi.dots-horizontal'))
         return super(CommentWidget, self).eventFilter(watched, event)
 
-    def _edit(self):
-        pass
+    def edit(self):
+        self._toggle_editor_mode(True)
+        self.textEditor.setPlainText(self.textComment.toPlainText())
+        self.textEditor.setVisible(True)
+        self.textComment.setHidden(True)
+        self.textEditor.setFocus()
 
     def _remove(self):
         self.removed.emit(self)
+
+    def _major_toggled(self, toggled: bool):
+        self.comment.major = toggled
+
+    def _apply(self):
+        self.comment.text = self.textEditor.toPlainText()
+        self.textComment.setPlainText(self.comment.text)
+        self._toggle_editor_mode()
+        self.changed.emit(self)
+
+    def _toggle_editor_mode(self, edit: bool = False):
+        if edit:
+            self.setFixedSize(self.width, self.height + 30)
+        else:
+            self.setFixedSize(self.width, self.height)
+        self.btnApply.setVisible(edit)
+        self.btnCancel.setVisible(edit)
+        self.btnMajor.setVisible(edit)
+        # self.btnResolve.setHidden(edit)
+        self.textEditor.setVisible(edit)
+        self.textComment.setHidden(edit)
+        self._edit_mode = edit
 
 
 class _CommentsMenu(QMenu):
