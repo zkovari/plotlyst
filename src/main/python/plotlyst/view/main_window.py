@@ -104,6 +104,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnReport.setEnabled(True)
             event_dispatcher.deregister(self, SceneChangedEvent)
 
+    @busy
     def _init_views(self):
         self.home_view = HomeView()
         self.btnHome.setIcon(IconRegistry.home_icon())
