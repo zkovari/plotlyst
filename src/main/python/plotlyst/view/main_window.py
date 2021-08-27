@@ -279,7 +279,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.notes_view.widget.deleteLater()
         self.pageReports.layout().removeWidget(self.reports_view.widget)
         self.reports_view.widget.deleteLater()
-        self.pageComments.layout().removeWidget(self.comments_view)
+        self.pageComments.layout().removeWidget(self.comments_view.widget)
         self.comments_view.widget.deleteLater()
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
