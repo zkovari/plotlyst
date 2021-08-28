@@ -24,7 +24,8 @@ from PyQt5.QtWidgets import QFrame, QMenu
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Comment, Scene
+from src.main.python.plotlyst.core.domain import Novel, Comment, Scene, Event
+from src.main.python.plotlyst.events import SceneSelectedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.comment_widget_ui import Ui_CommentWidget
 from src.main.python.plotlyst.view.generated.comments_view_ui import Ui_CommentsView
@@ -34,15 +35,24 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 class CommentsView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super(CommentsView, self).__init__(novel)
+        super(CommentsView, self).__init__(novel, [SceneSelectedEvent])
         self.ui = Ui_CommentsView()
         self.ui.setupUi(self.widget)
         self.ui.btnNewComment.setIcon(IconRegistry.from_name('mdi.comment-plus-outline', color='#726da8'))
         self.ui.btnNewComment.clicked.connect(self._new_comment)
 
+        self._selected_scene: Optional[Scene] = None
+        
         for scene in self.novel.scenes:
             for comment in scene.comments:
                 self._addComment(comment, scene)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, SceneSelectedEvent):
+            pass
+        else:
+            super(CommentsView, self).event_received(event)
 
     @overrides
     def refresh(self):
