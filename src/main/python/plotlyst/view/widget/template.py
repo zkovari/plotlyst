@@ -417,6 +417,8 @@ class TemplateFieldWidget(QFrame):
 
         if not field.show_label:
             self.lblName.setHidden(True)
+            if not self.field.emoji:
+                self.layout.addWidget(spacer_widget(20))
 
         self.wdgEditor = self._fieldWidget()
         self.layout.addWidget(self.wdgEditor)

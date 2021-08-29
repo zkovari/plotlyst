@@ -413,12 +413,13 @@ avatar_field = TemplateField(name='Avatar', type=TemplateFieldType.IMAGE,
                              id=uuid.UUID('c3b5c7b5-6fd2-4ae1-959d-6fabd659cb3c'), required=True, highlighted=True,
                              frozen=True, compact=True, show_label=False)
 age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
-                          id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), compact=True)
+                          id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), emoji=':birthday_cake:',
+                          show_label=False, compact=True, placeholder='Age')
 gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECTION,
                              id=uuid.UUID('dd5421f5-b332-4295-8020-e69c482a2ac5'),
                              selections=[SelectionItem('Male', icon='mdi.gender-male', icon_color='#067bc2'),
                                          SelectionItem('Female', icon='mdi.gender-female', icon_color='#832161')],
-                             compact=True, exclusive=True)
+                             compact=True, show_label=False, exclusive=True)
 enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
                                 id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
                                 selections=[SelectionItem('Perfectionist', icon='mdi.numeric-1-circle',
@@ -531,9 +532,10 @@ for item in enneagram_field.selections:
         continue
     _enneagram_choices[item.text] = item
 
-goal_field = TemplateField('Goal', type=TemplateFieldType.SMALL_TEXT,
+goal_field = TemplateField('Goals', type=TemplateFieldType.LABELS,
                            id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'),
-                           placeholder='Character goal throughout the story')
+                           emoji=':bullseye:',
+                           placeholder='Character goals throughout the story')
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
                                 placeholder='The misbelief/lie the character believes in')

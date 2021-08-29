@@ -225,7 +225,7 @@ border: 1 px solid black;</string>
                <cursorShape>OpenHandCursor</cursorShape>
               </property>
               <property name="text">
-               <string>Goal</string>
+               <string>Goals</string>
               </property>
               <property name="iconSize">
                <size>
