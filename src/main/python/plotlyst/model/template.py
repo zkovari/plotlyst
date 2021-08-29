@@ -30,6 +30,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 class TemplateFieldSelectionModel(EditableItemsModel):
     selection_changed = pyqtSignal()
+    item_edited = pyqtSignal()
     ItemRole: int = Qt.UserRole + 1
 
     ColIcon: int = 0
@@ -121,11 +122,15 @@ class TemplateFieldSelectionModel(EditableItemsModel):
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
         if role == Qt.EditRole:
+            self._checked.remove(self._field.selections[index.row()])
             self._field.selections[index.row()].text = value
+            self._checked.add(self._field.selections[index.row()])
+            self.item_edited.emit()
             return True
         if role == Qt.DecorationRole:
             self._field.selections[index.row()].icon = value[0]
             self._field.selections[index.row()].icon_color = value[1]
+            self.item_edited.emit()
             return True
         if role == Qt.CheckStateRole:
             if value == Qt.Checked:

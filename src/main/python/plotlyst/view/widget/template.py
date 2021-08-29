@@ -266,6 +266,7 @@ class LabelsSelectionWidget(QFrame):
         self._btnEdit.setIcon(IconRegistry.plus_edit_icon())
 
         self._model = self._initModel()
+        self._model.item_edited.connect(self._selectionChanged)
         self._model.setCheckable(True, TemplateFieldSelectionModel.ColName)
         self._popup = self._initPopupWidget()
         self._model.selection_changed.connect(self._selectionChanged)
