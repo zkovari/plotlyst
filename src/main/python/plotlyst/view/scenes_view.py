@@ -63,7 +63,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
                                  ScenesTableModel.ColCharacters,
                                  ScenesTableModel.ColSynopsis]
-        self._actions_view_columns = [ScenesTableModel.ColPov, ScenesTableModel.ColTitle, ScenesTableModel.ColType,
+        self._actions_view_columns = [ScenesTableModel.ColPov, ScenesTableModel.ColTitle,
                                       ScenesTableModel.ColBeginning,
                                       ScenesTableModel.ColMiddle, ScenesTableModel.ColEnd]
         self._proxy = ScenesFilterProxyModel()
