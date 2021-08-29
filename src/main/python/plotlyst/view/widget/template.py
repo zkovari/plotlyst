@@ -40,6 +40,7 @@ from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsWidget
 
 
@@ -447,8 +448,7 @@ class TemplateFieldWidget(QFrame):
         elif self.field.type == TemplateFieldType.IMAGE:
             widget = AvatarWidget(self.field)
         elif self.field.type == TemplateFieldType.SMALL_TEXT:
-            widget = QTextEdit()
-            widget.setMaximumHeight(60)
+            widget = AutoAdjustableTextEdit(height=60)
             widget.setPlaceholderText(self.field.placeholder)
         else:
             widget = QLineEdit()
