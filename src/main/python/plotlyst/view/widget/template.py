@@ -23,7 +23,7 @@ from typing import Optional, List, Any, Dict
 import emoji
 import qtawesome
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
+from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent, QModelIndex
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
@@ -33,14 +33,16 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field, SelectionItemType, \
-    enneagram_field, traits_field, desire_field, fear_field
+    enneagram_field, traits_field, desire_field, fear_field, goal_field
 from src.main.python.plotlyst.core.help import enneagram_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
+from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsWidget
 
 
@@ -247,7 +249,6 @@ class TextSelectionWidget(QPushButton):
 
 
 class LabelsSelectionWidget(QFrame):
-
     def __init__(self, field: TemplateField, parent=None):
         super(LabelsSelectionWidget, self).__init__(parent)
         self.field = field
@@ -257,29 +258,21 @@ class LabelsSelectionWidget(QFrame):
         self.setLayout(QVBoxLayout())
         self.layout().setSpacing(2)
         self.layout().setContentsMargins(1, 1, 1, 1)
-
         self._labels_index = {}
         for item in self.field.selections:
             self._labels_index[item.text] = item
 
         self._btnEdit = QToolButton()
         self._btnEdit.setIcon(IconRegistry.plus_edit_icon())
-        self._lstTraitsView = QListView()
-        self._lstTraitsView.setMaximumHeight(300)
-        self._lstTraitsView.setMaximumWidth(300)
-        self._lstTraitsView.setMinimumWidth(300)
-        self._lstTraitsView.setMinimumHeight(300)
-        self._model = TraitsFieldItemsSelectionModel(self.field)
-        self._model.setCheckable(True, TemplateFieldSelectionModel.ColName)
-        self._lstTraitsView.setModel(self._model)
-        self._lstTraitsView.setModelColumn(TemplateFieldSelectionModel.ColName)
-        self._lstTraitsView.setViewMode(QListView.IconMode)
 
+        self._model = self._initModel()
+        self._model.setCheckable(True, TemplateFieldSelectionModel.ColName)
+        self._popup = self._initPopupWidget()
         self._model.selection_changed.connect(self._selection_changed)
 
         menu = QMenu(self._btnEdit)
         action = QWidgetAction(menu)
-        action.setDefaultWidget(self._lstTraitsView)
+        action.setDefaultWidget(self._popup)
         menu.addAction(action)
         self._btnEdit.setMenu(menu)
         self._btnEdit.setPopupMode(QToolButton.InstantPopup)
@@ -302,6 +295,21 @@ class LabelsSelectionWidget(QFrame):
         self._model.modelReset.emit()
         self._selection_changed()
 
+    def _initPopupWidget(self) -> QWidget:
+        wdg = ItemsEditorWidget()
+        wdg.setModel(self._model)
+        wdg.tableView.clicked.connect(self._choice_clicked)
+        return wdg
+
+    def _initModel(self) -> TemplateFieldSelectionModel:
+        return TemplateFieldSelectionModel(self.field)
+
+    def _choice_clicked(self, index: QModelIndex):
+        if index.column() == TemplateFieldSelectionModel.ColIcon:
+            result = IconSelectorDialog(self).display()
+            if result:
+                self._model.setData(index, (result[0], result[1].name()), role=Qt.DecorationRole)
+
     def _selection_changed(self):
         self._wdgLabels.clear()
         for item in self._model.selections():
@@ -310,6 +318,29 @@ class LabelsSelectionWidget(QFrame):
         for item in self._model.selections():
             if not item.meta.get('positive', True):
                 self._wdgLabels.addLabel(TraitLabel(item.text, False))
+
+
+class TraitSelectionWidget(LabelsSelectionWidget):
+
+    def __init__(self, field: TemplateField, parent=None):
+        super(TraitSelectionWidget, self).__init__(field, parent)
+
+    @overrides
+    def _initModel(self) -> TemplateFieldSelectionModel:
+        return TraitsFieldItemsSelectionModel(self.field)
+
+    @overrides
+    def _initPopupWidget(self) -> QWidget:
+        _lstTraitsView = QListView()
+        _lstTraitsView.setMaximumHeight(300)
+        _lstTraitsView.setMaximumWidth(300)
+        _lstTraitsView.setMinimumWidth(300)
+        _lstTraitsView.setMinimumHeight(300)
+        _lstTraitsView.setModel(self._model)
+        _lstTraitsView.setModelColumn(TemplateFieldSelectionModel.ColName)
+        _lstTraitsView.setViewMode(QListView.IconMode)
+
+        return _lstTraitsView
 
 
 class ButtonSelectionWidget(QWidget):
@@ -429,7 +460,7 @@ class TemplateFieldWidget(QFrame):
         if self.field.id == enneagram_field.id:
             widget = TextSelectionWidget(self.field, enneagram_help)
         elif self.field.id == traits_field.id:
-            widget = LabelsSelectionWidget(self.field)
+            widget = TraitSelectionWidget(self.field)
         elif self.field.type == TemplateFieldType.NUMERIC:
             widget = QSpinBox()
             widget.setMinimum(self.field.min_value)
@@ -450,6 +481,8 @@ class TemplateFieldWidget(QFrame):
         elif self.field.type == TemplateFieldType.SMALL_TEXT:
             widget = AutoAdjustableTextEdit(height=60)
             widget.setPlaceholderText(self.field.placeholder)
+        elif self.field.type == TemplateFieldType.LABELS:
+            widget = LabelsSelectionWidget(self.field)
         else:
             widget = QLineEdit()
             widget.setPlaceholderText(self.field.placeholder)
@@ -624,7 +657,8 @@ class ProfileTemplateView(_ProfileTemplateBase):
         self._enneagram_widget: Optional[TextSelectionWidget] = None
         self._desire_widget: Optional[TemplateFieldWidget] = None
         self._fear_widget: Optional[TemplateFieldWidget] = None
-        self._traits_widget: Optional[LabelsSelectionWidget] = None
+        self._traits_widget: Optional[TraitSelectionWidget] = None
+        self._goals_widget: Optional[TemplateFieldWidget] = None
         for widget in self.widgets:
             if widget.field.id == name_field.id:
                 self._name_widget = widget
@@ -638,6 +672,8 @@ class ProfileTemplateView(_ProfileTemplateBase):
                 self._fear_widget = widget
             elif widget.field.id == traits_field.id:
                 self._traits_widget = widget.wdgEditor
+            elif widget.field.id == goal_field.id:
+                self._goals_widget = widget
         if not self._name_widget:
             raise ValueError('Obligatory name field is missing from profile')
         if not self._avatar_widget:
