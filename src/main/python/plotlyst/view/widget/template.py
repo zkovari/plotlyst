@@ -147,16 +147,15 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         self.avatarUpdated = True
 
 
-class TextSelectionWidget(QToolButton):
+class TextSelectionWidget(QPushButton):
     placeholder_text: str = 'Select...'
     selectionChanged = pyqtSignal(object, object)
 
     def __init__(self, field: TemplateField, help: Dict[Any, str], parent=None):
         super(TextSelectionWidget, self).__init__(parent)
         self.field = field
+        self.setStyleSheet('padding: 0px;')
 
-        self.setPopupMode(QToolButton.InstantPopup)
-        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.setText(self.placeholder_text)
         menu = QMenu(self)
         action = QWidgetAction(menu)
@@ -204,6 +203,7 @@ class TextSelectionWidget(QToolButton):
             self.help = help
 
             self.model = TemplateFieldSelectionModel(self.field)
+            self.model.setEditable(False)
             self.tblItems.setModel(self.model)
             self.tblItems.setColumnWidth(TemplateFieldSelectionModel.ColIcon, 26)
 
