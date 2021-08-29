@@ -123,5 +123,6 @@ class CharacterEditor:
             client.insert_character(self.novel, self.character)
         else:
             client.update_character(self.character, self.profile.avatarUpdated())
+            client.update_novel(self.novel)  # TODO temporary to update custom labels
 
         self._new_character = False

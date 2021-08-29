@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any, Dict, Set
 
 import emoji
 import qtawesome
@@ -43,7 +43,7 @@ from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui impo
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsWidget
+from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsWidget, SelectionItemLabel
 
 
 class _ProfileTemplateBase(QWidget):
@@ -268,7 +268,7 @@ class LabelsSelectionWidget(QFrame):
         self._model = self._initModel()
         self._model.setCheckable(True, TemplateFieldSelectionModel.ColName)
         self._popup = self._initPopupWidget()
-        self._model.selection_changed.connect(self._selection_changed)
+        self._model.selection_changed.connect(self._selectionChanged)
 
         menu = QMenu(self._btnEdit)
         action = QWidgetAction(menu)
@@ -293,31 +293,30 @@ class LabelsSelectionWidget(QFrame):
             if item:
                 self._model.checkItem(item)
         self._model.modelReset.emit()
-        self._selection_changed()
+        self._selectionChanged()
 
     def _initPopupWidget(self) -> QWidget:
         wdg = ItemsEditorWidget()
         wdg.setModel(self._model)
-        wdg.tableView.clicked.connect(self._choice_clicked)
+        wdg.tableView.clicked.connect(self._choiceClicked)
         return wdg
 
     def _initModel(self) -> TemplateFieldSelectionModel:
         return TemplateFieldSelectionModel(self.field)
 
-    def _choice_clicked(self, index: QModelIndex):
+    def _choiceClicked(self, index: QModelIndex):
         if index.column() == TemplateFieldSelectionModel.ColIcon:
             result = IconSelectorDialog(self).display()
             if result:
                 self._model.setData(index, (result[0], result[1].name()), role=Qt.DecorationRole)
 
-    def _selection_changed(self):
+    def _selectionChanged(self):
         self._wdgLabels.clear()
-        for item in self._model.selections():
-            if item.meta.get('positive', True):
-                self._wdgLabels.addLabel(TraitLabel(item.text))
-        for item in self._model.selections():
-            if not item.meta.get('positive', True):
-                self._wdgLabels.addLabel(TraitLabel(item.text, False))
+        self._addItems(self._model.selections())
+
+    def _addItems(self, items: Set[SelectionItem]):
+        for item in items:
+            self._wdgLabels.addLabel(SelectionItemLabel(item))
 
 
 class TraitSelectionWidget(LabelsSelectionWidget):
@@ -341,6 +340,15 @@ class TraitSelectionWidget(LabelsSelectionWidget):
         _lstTraitsView.setViewMode(QListView.IconMode)
 
         return _lstTraitsView
+
+    @overrides
+    def _addItems(self, items: Set[SelectionItem]):
+        for item in items:
+            if item.meta.get('positive', True):
+                self._wdgLabels.addLabel(TraitLabel(item.text))
+        for item in items:
+            if not item.meta.get('positive', True):
+                self._wdgLabels.addLabel(TraitLabel(item.text, False))
 
 
 class ButtonSelectionWidget(QWidget):
@@ -401,7 +409,11 @@ class TemplateFieldWidget(QFrame):
 
         self.lblName = QLabel()
         self.lblName.setText(self.field.name)
-        self.layout.addWidget(self.lblName)
+        if self.field.type in [TemplateFieldType.LABELS, TemplateFieldType.SMALL_TEXT]:
+            label_alignment = Qt.AlignTop
+        else:
+            label_alignment = Qt.AlignVCenter
+        self.layout.addWidget(self.lblName, alignment=label_alignment)
 
         if not field.show_label:
             self.lblName.setHidden(True)
@@ -463,6 +475,7 @@ class TemplateFieldWidget(QFrame):
             widget = TraitSelectionWidget(self.field)
         elif self.field.type == TemplateFieldType.NUMERIC:
             widget = QSpinBox()
+            widget.setPrefix(self.field.placeholder + ': ')
             widget.setMinimum(self.field.min_value)
             widget.setMaximum(self.field.max_value)
         elif self.field.type == TemplateFieldType.TEXT_SELECTION:
