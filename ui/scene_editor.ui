@@ -1006,15 +1006,9 @@ QToolButton:disabled {
                  </widget>
                 </item>
                 <item>
-                 <widget class="QToolButton" name="btnAddConflict">
+                 <widget class="QPushButton" name="btnAddConflict">
                   <property name="text">
                    <string>Add conflict</string>
-                  </property>
-                  <property name="popupMode">
-                   <enum>QToolButton::InstantPopup</enum>
-                  </property>
-                  <property name="toolButtonStyle">
-                   <enum>Qt::ToolButtonTextBesideIcon</enum>
                   </property>
                  </widget>
                 </item>
