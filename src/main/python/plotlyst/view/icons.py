@@ -192,7 +192,7 @@ class IconRegistry:
 
     @staticmethod
     def goal_icon() -> QIcon:
-        return qtawesome.icon('mdi.target', color='darkBlue', options=[{'scale_factor': 1.2}])
+        return IconRegistry.from_name('mdi.bullseye-arrow')
 
     @staticmethod
     def decision_icon() -> QIcon:
