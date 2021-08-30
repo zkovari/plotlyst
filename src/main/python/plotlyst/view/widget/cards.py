@@ -132,12 +132,16 @@ class SceneCard(Ui_SceneCard, _Card):
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
         if self.scene.beat:
-            if platform.is_windows():
-                self._emoji_font = emoji_font(14)
+            if self.scene.beat.icon:
+                self.lblBeatEmoji.setPixmap(
+                    IconRegistry.from_name(self.scene.beat.icon, self.scene.beat.icon_color).pixmap(24, 24))
             else:
-                self._emoji_font = emoji_font(20)
-            self.lblBeatEmoji.setFont(self._emoji_font)
-            self.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
+                if platform.is_windows():
+                    self._emoji_font = emoji_font(14)
+                else:
+                    self._emoji_font = emoji_font(20)
+                self.lblBeatEmoji.setFont(self._emoji_font)
+                self.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
         else:
             self.lblBeatEmoji.clear()
             self.lblBeatEmoji.setHidden(True)
