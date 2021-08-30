@@ -86,9 +86,9 @@ class HomeView(AbstractView):
             return
         importer = ScrivenerImporter()
         novel: Novel = importer.import_project(project)
-        client.insert_novel(novel)
+        self.repo.insert_novel(novel)
         for scene in novel.scenes:
-            client.insert_scene(novel, scene)
+            self.repo.insert_scene(novel, scene)
         self.refresh()
 
     def _add_new_novel(self):
@@ -98,7 +98,7 @@ class HomeView(AbstractView):
             self.ui.btnEdit.setDisabled(True)
         title = NovelEditionDialog().display()
         if title:
-            client.insert_novel(Novel(title))
+            self.repo.insert_novel(Novel(title))
             self.refresh()
 
     def _on_edit(self):
@@ -106,13 +106,13 @@ class HomeView(AbstractView):
         if title:
             self.selected_card.novel.title = title
             self.selected_card.refresh()
-            client.update_project_novel(self.selected_card.novel)
+            self.repo.update_project_novel(self.selected_card.novel)
             emit_event(NovelUpdatedEvent(self, self.selected_card.novel))
 
     def _on_delete(self):
         if ask_confirmation(f'Are you sure you want to delete the novel "{self.selected_card.novel.title}"?'):
             novel = self.selected_card.novel
-            client.delete_novel(novel)
+            self.repo.delete_novel(novel)
             emit_event(NovelDeletedEvent(self, novel))
             self.selected_card.deleteLater()
             self.selected_card = None

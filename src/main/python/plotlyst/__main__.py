@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 try:
     import argparse
@@ -152,6 +153,8 @@ if __name__ == '__main__':
             settings.set_launched_before()
 
         exit_code = appctxt.app.exec_()
+        repo = RepositoryPersistenceManager.instance()
+        repo.flush()
         if exit_code < EXIT_CODE_RESTART:
             break
 

@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt5.QtCore import QModelIndex, QTimer
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesNotesTableModel
@@ -63,6 +62,6 @@ class NotesView(AbstractNovelView):
         if not self._scene:
             return
         self._scene.notes = self.ui.textNotes.toPlainText()
-        client.update_scene(self._scene)
+        self.repo.update_scene(self._scene)
         self.scenes_model.dataChanged.emit(self.ui.lstScenes.selectedIndexes()[0],
                                            self.ui.lstScenes.selectedIndexes()[0])

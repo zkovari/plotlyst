@@ -27,12 +27,12 @@ from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, Character, \
     ConflictType
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class BaseScenesTableModel:
@@ -397,7 +397,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
         else:
             self._scene(index).stage = self._stage(index)
 
-        client.update_scene(self._scene(index))
+        RepositoryPersistenceManager.instance().update_scene(self._scene(index))
         self.modelReset.emit()
 
     def _scene(self, index: QModelIndex) -> Scene:

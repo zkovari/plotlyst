@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import os
 
 import pytest
 
@@ -27,6 +28,10 @@ from src.main.python.plotlyst.core.domain import Character, DramaticQuestion, Sc
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
+
+
+def pytest_generate_tests(metafunc):
+    os.environ['PLOTLYST_TEST_ENV'] = '1'
 
 
 @pytest.fixture

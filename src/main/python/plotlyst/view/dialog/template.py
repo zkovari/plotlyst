@@ -28,13 +28,14 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
-    desire_field, default_character_profiles, role_field, mbti_field, traits_field
+    desire_field, default_character_profiles, role_field, mbti_field, traits_field, Novel
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
@@ -265,3 +266,14 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.profile_editor.updateEmojiForSelected(alias)
         else:
             self.lineEmoji.clear()
+
+
+def customize_character_profile(novel: Novel, index: int, parent=None) -> bool:
+    profile = CharacterProfileEditorDialog(novel.character_profiles[index],
+                                           parent).display()
+    if profile:
+        novel.character_profiles[index] = profile
+        RepositoryPersistenceManager.instance().update_novel(novel)
+
+        return True
+    return False

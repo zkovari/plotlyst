@@ -25,10 +25,10 @@ from PyQt5.QtGui import QFont, QColor
 from anytree import Node
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class ChapterNode(Node):
@@ -164,7 +164,7 @@ class ChaptersTreeModel(TreeItemModel):
         parent = self.rootIndex()
         self.layoutAboutToBeChanged.emit([QPersistentModelIndex(parent)])
         self.layoutChanged.emit([QPersistentModelIndex(parent)])
-        client.update_scene(node.scene)
+        RepositoryPersistenceManager.instance().update_scene(node.scene)
 
         return True
 

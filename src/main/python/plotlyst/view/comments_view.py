@@ -23,7 +23,6 @@ from PyQt5.QtCore import QObject, QEvent, QPoint, pyqtSignal, Qt
 from PyQt5.QtWidgets import QFrame, QMenu
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Comment, Scene, Event
 from src.main.python.plotlyst.events import SceneSelectedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -89,13 +88,13 @@ class CommentsView(AbstractNovelView):
 
     def _comment_changed(self, comment_wdg: 'CommentWidget'):
         if comment_wdg.scene:
-            client.update_scene(comment_wdg.scene)
+            self.repo.update_scene(comment_wdg.scene)
 
     def _comment_removed(self, comment_wdg: 'CommentWidget'):
         self.ui.wdgComments.layout().removeWidget(comment_wdg)
         if comment_wdg.scene:
             comment_wdg.scene.comments.remove(comment_wdg.comment)
-            client.update_scene(comment_wdg.scene)
+            self.repo.update_scene(comment_wdg.scene)
         comment_wdg.deleteLater()
 
 

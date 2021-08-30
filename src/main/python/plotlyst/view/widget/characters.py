@@ -26,7 +26,6 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QHeaderView
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
 from src.main.python.plotlyst.event.core import emit_critical
@@ -224,8 +223,8 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 
         self.novel.conflicts.append(conflict)
         self.scene.conflicts.append(conflict)
-        client.update_novel(self.novel)
-        client.update_scene(self.scene)
+        self.repo.update_novel(self.novel)
+        self.repo.update_scene(self.scene)
         self.new_conflict_added.emit(conflict)
         self.refresh()
         self.lineKey.clear()

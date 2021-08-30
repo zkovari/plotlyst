@@ -37,6 +37,7 @@ from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
+from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -44,7 +45,7 @@ from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.worker.persistence import customize_character_profile
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
@@ -286,7 +287,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
-                client.update_novel(self.novel)
+                RepositoryPersistenceManager.instance().update_novel(self.novel)
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
         if isinstance(current_widget, (QLineEdit, QTextEdit)):
