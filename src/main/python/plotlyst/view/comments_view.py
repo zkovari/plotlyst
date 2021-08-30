@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QObject, QEvent, QPoint, pyqtSignal
+from PyQt5.QtCore import QObject, QEvent, QPoint, pyqtSignal, Qt
 from PyQt5.QtWidgets import QFrame, QMenu
 from overrides import overrides
 
@@ -42,7 +42,7 @@ class CommentsView(AbstractNovelView):
         self.ui.btnNewComment.clicked.connect(self._new_comment)
 
         self._selected_scene: Optional[Scene] = None
-        
+
         for scene in self.novel.scenes:
             for comment in scene.comments:
                 self._addComment(comment, scene)
@@ -64,7 +64,7 @@ class CommentsView(AbstractNovelView):
 
     def _addComment(self, comment: Comment, scene: Optional[Scene] = None) -> 'CommentWidget':
         comment_wdg = CommentWidget(comment, scene)
-        self.ui.wdgComments.layout().addWidget(comment_wdg)
+        self.ui.wdgComments.layout().addWidget(comment_wdg, alignment=Qt.AlignCenter)
         comment_wdg.changed.connect(self._comment_changed)
         comment_wdg.removed.connect(self._comment_removed)
 
@@ -110,6 +110,7 @@ class CommentWidget(QFrame, Ui_CommentWidget):
         self.btnApply.setHidden(True)
         self.btnCancel.setHidden(True)
         self.textEditor.setHidden(True)
+        self.textEditor.textChanged.connect(lambda: self.btnApply.setEnabled(len(self.textEditor.toPlainText()) > 0))
 
         self.btnMenu.setIcon(IconRegistry.from_name('mdi.dots-horizontal'))
         menu = _CommentsMenu(self.btnMenu)
@@ -182,6 +183,9 @@ class CommentWidget(QFrame, Ui_CommentWidget):
         self.textEditor.setVisible(edit)
         self.textComment.setHidden(edit)
         self._edit_mode = edit
+
+        if not edit and not self.textComment.toPlainText():
+            self.removed.emit(self)
 
 
 class _CommentsMenu(QMenu):
