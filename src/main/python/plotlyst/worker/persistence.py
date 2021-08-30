@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
+import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
@@ -56,7 +57,7 @@ class RepositoryPersistenceManager(QObject):
         self._finished_event = asyncio.Event()
 
         self._timer = QTimer()
-        self._timer.setInterval(1 * 60 * 1000)  # 1 min
+        self._timer.setInterval(60 * 1000)  # 1 min
         self._timer.timeout.connect(self.flush)
         if not app_env.test_env():
             self._timer.start()
@@ -145,6 +146,15 @@ class _PersistenceRunnable(QRunnable):
             self.finished.clear()
 
 
+def flush_or_fail():
+    attempts = 0
+    while not RepositoryPersistenceManager.instance().flush(sync=True) and attempts < 30:
+        time.sleep(1)
+        attempts += 1
+    if attempts >= 30:
+        raise IOError('Could not save novel')
+
+
 def _persist_operations(operations: List[Operation]):
     for op in operations:
         if op.scene and op.type == OperationType.UPDATE:
@@ -162,7 +172,6 @@ def _persist_operations(operations: List[Operation]):
             client.delete_character(op.novel, op.character)
 
         elif op.novel and op.type == OperationType.UPDATE:
-            print('update novel')
             client.update_novel(op.novel)
         elif op.novel and op.type == OperationType.INSERT:
             client.insert_novel(op.novel)

@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import time
 from typing import List
 
 import qtawesome
@@ -46,7 +45,7 @@ from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 
 class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
@@ -110,12 +109,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     @busy
     def _flush_end_fetch_novel(self):
-        attempts = 0
-        while not self.repo.flush(sync=True) and attempts < 30:
-            time.sleep(1)
-            attempts += 1
-        if attempts >= 30:
-            raise IOError('Could not save novel')
+        flush_or_fail()
         updated_novel = client.fetch_novel(self.novel.id)
         return updated_novel
 

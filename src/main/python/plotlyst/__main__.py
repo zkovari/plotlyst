@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 try:
     import argparse
@@ -32,6 +31,7 @@ try:
     from src.main.python.plotlyst.env import AppMode, app_env
     from src.main.python.plotlyst.settings import settings
     from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
+    from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
     from PyQt5 import QtWidgets
     from PyQt5.QtCore import Qt
@@ -153,8 +153,8 @@ if __name__ == '__main__':
             settings.set_launched_before()
 
         exit_code = appctxt.app.exec_()
-        repo = RepositoryPersistenceManager.instance()
-        repo.flush()
+        flush_or_fail()
+
         if exit_code < EXIT_CODE_RESTART:
             break
 
