@@ -134,7 +134,7 @@ background-color: rgba(0, 0, 0, 0);
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>30</height>
+       <height>35</height>
       </size>
      </property>
      <property name="styleSheet">
@@ -156,7 +156,7 @@ background-color: rgba(0, 0, 0, 0);</string>
         <x>0</x>
         <y>0</y>
         <width>123</width>
-        <height>30</height>
+        <height>35</height>
        </rect>
       </property>
       <property name="styleSheet">
