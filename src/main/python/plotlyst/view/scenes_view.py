@@ -359,7 +359,7 @@ class ScenesOutlineView(AbstractNovelView):
                 scene = indexes[0].data(role=ScenesTableModel.SceneRole)
             else:
                 return
-        elif self.ui.btnCardsView.isChecked():
+        elif self.ui.btnCardsView.isChecked() and self.selected_card:
             scene = self.selected_card.scene
         else:
             return

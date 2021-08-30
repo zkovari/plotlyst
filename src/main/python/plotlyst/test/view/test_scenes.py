@@ -45,6 +45,8 @@ def test_scene_characters(qtbot, filled_window: MainWindow):
 
 def test_scene_deletion(qtbot, filled_window: MainWindow, monkeypatch):
     view: ScenesOutlineView = go_to_scenes(filled_window)
+    view.ui.btnTableView.click()
+    
     click_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle)
     assert view.ui.btnEdit.isEnabled()
     assert view.ui.btnDelete.isEnabled()
