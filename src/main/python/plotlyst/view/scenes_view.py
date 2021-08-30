@@ -29,7 +29,8 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel, Character
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated
+from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
+    SceneSelectedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -174,6 +175,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnEdit.setEnabled(selection)
         if selection:
             self.ui.treeChapters.clearSelection()
+            emit_event(
+                SceneSelectedEvent(self, self.ui.tblScenes.selectedIndexes()[0].data(ScenesTableModel.SceneRole)))
 
     def _on_chapter_selected(self):
         selection = len(self.ui.treeChapters.selectedIndexes()) > 0
@@ -249,6 +252,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.selected_card = card
         self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
+        emit_event(SceneSelectedEvent(self, card.scene))
 
     def _switch_view(self):
         height = 50
@@ -349,16 +353,23 @@ class ScenesOutlineView(AbstractNovelView):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
     def _on_delete(self):
-        indexes = self.ui.tblScenes.selectedIndexes()
-        if indexes:
-            scene = indexes[0].data(role=ScenesTableModel.SceneRole)
-            if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
+        if self.ui.btnTableView.isChecked():
+            indexes = self.ui.tblScenes.selectedIndexes()
+            if indexes:
+                scene = indexes[0].data(role=ScenesTableModel.SceneRole)
+            else:
                 return
-            self.novel.scenes.remove(scene)
-            client.delete_scene(self.novel, scene)
-            self.refresh()
-            self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
-            emit_event(SceneDeletedEvent(self))
+        elif self.ui.btnCardsView.isChecked():
+            scene = self.selected_card.scene
+        else:
+            return
+        if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
+            return
+        self.novel.scenes.remove(scene)
+        client.delete_scene(self.novel, scene)
+        self.refresh()
+        self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
+        emit_event(SceneDeletedEvent(self))
 
     def _on_scene_moved(self):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])

@@ -146,7 +146,7 @@ class SceneCard(Ui_SceneCard, _Card):
             self.lblBeatEmoji.clear()
             self.lblBeatEmoji.setHidden(True)
 
-        if scene.notes:
+        if any([x.major for x in scene.comments]):
             self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#fb8b24'))
         else:
             self.btnComments.setHidden(True)

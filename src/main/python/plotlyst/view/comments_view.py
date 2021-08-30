@@ -42,16 +42,15 @@ class CommentsView(AbstractNovelView):
         self.ui.btnNewComment.clicked.connect(self._new_comment)
 
         self._selected_scene: Optional[Scene] = None
-
-        for scene in self.novel.scenes:
-            for comment in scene.comments:
-                print(f'comment {comment.text}')
-                self._addComment(comment, scene)
+        self.ui.cbShowAll.toggled.connect(self._show_comments)
+        self.ui.cbShowAll.setChecked(True)
 
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, SceneSelectedEvent):
-            pass
+            self._selected_scene = event.scene
+            if not self.ui.cbShowAll.isChecked():
+                self._show_comments()
         else:
             super(CommentsView, self).event_received(event)
 
@@ -59,8 +58,25 @@ class CommentsView(AbstractNovelView):
     def refresh(self):
         pass
 
+    def _show_comments(self, show_all: bool = False):
+        while self.ui.wdgComments.layout().count():
+            item = self.ui.wdgComments.layout().takeAt(0)
+            if item:
+                item.widget().deleteLater()
+
+        if show_all:
+            for scene in self.novel.scenes:
+                for comment in scene.comments:
+                    self._addComment(comment, scene)
+        elif self._selected_scene:
+            for comment in self._selected_scene.comments:
+                self._addComment(comment, self._selected_scene)
+
     def _new_comment(self):
-        wdg = self._addComment(Comment(''))
+        comment = Comment('')
+        if self._selected_scene:
+            self._selected_scene.comments.append(comment)
+        wdg = self._addComment(comment, self._selected_scene)
         wdg.edit()
 
     def _addComment(self, comment: Comment, scene: Optional[Scene] = None) -> 'CommentWidget':
@@ -109,7 +125,7 @@ class CommentWidget(QFrame, Ui_CommentWidget):
         self.btnApply.clicked.connect(self._apply)
         self.btnCancel.setIcon(IconRegistry.cancel_icon())
         self.btnCancel.clicked.connect(self._toggle_editor_mode)
-        self.btnMajor.setIcon(IconRegistry.from_name('fa5s.exclamation', color='red'))
+        self.btnMajor.setIcon(IconRegistry.from_name('fa5s.exclamation', color='#fb8b24'))
         self.btnApply.setHidden(True)
         self.btnCancel.setHidden(True)
         self.textEditor.setHidden(True)
@@ -127,13 +143,23 @@ class CommentWidget(QFrame, Ui_CommentWidget):
 
         self.textComment.setText(self.comment.text)
         self.btnMajor.setChecked(self.comment.major)
+        self.btnMajor.clicked.connect(self._updateStyleSheet)
 
-        self.setStyleSheet('''
-        QFrame[mainFrame=true] {
-               border: 1px solid #3066be;
+        self._updateStyleSheet()
+
+    def _updateStyleSheet(self):
+        if self.btnMajor.isChecked():
+            border = 2
+            border_color = '#fb8b24'
+        else:
+            border = 1
+            border_color = '#3066be'
+        self.setStyleSheet(f'''
+        QFrame[mainFrame=true] {{
+               border: {border}px solid {border_color};
                border-radius: 15px;
                background-color: white;
-           }''')
+           }}''')
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
