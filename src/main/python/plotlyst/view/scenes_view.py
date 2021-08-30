@@ -29,7 +29,8 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel, Character
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated
+from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
+    SceneSelectedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -174,6 +175,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnEdit.setEnabled(selection)
         if selection:
             self.ui.treeChapters.clearSelection()
+            emit_event(
+                SceneSelectedEvent(self, self.ui.tblScenes.selectedIndexes()[0].data(ScenesTableModel.SceneRole)))
 
     def _on_chapter_selected(self):
         selection = len(self.ui.treeChapters.selectedIndexes()) > 0
@@ -249,6 +252,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.selected_card = card
         self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
+        emit_event(SceneSelectedEvent(self, card.scene))
 
     def _switch_view(self):
         height = 50
@@ -349,103 +353,24 @@ class ScenesOutlineView(AbstractNovelView):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
     def _on_delete(self):
-        indexes = self.ui.tblScenes.selectedIndexes()
-        if indexes:
-            scene = indexes[0].data(role=ScenesTableModel.SceneRole)
-            if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
+        if self.ui.btnTableView.isChecked():
+            indexes = self.ui.tblScenes.selectedIndexes()
+            if indexes:
+                scene = indexes[0].data(role=ScenesTableModel.SceneRole)
+            else:
                 return
-            self.novel.scenes.remove(scene)
-            client.delete_scene(self.novel, scene)
-            self.refresh()
-            self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
-            emit_event(SceneDeletedEvent(self))
+        elif self.ui.btnCardsView.isChecked() and self.selected_card:
+            scene = self.selected_card.scene
+        else:
+            return
+        if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
+            return
+        self.novel.scenes.remove(scene)
+        client.delete_scene(self.novel, scene)
+        self.refresh()
+        self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
+        emit_event(SceneDeletedEvent(self))
 
     def _on_scene_moved(self):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
         self.refresh()
-
-# class ScenesViewDelegate(QStyledItemDelegate):
-#     avatarSize: int = 24
-#
-#     @overrides
-#     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
-#         super(ScenesViewDelegate, self).paint(painter, option, index)
-#         if index.column() == ScenesTableModel.ColCharacters:
-#             scene: Scene = index.data(ScenesTableModel.SceneRole)
-#             x = 3
-#             if scene.pov:
-#                 self._drawAvatar(painter, option, x, scene.pov)
-#             x += 27
-#             for char in scene.characters:
-#                 self._drawAvatar(painter, option, x, char)
-#                 x += 27
-#                 if x + 27 >= option.rect.width():
-#                     return
-#
-#         elif index.column() == ScenesTableModel.ColArc:
-#             scene = index.data(ScenesTableModel.SceneRole)
-#             painter.drawPixmap(option.rect.x() + 3, option.rect.y() + 2,
-#                                IconRegistry.emotion_icon_from_feeling(scene.pov_arc()).pixmap(
-#                                    QSize(self.avatarSize, self.avatarSize)))
-#
-#     def _drawAvatar(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', x: int, character: Character):
-#         if character.avatar:
-#             painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
-#                                avatars.pixmap(character).scaled(self.avatarSize, self.avatarSize, Qt.KeepAspectRatio,
-#                                                                 Qt.SmoothTransformation))
-#         else:
-#             painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
-#                                avatars.name_initial_icon(character).pixmap(QSize(self.avatarSize, self.avatarSize)))
-#
-#     @overrides
-#     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
-#         if index.column() == ScenesTableModel.ColArc:
-#             return QComboBox(parent)
-#         if index.column() == ScenesTableModel.ColTime:
-#             return QSpinBox(parent)
-#         return QTextEdit(parent)
-#
-#     @overrides
-#     def setEditorData(self, editor: QWidget, index: QModelIndex):
-#         edit_data = index.data(Qt.EditRole)
-#         if not edit_data:
-#             edit_data = index.data(Qt.DisplayRole)
-#         if isinstance(editor, QTextEdit) or isinstance(editor, QLineEdit):
-#             editor.setText(str(edit_data))
-#         elif isinstance(editor, QSpinBox):
-#             editor.setValue(edit_data)
-#         elif isinstance(editor, QComboBox):
-#             arc = index.data(ScenesTableModel.SceneRole).pov_arc()
-#             editor.addItem(IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY), '', VERY_UNHAPPY)
-#             if arc == VERY_UNHAPPY:
-#                 editor.setCurrentIndex(0)
-#             editor.addItem(IconRegistry.emotion_icon_from_feeling(UNHAPPY), '', UNHAPPY)
-#             if arc == UNHAPPY:
-#                 editor.setCurrentIndex(1)
-#             editor.addItem(IconRegistry.emotion_icon_from_feeling(NEUTRAL), '', NEUTRAL)
-#             if arc == NEUTRAL:
-#                 editor.setCurrentIndex(2)
-#             editor.addItem(IconRegistry.emotion_icon_from_feeling(HAPPY), '', HAPPY)
-#             if arc == HAPPY:
-#                 editor.setCurrentIndex(3)
-#             editor.addItem(IconRegistry.emotion_icon_from_feeling(VERY_HAPPY), '', VERY_HAPPY)
-#             if arc == VERY_HAPPY:
-#                 editor.setCurrentIndex(4)
-#
-#             editor.activated.connect(lambda: self._commit_and_close(editor))
-#             editor.showPopup()
-#
-#     @overrides
-#     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
-#         if isinstance(editor, QComboBox):
-#             model.setData(index, editor.currentData(Qt.UserRole))
-#         elif isinstance(editor, QSpinBox):
-#             model.setData(index, editor.value())
-#         else:
-#             model.setData(index, editor.toPlainText())
-#         scene = index.data(ScenesTableModel.SceneRole)
-#         client.update_scene(scene)
-#
-#     def _commit_and_close(self, editor):
-#         self.commitData.emit(editor)
-#         self.closeEditor.emit(editor)

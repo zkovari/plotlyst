@@ -21,7 +21,7 @@ from typing import List
 
 import qtawesome
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QToolButton, QWidget, QApplication, QWidgetAction, QLineEdit, QTextEdit
+from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton
 from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
@@ -34,6 +34,7 @@ from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelRelo
     SceneChangedEvent, CharacterChangedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
+from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
@@ -43,7 +44,6 @@ from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.tasks_view import TasksWidget
 from src.main.python.plotlyst.worker.persistence import customize_character_profile
 
 
@@ -127,6 +127,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.characters_view = CharactersView(self.novel)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
         self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
+        self.comments_view = CommentsView(self.novel)
+        self.pageComments.layout().addWidget(self.comments_view.widget)
+        self.wdgSidebar.setCurrentWidget(self.pageComments)
 
         self.notes_view = NotesView(self.novel)
         self.reports_view = ReportsView(self.novel)
@@ -194,19 +197,26 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
-        tasks_button = QToolButton(self.toolBar)
-        tasks_button.setPopupMode(QToolButton.InstantPopup)
-        tasks_button.setIcon(IconRegistry.tasks_icon())
-        tasks_button.setToolTip('Tasks')
-        tasks_action = QWidgetAction(tasks_button)
-        self._distribution_widget = TasksWidget(self.novel)
-        self._distribution_widget.setMinimumWidth(700)
-        self._distribution_widget.setMinimumHeight(400)
-        tasks_action.setDefaultWidget(self._distribution_widget)
-        tasks_button.addAction(tasks_action)
-        self.toolBar.addWidget(spacer_widget(5))
-        self.toolBar.addWidget(tasks_button)
+        # btn_docs = QToolButton(self.toolBar)
+        # btn_docs.setIcon(IconRegistry.document_edition_icon())
+        # btn_docs.setText('Docs')
+        # btn_docs.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        # btn_docs.setCursor(Qt.PointingHandCursor)
+        # btn_docs.setCheckable(True)
+
+        self.btnComments = QToolButton(self.toolBar)
+        self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
+        self.btnComments.setMinimumWidth(80)
+        self.btnComments.setCursor(Qt.PointingHandCursor)
+        self.btnComments.setCheckable(True)
+        self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
+
         self.toolBar.addWidget(spacer_widget())
+
+        # self.toolBar.addWidget(btn_docs)
+        self.toolBar.addWidget(self.btnComments)
+
+        self.wdgSidebar.setHidden(True)
 
     def _import_from_scrivener(self):
         self.btnHome.click()
@@ -268,6 +278,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.notes_view.widget.deleteLater()
         self.pageReports.layout().removeWidget(self.reports_view.widget)
         self.reports_view.widget.deleteLater()
+        self.pageComments.layout().removeWidget(self.comments_view.widget)
+        self.comments_view.widget.deleteLater()
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
