@@ -49,7 +49,7 @@
      <property name="spacing">
       <number>2</number>
      </property>
-     <item>
+     <item alignment="Qt::AlignLeft">
       <widget class="QToolButton" name="btnPov">
        <property name="styleSheet">
         <string notr="true">border: 0px;</string>
