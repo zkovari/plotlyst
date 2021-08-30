@@ -25,7 +25,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex
     QAbstractItemModel, Qt, QSize, QEvent
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
-    QWidgetAction, QListView, QTableView, QMenu, QApplication
+    QWidgetAction, QListView, QTableView, QMenu
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -77,7 +77,7 @@ class SceneEditor(QObject):
         self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.plus_edit_icon())
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
         self.ui.btnAddConflict.setIcon(IconRegistry.conflict_icon())
-        self.ui.btnAddConflict.setFont(QApplication.font())
+        self.ui.btnAddConflict.setStyleSheet('QPushButton::menu-indicator{width:0px;}')
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
         self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
@@ -91,7 +91,8 @@ class SceneEditor(QObject):
         self.ui.cbPivotal.addItem('Select story beat...', None)
         self.ui.cbPivotal.addItem('', None)
         for beat in self.novel.story_structure.beats:
-            self.ui.cbPivotal.addItem(beat.text, beat)
+            icon = IconRegistry.from_name(beat.icon, beat.icon_color) if beat.icon else QIcon('')
+            self.ui.cbPivotal.addItem(icon, beat.text, beat)
             if beat.ends_act:
                 self.ui.cbPivotal.insertSeparator(self.ui.cbPivotal.count())
         self.ui.cbPivotal.view().setRowHidden(0, True)
@@ -193,6 +194,19 @@ class SceneEditor(QObject):
                 self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
 
+        for char_arc in self.scene.arcs:
+            if scene.pov and char_arc.character == scene.pov:
+                if char_arc.arc == VERY_UNHAPPY:
+                    self.ui.btnVeryUnhappy.setChecked(True)
+                elif char_arc.arc == UNHAPPY:
+                    self.ui.btnUnHappy.setChecked(True)
+                elif char_arc.arc == NEUTRAL:
+                    self.ui.btnNeutral.setChecked(True)
+                elif char_arc.arc == HAPPY:
+                    self.ui.btnHappy.setChecked(True)
+                elif char_arc.arc == VERY_HAPPY:
+                    self.ui.btnVeryHappy.setChecked(True)
+
         if self.scene.pov:
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
         else:
@@ -269,19 +283,6 @@ class SceneEditor(QObject):
                 self.ui.btnNext.setDisabled(True)
             else:
                 self.ui.btnNext.setEnabled(True)
-
-        for char_arc in self.scene.arcs:
-            if scene.pov and char_arc.character == scene.pov:
-                if char_arc.arc == VERY_UNHAPPY:
-                    self.ui.btnVeryUnhappy.setChecked(True)
-                elif char_arc.arc == UNHAPPY:
-                    self.ui.btnUnHappy.setChecked(True)
-                elif char_arc.arc == NEUTRAL:
-                    self.ui.btnNeutral.setChecked(True)
-                elif char_arc.arc == HAPPY:
-                    self.ui.btnHappy.setChecked(True)
-                elif char_arc.arc == VERY_HAPPY:
-                    self.ui.btnVeryHappy.setChecked(True)
 
         self._scene_builder_palette_model = SceneBuilderPaletteTreeModel(self.scene)
         self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)

@@ -41,14 +41,16 @@ class _Card(QFrame):
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        self._setStyleSheet(selected=True)
-        self.selected.emit(self)
+        self.select()
 
     @overrides
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+        self.select()
+        self.doubleClicked.emit(self)
+
+    def select(self):
         self._setStyleSheet(selected=True)
         self.selected.emit(self)
-        self.doubleClicked.emit(self)
 
     def clearSelection(self):
         self._setStyleSheet()
@@ -93,8 +95,11 @@ class CharacterCard(Ui_CharacterCard, _Card):
         super().__init__(parent)
         self.setupUi(self)
         self.character = character
-        self.lblName.setText(self.character.name)
-        set_avatar(self.lblPic, self.character)
+        self.textName.setContentsMargins(0, 0, 0, 0)
+        self.textName.document().setDocumentMargin(0)
+        self.textName.setText(self.character.name)
+        self.textName.setAlignment(Qt.AlignCenter)
+        set_avatar(self.lblPic, self.character, size=118)
 
         enneagram = self.character.enneagram()
         if enneagram:
@@ -117,18 +122,26 @@ class SceneCard(Ui_SceneCard, _Card):
         self.textTitle.setFontPointSize(QApplication.font().pointSize() + 1)
         self.textTitle.setText(self.scene.title)
         self.textTitle.setAlignment(Qt.AlignCenter)
+
+        self.btnPov.clicked.connect(self.select)
+        self.btnComments.clicked.connect(self.select)
+
         if scene.pov:
             self.btnPov.setIcon(QIcon(avatars.pixmap(scene.pov)))
         for char in scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
         if self.scene.beat:
-            if platform.is_windows():
-                self._emoji_font = emoji_font(14)
+            if self.scene.beat.icon:
+                self.lblBeatEmoji.setPixmap(
+                    IconRegistry.from_name(self.scene.beat.icon, self.scene.beat.icon_color).pixmap(24, 24))
             else:
-                self._emoji_font = emoji_font(20)
-            self.lblBeatEmoji.setFont(self._emoji_font)
-            self.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
+                if platform.is_windows():
+                    self._emoji_font = emoji_font(14)
+                else:
+                    self._emoji_font = emoji_font(20)
+                self.lblBeatEmoji.setFont(self._emoji_font)
+                self.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
         else:
             self.lblBeatEmoji.clear()
             self.lblBeatEmoji.setHidden(True)
@@ -139,7 +152,7 @@ class SceneCard(Ui_SceneCard, _Card):
             self.btnComments.setHidden(True)
 
         if self.scene.type == ACTION_SCENE:
-            self.lblType.setPixmap(IconRegistry.action_scene_icon().pixmap(QSize(24, 24, )))
+            self.lblType.setPixmap(IconRegistry.action_scene_icon(self.scene.action_resolution).pixmap(QSize(24, 24, )))
         elif self.scene.type == REACTION_SCENE:
             self.lblType.setPixmap(IconRegistry.reaction_scene_icon().pixmap(QSize(24, 24, )))
         else:

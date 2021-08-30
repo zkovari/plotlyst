@@ -30,6 +30,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 class TemplateFieldSelectionModel(EditableItemsModel):
     selection_changed = pyqtSignal()
+    item_edited = pyqtSignal()
     ItemRole: int = Qt.UserRole + 1
 
     ColIcon: int = 0
@@ -41,6 +42,7 @@ class TemplateFieldSelectionModel(EditableItemsModel):
         self._checkable: bool = False
         self._checkable_column: int = 0
         self._checked: Set[SelectionItem] = set()
+        self._editable: bool = True
 
     def selections(self) -> Set[SelectionItem]:
         return self._checked
@@ -48,6 +50,10 @@ class TemplateFieldSelectionModel(EditableItemsModel):
     def setCheckable(self, checkable: bool, column: int):
         self._checkable = checkable
         self._checkable_column = column
+        self.modelReset.emit()
+
+    def setEditable(self, editable: bool):
+        self._editable = editable
         self.modelReset.emit()
 
     def checkItem(self, item: SelectionItem):
@@ -71,7 +77,9 @@ class TemplateFieldSelectionModel(EditableItemsModel):
         flags = super(TemplateFieldSelectionModel, self).flags(index)
         if self._checkable and index.column() == self._checkable_column:
             return Qt.ItemIsUserCheckable | flags
-        return flags
+        elif self._editable:
+            return flags
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
@@ -114,11 +122,15 @@ class TemplateFieldSelectionModel(EditableItemsModel):
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
         if role == Qt.EditRole:
+            self._checked.remove(self._field.selections[index.row()])
             self._field.selections[index.row()].text = value
+            self._checked.add(self._field.selections[index.row()])
+            self.item_edited.emit()
             return True
         if role == Qt.DecorationRole:
             self._field.selections[index.row()].icon = value[0]
             self._field.selections[index.row()].icon_color = value[1]
+            self.item_edited.emit()
             return True
         if role == Qt.CheckStateRole:
             if value == Qt.Checked:

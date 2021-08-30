@@ -72,6 +72,7 @@ class HomeView(AbstractView):
         self.ui.btnDelete.setDisabled(True)
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnActivate.setDisabled(True)
+        self.selected_card = None
         for novel in client.novels():
             card = NovelCard(novel)
             self._layout.addWidget(card)

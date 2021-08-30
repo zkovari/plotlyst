@@ -81,6 +81,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._relax_colors = False
 
         self._action_icon = IconRegistry.action_scene_icon()
+        self._resolved_action_icon = IconRegistry.action_scene_icon(resolved=True)
         self._reaction_icon = IconRegistry.reaction_scene_icon()
         self._wip_brush = QBrush(QColor(WIP_COLOR))
         self._pivotal_brush = QBrush(QColor(PIVOTAL_COLOR))
@@ -127,6 +128,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 if self._data[index.row()].wip:
                     return IconRegistry.wip_icon()
                 elif self._data[index.row()].type == ACTION_SCENE:
+                    if self._data[index.row()].action_resolution:
+                        return self._resolved_action_icon
                     return self._action_icon
                 elif self._data[index.row()].type == REACTION_SCENE:
                     return self._reaction_icon

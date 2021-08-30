@@ -70,11 +70,11 @@ class IconRegistry:
 
     @staticmethod
     def increase_font_size_icon() -> QIcon:
-        return qtawesome.icon('mdi.format-font-size-increase', options=[{'scale_factor': 1.2}])
+        return IconRegistry.from_name('mdi.format-font-size-increase')
 
     @staticmethod
     def decrease_font_size_icon() -> QIcon:
-        return qtawesome.icon('mdi.format-font-size-decrease', options=[{'scale_factor': 1.2}])
+        return IconRegistry.from_name('mdi.format-font-size-decrease')
 
     @staticmethod
     def filter_icon() -> QIcon:
@@ -122,16 +122,20 @@ class IconRegistry:
 
     @staticmethod
     def synopsis_icon() -> QIcon:
-        return qtawesome.icon('mdi.file-document')
+        return IconRegistry.from_name('mdi.file-document')
 
     @staticmethod
     def general_info_icon() -> QIcon:
         return qtawesome.icon('fa5s.info-circle', color='darkBlue')
 
     @staticmethod
-    def action_scene_icon() -> QIcon:
+    def action_scene_icon(resolved: bool = False) -> QIcon:
+        if resolved:
+            color = '#0b6e4f'
+        else:
+            color = '#fe4a49'
         return qtawesome.icon('fa.circle', 'fa5s.yin-yang',
-                              options=[{'color': 'white', 'scale_factor': 1}, {'color': '#fe4a49'}])
+                              options=[{'color': 'white', 'scale_factor': 1}, {'color': color}])
 
     @staticmethod
     def reaction_scene_icon() -> QIcon:
@@ -148,7 +152,7 @@ class IconRegistry:
 
     @staticmethod
     def wip_icon() -> QIcon:
-        return qtawesome.icon('mdi.progress-question', options=[{'scale_factor': 1.2}])
+        return IconRegistry.from_name('mdi.progress-question')
 
     @staticmethod
     def tasks_icon() -> QIcon:
@@ -172,15 +176,15 @@ class IconRegistry:
 
     @staticmethod
     def act_one_icon() -> QIcon:
-        return qtawesome.icon('mdi.numeric-1-circle', color='#02bcd4')
+        return IconRegistry.from_name('mdi.numeric-1-circle', color='#02bcd4')
 
     @staticmethod
     def act_two_icon() -> QIcon:
-        return qtawesome.icon('mdi.numeric-2-circle', color='#1bbc9c')
+        return IconRegistry.from_name('mdi.numeric-2-circle', color='#1bbc9c')
 
     @staticmethod
     def act_three_icon() -> QIcon:
-        return qtawesome.icon('mdi.numeric-3-circle', color='#ff7800')
+        return IconRegistry.from_name('mdi.numeric-3-circle', color='#ff7800')
 
     @staticmethod
     def table_icon() -> QIcon:
@@ -188,7 +192,7 @@ class IconRegistry:
 
     @staticmethod
     def goal_icon() -> QIcon:
-        return qtawesome.icon('mdi.target', color='darkBlue', options=[{'scale_factor': 1.2}])
+        return IconRegistry.from_name('mdi.bullseye-arrow')
 
     @staticmethod
     def decision_icon() -> QIcon:
@@ -265,7 +269,7 @@ class IconRegistry:
 
     @staticmethod
     def progress_check_icon() -> QIcon:
-        return qtawesome.icon('mdi.progress-check', color='darkblue', options=[{'scale_factor': 1.2}])
+        return IconRegistry.from_name('mdi.progress-check', color='darkblue')
 
     @staticmethod
     def customization_icon() -> QIcon:
@@ -273,11 +277,11 @@ class IconRegistry:
 
     @staticmethod
     def restore_alert_icon(color='black') -> QIcon:
-        return qtawesome.icon('mdi.restore-alert', color=color, options=[{'scale_factor': 1.2}])
+        return IconRegistry.from_name('mdi.restore-alert', color=color)
 
     @staticmethod
     def cards_icon() -> QIcon:
-        return qtawesome.icon('mdi.cards', options=[{'scale_factor': 1.2}])
+        return IconRegistry.from_name('mdi.cards')
 
     @staticmethod
     def conflict_character_icon() -> QIcon:

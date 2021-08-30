@@ -25,7 +25,7 @@ from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType
+from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem
 from src.main.python.plotlyst.view.common import line
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import FlowLayout
@@ -162,3 +162,23 @@ class TraitLabel(QLabel):
             color: white;
             padding-left: 0px; padding-right: 0px; padding-top: 0px; padding-bottom: 0px;
         }}''')
+
+
+class SelectionItemLabel(Label):
+    def __init__(self, item: SelectionItem, parent=None):
+        super(SelectionItemLabel, self).__init__(parent)
+        self.item = item
+
+        if self.item.icon:
+            self.lblIcon = QLabel()
+            self.lblIcon.setPixmap(IconRegistry.from_name(self.item.icon, self.item.icon_color).pixmap(QSize(24, 24)))
+            self.layout().addWidget(self.lblIcon)
+
+        self.lblText = QLabel(self.item.text)
+        self.layout().addWidget(self.lblText)
+
+        self.setStyleSheet('''
+                        SelectionItemLabel {
+                            border: 2px solid #2e5266;
+                            border-radius: 8px; padding-left: 3px; padding-right: 3px;}
+                        ''')
