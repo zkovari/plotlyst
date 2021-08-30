@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
+import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
@@ -81,7 +82,7 @@ class RepositoryPersistenceManager(QObject):
                 self._finished_event.set()
                 _runnable = _PersistenceRunnable(operations_to_persist, self._finished_event)
                 self._pool.start(_runnable)
-                self._operations.clear()
+            self._operations.clear()
 
         return True
 
@@ -141,14 +142,14 @@ class _PersistenceRunnable(QRunnable):
     def run(self) -> None:
         try:
             _persist_operations(self.operations)
-
         finally:
             self.finished.clear()
 
 
 def flush_or_fail():
     attempts = 0
-    while not RepositoryPersistenceManager.instance().flush(sync=True) and attempts < 30:
+    repo = RepositoryPersistenceManager.instance()
+    while not repo.flush(sync=True) and attempts < 30:
         time.sleep(1)
         attempts += 1
     if attempts >= 30:
@@ -180,3 +181,6 @@ def _persist_operations(operations: List[Operation]):
 
         elif op.novel_descriptor and op.type == OperationType.UPDATE:
             client.update_project_novel(op.novel_descriptor)
+
+        else:
+            logging.error('Unrecognized operation %s', op.type)
