@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import time
 from typing import List
 
 import qtawesome
@@ -81,10 +82,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelReloadRequestedEvent):
-            updated_novel = client.fetch_novel(self.novel.id)
+            updated_novel = self._flush_end_fetch_novel()
             self.novel.update_from(updated_novel)
             emit_event(NovelReloadedEvent(self))
         elif isinstance(event, NovelDeletedEvent):
@@ -104,6 +107,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnNotes.setEnabled(True)
             self.btnReport.setEnabled(True)
             event_dispatcher.deregister(self, SceneChangedEvent)
+
+    @busy
+    def _flush_end_fetch_novel(self):
+        attempts = 0
+        while not self.repo.flush(sync=True) and attempts < 30:
+            time.sleep(1)
+            attempts += 1
+        if attempts >= 30:
+            raise IOError('Could not save novel')
+        updated_novel = client.fetch_novel(self.novel.id)
+        return updated_novel
 
     @busy
     def _init_views(self):
@@ -287,7 +301,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
-                RepositoryPersistenceManager.instance().update_novel(self.novel)
+                self.repo.update_novel(self.novel)
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
         if isinstance(current_widget, (QLineEdit, QTextEdit)):

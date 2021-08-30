@@ -67,18 +67,20 @@ class RepositoryPersistenceManager(QObject):
             cls.__instance = RepositoryPersistenceManager()
         return cls.__instance
 
-    def flush(self) -> bool:
+    def flush(self, sync: bool = False) -> bool:
         if self._finished_event.is_set():
-            print('blocked')
             return False
 
         if self._operations:
-            self._finished_event.set()
             operations_to_persist = []
             operations_to_persist.extend(self._operations)
-            _runnable = _PersistenceRunnable(operations_to_persist, self._finished_event)
-            self._pool.start(_runnable)
-            self._operations.clear()
+            if sync:
+                _persist_operations(operations_to_persist)
+            else:
+                self._finished_event.set()
+                _runnable = _PersistenceRunnable(operations_to_persist, self._finished_event)
+                self._pool.start(_runnable)
+                self._operations.clear()
 
         return True
 
@@ -160,6 +162,7 @@ def _persist_operations(operations: List[Operation]):
             client.delete_character(op.novel, op.character)
 
         elif op.novel and op.type == OperationType.UPDATE:
+            print('update novel')
             client.update_novel(op.novel)
         elif op.novel and op.type == OperationType.INSERT:
             client.insert_novel(op.novel)
