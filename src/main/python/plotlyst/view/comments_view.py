@@ -45,6 +45,7 @@ class CommentsView(AbstractNovelView):
 
         for scene in self.novel.scenes:
             for comment in scene.comments:
+                print(f'comment {comment.text}')
                 self._addComment(comment, scene)
 
     @overrides
@@ -63,7 +64,7 @@ class CommentsView(AbstractNovelView):
         wdg.edit()
 
     def _addComment(self, comment: Comment, scene: Optional[Scene] = None) -> 'CommentWidget':
-        comment_wdg = CommentWidget(comment, scene)
+        comment_wdg = CommentWidget(self.novel, comment, scene)
         self.ui.wdgComments.layout().addWidget(comment_wdg, alignment=Qt.AlignCenter)
         comment_wdg.changed.connect(self._comment_changed)
         comment_wdg.removed.connect(self._comment_removed)
@@ -89,9 +90,10 @@ class CommentWidget(QFrame, Ui_CommentWidget):
     width: int = 200
     height: int = 100
 
-    def __init__(self, comment: Comment, scene: Optional[Scene] = None, parent=None):
+    def __init__(self, novel: Novel, comment: Comment, scene: Optional[Scene] = None, parent=None):
         super(CommentWidget, self).__init__(parent)
         self.setupUi(self)
+        self.novel = novel
         self.comment = comment
         self.scene: Optional[Scene] = scene
 
@@ -99,6 +101,7 @@ class CommentWidget(QFrame, Ui_CommentWidget):
 
         self.setFixedSize(self.width, self.height)
 
+        self.cbScene.setHidden(True)
         self.btnResolve.setHidden(True)
         self.btnMajor.setHidden(True)
         self.btnMajor.toggled.connect(self._major_toggled)
@@ -158,6 +161,15 @@ class CommentWidget(QFrame, Ui_CommentWidget):
         self.textEditor.setVisible(True)
         self.textComment.setHidden(True)
         self.textEditor.setFocus()
+        if self.scene:
+            self.cbScene.setHidden(True)
+        else:
+            self.cbScene.setVisible(True)
+            self.cbScene.clear()
+            for scene in self.novel.scenes:
+                self.cbScene.addItem(scene.title, scene)
+            if self.scene:
+                self.cbScene.setCurrentText(self.scene.title)
 
     def _remove(self):
         self.removed.emit(self)
@@ -167,7 +179,12 @@ class CommentWidget(QFrame, Ui_CommentWidget):
 
     def _apply(self):
         self.comment.text = self.textEditor.toPlainText()
+        self.comment.major = self.btnMajor.isChecked()
         self.textComment.setPlainText(self.comment.text)
+        if not self.scene:
+            self.scene = self.cbScene.currentData()
+            self.scene.comments.append(self.comment)
+
         self._toggle_editor_mode()
         self.changed.emit(self)
 
@@ -182,6 +199,8 @@ class CommentWidget(QFrame, Ui_CommentWidget):
         # self.btnResolve.setHidden(edit)
         self.textEditor.setVisible(edit)
         self.textComment.setHidden(edit)
+        if not edit:
+            self.cbScene.setHidden(True)
         self._edit_mode = edit
 
         if not edit and not self.textComment.toPlainText():
