@@ -33,7 +33,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field, SelectionItemType, \
-    enneagram_field, traits_field, desire_field, fear_field, goal_field
+    enneagram_field, traits_field, desire_field, fear_field, goal_field, HAlignment, VAlignment
 from src.main.python.plotlyst.core.help import enneagram_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
@@ -537,8 +537,28 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             item = self.gridLayout.itemAt(i)
             if item and isinstance(item.widget(), TemplateFieldWidget):
                 pos = self.gridLayout.getItemPosition(i)
+                item = self.gridLayout.itemAtPosition(pos[0], pos[1])
+                if item.alignment() & Qt.AlignRight:
+                    h_alignment = HAlignment.RIGHT
+                elif item.alignment() & Qt.AlignLeft:
+                    h_alignment = HAlignment.LEFT
+                elif item.alignment() & Qt.AlignHCenter:
+                    h_alignment = HAlignment.CENTER
+                elif item.alignment() & Qt.AlignJustify:
+                    h_alignment = HAlignment.JUSTIFY
+                else:
+                    h_alignment = HAlignment.DEFAULT
+
+                if item.alignment() & Qt.AlignTop:
+                    v_alignment = VAlignment.TOP
+                elif item.alignment() & Qt.AlignBottom:
+                    v_alignment = VAlignment.BOTTOM
+                else:
+                    v_alignment = VAlignment.CENTER
+
                 elements.append(
-                    ProfileElement(item.widget().field, row=pos[0], col=pos[1], row_span=pos[2], col_span=pos[3]))
+                    ProfileElement(item.widget().field, row=pos[0], col=pos[1], row_span=pos[2], col_span=pos[3],
+                                   h_alignment=h_alignment, v_alignment=v_alignment))
 
         self._profile.elements = elements
         return self._profile
