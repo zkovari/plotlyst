@@ -29,7 +29,6 @@ from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, 
 from fbs_runtime import platform
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
     UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, Conflict
@@ -44,6 +43,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel, ConflictLabel
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class SceneEditor(QObject):
@@ -295,6 +295,7 @@ class SceneEditor(QObject):
         self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self, self.scene))
         self._scene_builder_palette_model.setElements(self.scene.builder_elements)
 
+        self.repo = RepositoryPersistenceManager.instance()
         self._save_enabled = True
 
     def _on_type_changed(self, text: str):
@@ -477,9 +478,9 @@ class SceneEditor(QObject):
         if self._new_scene:
             self.novel.scenes.append(self.scene)
             self.scene.sequence = self.novel.scenes.index(self.scene)
-            client.insert_scene(self.novel, self.scene)
+            self.repo.insert_scene(self.novel, self.scene)
         else:
-            client.update_scene(self.scene)
+            self.repo.update_scene(self.scene)
         self._new_scene = False
 
     def _conflicts_changed(self):

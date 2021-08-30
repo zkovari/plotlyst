@@ -37,6 +37,7 @@ from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
+from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -44,7 +45,7 @@ from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.worker.persistence import customize_character_profile
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 
 class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
@@ -80,10 +81,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelReloadRequestedEvent):
-            updated_novel = client.fetch_novel(self.novel.id)
+            updated_novel = self._flush_end_fetch_novel()
             self.novel.update_from(updated_novel)
             emit_event(NovelReloadedEvent(self))
         elif isinstance(event, NovelDeletedEvent):
@@ -103,6 +106,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnNotes.setEnabled(True)
             self.btnReport.setEnabled(True)
             event_dispatcher.deregister(self, SceneChangedEvent)
+
+    @busy
+    def _flush_end_fetch_novel(self):
+        flush_or_fail()
+        updated_novel = client.fetch_novel(self.novel.id)
+        return updated_novel
 
     @busy
     def _init_views(self):
@@ -286,7 +295,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
                 for index, scene in enumerate(self.novel.scenes):
                     scene.sequence = index
-                client.update_novel(self.novel)
+                self.repo.update_novel(self.novel)
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
         if isinstance(current_widget, (QLineEdit, QTextEdit)):

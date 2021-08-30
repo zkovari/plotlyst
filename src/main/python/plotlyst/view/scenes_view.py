@@ -26,7 +26,6 @@ from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QMenu, QAction
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel, Character
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
@@ -232,7 +231,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _new_chapter(self):
         self.chaptersModel.newChapter()
-        client.update_novel(self.novel)
+        self.repo.update_novel(self.novel)
 
     def _update_cards(self):
         self.scene_cards.clear()
@@ -328,7 +327,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):
             scene.wip = not scene.wip
-            client.update_scene(scene)
+            self.repo.update_scene(scene)
             self.refresh()
 
         index: QModelIndex = self.ui.tblScenes.indexAt(pos)
@@ -348,7 +347,7 @@ class ScenesOutlineView(AbstractNovelView):
         new_scene = Scene('Untitled', day=day)
         self.novel.scenes.insert(i + 1, new_scene)
         new_scene.sequence = i + 1
-        client.insert_scene(self.novel, new_scene)
+        self.repo.insert_scene(self.novel, new_scene)
         self.refresh()
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
@@ -366,7 +365,7 @@ class ScenesOutlineView(AbstractNovelView):
         if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
             return
         self.novel.scenes.remove(scene)
-        client.delete_scene(self.novel, scene)
+        self.repo.delete_scene(self.novel, scene)
         self.refresh()
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
         emit_event(SceneDeletedEvent(self))

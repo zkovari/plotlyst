@@ -26,9 +26,9 @@ from PyQt5.QtWidgets import QWidget, QMenu, QAction
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, Novel, DramaticQuestion
 from src.main.python.plotlyst.view.common import busy
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class StoryLinesMapWidget(QWidget):
@@ -189,6 +189,6 @@ class StoryLinesMapWidget(QWidget):
             self._clicked_scene.dramatic_questions.append(dramatic_question)
         else:
             self._clicked_scene.dramatic_questions.remove(dramatic_question)
-        client.update_scene(self._clicked_scene)
+        RepositoryPersistenceManager.instance().update_scene(self._clicked_scene)
 
         self.update()

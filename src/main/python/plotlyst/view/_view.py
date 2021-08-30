@@ -29,6 +29,7 @@ from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadedEvent
 from src.main.python.plotlyst.view.common import busy
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class AbstractView(QObject, EventListener):
@@ -44,6 +45,8 @@ class AbstractView(QObject, EventListener):
 
         for event in self._event_types:
             event_dispatcher.register(self, event)
+
+        self.repo = RepositoryPersistenceManager.instance()
 
     @overrides
     def event_received(self, event: Event):

@@ -22,7 +22,6 @@ from typing import Optional, List
 from PyQt5.QtCore import QItemSelection
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, CharacterChangedEvent
@@ -159,6 +158,6 @@ class CharactersView(AbstractNovelView):
         if not ask_confirmation(f'Are you sure you want to delete character {character.name}?'):
             return
         self.novel.characters.remove(character)
-        client.delete_character(self.novel, character)
+        self.repo.delete_character(self.novel, character)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()

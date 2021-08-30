@@ -7,10 +7,15 @@ from src.main.python.plotlyst.view.novel_view import NovelView
 
 
 def test_create_dramatic_question(qtbot, filled_window: MainWindow):
+    view: NovelView = go_to_novel(filled_window)
     create_dramatic_question(qtbot, filled_window, 'New Storyline')
 
     assert filled_window.novel.dramatic_questions
     assert filled_window.novel.dramatic_questions[-1].text == 'New Storyline'
+
+    persisted_novel = client.fetch_novel(view.novel.id)
+    assert len(persisted_novel.dramatic_questions) == len(view.novel.dramatic_questions)
+    assert persisted_novel.dramatic_questions[-1].text == 'New Storyline'
 
 
 def test_delete_dramatic_question(qtbot, filled_window: MainWindow, monkeypatch):

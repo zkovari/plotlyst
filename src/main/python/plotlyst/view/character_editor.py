@@ -22,15 +22,15 @@ from typing import Optional
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from fbs_runtime import platform
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEvent
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
+from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterBackstoryCard
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateView
-from src.main.python.plotlyst.worker.persistence import customize_character_profile
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class CharacterEditor:
@@ -68,6 +68,8 @@ class CharacterEditor:
 
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
+
+        self.repo = RepositoryPersistenceManager.instance()
 
     def _init_profile_view(self):
         self._profile_with_toolbar = QWidget()
@@ -120,9 +122,9 @@ class CharacterEditor:
 
         if self._new_character:
             self.novel.characters.append(self.character)
-            client.insert_character(self.novel, self.character)
+            self.repo.insert_character(self.novel, self.character)
         else:
-            client.update_character(self.character, self.profile.avatarUpdated())
-            client.update_novel(self.novel)  # TODO temporary to update custom labels
+            self.repo.update_character(self.character, self.profile.avatarUpdated())
+            self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
 
         self._new_character = False

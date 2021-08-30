@@ -25,11 +25,11 @@ from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QComboBox, QLineEdit, QSpinBox
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Scene, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, \
     Character
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class ScenesViewDelegate(QStyledItemDelegate):
@@ -112,7 +112,7 @@ class ScenesViewDelegate(QStyledItemDelegate):
         else:
             model.setData(index, editor.toPlainText())
         scene = index.data(ScenesTableModel.SceneRole)
-        client.update_scene(scene)
+        RepositoryPersistenceManager.instance().update_scene(scene)
 
     def _commit_and_close(self, editor):
         self.commitData.emit(editor)

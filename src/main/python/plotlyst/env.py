@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import os
 from enum import Enum
 
 
@@ -42,6 +43,11 @@ class AppEnvironment:
 
     def is_prod(self) -> bool:
         return self._mode == AppMode.PROD
+
+    def test_env(self) -> bool:
+        if os.getenv('PLOTLYST_TEST_ENV'):
+            return True
+        return False
 
 
 app_env = AppEnvironment()

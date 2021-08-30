@@ -24,7 +24,7 @@ from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QLineEdit, QColorDialo
 from fbs_runtime import platform
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client, json_client
+from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent, NovelUpdatedEvent, \
@@ -35,6 +35,7 @@ from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class NovelView(AbstractNovelView):
@@ -111,9 +112,9 @@ The scenes can be associated to such story beats.</p>''')
             return
         for scene in beats:
             scene.beat = None
-            client.update_scene(scene)
+            self.repo.update_scene(scene)
         self.novel.story_structure = structure
-        client.update_novel(self.novel)
+        self.repo.update_novel(self.novel)
         emit_event(NovelStoryStructureUpdated(self))
 
     def _story_structure_info_clicked(self, checked: bool):
@@ -136,7 +137,7 @@ The scenes can be associated to such story beats.</p>''')
         self.novel.dramatic_questions.append(story_line)
         story_line.color_hexa = STORY_LINE_COLOR_CODES[
             (len(self.novel.dramatic_questions) - 1) % len(STORY_LINE_COLOR_CODES)]
-        client.update_novel(self.novel)
+        self.repo.update_novel(self.novel)
         self.story_lines_model.modelReset.emit()
 
         self.ui.tblDramaticQuestions.edit(self.story_lines_model.index(self.story_lines_model.rowCount() - 1,
@@ -158,7 +159,7 @@ The scenes can be associated to such story beats.</p>''')
             return
 
         self.novel.dramatic_questions.remove(story_line)
-        client.update_novel(self.novel)
+        self.repo.update_novel(self.novel)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()
 
@@ -174,7 +175,7 @@ The scenes can be associated to such story beats.</p>''')
                                                   options=QColorDialog.DontUseNativeDialog)
             if color.isValid():
                 dq.color_hexa = color.name()
-                client.update_novel(self.novel)
+                self.repo.update_novel(self.novel)
             self.ui.tblDramaticQuestions.clearSelection()
 
 
@@ -194,4 +195,4 @@ class StoryLineDelegate(QStyledItemDelegate):
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex) -> None:
         updated = model.setData(index, editor.text(), role=Qt.EditRole)
         if updated:
-            client.update_novel(self.novel)
+            RepositoryPersistenceManager.instance().update_novel(self.novel)
