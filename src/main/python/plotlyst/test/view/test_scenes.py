@@ -5,9 +5,11 @@ from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QMessageBox, QAction, QSpinBox
 
+from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel, ScenesNotesTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
     click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed, edit_item
+from src.main.python.plotlyst.view.comments_view import CommentWidget
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 
@@ -46,7 +48,7 @@ def test_scene_characters(qtbot, filled_window: MainWindow):
 def test_scene_deletion(qtbot, filled_window: MainWindow, monkeypatch):
     view: ScenesOutlineView = go_to_scenes(filled_window)
     view.ui.btnTableView.click()
-    
+
     click_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle)
     assert view.ui.btnEdit.isEnabled()
     assert view.ui.btnDelete.isEnabled()
@@ -224,3 +226,30 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
     click_on_item(qtbot, view.characters_distribution.ui.tblSceneDistribution, 3, 1)
     assert model.flags(model.index(3, 0)) & Qt.ItemIsEnabled
     assert model.flags(model.index(4, 0)) & Qt.ItemIsEnabled
+
+
+def test_add_scene_comment(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+
+    card = view.scene_cards[0]
+    qtbot.mouseClick(card, Qt.LeftButton)
+
+    filled_window.btnComments.click()
+    assert filled_window.wdgSidebar.isVisible()
+
+    filled_window.comments_view.ui.btnNewComment.click()
+    assert filled_window.comments_view.ui.wdgComments.layout().count()
+    item = filled_window.comments_view.ui.wdgComments.layout().itemAt(0)
+    assert item
+    assert item.widget()
+    comment: CommentWidget = item.widget()
+
+    qtbot.keyClicks(comment.textEditor, 'Comment content')
+    assert comment.btnApply.isEnabled()
+    comment.btnApply.click()
+    assert view.novel.scenes[0].comments
+    assert view.novel.scenes[0].comments[0].text == 'Comment content'
+
+    persisted_novel = client.fetch_novel(view.novel.id)
+    assert len(persisted_novel.scenes[0].comments) == 1
+    assert persisted_novel.scenes[0].comments[0].text == 'Comment content'

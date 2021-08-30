@@ -204,17 +204,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         # btn_docs.setCursor(Qt.PointingHandCursor)
         # btn_docs.setCheckable(True)
 
-        btn_comments = QToolButton(self.toolBar)
-        btn_comments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
-        btn_comments.setMinimumWidth(80)
-        btn_comments.setCursor(Qt.PointingHandCursor)
-        btn_comments.setCheckable(True)
-        btn_comments.toggled.connect(self.wdgSidebar.setVisible)
+        self.btnComments = QToolButton(self.toolBar)
+        self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
+        self.btnComments.setMinimumWidth(80)
+        self.btnComments.setCursor(Qt.PointingHandCursor)
+        self.btnComments.setCheckable(True)
+        self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
 
         self.toolBar.addWidget(spacer_widget())
 
         # self.toolBar.addWidget(btn_docs)
-        self.toolBar.addWidget(btn_comments)
+        self.toolBar.addWidget(self.btnComments)
 
         self.wdgSidebar.setHidden(True)
 
