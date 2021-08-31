@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import QTextEdit
 
 
 class AutoAdjustableTextEdit(QTextEdit):
-    def __init__(self, height: int = 40, parent=None):
+    def __init__(self, parent=None, height: int = 40):
         super(AutoAdjustableTextEdit, self).__init__(parent)
         self.textChanged.connect(self._resizeToContent)
         self._minHeight = height

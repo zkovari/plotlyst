@@ -932,7 +932,7 @@ QToolButton:disabled {
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QTextEdit" name="textEvent1">
+                 <widget class="AutoAdjustableTextEdit" name="textEvent1">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
@@ -1082,7 +1082,7 @@ QToolButton:disabled {
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QTextEdit" name="textEvent2">
+                 <widget class="AutoAdjustableTextEdit" name="textEvent2">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
@@ -1229,7 +1229,7 @@ QToolButton:disabled {
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QTextEdit" name="textEvent3">
+                 <widget class="AutoAdjustableTextEdit" name="textEvent3">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
@@ -1674,11 +1674,16 @@ QToolButton:disabled {
    <header>src.main.python.plotlyst.view.widget.labels</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>AutoAdjustableTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupArc"/>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="btnGroupArc"/>
  </buttongroups>
 </ui>
