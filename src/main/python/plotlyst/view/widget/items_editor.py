@@ -21,7 +21,7 @@ from typing import Optional
 
 from PyQt5.QtWidgets import QWidget
 
-from src.main.python.plotlyst.model.common import EditableItemsModel
+from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.generated.items_editor_widget_ui import Ui_ItemsEditorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -31,7 +31,7 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
     def __init__(self, parent=None):
         super(ItemsEditorWidget, self).__init__(parent)
         self.setupUi(self)
-        self.model: Optional[EditableItemsModel] = None
+        self.model: Optional[SelectionItemsModel] = None
 
         self.btnAdd.setIcon(IconRegistry.plus_icon())
         self.btnAdd.clicked.connect(self._add)
@@ -44,7 +44,7 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.btnRemove.setDisabled(True)
         self.btnRemove.setIcon(IconRegistry.minus_icon())
 
-    def setModel(self, model: EditableItemsModel):
+    def setModel(self, model: SelectionItemsModel):
         self.model = model
         self.tableView.setModel(self.model)
         self.tableView.selectionModel().selectionChanged.connect(self._item_selected)

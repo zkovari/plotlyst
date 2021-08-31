@@ -23,7 +23,7 @@ from typing import Optional, List, Any, Dict, Set
 import emoji
 import qtawesome
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent, QModelIndex
+from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
@@ -37,13 +37,11 @@ from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldTyp
 from src.main.python.plotlyst.core.help import enneagram_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
-from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsWidget, SelectionItemLabel
+from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 
 
 class _ProfileTemplateBase(QWidget):
@@ -248,82 +246,25 @@ class TextSelectionWidget(QPushButton):
             return indexes[0].data(TemplateFieldSelectionModel.ItemRole)
 
 
-class LabelsSelectionWidget(QFrame):
+class LabelsSelectionWidget(LabelsEditorWidget):
     def __init__(self, field: TemplateField, parent=None):
-        super(LabelsSelectionWidget, self).__init__(parent)
         self.field = field
-        self.setLineWidth(1)
-        self.setFrameShape(QFrame.Box)
-        self.setStyleSheet('LabelsSelectionWidget {background: white;}')
-        self.setLayout(QVBoxLayout())
-        self.layout().setSpacing(2)
-        self.layout().setContentsMargins(1, 1, 1, 1)
-        self._labels_index = {}
-        for item in self.field.selections:
-            self._labels_index[item.text] = item
+        super(LabelsSelectionWidget, self).__init__(parent)
 
-        self._btnEdit = QToolButton()
-        self._btnEdit.setIcon(IconRegistry.plus_edit_icon())
+    @overrides
+    def items(self) -> List[SelectionItem]:
+        return self.field.selections
 
-        self._model = self._initModel()
-        self._model.item_edited.connect(self._selectionChanged)
-        self._model.setCheckable(True, TemplateFieldSelectionModel.ColName)
-        self._popup = self._initPopupWidget()
-        self._model.selection_changed.connect(self._selectionChanged)
-
-        menu = QMenu(self._btnEdit)
-        action = QWidgetAction(menu)
-        action.setDefaultWidget(self._popup)
-        menu.addAction(action)
-        self._btnEdit.setMenu(menu)
-        self._btnEdit.setPopupMode(QToolButton.InstantPopup)
-        self.layout().addWidget(self._btnEdit)
-
-        self._wdgLabels = LabelsWidget()
-        self._wdgLabels.setStyleSheet('LabelsWidget {border: 1px solid black;}')
-        self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.layout().addWidget(self._wdgLabels)
-
-    def value(self) -> List[str]:
-        return [x.text for x in self._model.selections()]
-
-    def setValue(self, values: List[str]):
-        self._model.uncheckAll()
-        for v in values:
-            item = self._labels_index.get(v)
-            if item:
-                self._model.checkItem(item)
-        self._model.modelReset.emit()
-        self._selectionChanged()
-
-    def _initPopupWidget(self) -> QWidget:
-        wdg = ItemsEditorWidget()
-        wdg.setModel(self._model)
-        wdg.tableView.clicked.connect(self._choiceClicked)
-        return wdg
-
+    @overrides
     def _initModel(self) -> TemplateFieldSelectionModel:
         return TemplateFieldSelectionModel(self.field)
-
-    def _choiceClicked(self, index: QModelIndex):
-        if index.column() == TemplateFieldSelectionModel.ColIcon:
-            result = IconSelectorDialog(self).display()
-            if result:
-                self._model.setData(index, (result[0], result[1].name()), role=Qt.DecorationRole)
-
-    def _selectionChanged(self):
-        self._wdgLabels.clear()
-        self._addItems(self._model.selections())
-
-    def _addItems(self, items: Set[SelectionItem]):
-        for item in items:
-            self._wdgLabels.addLabel(SelectionItemLabel(item))
 
 
 class TraitSelectionWidget(LabelsSelectionWidget):
 
     def __init__(self, field: TemplateField, parent=None):
         super(TraitSelectionWidget, self).__init__(field, parent)
+        self._model.setEditable(False)
 
     @overrides
     def _initModel(self) -> TemplateFieldSelectionModel:

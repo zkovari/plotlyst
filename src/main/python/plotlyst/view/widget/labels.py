@@ -18,17 +18,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
-from typing import Union
+from abc import abstractmethod
+from typing import Union, List, Set
 
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, QModelIndex, Qt
 from PyQt5.QtGui import QColor, QIcon
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton
+from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, QVBoxLayout, QMenu, QWidgetAction, \
+    QSizePolicy
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem
+from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import line
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 
 
 class Label(QFrame):
@@ -182,3 +187,79 @@ class SelectionItemLabel(Label):
                             border: 2px solid #2e5266;
                             border-radius: 8px; padding-left: 3px; padding-right: 3px;}
                         ''')
+
+
+class LabelsEditorWidget(QFrame):
+    def __init__(self, parent=None):
+        super(LabelsEditorWidget, self).__init__(parent)
+        self.setLineWidth(1)
+        self.setFrameShape(QFrame.Box)
+        self.setStyleSheet('LabelsSelectionWidget {background: white;}')
+        self.setLayout(QVBoxLayout())
+        self.layout().setSpacing(2)
+        self.layout().setContentsMargins(1, 1, 1, 1)
+        self._labels_index = {}
+        for item in self.items():
+            self._labels_index[item.text] = item
+
+        self._btnEdit = QToolButton()
+        self._btnEdit.setIcon(IconRegistry.plus_edit_icon())
+
+        self._model = self._initModel()
+        self._model.item_edited.connect(self._selectionChanged)
+        self._model.setCheckable(True, SelectionItemsModel.ColName)
+        self._popup = self._initPopupWidget()
+        self._model.selection_changed.connect(self._selectionChanged)
+
+        menu = QMenu(self._btnEdit)
+        action = QWidgetAction(menu)
+        action.setDefaultWidget(self._popup)
+        menu.addAction(action)
+        self._btnEdit.setMenu(menu)
+        self._btnEdit.setPopupMode(QToolButton.InstantPopup)
+        self.layout().addWidget(self._btnEdit)
+
+        self._wdgLabels = LabelsWidget()
+        self._wdgLabels.setStyleSheet('LabelsWidget {border: 1px solid black;}')
+        self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.layout().addWidget(self._wdgLabels)
+
+    @abstractmethod
+    def _initModel(self) -> SelectionItemsModel:
+        pass
+
+    @abstractmethod
+    def items(self) -> List[SelectionItem]:
+        pass
+
+    def value(self) -> List[str]:
+        return [x.text for x in self._model.selections()]
+
+    def setValue(self, values: List[str]):
+        self._model.uncheckAll()
+        for v in values:
+            item = self._labels_index.get(v)
+            if item:
+                self._model.checkItem(item)
+        self._model.modelReset.emit()
+        self._selectionChanged()
+
+    def _initPopupWidget(self) -> QWidget:
+        wdg = ItemsEditorWidget()
+        wdg.setModel(self._model)
+        wdg.tableView.clicked.connect(self._choiceClicked)
+        return wdg
+
+    def _choiceClicked(self, index: QModelIndex):
+        if index.column() == SelectionItemsModel.ColIcon:
+            result = IconSelectorDialog(self).display()
+            if result:
+                self._model.setData(index, (result[0], result[1].name()), role=Qt.DecorationRole)
+
+    def _selectionChanged(self):
+        self._wdgLabels.clear()
+        self._addItems(self._model.selections())
+
+    def _addItems(self, items: Set[SelectionItem]):
+        for item in items:
+            self._wdgLabels.addLabel(SelectionItemLabel(item))

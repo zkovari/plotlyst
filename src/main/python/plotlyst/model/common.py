@@ -18,10 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from typing import List, Any
+from typing import List, Any, Set
 
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel, pyqtSignal
+from PyQt5.QtGui import QFont
 from overrides import overrides
+
+from src.main.python.plotlyst.core.domain import SelectionItem
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class AbstractHorizontalHeaderBasedTableModel(QAbstractTableModel):
@@ -53,25 +57,116 @@ def proxy(model: QAbstractItemModel) -> QSortFilterProxyModel:
     return _proxy
 
 
-class EditableItemsModel(QAbstractTableModel):
+class SelectionItemsModel(QAbstractTableModel):
+    selection_changed = pyqtSignal()
+    item_edited = pyqtSignal()
+    ItemRole: int = Qt.UserRole + 1
+
+    ColIcon: int = 0
+    ColName: int = 1
+
+    def __init__(self, parent=None):
+        super(SelectionItemsModel, self).__init__(parent)
+        self._checkable: bool = False
+        self._checkable_column: int = 0
+        self._checked: Set[SelectionItem] = set()
+        self._editable: bool = True
+
+    def selections(self) -> Set[SelectionItem]:
+        return self._checked
+
+    def setCheckable(self, checkable: bool, column: int):
+        self._checkable = checkable
+        self._checkable_column = column
+        self.modelReset.emit()
+
+    def setEditable(self, editable: bool):
+        self._editable = editable
+        self.modelReset.emit()
+
+    def checkItem(self, item: SelectionItem):
+        if self._checkable:
+            self._checked.add(item)
+            self.selection_changed.emit()
+
+    def uncheckItem(self, item: SelectionItem):
+        if self._checkable and item in self._checked:
+            self._checked.remove(item)
+            self.selection_changed.emit()
+
+    def uncheckAll(self):
+        self._checked.clear()
+        self.modelReset.emit()
 
     def add(self):
         self.modelReset.emit()
 
     def remove(self, index: QModelIndex):
+        if self._checkable:
+            self.uncheckItem(self.item(index))
         self.modelReset.emit()
 
-    def defaultEditableColumn(self) -> int:
-        return -1
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        item = self.item(index)
+        if role == self.ItemRole:
+            return item
+        if index.column() == self.ColIcon and role == Qt.DecorationRole:
+            if item.icon:
+                return IconRegistry.from_name(item.icon,
+                                              item.icon_color)
+            return IconRegistry.from_name('fa5s.icons', color='lightgrey')
+        if index.column() == self.ColName and role == Qt.DisplayRole:
+            return item.text
+        if role == Qt.CheckStateRole and self._checkable and index.column() == self._checkable_column:
+            return Qt.Checked if item in self._checked else Qt.Unchecked
+        if role == Qt.FontRole and self._checkable and index.column() == self._checkable_column:
+            if item in self._checked:
+                font = QFont()
+                font.setBold(True)
+                return font
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
-        if self.columnIsEditable(index.column()):
-            return flags | Qt.ItemIsEditable
-        else:
-            return flags
+        if self._checkable and index.column() == self._checkable_column:
+            flags = flags | Qt.ItemIsUserCheckable
+        if self._editable and self.columnIsEditable(index.column()):
+            flags = flags | Qt.ItemIsEditable
+
+        return flags
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+        if role == Qt.EditRole:
+            was_checked = self.item(index) in self._checked
+            if was_checked:
+                self._checked.remove(self._field.selections[index.row()])
+            self._field.selections[index.row()].text = value
+            if was_checked:
+                self._checked.add(self._field.selections[index.row()])
+            self.item_edited.emit()
+            return True
+        if role == Qt.DecorationRole:
+            self._field.selections[index.row()].icon = value[0]
+            self._field.selections[index.row()].icon_color = value[1]
+            self.item_edited.emit()
+            return True
+        if role == Qt.CheckStateRole:
+            if value == Qt.Checked:
+                self._checked.add(self._field.selections[index.row()])
+            elif value == Qt.Unchecked:
+                self._checked.remove(self._field.selections[index.row()])
+            self.selection_changed.emit()
+            return True
+        return False
 
     @abstractmethod
-    def columnIsEditable(self, column: int) -> bool:
+    def item(self, index: QModelIndex) -> SelectionItem:
         pass
+
+    def defaultEditableColumn(self) -> int:
+        return self.ColName
+
+    def columnIsEditable(self, column: int) -> bool:
+        return column == self.ColName
