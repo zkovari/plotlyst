@@ -256,6 +256,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if self.novel and self.novel.id == novel.id:
             return
 
+        self.repo.flush()
         event_dispatcher.clear()
         self.pageHome.layout().removeWidget(self.home_view.widget)
         self.home_view.widget.deleteLater()
