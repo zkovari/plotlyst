@@ -174,6 +174,23 @@ class StoryBeat:
     icon_color: str = 'black'
 
 
+class SelectionItemType(Enum):
+    CHOICE = 0
+    SEPARATOR = 1
+
+
+@dataclass
+class SelectionItem:
+    text: str
+    type: SelectionItemType = SelectionItemType.CHOICE
+    icon: str = ''
+    icon_color: str = 'black'
+    meta: Dict[str, Any] = field(default_factory=dict)
+
+    def __hash__(self):
+        return hash(self.text)
+
+
 class ConflictType(Enum):
     CHARACTER = 0
     SOCIETY = 1
@@ -190,6 +207,14 @@ class Conflict:
     pov: Character
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     character: Optional[Character] = None
+
+
+@dataclass
+class SceneGoal(SelectionItem):
+    story_goal: Optional[SelectionItem] = None
+
+    def __hash__(self):
+        return hash(self.text)
 
 
 @dataclass
@@ -219,6 +244,7 @@ class Scene:
     stage: Optional[SceneStage] = None
     beat: Optional[StoryBeat] = None
     conflicts: List[Conflict] = field(default_factory=list)
+    goals: List[SceneGoal] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
 
     def pov_arc(self) -> int:
@@ -378,23 +404,6 @@ class SelectionType(Enum):
     CHECKBOX = 1
     CHECKED_BUTTON = 2
     TAGS = 3
-
-
-class SelectionItemType(Enum):
-    CHOICE = 0
-    SEPARATOR = 1
-
-
-@dataclass
-class SelectionItem:
-    text: str
-    type: SelectionItemType = SelectionItemType.CHOICE
-    icon: str = ''
-    icon_color: str = 'black'
-    meta: Dict[str, Any] = field(default_factory=dict)
-
-    def __hash__(self):
-        return hash(self.text)
 
 
 @dataclass
@@ -647,6 +656,7 @@ class Novel(NovelDescriptor):
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
+    scene_goals: List[SceneGoal] = field(default_factory=list)
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title
@@ -662,6 +672,10 @@ class Novel(NovelDescriptor):
         self.stages.extend(updated_novel.stages)
         self.character_profiles.clear()
         self.character_profiles.extend(updated_novel.character_profiles)
+        self.conflicts.clear()
+        self.conflicts.extend(updated_novel.conflicts)
+        self.scene_goals.clear()
+        self.scene_goals.extend(updated_novel.scene_goals)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

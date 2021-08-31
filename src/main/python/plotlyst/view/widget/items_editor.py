@@ -56,10 +56,10 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.btnRemove.setEnabled(False)
 
     def _add(self):
-        self.model.add()
+        row = self.model.add()
         default_editable_col = self.model.defaultEditableColumn()
         if default_editable_col >= 0:
-            self.tableView.edit(self.model.index(self.model.rowCount() - 1, default_editable_col))
+            self.tableView.edit(self.model.index(row, default_editable_col))
 
     def _edit(self):
         indexes = self.tableView.selectedIndexes()

@@ -192,7 +192,7 @@ class IconRegistry:
 
     @staticmethod
     def goal_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.bullseye-arrow')
+        return IconRegistry.from_name('mdi.target', color='darkBlue')
 
     @staticmethod
     def decision_icon() -> QIcon:

@@ -24,7 +24,8 @@ from typing import Union, List, Set
 from PyQt5.QtCore import QSize, QModelIndex, Qt
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, QVBoxLayout, QMenu, QWidgetAction, \
-    QSizePolicy
+    QSizePolicy, QPushButton
+from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem
@@ -182,28 +183,49 @@ class SelectionItemLabel(Label):
         self.lblText = QLabel(self.item.text)
         self.layout().addWidget(self.lblText)
 
-        self.setStyleSheet('''
-                        SelectionItemLabel {
-                            border: 2px solid #2e5266;
-                            border-radius: 8px; padding-left: 3px; padding-right: 3px;}
+        self.setStyleSheet(f'''
+                        SelectionItemLabel {{
+                            border: 2px solid {self._borderColor()};
+                            border-radius: 8px; padding-left: 3px; padding-right: 3px;}}
                         ''')
+
+    def _borderColor(self) -> str:
+        return '#2e5266'
+
+
+class GoalLabel(SelectionItemLabel):
+    def __init__(self, item: SelectionItem, parent=None):
+        super(GoalLabel, self).__init__(item, parent)
+        self.item = item
+
+        self.lblGoal = QLabel()
+        self.lblGoal.setPixmap(IconRegistry.goal_icon().pixmap(QSize(24, 24)))
+        self.layout().insertWidget(0, self.lblGoal)
+
+    @overrides
+    def _borderColor(self):
+        return 'darkBlue'
 
 
 class LabelsEditorWidget(QFrame):
-    def __init__(self, parent=None):
+    def __init__(self, alignment=Qt.Horizontal, parent=None):
         super(LabelsEditorWidget, self).__init__(parent)
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Box)
-        self.setStyleSheet('LabelsSelectionWidget {background: white;}')
-        self.setLayout(QVBoxLayout())
+        self.setStyleSheet('LabelsEditorWidget {background: white;}')
+        if alignment:
+            self.setLayout(QHBoxLayout())
+        else:
+            self.setLayout(QVBoxLayout())
         self.layout().setSpacing(2)
         self.layout().setContentsMargins(1, 1, 1, 1)
         self._labels_index = {}
-        for item in self.items():
-            self._labels_index[item.text] = item
+        self.reset()
 
-        self._btnEdit = QToolButton()
-        self._btnEdit.setIcon(IconRegistry.plus_edit_icon())
+        self.btnEdit = QPushButton()
+        self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
+        self.btnEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        self.btnEdit.setStyleSheet('QPushButton::menu-indicator{width:0px;}')
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
@@ -211,18 +233,22 @@ class LabelsEditorWidget(QFrame):
         self._popup = self._initPopupWidget()
         self._model.selection_changed.connect(self._selectionChanged)
 
-        menu = QMenu(self._btnEdit)
+        menu = QMenu(self.btnEdit)
         action = QWidgetAction(menu)
         action.setDefaultWidget(self._popup)
         menu.addAction(action)
-        self._btnEdit.setMenu(menu)
-        self._btnEdit.setPopupMode(QToolButton.InstantPopup)
-        self.layout().addWidget(self._btnEdit)
+        self.btnEdit.setMenu(menu)
+        self.layout().addWidget(self.btnEdit)
 
         self._wdgLabels = LabelsWidget()
         self._wdgLabels.setStyleSheet('LabelsWidget {border: 1px solid black;}')
         self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.layout().addWidget(self._wdgLabels)
+
+    def reset(self):
+        self._labels_index.clear()
+        for item in self.items():
+            self._labels_index[item.text] = item
 
     @abstractmethod
     def _initModel(self) -> SelectionItemsModel:

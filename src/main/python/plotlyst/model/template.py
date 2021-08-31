@@ -30,8 +30,8 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 class TemplateFieldSelectionModel(SelectionItemsModel):
 
     def __init__(self, field: TemplateField):
-        super(TemplateFieldSelectionModel, self).__init__()
         self._field = field
+        super(TemplateFieldSelectionModel, self).__init__()
 
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
@@ -44,7 +44,9 @@ class TemplateFieldSelectionModel(SelectionItemsModel):
     @overrides
     def add(self):
         super(TemplateFieldSelectionModel, self).add()
-        self._field.selections.append(SelectionItem('New'))
+        self._field.selections.append(SelectionItem(''))
+
+        return self.rowCount() - 1
 
     @overrides
     def remove(self, index: QModelIndex):

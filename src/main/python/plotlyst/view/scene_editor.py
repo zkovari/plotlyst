@@ -43,6 +43,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel, ConflictLabel
+from src.main.python.plotlyst.view.widget.scenes import SceneGoalsWidget
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -56,6 +57,9 @@ class SceneEditor(QObject):
         self.ui.setupUi(self.widget)
         self.novel = novel
         self.scene: Optional[Scene] = None
+
+        self.goalEditor: Optional[SceneGoalsWidget] = None
+
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
         else:
@@ -88,7 +92,7 @@ class SceneEditor(QObject):
         self.ui.lblBeatEmoji.setFont(self._emoji_font)
         self.ui.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
 
-        self.ui.cbPivotal.addItem('Select story beat...', None)
+        self.ui.cbPivotal.addItem('Select story beat ...', None)
         self.ui.cbPivotal.addItem('', None)
         for beat in self.novel.story_structure.beats:
             icon = IconRegistry.from_name(beat.icon, beat.icon_color) if beat.icon else QIcon('')
@@ -97,7 +101,7 @@ class SceneEditor(QObject):
                 self.ui.cbPivotal.insertSeparator(self.ui.cbPivotal.count())
         self.ui.cbPivotal.view().setRowHidden(0, True)
 
-        self.ui.cbPov.addItem('Select POV...', None)
+        self.ui.cbPov.addItem('Select POV ...', None)
         self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
             self.ui.cbPov.addItem(QIcon(avatars.pixmap(char)), char.name, char)
@@ -193,6 +197,18 @@ class SceneEditor(QObject):
             if len(self.novel.scenes) > 1:
                 self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
+
+        item = self.ui.hLayoutGoal.itemAt(1)
+        if item and isinstance(item.widget(), SceneGoalsWidget):
+            self.ui.hLayoutGoal.removeItem(item)
+            item.widget().deleteLater()
+        item = self.ui.hLayoutOutcome.itemAt(1)
+        if item and isinstance(item.widget(), SceneGoalsWidget):
+            self.ui.hLayoutOutcome.removeItem(item)
+            item.widget().deleteLater()
+
+        goalEditor = SceneGoalsWidget(self.novel, self.scene)
+        self.ui.hLayoutGoal.insertWidget(1, goalEditor)
 
         for char_arc in self.scene.arcs:
             if scene.pov and char_arc.character == scene.pov:
@@ -322,6 +338,12 @@ class SceneEditor(QObject):
             self._on_conflict_toggled(self.ui.cbConflict.isChecked())
             self.ui.btnAddConflict.setText('Add conflict')
 
+            item = self.ui.hLayoutOutcome.itemAt(1)
+            if item and isinstance(item.widget(), SceneGoalsWidget):
+                self.ui.hLayoutOutcome.removeItem(item)
+                self.ui.hLayoutGoal.insertWidget(1, item.widget())
+                item.widget().btnEdit.setText('Add goal')
+
             return
         elif text == REACTION_SCENE:
             self.ui.btnDisaster.setHidden(True)
@@ -333,6 +355,13 @@ class SceneEditor(QObject):
             self.ui.lblType3.setText('Decision:')
             self.ui.textEvent3.setPlaceholderText('Decision in the end')
             self.ui.btnAddConflict.setText('Add cause')
+
+            item = self.ui.hLayoutGoal.itemAt(1)
+            if item and isinstance(item.widget(), SceneGoalsWidget):
+                self.ui.hLayoutGoal.removeItem(item)
+                self.ui.hLayoutOutcome.insertWidget(1, item.widget())
+                item.widget().btnEdit.setText('Add new goal')
+
         else:
             self.ui.lblType1.setText('Beginning:')
             self.ui.textEvent1.setPlaceholderText('Beginning event of the scene')
