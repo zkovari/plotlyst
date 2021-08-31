@@ -24,6 +24,7 @@ from typing import Any, List, Optional
 import emoji
 from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QApplication
 from anytree import Node
 from overrides import overrides
 
@@ -246,7 +247,7 @@ class _SceneBuilderTreeModel(TreeItemModel):
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if role == Qt.FontRole:
-            return emoji_font(12)
+            return emoji_font(QApplication.font().pointSize())
         if role == self.NodeRole:
             return super(_SceneBuilderTreeModel, self).data(index, role)
         node = index.internalPointer()
@@ -259,10 +260,6 @@ class _SceneBuilderTreeModel(TreeItemModel):
         if column == 0:
             if role == Qt.DisplayRole:
                 return f'{node.emoji}{node.name}'
-            # if role == Qt.SizeHintRole:
-            #     rows = int(len(node.name) / 35)
-            #     height = 20 + 20 * rows
-            #     return QSize(150, height)
             if role == Qt.DecorationRole:
                 if node.character:
                     if isinstance(node.character, NpcCharacter):

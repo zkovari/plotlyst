@@ -17,12 +17,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt5.QtCore import QModelIndex, QTimer
+from typing import Optional
+
+from PyQt5.QtCore import QModelIndex
+from PyQt5.QtWidgets import QHeaderView
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesNotesTableModel
+from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 
@@ -33,35 +37,31 @@ class NotesView(AbstractNovelView):
         super().__init__(novel, [SceneChangedEvent, SceneDeletedEvent])
         self.ui = Ui_NotesView()
         self.ui.setupUi(self.widget)
+        self._current_doc: Optional[Document] = None
 
-        self.scenes_model = ScenesNotesTableModel(self.novel)
-        self.ui.lstScenes.setModel(self.scenes_model)
-        self.ui.lstScenes.setModelColumn(ScenesTableModel.ColTitle)
-        self.ui.lstScenes.clicked.connect(self._on_scene_selected)
+        self.model = DocumentsTreeModel(self.novel)
+        self.ui.treeDocuments.setModel(self.model)
+        self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeDocuments.setColumnWidth(1, 20)
+        self.ui.treeDocuments.clicked.connect(self._doc_clicked)
 
-        self._scene = None
-        self._save_timer = QTimer()
-        self._save_timer.setInterval(500)
-        self._first_update: bool = True
-        self.ui.textNotes.textChanged.connect(lambda: self._save_timer.start())
-        self._save_timer.timeout.connect(self._save)
+        self.ui.textDocument.textChanged.connect(self._save)
+        self.ui.textDocument.setHidden(True)
 
     @overrides
     def refresh(self):
-        self.scenes_model.modelReset.emit()
+        pass
 
-    def _on_scene_selected(self, index: QModelIndex):
-        self._scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
-        self._first_update = True
-        self.ui.textNotes.setPlainText(self._scene.notes)
+    def _doc_clicked(self, index: QModelIndex):
+        if index.column() == 0:
+            self.ui.textDocument.setVisible(True)
+            node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
+            self._current_doc = node.document
+            if not node.document.content_loaded:
+                json_client.load_document(self.novel, self._current_doc)
+            self.ui.textDocument.setHtml(self._current_doc.content)
 
     def _save(self):
-        if self._first_update:
-            self._first_update = False
-        self._save_timer.stop()
-        if not self._scene:
-            return
-        self._scene.notes = self.ui.textNotes.toPlainText()
-        self.repo.update_scene(self._scene)
-        self.scenes_model.dataChanged.emit(self.ui.lstScenes.selectedIndexes()[0],
-                                           self.ui.lstScenes.selectedIndexes()[0])
+        if self._current_doc:
+            self._current_doc.content = self.ui.textDocument.toHtml()
+            json_client.save_document(self.novel, self._current_doc)
