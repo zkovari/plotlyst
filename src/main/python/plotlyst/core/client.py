@@ -473,7 +473,6 @@ class JsonClient:
             f.write(self.project.to_json())
 
     def _persist_novel(self, novel: Novel):
-        print(novel.scene_goals)
         novel_info = NovelInfo(id=novel.id, scenes=[x.id for x in novel.scenes],
                                dramatic_questions=[DramaticQuestion(text=x.text, id=x.id, color_hexa=x.color_hexa) for x
                                                    in
@@ -496,7 +495,6 @@ class JsonClient:
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
-        print(scene.goals)
         dramatic_questions = [x.id for x in scene.dramatic_questions]
         characters = [x.id for x in scene.characters]
         arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]

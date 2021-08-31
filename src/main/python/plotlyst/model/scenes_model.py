@@ -487,9 +487,9 @@ class SceneConflictsTableModel(QAbstractTableModel):
 class SceneGoalsModel(SelectionItemsModel):
 
     def __init__(self, novel: Novel, scene: Scene):
-        super(SceneGoalsModel, self).__init__()
         self.novel = novel
         self.scene = scene
+        super(SceneGoalsModel, self).__init__()
         self.repo = RepositoryPersistenceManager.instance()
 
     def setScene(self, scene: Scene):

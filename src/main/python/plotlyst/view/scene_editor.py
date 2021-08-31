@@ -198,10 +198,13 @@ class SceneEditor(QObject):
                 self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
 
-        if self.goalEditor:
-            self.goalEditor.setScene(self.scene)
-        else:
-            self.goalEditor = SceneGoalsWidget(self.novel, self.scene)
+        item = self.ui.hLayoutGoal.itemAt(1)
+        if item and isinstance(item.widget(), SceneGoalsWidget):
+            self.ui.hLayoutGoal.removeItem(item)
+            item.widget().deleteLater()
+
+        goalEditor = SceneGoalsWidget(self.novel, self.scene)
+        self.ui.hLayoutGoal.insertWidget(1, goalEditor)
 
         for char_arc in self.scene.arcs:
             if scene.pov and char_arc.character == scene.pov:
@@ -339,9 +342,6 @@ class SceneEditor(QObject):
             self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
             self._on_conflict_toggled(self.ui.cbConflict.isChecked())
             self.ui.btnAddConflict.setText('Add conflict')
-
-            if self.ui.hLayoutGoal.itemAt(1).widget() is not self.ui.hLayoutGoal:
-                self.ui.hLayoutGoal.insertWidget(1, self.goalEditor)
 
             return
         elif text == REACTION_SCENE:

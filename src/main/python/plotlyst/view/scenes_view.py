@@ -138,7 +138,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
-        self.ui.btnNew.clicked.connect(self._on_new)
+        self.ui.btnNew.clicked.connect(self._new_scene)
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
@@ -189,7 +189,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.btnNew.setMenu(None)
         else:
             menu = QMenu(self.ui.btnNew)
-            menu.addAction(IconRegistry.scene_icon(), 'Add Scene', self._on_new)
+            menu.addAction(IconRegistry.scene_icon(), 'Add Scene', self._new_scene)
             menu.addAction(IconRegistry.chapter_icon(), 'Add Chapter', self._new_chapter)
             self.ui.btnNew.setMenu(menu)
 
@@ -225,7 +225,7 @@ class ScenesOutlineView(AbstractNovelView):
         emit_event(SceneChangedEvent(self))
         self.refresh()
 
-    def _on_new(self):
+    def _new_scene(self):
         self.editor = SceneEditor(self.novel)
         self._switch_to_editor()
 

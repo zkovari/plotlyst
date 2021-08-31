@@ -672,6 +672,10 @@ class Novel(NovelDescriptor):
         self.stages.extend(updated_novel.stages)
         self.character_profiles.clear()
         self.character_profiles.extend(updated_novel.character_profiles)
+        self.conflicts.clear()
+        self.conflicts.extend(updated_novel.conflicts)
+        self.scene_goals.clear()
+        self.scene_goals.extend(updated_novel.scene_goals)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
