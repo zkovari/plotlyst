@@ -209,9 +209,6 @@ class SceneEditor(QObject):
 
         goalEditor = SceneGoalsWidget(self.novel, self.scene)
         self.ui.hLayoutGoal.insertWidget(1, goalEditor)
-        newDecisionGoalEditor = SceneGoalsWidget(self.novel, self.scene)
-        newDecisionGoalEditor.btnEdit.setText('Add new goal')
-        self.ui.hLayoutOutcome.insertWidget(1, newDecisionGoalEditor)
 
         for char_arc in self.scene.arcs:
             if scene.pov and char_arc.character == scene.pov:
@@ -343,13 +340,9 @@ class SceneEditor(QObject):
 
             item = self.ui.hLayoutOutcome.itemAt(1)
             if item and isinstance(item.widget(), SceneGoalsWidget):
-                item.widget().setHidden(True)
-            item = self.ui.hLayoutGoal.itemAt(1)
-            if item and isinstance(item.widget(), SceneGoalsWidget):
-                item.widget().setVisible(True)
-                # self.ui.hLayoutOutcome.removeItem(item)
-                # self.ui.hLayoutGoal.insertWidget(1, item.widget())
-                # item.widget().btnEdit.setText('Add goal')
+                self.ui.hLayoutOutcome.removeItem(item)
+                self.ui.hLayoutGoal.insertWidget(1, item.widget())
+                item.widget().btnEdit.setText('Add goal')
 
             return
         elif text == REACTION_SCENE:
@@ -363,18 +356,12 @@ class SceneEditor(QObject):
             self.ui.textEvent3.setPlaceholderText('Decision in the end')
             self.ui.btnAddConflict.setText('Add cause')
 
-            # item = self.ui.hLayoutGoal.itemAt(1)
-            # if item and isinstance(item.widget(), SceneGoalsWidget):
-            #     print('move to outcome')
-            #     self.ui.hLayoutGoal.removeItem(item)
-            #     self.ui.hLayoutOutcome.insertWidget(1, item.widget())
-            #     item.widget().btnEdit.setText('Add new goal')
             item = self.ui.hLayoutGoal.itemAt(1)
             if item and isinstance(item.widget(), SceneGoalsWidget):
-                item.widget().setHidden(True)
-            item = self.ui.hLayoutOutcome.itemAt(1)
-            if item and isinstance(item.widget(), SceneGoalsWidget):
-                item.widget().setVisible(True)
+                print('move to outcome')
+                self.ui.hLayoutGoal.removeItem(item)
+                self.ui.hLayoutOutcome.insertWidget(1, item.widget())
+                item.widget().btnEdit.setText('Add new goal')
 
         else:
             self.ui.lblType1.setText('Beginning:')
