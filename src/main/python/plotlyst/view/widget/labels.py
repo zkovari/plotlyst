@@ -190,12 +190,15 @@ class SelectionItemLabel(Label):
 
 
 class LabelsEditorWidget(QFrame):
-    def __init__(self, parent=None):
+    def __init__(self, alignment=Qt.Horizontal, parent=None):
         super(LabelsEditorWidget, self).__init__(parent)
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Box)
         self.setStyleSheet('LabelsEditorWidget {background: white;}')
-        self.setLayout(QVBoxLayout())
+        if alignment:
+            self.setLayout(QHBoxLayout())
+        else:
+            self.setLayout(QVBoxLayout())
         self.layout().setSpacing(2)
         self.layout().setContentsMargins(1, 1, 1, 1)
         self._labels_index = {}

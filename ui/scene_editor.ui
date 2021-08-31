@@ -1142,7 +1142,7 @@ QToolButton:disabled {
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <layout class="QHBoxLayout" name="hLayoutOutcome">
                 <item>
                  <widget class="QLabel" name="lblType3">
                   <property name="text">

@@ -202,9 +202,16 @@ class SceneEditor(QObject):
         if item and isinstance(item.widget(), SceneGoalsWidget):
             self.ui.hLayoutGoal.removeItem(item)
             item.widget().deleteLater()
+        item = self.ui.hLayoutOutcome.itemAt(1)
+        if item and isinstance(item.widget(), SceneGoalsWidget):
+            self.ui.hLayoutOutcome.removeItem(item)
+            item.widget().deleteLater()
 
         goalEditor = SceneGoalsWidget(self.novel, self.scene)
         self.ui.hLayoutGoal.insertWidget(1, goalEditor)
+        newDecisionGoalEditor = SceneGoalsWidget(self.novel, self.scene)
+        newDecisionGoalEditor.btnEdit.setText('Add new goal')
+        self.ui.hLayoutOutcome.insertWidget(1, newDecisionGoalEditor)
 
         for char_arc in self.scene.arcs:
             if scene.pov and char_arc.character == scene.pov:
@@ -265,15 +272,6 @@ class SceneEditor(QObject):
         self._characters_proxy_model.setSourceModel(self._characters_model)
         self.tblCharacters.setModel(self._characters_proxy_model)
         self._character_changed()
-
-        # action = QWidgetAction(self.ui.btnAddGoal)
-        # editor = ItemsEditorWidget()
-        # # editor.setModel()
-        # action.setDefaultWidget(editor)
-        # menu = QMenu(self.ui.btnAddGoal)
-        # menu.addAction(action)
-        # self.ui.btnAddGoal.setMenu(menu)
-        self._goals_changed()
 
         action = QWidgetAction(self.ui.btnAddConflict)
         self._character_conflict_widget = CharacterConflictWidget(self.novel, self.scene)
@@ -343,6 +341,16 @@ class SceneEditor(QObject):
             self._on_conflict_toggled(self.ui.cbConflict.isChecked())
             self.ui.btnAddConflict.setText('Add conflict')
 
+            item = self.ui.hLayoutOutcome.itemAt(1)
+            if item and isinstance(item.widget(), SceneGoalsWidget):
+                item.widget().setHidden(True)
+            item = self.ui.hLayoutGoal.itemAt(1)
+            if item and isinstance(item.widget(), SceneGoalsWidget):
+                item.widget().setVisible(True)
+                # self.ui.hLayoutOutcome.removeItem(item)
+                # self.ui.hLayoutGoal.insertWidget(1, item.widget())
+                # item.widget().btnEdit.setText('Add goal')
+
             return
         elif text == REACTION_SCENE:
             self.ui.btnDisaster.setHidden(True)
@@ -354,6 +362,20 @@ class SceneEditor(QObject):
             self.ui.lblType3.setText('Decision:')
             self.ui.textEvent3.setPlaceholderText('Decision in the end')
             self.ui.btnAddConflict.setText('Add cause')
+
+            # item = self.ui.hLayoutGoal.itemAt(1)
+            # if item and isinstance(item.widget(), SceneGoalsWidget):
+            #     print('move to outcome')
+            #     self.ui.hLayoutGoal.removeItem(item)
+            #     self.ui.hLayoutOutcome.insertWidget(1, item.widget())
+            #     item.widget().btnEdit.setText('Add new goal')
+            item = self.ui.hLayoutGoal.itemAt(1)
+            if item and isinstance(item.widget(), SceneGoalsWidget):
+                item.widget().setHidden(True)
+            item = self.ui.hLayoutOutcome.itemAt(1)
+            if item and isinstance(item.widget(), SceneGoalsWidget):
+                item.widget().setVisible(True)
+
         else:
             self.ui.lblType1.setText('Beginning:')
             self.ui.textEvent1.setPlaceholderText('Beginning event of the scene')
@@ -503,10 +525,6 @@ class SceneEditor(QObject):
         else:
             self.repo.update_scene(self.scene)
         self._new_scene = False
-
-    def _goals_changed(self):
-        pass
-        # self.ui.wdgGoals.clear()
 
     def _conflicts_changed(self):
         self.ui.wdgConflicts.clear()

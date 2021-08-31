@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Set
 
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QSizePolicy
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal
@@ -33,7 +35,8 @@ class SceneGoalsWidget(LabelsEditorWidget):
     def __init__(self, novel: Novel, scene: Scene, parent=None):
         self.novel = novel
         self.scene = scene
-        super(SceneGoalsWidget, self).__init__(parent)
+        super(SceneGoalsWidget, self).__init__(Qt.Vertical, parent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
         self.setValue([x.text for x in self.scene.goals])
         self.btnEdit.setIcon(IconRegistry.goal_icon())
         self.btnEdit.setText('Add goal')
