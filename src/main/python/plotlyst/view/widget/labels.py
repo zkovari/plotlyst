@@ -24,7 +24,7 @@ from typing import Union, List, Set
 from PyQt5.QtCore import QSize, QModelIndex, Qt
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, QVBoxLayout, QMenu, QWidgetAction, \
-    QSizePolicy
+    QSizePolicy, QPushButton
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem
@@ -194,16 +194,17 @@ class LabelsEditorWidget(QFrame):
         super(LabelsEditorWidget, self).__init__(parent)
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Box)
-        self.setStyleSheet('LabelsSelectionWidget {background: white;}')
+        self.setStyleSheet('LabelsEditorWidget {background: white;}')
         self.setLayout(QVBoxLayout())
         self.layout().setSpacing(2)
         self.layout().setContentsMargins(1, 1, 1, 1)
         self._labels_index = {}
-        for item in self.items():
-            self._labels_index[item.text] = item
+        self.reset()
 
-        self._btnEdit = QToolButton()
-        self._btnEdit.setIcon(IconRegistry.plus_edit_icon())
+        self.btnEdit = QPushButton()
+        self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
+        self.btnEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        self.btnEdit.setStyleSheet('QPushButton::menu-indicator{width:0px;}')
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
@@ -211,18 +212,22 @@ class LabelsEditorWidget(QFrame):
         self._popup = self._initPopupWidget()
         self._model.selection_changed.connect(self._selectionChanged)
 
-        menu = QMenu(self._btnEdit)
+        menu = QMenu(self.btnEdit)
         action = QWidgetAction(menu)
         action.setDefaultWidget(self._popup)
         menu.addAction(action)
-        self._btnEdit.setMenu(menu)
-        self._btnEdit.setPopupMode(QToolButton.InstantPopup)
-        self.layout().addWidget(self._btnEdit)
+        self.btnEdit.setMenu(menu)
+        self.layout().addWidget(self.btnEdit)
 
         self._wdgLabels = LabelsWidget()
         self._wdgLabels.setStyleSheet('LabelsWidget {border: 1px solid black;}')
         self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.layout().addWidget(self._wdgLabels)
+
+    def reset(self):
+        self._labels_index.clear()
+        for item in self.items():
+            self._labels_index[item.text] = item
 
     @abstractmethod
     def _initModel(self) -> SelectionItemsModel:

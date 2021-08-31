@@ -138,25 +138,26 @@ class SelectionItemsModel(QAbstractTableModel):
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+        item: SelectionItem = self.item(index)
         if role == Qt.EditRole:
-            was_checked = self.item(index) in self._checked
+            was_checked = item in self._checked
             if was_checked:
                 self._checked.remove(self._field.selections[index.row()])
-            self._field.selections[index.row()].text = value
+            item.text = value
             if was_checked:
                 self._checked.add(self._field.selections[index.row()])
             self.item_edited.emit()
             return True
         if role == Qt.DecorationRole:
-            self._field.selections[index.row()].icon = value[0]
-            self._field.selections[index.row()].icon_color = value[1]
+            item.icon = value[0]
+            item.icon_color = value[1]
             self.item_edited.emit()
             return True
         if role == Qt.CheckStateRole:
             if value == Qt.Checked:
-                self._checked.add(self._field.selections[index.row()])
+                self._checked.add(item)
             elif value == Qt.Unchecked:
-                self._checked.remove(self._field.selections[index.row()])
+                self._checked.remove(item)
             self.selection_changed.emit()
             return True
         return False

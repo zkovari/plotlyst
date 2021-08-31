@@ -28,8 +28,8 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, Character, \
-    ConflictType
-from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
+    ConflictType, SelectionItem, SceneGoal
+from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -482,3 +482,47 @@ class SceneConflictsTableModel(QAbstractTableModel):
             return True
         else:
             return super().setData(index, value, role)
+
+
+class SceneGoalsModel(SelectionItemsModel):
+
+    def __init__(self, novel: Novel, scene: Scene):
+        super(SceneGoalsModel, self).__init__()
+        self.novel = novel
+        self.scene = scene
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def setScene(self, scene: Scene):
+        self.scene = scene
+        self._checked.clear()
+
+    @overrides
+    def item(self, index: QModelIndex) -> SelectionItem:
+        return self.novel.scene_goals[index.row()]
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return len(self.novel.scene_goals)
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = None) -> int:
+        return 2
+
+    @overrides
+    def add(self):
+        super(SceneGoalsModel, self).add()
+        self.novel.scene_goals.append(SceneGoal('New scene goal'))
+        self.repo.update_novel(self.novel)
+
+    @overrides
+    def remove(self, index: QModelIndex):
+        super(SceneGoalsModel, self).remove(index)
+        self.novel.scene_goals.pop(index.row())
+        self.repo.update_novel(self.novel)
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+        updated = super(SceneGoalsModel, self).setData(index, value, role)
+        if updated and role != Qt.CheckStateRole:
+            self.repo.update_novel(self.novel)
+        return updated

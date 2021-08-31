@@ -43,6 +43,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel, ConflictLabel
+from src.main.python.plotlyst.view.widget.scenes import SceneGoalsWidget
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -56,6 +57,9 @@ class SceneEditor(QObject):
         self.ui.setupUi(self.widget)
         self.novel = novel
         self.scene: Optional[Scene] = None
+
+        self.goalEditor: Optional[SceneGoalsWidget] = None
+
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
         else:
@@ -194,6 +198,11 @@ class SceneEditor(QObject):
                 self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
 
+        if self.goalEditor:
+            self.goalEditor.setScene(self.scene)
+        else:
+            self.goalEditor = SceneGoalsWidget(self.novel, self.scene)
+
         for char_arc in self.scene.arcs:
             if scene.pov and char_arc.character == scene.pov:
                 if char_arc.arc == VERY_UNHAPPY:
@@ -253,6 +262,15 @@ class SceneEditor(QObject):
         self._characters_proxy_model.setSourceModel(self._characters_model)
         self.tblCharacters.setModel(self._characters_proxy_model)
         self._character_changed()
+
+        # action = QWidgetAction(self.ui.btnAddGoal)
+        # editor = ItemsEditorWidget()
+        # # editor.setModel()
+        # action.setDefaultWidget(editor)
+        # menu = QMenu(self.ui.btnAddGoal)
+        # menu.addAction(action)
+        # self.ui.btnAddGoal.setMenu(menu)
+        self._goals_changed()
 
         action = QWidgetAction(self.ui.btnAddConflict)
         self._character_conflict_widget = CharacterConflictWidget(self.novel, self.scene)
@@ -321,6 +339,9 @@ class SceneEditor(QObject):
             self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
             self._on_conflict_toggled(self.ui.cbConflict.isChecked())
             self.ui.btnAddConflict.setText('Add conflict')
+
+            if self.ui.hLayoutGoal.itemAt(1).widget() is not self.ui.hLayoutGoal:
+                self.ui.hLayoutGoal.insertWidget(1, self.goalEditor)
 
             return
         elif text == REACTION_SCENE:
@@ -482,6 +503,10 @@ class SceneEditor(QObject):
         else:
             self.repo.update_scene(self.scene)
         self._new_scene = False
+
+    def _goals_changed(self):
+        pass
+        # self.ui.wdgGoals.clear()
 
     def _conflicts_changed(self):
         self.ui.wdgConflicts.clear()

@@ -38,6 +38,7 @@ from src.main.python.plotlyst.view.generated.character_backstory_card_ui import 
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class CharactersScenesDistributionWidget(QWidget):
@@ -148,6 +149,8 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.scene = scene
         self.setupUi(self)
         self.setMaximumWidth(270)
+
+        self.repo = RepositoryPersistenceManager.instance()
 
         self.btnCharacter.setIcon(IconRegistry.conflict_character_icon())
         self.btnSociety.setIcon(IconRegistry.conflict_society_icon())
