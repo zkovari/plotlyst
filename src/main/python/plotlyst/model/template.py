@@ -44,7 +44,9 @@ class TemplateFieldSelectionModel(SelectionItemsModel):
     @overrides
     def add(self):
         super(TemplateFieldSelectionModel, self).add()
-        self._field.selections.append(SelectionItem('New'))
+        self._field.selections.append(SelectionItem(''))
+
+        return self.rowCount() - 1
 
     @overrides
     def remove(self, index: QModelIndex):

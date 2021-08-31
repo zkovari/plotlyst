@@ -142,10 +142,10 @@ class SelectionItemsModel(QAbstractTableModel):
         if role == Qt.EditRole:
             was_checked = item in self._checked
             if was_checked:
-                self._checked.remove(self._field.selections[index.row()])
+                self._checked.remove(item)
             item.text = value
             if was_checked:
-                self._checked.add(self._field.selections[index.row()])
+                self._checked.add(item)
             self.item_edited.emit()
             return True
         if role == Qt.DecorationRole:

@@ -47,12 +47,6 @@ class SceneGoalsWidget(LabelsEditorWidget):
     def items(self) -> List[SelectionItem]:
         return self.novel.scene_goals
 
-    def setScene(self, scene: Scene):
-        self.scene = scene
-        self.reset()
-        self._model.setScene(scene)
-        self.setValue([x.text for x in self.scene.goals])
-
     @overrides
     def _addItems(self, items: Set[SceneGoal]):
         super(SceneGoalsWidget, self)._addItems(items)

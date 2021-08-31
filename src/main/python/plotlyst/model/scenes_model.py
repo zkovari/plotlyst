@@ -492,10 +492,6 @@ class SceneGoalsModel(SelectionItemsModel):
         super(SceneGoalsModel, self).__init__()
         self.repo = RepositoryPersistenceManager.instance()
 
-    def setScene(self, scene: Scene):
-        self.scene = scene
-        self._checked.clear()
-
     @overrides
     def item(self, index: QModelIndex) -> SelectionItem:
         return self.novel.scene_goals[index.row()]
@@ -509,10 +505,16 @@ class SceneGoalsModel(SelectionItemsModel):
         return 2
 
     @overrides
-    def add(self):
+    def add(self) -> int:
         super(SceneGoalsModel, self).add()
-        self.novel.scene_goals.append(SceneGoal('New scene goal'))
+        goal = SceneGoal('')
+        index = 0
+        self.novel.scene_goals.insert(index, goal)
+        self._checked.add(goal)
+        self.selection_changed.emit()
         self.repo.update_novel(self.novel)
+
+        return index
 
     @overrides
     def remove(self, index: QModelIndex):
