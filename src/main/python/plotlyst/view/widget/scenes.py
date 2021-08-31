@@ -27,7 +27,7 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel
 
 
 class SceneGoalsWidget(LabelsEditorWidget):
@@ -52,6 +52,7 @@ class SceneGoalsWidget(LabelsEditorWidget):
 
     @overrides
     def _addItems(self, items: Set[SceneGoal]):
-        super(SceneGoalsWidget, self)._addItems(items)
+        for item in items:
+            self._wdgLabels.addLabel(GoalLabel(item))
         self.scene.goals.clear()
         self.scene.goals.extend(items)

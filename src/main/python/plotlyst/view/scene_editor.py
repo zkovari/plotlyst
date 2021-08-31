@@ -358,7 +358,6 @@ class SceneEditor(QObject):
 
             item = self.ui.hLayoutGoal.itemAt(1)
             if item and isinstance(item.widget(), SceneGoalsWidget):
-                print('move to outcome')
                 self.ui.hLayoutGoal.removeItem(item)
                 self.ui.hLayoutOutcome.insertWidget(1, item.widget())
                 item.widget().btnEdit.setText('Add new goal')

@@ -25,6 +25,7 @@ from PyQt5.QtCore import QSize, QModelIndex, Qt
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, QVBoxLayout, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
+from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem
@@ -182,11 +183,28 @@ class SelectionItemLabel(Label):
         self.lblText = QLabel(self.item.text)
         self.layout().addWidget(self.lblText)
 
-        self.setStyleSheet('''
-                        SelectionItemLabel {
-                            border: 2px solid #2e5266;
-                            border-radius: 8px; padding-left: 3px; padding-right: 3px;}
+        self.setStyleSheet(f'''
+                        SelectionItemLabel {{
+                            border: 2px solid {self._borderColor()};
+                            border-radius: 8px; padding-left: 3px; padding-right: 3px;}}
                         ''')
+
+    def _borderColor(self) -> str:
+        return '#2e5266'
+
+
+class GoalLabel(SelectionItemLabel):
+    def __init__(self, item: SelectionItem, parent=None):
+        super(GoalLabel, self).__init__(item, parent)
+        self.item = item
+
+        self.lblGoal = QLabel()
+        self.lblGoal.setPixmap(IconRegistry.goal_icon().pixmap(QSize(24, 24)))
+        self.layout().insertWidget(0, self.lblGoal)
+
+    @overrides
+    def _borderColor(self):
+        return 'darkBlue'
 
 
 class LabelsEditorWidget(QFrame):
