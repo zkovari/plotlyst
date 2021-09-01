@@ -37,9 +37,12 @@
     </widget>
    </item>
    <item>
-    <widget class="QTextEdit" name="textDocument">
-     <property name="placeholderText">
-      <string>Scene notes</string>
+    <widget class="RichTextEditor" name="editor">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
@@ -50,6 +53,12 @@
    <class>ActionBasedTreeView</class>
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.tree_view</header>
+  </customwidget>
+  <customwidget>
+   <class>RichTextEditor</class>
+   <extends>QFrame</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

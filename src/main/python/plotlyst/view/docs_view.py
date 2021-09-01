@@ -31,7 +31,7 @@ from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 
 
-class NotesView(AbstractNovelView):
+class DocumentsView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
         super().__init__(novel, [SceneChangedEvent, SceneDeletedEvent])
@@ -45,8 +45,8 @@ class NotesView(AbstractNovelView):
         self.ui.treeDocuments.setColumnWidth(1, 20)
         self.ui.treeDocuments.clicked.connect(self._doc_clicked)
 
-        self.ui.textDocument.textChanged.connect(self._save)
-        self.ui.textDocument.setHidden(True)
+        self.ui.editor.textEditor.textChanged.connect(self._save)
+        self.ui.editor.setHidden(True)
 
     @overrides
     def refresh(self):
@@ -54,14 +54,15 @@ class NotesView(AbstractNovelView):
 
     def _doc_clicked(self, index: QModelIndex):
         if index.column() == 0:
-            self.ui.textDocument.setVisible(True)
+            self.ui.editor.setVisible(True)
             node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
             self._current_doc = node.document
             if not node.document.content_loaded:
                 json_client.load_document(self.novel, self._current_doc)
-            self.ui.textDocument.setHtml(self._current_doc.content)
+            self.ui.editor.textEditor.setHtml(self._current_doc.content)
+            self.ui.editor.textEditor.setFocus()
 
     def _save(self):
         if self._current_doc:
-            self._current_doc.content = self.ui.textDocument.toHtml()
+            self._current_doc.content = self.ui.editor.textEditor.toHtml()
             json_client.save_document(self.novel, self._current_doc)

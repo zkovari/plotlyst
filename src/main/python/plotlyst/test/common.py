@@ -25,9 +25,9 @@ from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction, QMessa
 
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.dialog.new_novel import NovelEditionDialog
+from src.main.python.plotlyst.view.docs_view import DocumentsView
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
-from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
@@ -144,7 +144,7 @@ def go_to_timeline(window: MainWindow) -> TimelineView:
     return window.timeline_view
 
 
-def go_to_notes(window: MainWindow) -> NotesView:
+def go_to_docs(window: MainWindow) -> DocumentsView:
     window.btnNotes.setChecked(True)
     return window.notes_view
 

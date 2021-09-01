@@ -6,7 +6,7 @@ from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QMessageBox, QAction, QSpinBox
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel, ScenesNotesTableModel
+from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesStageTableModel
 from src.main.python.plotlyst.test.common import create_character, start_new_scene_editor, assert_data, go_to_scenes, \
     click_on_item, popup_actions_on_item, trigger_popup_action_on_item, patch_confirmed, edit_item
 from src.main.python.plotlyst.view.comments_view import CommentWidget
@@ -166,11 +166,11 @@ def test_timeline_display(qtbot, filled_window: MainWindow):
 
     assert view.ui.pageTimeline.isVisible()
     view.timeline_view.timeline_widget.grab().toImage()
-    assert_data(view.timeline_view.model, 'Scene 1', 0, ScenesNotesTableModel.ColTitle)
-    assert_data(view.timeline_view.model, 'Scene 2', 1, ScenesNotesTableModel.ColTitle)
+    assert_data(view.timeline_view.model, 'Scene 1', 0, ScenesTableModel.ColTitle)
+    assert_data(view.timeline_view.model, 'Scene 2', 1, ScenesTableModel.ColTitle)
 
-    assert_data(view.timeline_view.model, 1, 0, ScenesNotesTableModel.ColTime)
-    assert_data(view.timeline_view.model, 2, 1, ScenesNotesTableModel.ColTime)
+    assert_data(view.timeline_view.model, 1, 0, ScenesTableModel.ColTime)
+    assert_data(view.timeline_view.model, 2, 1, ScenesTableModel.ColTime)
 
     # mimic drawing curves
     filled_window.setWindowState(Qt.WindowNoState)
