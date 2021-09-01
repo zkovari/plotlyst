@@ -647,6 +647,24 @@ def default_character_profiles() -> List[ProfileTemplate]:
 
 
 @dataclass
+class Document:
+    title: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    content: str = ''
+    emoji: str = ''
+    content_loaded: bool = False
+    children: List['Document'] = field(default_factory=list)
+
+
+def default_documents() -> List[Document]:
+    return [Document('Story structure', id=uuid.UUID('ec2a62d9-fc00-41dd-8a6c-b121156b6cf4')),
+            Document('Characters', id=uuid.UUID('8fa16650-bed0-489b-baa1-d239e5198d47')),
+            Document('Scenes', id=uuid.UUID('75a552f4-037d-4179-860f-dd8400a7545b')),
+            Document('Worldbuilding', id=uuid.UUID('5faf7c16-f970-465d-bbcb-1bad56f3313c')),
+            Document('Brainstorming', id=uuid.UUID('f6df3a87-7054-40d6-a4b0-ad9917003136'))]
+
+
+@dataclass
 class Novel(NovelDescriptor):
     story_structure: StoryStructure = default_story_structures[0]
     characters: List[Character] = field(default_factory=list)
@@ -657,6 +675,7 @@ class Novel(NovelDescriptor):
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
+    documents: List[Document] = field(default_factory=default_documents)
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title

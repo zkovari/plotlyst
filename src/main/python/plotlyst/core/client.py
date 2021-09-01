@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import codecs
 import json
 import os
 import pathlib
@@ -33,7 +34,7 @@ from dataclasses_json import dataclass_json, Undefined
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal
+    DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
@@ -208,6 +209,7 @@ class JsonClient:
         self.scenes_dir: Optional[pathlib.Path] = None
         self.characters_dir: Optional[pathlib.Path] = None
         self.images_dir: Optional[pathlib.Path] = None
+        self.docs_dir: Optional[pathlib.Path] = None
 
     def init(self, workspace: str):
         self.project_file_path = os.path.join(workspace, 'project.plotlyst')
@@ -229,6 +231,7 @@ class JsonClient:
         self.scenes_dir = self.root_path.joinpath('scenes')
         self.characters_dir = self.root_path.joinpath('characters')
         self.images_dir = self.root_path.joinpath('images')
+        self.docs_dir = self.root_path.joinpath('docs')
 
         if not os.path.exists(str(self.novels_dir)):
             os.mkdir(self.novels_dir)
@@ -238,6 +241,8 @@ class JsonClient:
             os.mkdir(self.characters_dir)
         if not os.path.exists(str(self.images_dir)):
             os.mkdir(self.images_dir)
+        if not os.path.exists(str(self.docs_dir)):
+            os.mkdir(self.docs_dir)
 
     def novels(self) -> List[NovelDescriptor]:
         return [NovelDescriptor(title=x.title, id=x.id) for x in self.project.novels]
@@ -314,6 +319,17 @@ class JsonClient:
             if info.id == id:
                 return info
         raise ValueError(f'Could not find novel with id {id}')
+
+    def load_document(self, novel: Novel, document: Document):
+        if document.content_loaded:
+            return
+
+        content = self.__load_doc(novel, document.id)
+        document.content = content
+        document.content_loaded = True
+
+    def save_document(self, novel: Novel, document: Document):
+        self.__persist_doc(novel, document)
 
     def fetch_novel(self, id: uuid.UUID) -> Novel:
         project_novel_info: ProjectNovelInfo = self._find_project_novel_info_or_fail(id)
@@ -548,6 +564,9 @@ class JsonClient:
     def __image_file(self, uuid: uuid.UUID) -> str:
         return f'{uuid}.jpeg'
 
+    def __doc_file(self, uuid: uuid.UUID) -> str:
+        return f'{uuid}.html'
+
     def _load_image(self, filename) -> Optional[Any]:
         path = self.images_dir.joinpath(filename)
         if not os.path.exists(path):
@@ -562,6 +581,23 @@ class JsonClient:
         buffer.open(QIODevice.WriteOnly)
         image.save(buffer, 'PNG')
         return array
+
+    def __load_doc(self, novel: Novel, doc_uuid: uuid.UUID) -> str:
+        novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
+        path = novel_doc_dir.joinpath(self.__doc_file(doc_uuid))
+        if not os.path.exists(path):
+            return ''
+        with codecs.open(str(path), "r", "utf-8") as doc_file:
+            return doc_file.read()
+
+    def __persist_doc(self, novel: Novel, doc: Document, ):
+        novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
+        if not os.path.exists(str(novel_doc_dir)):
+            os.mkdir(novel_doc_dir)
+
+        doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
+        with atomic_write(doc_file_path, overwrite=True) as f:
+            f.write(doc.content)
 
     def __persist_info(self, dir, info: Any):
         with atomic_write(dir.joinpath(self.__json_file(info.id)), overwrite=True) as f:

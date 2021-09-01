@@ -38,10 +38,10 @@ from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
+from src.main.python.plotlyst.view.docs_view import DocumentsView
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.notes_view import NotesView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
@@ -140,7 +140,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
 
-        self.notes_view = NotesView(self.novel)
+        self.notes_view = DocumentsView(self.novel)
         self.reports_view = ReportsView(self.novel)
 
         self.btnNovel.setIcon(IconRegistry.book_icon())

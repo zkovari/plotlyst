@@ -330,20 +330,6 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
         return filtered
 
 
-class ScenesNotesTableModel(ScenesTableModel):
-
-    def __init__(self, novel: Novel):
-        super(ScenesNotesTableModel, self).__init__(novel)
-        self._note_icon = IconRegistry.notes_icon()
-
-    @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if role == Qt.DecorationRole:
-            if self._data[index.row()].notes:
-                return self._note_icon
-        return super(ScenesNotesTableModel, self).data(index, role)
-
-
 class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
     ColTitle: int = 0
     ColNoneStage: int = 1
