@@ -35,6 +35,7 @@ from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout
 from src.main.python.plotlyst.view.widget.cards import NovelCard
+from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
 
 class HomeView(AbstractView):
@@ -73,6 +74,7 @@ class HomeView(AbstractView):
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnActivate.setDisabled(True)
         self.selected_card = None
+        flush_or_fail()
         for novel in client.novels():
             card = NovelCard(novel)
             self._layout.addWidget(card)
