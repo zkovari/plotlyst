@@ -17,9 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Any
+from typing import Any
 
-from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal
+from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSortFilterProxyModel
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView
 from overrides import overrides
@@ -37,15 +37,37 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         super(IconSelectorWidget, self).__init__(parent)
         self.setupUi(self)
 
-        fitlered_icons = []
-        for icons_list in icons_registry.values():
+        self.btnPeople.setIcon(IconRegistry.from_name('mdi.account', color_on='darkGreen'))
+        self.btnFood.setIcon(IconRegistry.from_name('fa5s.ice-cream', color_on='darkGreen'))
+        self.btnNature.setIcon(IconRegistry.from_name('mdi.nature', color_on='darkGreen'))
+        self.btnSports.setIcon(IconRegistry.from_name('fa5s.football-ball', color_on='darkGreen'))
+        self.btnObjects.setIcon(IconRegistry.from_name('fa5.lightbulb', color_on='darkGreen'))
+        self.btnPlaces.setIcon(IconRegistry.from_name('ei.globe', color_on='darkGreen'))
+        self.btnSymbols.setIcon(IconRegistry.from_name('mdi.symbol', color_on='darkGreen'))
+        self.btnAll.setChecked(True)
+
+        # qtawesome._instance()
+        # fontMaps = qtawesome._resource['iconic'].charmap
+        # for fontCollection, fontData in fontMaps.items():
+        #     if fontCollection != 'mdi':
+        #         continue
+        #     for iconName in fontData:
+        #         print(iconName)
+
+        filtered_icons = []
+        for type, icons_list in icons_registry.items():
             for icon in icons_list:
-                if icon != 'fa5s.':
-                    fitlered_icons.append(icon)
-        self.model = self._Model(fitlered_icons)
-        self.lstIcons.setModel(self.model)
+                if icon and icon != 'fa5s.' and icon != 'mdi.':
+                    filtered_icons.append(self._IconItem(type, icon))
+        self.model = self._Model(filtered_icons)
+        self._proxy = QSortFilterProxyModel()
+        self._proxy.setSourceModel(self.model)
+        self._proxy.setFilterRole(self._Model.IconTypeRole)
+        self.lstIcons.setModel(self._proxy)
         self.lstIcons.setViewMode(QListView.IconMode)
         self.lstIcons.clicked.connect(self._icon_clicked)
+
+        self.buttonGroup.buttonToggled.connect(self._filter_toggled)
 
         self._color: QColor = QColor('black')
         self._update_button_color()
@@ -63,15 +85,39 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
             self._color = color
             self._update_button_color()
 
+    def _filter_toggled(self):
+        if self.btnPeople.isChecked():
+            self._proxy.setFilterFixedString('People')
+        elif self.btnFood.isChecked():
+            self._proxy.setFilterFixedString('Food')
+        elif self.btnNature.isChecked():
+            self._proxy.setFilterFixedString('Animals & Nature')
+        elif self.btnSports.isChecked():
+            self._proxy.setFilterFixedString('Sports & Activities')
+        elif self.btnPlaces.isChecked():
+            self._proxy.setFilterFixedString('Travel & Places')
+        elif self.btnObjects.isChecked():
+            self._proxy.setFilterFixedString('Objects')
+        elif self.btnSymbols.isChecked():
+            self._proxy.setFilterFixedString('Symbols')
+        elif self.btnAll.isChecked():
+            self._proxy.setFilterFixedString('')
+
     def _icon_clicked(self, index: QModelIndex):
         icon_alias: str = index.data(role=self._Model.IconAliasRole)
         self.iconSelected.emit(icon_alias, self._color)
 
+    class _IconItem:
+        def __init__(self, type: str, name: str):
+            self.type = type
+            self.name = name
+
     class _Model(QAbstractListModel):
 
         IconAliasRole = Qt.UserRole + 1
+        IconTypeRole = Qt.UserRole + 2
 
-        def __init__(self, icons: List[str]):
+        def __init__(self, icons):
             super().__init__()
             self.icons = icons
 
@@ -83,5 +129,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         def data(self, index: QModelIndex, role: int) -> Any:
             if role == self.IconAliasRole:
                 return self.icons[index.row()]
+            if role == self.IconTypeRole:
+                return self.icons[index.row()].type
             if role == Qt.DecorationRole:
-                return IconRegistry.from_name(self.icons[index.row()])
+                return IconRegistry.from_name(self.icons[index.row()].name)

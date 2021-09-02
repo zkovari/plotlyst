@@ -334,10 +334,10 @@ class IconRegistry:
         return IconRegistry.from_name('ei.adult')
 
     @staticmethod
-    def from_name(name: str, color: str = 'black', mdi_scale: float = 1.2) -> QIcon:
+    def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         if name.startswith('md'):
-            return QIcon(qtawesome.icon(name, color=color, options=[{'scale_factor': mdi_scale}]))
-        return QIcon(qtawesome.icon(name, color=color))
+            return QIcon(qtawesome.icon(name, color=color, color_on=color_on, options=[{'scale_factor': mdi_scale}]))
+        return QIcon(qtawesome.icon(name, color=color, color_on=color_on))
 
 
 class AvatarsRegistry:
