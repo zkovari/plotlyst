@@ -134,7 +134,7 @@ class SelectionItemsModel(QAbstractTableModel):
                                               item.icon_color)
             return IconRegistry.from_name('fa5s.icons', color='lightgrey')
         if index.column() == self.ColIcon and role == Qt.BackgroundRole:
-            if item.icon and item.icon_color in ['FFFFFF', 'white']:
+            if item.icon and item.icon_color in ['#ffffff', 'white']:
                 return QBrush(QColor('lightGrey'))
         if index.column() == self.ColName and role == Qt.DisplayRole:
             return item.text
@@ -148,6 +148,8 @@ class SelectionItemsModel(QAbstractTableModel):
         if index.column() == self.ColBgColor:
             if role == Qt.BackgroundRole and item.color_hexa:
                 return QBrush(QColor(item.color_hexa))
+            if role == Qt.DecorationRole and (not item.color_hexa or item.color_hexa in ['white', '#ffffff']):
+                return IconRegistry.from_name('mdi.palette', color='lightgrey')
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
