@@ -19,10 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
+from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtWidgets import QWidget
 
+from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.items_editor_widget_ui import Ui_ItemsEditorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -32,6 +36,8 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         super(ItemsEditorWidget, self).__init__(parent)
         self.setupUi(self)
         self.model: Optional[SelectionItemsModel] = None
+
+        self.askRemovalConfirmation: bool = False
 
         self.btnAdd.setIcon(IconRegistry.plus_icon())
         self.btnAdd.clicked.connect(self._add)
@@ -48,7 +54,11 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.model = model
         self.tableView.setModel(self.model)
         self.tableView.selectionModel().selectionChanged.connect(self._item_selected)
+        self.tableView.clicked.connect(self._item_clicked)
         self.tableView.setItemDelegate(TextItemDelegate())
+
+    def setAskRemovalConfirmation(self, ask: bool):
+        self.askRemovalConfirmation = ask
 
     def refresh(self):
         self.model.modelReset.emit()
@@ -76,9 +86,18 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         indexes = self.tableView.selectedIndexes()
         if not indexes:
             return
+        item: SelectionItem = self.model.item(indexes[0])
+        if self.askRemovalConfirmation and not ask_confirmation(f'Are you sure you want to remove "{item.text}"?'):
+            return
         self.model.remove(indexes[0])
 
     def _item_selected(self):
         selection = len(self.tableView.selectedIndexes()) > 0
         self.btnEdit.setEnabled(selection)
         self.btnRemove.setEnabled(selection)
+
+    def _item_clicked(self, index: QModelIndex):
+        if index.column() == SelectionItemsModel.ColIcon:
+            result = IconSelectorDialog(self).display()
+            if result:
+                self.model.setData(index, (result[0], result[1].name()), role=Qt.DecorationRole)

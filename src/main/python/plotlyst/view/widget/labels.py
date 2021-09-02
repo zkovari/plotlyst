@@ -21,7 +21,7 @@ import math
 from abc import abstractmethod
 from typing import Union, List, Set
 
-from PyQt5.QtCore import QSize, QModelIndex, Qt
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, QVBoxLayout, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
@@ -31,7 +31,6 @@ from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import line
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import FlowLayout
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -273,14 +272,7 @@ class LabelsEditorWidget(QFrame):
     def _initPopupWidget(self) -> QWidget:
         wdg = ItemsEditorWidget()
         wdg.setModel(self._model)
-        wdg.tableView.clicked.connect(self._choiceClicked)
         return wdg
-
-    def _choiceClicked(self, index: QModelIndex):
-        if index.column() == SelectionItemsModel.ColIcon:
-            result = IconSelectorDialog(self).display()
-            if result:
-                self._model.setData(index, (result[0], result[1].name()), role=Qt.DecorationRole)
 
     def _selectionChanged(self):
         self._wdgLabels.clear()

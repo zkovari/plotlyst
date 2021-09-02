@@ -21,7 +21,7 @@ import pickle
 from typing import Optional
 
 import emoji
-from PyQt5.QtCore import Qt, QMimeData, QObject, QEvent, QByteArray, QModelIndex
+from PyQt5.QtCore import Qt, QMimeData, QObject, QEvent, QByteArray
 from PyQt5.QtGui import QDrag, QMouseEvent
 from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
@@ -31,7 +31,6 @@ from src.main.python.plotlyst.core.domain import age_field, gender_field, \
     desire_field, default_character_profiles, role_field, mbti_field, traits_field, Novel
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
@@ -85,8 +84,6 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.lineLabel.textEdited.connect(self._label_edited)
         self.lineEmoji.setFont(emoji_font(16))
         self.lineEmoji.textEdited.connect(self._emoji_edited)
-
-        self.wdgChoicesEditor.tableView.clicked.connect(self._choice_clicked)
 
         self.btnAge.installEventFilter(self)
         self.btnGender.installEventFilter(self)
@@ -181,12 +178,6 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self._enable_in_inventory(field, False)
         if field.custom:
             self.btnSettings.setChecked(True)
-
-    def _choice_clicked(self, index: QModelIndex):
-        if index.column() == TemplateFieldSelectionModel.ColIcon:
-            result = IconSelectorDialog(self).display()
-            if result:
-                self.wdgChoicesEditor.model.setData(index, (result[0], result[1].name()), role=Qt.DecorationRole)
 
     def _enable_in_inventory(self, field: TemplateField, enabled: bool):
         if field.id == age_field.id:
