@@ -491,16 +491,13 @@ class SceneGoalsModel(SelectionItemsModel):
         return 2
 
     @overrides
-    def add(self) -> int:
-        super(SceneGoalsModel, self).add()
+    def _newItem(self) -> QModelIndex:
         goal = SceneGoal('')
-        index = 0
-        self.novel.scene_goals.insert(index, goal)
-        self._checked.add(goal)
-        self.selection_changed.emit()
+        row = 0
+        self.novel.scene_goals.insert(row, goal)
         self.repo.update_novel(self.novel)
 
-        return index
+        return self.index(row, 0)
 
     @overrides
     def remove(self, index: QModelIndex):

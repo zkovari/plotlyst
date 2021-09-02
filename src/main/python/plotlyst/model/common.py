@@ -98,8 +98,20 @@ class SelectionItemsModel(QAbstractTableModel):
         self._checked.clear()
         self.modelReset.emit()
 
-    def add(self):
+    def add(self) -> int:
+        index = self._newItem()
+        item = self.item(index)
+        if self._checkable:
+            self._checked.add(item)
+            self.selection_changed.emit()
+
         self.modelReset.emit()
+
+        return index.row()
+
+    @abstractmethod
+    def _newItem(self) -> QModelIndex:
+        pass
 
     def remove(self, index: QModelIndex):
         if self._checkable:
