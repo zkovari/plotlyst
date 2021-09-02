@@ -35,7 +35,6 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document
-from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 
 
 class ApplicationDbVersion(Enum):
@@ -337,15 +336,9 @@ class JsonClient:
         novel_info = self._read_novel_info(project_novel_info.id)
         self.__persist_info(self.novels_dir, novel_info)
 
-        dramatic_questions = []
         dq_ids = {}
-        questions = novel_info.storylines if novel_info.storylines else novel_info.dramatic_questions
-        for i, sl_info in enumerate(questions):
-            color = sl_info.color_hexa if sl_info.color_hexa else STORY_LINE_COLOR_CODES[
-                i % len(STORY_LINE_COLOR_CODES)]
-            dq = DramaticQuestion(text=sl_info.text, id=sl_info.id, color_hexa=color)
-            dramatic_questions.append(dq)
-            dq_ids[str(sl_info.id)] = dq
+        for dq in novel_info.dramatic_questions:
+            dq_ids[str(dq.id)] = dq
         chapters = []
         chapters_ids = {}
         for seq, chapter_info in enumerate(novel_info.chapters):
@@ -466,7 +459,7 @@ class JsonClient:
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
                               conflicts=scene_conflicts, goals=scene_goals, comments=info.comments)
                 scenes.append(scene)
-        return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=dramatic_questions,
+        return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=novel_info.dramatic_questions,
                      characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
                      story_structure=story_structure, character_profiles=novel_info.character_profiles,
@@ -491,9 +484,7 @@ class JsonClient:
 
     def _persist_novel(self, novel: Novel):
         novel_info = NovelInfo(id=novel.id, scenes=[x.id for x in novel.scenes],
-                               dramatic_questions=[DramaticQuestion(text=x.text, id=x.id, color_hexa=x.color_hexa) for x
-                                                   in
-                                                   novel.dramatic_questions],
+                               dramatic_questions=novel.dramatic_questions,
                                characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
                                stages=novel.stages, story_structure=novel.story_structure.id,

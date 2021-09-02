@@ -19,11 +19,58 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any, Set
 
-from PyQt5.QtCore import QModelIndex, Qt, QVariant, pyqtSignal, QAbstractTableModel
-from PyQt5.QtGui import QBrush, QColor
+from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal, QAbstractTableModel
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion
+from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion, SelectionItem
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import StorylineCreatedEvent, NovelReloadRequestedEvent
+from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
+
+
+class NovelDramaticQuestionsModel(SelectionItemsModel):
+
+    def __init__(self, novel: Novel):
+        self.novel = novel
+        self.repo = RepositoryPersistenceManager.instance()
+        super(NovelDramaticQuestionsModel, self).__init__()
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return len(self.novel.dramatic_questions)
+
+    @overrides
+    def item(self, index: QModelIndex) -> SelectionItem:
+        return self.novel.dramatic_questions[index.row()]
+
+    @overrides
+    def _newItem(self) -> QModelIndex:
+        question = DramaticQuestion(text='')
+        self.novel.dramatic_questions.append(question)
+        question.color_hexa = STORY_LINE_COLOR_CODES[
+            (len(self.novel.dramatic_questions) - 1) % len(STORY_LINE_COLOR_CODES)]
+        self.repo.update_novel(self.novel)
+
+        emit_event(StorylineCreatedEvent(self))
+
+        return self.index(self.rowCount() - 1, 0)
+
+    @overrides
+    def remove(self, index: QModelIndex):
+        super().remove(index)
+        self.novel.dramatic_questions.pop(index.row())
+
+        self.repo.update_novel(self.novel)
+        emit_event(NovelReloadRequestedEvent(self))
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+        updated = super().setData(index, value, role)
+        if updated and role != Qt.CheckStateRole:
+            self.repo.update_novel(self.novel)
+        return updated
 
 
 class NovelDramaticQuestionsListModel(QAbstractTableModel):
@@ -72,40 +119,5 @@ class NovelDramaticQuestionsListModel(QAbstractTableModel):
             elif value == Qt.Unchecked:
                 self.selected.remove(self.novel.dramatic_questions[index.row()])
             self.selection_changed.emit()
-            return True
-        return False
-
-
-class EditableNovelDramaticQuestionsListModel(NovelDramaticQuestionsListModel):
-    ColColor: int = 0
-    ColText: int = 1
-
-    @overrides
-    def columnCount(self, parent: QModelIndex = ...) -> int:
-        return 2
-
-    @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        flags = super().flags(index)
-        return flags | Qt.ItemIsEditable
-
-    @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if not index.isValid():
-            return
-
-        if role == Qt.CheckStateRole:
-            return QVariant()
-
-        if index.column() == self.ColColor:
-            if role == Qt.BackgroundRole:
-                return QBrush(QColor(self.novel.dramatic_questions[index.row()].color_hexa))
-
-        return super(EditableNovelDramaticQuestionsListModel, self).data(index, role)
-
-    @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
-        if role == Qt.EditRole:
-            self.novel.dramatic_questions[index.row()].text = value
             return True
         return False

@@ -21,7 +21,7 @@ from abc import abstractmethod
 from typing import List, Any, Set
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QColor, QBrush
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import SelectionItem
@@ -63,7 +63,8 @@ class SelectionItemsModel(QAbstractTableModel):
     ItemRole: int = Qt.UserRole + 1
 
     ColIcon: int = 0
-    ColName: int = 1
+    ColBgColor: int = 1
+    ColName: int = 2
 
     def __init__(self, parent=None):
         super(SelectionItemsModel, self).__init__(parent)
@@ -119,6 +120,10 @@ class SelectionItemsModel(QAbstractTableModel):
         self.modelReset.emit()
 
     @overrides
+    def columnCount(self, parent: QModelIndex = None) -> int:
+        return 3
+
+    @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         item = self.item(index)
         if role == self.ItemRole:
@@ -137,6 +142,9 @@ class SelectionItemsModel(QAbstractTableModel):
                 font = QFont()
                 font.setBold(True)
                 return font
+        if index.column() == self.ColBgColor:
+            if role == Qt.BackgroundRole and item.color_hexa:
+                return QBrush(QColor(item.color_hexa))
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -171,6 +179,10 @@ class SelectionItemsModel(QAbstractTableModel):
             elif value == Qt.Unchecked:
                 self._checked.remove(item)
             self.selection_changed.emit()
+            return True
+        if role == Qt.BackgroundRole:
+            item.color_hexa = value
+            self.item_edited.emit()
             return True
         return False
 

@@ -38,10 +38,6 @@ class TemplateFieldSelectionModel(SelectionItemsModel):
         return len(self._field.selections)
 
     @overrides
-    def columnCount(self, parent: QModelIndex = None) -> int:
-        return 2
-
-    @overrides
     def _newItem(self) -> QModelIndex:
         self._field.selections.append(SelectionItem(''))
         return self.index(self.rowCount() - 1, 0)

@@ -97,13 +97,6 @@ class NpcCharacter(Character):
     pass
 
 
-@dataclass(unsafe_hash=True)
-class DramaticQuestion:
-    text: str
-    color_hexa: str = ''
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-
-
 @dataclass
 class Chapter:
     title: str
@@ -185,10 +178,19 @@ class SelectionItem:
     type: SelectionItemType = SelectionItemType.CHOICE
     icon: str = ''
     icon_color: str = 'black'
+    color_hexa: str = ''
     meta: Dict[str, Any] = field(default_factory=dict)
 
     def __hash__(self):
         return hash(self.text)
+
+
+@dataclass
+class DramaticQuestion(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    def __hash__(self):
+        return hash(str(id))
 
 
 class ConflictType(Enum):

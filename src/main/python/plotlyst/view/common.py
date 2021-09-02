@@ -23,8 +23,8 @@ from enum import Enum
 from typing import Optional, Any
 
 from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont
-from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame
+from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog
 from fbs_runtime import platform
 
 
@@ -120,3 +120,13 @@ def emoji_font(size: int = 13) -> QFont:
     if platform.is_windows():
         return QFont('Segoe UI Emoji', size)
     return QFont('Noto Emoji', size)
+
+
+def show_color_picker(default_color: QColor = QColor('white')) -> QColor:
+    if platform.is_linux():
+        color: QColor = QColorDialog.getColor(QColor(default_color),
+                                              options=QColorDialog.DontUseNativeDialog)
+    else:
+        color = QColorDialog.getColor(QColor(default_color))
+
+    return color

@@ -20,11 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex, Qt
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.view.common import ask_confirmation, show_color_picker
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.items_editor_widget_ui import Ui_ItemsEditorWidget
@@ -37,6 +38,7 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.setupUi(self)
         self.model: Optional[SelectionItemsModel] = None
 
+        self.bgColorFieldEnabled: bool = False
         self.askRemovalConfirmation: bool = False
 
         self.btnAdd.setIcon(IconRegistry.plus_icon())
@@ -56,9 +58,17 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.tableView.selectionModel().selectionChanged.connect(self._item_selected)
         self.tableView.clicked.connect(self._item_clicked)
         self.tableView.setItemDelegate(TextItemDelegate())
+        self.setAskRemovalConfirmation(self.bgColorFieldEnabled)
 
     def setAskRemovalConfirmation(self, ask: bool):
         self.askRemovalConfirmation = ask
+
+    def setBgColorFieldEnabled(self, enabled: bool):
+        self.bgColorFieldEnabled = enabled
+        if self.bgColorFieldEnabled:
+            self.tableView.showColumn(SelectionItemsModel.ColBgColor)
+        else:
+            self.tableView.hideColumn(SelectionItemsModel.ColBgColor)
 
     def refresh(self):
         self.model.modelReset.emit()
@@ -101,3 +111,8 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
             result = IconSelectorDialog(self).display()
             if result:
                 self.model.setData(index, (result[0], result[1].name()), role=Qt.DecorationRole)
+        if index.column() == SelectionItemsModel.ColBgColor:
+            color: QColor = show_color_picker()
+            if color.isValid():
+                self.model.setData(index, color.name(), role=Qt.BackgroundRole)
+            self.tableView.clearSelection()

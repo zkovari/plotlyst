@@ -23,6 +23,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel, QCoreApplication, QTimer
 from PyQt5.QtWidgets import QAbstractItemView, QLineEdit, QMenu, QAction, QMessageBox, QDialog, QApplication
 
+from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.dialog.new_novel import NovelEditionDialog
 from src.main.python.plotlyst.view.docs_view import DocumentsView
@@ -180,18 +181,18 @@ def create_character(qtbot, window: MainWindow, name: str):
 def create_dramatic_question(qtbot, window: MainWindow, text: str):
     novels: NovelView = go_to_novel(window)
 
-    novels.ui.btnAdd.click()
-    row = novels.ui.tblDramaticQuestions.model().rowCount() - 1
-    index = novels.ui.tblDramaticQuestions.model().index(row, 1)
-    editor = novels.ui.tblDramaticQuestions.indexWidget(index)
-    assert editor, "Editor should be open at position row,1"
+    novels.ui.wdgDramaticQuestions.btnAdd.click()
+    row = novels.ui.wdgDramaticQuestions.model.rowCount() - 1
+    index = novels.ui.wdgDramaticQuestions.model.index(row, SelectionItemsModel.ColName)
+    editor = novels.ui.wdgDramaticQuestions.tableView.indexWidget(index)
+    assert editor, "Editor should be open"
     assert isinstance(editor, QLineEdit)
 
     qtbot.keyClicks(editor, text)
-    novels.ui.tblDramaticQuestions.itemDelegate().commitData.emit(editor)
-    novels.ui.tblDramaticQuestions.itemDelegate().closeEditor.emit(editor)
+    novels.ui.wdgDramaticQuestions.tableView.itemDelegate().commitData.emit(editor)
+    novels.ui.wdgDramaticQuestions.tableView.itemDelegate().closeEditor.emit(editor)
 
-    assert_data(novels.ui.tblDramaticQuestions.model(), text, row, 1)
+    assert_data(novels.ui.wdgDramaticQuestions.model, text, row, SelectionItemsModel.ColName)
 
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:

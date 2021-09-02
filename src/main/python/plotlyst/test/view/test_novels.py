@@ -1,5 +1,6 @@
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import default_story_structures
+from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.test.common import create_dramatic_question, go_to_novel, click_on_item, \
     patch_confirmed, go_to_scenes
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -20,13 +21,13 @@ def test_create_dramatic_question(qtbot, filled_window: MainWindow):
 
 def test_delete_dramatic_question(qtbot, filled_window: MainWindow, monkeypatch):
     view: NovelView = go_to_novel(filled_window)
-    click_on_item(qtbot, view.ui.tblDramaticQuestions, 0, 1)
+    click_on_item(qtbot, view.ui.wdgDramaticQuestions.tableView, 0, SelectionItemsModel.ColName)
     assert len(view.novel.dramatic_questions) == 3
     dq = view.novel.dramatic_questions[0]
     assert dq in view.novel.scenes[0].dramatic_questions
 
     patch_confirmed(monkeypatch)
-    view.ui.btnRemove.click()
+    view.ui.wdgDramaticQuestions.btnRemove.click()
 
     assert len(view.novel.dramatic_questions) == 2
     assert dq not in view.novel.dramatic_questions

@@ -21,10 +21,10 @@ from typing import List, Any
 
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget, QListView, QColorDialog
-from fbs_runtime import platform
+from PyQt5.QtWidgets import QWidget, QListView
 from overrides import overrides
 
+from src.main.python.plotlyst.view.common import show_color_picker
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._icons import icons_registry
@@ -58,11 +58,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
                                       stop: 0 {self._color.name()}, stop: 1 {self._color.name()}) ;''')
 
     def _change_color(self):
-        if platform.is_linux():
-            color: QColor = QColorDialog.getColor(QColor(self._color),
-                                                  options=QColorDialog.DontUseNativeDialog)
-        else:
-            color = QColorDialog.getColor(QColor(self._color))
+        color = show_color_picker(self._color)
         if color.isValid():
             self._color = color
             self._update_button_color()

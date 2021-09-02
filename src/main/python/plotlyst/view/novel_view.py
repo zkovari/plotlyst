@@ -18,24 +18,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import emoji
-from PyQt5.QtCore import QModelIndex, QAbstractItemModel, Qt, QPropertyAnimation
-from PyQt5.QtGui import QColor, QIcon
-from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QLineEdit, QColorDialog, QHeaderView
+from PyQt5.QtCore import QPropertyAnimation
+from PyQt5.QtGui import QIcon
 from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion
+from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent, StorylineCreatedEvent, NovelUpdatedEvent, \
+from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     NovelStoryStructureUpdated
-from src.main.python.plotlyst.model.novel import EditableNovelDramaticQuestionsListModel
-from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
+from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class NovelView(AbstractNovelView):
@@ -46,16 +43,6 @@ class NovelView(AbstractNovelView):
         self.ui.setupUi(self.widget)
 
         self.ui.lblTitle.setText(self.novel.title)
-        self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
-        self.ui.btnAdd.clicked.connect(self._on_add_story_line)
-
-        self.ui.btnEdit.clicked.connect(self._on_edit_story_line)
-        self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
-        self.ui.btnEdit.setDisabled(True)
-
-        self.ui.btnRemove.clicked.connect(self._on_remove_story_line)
-        self.ui.btnRemove.setDisabled(True)
-        self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
 
         self._emoji_font = emoji_font(14) if platform.is_windows() else emoji_font(20)
         self.ui.lblStoryStructureEmoji.setFont(self._emoji_font)
@@ -72,15 +59,10 @@ class NovelView(AbstractNovelView):
         self.ui.wdgStoryStructureInfo.setVisible(False)
         self._update_story_structure_info()
 
-        self.story_lines_model = EditableNovelDramaticQuestionsListModel(self.novel)
-        self.ui.tblDramaticQuestions.horizontalHeader().setDefaultSectionSize(25)
-        self.ui.tblDramaticQuestions.setModel(self.story_lines_model)
-        self.ui.tblDramaticQuestions.horizontalHeader().setSectionResizeMode(
-            EditableNovelDramaticQuestionsListModel.ColText,
-            QHeaderView.Stretch)
-        self.ui.tblDramaticQuestions.setItemDelegate(StoryLineDelegate(self.novel))
-        self.ui.tblDramaticQuestions.selectionModel().selectionChanged.connect(self._on_dramatic_question_selected)
-        self.ui.tblDramaticQuestions.clicked.connect(self._on_dramatic_question_clicked)
+        self.story_lines_model = NovelDramaticQuestionsModel(self.novel)
+        self.ui.wdgDramaticQuestions.setModel(self.story_lines_model)
+        self.ui.wdgDramaticQuestions.setAskRemovalConfirmation(True)
+        self.ui.wdgDramaticQuestions.setBgColorFieldEnabled(True)
 
         self.ui.btnStoryStructureInfo.setText(u'\u00BB')
         self.ui.btnStoryStructureInfo.setIcon(IconRegistry.general_info_icon())
@@ -90,8 +72,6 @@ class NovelView(AbstractNovelView):
     def refresh(self):
         self.ui.lblTitle.setText(self.novel.title)
         self.story_lines_model.modelReset.emit()
-        self.ui.btnEdit.setEnabled(False)
-        self.ui.btnRemove.setEnabled(False)
         self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
 
     def _update_story_structure_info(self):
@@ -131,68 +111,3 @@ The scenes can be associated to such story beats.</p>''')
             self.animation.start()
 
         self.ui.btnStoryStructureInfo.setText(u'\u02C7' if checked else u'\u00BB')
-
-    def _on_add_story_line(self):
-        story_line = DramaticQuestion(text='Unknown')
-        self.novel.dramatic_questions.append(story_line)
-        story_line.color_hexa = STORY_LINE_COLOR_CODES[
-            (len(self.novel.dramatic_questions) - 1) % len(STORY_LINE_COLOR_CODES)]
-        self.repo.update_novel(self.novel)
-        self.story_lines_model.modelReset.emit()
-
-        self.ui.tblDramaticQuestions.edit(self.story_lines_model.index(self.story_lines_model.rowCount() - 1,
-                                                                       EditableNovelDramaticQuestionsListModel.ColText))
-        emit_event(StorylineCreatedEvent(self))
-
-    def _on_edit_story_line(self):
-        indexes = self.ui.tblDramaticQuestions.selectedIndexes()
-        if not indexes:
-            return
-        self.ui.tblDramaticQuestions.edit(indexes[0])
-
-    def _on_remove_story_line(self):
-        indexes = self.ui.tblDramaticQuestions.selectedIndexes()
-        if not indexes:
-            return
-        story_line: DramaticQuestion = indexes[0].data(EditableNovelDramaticQuestionsListModel.StoryLineRole)
-        if not ask_confirmation(f'Are you sure you want to remove story line "{story_line.text}"?'):
-            return
-
-        self.novel.dramatic_questions.remove(story_line)
-        self.repo.update_novel(self.novel)
-        emit_event(NovelReloadRequestedEvent(self))
-        self.refresh()
-
-    def _on_dramatic_question_selected(self):
-        selection = len(self.ui.tblDramaticQuestions.selectedIndexes()) > 0
-        self.ui.btnEdit.setEnabled(selection)
-        self.ui.btnRemove.setEnabled(selection)
-
-    def _on_dramatic_question_clicked(self, index: QModelIndex):
-        if index.column() == EditableNovelDramaticQuestionsListModel.ColColor:
-            dq: DramaticQuestion = index.data(EditableNovelDramaticQuestionsListModel.StoryLineRole)
-            color: QColor = QColorDialog.getColor(QColor(dq.color_hexa),
-                                                  options=QColorDialog.DontUseNativeDialog)
-            if color.isValid():
-                dq.color_hexa = color.name()
-                self.repo.update_novel(self.novel)
-            self.ui.tblDramaticQuestions.clearSelection()
-
-
-class StoryLineDelegate(QStyledItemDelegate):
-
-    def __init__(self, novel: Novel):
-        super(StoryLineDelegate, self).__init__()
-        self.novel = novel
-
-    @overrides
-    def setEditorData(self, editor: QWidget, index: QModelIndex):
-        if isinstance(editor, QLineEdit):
-            editor.deselect()
-            editor.setText(index.data())
-
-    @overrides
-    def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex) -> None:
-        updated = model.setData(index, editor.text(), role=Qt.EditRole)
-        if updated:
-            RepositoryPersistenceManager.instance().update_novel(self.novel)
