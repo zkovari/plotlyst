@@ -667,6 +667,11 @@ def default_documents() -> List[Document]:
             Document('Brainstorming', id=uuid.UUID('f6df3a87-7054-40d6-a4b0-ad9917003136'))]
 
 
+def default_tags() -> List[SelectionItem]:
+    return [SelectionItem('Flashback', icon='ei.backward', icon_color='white', color_hexa='#1b263b'),
+            SelectionItem('Flashforward', icon='ei.forward', icon_color='white', color_hexa='#1b998b')]
+
+
 @dataclass
 class Novel(NovelDescriptor):
     story_structure: StoryStructure = default_story_structures[0]
@@ -679,6 +684,7 @@ class Novel(NovelDescriptor):
     conflicts: List[Conflict] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)
+    tags: List[SelectionItem] = field(default_factory=default_tags)
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title

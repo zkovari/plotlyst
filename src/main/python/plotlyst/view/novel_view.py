@@ -17,22 +17,28 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
+
 import emoji
 from PyQt5.QtCore import QPropertyAnimation
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QHBoxLayout, QWidget
 from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, SelectionItem
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     NovelStoryStructureUpdated
-from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel
+from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel, NovelTagsModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 
 
 class NovelView(AbstractNovelView):
@@ -63,6 +69,15 @@ class NovelView(AbstractNovelView):
         self.ui.wdgDramaticQuestions.setModel(self.story_lines_model)
         self.ui.wdgDramaticQuestions.setAskRemovalConfirmation(True)
         self.ui.wdgDramaticQuestions.setBgColorFieldEnabled(True)
+
+        self.ui.lblTagEmoji.setFont(self._emoji_font)
+        self.ui.lblTagEmoji.setText(emoji.emojize(':label:'))
+        tags_editor = NovelTagsEditor(self.novel)
+        _layout = QHBoxLayout()
+        _layout.setSpacing(0)
+        _layout.setContentsMargins(0, 0, 0, 0)
+        self.ui.wdgTagsContainer.setLayout(_layout)
+        self.ui.wdgTagsContainer.layout().addWidget(tags_editor)
 
         self.ui.btnStoryStructureInfo.setText(u'\u00BB')
         self.ui.btnStoryStructureInfo.setIcon(IconRegistry.general_info_icon())
@@ -111,3 +126,31 @@ The scenes can be associated to such story beats.</p>''')
             self.animation.start()
 
         self.ui.btnStoryStructureInfo.setText(u'\u02C7' if checked else u'\u00BB')
+
+
+class NovelTagsEditor(LabelsEditorWidget):
+
+    def __init__(self, novel: Novel, parent=None):
+        self.novel = novel
+        super(NovelTagsEditor, self).__init__(checkable=False, parent=parent)
+        self.btnEdit.setIcon(IconRegistry.from_name('mdi.tag-plus'))
+        self.editor.model.item_edited.connect(self._updateTags)
+        self._updateTags()
+
+    @overrides
+    def _initPopupWidget(self) -> QWidget:
+        self.editor: ItemsEditorWidget = super(NovelTagsEditor, self)._initPopupWidget()
+        self.editor.setBgColorFieldEnabled(True)
+        return self.editor
+
+    @overrides
+    def _initModel(self) -> SelectionItemsModel:
+        return NovelTagsModel(self.novel)
+
+    @overrides
+    def items(self) -> List[SelectionItem]:
+        return self.novel.tags
+
+    def _updateTags(self):
+        self._wdgLabels.clear()
+        self._addItems(self.novel.tags)

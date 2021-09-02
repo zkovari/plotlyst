@@ -17,12 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import math
 from abc import abstractmethod
-from typing import Union, List, Set
+from typing import Union, List, Iterable
 
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QColor, QIcon
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, QVBoxLayout, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
 from overrides import overrides
@@ -30,7 +29,7 @@ from overrides import overrides
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import line
+from src.main.python.plotlyst.view.common import line, text_color_with_bg_color
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import FlowLayout
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -53,12 +52,7 @@ class LabelsWidget(QWidget):
 
     def addText(self, text: str, color: str = '#7c98b3'):
         label = QLabel(truncate_string(text, 40))
-        rgb = QColor(color).getRgb()
-        r = rgb[0]
-        g = rgb[1]
-        b = rgb[2]
-        hsp = math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
-        text_color = 'black' if hsp > 127.5 else 'white'
+        text_color = text_color_with_bg_color(color)
         label.setStyleSheet(
             f'''QLabel {{
                 background-color: {color}; border-radius: 6px; color: {text_color};
@@ -182,10 +176,22 @@ class SelectionItemLabel(Label):
         self.lblText = QLabel(self.item.text)
         self.layout().addWidget(self.lblText)
 
+        if item.color_hexa:
+            bg_color = item.color_hexa
+            text_color = text_color_with_bg_color(bg_color)
+        else:
+            bg_color = 'white'
+            text_color = 'black'
+
         self.setStyleSheet(f'''
                         SelectionItemLabel {{
                             border: 2px solid {self._borderColor()};
-                            border-radius: 8px; padding-left: 3px; padding-right: 3px;}}
+                            border-radius: 8px; padding-left: 3px; padding-right: 3px;
+                            background-color: {bg_color};
+                            }}
+                        QLabel {{
+                            color: {text_color};
+                        }}
                         ''')
 
     def _borderColor(self) -> str:
@@ -207,8 +213,9 @@ class GoalLabel(SelectionItemLabel):
 
 
 class LabelsEditorWidget(QFrame):
-    def __init__(self, alignment=Qt.Horizontal, parent=None):
+    def __init__(self, alignment=Qt.Horizontal, checkable: bool = True, parent=None):
         super(LabelsEditorWidget, self).__init__(parent)
+        self.checkable = checkable
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Box)
         self.setStyleSheet('LabelsEditorWidget {background: white;}')
@@ -228,7 +235,8 @@ class LabelsEditorWidget(QFrame):
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
-        self._model.setCheckable(True, SelectionItemsModel.ColName)
+        if self.checkable:
+            self._model.setCheckable(True, SelectionItemsModel.ColName)
         self._popup = self._initPopupWidget()
         self._model.selection_changed.connect(self._selectionChanged)
 
@@ -278,6 +286,6 @@ class LabelsEditorWidget(QFrame):
         self._wdgLabels.clear()
         self._addItems(self._model.selections())
 
-    def _addItems(self, items: Set[SelectionItem]):
+    def _addItems(self, items: Iterable[SelectionItem]):
         for item in items:
             self._wdgLabels.addLabel(SelectionItemLabel(item))

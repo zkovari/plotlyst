@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import functools
+import math
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Any
@@ -130,3 +131,12 @@ def show_color_picker(default_color: QColor = QColor('white')) -> QColor:
         color = QColorDialog.getColor(QColor(default_color))
 
     return color
+
+
+def text_color_with_bg_color(bg_color: str) -> str:
+    rgb = QColor(bg_color).getRgb()
+    r = rgb[0]
+    g = rgb[1]
+    b = rgb[2]
+    hsp = math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
+    return 'black' if hsp > 127.5 else 'white'

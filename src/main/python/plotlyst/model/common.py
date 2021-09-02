@@ -133,6 +133,9 @@ class SelectionItemsModel(QAbstractTableModel):
                 return IconRegistry.from_name(item.icon,
                                               item.icon_color)
             return IconRegistry.from_name('fa5s.icons', color='lightgrey')
+        if index.column() == self.ColIcon and role == Qt.BackgroundRole:
+            if item.icon and item.icon_color in ['FFFFFF', 'white']:
+                return QBrush(QColor('lightGrey'))
         if index.column() == self.ColName and role == Qt.DisplayRole:
             return item.text
         if role == Qt.CheckStateRole and self._checkable and index.column() == self._checkable_column:

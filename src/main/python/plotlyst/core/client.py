@@ -34,7 +34,7 @@ from dataclasses_json import dataclass_json, Undefined
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document
+    DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, default_tags
 
 
 class ApplicationDbVersion(Enum):
@@ -179,6 +179,7 @@ class NovelInfo:
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     conflicts: List[ConflictInfo] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
+    tags: List[SelectionItem] = field(default_factory=default_tags)
 
 
 @dataclass
@@ -463,7 +464,7 @@ class JsonClient:
                      characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
                      story_structure=story_structure, character_profiles=novel_info.character_profiles,
-                     conflicts=conflicts, scene_goals=novel_info.scene_goals)
+                     conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -493,7 +494,7 @@ class JsonClient:
                                                        pov=x.pov.id,
                                                        character=x.character.id if x.character else None) for x in
                                           novel.conflicts],
-                               scene_goals=novel.scene_goals)
+                               scene_goals=novel.scene_goals, tags=novel.tags)
 
         self.__persist_info(self.novels_dir, novel_info)
 

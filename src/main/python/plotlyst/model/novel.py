@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from typing import Any, Set
 
 from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal, QAbstractTableModel
@@ -30,12 +31,32 @@ from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
-class NovelDramaticQuestionsModel(SelectionItemsModel):
+class _NovelSelectionItemsModel(SelectionItemsModel):
 
     def __init__(self, novel: Novel):
         self.novel = novel
         self.repo = RepositoryPersistenceManager.instance()
-        super(NovelDramaticQuestionsModel, self).__init__()
+        super().__init__()
+
+    @abstractmethod
+    @overrides
+    def _newItem(self) -> QModelIndex:
+        pass
+
+    @abstractmethod
+    @overrides
+    def item(self, index: QModelIndex) -> SelectionItem:
+        pass
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+        updated = super().setData(index, value, role)
+        if updated and role != Qt.CheckStateRole:
+            self.repo.update_novel(self.novel)
+        return updated
+
+
+class NovelDramaticQuestionsModel(_NovelSelectionItemsModel):
 
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
@@ -65,12 +86,32 @@ class NovelDramaticQuestionsModel(SelectionItemsModel):
         self.repo.update_novel(self.novel)
         emit_event(NovelReloadRequestedEvent(self))
 
+
+class NovelTagsModel(_NovelSelectionItemsModel):
+
     @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
-        updated = super().setData(index, value, role)
-        if updated and role != Qt.CheckStateRole:
-            self.repo.update_novel(self.novel)
-        return updated
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return len(self.novel.tags)
+
+    @overrides
+    def item(self, index: QModelIndex) -> SelectionItem:
+        return self.novel.tags[index.row()]
+
+    @overrides
+    def _newItem(self) -> QModelIndex:
+        tag = SelectionItem(text='')
+        self.novel.tags.append(tag)
+        self.repo.update_novel(self.novel)
+
+        return self.index(self.rowCount() - 1, 0)
+
+    @overrides
+    def remove(self, index: QModelIndex):
+        super().remove(index)
+        self.novel.tags.pop(index.row())
+
+        self.repo.update_novel(self.novel)
+        emit_event(NovelReloadRequestedEvent(self))
 
 
 class NovelDramaticQuestionsListModel(QAbstractTableModel):
