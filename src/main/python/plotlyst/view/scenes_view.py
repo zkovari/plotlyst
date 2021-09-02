@@ -194,7 +194,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.btnNew.setMenu(menu)
 
     def _on_edit(self):
-        if self.ui.btnTableView.isChecked():
+        if self.ui.btnTableView.isChecked() or self.ui.btnActionsView.isChecked():
             indexes = self.ui.tblScenes.selectedIndexes()
             if indexes:
                 scene = indexes[0].data(role=ScenesTableModel.SceneRole)
