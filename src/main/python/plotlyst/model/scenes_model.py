@@ -492,10 +492,6 @@ class SceneGoalsModel(SelectionItemsModel):
         return len(self.novel.scene_goals)
 
     @overrides
-    def columnCount(self, parent: QModelIndex = None) -> int:
-        return 2
-
-    @overrides
     def _newItem(self) -> QModelIndex:
         goal = SceneGoal('')
         row = 0

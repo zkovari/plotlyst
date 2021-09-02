@@ -58,7 +58,7 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.tableView.selectionModel().selectionChanged.connect(self._item_selected)
         self.tableView.clicked.connect(self._item_clicked)
         self.tableView.setItemDelegate(TextItemDelegate())
-        self.setAskRemovalConfirmation(self.bgColorFieldEnabled)
+        self.setBgColorFieldEnabled(self.bgColorFieldEnabled)
 
     def setAskRemovalConfirmation(self, ask: bool):
         self.askRemovalConfirmation = ask
