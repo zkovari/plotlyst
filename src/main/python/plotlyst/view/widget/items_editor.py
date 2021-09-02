@@ -57,6 +57,10 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
 
     def _add(self):
         row = self.model.add()
+        if row == 0:
+            self.tableView.scrollToTop()
+        else:
+            self.tableView.scrollToBottom()
         default_editable_col = self.model.defaultEditableColumn()
         if default_editable_col >= 0:
             self.tableView.edit(self.model.index(row, default_editable_col))
