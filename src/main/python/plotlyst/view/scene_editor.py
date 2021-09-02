@@ -76,6 +76,7 @@ class SceneEditor(QObject):
 
         self.ui.btnDisaster.setIcon(IconRegistry.disaster_icon(color='grey'))
         self.ui.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
+        self.ui.btnTradeOff.setIcon(IconRegistry.tradeoff_icon(color='grey'))
         self.ui.btnEditDramaticQuestions.setIcon(IconRegistry.plus_edit_icon())
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
         self.ui.btnAddConflict.setIcon(IconRegistry.conflict_icon())
@@ -172,8 +173,7 @@ class SceneEditor(QObject):
         self.ui.textSynopsis.textChanged.connect(self._pending_save)
         self.ui.textNotes.textChanged.connect(self._pending_save)
         self.ui.btnGroupArc.buttonClicked.connect(self._save_scene)
-        self.ui.btnDisaster.toggled.connect(self._on_disaster_toggled)
-        self.ui.btnResolution.toggled.connect(self._on_resolution_toggled)
+        self.ui.btnGroupOutcome.buttonToggled.connect(self._outcome_toggled)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -321,16 +321,14 @@ class SceneEditor(QObject):
                 self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
             if self.scene.action_resolution:
                 self.ui.btnResolution.setChecked(True)
+            elif self.scene.action_trade_off:
+                self.ui.btnTradeOff.setChecked(True)
             else:
                 self.ui.btnDisaster.setChecked(True)
-            if self.ui.btnDisaster.isChecked():
-                self.ui.lblType3.setText('Disaster:')
-                self.ui.textEvent3.setPlaceholderText('Disaster in the end')
-            elif self.ui.btnResolution.isChecked():
-                self.ui.lblType3.setText('Resolution:')
-                self.ui.textEvent3.setPlaceholderText('Resolution in the end')
-            self.ui.btnDisaster.setVisible(True)
-            self.ui.btnResolution.setVisible(True)
+            self._outcome_toggled()
+
+            for btn in self.ui.btnGroupOutcome.buttons():
+                btn.setVisible(True)
             self.ui.cbConflict.setVisible(True)
             self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
             self._on_conflict_toggled(self.ui.cbConflict.isChecked())
@@ -344,8 +342,8 @@ class SceneEditor(QObject):
 
             return
         elif text == REACTION_SCENE:
-            self.ui.btnDisaster.setHidden(True)
-            self.ui.btnResolution.setHidden(True)
+            for btn in self.ui.btnGroupOutcome.buttons():
+                btn.setHidden(True)
             self.ui.lblType1.setText('Reaction:')
             self.ui.textEvent1.setPlaceholderText('Reaction at the beginning')
             self.ui.lblType2.setText('Dilemma:')
@@ -371,20 +369,23 @@ class SceneEditor(QObject):
 
         self.ui.textEvent2.setEnabled(True)
         self.ui.lblType2.setVisible(True)
-        self.ui.btnDisaster.setHidden(True)
-        self.ui.btnResolution.setHidden(True)
+        for btn in self.ui.btnGroupOutcome.buttons():
+            btn.setHidden(True)
         self.ui.cbConflict.setHidden(True)
 
         self.ui.btnAddConflict.setVisible(True)
         self.ui.wdgConflicts.setVisible(True)
 
-    def _on_disaster_toggled(self):
-        self.ui.lblType3.setText('Disaster:')
-        self.ui.textEvent3.setPlaceholderText('Disaster in the end')
-
-    def _on_resolution_toggled(self):
-        self.ui.lblType3.setText('Resolution:')
-        self.ui.textEvent3.setPlaceholderText('Resolution in the end')
+    def _outcome_toggled(self):
+        if self.ui.btnDisaster.isChecked():
+            self.ui.lblType3.setText('Disaster:')
+            self.ui.textEvent3.setPlaceholderText('Disaster in the end')
+        elif self.ui.btnResolution.isChecked():
+            self.ui.lblType3.setText('Resolution:')
+            self.ui.textEvent3.setPlaceholderText('Resolution in the end')
+        elif self.ui.btnTradeOff.isChecked():
+            self.ui.lblType3.setText('Trade-off:')
+            self.ui.textEvent3.setPlaceholderText('Bittersweet ending')
 
     def _on_conflict_toggled(self, toggled: bool):
         if toggled:
@@ -477,6 +478,7 @@ class SceneEditor(QObject):
         if self.scene.type == ACTION_SCENE:
             self.scene.without_action_conflict = not self.ui.cbConflict.isChecked()
             self.scene.action_resolution = self.ui.btnResolution.isChecked()
+            self.scene.action_trade_off = self.ui.btnTradeOff.isChecked()
         self.scene.middle = self.ui.textEvent2.toPlainText()
         self.scene.end = self.ui.textEvent3.toPlainText()
         self.scene.day = self.ui.sbDay.value()

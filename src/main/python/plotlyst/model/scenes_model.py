@@ -82,6 +82,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
 
         self._action_icon = IconRegistry.action_scene_icon()
         self._resolved_action_icon = IconRegistry.action_scene_icon(resolved=True)
+        self._trade_off_action_icon = IconRegistry.action_scene_icon(trade_off=True)
         self._reaction_icon = IconRegistry.reaction_scene_icon()
         self._wip_brush = QBrush(QColor(WIP_COLOR))
         self._pivotal_brush = QBrush(QColor(PIVOTAL_COLOR))
@@ -130,6 +131,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 elif self._data[index.row()].type == ACTION_SCENE:
                     if self._data[index.row()].action_resolution:
                         return self._resolved_action_icon
+                    if self._data[index.row()].action_trade_off:
+                        return self._trade_off_action_icon
                     return self._action_icon
                 elif self._data[index.row()].type == REACTION_SCENE:
                     return self._reaction_icon
@@ -157,6 +160,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 if self._data[index.row()].type == ACTION_SCENE:
                     if self._data[index.row()].action_resolution:
                         return IconRegistry.success_icon()
+                    if self._data[index.row()].action_trade_off:
+                        return IconRegistry.tradeoff_icon()
                     return IconRegistry.disaster_icon()
                 if self._data[index.row()].type == REACTION_SCENE:
                     return IconRegistry.decision_icon()

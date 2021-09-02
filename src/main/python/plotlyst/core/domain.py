@@ -239,6 +239,7 @@ class Scene:
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
     action_resolution: bool = False
+    action_trade_off: bool = False
     without_action_conflict: bool = False
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None

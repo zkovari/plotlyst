@@ -141,6 +141,7 @@ class SceneInfo:
     chapter: Optional[uuid.UUID] = None
     arcs: List[CharacterArcInfo] = field(default_factory=list)
     action_resolution: bool = False
+    action_trade_off: bool = False
     without_action_conflict: bool = False
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
@@ -459,7 +460,7 @@ class JsonClient:
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, day=info.day,
                               notes=info.notes,
-                              action_resolution=info.action_resolution,
+                              action_resolution=info.action_resolution, action_trade_off=info.action_trade_off,
                               without_action_conflict=info.without_action_conflict, sequence=seq,
                               dramatic_questions=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
@@ -520,7 +521,7 @@ class JsonClient:
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          beginning=scene.beginning, middle=scene.middle,
                          end=scene.end, wip=scene.wip, day=scene.day, notes=scene.notes,
-                         action_resolution=scene.action_resolution,
+                         action_resolution=scene.action_resolution, action_trade_off=scene.action_trade_off,
                          without_action_conflict=scene.without_action_conflict,
                          pov=self.__id_or_none(scene.pov), dramatic_questions=dramatic_questions, characters=characters,
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),

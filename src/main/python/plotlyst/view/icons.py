@@ -133,9 +133,11 @@ class IconRegistry:
         return qtawesome.icon('fa5s.info-circle', color='darkBlue')
 
     @staticmethod
-    def action_scene_icon(resolved: bool = False) -> QIcon:
+    def action_scene_icon(resolved: bool = False, trade_off: bool = False) -> QIcon:
         if resolved:
             color = '#0b6e4f'
+        elif trade_off:
+            color = '#832161'
         else:
             color = '#fe4a49'
         return qtawesome.icon('fa.circle', 'fa5s.yin-yang',
@@ -200,14 +202,14 @@ class IconRegistry:
 
     @staticmethod
     def decision_icon() -> QIcon:
-        return qtawesome.icon('fa.lightbulb-o', color='darkGreen')
+        return qtawesome.icon('fa.lightbulb-o', color='#3cdbd3')
 
     @staticmethod
     def reaction_icon() -> QIcon:
         return qtawesome.icon('fa.shield')
 
     @staticmethod
-    def disaster_icon(color: str = 'red', color_on: str = 'red') -> QIcon:
+    def disaster_icon(color: str = '#f4442e', color_on: str = '#f4442e') -> QIcon:
         return qtawesome.icon('fa.bomb', color=color, color_on=color_on)
 
     @staticmethod
@@ -216,11 +218,15 @@ class IconRegistry:
 
     @staticmethod
     def conflict_icon(color: str = '#f3a712') -> QIcon:
-        return qtawesome.icon('mdi.sword-cross', color=color)
+        return IconRegistry.from_name('mdi.sword-cross', color=color)
 
     @staticmethod
-    def success_icon(color: str = 'darkGreen', color_on: str = 'darkGreen') -> QIcon:
+    def success_icon(color: str = '#6ba368', color_on: str = '#6ba368') -> QIcon:
         return qtawesome.icon('fa5s.trophy', color=color, color_on=color_on)
+
+    @staticmethod
+    def tradeoff_icon(color: str = '#832161', color_on: str = '#832161') -> QIcon:
+        return qtawesome.icon('fa5s.balance-scale-left', color=color, color_on=color_on)
 
     @staticmethod
     def home_icon() -> QIcon:
