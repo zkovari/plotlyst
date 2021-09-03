@@ -31,8 +31,8 @@ class IconSelectorDialog(QDialog):
     def __init__(self, parent=None):
         super(IconSelectorDialog, self).__init__(parent)
         self.setWindowTitle('Select icon')
-        
-        self.resize(300, 300)
+
+        self.resize(500, 500)
         self.setLayout(QHBoxLayout())
         self.layout().setSpacing(0)
         self.layout().setContentsMargins(1, 1, 1, 1)
