@@ -35,7 +35,7 @@ class SceneGoalsWidget(LabelsEditorWidget):
     def __init__(self, novel: Novel, scene: Scene, parent=None):
         self.novel = novel
         self.scene = scene
-        super(SceneGoalsWidget, self).__init__(Qt.Vertical, parent)
+        super(SceneGoalsWidget, self).__init__(alignment=Qt.Vertical, parent=parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
         self.setValue([x.text for x in self.scene.goals])
         self.btnEdit.setIcon(IconRegistry.goal_icon())
