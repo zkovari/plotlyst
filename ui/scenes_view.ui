@@ -90,6 +90,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="shortcut">
+             <string>1</string>
+            </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
@@ -115,6 +118,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="shortcut">
+             <string>2</string>
+            </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
@@ -137,6 +143,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="shortcut">
+             <string>3</string>
+            </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
@@ -156,6 +165,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="shortcut">
+             <string>4</string>
+            </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
@@ -174,6 +186,9 @@
             </property>
             <property name="text">
              <string/>
+            </property>
+            <property name="shortcut">
+             <string>5</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -200,6 +215,9 @@
             </property>
             <property name="text">
              <string/>
+            </property>
+            <property name="shortcut">
+             <string>6</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
