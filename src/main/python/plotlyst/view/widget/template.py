@@ -207,6 +207,7 @@ class TextSelectionWidget(QPushButton):
             self.model.setEditable(False)
             self.tblItems.setModel(self.model)
             self.tblItems.setColumnWidth(TemplateFieldSelectionModel.ColIcon, 26)
+            self.tblItems.hideColumn(TemplateFieldSelectionModel.ColBgColor)
 
             self.btnSelect.setIcon(IconRegistry.ok_icon('white'))
             self.tblItems.selectionModel().selectionChanged.connect(self._selection_changed)
