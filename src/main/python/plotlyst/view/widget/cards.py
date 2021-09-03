@@ -82,11 +82,12 @@ class NovelCard(Ui_NovelCard, _Card):
         super().__init__(parent)
         self.setupUi(self)
         self.novel = novel
-        self.label.setText(self.novel.title)
+        self.textName.setText(self.novel.title)
+        self.textName.setAlignment(Qt.AlignCenter)
         self._setStyleSheet()
 
     def refresh(self):
-        self.label.setText(self.novel.title)
+        self.textName.setText(self.novel.title)
 
 
 class CharacterCard(Ui_CharacterCard, _Card):
