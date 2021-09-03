@@ -168,6 +168,9 @@ class ChaptersTreeModel(TreeItemModel):
 
         return True
 
+    def displayAction(self, index: QModelIndex):
+        pass
+
     def _dropUnderNode(self, parent_node: Node, node: SceneNode, row: int):
         old_parent_node: Node = node.parent
         if old_parent_node is not parent_node:
