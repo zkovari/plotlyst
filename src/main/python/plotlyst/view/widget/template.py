@@ -421,7 +421,8 @@ class TemplateFieldWidget(QFrame):
             widget = TraitSelectionWidget(self.field)
         elif self.field.type == TemplateFieldType.NUMERIC:
             widget = QSpinBox()
-            widget.setPrefix(self.field.placeholder + ': ')
+            if self.field.placeholder:
+                widget.setPrefix(self.field.placeholder + ': ')
             widget.setMinimum(self.field.min_value)
             widget.setMaximum(self.field.max_value)
         elif self.field.type == TemplateFieldType.TEXT_SELECTION:
