@@ -31,7 +31,7 @@ def test_edit_novel(qtbot, filled_window: MainWindow):
     QTimer.singleShot(40, lambda: edit_novel_dialog(new_title))
     view.ui.btnEdit.click()
 
-    assert card.label.text() == new_title
+    assert card.textName.toPlainText() == new_title
     assert client.novels()[0].title == new_title
 
     novel_view: NovelView = go_to_novel(filled_window)
