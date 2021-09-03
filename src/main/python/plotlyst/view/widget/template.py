@@ -211,6 +211,7 @@ class TextSelectionWidget(QPushButton):
 
             self.btnSelect.setIcon(IconRegistry.ok_icon('white'))
             self.tblItems.selectionModel().selectionChanged.connect(self._selection_changed)
+            self.tblItems.doubleClicked.connect(self._select)
 
             self.btnSelect.clicked.connect(self._select)
 
