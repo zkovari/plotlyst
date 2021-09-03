@@ -163,7 +163,6 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 
         self.btnAddNew.setIcon(IconRegistry.ok_icon())
         self.btnAddNew.setDisabled(True)
-        self.btnConfirm.setHidden(True)
 
         self.lineKey.textChanged.connect(self._keyphrase_edited)
 
@@ -173,9 +172,9 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 
         self._model = SceneConflictsTableModel(self.novel, self.scene)
         self._model.selection_changed.connect(self.conflict_selection_changed.emit)
-        self.tblConflicts.verticalHeader().setDefaultSectionSize(20)
         self.tblConflicts.setModel(self._model)
-        self.tblConflicts.setColumnWidth(SceneConflictsTableModel.ColType, 50)
+        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsTableModel.ColType,
+                                                                  QHeaderView.ResizeToContents)
         self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsTableModel.ColPhrase,
                                                                   QHeaderView.Stretch)
 
