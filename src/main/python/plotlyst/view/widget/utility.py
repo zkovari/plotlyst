@@ -128,7 +128,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         @overrides
         def data(self, index: QModelIndex, role: int) -> Any:
             if role == self.IconAliasRole:
-                return self.icons[index.row()]
+                return self.icons[index.row()].name
             if role == self.IconTypeRole:
                 return self.icons[index.row()].type
             if role == Qt.DecorationRole:
