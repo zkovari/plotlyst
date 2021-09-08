@@ -100,8 +100,10 @@ class NpcCharacter(Character):
 @dataclass
 class Chapter:
     title: str
-    sequence: int
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    def sid(self) -> str:
+        return str(self.id)
 
 
 @dataclass

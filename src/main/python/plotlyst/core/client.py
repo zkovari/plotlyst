@@ -348,7 +348,7 @@ class JsonClient:
         chapters = []
         chapters_ids = {}
         for seq, chapter_info in enumerate(novel_info.chapters):
-            chapter = Chapter(title=chapter_info.title, sequence=seq, id=chapter_info.id)
+            chapter = Chapter(title=chapter_info.title, id=chapter_info.id)
             chapters.append(chapter)
             chapters_ids[str(chapter.id)] = chapter
 

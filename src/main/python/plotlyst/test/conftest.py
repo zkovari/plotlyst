@@ -83,8 +83,8 @@ def init_project():
     conflict = Conflict('Test', ConflictType.SOCIETY, pov=char_a)
     novel.conflicts.append(conflict)
 
-    chapter_1 = Chapter(title='1', sequence=0)
-    chapter_2 = Chapter(title='2', sequence=1)
+    chapter_1 = Chapter(title='1')
+    chapter_2 = Chapter(title='2')
     novel.chapters.append(chapter_1)
     novel.chapters.append(chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],

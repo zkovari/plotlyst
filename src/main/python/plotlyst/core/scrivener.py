@@ -94,7 +94,7 @@ class ScrivenerImporter:
         if not uuid:
             raise ScrivenerParsingError('Could not extract chapter id as UUID attribute was not found')
         title = self._find_title(element)
-        return Chapter(title, sequence=0, id=UUID(uuid))
+        return Chapter(title, id=UUID(uuid))
 
     def _parse_scene(self, element: Element) -> Scene:
         uuid = element.attrib.get('UUID')
