@@ -26,9 +26,11 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class DocumentsView(AbstractNovelView):
@@ -44,25 +46,68 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.ui.treeDocuments.setColumnWidth(1, 20)
         self.ui.treeDocuments.clicked.connect(self._doc_clicked)
+        self.ui.treeDocuments.expandAll()
+        self.model.modelReset.connect(self.refresh)
 
         self.ui.editor.textEditor.textChanged.connect(self._save)
+        self.ui.editor.textTitle.textChanged.connect(self._title_changed)
         self.ui.editor.setHidden(True)
+
+        self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
+        self.ui.btnAdd.clicked.connect(self._add_doc)
+        self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
+        self.ui.btnRemove.clicked.connect(self._remove_doc)
 
     @overrides
     def refresh(self):
-        pass
+        self.ui.treeDocuments.expandAll()
+        self.ui.btnRemove.setEnabled(False)
+
+    def _add_doc(self, parent: Optional[QModelIndex] = None):
+        if parent:
+            index = self.model.insertDocUnder(parent)
+        else:
+            index = self.model.insertDoc()
+        self.ui.treeDocuments.select(index)
+        self._edit(index)
 
     def _doc_clicked(self, index: QModelIndex):
+        self.ui.btnRemove.setEnabled(True)
         if index.column() == 0:
-            self.ui.editor.setVisible(True)
-            node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
-            self._current_doc = node.document
-            if not node.document.content_loaded:
-                json_client.load_document(self.novel, self._current_doc)
-            self.ui.editor.textEditor.setHtml(self._current_doc.content)
-            self.ui.editor.textEditor.setFocus()
+            self._edit(index)
+        elif index.column() == 1:
+            self._add_doc(index)
+
+    def _remove_doc(self):
+        selected = self.ui.treeDocuments.selectionModel().selectedIndexes()
+        if not selected:
+            return
+        self.model.removeDoc(selected[0])
+        self.ui.editor.setVisible(False)
+
+    def _edit(self, index: QModelIndex):
+        self.ui.editor.setVisible(True)
+        node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
+        self._current_doc = node.document
+        if not node.document.content_loaded:
+            json_client.load_document(self.novel, self._current_doc)
+        self.ui.editor.textEditor.setHtml(self._current_doc.content)
+        self.ui.editor.textEditor.setFocus()
+        self.ui.editor.textTitle.setHtml(f'''
+                    <style>
+                        h1 {{text-align: center;}}
+                        </style>
+                    <h1>{self._current_doc.title}</h1>''')
 
     def _save(self):
         if self._current_doc:
             self._current_doc.content = self.ui.editor.textEditor.toHtml()
             json_client.save_document(self.novel, self._current_doc)
+
+    def _title_changed(self):
+        if self._current_doc:
+            new_title = self.ui.editor.textTitle.toPlainText()
+            if new_title and new_title != self._current_doc.title:
+                self._current_doc.title = new_title
+                emit_column_changed_in_tree(self.model, 0, QModelIndex())
+                self.repo.update_novel(self.novel)

@@ -44,6 +44,10 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         super(RichTextEditor, self).__init__(parent)
         self.setupUi(self)
 
+        self.textTitle = AutoAdjustableTextEdit()
+        self.textTitle.setStyleSheet('border: 0px;')
+        self.layout().insertWidget(1, self.textTitle)
+
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
         self.textEditor.setTabStopDistance(
             QtGui.QFontMetricsF(self.textEditor.font()).horizontalAdvance(' ') * 4)

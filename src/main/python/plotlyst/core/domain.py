@@ -653,10 +653,11 @@ def default_character_profiles() -> List[ProfileTemplate]:
 class Document:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    content: str = ''
-    emoji: str = ''
-    content_loaded: bool = False
     children: List['Document'] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.content_loaded: bool = False
+        self.content: str = ''
 
 
 def default_documents() -> List[Document]:
