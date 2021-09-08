@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from PyQt5 import QtGui
+from PyQt5.QtCore import QModelIndex, QItemSelectionModel
 from PyQt5.QtWidgets import QTreeView
 from overrides import overrides
 
@@ -33,3 +34,6 @@ class ActionBasedTreeView(QTreeView):
         index = self.indexAt(event.pos())
         self.model().displayAction(index)
         super(ActionBasedTreeView, self).mouseMoveEvent(event)
+
+    def select(self, index: QModelIndex):
+        self.selectionModel().select(index, QItemSelectionModel.Select)

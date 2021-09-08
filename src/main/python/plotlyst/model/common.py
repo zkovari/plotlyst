@@ -25,7 +25,18 @@ from PyQt5.QtGui import QFont, QColor, QBrush
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import SelectionItem
+from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import IconRegistry
+
+
+def emit_column_changed_in_tree(model: TreeItemModel, column: int, parent: QModelIndex):
+    model.dataChanged.emit(model.index(0, column, parent),
+                           model.index(model.rowCount(parent) - 1, column, parent))
+
+
+def emit_column_changed(model: QAbstractItemModel, column: int = 0):
+    model.dataChanged.emit(model.index(0, column),
+                           model.index(model.rowCount() - 1, column))
 
 
 class AbstractHorizontalHeaderBasedTableModel(QAbstractTableModel):

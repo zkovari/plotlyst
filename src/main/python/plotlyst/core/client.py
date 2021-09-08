@@ -34,7 +34,8 @@ from dataclasses_json import dataclass_json, Undefined
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, default_tags
+    DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, default_tags, \
+    default_documents
 
 
 class ApplicationDbVersion(Enum):
@@ -180,6 +181,7 @@ class NovelInfo:
     conflicts: List[ConflictInfo] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
     tags: List[SelectionItem] = field(default_factory=default_tags)
+    documents: List[Document] = field(default_factory=default_documents)
 
 
 @dataclass
@@ -332,6 +334,9 @@ class JsonClient:
     def save_document(self, novel: Novel, document: Document):
         self.__persist_doc(novel, document)
 
+    def delete_document(self, novel: Novel, document: Document):
+        self.__delete_doc(novel, document)
+
     def fetch_novel(self, id: uuid.UUID) -> Novel:
         project_novel_info: ProjectNovelInfo = self._find_project_novel_info_or_fail(id)
         novel_info = self._read_novel_info(project_novel_info.id)
@@ -464,7 +469,8 @@ class JsonClient:
                      characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
                      story_structure=story_structure, character_profiles=novel_info.character_profiles,
-                     conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags)
+                     conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags,
+                     documents=novel_info.documents)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -494,7 +500,7 @@ class JsonClient:
                                                        pov=x.pov.id,
                                                        character=x.character.id if x.character else None) for x in
                                           novel.conflicts],
-                               scene_goals=novel.scene_goals, tags=novel.tags)
+                               scene_goals=novel.scene_goals, tags=novel.tags, documents=novel.documents)
 
         self.__persist_info(self.novels_dir, novel_info)
 
@@ -583,7 +589,7 @@ class JsonClient:
         with codecs.open(str(path), "r", "utf-8") as doc_file:
             return doc_file.read()
 
-    def __persist_doc(self, novel: Novel, doc: Document, ):
+    def __persist_doc(self, novel: Novel, doc: Document):
         novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
         if not os.path.exists(str(novel_doc_dir)):
             os.mkdir(novel_doc_dir)
@@ -605,6 +611,14 @@ class JsonClient:
         path = self.images_dir.joinpath(self.__image_file(id))
         if os.path.exists(path):
             os.remove(path)
+
+    def __delete_doc(self, novel: Novel, doc: Document):
+        novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
+        if not os.path.exists(str(novel_doc_dir)):
+            return
+        doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
+        if os.path.exists(doc_file_path):
+            os.remove(doc_file_path)
 
 
 json_client = JsonClient()

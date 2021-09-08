@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>3</number>
+    <number>0</number>
    </property>
    <property name="leftMargin">
     <number>2</number>
@@ -44,13 +44,13 @@
        <number>1</number>
       </property>
       <property name="topMargin">
-       <number>1</number>
+       <number>3</number>
       </property>
       <property name="rightMargin">
        <number>1</number>
       </property>
       <property name="bottomMargin">
-       <number>1</number>
+       <number>3</number>
       </property>
       <item>
        <widget class="QComboBox" name="cbHeading"/>
@@ -161,6 +161,9 @@
    </item>
    <item>
     <widget class="QTextEdit" name="textEditor">
+     <property name="styleSheet">
+      <string notr="true">border: 0px;</string>
+     </property>
      <property name="autoFormatting">
       <set>QTextEdit::AutoAll</set>
      </property>
