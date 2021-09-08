@@ -108,6 +108,7 @@ class DocumentsTreeModel(TreeItemModel):
             self.novel.documents.remove(doc)
 
         node.parent = None
+        self.repo.update_novel(self.novel)
         self._removeDoc(doc)
 
         self.modelReset.emit()
