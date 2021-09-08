@@ -26,11 +26,11 @@ from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QMenu, QAction
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Scene, Novel, Character
+from src.main.python.plotlyst.core.domain import Scene, Novel, Character, Chapter
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent
-from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
+from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
@@ -87,7 +87,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
-        self.ui.splitterLeft.setSizes([70, 500])
+        self.ui.splitterLeft.setSizes([150, 500])
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
@@ -169,18 +169,31 @@ class ScenesOutlineView(AbstractNovelView):
         self._update_cards()
 
     def _on_scene_selected(self):
-        selection = len(self.ui.tblScenes.selectedIndexes()) > 0
+        if self.ui.btnTimelineView.isChecked():
+            indexes = self.timeline_view.ui.tblScenes.selectedIndexes()
+        else:
+            indexes = self.ui.tblScenes.selectedIndexes()
+        selection = len(indexes) > 0
         self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
         if selection:
             self.ui.treeChapters.clearSelection()
             emit_event(
-                SceneSelectedEvent(self, self.ui.tblScenes.selectedIndexes()[0].data(ScenesTableModel.SceneRole)))
+                SceneSelectedEvent(self, indexes[0].data(ScenesTableModel.SceneRole)))
 
     def _on_chapter_selected(self):
-        selection = len(self.ui.treeChapters.selectedIndexes()) > 0
-        if selection:
-            self.ui.tblScenes.clearSelection()
+        indexes = self.ui.treeChapters.selectedIndexes()
+        if not indexes:
+            return
+
+        self.ui.tblScenes.clearSelection()
+        if self.selected_card:
+            self.selected_card.clearSelection()
+            self.selected_card = None
+
+        self.ui.btnDelete.setEnabled(True)
+        node = indexes[0].data(ChaptersTreeModel.NodeRole)
+        self.ui.btnEdit.setEnabled(isinstance(node, SceneNode))
 
     def _hide_chapters_toggled(self, toggled: bool):
         self.ui.wgtChapters.setHidden(toggled)
@@ -194,19 +207,38 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.btnNew.setMenu(menu)
 
     def _on_edit(self):
-        if self.ui.btnTableView.isChecked() or self.ui.btnActionsView.isChecked():
-            indexes = self.ui.tblScenes.selectedIndexes()
-            if indexes:
-                scene = indexes[0].data(role=ScenesTableModel.SceneRole)
-            else:
-                return
-        elif self.ui.btnCardsView.isChecked():
-            scene = self.selected_card.scene
-        else:
-            return
+        scene: Optional[Scene] = self._selected_scene()
+        if scene:
+            self.editor = SceneEditor(self.novel, scene)
+            self._switch_to_editor()
 
-        self.editor = SceneEditor(self.novel, scene)
-        self._switch_to_editor()
+    def _selected_scene(self) -> Optional[Scene]:
+        if self.ui.btnCardsView.isChecked() and self.selected_card:
+            return self.selected_card.scene
+        elif self.ui.treeChapters.selectionModel().selectedIndexes():
+            index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
+            node = index.data(ChaptersTreeModel.NodeRole)
+            if isinstance(node, SceneNode):
+                return node.scene
+            return None
+        else:
+            indexes = None
+            if self.ui.btnTableView.isChecked() or self.ui.btnActionsView.isChecked():
+                indexes = self.ui.tblScenes.selectedIndexes()
+            elif self.ui.btnTimelineView.isChecked():
+                indexes = self.timeline_view.ui.tblScenes.selectedIndexes()
+
+            if indexes:
+                return indexes[0].data(role=ScenesTableModel.SceneRole)
+            else:
+                return None
+
+    def _selected_chapter(self) -> Optional[Chapter]:
+        indexes = self.ui.treeChapters.selectionModel().selectedIndexes()
+        if indexes:
+            node = indexes[0].data(ChaptersTreeModel.NodeRole)
+            if isinstance(node, ChapterNode):
+                return node.chapter
 
     def _switch_to_editor(self):
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
@@ -273,6 +305,7 @@ class ScenesOutlineView(AbstractNovelView):
             if not self.timeline_view:
                 self.timeline_view = TimelineView(self.novel)
                 self.ui.pageTimeline.layout().addWidget(self.timeline_view.widget)
+                self.timeline_view.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
         elif self.ui.btnCharactersDistributionView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
             self.ui.tblScenes.clearSelection()
@@ -352,23 +385,20 @@ class ScenesOutlineView(AbstractNovelView):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
     def _on_delete(self):
-        if self.ui.btnTableView.isChecked():
-            indexes = self.ui.tblScenes.selectedIndexes()
-            if indexes:
-                scene = indexes[0].data(role=ScenesTableModel.SceneRole)
-            else:
+        scene: Optional[Scene] = self._selected_scene()
+        if scene and ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
+            self.novel.scenes.remove(scene)
+            self.repo.delete_scene(self.novel, scene)
+            self.refresh()
+            self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
+            emit_event(SceneDeletedEvent(self))
+        elif not scene:
+            chapter = self._selected_chapter()
+            if not chapter:
                 return
-        elif self.ui.btnCardsView.isChecked() and self.selected_card:
-            scene = self.selected_card.scene
-        else:
-            return
-        if not ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
-            return
-        self.novel.scenes.remove(scene)
-        self.repo.delete_scene(self.novel, scene)
-        self.refresh()
-        self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
-        emit_event(SceneDeletedEvent(self))
+            index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
+            if ask_confirmation(f'Are you sure you want to delete "{index.data()}"? (scenes will remain)'):
+                self.chaptersModel.removeChapter(index)
 
     def _on_scene_moved(self):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])

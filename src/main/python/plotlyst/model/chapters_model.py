@@ -61,6 +61,7 @@ class ChaptersTreeModel(TreeItemModel):
     def __init__(self, novel: Novel, parent=None):
         super(ChaptersTreeModel, self).__init__(parent)
         self.novel = novel
+        self.repo = RepositoryPersistenceManager.instance()
 
         self.update()
 
@@ -70,6 +71,8 @@ class ChaptersTreeModel(TreeItemModel):
             return QVariant()
         node = index.internalPointer()
         if isinstance(node, ChapterNode):
+            if role == Qt.DisplayRole:
+                return f'Chapter {index.row() + 1}'
             if role == Qt.DecorationRole:
                 return IconRegistry.chapter_icon()
         if isinstance(node, UncategorizedChapterNode) or (
@@ -86,13 +89,13 @@ class ChaptersTreeModel(TreeItemModel):
         return super().data(index, role)
 
     def update(self):
-        del self.root.children
+        self.root.children = []
         chapters: Dict[str, ChapterNode] = {}
         for chapter in self.novel.chapters:
-            chapters[chapter.title] = ChapterNode(chapter, self.root)
+            chapters[chapter.sid()] = ChapterNode(chapter, self.root)
         for scene in self.novel.scenes:
             if scene.chapter:
-                SceneNode(scene, chapters[scene.chapter.title])
+                SceneNode(scene, chapters[scene.chapter.sid()])
 
         Node('', self.root)  # to mimic empty space
         dummy_parent = UncategorizedChapterNode(self.root)
@@ -102,13 +105,30 @@ class ChaptersTreeModel(TreeItemModel):
 
     def newChapter(self) -> Chapter:
         index = len(self.novel.chapters)
-        chapter = Chapter(title=str(index + 1), sequence=index)
+        chapter = Chapter(title=str(index + 1))
         self.novel.chapters.append(chapter)
 
         self.update()
         self.modelReset.emit()
 
         return chapter
+
+    def removeChapter(self, index: QModelIndex):
+        node = index.internalPointer()
+        if isinstance(node, SceneNode):
+            return
+
+        node.parent = None
+
+        self.novel.chapters.remove(node.chapter)
+        self.repo.update_novel(self.novel)
+        for scene in self.novel.scenes:
+            if scene.chapter and scene.chapter.id == node.chapter.id:
+                scene.chapter = None
+                self.repo.update_scene(scene)
+
+        self.update()
+        self.modelReset.emit()
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
