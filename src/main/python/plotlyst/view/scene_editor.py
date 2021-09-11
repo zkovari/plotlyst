@@ -42,7 +42,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel, ConflictLabel
-from src.main.python.plotlyst.view.widget.scenes import SceneGoalsWidget, SceneDramaticQuestionsWidget
+from src.main.python.plotlyst.view.widget.scenes import SceneGoalsWidget, SceneDramaticQuestionsWidget, SceneTagsWidget
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -144,6 +144,10 @@ class SceneEditor(QObject):
 
         self.questionsEditor = SceneDramaticQuestionsWidget(self.novel)
         self.ui.wdgDramaticQuestions.layout().addWidget(self.questionsEditor)
+
+        self.tagsEditor = SceneTagsWidget(self.novel)
+        self.tagsEditor.setMinimumHeight(50)
+        self.ui.wdgTagsContainer.layout().addWidget(self.tagsEditor)
 
         self._save_timer = QTimer()
         self._save_timer.setInterval(500)
@@ -272,6 +276,9 @@ class SceneEditor(QObject):
 
         self.questionsEditor.clear()
         self.questionsEditor.setValue([x.text for x in self.scene.dramatic_questions])
+
+        self.tagsEditor.clear()
+        self.tagsEditor.setValue(self.scene.tags)
 
         if self._new_scene:
             self.ui.btnPrevious.setDisabled(True)
@@ -472,6 +479,9 @@ class SceneEditor(QObject):
             self.scene.beat = self.ui.cbPivotal.currentData()
         self.scene.dramatic_questions.clear()
         self.scene.dramatic_questions.extend(self.questionsEditor.selectedItems())
+
+        self.scene.tags.clear()
+        self.scene.tags.extend(self.tagsEditor.value())
 
         arc = NEUTRAL
         if self.ui.btnVeryUnhappy.isChecked():

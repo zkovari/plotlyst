@@ -251,6 +251,7 @@ class Scene:
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[SceneGoal] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
 
     def pov_arc(self) -> int:
         for arc in self.arcs:
