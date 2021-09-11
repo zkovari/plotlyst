@@ -656,15 +656,44 @@ class Document:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     children: List['Document'] = field(default_factory=list)
+    character_id: Optional[uuid.UUID] = None
+    scene_id: Optional[uuid.UUID] = None
 
     def __post_init__(self):
         self.content_loaded: bool = False
         self.content: str = ''
+        self._character: Optional[Character] = None
+        self._scene: Optional[Scene] = None
+
+    def character(self, novel: 'Novel') -> Optional[Character]:
+        if not self.character_id:
+            return None
+        if not self._character:
+            for c in novel.characters:
+                if c.id == self.character_id:
+                    self._character = c
+                    break
+
+        return self._character
+
+    def scene(self, novel: 'Novel') -> Optional[Scene]:
+        if not self.scene_id:
+            return None
+        if not self._scene:
+            for s in novel.scenes:
+                if s.id == self.scene_id:
+                    self._scene = s
+                    break
+
+        return self._scene
+
+
+doc_characters_id = uuid.UUID('8fa16650-bed0-489b-baa1-d239e5198d47')
 
 
 def default_documents() -> List[Document]:
     return [Document('Story structure', id=uuid.UUID('ec2a62d9-fc00-41dd-8a6c-b121156b6cf4')),
-            Document('Characters', id=uuid.UUID('8fa16650-bed0-489b-baa1-d239e5198d47')),
+            Document('Characters', id=doc_characters_id),
             Document('Scenes', id=uuid.UUID('75a552f4-037d-4179-860f-dd8400a7545b')),
             Document('Worldbuilding', id=uuid.UUID('5faf7c16-f970-465d-bbcb-1bad56f3313c')),
             Document('Brainstorming', id=uuid.UUID('f6df3a87-7054-40d6-a4b0-ad9917003136'))]

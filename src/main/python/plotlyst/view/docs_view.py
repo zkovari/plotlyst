@@ -19,16 +19,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex
-from PyQt5.QtWidgets import QHeaderView
+from PyQt5.QtCore import QModelIndex, QRect, QPoint
+from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidget, QStylePainter, QStyle, \
+    QStyleOptionButton, QPushButton
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document
+from src.main.python.plotlyst.core.domain import Novel, Document, doc_characters_id, Character
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -63,20 +67,47 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.expandAll()
         self.ui.btnRemove.setEnabled(False)
 
-    def _add_doc(self, parent: Optional[QModelIndex] = None):
+    def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None):
+        doc = Document('New Document')
+        if character:
+            doc.character_id = character.id
+            doc.title = character.name
+
         if parent:
-            index = self.model.insertDocUnder(parent)
+            index = self.model.insertDocUnder(doc, parent)
         else:
-            index = self.model.insertDoc()
+            index = self.model.insertDoc(doc)
         self.ui.treeDocuments.select(index)
+        self.ui.btnRemove.setEnabled(True)
         self._edit(index)
 
     def _doc_clicked(self, index: QModelIndex):
-        self.ui.btnRemove.setEnabled(True)
+        node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
+        self.ui.btnRemove.setEnabled(node.document.id != doc_characters_id)
         if index.column() == 0:
             self._edit(index)
         elif index.column() == 1:
-            self._add_doc(index)
+            if node.document.id == doc_characters_id or 'character' in node.document.title.lower():
+                self._show_characters_popup(index)
+            else:
+                self._add_doc(index)
+
+    def _show_characters_popup(self, index: QModelIndex):
+        def add_character(char_index: QModelIndex):
+            char = char_index.data(CharactersTableModel.CharacterRole)
+            self._add_doc(index, char)
+
+        rect: QRect = self.ui.treeDocuments.visualRect(index)
+        menu = QMenu(self.ui.treeDocuments)
+        action = QWidgetAction(menu)
+        _view = QListView()
+        _view.clicked.connect(add_character)
+        action.setDefaultWidget(_view)
+        _view.setModel(CharactersTableModel(self.novel))
+        menu.addAction(action)
+        menu.addAction(IconRegistry.plus_circle_icon(), 'Add Custom...', lambda: self._add_doc(index))
+
+        menu.popup(self.ui.treeDocuments.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
     def _remove_doc(self):
         selected = self.ui.treeDocuments.selectionModel().selectedIndexes()
@@ -111,3 +142,46 @@ class DocumentsView(AbstractNovelView):
                 self._current_doc.title = new_title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
                 self.repo.update_novel(self.novel)
+
+
+class DocumentsSidebar(QWidget, AbstractNovelView, Ui_DocumentsSidebarWidget):
+
+    def __init__(self, novel: Novel, parent=None):
+        super(DocumentsSidebar, self).__init__(parent)
+        self.novel = novel
+        self.setupUi(self)
+        self._updateDocs()
+
+    @overrides
+    def refresh(self):
+        self._updateDocs()
+
+    def _updateDocs(self):
+        while self.scrollAreaWidgetContents.layout().count():
+            item = self.scrollAreaWidgetContents.layout().takeAt(0)
+            item.widget().deleteLater()
+        for doc in self.novel.documents:
+            btn = RotatedButton()
+            btn.setText(doc.title)
+            self.scrollAreaWidgetContents.layout().addWidget(btn)
+        self.scrollAreaWidgetContents.layout().addWidget(spacer_widget(vertical=True))
+
+
+class RotatedButton(QPushButton):
+    def __init__(self, parent=None):
+        super(RotatedButton, self).__init__(parent)
+
+    @overrides
+    def paintEvent(self, event):
+        painter = QStylePainter(self)
+        option = QStyleOptionButton()
+        self.initStyleOption(option)
+        painter.rotate(90)
+        painter.translate(0, -1 * self.width())
+        option.rect = option.rect.transposed()
+        painter.drawControl(QStyle.CE_PushButton, option)
+
+    def sizeHint(self):
+        size = super(RotatedButton, self).sizeHint()
+        size.transpose()
+        return size
