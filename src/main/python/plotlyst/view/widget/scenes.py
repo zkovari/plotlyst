@@ -20,11 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Set
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QSizePolicy
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal
 from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel
@@ -56,3 +57,27 @@ class SceneGoalsWidget(LabelsEditorWidget):
             self._wdgLabels.addLabel(GoalLabel(item))
         self.scene.goals.clear()
         self.scene.goals.extend(items)
+
+
+class SceneDramaticQuestionsWidget(LabelsEditorWidget):
+
+    def __init__(self, novel: Novel, parent=None):
+        self.novel = novel
+        super(SceneDramaticQuestionsWidget, self).__init__(parent=parent)
+
+    @overrides
+    def _initModel(self) -> SelectionItemsModel:
+        model = NovelDramaticQuestionsModel(self.novel)
+        model.setEditable(False)
+        return model
+
+    @overrides
+    def _initPopupWidget(self) -> QWidget:
+        _view = QListView()
+        _view.setModel(self._model)
+        _view.setModelColumn(SelectionItemsModel.ColName)
+        return _view
+
+    @overrides
+    def items(self) -> List[SelectionItem]:
+        return self.novel.dramatic_questions

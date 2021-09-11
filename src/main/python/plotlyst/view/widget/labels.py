@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from typing import Union, List, Iterable
+from typing import Union, List, Iterable, Set
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
@@ -219,14 +219,14 @@ class LabelsEditorWidget(QFrame):
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Box)
         self.setStyleSheet('LabelsEditorWidget {background: white;}')
-        if alignment:
+        if alignment == Qt.Horizontal:
             self.setLayout(QHBoxLayout())
         else:
             self.setLayout(QVBoxLayout())
         self.layout().setSpacing(2)
         self.layout().setContentsMargins(1, 1, 1, 1)
         self._labels_index = {}
-        self.reset()
+        self.clear()
 
         self.btnEdit = QPushButton()
         self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
@@ -245,14 +245,14 @@ class LabelsEditorWidget(QFrame):
         action.setDefaultWidget(self._popup)
         menu.addAction(action)
         self.btnEdit.setMenu(menu)
-        self.layout().addWidget(self.btnEdit)
+        self.layout().addWidget(self.btnEdit, alignment=Qt.AlignTop)
 
         self._wdgLabels = LabelsWidget()
         self._wdgLabels.setStyleSheet('LabelsWidget {border: 1px solid black;}')
         self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.layout().addWidget(self._wdgLabels)
 
-    def reset(self):
+    def clear(self):
         self._labels_index.clear()
         for item in self.items():
             self._labels_index[item.text] = item
@@ -264,6 +264,9 @@ class LabelsEditorWidget(QFrame):
     @abstractmethod
     def items(self) -> List[SelectionItem]:
         pass
+
+    def selectedItems(self) -> Set[SelectionItem]:
+        return self._model.selections()
 
     def value(self) -> List[str]:
         return [x.text for x in self._model.selections()]
