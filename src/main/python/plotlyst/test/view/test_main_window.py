@@ -89,3 +89,19 @@ def test_import_from_scrivener(qtbot, window: MainWindow, monkeypatch):
 
     view.ui.btnActivate.click()
     assert_views(window)
+
+
+def test_sidebar_toggle(qtbot, filled_window: MainWindow):
+    view: HomeView = go_to_home(filled_window)
+    assert len(view.novel_cards) == 1
+
+    card = view.novel_cards[0]
+    qtbot.mouseClick(card, Qt.LeftButton)
+
+    view.ui.btnActivate.click()
+
+    filled_window.btnComments.click()
+    assert filled_window.wdgSidebar.isVisible()
+
+    filled_window.btnDocs.click()
+    assert filled_window.wdgDocs.isVisible()

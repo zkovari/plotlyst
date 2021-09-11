@@ -38,7 +38,7 @@ from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
-from src.main.python.plotlyst.view.docs_view import DocumentsView
+from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSidebar
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -140,6 +140,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
 
+        self.docs_view = DocumentsSidebar(self.novel)
+        self.wdgDocs.layout().addWidget(self.docs_view)
+
         self.notes_view = DocumentsView(self.novel)
         self.reports_view = ReportsView(self.novel)
 
@@ -206,26 +209,27 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
-        # btn_docs = QToolButton(self.toolBar)
-        # btn_docs.setIcon(IconRegistry.document_edition_icon())
-        # btn_docs.setText('Docs')
-        # btn_docs.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        # btn_docs.setCursor(Qt.PointingHandCursor)
-        # btn_docs.setCheckable(True)
-
         self.btnComments = QToolButton(self.toolBar)
         self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
-        self.btnComments.setMinimumWidth(80)
+        self.btnComments.setMinimumWidth(50)
         self.btnComments.setCursor(Qt.PointingHandCursor)
         self.btnComments.setCheckable(True)
         self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
 
+        self.btnDocs = QToolButton(self.toolBar)
+        self.btnDocs.setIcon(IconRegistry.document_edition_icon())
+        self.btnDocs.setMinimumWidth(50)
+        self.btnDocs.setCursor(Qt.PointingHandCursor)
+        self.btnDocs.setCheckable(True)
+        self.btnDocs.toggled.connect(self.wdgDocs.setVisible)
+
         self.toolBar.addWidget(spacer_widget())
 
-        # self.toolBar.addWidget(btn_docs)
         self.toolBar.addWidget(self.btnComments)
+        self.toolBar.addWidget(self.btnDocs)
 
         self.wdgSidebar.setHidden(True)
+        self.wdgDocs.setHidden(True)
 
     def _import_from_scrivener(self):
         self.btnHome.click()

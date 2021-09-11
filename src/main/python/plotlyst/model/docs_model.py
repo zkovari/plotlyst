@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Any, Optional
 
 from PyQt5.QtCore import QModelIndex, Qt
+from PyQt5.QtGui import QIcon
 from anytree import Node
 from overrides import overrides
 
@@ -27,7 +28,7 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -58,9 +59,16 @@ class DocumentsTreeModel(TreeItemModel):
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if role == self.NodeRole:
+            return super(DocumentsTreeModel, self).data(index, role)
         if index.column() == 0:
             if role == Qt.DisplayRole:
                 return index.internalPointer().document.title
+            if role == Qt.DecorationRole:
+                doc: Document = index.internalPointer().document
+                char = doc.character(self.novel)
+                if char:
+                    return QIcon(avatars.pixmap(char))
             return super(DocumentsTreeModel, self).data(index, role)
         if index.column() == 1 and self._action_index and index.row() == self._action_index.row() \
                 and self._action_index.parent() == index.parent():
@@ -77,8 +85,7 @@ class DocumentsTreeModel(TreeItemModel):
             self._action_index = None
         emit_column_changed_in_tree(self, 1, index)
 
-    def insertDoc(self) -> QModelIndex:
-        doc = Document('New Document')
+    def insertDoc(self, doc: Document) -> QModelIndex:
         DocumentNode(doc, self.root)
         self.novel.documents.append(doc)
         self.modelReset.emit()
@@ -86,9 +93,8 @@ class DocumentsTreeModel(TreeItemModel):
 
         return self.index(self.rowCount(QModelIndex()) - 1, 0, QModelIndex())
 
-    def insertDocUnder(self, index: QModelIndex) -> QModelIndex:
+    def insertDocUnder(self, doc: Document, index: QModelIndex) -> QModelIndex:
         node: DocumentNode = index.internalPointer()
-        doc = Document('New Document')
         node.document.children.append(doc)
         DocumentNode(doc, node)
         self.modelReset.emit()
