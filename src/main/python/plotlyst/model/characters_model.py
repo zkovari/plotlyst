@@ -17,13 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Any, Optional
+from typing import List, Any
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant, pyqtSignal
-from PyQt5.QtGui import QFont, QIcon, QBrush, QColor
+from PyQt5.QtGui import QFont, QIcon
 from overrides import overrides
 
-from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene
 from src.main.python.plotlyst.view.icons import avatars
 
@@ -115,96 +114,3 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
         if self.scene.pov in self.scene.characters:
             self.scene.characters.remove(self.scene.pov)
         self.modelReset.emit()
-
-
-class CharactersScenesDistributionTableModel(QAbstractTableModel):
-
-    def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
-        self.novel = novel
-        self._highlighted_scene: Optional[QModelIndex] = None
-        self._highlighted_characters: List[QModelIndex] = []
-
-    @overrides
-    def rowCount(self, parent: QModelIndex = None) -> int:
-        return len(self.novel.characters)
-
-    @overrides
-    def columnCount(self, parent: QModelIndex = None) -> int:
-        return len(self.novel.scenes) + 1
-
-    @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if not index.isValid():
-            return
-
-        if index.column() == 0:
-            if role == Qt.DecorationRole:
-                return QIcon(avatars.pixmap(self.novel.characters[index.row()]))
-            if role == Qt.ToolTipRole:
-                return self.novel.characters[index.row()].name
-            elif role == Qt.DisplayRole:
-                return len([x for x in self.novel.scenes if
-                            self.novel.characters[index.row()] in x.characters or self.novel.characters[
-                                index.row()] == x.pov])
-            if role == Qt.ForegroundRole:
-                if self._highlighted_characters and index not in self._highlighted_characters:
-                    return QBrush(QColor(Qt.gray))
-        elif role == Qt.ToolTipRole:
-            tooltip = f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
-            if self.novel.scenes[index.column() - 1].beat:
-                tooltip += f' ({self.novel.scenes[index.column() - 1].beat})'
-            return tooltip
-        elif role == Qt.BackgroundRole:
-            if self._match(index):
-                if self._highlighted_scene:
-                    if self._highlighted_scene.column() != index.column():
-                        return QBrush(QColor(Qt.gray))
-                if self._highlighted_characters:
-                    if not all([self._match_by_row_col(x.row(), index.column()) for x in self._highlighted_characters]):
-                        return QBrush(QColor(Qt.gray))
-                if self.novel.scenes[index.column() - 1].wip:
-                    return QBrush(QColor(WIP_COLOR))
-                if self.novel.scenes[index.column() - 1].beat:
-                    return QBrush(QColor(PIVOTAL_COLOR))
-                return QBrush(QColor('darkblue'))
-        return QVariant()
-
-    @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        flags = super().flags(index)
-
-        if self._highlighted_scene and index.column() == 0:
-            if not self._match_by_row_col(index.row(), self._highlighted_scene.column()):
-                return Qt.NoItemFlags
-
-        return flags
-
-    def highlightScene(self, index: QModelIndex):
-        if self._match(index):
-            self._highlighted_scene = index
-        else:
-            self._highlighted_scene = None
-
-        self._highlighted_characters.clear()
-        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount() - 1, self.columnCount() - 1))
-
-    def highlightCharacters(self, indexes: List[QModelIndex]):
-        self._highlighted_characters = indexes
-        self._highlighted_scene = None
-        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount() - 1, self.columnCount() - 1))
-
-    def commonScenes(self) -> int:
-        matches = 0
-        for y in range(1, self.columnCount()):
-            if all(self._match_by_row_col(x.row(), y) for x in self._highlighted_characters):
-                matches += 1
-        return matches
-
-    def _match(self, index: QModelIndex):
-        return self._match_by_row_col(index.row(), index.column())
-
-    def _match_by_row_col(self, row: int, column: int):
-        in_char = self.novel.characters[row] in self.novel.scenes[column - 1].characters
-        pov = self.novel.characters[row] == self.novel.scenes[column - 1].pov
-        return in_char or pov

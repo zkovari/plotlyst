@@ -18,13 +18,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from typing import List, Any, Set
+from typing import List, Any, Set, Optional
 
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel, pyqtSignal
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel, pyqtSignal, \
+    QVariant
 from PyQt5.QtGui import QFont, QColor, QBrush
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import SelectionItem
+from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
+from src.main.python.plotlyst.core.domain import SelectionItem, Novel
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -211,3 +213,93 @@ class SelectionItemsModel(QAbstractTableModel):
 
     def columnIsEditable(self, column: int) -> bool:
         return column == self.ColName
+
+
+class DistributionModel(QAbstractTableModel):
+    SortRole: int = Qt.UserRole + 1
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self.novel = novel
+        self._highlighted_scene: Optional[QModelIndex] = None
+        self._highlighted_tags: List[QModelIndex] = []
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = None) -> int:
+        return len(self.novel.scenes) + 1
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if index.column() == 0:
+            if role == Qt.ForegroundRole:
+                if self._highlighted_tags and index not in self._highlighted_tags:
+                    return QBrush(QColor(Qt.gray))
+            elif role == self.SortRole:
+                count = 0
+                for i, _ in enumerate(self.novel.scenes):
+                    if self._match_by_row_col(index.row(), i + 1):
+                        count += 1
+                return count
+            else:
+                return self._dataForTag(index, role)
+        elif role == Qt.ToolTipRole:
+            tooltip = f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
+            if self.novel.scenes[index.column() - 1].beat:
+                tooltip += f' ({self.novel.scenes[index.column() - 1].beat.text})'
+            return tooltip
+        elif role == Qt.BackgroundRole:
+            if self._match(index):
+                if self._highlighted_scene:
+                    if self._highlighted_scene.column() != index.column():
+                        return QBrush(QColor(Qt.gray))
+                if self._highlighted_tags:
+                    if not all([self._match_by_row_col(x.row(), index.column()) for x in self._highlighted_tags]):
+                        return QBrush(QColor(Qt.gray))
+                if self.novel.scenes[index.column() - 1].wip:
+                    return QBrush(QColor(WIP_COLOR))
+                if self.novel.scenes[index.column() - 1].beat:
+                    return QBrush(QColor(PIVOTAL_COLOR))
+                return QBrush(QColor('darkblue'))
+        return QVariant()
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        flags = super().flags(index)
+
+        if self._highlighted_scene and index.column() == 0:
+            if not self._match_by_row_col(index.row(), self._highlighted_scene.column()):
+                return Qt.NoItemFlags
+
+        return flags
+
+    def commonScenes(self) -> int:
+        matches = 0
+        for y in range(1, self.columnCount()):
+            if all(self._match_by_row_col(x.row(), y) for x in self._highlighted_tags):
+                matches += 1
+        return matches
+
+    def highlightTags(self, indexes: List[QModelIndex]):
+        self._highlighted_tags = indexes
+        self._highlighted_scene = None
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount() - 1, self.columnCount() - 1))
+
+    def highlightScene(self, index: QModelIndex):
+        if self._match(index):
+            self._highlighted_scene = index
+        else:
+            self._highlighted_scene = None
+
+        self._highlighted_tags.clear()
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount() - 1, self.columnCount() - 1))
+
+    def _match(self, index: QModelIndex):
+        return self._match_by_row_col(index.row(), index.column())
+
+    @abstractmethod
+    def _dataForTag(self, index: QModelIndex, role: int = Qt.DisplayRole):
+        pass
+
+    @abstractmethod
+    def _match_by_row_col(self, row: int, column: int) -> bool:
+        pass

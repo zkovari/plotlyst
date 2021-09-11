@@ -29,8 +29,9 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
 from src.main.python.plotlyst.event.core import emit_critical
-from src.main.python.plotlyst.model.characters_model import CharactersScenesDistributionTableModel
 from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
+    ConflictScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
@@ -41,28 +42,37 @@ from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
-class CharactersScenesDistributionWidget(QWidget):
+class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
     avg_text: str = 'Average characters per scenes: '
     common_text: str = 'Common scenes: '
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
-        self.ui = Ui_CharactersScenesDistributionWidget()
-        self.ui.setupUi(self)
+        self.setupUi(self)
         self.novel = novel
         self.average = 0
+
+        self.btnCharacters.setIcon(IconRegistry.character_icon())
+        self.btnConflicts.setIcon(IconRegistry.conflict_icon())
+
         self._model = CharactersScenesDistributionTableModel(self.novel)
         self._scenes_proxy = proxy(self._model)
+        self._scenes_proxy.setSortRole(CharactersScenesDistributionTableModel.SortRole)
         self._scenes_proxy.sort(0, Qt.DescendingOrder)
-        self.ui.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
-        self.ui.tblSceneDistribution.setModel(self._scenes_proxy)
-        self.ui.tblSceneDistribution.hideColumn(0)
-        self.ui.tblCharacters.setModel(self._scenes_proxy)
-        self.ui.tblCharacters.setColumnWidth(0, 70)
-        self.ui.tblCharacters.setMaximumWidth(70)
+        self.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
+        self.tblSceneDistribution.setModel(self._scenes_proxy)
+        self.tblSceneDistribution.hideColumn(0)
+        self.tblCharacters.setModel(self._scenes_proxy)
+        self.tblCharacters.setColumnWidth(0, 70)
+        self.tblCharacters.setMaximumWidth(70)
 
-        self.ui.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
-        self.ui.tblSceneDistribution.selectionModel().selectionChanged.connect(self._on_scene_selected)
+        self.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
+        self.tblSceneDistribution.selectionModel().selectionChanged.connect(self._on_scene_selected)
+
+        self.btnCharacters.toggled.connect(self._toggle_characters)
+        self.btnConflicts.toggled.connect(self._toggle_conflicts)
+
+        self.btnCharacters.setChecked(True)
 
         self.refresh()
 
@@ -74,31 +84,49 @@ class CharactersScenesDistributionWidget(QWidget):
         for col in range(self._model.columnCount()):
             if col == 0:
                 continue
-            self.ui.tblCharacters.hideColumn(col)
-        self.ui.spinAverage.setValue(self.average)
-        self.ui.tblSceneDistribution.horizontalHeader().setMaximumSectionSize(15)
+            self.tblCharacters.hideColumn(col)
+        self.spinAverage.setValue(self.average)
+        self.tblSceneDistribution.horizontalHeader().setMaximumSectionSize(15)
         self._model.modelReset.emit()
 
+    def _toggle_characters(self, toggled: bool):
+        if toggled:
+            self._model = CharactersScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.setColumnWidth(0, 70)
+            self.tblCharacters.setMaximumWidth(70)
+
+            self.spinAverage.setVisible(True)
+
+    def _toggle_conflicts(self, toggled: bool):
+        if toggled:
+            self._model = ConflictScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.setColumnWidth(0, 140)
+            self.tblCharacters.setMaximumWidth(140)
+
+            self.spinAverage.setVisible(False)
+
     def _on_character_selected(self):
-        selected = self.ui.tblCharacters.selectionModel().selectedIndexes()
-        self._model.highlightCharacters(
+        selected = self.tblCharacters.selectionModel().selectedIndexes()
+        self._model.highlightTags(
             [self._scenes_proxy.mapToSource(x) for x in selected])
 
         if selected and len(selected) > 1:
-            self.ui.spinAverage.setPrefix(self.common_text)
-            self.ui.spinAverage.setValue(self._model.commonScenes())
+            self.spinAverage.setPrefix(self.common_text)
+            self.spinAverage.setValue(self._model.commonScenes())
         else:
-            self.ui.spinAverage.setPrefix(self.avg_text)
-            self.ui.spinAverage.setValue(self.average)
+            self.spinAverage.setPrefix(self.avg_text)
+            self.spinAverage.setValue(self.average)
 
-        self.ui.tblSceneDistribution.clearSelection()
+        self.tblSceneDistribution.clearSelection()
 
     def _on_scene_selected(self, selection: QItemSelection):
         indexes = selection.indexes()
         if not indexes:
             return
         self._model.highlightScene(self._scenes_proxy.mapToSource(indexes[0]))
-        self.ui.tblCharacters.clearSelection()
+        self.tblCharacters.clearSelection()
 
 
 class CharacterSelectorWidget(QWidget):

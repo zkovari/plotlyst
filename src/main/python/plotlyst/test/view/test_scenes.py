@@ -204,8 +204,8 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
     view.ui.btnCharactersDistributionView.click()
 
-    assert view.characters_distribution.ui.spinAverage.value() == 3
-    model = view.characters_distribution.ui.tblSceneDistribution.model()
+    assert view.characters_distribution.spinAverage.value() == 3
+    model = view.characters_distribution.tblSceneDistribution.model()
     assert_painted(model.index(0, 1))
     assert_painted(model.index(0, 2))
     assert_painted(model.index(1, 1))
@@ -218,12 +218,12 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
     assert_not_painted(model.index(4, 2))
 
     # click brushed scene cell
-    click_on_item(qtbot, view.characters_distribution.ui.tblSceneDistribution, 0, 1)
+    click_on_item(qtbot, view.characters_distribution.tblSceneDistribution, 0, 1)
     assert model.flags(model.index(3, 0)) == Qt.NoItemFlags
     assert model.flags(model.index(4, 0)) == Qt.NoItemFlags
 
     # click empty area
-    click_on_item(qtbot, view.characters_distribution.ui.tblSceneDistribution, 3, 1)
+    click_on_item(qtbot, view.characters_distribution.tblSceneDistribution, 3, 1)
     assert model.flags(model.index(3, 0)) & Qt.ItemIsEnabled
     assert model.flags(model.index(4, 0)) & Qt.ItemIsEnabled
 
