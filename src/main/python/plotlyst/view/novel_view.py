@@ -133,7 +133,7 @@ class NovelTagsEditor(LabelsEditorWidget):
     def __init__(self, novel: Novel, parent=None):
         self.novel = novel
         super(NovelTagsEditor, self).__init__(checkable=False, parent=parent)
-        self.btnEdit.setIcon(IconRegistry.from_name('mdi.tag-plus'))
+        self.btnEdit.setIcon(IconRegistry.tag_plus_icon())
         self.editor.model.item_edited.connect(self._updateTags)
         self._updateTags()
 

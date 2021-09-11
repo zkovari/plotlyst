@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from typing import List, Set
 
 from PyQt5.QtCore import Qt
@@ -25,7 +26,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel
+from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel
@@ -59,17 +60,12 @@ class SceneGoalsWidget(LabelsEditorWidget):
         self.scene.goals.extend(items)
 
 
-class SceneDramaticQuestionsWidget(LabelsEditorWidget):
+class _SceneLabelsEditor(LabelsEditorWidget):
 
     def __init__(self, novel: Novel, parent=None):
         self.novel = novel
-        super(SceneDramaticQuestionsWidget, self).__init__(parent=parent)
-
-    @overrides
-    def _initModel(self) -> SelectionItemsModel:
-        model = NovelDramaticQuestionsModel(self.novel)
-        model.setEditable(False)
-        return model
+        super().__init__(parent=parent)
+        self.btnEdit.setIcon(IconRegistry.tag_plus_icon())
 
     @overrides
     def _initPopupWidget(self) -> QWidget:
@@ -78,6 +74,36 @@ class SceneDramaticQuestionsWidget(LabelsEditorWidget):
         _view.setModelColumn(SelectionItemsModel.ColName)
         return _view
 
+    @abstractmethod
+    def _initModel(self) -> SelectionItemsModel:
+        pass
+
+    @abstractmethod
+    def items(self) -> List[SelectionItem]:
+        pass
+
+
+class SceneDramaticQuestionsWidget(_SceneLabelsEditor):
+
+    @overrides
+    def _initModel(self) -> SelectionItemsModel:
+        model = NovelDramaticQuestionsModel(self.novel)
+        model.setEditable(False)
+        return model
+
     @overrides
     def items(self) -> List[SelectionItem]:
         return self.novel.dramatic_questions
+
+
+class SceneTagsWidget(_SceneLabelsEditor):
+
+    @overrides
+    def _initModel(self) -> SelectionItemsModel:
+        model = NovelTagsModel(self.novel)
+        model.setEditable(False)
+        return model
+
+    @overrides
+    def items(self) -> List[SelectionItem]:
+        return self.novel.tags

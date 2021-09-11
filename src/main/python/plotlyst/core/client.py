@@ -70,7 +70,10 @@ class SqlClient:
         json_client.update_novel(novel)
 
     def fetch_novel(self, id: uuid.UUID) -> Novel:
-        return json_client.fetch_novel(id)
+        novel = json_client.fetch_novel(id)
+        if len(novel.tags) < 5:
+            novel.tags = default_tags()
+        return novel
 
     def insert_character(self, novel: Novel, character: Character):
         json_client.insert_character(novel, character)
@@ -149,6 +152,7 @@ class SceneInfo:
     conflicts: List[uuid.UUID] = field(default_factory=list)
     goals: List[str] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -463,7 +467,7 @@ class JsonClient:
                               without_action_conflict=info.without_action_conflict, sequence=seq,
                               dramatic_questions=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
-                              conflicts=scene_conflicts, goals=scene_goals, comments=info.comments)
+                              conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags)
                 scenes.append(scene)
         return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=novel_info.dramatic_questions,
                      characters=characters,
@@ -526,7 +530,8 @@ class JsonClient:
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
                          beat=self.__id_or_none(scene.beat),
-                         conflicts=conflicts, goals=[x.text for x in scene.goals], comments=scene.comments)
+                         conflicts=conflicts, goals=[x.text for x in scene.goals], comments=scene.comments,
+                         tags=scene.tags)
         self.__persist_info(self.scenes_dir, info)
 
     @staticmethod

@@ -237,7 +237,7 @@ places = [
 ]
 objects = [
     "fa5.calendar", "fa5.calendar-alt", "fa5.clock", "fa5.compass", "fa5.envelope", "fa5.envelope-open",
-    "fa5.gem",
+    "fa5.gem", "mdi.pickaxe",
     "fa5.hourglass", "fa5.lightbulb",
     "fa5.map", "fa5.money-bill-alt", "fa5.newspaper",
     "fa5.paper-plane", "fa5.trash-alt",

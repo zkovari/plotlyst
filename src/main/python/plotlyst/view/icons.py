@@ -153,6 +153,14 @@ class IconRegistry:
         return qtawesome.icon('fa5s.hashtag')
 
     @staticmethod
+    def tag_plus_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.tag-plus')
+
+    @staticmethod
+    def tags_icon() -> QIcon:
+        return qtawesome.icon('ei.tags')
+
+    @staticmethod
     def graph_icon() -> QIcon:
         return qtawesome.icon('ei.graph')
 
@@ -311,7 +319,7 @@ class IconRegistry:
 
     @staticmethod
     def conflict_supernatural_icon() -> QIcon:
-        return IconRegistry.from_name('ei.magic', color='#ac7b84')
+        return IconRegistry.from_name('mdi.creation', color='#ac7b84')
 
     @staticmethod
     def conflict_self_icon() -> QIcon:
