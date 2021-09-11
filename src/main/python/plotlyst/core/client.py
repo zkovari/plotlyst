@@ -70,7 +70,10 @@ class SqlClient:
         json_client.update_novel(novel)
 
     def fetch_novel(self, id: uuid.UUID) -> Novel:
-        return json_client.fetch_novel(id)
+        novel = json_client.fetch_novel(id)
+        if len(novel.tags) < 5:
+            novel.tags = default_tags()
+        return novel
 
     def insert_character(self, novel: Novel, character: Character):
         json_client.insert_character(novel, character)

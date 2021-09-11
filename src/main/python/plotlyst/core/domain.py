@@ -701,8 +701,12 @@ def default_documents() -> List[Document]:
 
 
 def default_tags() -> List[SelectionItem]:
-    return [SelectionItem('Flashback', icon='ei.backward', icon_color='white', color_hexa='#1b263b'),
-            SelectionItem('Flashforward', icon='ei.forward', icon_color='white', color_hexa='#1b998b')]
+    return [SelectionItem('Flashback', icon='fa5s.backward', icon_color='white', color_hexa='#1b263b'),
+            SelectionItem('Flashforward', icon='fa5s.forward', icon_color='white', color_hexa='#1b998b'),
+            SelectionItem('Foreshadowing', icon='mdi.crystal-ball', icon_color='#76bed0'),
+            SelectionItem('Cliffhanger', icon='mdi.target-account', icon_color='#f7cb15'),
+            SelectionItem('Backstory', icon='mdi.archive', icon_color='#9a6d38'),
+            SelectionItem('Red herring', icon='fa5s.fish', icon_color='#d33f49')]
 
 
 @dataclass

@@ -319,7 +319,7 @@ class IconRegistry:
 
     @staticmethod
     def conflict_supernatural_icon() -> QIcon:
-        return IconRegistry.from_name('ei.magic', color='#ac7b84')
+        return IconRegistry.from_name('mdi.creation', color='#ac7b84')
 
     @staticmethod
     def conflict_self_icon() -> QIcon:
