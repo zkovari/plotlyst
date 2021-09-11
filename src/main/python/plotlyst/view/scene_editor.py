@@ -440,11 +440,6 @@ class SceneEditor(QObject):
         else:
             self.ui.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(128, 128)))
 
-    def _dramatic_question_selection_changed(self):
-        self.questionsEditor.clear()
-        self.questionsEditor.setValue([x.text for x in self.scene.dramatic_questions])
-        self._save_scene()
-
     def _character_changed(self):
         self.ui.wdgCharacters.clear()
 
