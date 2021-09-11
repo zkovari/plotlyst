@@ -227,6 +227,16 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
     assert model.flags(model.index(3, 0)) & Qt.ItemIsEnabled
     assert model.flags(model.index(4, 0)) & Qt.ItemIsEnabled
 
+    view.characters_distribution.btnConflicts.click()
+    assert not view.characters_distribution.spinAverage.isVisible()
+
+    model = view.characters_distribution.tblSceneDistribution.model()
+    assert model.rowCount() == 1
+
+    view.characters_distribution.btnTags.click()
+    model = view.characters_distribution.tblSceneDistribution.model()
+    assert model.rowCount() == 2
+
 
 def test_add_scene_comment(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)

@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, Con
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
-    ConflictScenesDistributionTableModel
+    ConflictScenesDistributionTableModel, TagScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
@@ -54,6 +54,7 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
 
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnConflicts.setIcon(IconRegistry.conflict_icon())
+        self.btnTags.setIcon(IconRegistry.tags_icon())
 
         self._model = CharactersScenesDistributionTableModel(self.novel)
         self._scenes_proxy = proxy(self._model)
@@ -71,6 +72,7 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
 
         self.btnCharacters.toggled.connect(self._toggle_characters)
         self.btnConflicts.toggled.connect(self._toggle_conflicts)
+        self.btnTags.toggled.connect(self._toggle_tags)
 
         self.btnCharacters.setChecked(True)
 
@@ -101,6 +103,15 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
     def _toggle_conflicts(self, toggled: bool):
         if toggled:
             self._model = ConflictScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.setColumnWidth(0, 140)
+            self.tblCharacters.setMaximumWidth(140)
+
+            self.spinAverage.setVisible(False)
+
+    def _toggle_tags(self, toggled: bool):
+        if toggled:
+            self._model = TagScenesDistributionTableModel(self.novel)
             self._scenes_proxy.setSourceModel(self._model)
             self.tblCharacters.setColumnWidth(0, 140)
             self.tblCharacters.setMaximumWidth(140)

@@ -234,6 +234,8 @@ class DistributionModel(QAbstractTableModel):
             if role == Qt.ForegroundRole:
                 if self._highlighted_tags and index not in self._highlighted_tags:
                     return QBrush(QColor(Qt.gray))
+                else:
+                    return self._dataForTag(index, role)
             elif role == self.SortRole:
                 count = 0
                 for i, _ in enumerate(self.novel.scenes):

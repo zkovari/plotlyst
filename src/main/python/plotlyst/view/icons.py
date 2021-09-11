@@ -153,6 +153,14 @@ class IconRegistry:
         return qtawesome.icon('fa5s.hashtag')
 
     @staticmethod
+    def tag_plus_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.tag-plus')
+
+    @staticmethod
+    def tags_icon() -> QIcon:
+        return qtawesome.icon('ei.tags')
+
+    @staticmethod
     def graph_icon() -> QIcon:
         return qtawesome.icon('ei.graph')
 
