@@ -538,7 +538,7 @@ positive_traits = sorted(['Generous', 'Objective', 'Principled', 'Rational',
                           'Structured', 'Caring', 'Warm', 'Driven', 'Ambitious', 'Self-aware', 'Sensitive',
                           'Expressive', 'Perceptive', 'Curious', 'Innovative', 'Committed', 'Responsible', 'Organized',
                           'Optimistic', 'Flexible', 'Practical',
-                          'Adventurous', 'Decisive', 'Powerful', 'Assertive',
+                          'Adventurous', 'Decisive', 'Powerful', 'Assertive', 'Pragmatic',
                           'Independent', 'Easygoing', 'Understanding', 'Patient',
                           'Supportive'])
 negative_traits = sorted(
