@@ -65,7 +65,6 @@ class _SceneLabelsEditor(LabelsEditorWidget):
     def __init__(self, novel: Novel, parent=None):
         self.novel = novel
         super().__init__(parent=parent)
-        self.btnEdit.setIcon(IconRegistry.tag_plus_icon())
 
     @overrides
     def _initPopupWidget(self) -> QWidget:
@@ -97,6 +96,10 @@ class SceneDramaticQuestionsWidget(_SceneLabelsEditor):
 
 
 class SceneTagsWidget(_SceneLabelsEditor):
+
+    def __init__(self, novel: Novel, parent=None):
+        super(SceneTagsWidget, self).__init__(novel, parent)
+        self.btnEdit.setIcon(IconRegistry.tag_plus_icon())
 
     @overrides
     def _initModel(self) -> SelectionItemsModel:
