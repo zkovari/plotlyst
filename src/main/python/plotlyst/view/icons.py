@@ -346,7 +346,7 @@ class IconRegistry:
         _color_on = color_on if color_on else color
         if name.startswith('md'):
             return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, options=[{'scale_factor': mdi_scale}]))
-        return QIcon(qtawesome.icon(name, color=color, color_on=color_on))
+        return QIcon(qtawesome.icon(name, color=color, color_on=_color_on))
 
 
 class AvatarsRegistry:
