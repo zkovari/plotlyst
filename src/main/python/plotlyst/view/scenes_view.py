@@ -87,7 +87,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
-        self.ui.splitterLeft.setSizes([150, 500])
+        self.ui.splitterLeft.setSizes([100, 500])
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
