@@ -77,6 +77,7 @@ class ReportsView(AbstractNovelView):
         self.scenes_model = ScenesTableModel(self.novel)
         self._scenes_proxy = ScenesFilterProxyModel()
         self._scenes_proxy.setSourceModel(self.scenes_model)
+        self._scenes_proxy.setEmptyPovFilter(True)
 
         for pov in self.novel.pov_characters():
             self._scenes_proxy.setCharacterFilter(pov, False)

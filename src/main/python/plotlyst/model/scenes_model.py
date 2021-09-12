@@ -306,6 +306,7 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
         super().__init__()
         self.character_filter: Dict[str, bool] = {}
         self.acts_filter: Dict[int, bool] = {}
+        self.empty_pov_filter: bool = False
 
     def setCharacterFilter(self, character: Character, filter: bool):
         self.character_filter[str(character.id)] = filter
@@ -313,6 +314,10 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
 
     def setActsFilter(self, act: int, filter: bool):
         self.acts_filter[act] = filter
+        self.invalidateFilter()
+
+    def setEmptyPovFilter(self, filter: bool):
+        self.empty_pov_filter = filter
         self.invalidateFilter()
 
     @overrides
@@ -325,6 +330,10 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
         scene: Scene = self.sourceModel().data(self.sourceModel().index(source_row, 0), role=ScenesTableModel.SceneRole)
         if not scene:
             return filtered
+
+        if self.empty_pov_filter and not scene.pov:
+            return False
+
         if scene.pov and not self.character_filter.get(str(scene.pov.id), True):
             return False
 
