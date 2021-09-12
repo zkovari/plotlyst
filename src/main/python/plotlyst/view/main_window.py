@@ -31,7 +31,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
-    SceneChangedEvent, CharacterChangedEvent, NovelUpdatedEvent
+    SceneChangedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -99,11 +99,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, NovelUpdatedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel.title = event.novel.title
-        elif isinstance(event, CharacterChangedEvent):
-            self.btnScenes.setEnabled(True)
-            event_dispatcher.deregister(self, CharacterChangedEvent)
         elif isinstance(event, SceneChangedEvent):
-            self.btnNotes.setEnabled(True)
             self.btnReport.setEnabled(True)
             event_dispatcher.deregister(self, SceneChangedEvent)
 
@@ -158,8 +154,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageNotes.layout().addWidget(self.notes_view.widget)
         self.pageReports.layout().addWidget(self.reports_view.widget)
 
-        self.btnScenes.setEnabled(len(self.novel.characters) > 0 or len(self.novel.scenes) > 0)
-        self.btnNotes.setEnabled(len(self.novel.scenes) > 0)
         self.btnReport.setEnabled(len(self.novel.scenes) > 0)
         if self.novel.scenes:
             self.btnScenes.setChecked(True)
@@ -278,8 +272,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, NovelUpdatedEvent)
         if self.novel and not self.novel.scenes:
             event_dispatcher.register(self, SceneChangedEvent)
-        if self.novel and not self.novel.characters:
-            event_dispatcher.register(self, CharacterChangedEvent)
 
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)

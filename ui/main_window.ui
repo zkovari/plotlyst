@@ -249,7 +249,7 @@
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
          <property name="toolTip">
-          <string>Notes</string>
+          <string>Documents</string>
          </property>
          <property name="text">
           <string/>
