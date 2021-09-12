@@ -122,13 +122,7 @@ class DocumentsView(AbstractNovelView):
         self._current_doc = node.document
         if not node.document.content_loaded:
             json_client.load_document(self.novel, self._current_doc)
-        self.ui.editor.textEditor.setHtml(self._current_doc.content)
-        self.ui.editor.textEditor.setFocus()
-        self.ui.editor.textTitle.setHtml(f'''
-                    <style>
-                        h1 {{text-align: center;}}
-                        </style>
-                    <h1>{self._current_doc.title}</h1>''')
+        self.ui.editor.setText(self._current_doc.content, self._current_doc.title)
 
     def _save(self):
         if self._current_doc:

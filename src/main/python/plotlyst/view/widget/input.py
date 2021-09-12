@@ -80,6 +80,15 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.btnAlignRight.setIcon(IconRegistry.from_name('fa5s.align-right'))
         self.btnAlignRight.clicked.connect(lambda: self.textEditor.setAlignment(Qt.AlignRight))
 
+    def setText(self, content: str, title: str = ''):
+        self.textEditor.setHtml(content)
+        self.textEditor.setFocus()
+        self.textTitle.setHtml(f'''
+                            <style>
+                                h1 {{text-align: center;}}
+                                </style>
+                            <h1>{title}</h1>''')
+
     def _updateFormat(self):
         self.btnBold.setChecked(self.textEditor.fontWeight() == QFont.Bold)
         self.btnItalic.setChecked(self.textEditor.fontItalic())
@@ -90,8 +99,13 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.btnAlignRight.setChecked(self.textEditor.alignment() == Qt.AlignRight)
 
         self.cbHeading.blockSignals(True)
-        level = self.textEditor.textCursor().blockFormat().headingLevel()
-        self.cbHeading.setCurrentIndex(level)
+        cursor = self.textEditor.textCursor()
+        if cursor.atBlockStart() and cursor.block().length() <= 1:  # only newline character
+            self.cbHeading.setCurrentIndex(0)
+            self._setHeading()
+        else:
+            level = cursor.blockFormat().headingLevel()
+            self.cbHeading.setCurrentIndex(level)
         self.cbHeading.blockSignals(False)
 
     def _setHeading(self):
