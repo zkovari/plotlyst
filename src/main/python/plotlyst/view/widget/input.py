@@ -18,9 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat
+from PyQt5.QtCore import Qt, QObject, QEvent
+from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
+    QKeyEvent
 from PyQt5.QtWidgets import QTextEdit, QFrame
+from overrides import overrides
 
 from src.main.python.plotlyst.view.generated.rich_text_editor_widget_ui import Ui_RichTextEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -49,6 +51,7 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.layout().insertWidget(1, self.textTitle)
 
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
+        self.textEditor.installEventFilter(self)
         self.textEditor.setTabStopDistance(
             QtGui.QFontMetricsF(self.textEditor.font()).horizontalAdvance(' ') * 4)
 
@@ -90,6 +93,32 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
                             <h1>{title}</h1>''')
         self.textTitle.setReadOnly(title_read_only)
 
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(event, QKeyEvent):
+            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
+                cursor = self.textEditor.textCursor()
+                _list = cursor.block().textList()
+                if _list and _list.count() > 1:
+                    cursor.beginEditBlock()
+                    block = cursor.block()
+                    _list.remove(block)
+                    _list.format().setIndent(_list.format().indent() + 1)
+                    cursor.insertList(_list.format())
+
+                    cursor.endEditBlock()
+                    return True
+            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
+                cursor = self.textEditor.textCursor()
+                level = cursor.blockFormat().headingLevel()
+                if level > 0:  # heading
+                    cursor.insertBlock()
+                    self.cbHeading.setCurrentIndex(0)
+                    self._setHeading()
+                    return True
+
+        return super(RichTextEditor, self).eventFilter(watched, event)
+
     def _updateFormat(self):
         self.btnBold.setChecked(self.textEditor.fontWeight() == QFont.Bold)
         self.btnItalic.setChecked(self.textEditor.fontItalic())
@@ -101,12 +130,8 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
 
         self.cbHeading.blockSignals(True)
         cursor = self.textEditor.textCursor()
-        if cursor.atBlockStart() and cursor.block().length() <= 1:  # only newline character
-            self.cbHeading.setCurrentIndex(0)
-            self._setHeading()
-        else:
-            level = cursor.blockFormat().headingLevel()
-            self.cbHeading.setCurrentIndex(level)
+        level = cursor.blockFormat().headingLevel()
+        self.cbHeading.setCurrentIndex(level)
         self.cbHeading.blockSignals(False)
 
     def _setHeading(self):
