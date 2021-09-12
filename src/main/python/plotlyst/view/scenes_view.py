@@ -29,7 +29,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Scene, Novel, Character, Chapter
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
-    SceneSelectedEvent
+    SceneSelectedEvent, SceneSelectionClearedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -332,6 +332,8 @@ class ScenesOutlineView(AbstractNovelView):
                 continue
             self.ui.tblScenes.hideColumn(col)
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
+
+        emit_event(SceneSelectionClearedEvent(self))
 
     def _init_stages_view(self):
         self.stagesModel = ScenesStageTableModel(self.novel)

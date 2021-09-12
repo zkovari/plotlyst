@@ -54,6 +54,11 @@ class SceneSelectedEvent(Event):
 
 
 @dataclass
+class SceneSelectionClearedEvent(Event):
+    pass
+
+
+@dataclass
 class NovelUpdatedEvent(Event):
     novel: NovelDescriptor
 

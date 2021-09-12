@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>255</width>
-    <height>189</height>
+    <width>277</width>
+    <height>197</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -44,6 +44,31 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QToolButton" name="btnDelete">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QToolButton {border: 0px;
+}
+
+QToolButton::menu-indicator{width:0px;}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>12</width>
+         <height>12</height>
+        </size>
+       </property>
+       <property name="popupMode">
+        <enum>QToolButton::InstantPopup</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QToolButton" name="btnCharacter">
        <property name="styleSheet">
         <string notr="true">border: 0px;</string>
@@ -58,9 +83,6 @@
         </size>
        </property>
       </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="cbScene"/>
      </item>
      <item>
       <spacer name="horizontalSpacer">
@@ -111,7 +133,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="btnMenu">
+      <widget class="QToolButton" name="btnEdit">
        <property name="cursor">
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
@@ -126,8 +148,8 @@ QToolButton::menu-indicator{width:0px;}</string>
        </property>
        <property name="iconSize">
         <size>
-         <width>24</width>
-         <height>24</height>
+         <width>16</width>
+         <height>16</height>
         </size>
        </property>
        <property name="popupMode">
