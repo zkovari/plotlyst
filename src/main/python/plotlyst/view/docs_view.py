@@ -124,7 +124,7 @@ class DocumentsView(AbstractNovelView):
             json_client.load_document(self.novel, self._current_doc)
         char = node.document.character(self.novel)
         if char:
-            self.ui.editor.setText(self._current_doc.content, char.name)
+            self.ui.editor.setText(self._current_doc.content, char.name, title_read_only=True)
         else:
             self.ui.editor.setText(self._current_doc.content, self._current_doc.title)
 

@@ -80,7 +80,7 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.btnAlignRight.setIcon(IconRegistry.from_name('fa5s.align-right'))
         self.btnAlignRight.clicked.connect(lambda: self.textEditor.setAlignment(Qt.AlignRight))
 
-    def setText(self, content: str, title: str = ''):
+    def setText(self, content: str, title: str = '', title_read_only: bool = False):
         self.textEditor.setHtml(content)
         self.textEditor.setFocus()
         self.textTitle.setHtml(f'''
@@ -88,6 +88,7 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
                                 h1 {{text-align: center;}}
                                 </style>
                             <h1>{title}</h1>''')
+        self.textTitle.setReadOnly(title_read_only)
 
     def _updateFormat(self):
         self.btnBold.setChecked(self.textEditor.fontWeight() == QFont.Bold)
