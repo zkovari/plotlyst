@@ -8,3 +8,8 @@ def test_icon_picker(qtbot):
 
     assert icon_selector.model.rowCount()
     click_on_item(qtbot, icon_selector.lstIcons, 0)
+
+    icon_selector.btnFood.click()
+
+    icon_selector.lineFilter.setText('cat')
+    assert icon_selector.btnAll.isChecked()

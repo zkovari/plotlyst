@@ -37,6 +37,8 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         super(IconSelectorWidget, self).__init__(parent)
         self.setupUi(self)
 
+        self.btnFilterIcon.setIcon(IconRegistry.from_name('mdi.magnify'))
+
         self.btnPeople.setIcon(IconRegistry.from_name('mdi.account', color_on='darkGreen'))
         self.btnFood.setIcon(IconRegistry.from_name('fa5s.ice-cream', color_on='darkGreen'))
         self.btnNature.setIcon(IconRegistry.from_name('mdi.nature', color_on='darkGreen'))
@@ -67,6 +69,8 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self.lstIcons.setViewMode(QListView.IconMode)
         self.lstIcons.clicked.connect(self._icon_clicked)
 
+        self.lineFilter.textChanged.connect(self._text_changed)
+
         self.buttonGroup.buttonToggled.connect(self._filter_toggled)
 
         self._color: QColor = QColor('black')
@@ -85,7 +89,14 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
             self._color = color
             self._update_button_color()
 
+    def _text_changed(self, text: str):
+        self.btnAll.setChecked(True)
+        self._proxy.setFilterRole(self._Model.IconAliasRole)
+        self._proxy.setFilterRegExp(text)
+
     def _filter_toggled(self):
+        self.lineFilter.clear()
+        self._proxy.setFilterRole(self._Model.IconTypeRole)
         if self.btnPeople.isChecked():
             self._proxy.setFilterFixedString('People')
         elif self.btnFood.isChecked():
