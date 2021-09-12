@@ -38,8 +38,20 @@
       </size>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3">
+      <property name="spacing">
+       <number>3</number>
+      </property>
+      <property name="leftMargin">
+       <number>1</number>
+      </property>
+      <property name="topMargin">
+       <number>1</number>
+      </property>
       <property name="rightMargin">
-       <number>5</number>
+       <number>1</number>
+      </property>
+      <property name="bottomMargin">
+       <number>1</number>
       </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -94,6 +106,9 @@
         </property>
         <property name="mouseTracking">
          <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">padding-right: 2px;</string>
         </property>
         <attribute name="headerVisible">
          <bool>false</bool>
