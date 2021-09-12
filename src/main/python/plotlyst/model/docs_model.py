@@ -62,11 +62,13 @@ class DocumentsTreeModel(TreeItemModel):
         if role == self.NodeRole:
             return super(DocumentsTreeModel, self).data(index, role)
         if index.column() == 0:
+            doc: Document = index.internalPointer().document
+            char = doc.character(self.novel)
             if role == Qt.DisplayRole:
+                if char:
+                    return char.name
                 return index.internalPointer().document.title
             if role == Qt.DecorationRole:
-                doc: Document = index.internalPointer().document
-                char = doc.character(self.novel)
                 if char:
                     return QIcon(avatars.pixmap(char))
             return super(DocumentsTreeModel, self).data(index, role)

@@ -70,8 +70,8 @@ class DocumentsView(AbstractNovelView):
     def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None):
         doc = Document('New Document')
         if character:
+            doc.title = ''
             doc.character_id = character.id
-            doc.title = character.name
 
         if parent:
             index = self.model.insertDocUnder(doc, parent)
@@ -95,7 +95,7 @@ class DocumentsView(AbstractNovelView):
     def _show_characters_popup(self, index: QModelIndex):
         def add_character(char_index: QModelIndex):
             char = char_index.data(CharactersTableModel.CharacterRole)
-            self._add_doc(index, char)
+            self._add_doc(index, character=char)
 
         rect: QRect = self.ui.treeDocuments.visualRect(index)
         menu = QMenu(self.ui.treeDocuments)
@@ -122,7 +122,11 @@ class DocumentsView(AbstractNovelView):
         self._current_doc = node.document
         if not node.document.content_loaded:
             json_client.load_document(self.novel, self._current_doc)
-        self.ui.editor.setText(self._current_doc.content, self._current_doc.title)
+        char = node.document.character(self.novel)
+        if char:
+            self.ui.editor.setText(self._current_doc.content, char.name)
+        else:
+            self.ui.editor.setText(self._current_doc.content, self._current_doc.title)
 
     def _save(self):
         if self._current_doc:
