@@ -23,7 +23,7 @@ from PyQt5.QtChart import QChart, QChartView, QPieSeries, QPieSlice
 from PyQt5.QtCore import Qt, QMargins
 from PyQt5.QtGui import QPainter, QColor, QFont
 
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, SceneStage
 
 
 class ProgressChartView(QChartView):
@@ -72,6 +72,14 @@ class SceneStageProgressCharts:
 
     def charts(self) -> List[ProgressChartView]:
         return self._chartviews
+
+    def stage(self) -> SceneStage:
+        return self._stage
+
+    def setStage(self, stage: SceneStage):
+        self._stage = stage
+        self._stage_index = self.novel.stages.index(self._stage)
+        self.refresh()
 
     def refresh(self):
         in_act_1 = True

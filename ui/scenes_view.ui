@@ -546,7 +546,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>0</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="pageCards">
               <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -715,6 +715,19 @@
                     <number>1</number>
                    </property>
                    <item>
+                    <widget class="RotatedButton" name="btnStageSelector">
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>20</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
                     <widget class="QWidget" name="wdgProgressCharts" native="true">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -860,6 +873,11 @@
    <class>ActionBasedTreeView</class>
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.tree_view</header>
+  </customwidget>
+  <customwidget>
+   <class>RotatedButton</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

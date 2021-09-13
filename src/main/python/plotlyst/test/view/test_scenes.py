@@ -159,6 +159,18 @@ def test_change_stage(qtbot, filled_window: MainWindow):
     pie_series = charts[0].chart.series()[0]
     assert pie_series.slices()[0].percentage() == 0.5
 
+    view.ui.btnStageSelector.menu().actions()[0].trigger()
+    assert view.ui.btnStageSelector.text() == 'Outlined'
+    assert view.stagesProgress.stage().stage == 'Outlined'
+
+    view.ui.btnStageSelector.menu().actions()[3].trigger()
+    assert view.ui.btnStageSelector.text() == '3rd Draft'
+    assert view.stagesProgress.stage().stage == '3rd Draft'
+
+    charts = view.stagesProgress.charts()
+    pie_series: QPieSeries = charts[0].chart.series()[0]
+    assert pie_series.slices()[0].percentage() == 0.0
+
 
 def test_timeline_display(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)

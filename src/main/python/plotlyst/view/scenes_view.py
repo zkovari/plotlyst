@@ -26,7 +26,7 @@ from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
 from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QMenu, QAction
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Scene, Novel, Character, Chapter
+from src.main.python.plotlyst.core.domain import Scene, Novel, Character, Chapter, SceneStage
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 
 
@@ -336,6 +337,11 @@ class ScenesOutlineView(AbstractNovelView):
         emit_event(SceneSelectionClearedEvent(self))
 
     def _init_stages_view(self):
+        def change_stage(stage: SceneStage):
+            self.stagesProgress.setStage(stage)
+            self.ui.btnStageSelector.setText(stage.stage)
+            self.stagesModel.setHighlightedStage(stage)
+
         self.stagesModel = ScenesStageTableModel(self.novel)
         self.ui.tblSceneStages.setModel(self.stagesModel)
         self.ui.tblSceneStages.verticalHeader().setStyleSheet(
@@ -350,6 +356,14 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
             self.ui.tblSceneStages.setColumnWidth(col, w + 10)
         self.stagesProgress = SceneStageProgressCharts(self.novel)
+        self.ui.btnStageSelector.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+        self.ui.btnStageSelector.setIcon(IconRegistry.progress_check_icon())
+        menu = QMenu(self.ui.btnStageSelector)
+        for stage in self.novel.stages:
+            menu.addAction(stage.stage, partial(change_stage, stage))
+        self.ui.btnStageSelector.setMenu(menu)
+        self.ui.btnStageSelector.setText(self.stagesProgress.stage().stage)
+        self.stagesModel.setHighlightedStage(self.stagesProgress.stage())
 
         self.ui.tblSceneStages.clicked.connect(self.stagesModel.changeStage)
         self.ui.tblSceneStages.clicked.connect(self.stagesProgress.refresh)

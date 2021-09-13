@@ -28,7 +28,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, Character, \
-    ConflictType, SelectionItem, SceneGoal
+    ConflictType, SelectionItem, SceneGoal, SceneStage
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -351,6 +351,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
+        self._highlighted_stage: Optional[SceneStage] = None
 
     @overrides
     def rowCount(self, parent: QModelIndex = ...) -> int:
@@ -374,8 +375,17 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
         if role == Qt.DisplayRole:
             if self._scene(index).stage and self._scene(index).stage.id == self._stage(index).id:
                 return emoji.emojize(':check_mark:')
+        if role == Qt.BackgroundRole and index.column() > self.ColNoneStage and self._highlighted_stage:
+            if self.novel.stages[index.column() - 2] == self._highlighted_stage:
+                return QBrush(QColor('#c1e0f7'))
         if role == Qt.DisplayRole and index.column() == self.ColTitle:
             return self._scene(index).title
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        if index.column() == self.ColTitle:
+            return Qt.ItemIsEnabled
+        return super(ScenesStageTableModel, self).flags(index)
 
     @overrides
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
@@ -398,6 +408,10 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
             self._scene(index).stage = self._stage(index)
 
         RepositoryPersistenceManager.instance().update_scene(self._scene(index))
+        self.modelReset.emit()
+
+    def setHighlightedStage(self, stage: SceneStage):
+        self._highlighted_stage = stage
         self.modelReset.emit()
 
     def _scene(self, index: QModelIndex) -> Scene:
