@@ -24,7 +24,7 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QLabel
 
-from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
+from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
 
@@ -300,6 +300,21 @@ class IconRegistry:
     @staticmethod
     def cards_icon() -> QIcon:
         return IconRegistry.from_name('mdi.cards')
+
+    @staticmethod
+    def conflict_type_icon(type: ConflictType) -> QIcon:
+        if type == ConflictType.CHARACTER:
+            return IconRegistry.conflict_character_icon()
+        elif type == ConflictType.SOCIETY:
+            return IconRegistry.conflict_society_icon()
+        elif type == ConflictType.NATURE:
+            return IconRegistry.conflict_nature_icon()
+        elif type == ConflictType.TECHNOLOGY:
+            return IconRegistry.conflict_technology_icon()
+        elif type == ConflictType.SUPERNATURAL:
+            return IconRegistry.conflict_supernatural_icon()
+        elif type == ConflictType.SELF:
+            return IconRegistry.conflict_self_icon()
 
     @staticmethod
     def conflict_character_icon() -> QIcon:

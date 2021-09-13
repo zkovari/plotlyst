@@ -70,6 +70,10 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         else:
             self.tableView.hideColumn(SelectionItemsModel.ColBgColor)
 
+    def setAdditionEnabled(self, enabled: bool):
+        self.btnAdd.setEnabled(enabled)
+        self.btnAdd.setVisible(enabled)
+
     def refresh(self):
         self.model.modelReset.emit()
         self.btnEdit.setEnabled(False)

@@ -20,14 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from abc import abstractmethod
 from typing import Any
 
-from PyQt5.QtCore import QModelIndex, Qt
+from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel
+from PyQt5.QtGui import QIcon
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion, SelectionItem
+from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion, SelectionItem, Conflict
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import StorylineCreatedEvent, NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -112,3 +114,56 @@ class NovelTagsModel(_NovelSelectionItemsModel):
 
         self.repo.update_novel(self.novel)
         emit_event(NovelReloadRequestedEvent(self))
+
+
+class NovelConflictsModel(QAbstractTableModel):
+    ColPov = 0
+    ColType = 1
+    ColPhrase = 2
+
+    ConflictRole = Qt.UserRole + 1
+
+    def __init__(self, novel: Novel, parent=None):
+        super(NovelConflictsModel, self).__init__(parent)
+        self.novel = novel
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = ...) -> int:
+        return len(self.novel.conflicts)
+
+    @overrides
+    def columnCount(self, parent: QModelIndex = ...) -> int:
+        return 3
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        conflict: Conflict = self.novel.conflicts[index.row()]
+        if role == self.ConflictRole:
+            return conflict
+        if index.column() == self.ColPov and role == Qt.DecorationRole:
+            return QIcon(avatars.pixmap(conflict.pov))
+        if index.column() == self.ColType and role == Qt.DecorationRole:
+            if conflict.character:
+                if conflict.character.avatar:
+                    return QIcon(avatars.pixmap(conflict.character))
+                else:
+                    return avatars.name_initial_icon(conflict.character)
+            else:
+                return IconRegistry.conflict_type_icon(conflict.type)
+        if index.column() == self.ColPhrase and role == Qt.DisplayRole:
+            return conflict.keyphrase
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        flags = super(NovelConflictsModel, self).flags(index)
+        if index.column() == self.ColPhrase:
+            return flags | Qt.ItemIsEditable
+        return flags
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
+        if index.column() == self.ColPhrase and role == Qt.EditRole:
+            self.novel.conflicts[index.row()].keyphrase = value
+            RepositoryPersistenceManager.instance().update_novel(self.novel)
+            return True
+        return False

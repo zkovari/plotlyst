@@ -28,7 +28,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, Character, \
-    ConflictType, SelectionItem, SceneGoal, SceneStage
+    SelectionItem, SceneGoal, SceneStage
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -455,20 +455,8 @@ class SceneConflictsTableModel(QAbstractTableModel):
                         return QIcon(avatars.pixmap(conflict.character))
                     else:
                         return avatars.name_initial_icon(conflict.character)
-                elif conflict.type == ConflictType.CHARACTER:
-                    return IconRegistry.conflict_character_icon()
-                elif conflict.type == ConflictType.SOCIETY:
-                    return IconRegistry.conflict_society_icon()
-                elif conflict.type == ConflictType.NATURE:
-                    return IconRegistry.conflict_nature_icon()
-                elif conflict.type == ConflictType.TECHNOLOGY:
-                    return IconRegistry.conflict_technology_icon()
-                elif conflict.type == ConflictType.SUPERNATURAL:
-                    return IconRegistry.conflict_supernatural_icon()
-                elif conflict.type == ConflictType.SELF:
-                    return IconRegistry.conflict_self_icon()
                 else:
-                    return IconRegistry.conflict_icon()
+                    return IconRegistry.conflict_type_icon(conflict.type)
             if role == Qt.CheckStateRole:
                 if conflict in self.scene.conflicts:
                     return Qt.Checked

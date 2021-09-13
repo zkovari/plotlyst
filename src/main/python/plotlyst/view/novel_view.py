@@ -22,7 +22,7 @@ from typing import List
 import emoji
 from PyQt5.QtCore import QPropertyAnimation
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QHBoxLayout, QWidget
+from PyQt5.QtWidgets import QHBoxLayout, QWidget, QHeaderView
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -30,11 +30,12 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, SelectionItem
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
-    NovelStoryStructureUpdated
+    NovelStoryStructureUpdated, SceneChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel, NovelTagsModel
+from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel, NovelTagsModel, NovelConflictsModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ask_confirmation, emoji_font
+from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -44,11 +45,14 @@ from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelUpdatedEvent])
+        super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent])
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
         self.ui.lblTitle.setText(self.novel.title)
+
+        self.ui.btnGoalIcon.setIcon(IconRegistry.goal_icon())
+        self.ui.btnConflictIcon.setIcon(IconRegistry.conflict_icon())
 
         self._emoji_font = emoji_font(14) if platform.is_windows() else emoji_font(20)
         self.ui.lblStoryStructureEmoji.setFont(self._emoji_font)
@@ -70,6 +74,22 @@ class NovelView(AbstractNovelView):
         self.ui.wdgDramaticQuestions.setAskRemovalConfirmation(True)
         self.ui.wdgDramaticQuestions.setBgColorFieldEnabled(True)
 
+        self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
+        self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
+
+        self.conflict_model = NovelConflictsModel(self.novel)
+        self.ui.tblConflicts.setModel(self.conflict_model)
+        self.ui.tblConflicts.horizontalHeader().setSectionResizeMode(NovelConflictsModel.ColPov,
+                                                                     QHeaderView.ResizeToContents)
+        self.ui.tblConflicts.horizontalHeader().setSectionResizeMode(NovelConflictsModel.ColType,
+                                                                     QHeaderView.ResizeToContents)
+        self.ui.tblConflicts.horizontalHeader().setSectionResizeMode(NovelConflictsModel.ColPhrase,
+                                                                     QHeaderView.Stretch)
+        self.ui.tblConflicts.selectionModel().selectionChanged.connect(self._conflict_selected)
+        self.ui.tblConflicts.setItemDelegateForColumn(NovelConflictsModel.ColPhrase, TextItemDelegate())
+        self.ui.btnEdit.clicked.connect(self._edit_conflict)
+        self.ui.btnRemove.clicked.connect(self._delete_conflict)
+
         self.ui.lblTagEmoji.setFont(self._emoji_font)
         self.ui.lblTagEmoji.setText(emoji.emojize(':label:'))
         tags_editor = NovelTagsEditor(self.novel)
@@ -88,6 +108,8 @@ class NovelView(AbstractNovelView):
         self.ui.lblTitle.setText(self.novel.title)
         self.story_lines_model.modelReset.emit()
         self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
+        self.conflict_model.modelReset.emit()
+        self._conflict_selected()
 
     def _update_story_structure_info(self):
         self.ui.textStoryStructureInfo.setText('''
@@ -126,6 +148,31 @@ The scenes can be associated to such story beats.</p>''')
             self.animation.start()
 
         self.ui.btnStoryStructureInfo.setText(u'\u02C7' if checked else u'\u00BB')
+
+    def _conflict_selected(self):
+        selection = bool(self.ui.tblConflicts.selectedIndexes())
+        self.ui.btnEdit.setEnabled(selection)
+        self.ui.btnRemove.setEnabled(selection)
+
+    def _edit_conflict(self):
+        indexes = self.ui.tblConflicts.selectedIndexes()
+        if not indexes:
+            return
+        self.ui.tblConflicts.edit(self.conflict_model.index(indexes[0].row(), NovelConflictsModel.ColPhrase))
+
+    def _delete_conflict(self):
+        indexes = self.ui.tblConflicts.selectedIndexes()
+        if not indexes:
+            return
+
+        conflict = indexes[0].data(NovelConflictsModel.ConflictRole)
+        if ask_confirmation(f'Delete conflict "{conflict.keyphrase}"'):
+            for scene in self.novel.scenes:
+                if conflict in scene.conflicts:
+                    scene.conflicts.remove(conflict)
+                    self.repo.update_scene(scene)
+            self.novel.conflicts.remove(conflict)
+            self.repo.update_novel(self.novel)
 
 
 class NovelTagsEditor(LabelsEditorWidget):
