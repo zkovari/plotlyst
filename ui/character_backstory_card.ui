@@ -27,16 +27,16 @@
     <number>3</number>
    </property>
    <property name="leftMargin">
-    <number>5</number>
+    <number>6</number>
    </property>
    <property name="topMargin">
     <number>2</number>
    </property>
    <property name="rightMargin">
-    <number>5</number>
+    <number>6</number>
    </property>
    <property name="bottomMargin">
-    <number>4</number>
+    <number>8</number>
    </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -151,7 +151,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QTextEdit" name="textSummary">
+    <widget class="AutoAdjustableTextEdit" name="textSummary">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -186,6 +186,11 @@
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.labels</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>AutoAdjustableTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

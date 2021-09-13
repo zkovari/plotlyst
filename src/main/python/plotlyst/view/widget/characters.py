@@ -320,7 +320,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
                     ''')
 
         self.lblKeyphrase.setText(self.backstory.keyphrase)
-        self.textSummary.setText(self.backstory.synopsis)
+        self.textSummary.setPlainText(self.backstory.synopsis)
 
         if self.backstory.as_baby:
             self.lblAge.setText('0-3')

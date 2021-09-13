@@ -36,6 +36,16 @@ class AutoAdjustableTextEdit(QTextEdit):
         self.setMaximumHeight(self._minHeight)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
+    @overrides
+    def setText(self, text: str) -> None:
+        self.setPlainText(text)
+
+    @overrides
+    def setPlainText(self, text: str) -> None:
+        super(AutoAdjustableTextEdit, self).setPlainText(text)
+        self.document().adjustSize()
+        self._resizeToContent()
+
     def _resizeToContent(self):
         size = self.document().size()
         self.setMaximumHeight(max(self._minHeight, size.height()))
