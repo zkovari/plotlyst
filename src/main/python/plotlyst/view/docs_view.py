@@ -20,8 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex, QRect, QPoint
-from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidget, QStylePainter, QStyle, \
-    QStyleOptionButton, QPushButton
+from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidget
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
@@ -35,6 +34,7 @@ from src.main.python.plotlyst.view.common import spacer_widget
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.input import RotatedButton
 
 
 class DocumentsView(AbstractNovelView):
@@ -163,23 +163,3 @@ class DocumentsSidebar(QWidget, AbstractNovelView, Ui_DocumentsSidebarWidget):
             btn.setText(doc.title)
             self.scrollAreaWidgetContents.layout().addWidget(btn)
         self.scrollAreaWidgetContents.layout().addWidget(spacer_widget(vertical=True))
-
-
-class RotatedButton(QPushButton):
-    def __init__(self, parent=None):
-        super(RotatedButton, self).__init__(parent)
-
-    @overrides
-    def paintEvent(self, event):
-        painter = QStylePainter(self)
-        option = QStyleOptionButton()
-        self.initStyleOption(option)
-        painter.rotate(90)
-        painter.translate(0, -1 * self.width())
-        option.rect = option.rect.transposed()
-        painter.drawControl(QStyle.CE_PushButton, option)
-
-    def sizeHint(self):
-        size = super(RotatedButton, self).sizeHint()
-        size.transpose()
-        return size

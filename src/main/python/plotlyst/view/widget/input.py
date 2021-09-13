@@ -17,11 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
+
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
-    QKeyEvent
-from PyQt5.QtWidgets import QTextEdit, QFrame
+    QKeyEvent, QPaintEvent
+from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle
 from overrides import overrides
 
 from src.main.python.plotlyst.view.generated.rich_text_editor_widget_ui import Ui_RichTextEditor
@@ -163,3 +165,37 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.textEditor.mergeCurrentCharFormat(charFormat)
 
         cursor.endEditBlock()
+
+
+class RotatedButtonOrientation(Enum):
+    VerticalTopToBottom = 0
+    VerticalBottomToTop = 1
+
+
+class RotatedButton(QPushButton):
+    def __init__(self, parent=None):
+        super(RotatedButton, self).__init__(parent)
+        self._orientation = RotatedButtonOrientation.VerticalTopToBottom
+
+    def setOrientation(self, orientation: RotatedButtonOrientation):
+        self._orientation = orientation
+        self.update()
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent):
+        painter = QStylePainter(self)
+        option = QStyleOptionButton()
+        self.initStyleOption(option)
+        if self._orientation == RotatedButtonOrientation.VerticalTopToBottom:
+            painter.rotate(90)
+            painter.translate(0, -1 * self.width())
+        else:
+            painter.rotate(-90)
+            painter.translate(-1 * self.height(), 0)
+        option.rect = option.rect.transposed()
+        painter.drawControl(QStyle.CE_PushButton, option)
+
+    def sizeHint(self):
+        size = super(RotatedButton, self).sizeHint()
+        size.transpose()
+        return size
