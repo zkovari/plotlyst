@@ -39,6 +39,7 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
         self.btnTeenager.setIcon(IconRegistry.teenager_icon())
         self.btnAdult.setIcon(IconRegistry.adult_icon())
         self.btnGroupAge.buttonToggled.connect(self._btn_age_toggled)
+        self.btnAdult.setChecked(True)
 
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
@@ -57,7 +58,7 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
         self.btnVeryHappy.setText(emoji.emojize(':smiling_face_with_smiling_eyes:'))
 
         self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
-        self.sbAge.valueChanged.connect(lambda x: self.lblAge.setText(str(x)))
+        self.sbAge.valueChanged.connect(self._age_changed)
 
         self.btnSave.setDisabled(True)
         self.btnSave.clicked.connect(self.accept)
@@ -106,6 +107,18 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
                               as_baby=self.btnBaby.isChecked(), as_child=self.btnChild.isChecked(),
                               as_teenager=self.btnTeenager.isChecked(), as_adult=self.btnAdult.isChecked())
 
+    def _age_changed(self, value: int):
+        if 0 < value <= 3:
+            self.btnBaby.setChecked(True)
+        elif 3 < value <= 12:
+            self.btnChild.setChecked(True)
+        elif 12 < value <= 18:
+            self.btnTeenager.setChecked(True)
+        elif value > 18:
+            self.btnAdult.setChecked(True)
+
+        self.lblAge.setText(str(value))
+
     def _btn_age_toggled(self):
         if self.btnBaby.isChecked():
             self.lblAge.setText('0-3')
@@ -115,10 +128,3 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
             self.lblAge.setText('12-18')
         elif self.btnAdult.isChecked():
             self.lblAge.setText('Adulthood')
-
-#     elif self.backstory.as_child:
-#     self.lblAge.setText('3-12')
-#     self.lblAgeIcon.setPixmap(IconRegistry.child_icon().pixmap(24, 24))
-#
-# elif self.backstory.as_teenager:
-# self.lblAge.setText('12-18')

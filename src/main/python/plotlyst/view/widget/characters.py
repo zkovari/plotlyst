@@ -321,9 +321,8 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
 
         self.lblKeyphrase.setText(self.backstory.keyphrase)
         self.textSummary.setText(self.backstory.synopsis)
-        if self.backstory.age > 0:
-            self.lblAge.setText(str(self.backstory.age))
-        elif self.backstory.as_baby:
+
+        if self.backstory.as_baby:
             self.lblAge.setText('0-3')
             self.lblAgeIcon.setPixmap(IconRegistry.baby_icon().pixmap(24, 24))
         elif self.backstory.as_child:
@@ -336,11 +335,12 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
             self.lblAgeIcon.setPixmap(IconRegistry.adult_icon().pixmap(24, 24))
         else:
             self.lblAge.clear()
+        if self.backstory.age > 0:
+            self.lblAge.setText(str(self.backstory.age))
 
     def _enableActionButtons(self, enabled: bool):
         self.btnEdit.setVisible(enabled)
         self.btnRemove.setVisible(enabled)
-        # self.btnAddConflict.setVisible(enabled)
 
     def _synopsis_changed(self):
         self.backstory.synopsis = self.textSummary.toPlainText()

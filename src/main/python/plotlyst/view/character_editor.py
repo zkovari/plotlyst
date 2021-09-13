@@ -102,10 +102,22 @@ class CharacterEditor:
     def _new_backstory(self):
         backstory: Optional[BackstoryEvent] = BackstoryEditorDialog().display()
         if backstory:
+            index = None
+            for i, _bck in enumerate(self.character.backstory):
+                if backstory.period() == _bck.period() and backstory.age and _bck.age > backstory.age:
+                    index = i
+                    break
+                elif backstory.period().value < _bck.period().value:
+                    index = i
+                    break
             card = CharacterBackstoryCard(backstory)
             card.deleteRequested.connect(self._remove_backstory)
-            self.ui.wdgBackstory.layout().addWidget(card)
-            self.character.backstory.append(backstory)
+            if index is None:
+                self.ui.wdgBackstory.layout().addWidget(card)
+                self.character.backstory.append(backstory)
+            else:
+                self.ui.wdgBackstory.layout().insertWidget(index, card)
+                self.character.backstory.insert(index, backstory)
 
     def _remove_backstory(self, card: CharacterBackstoryCard):
         if card.backstory in self.character.backstory:

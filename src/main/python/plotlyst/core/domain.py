@@ -54,6 +54,13 @@ class Comment:
     character: Optional['Character'] = None
 
 
+class AgePeriod(Enum):
+    BABY = 0
+    CHILD = 1
+    TEENAGER = 2
+    ADULT = 3
+
+
 @dataclass
 class BackstoryEvent(Event):
     age: int = 0
@@ -61,6 +68,16 @@ class BackstoryEvent(Event):
     as_child: bool = False
     as_teenager: bool = False
     as_adult: bool = False
+
+    def period(self) -> AgePeriod:
+        if self.as_baby:
+            return AgePeriod.BABY
+        if self.as_child:
+            return AgePeriod.CHILD
+        if self.as_teenager:
+            return AgePeriod.TEENAGER
+        if self.as_adult:
+            return AgePeriod.ADULT
 
 
 @dataclass

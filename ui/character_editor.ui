@@ -239,6 +239,12 @@ border: 0px;
                 <height>450</height>
                </rect>
               </property>
+              <property name="styleSheet">
+               <string notr="true">.QWidget {
+	background-color: rgb(255, 255, 255);
+
+}</string>
+              </property>
               <layout class="QVBoxLayout" name="verticalLayout_8">
                <item>
                 <widget class="QWidget" name="wdgBackstory" native="true">
