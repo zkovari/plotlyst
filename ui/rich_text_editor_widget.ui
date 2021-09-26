@@ -54,6 +54,19 @@
       </property>
       <item>
        <widget class="QComboBox" name="cbHeading">
+        <property name="styleSheet">
+         <string notr="true">QComboBox {
+    border: 0px;
+    padding: 1px 1px 1px 3px;
+}
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 0px;
+
+    border: 0px;
+}</string>
+        </property>
         <property name="frame">
          <bool>false</bool>
         </property>
