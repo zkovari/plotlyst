@@ -333,7 +333,7 @@ class JsonClient:
             document.content = content
         else:
             data_str: str = self.__load_doc_data(novel, document.data_id)
-            if document.type == DocumentType.CAUSE_AND_EFFECT or document.type == DocumentType.REVERSED_CAUSE_AND_EFFECT:
+            if document.type in [DocumentType.CAUSE_AND_EFFECT, DocumentType.REVERSED_CAUSE_AND_EFFECT]:
                 document.data = Causality.from_json(data_str)
         document.loaded = True
 

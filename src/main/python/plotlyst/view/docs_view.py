@@ -24,8 +24,8 @@ from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidge
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document, doc_characters_id, Character, DocumentType, Causality, \
-    CausalityItem
+from src.main.python.plotlyst.core.domain import Novel, Document, doc_characters_id, Character, DocumentType, \
+    Causality, CausalityItem
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
