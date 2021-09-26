@@ -53,7 +53,11 @@
        <number>3</number>
       </property>
       <item>
-       <widget class="QComboBox" name="cbHeading"/>
+       <widget class="QComboBox" name="cbHeading">
+        <property name="frame">
+         <bool>false</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QToolButton" name="btnBold">
@@ -61,6 +65,9 @@
          <string/>
         </property>
         <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoRaise">
          <bool>true</bool>
         </property>
        </widget>
@@ -73,6 +80,9 @@
         <property name="checkable">
          <bool>true</bool>
         </property>
+        <property name="autoRaise">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
@@ -81,6 +91,9 @@
          <string/>
         </property>
         <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoRaise">
          <bool>true</bool>
         </property>
        </widget>
@@ -112,6 +125,9 @@
         <property name="checked">
          <bool>true</bool>
         </property>
+        <property name="autoRaise">
+         <bool>true</bool>
+        </property>
         <attribute name="buttonGroup">
          <string notr="true">btnGroupAlignment</string>
         </attribute>
@@ -125,6 +141,9 @@
         <property name="checkable">
          <bool>true</bool>
         </property>
+        <property name="autoRaise">
+         <bool>true</bool>
+        </property>
         <attribute name="buttonGroup">
          <string notr="true">btnGroupAlignment</string>
         </attribute>
@@ -136,6 +155,9 @@
          <string/>
         </property>
         <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoRaise">
          <bool>true</bool>
         </property>
         <attribute name="buttonGroup">
