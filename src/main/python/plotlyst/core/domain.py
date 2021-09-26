@@ -24,6 +24,7 @@ from enum import Enum
 from typing import List, Optional, Any, Dict
 
 from PyQt5.QtCore import Qt
+from dataclasses_json import dataclass_json, Undefined
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
 
@@ -670,16 +671,45 @@ def default_character_profiles() -> List[ProfileTemplate]:
 
 
 @dataclass
+class CausalityItem(SelectionItem):
+    links: List['CausalityItem'] = field(default_factory=list)
+    description: str = ''
+
+    def __hash__(self):
+        return hash(self.text)
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Causality:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    items: List['CausalityItem'] = field(default_factory=list)
+
+
+class DocumentType(Enum):
+    DOCUMENT = 0
+    CHARACTER_BACKSTORY = 1
+    CAUSE_AND_EFFECT = 2
+    REVERSED_CAUSE_AND_EFFECT = 3
+    SNOWFLAKE = 4
+    CHARACTER_ARC = 5
+    STORY_STRUCTURE = 6
+
+
+@dataclass
 class Document:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    type: DocumentType = DocumentType.DOCUMENT
     children: List['Document'] = field(default_factory=list)
     character_id: Optional[uuid.UUID] = None
     scene_id: Optional[uuid.UUID] = None
+    data_id: Optional[uuid.UUID] = None
 
     def __post_init__(self):
-        self.content_loaded: bool = False
+        self.loaded: bool = False
         self.content: str = ''
+        self.data: Any = None
         self._character: Optional[Character] = None
         self._scene: Optional[Scene] = None
 

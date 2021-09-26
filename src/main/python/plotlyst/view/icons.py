@@ -357,6 +357,18 @@ class IconRegistry:
         return IconRegistry.from_name('ei.adult')
 
     @staticmethod
+    def cause_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.ray-start')
+
+    @staticmethod
+    def cause_and_effect_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.ray-start-arrow')
+
+    @staticmethod
+    def reversed_cause_and_effect_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.ray-end-arrow')
+
+    @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
         if name.startswith('md'):

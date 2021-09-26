@@ -35,7 +35,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
-    default_tags, default_documents
+    default_tags, default_documents, DocumentType, Causality
 
 
 class ApplicationDbVersion(Enum):
@@ -325,12 +325,17 @@ class JsonClient:
         raise ValueError(f'Could not find novel with id {id}')
 
     def load_document(self, novel: Novel, document: Document):
-        if document.content_loaded:
+        if document.loaded:
             return
 
-        content = self.__load_doc(novel, document.id)
-        document.content = content
-        document.content_loaded = True
+        if document.type == DocumentType.DOCUMENT:
+            content = self.__load_doc(novel, document.id)
+            document.content = content
+        else:
+            data_str: str = self.__load_doc_data(novel, document.data_id)
+            if document.type == DocumentType.CAUSE_AND_EFFECT or document.type == DocumentType.REVERSED_CAUSE_AND_EFFECT:
+                document.data = Causality.from_json(data_str)
+        document.loaded = True
 
     def save_document(self, novel: Novel, document: Document):
         self.__persist_doc(novel, document)
@@ -358,7 +363,7 @@ class JsonClient:
             path = self.characters_dir.joinpath(self.__json_file(char_id))
             if not os.path.exists(path):
                 continue
-            with open(path) as json_file:
+            with open(path, encoding='utf8') as json_file:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 character = Character(name=info.name, id=info.id, template_values=info.template_values,
@@ -407,7 +412,7 @@ class JsonClient:
             path = self.scenes_dir.joinpath(self.__json_file(scene_id))
             if not os.path.exists(path):
                 continue
-            with open(path) as json_file:
+            with open(path, encoding='utf8') as json_file:
                 data = json_file.read()
                 info: SceneInfo = SceneInfo.from_json(data)
                 scene_storylines = []
@@ -591,18 +596,34 @@ class JsonClient:
         with codecs.open(str(path), "r", "utf-8") as doc_file:
             return doc_file.read()
 
+    def __load_doc_data(self, novel: Novel, data_uuid: uuid.UUID) -> str:
+        if not data_uuid:
+            return ''
+        novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
+        path = novel_doc_dir.joinpath(self.__json_file(data_uuid))
+        if not os.path.exists(path):
+            return ''
+        with open(path, encoding='utf8') as json_file:
+            return json_file.read()
+
     def __persist_doc(self, novel: Novel, doc: Document):
         novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
         if not os.path.exists(str(novel_doc_dir)):
             os.mkdir(novel_doc_dir)
 
-        doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
-        with atomic_write(doc_file_path, overwrite=True) as f:
-            f.write(doc.content)
+        if doc.type == DocumentType.DOCUMENT:
+            doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
+            with atomic_write(doc_file_path, overwrite=True) as f:
+                f.write(doc.content)
+        elif doc.type == DocumentType.REVERSED_CAUSE_AND_EFFECT or doc.type == DocumentType.CAUSE_AND_EFFECT:
+            self.__persist_json_by_id(novel_doc_dir, doc.data.to_json(), doc.data_id)
 
     def __persist_info(self, dir, info: Any):
-        with atomic_write(dir.joinpath(self.__json_file(info.id)), overwrite=True) as f:
-            f.write(info.to_json())
+        self.__persist_json_by_id(dir, info.to_json(), info.id)
+
+    def __persist_json_by_id(self, dir, json_data: str, id: uuid.UUID):
+        with atomic_write(dir.joinpath(self.__json_file(id)), overwrite=True) as f:
+            f.write(json_data)
 
     def __delete_info(self, dir, id: uuid.UUID):
         path = dir.joinpath(self.__json_file(id))
