@@ -79,17 +79,20 @@ def assert_data(model: QAbstractItemModel, value: Any, row: int, column: int = 0
                           role) == value, f'{model.data(model.index(row, column), role)} != {value}'
 
 
-def trigger_popup_action_on_item(qtbot, view: QAbstractItemView, row: int, column: int, *action_names):
+def trigger_popup_action_on_item(qtbot, view: QAbstractItemView, row: int, column: int, action_name: str, parent=None):
     # Right-click doesn't trigger popup: https://github.com/pytest-dev/pytest-qt/issues/269
-    view.customContextMenuRequested.emit(_get_position_or_fail(view, row, column))
+    view.customContextMenuRequested.emit(_get_position_or_fail(view, row, column, parent))
+    trigger_action_on_popup(qtbot, action_name)
+
+
+def trigger_action_on_popup(qtbot, action_name: str):
     app: QCoreApplication = QtWidgets.QApplication.instance()
     menu: QMenu = app.activePopupWidget()
 
-    for action_name in action_names:
-        action: QAction = next((a for a in menu.actions() if a.text() == action_name), None)
-        qtbot.mouseClick(menu, QtCore.Qt.LeftButton, pos=menu.actionGeometry(action).center())
-        qtbot.wait(100)
-        menu = action.menu()
+    # for action_name in action_names:
+    action: QAction = next((a for a in menu.actions() if a.text() == action_name), None)
+    qtbot.mouseClick(menu, QtCore.Qt.LeftButton, pos=menu.actionGeometry(action).center())
+    qtbot.wait(100)
 
 
 def popup_actions_on_item(qtbot, view: QAbstractItemView, row: int, column: int) -> List[QAction]:

@@ -17,25 +17,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any
 
-from PyQt5.QtCore import QEvent, QObject, Qt, QModelIndex, pyqtSignal
+from PyQt5.QtCore import QEvent, QObject
 from PyQt5.QtWidgets import QWidget
-from anytree import Node
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import CausalityItem, Causality
-from src.main.python.plotlyst.model.tree_model import TreeItemModel
+from src.main.python.plotlyst.core.domain import Causality
+from src.main.python.plotlyst.model.causality import CaualityTreeModel
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.generated.causality_item_widget_ui import Ui_CausalityItemWidget
 from src.main.python.plotlyst.view.generated.cause_and_effect_editor_ui import Ui_CauseAndEffectEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
-
-
-class _CausalityNode(Node):
-    def __init__(self, item: CausalityItem, parent: Node):
-        super(_CausalityNode, self).__init__(item.text, parent)
-        self.item = item
 
 
 class CauseAndEffectDiagram(QWidget, Ui_CauseAndEffectEditor):
@@ -44,11 +36,12 @@ class CauseAndEffectDiagram(QWidget, Ui_CauseAndEffectEditor):
         super(CauseAndEffectDiagram, self).__init__(parent)
         self.setupUi(self)
         self.causality: Causality = causality
-        self.model = self._Model(self.causality)
+        self.model = CaualityTreeModel(self.causality)
         self.treeView.setModel(self.model)
         self.treeView.setItemDelegate(TextItemDelegate())
         self.treeView.expandAll()
         self.treeView.selectionModel().selectionChanged.connect(self._selected)
+        self.model.modelReset.connect(self.treeView.expandAll)
 
         if reversed_:
             self.btnAddChild.setIcon(IconRegistry.cause_icon())
@@ -57,6 +50,8 @@ class CauseAndEffectDiagram(QWidget, Ui_CauseAndEffectEditor):
         self.btnDelete.setIcon(IconRegistry.wrong_icon('black'))
 
         self.btnEdit.clicked.connect(lambda: self.treeView.edit(self.treeView.selectedIndexes()[0]))
+        self.btnAddChild.clicked.connect(self._addChild)
+        self.btnDelete.clicked.connect(self._delete)
 
     def _selected(self):
         selected = bool(self.treeView.selectedIndexes())
@@ -64,39 +59,13 @@ class CauseAndEffectDiagram(QWidget, Ui_CauseAndEffectEditor):
         self.btnEdit.setEnabled(selected)
         self.btnDelete.setEnabled(selected)
 
-    class _Model(TreeItemModel):
-        changed = pyqtSignal()
+    def _addChild(self):
+        index = self.treeView.selectedIndexes()[0]
+        self.model.addChild(index, 'Cause')
 
-        def __init__(self, causality: Causality, parent=None):
-            def _initNodes(item: CausalityItem, parent: Node):
-                node = _CausalityNode(item, parent)
-                for link in item.links:
-                    _initNodes(link, node)
-
-            super().__init__(parent)
-            self.causality: Causality = causality
-            for item in self.causality.items:
-                _initNodes(item, self.root)
-
-        @overrides
-        def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-            return super().flags(index) | Qt.ItemIsEditable
-
-        @overrides
-        def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
-            if role == Qt.EditRole:
-                node: _CausalityNode = index.internalPointer()
-                node.item.text = value
-                self.changed.emit()
-                return True
-            return False
-
-        @overrides
-        def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-            node: _CausalityNode = index.internalPointer()
-            if role == Qt.DisplayRole:
-                return node.item.text
-            return super().data(index, role)
+    def _delete(self):
+        index = self.treeView.selectedIndexes()[0]
+        self.model.delete(index)
 
 
 class CausalityItemWidget(QWidget, Ui_CausalityItemWidget):
