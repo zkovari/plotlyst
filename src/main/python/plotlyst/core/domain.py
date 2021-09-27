@@ -673,7 +673,6 @@ def default_character_profiles() -> List[ProfileTemplate]:
 @dataclass
 class CausalityItem(SelectionItem):
     links: List['CausalityItem'] = field(default_factory=list)
-    description: str = ''
 
     def __hash__(self):
         return hash(self.text)
