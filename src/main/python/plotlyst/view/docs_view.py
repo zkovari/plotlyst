@@ -24,7 +24,8 @@ from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidge
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document, doc_characters_id, Character
+from src.main.python.plotlyst.core.domain import Novel, Document, doc_characters_id, Character, DocumentType, \
+    Causality, CausalityItem
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
@@ -34,6 +35,7 @@ from src.main.python.plotlyst.view.common import spacer_widget
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
 from src.main.python.plotlyst.view.widget.input import RotatedButton
 
 
@@ -53,9 +55,9 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.expandAll()
         self.model.modelReset.connect(self.refresh)
 
-        self.ui.editor.textEditor.textChanged.connect(self._save)
-        self.ui.editor.textTitle.textChanged.connect(self._title_changed)
-        self.ui.editor.setHidden(True)
+        self.ui.textEditor.textEditor.textChanged.connect(self._save)
+        self.ui.textEditor.textTitle.textChanged.connect(self._title_changed)
+        self.ui.textEditor.setHidden(True)
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
         self.ui.btnAdd.clicked.connect(self._add_doc)
@@ -67,11 +69,19 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.expandAll()
         self.ui.btnRemove.setEnabled(False)
 
-    def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None):
-        doc = Document('New Document')
+    def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None,
+                 doc_type: DocumentType = DocumentType.DOCUMENT):
+        doc = Document('New Document', type=doc_type)
         if character:
             doc.title = ''
             doc.character_id = character.id
+        if doc_type == DocumentType.CAUSE_AND_EFFECT or doc_type == DocumentType.REVERSED_CAUSE_AND_EFFECT:
+            casuality = Causality(items=[CausalityItem('Story ending')])
+            doc.data = casuality
+            doc.data_id = casuality.id
+            json_client.save_document(self.novel, doc)
+
+        doc.loaded = True
 
         if parent:
             index = self.model.insertDocUnder(doc, parent)
@@ -87,25 +97,29 @@ class DocumentsView(AbstractNovelView):
         if index.column() == 0:
             self._edit(index)
         elif index.column() == 1:
-            if node.document.id == doc_characters_id or 'character' in node.document.title.lower():
-                self._show_characters_popup(index)
-            else:
-                self._add_doc(index)
+            self._show_docs_popup(index)
 
-    def _show_characters_popup(self, index: QModelIndex):
+    def _show_docs_popup(self, index: QModelIndex):
         def add_character(char_index: QModelIndex):
             char = char_index.data(CharactersTableModel.CharacterRole)
             self._add_doc(index, character=char)
 
         rect: QRect = self.ui.treeDocuments.visualRect(index)
         menu = QMenu(self.ui.treeDocuments)
-        action = QWidgetAction(menu)
+        menu.addAction(IconRegistry.document_edition_icon(), 'Document', lambda: self._add_doc(index))
+
+        character_menu = QMenu('Characters', menu)
+        character_menu.setIcon(IconRegistry.character_icon())
+        action = QWidgetAction(character_menu)
         _view = QListView()
         _view.clicked.connect(add_character)
         action.setDefaultWidget(_view)
         _view.setModel(CharactersTableModel(self.novel))
-        menu.addAction(action)
-        menu.addAction(IconRegistry.plus_circle_icon(), 'Add Custom...', lambda: self._add_doc(index))
+        character_menu.addAction(action)
+        menu.addMenu(character_menu)
+
+        menu.addAction(IconRegistry.reversed_cause_and_effect_icon(), 'Reversed Cause and Effect',
+                       lambda: self._add_doc(index, doc_type=DocumentType.REVERSED_CAUSE_AND_EFFECT))
 
         menu.popup(self.ui.treeDocuments.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
@@ -114,28 +128,44 @@ class DocumentsView(AbstractNovelView):
         if not selected:
             return
         self.model.removeDoc(selected[0])
-        self.ui.editor.setVisible(False)
+        self.ui.textEditor.setVisible(False)
 
     def _edit(self, index: QModelIndex):
-        self.ui.editor.setVisible(True)
         node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
         self._current_doc = node.document
-        if not node.document.content_loaded:
+
+        if not self._current_doc.loaded:
             json_client.load_document(self.novel, self._current_doc)
+
         char = node.document.character(self.novel)
-        if char:
-            self.ui.editor.setText(self._current_doc.content, char.name, title_read_only=True)
+
+        if self._current_doc.type == DocumentType.DOCUMENT:
+            self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
+            self.ui.textEditor.setVisible(True)
+            if char:
+                self.ui.textEditor.setText(self._current_doc.content, char.name, title_read_only=True)
+            else:
+                self.ui.textEditor.setText(self._current_doc.content, self._current_doc.title)
         else:
-            self.ui.editor.setText(self._current_doc.content, self._current_doc.title)
+            self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
+            while self.ui.customEditorPage.layout().count():
+                item = self.ui.customEditorPage.layout().takeAt(0)
+                item.widget().deleteLater()
+            if self._current_doc.type == DocumentType.REVERSED_CAUSE_AND_EFFECT:
+                widget = CauseAndEffectDiagram(self._current_doc.data, reversed_=True)
+                widget.model.changed.connect(self._save)
+                self.ui.customEditorPage.layout().addWidget(widget)
 
     def _save(self):
-        if self._current_doc:
-            self._current_doc.content = self.ui.editor.textEditor.toHtml()
-            json_client.save_document(self.novel, self._current_doc)
+        if not self._current_doc:
+            return
+        if self._current_doc.type == DocumentType.DOCUMENT:
+            self._current_doc.content = self.ui.textEditor.textEditor.toHtml()
+        json_client.save_document(self.novel, self._current_doc)
 
     def _title_changed(self):
         if self._current_doc:
-            new_title = self.ui.editor.textTitle.toPlainText()
+            new_title = self.ui.textEditor.textTitle.toPlainText()
             if new_title and new_title != self._current_doc.title:
                 self._current_doc.title = new_title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
