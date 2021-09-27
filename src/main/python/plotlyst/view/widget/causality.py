@@ -18,14 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt5.QtCore import QEvent, QObject
 from PyQt5.QtWidgets import QWidget
-from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Causality
 from src.main.python.plotlyst.model.causality import CaualityTreeModel
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
-from src.main.python.plotlyst.view.generated.causality_item_widget_ui import Ui_CausalityItemWidget
 from src.main.python.plotlyst.view.generated.cause_and_effect_editor_ui import Ui_CauseAndEffectEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -66,39 +63,3 @@ class CauseAndEffectDiagram(QWidget, Ui_CauseAndEffectEditor):
     def _delete(self):
         index = self.treeView.selectedIndexes()[0]
         self.model.delete(index)
-
-
-class CausalityItemWidget(QWidget, Ui_CausalityItemWidget):
-    def __init__(self, title: str = 'Effect', parent=None):
-        super(CausalityItemWidget, self).__init__(parent)
-        self.setupUi(self)
-        font = self.lineText.font()
-        font.setBold(True)
-        self.lineText.setFont(font)
-        self.lineText.setText(title)
-
-        self.btnCause.setIcon(IconRegistry.cause_icon())
-        # self.btnEffect.setIcon(IconRegistry.cause_and_effect_icon())
-
-        self.btnCause.setVisible(False)
-        self.wdgHeader.installEventFilter(self)
-
-        self.btnCause.clicked.connect(self._addCause)
-        # self.btnEffect.installEventFilter(self)
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Enter or event.type() == QEvent.Leave:
-            visible = event.type() == QEvent.Enter
-            if watched == self.wdgHeader:
-                self.btnCause.setVisible(visible)
-            # elif watched == self.btnCause:
-            #     self.lblCause.setText('Add cause' if visible else '')
-            #     self.lblCause.setVisible(visible)
-            # elif watched == self.btnEffect:
-            #     self.lblCause.setText('Add effect' if visible else '')
-            #     self.lblCause.setVisible(visible)
-        return super(CausalityItemWidget, self).eventFilter(watched, event)
-
-    def _addCause(self):
-        self.wdgChildren.layout().addWidget(CausalityItemWidget('Cause'))
