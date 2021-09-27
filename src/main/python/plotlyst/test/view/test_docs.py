@@ -29,3 +29,9 @@ def test_add_new_doc(qtbot, filled_window: MainWindow):
     assert persisted_novel.documents[-1].title == 'New Document'
 
     assert len(persisted_novel.documents[0].children) == 1
+
+
+def test_add_new_reversed_cause_and_effect_doc(qtbot, filled_window: MainWindow):
+    view: DocumentsView = go_to_docs(filled_window)
+    click_on_item(qtbot, view.ui.treeDocuments, 0, 1, QModelIndex())
+    trigger_action_on_popup(qtbot, 'Reversed Cause and Effect')
