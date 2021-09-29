@@ -589,7 +589,7 @@ fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fa
 desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='Desire (select Enneagram to autofill)',
                              id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'), show_label=False)
-role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION,
+role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION, emoji=':chess_pawn:',
                            id=uuid.UUID('131b9de6-ac95-4db5-b9a1-33200100b676'),
                            selections=[SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c'),
                                        SelectionItem('', type=SelectionItemType.SEPARATOR),
