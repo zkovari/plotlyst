@@ -89,7 +89,7 @@ class SceneEditor(QObject):
         self.ui.lblBeatEmoji.setFont(self._emoji_font)
         self.ui.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
 
-        self.ui.cbPivotal.addItem('Select story beat ...', None)
+        self.ui.cbPivotal.addItem('Select story beat...', None)
         self.ui.cbPivotal.addItem('', None)
         for beat in self.novel.story_structure.beats:
             icon = IconRegistry.from_name(beat.icon, beat.icon_color) if beat.icon else QIcon('')

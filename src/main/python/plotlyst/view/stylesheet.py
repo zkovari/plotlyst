@@ -23,7 +23,7 @@ APP_STYLESHEET = '''
     icon-size: 20px;
 }
 
-QPushButton {
+QPushButton[base=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #f6f7fa, stop: 1 #dadbde);
     border: 2px solid #8f8f91;
@@ -31,17 +31,17 @@ QPushButton {
     padding: 2px;
 }
 
-QPushButton:hover {
+QPushButton:hover[base=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #c3c4c7, stop: 1 #f6f7fa);
 }
 
-QPushButton:pressed {
+QPushButton:pressed[base=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #d7d8db, stop: 1 #f6f7fa);
 }
 
-QPushButton:disabled {
+QPushButton:disabled[base=true] {
     opacity: 0.65;
 }
 
