@@ -218,6 +218,9 @@ class SelectionItemsModel(QAbstractTableModel):
 class DistributionModel(QAbstractTableModel):
     SortRole: int = Qt.UserRole + 1
 
+    IndexMeta: int = 0
+    IndexTags: int = 1
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
@@ -226,11 +229,11 @@ class DistributionModel(QAbstractTableModel):
 
     @overrides
     def columnCount(self, parent: QModelIndex = None) -> int:
-        return len(self.novel.scenes) + 1
+        return len(self.novel.scenes) + 2
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if index.column() == 0:
+        if index.column() == self.IndexTags:
             if role == Qt.ForegroundRole:
                 if self._highlighted_tags and index not in self._highlighted_tags:
                     return QBrush(QColor(Qt.gray))
@@ -239,15 +242,17 @@ class DistributionModel(QAbstractTableModel):
             elif role == self.SortRole:
                 count = 0
                 for i, _ in enumerate(self.novel.scenes):
-                    if self._match_by_row_col(index.row(), i + 1):
+                    if self._match_by_row_col(index.row(), i + 2):
                         count += 1
                 return count
             else:
                 return self._dataForTag(index, role)
+        elif index.column() == self.IndexMeta:
+            return self._dataForMeta(index, role)
         elif role == Qt.ToolTipRole:
-            tooltip = f'{index.column()}. {self.novel.scenes[index.column() - 1].title}'
-            if self.novel.scenes[index.column() - 1].beat:
-                tooltip += f' ({self.novel.scenes[index.column() - 1].beat.text})'
+            tooltip = f'{index.column() - 1}. {self.novel.scenes[index.column() - 2].title}'
+            if self.novel.scenes[index.column() - 2].beat:
+                tooltip += f' ({self.novel.scenes[index.column() - 2].beat.text})'
             return tooltip
         elif role == Qt.BackgroundRole:
             if self._match(index):
@@ -257,9 +262,9 @@ class DistributionModel(QAbstractTableModel):
                 if self._highlighted_tags:
                     if not all([self._match_by_row_col(x.row(), index.column()) for x in self._highlighted_tags]):
                         return QBrush(QColor(Qt.gray))
-                if self.novel.scenes[index.column() - 1].wip:
+                if self.novel.scenes[index.column() - 2].wip:
                     return QBrush(QColor(WIP_COLOR))
-                if self.novel.scenes[index.column() - 1].beat:
+                if self.novel.scenes[index.column() - 2].beat:
                     return QBrush(QColor(PIVOTAL_COLOR))
                 return QBrush(QColor('darkblue'))
         return QVariant()
@@ -268,7 +273,7 @@ class DistributionModel(QAbstractTableModel):
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
 
-        if self._highlighted_scene and index.column() == 0:
+        if self._highlighted_scene and index.column() == self.IndexTags:
             if not self._match_by_row_col(index.row(), self._highlighted_scene.column()):
                 return Qt.NoItemFlags
 
@@ -276,7 +281,7 @@ class DistributionModel(QAbstractTableModel):
 
     def commonScenes(self) -> int:
         matches = 0
-        for y in range(1, self.columnCount()):
+        for y in range(2, self.columnCount()):
             if all(self._match_by_row_col(x.row(), y) for x in self._highlighted_tags):
                 matches += 1
         return matches
@@ -301,6 +306,9 @@ class DistributionModel(QAbstractTableModel):
     @abstractmethod
     def _dataForTag(self, index: QModelIndex, role: int = Qt.DisplayRole):
         pass
+
+    def _dataForMeta(self, index: QModelIndex, role: int = Qt.DisplayRole):
+        return QVariant()
 
     @abstractmethod
     def _match_by_row_col(self, row: int, column: int) -> bool:

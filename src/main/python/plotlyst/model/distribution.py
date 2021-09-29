@@ -44,8 +44,8 @@ class CharactersScenesDistributionTableModel(DistributionModel):
 
     @overrides
     def _match_by_row_col(self, row: int, column: int):
-        in_char = self.novel.characters[row] in self.novel.scenes[column - 1].characters
-        pov = self.novel.characters[row] == self.novel.scenes[column - 1].pov
+        in_char = self.novel.characters[row] in self.novel.scenes[column - 2].characters
+        pov = self.novel.characters[row] == self.novel.scenes[column - 2].pov
         return in_char or pov
 
 
@@ -78,8 +78,14 @@ class ConflictScenesDistributionTableModel(DistributionModel):
             return conflict.keyphrase
 
     @overrides
+    def _dataForMeta(self, index: QModelIndex, role: int = Qt.DisplayRole):
+        conflict: Conflict = self.novel.conflicts[index.row()]
+        if role == Qt.DecorationRole:
+            return QIcon(avatars.pixmap(conflict.pov))
+
+    @overrides
     def _match_by_row_col(self, row: int, column: int):
-        return self.novel.conflicts[row] in self.novel.scenes[column - 1].conflicts
+        return self.novel.conflicts[row] in self.novel.scenes[column - 2].conflicts
 
 
 class TagScenesDistributionTableModel(DistributionModel):
@@ -106,4 +112,4 @@ class TagScenesDistributionTableModel(DistributionModel):
 
     @overrides
     def _match_by_row_col(self, row: int, column: int):
-        return self.novel.tags[row].text in self.novel.scenes[column - 1].tags
+        return self.novel.tags[row].text in self.novel.scenes[column - 2].tags

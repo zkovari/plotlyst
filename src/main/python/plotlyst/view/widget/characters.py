@@ -59,12 +59,14 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self._model = CharactersScenesDistributionTableModel(self.novel)
         self._scenes_proxy = proxy(self._model)
         self._scenes_proxy.setSortRole(CharactersScenesDistributionTableModel.SortRole)
-        self._scenes_proxy.sort(0, Qt.DescendingOrder)
+        self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.DescendingOrder)
         self.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
         self.tblSceneDistribution.setModel(self._scenes_proxy)
         self.tblSceneDistribution.hideColumn(0)
+        self.tblSceneDistribution.hideColumn(1)
         self.tblCharacters.setModel(self._scenes_proxy)
-        self.tblCharacters.setColumnWidth(0, 70)
+        self.tblCharacters.hideColumn(0)
+        self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 70)
         self.tblCharacters.setMaximumWidth(70)
 
         self.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
@@ -84,7 +86,7 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         else:
             self.average = 0
         for col in range(self._model.columnCount()):
-            if col == 0:
+            if col == CharactersScenesDistributionTableModel.IndexTags:
                 continue
             self.tblCharacters.hideColumn(col)
         self.spinAverage.setValue(self.average)
@@ -95,7 +97,8 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         if toggled:
             self._model = CharactersScenesDistributionTableModel(self.novel)
             self._scenes_proxy.setSourceModel(self._model)
-            self.tblCharacters.setColumnWidth(0, 70)
+            self.tblCharacters.hideColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 70)
             self.tblCharacters.setMaximumWidth(70)
 
             self.spinAverage.setVisible(True)
@@ -104,7 +107,9 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         if toggled:
             self._model = ConflictScenesDistributionTableModel(self.novel)
             self._scenes_proxy.setSourceModel(self._model)
-            self.tblCharacters.setColumnWidth(0, 140)
+            self.tblCharacters.showColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 30)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 140)
             self.tblCharacters.setMaximumWidth(140)
 
             self.spinAverage.setVisible(False)
@@ -113,7 +118,8 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         if toggled:
             self._model = TagScenesDistributionTableModel(self.novel)
             self._scenes_proxy.setSourceModel(self._model)
-            self.tblCharacters.setColumnWidth(0, 170)
+            self.tblCharacters.hideColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
             self.tblCharacters.setMaximumWidth(170)
 
             self.spinAverage.setVisible(False)
