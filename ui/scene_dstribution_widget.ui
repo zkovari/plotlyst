@@ -63,6 +63,16 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QRadioButton" name="btnGoals">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>Goals</string>
+       </property>
+      </widget>
+     </item>
      <item alignment="Qt::AlignLeft">
       <widget class="QRadioButton" name="btnConflicts">
        <property name="cursor">

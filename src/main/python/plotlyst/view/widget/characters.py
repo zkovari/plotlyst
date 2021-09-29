@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, Con
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
-    ConflictScenesDistributionTableModel, TagScenesDistributionTableModel
+    ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
@@ -53,6 +53,7 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.average = 0
 
         self.btnCharacters.setIcon(IconRegistry.character_icon())
+        self.btnGoals.setIcon(IconRegistry.goal_icon())
         self.btnConflicts.setIcon(IconRegistry.conflict_icon())
         self.btnTags.setIcon(IconRegistry.tags_icon())
 
@@ -73,6 +74,7 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.tblSceneDistribution.selectionModel().selectionChanged.connect(self._on_scene_selected)
 
         self.btnCharacters.toggled.connect(self._toggle_characters)
+        self.btnGoals.toggled.connect(self._toggle_goals)
         self.btnConflicts.toggled.connect(self._toggle_conflicts)
         self.btnTags.toggled.connect(self._toggle_tags)
 
@@ -102,6 +104,17 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
             self.tblCharacters.setMaximumWidth(70)
 
             self.spinAverage.setVisible(True)
+
+    def _toggle_goals(self, toggled: bool):
+        if toggled:
+            self._model = GoalScenesDistributionTableModel(self.novel)
+            self._scenes_proxy.setSourceModel(self._model)
+            self.tblCharacters.showColumn(0)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 30)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 140)
+            self.tblCharacters.setMaximumWidth(140)
+
+            self.spinAverage.setVisible(False)
 
     def _toggle_conflicts(self, toggled: bool):
         if toggled:

@@ -21,7 +21,7 @@ from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtGui import QIcon, QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Conflict, ConflictType
+from src.main.python.plotlyst.core.domain import Conflict, ConflictType, SceneGoal
 from src.main.python.plotlyst.model.common import DistributionModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
@@ -47,6 +47,32 @@ class CharactersScenesDistributionTableModel(DistributionModel):
         in_char = self.novel.characters[row] in self.novel.scenes[column - 2].characters
         pov = self.novel.characters[row] == self.novel.scenes[column - 2].pov
         return in_char or pov
+
+
+class GoalScenesDistributionTableModel(DistributionModel):
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return len(self.novel.scene_goals)
+
+    @overrides
+    def _dataForTag(self, index: QModelIndex, role: int = Qt.DisplayRole):
+        goal: SceneGoal = self.novel.scene_goals[index.row()]
+
+        if role == Qt.DecorationRole and goal.icon:
+            return IconRegistry.from_name(goal.icon, goal.icon_color)
+        if role == Qt.DisplayRole:
+            return goal.text
+
+    @overrides
+    def _dataForMeta(self, index: QModelIndex, role: int = Qt.DisplayRole):
+        conflict: Conflict = self.novel.conflicts[index.row()]
+        if role == Qt.DecorationRole:
+            return QIcon(avatars.pixmap(conflict.pov))
+
+    @overrides
+    def _match_by_row_col(self, row: int, column: int):
+        return self.novel.scene_goals[row] in self.novel.scenes[column - 2].goals
 
 
 class ConflictScenesDistributionTableModel(DistributionModel):

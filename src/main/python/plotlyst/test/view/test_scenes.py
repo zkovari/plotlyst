@@ -239,6 +239,8 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
     assert model.flags(model.index(3, 1)) & Qt.ItemIsEnabled
     assert model.flags(model.index(4, 1)) & Qt.ItemIsEnabled
 
+    view.characters_distribution.btnGoals.click()
+
     view.characters_distribution.btnConflicts.click()
     assert not view.characters_distribution.spinAverage.isVisible()
 
