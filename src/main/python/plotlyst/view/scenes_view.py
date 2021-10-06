@@ -98,6 +98,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.setColumnWidth(1, 20)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
+        self.ui.treeChapters.doubleClicked.connect(self._on_edit)
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self.ui.btnChaptersToggle.setChecked(True)
 
