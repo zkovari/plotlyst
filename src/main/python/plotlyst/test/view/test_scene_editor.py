@@ -55,7 +55,7 @@ def test_editor_with_multiple_scenes(qtbot, test_client):
     view: SceneEditor = editor(qtbot, novel, scene3)
 
     assert view.ui.lineTitle.text() == 'Scene 3'
-    assert view.ui.cbPivotal.currentText() == 'Select story beat ...'
+    assert view.ui.cbPivotal.currentText() == 'Select story beat...'
 
     assert view.ui.btnPrevious.isEnabled()
     assert not view.ui.btnNext.isEnabled()
