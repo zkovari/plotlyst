@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from enum import Enum
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle
@@ -45,8 +45,7 @@ class AutoAdjustableTextEdit(QTextEdit):
     @overrides
     def setPlainText(self, text: str) -> None:
         super(AutoAdjustableTextEdit, self).setPlainText(text)
-        self.document().adjustSize()
-        self._resizeToContent()
+        QTimer.singleShot(50, self._resizeToContent)
 
     def _resizeToContent(self):
         size = self.document().size()
