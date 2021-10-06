@@ -11,7 +11,7 @@ jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ ubuntu-18.04, windows-2016, macos-latest ]
+        os: [ ubuntu-18.04, windows-2016, macos-10.15 ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -38,7 +38,7 @@ jobs:
         name: Install fpm on Linux
         run: |
           sudo gem install --no-document fpm
-      - if: matrix.os == 'macos-latest'
+      - if: matrix.os == 'macos-10.15'
         name: Install fpm on Mac
         run: |
           gem install --no-document fpm
@@ -63,7 +63,7 @@ jobs:
         run: |
           fbs freeze
 
-      - if: matrix.os == 'macos-latest'
+      - if: matrix.os == 'macos-10.15'
         name: Sign Macos App
         env: 
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
@@ -77,7 +77,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k ${{secrets.KEYCHAIN_PWD}} build.keychain
           /usr/bin/codesign -v --timestamp --options=runtime --entitlements entitlements.plist --deep --force -s ${{secrets.MACOS_CERTIFICATE_IDENTITY}} target/Plotlyst.app
       
-      - if: matrix.os == 'macos-latest'
+      - if: matrix.os == 'macos-10.15'
         name: "Notarize Macos App"
         uses: devbotsxyz/xcode-notarize@v1
         with:
@@ -87,7 +87,7 @@ jobs:
           verbose: "true"
         continue-on-error: true
       
-      - if: matrix.os == 'macos-latest'
+      - if: matrix.os == 'macos-10.15'
         name: "Staple Macos App"
         uses: devbotsxyz/xcode-staple@v1
         with:
@@ -103,7 +103,7 @@ jobs:
           name: app-deb-artifact
           path: target/Plotlyst.deb
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-10.15'
         with:
           name: app-mac-artifact
           path: target/Plotlyst.dmg
