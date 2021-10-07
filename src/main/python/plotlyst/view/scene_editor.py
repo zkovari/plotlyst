@@ -107,7 +107,7 @@ class SceneEditor(QObject):
         self.ui.cbType.setItemIcon(1, IconRegistry.action_scene_icon())
         self.ui.cbType.setItemIcon(2, IconRegistry.reaction_scene_icon())
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
-        self.ui.cbConflict.clicked.connect(self._on_conflict_toggled)
+        # self.ui.cbConflict.clicked.connect(self._on_conflict_toggled)
 
         self.tblCharacters = QTableView()
         self.tblCharacters.setShowGrid(False)
@@ -192,17 +192,17 @@ class SceneEditor(QObject):
                 self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
 
-        item = self.ui.hLayoutGoal.itemAt(1)
+        item = self.ui.gBoxSceneGoals.layout().itemAt(0)
         if item and isinstance(item.widget(), SceneGoalsWidget):
-            self.ui.hLayoutGoal.removeItem(item)
+            self.ui.gBoxSceneGoals.layout().removeItem(item)
             item.widget().deleteLater()
-        item = self.ui.hLayoutOutcome.itemAt(1)
-        if item and isinstance(item.widget(), SceneGoalsWidget):
-            self.ui.hLayoutOutcome.removeItem(item)
-            item.widget().deleteLater()
+        # item = self.ui.vLayoutGoalConflict.itemAt(1)
+        # if item and isinstance(item.widget(), SceneGoalsWidget):
+        #     self.ui.vLayoutGoalConflict.removeItem(item)
+        #     item.widget().deleteLater()
 
         goalEditor = SceneGoalsWidget(self.novel, self.scene)
-        self.ui.hLayoutGoal.insertWidget(1, goalEditor)
+        self.ui.gBoxSceneGoals.layout().addWidget(goalEditor)
 
         for char_arc in self.scene.arcs:
             if scene.pov and char_arc.character == scene.pov:
@@ -311,9 +311,9 @@ class SceneEditor(QObject):
 
     def _on_type_changed(self, text: str):
         if text == ACTION_SCENE:
-            self.ui.lblType1.setText('Goal:')
+            # self.ui.lblType1.setText('Goal:')
             self.ui.textEvent1.setPlaceholderText('Scene goal')
-            self.ui.lblType2.setText('Conflict:')
+            # self.ui.lblType2.setText('Conflict:')
             if not self.scene.without_action_conflict:
                 self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
             if self.scene.action_resolution:
@@ -324,51 +324,54 @@ class SceneEditor(QObject):
                 self.ui.btnDisaster.setChecked(True)
             self._outcome_toggled()
 
-            for btn in self.ui.btnGroupOutcome.buttons():
-                btn.setVisible(True)
-            self.ui.cbConflict.setVisible(True)
-            self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
-            self._on_conflict_toggled(self.ui.cbConflict.isChecked())
+            self.ui.wdgOutcomeContainer.setVisible(True)
+            # for btn in self.ui.btnGroupOutcome.buttons():
+            #     btn.setVisible(True)
+            # self.ui.cbConflict.setVisible(True)
+            # self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
+            # self._on_conflict_toggled(self.ui.cbConflict.isChecked())
             self.ui.btnAddConflict.setText('Add conflict')
 
-            item = self.ui.hLayoutOutcome.itemAt(1)
-            if item and isinstance(item.widget(), SceneGoalsWidget):
-                self.ui.hLayoutOutcome.removeItem(item)
-                self.ui.hLayoutGoal.insertWidget(1, item.widget())
-                item.widget().btnEdit.setText('Add goal')
+            # item = self.ui.vLayoutGoalConflict.itemAt(1)
+            # if item and isinstance(item.widget(), SceneGoalsWidget):
+            #     self.ui.vLayoutGoalConflict.removeItem(item)
+            #     self.ui.vLayoutGoalConflict.insertWidget(1, item.widget())
+            #     item.widget().btnEdit.setText('Add goal')
 
             return
         elif text == REACTION_SCENE:
-            for btn in self.ui.btnGroupOutcome.buttons():
-                btn.setHidden(True)
-            self.ui.lblType1.setText('Reaction:')
+            self.ui.wdgOutcomeContainer.setHidden(True)
+            # for btn in self.ui.btnGroupOutcome.buttons():
+            #     btn.setHidden(True)
+            # self.ui.lblType1.setText('Reaction:')
             self.ui.textEvent1.setPlaceholderText('Reaction at the beginning')
-            self.ui.lblType2.setText('Dilemma:')
+            # self.ui.lblType2.setText('Dilemma:')
             self.ui.textEvent2.setPlaceholderText('Dilemma throughout the scene')
             self.ui.lblType3.setText('Decision:')
             self.ui.textEvent3.setPlaceholderText('Decision in the end')
             self.ui.btnAddConflict.setText('Add cause')
 
-            item = self.ui.hLayoutGoal.itemAt(1)
-            if item and isinstance(item.widget(), SceneGoalsWidget):
-                self.ui.hLayoutGoal.removeItem(item)
-                self.ui.hLayoutOutcome.insertWidget(1, item.widget())
-                item.widget().btnEdit.setText('Add new goal')
+            # item = self.ui.vLayoutGoalConflict.itemAt(1)
+            # if item and isinstance(item.widget(), SceneGoalsWidget):
+            #     self.ui.vLayoutGoalConflict.removeItem(item)
+            #     self.ui.vLayoutGoalConflict.insertWidget(1, item.widget())
+            #     item.widget().btnEdit.setText('Add new goal')
 
         else:
-            self.ui.lblType1.setText('Beginning:')
+            # self.ui.lblType1.setText('Beginning:')
             self.ui.textEvent1.setPlaceholderText('Beginning event of the scene')
-            self.ui.lblType2.setText('Middle:')
+            # self.ui.lblType2.setText('Middle:')
             self.ui.textEvent2.setPlaceholderText('Middle part of the scene')
             self.ui.lblType3.setText('End:')
             self.ui.textEvent3.setPlaceholderText('Ending of the scene')
             self.ui.btnAddConflict.setText('Add conflict')
 
         self.ui.textEvent2.setEnabled(True)
-        self.ui.lblType2.setVisible(True)
-        for btn in self.ui.btnGroupOutcome.buttons():
-            btn.setHidden(True)
-        self.ui.cbConflict.setHidden(True)
+        # self.ui.lblType2.setVisible(True)
+        self.ui.wdgOutcomeContainer.setHidden(True)
+        # for btn in self.ui.btnGroupOutcome.buttons():
+        #     btn.setHidden(True)
+        # self.ui.cbConflict.setHidden(True)
 
         self.ui.btnAddConflict.setVisible(True)
         self.ui.wdgConflicts.setVisible(True)
@@ -467,7 +470,7 @@ class SceneEditor(QObject):
         self.scene.type = self.ui.cbType.currentText()
         self.scene.beginning = self.ui.textEvent1.toPlainText()
         if self.scene.type == ACTION_SCENE:
-            self.scene.without_action_conflict = not self.ui.cbConflict.isChecked()
+            # self.scene.without_action_conflict = not self.ui.cbConflict.isChecked()
             self.scene.action_resolution = self.ui.btnResolution.isChecked()
             self.scene.action_trade_off = self.ui.btnTradeOff.isChecked()
         self.scene.middle = self.ui.textEvent2.toPlainText()

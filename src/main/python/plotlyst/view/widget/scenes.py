@@ -37,11 +37,10 @@ class SceneGoalsWidget(LabelsEditorWidget):
     def __init__(self, novel: Novel, scene: Scene, parent=None):
         self.novel = novel
         self.scene = scene
-        super(SceneGoalsWidget, self).__init__(alignment=Qt.Vertical, parent=parent)
+        super(SceneGoalsWidget, self).__init__(alignment=Qt.Horizontal, parent=parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
         self.setValue([x.text for x in self.scene.goals])
         self.btnEdit.setIcon(IconRegistry.goal_icon())
-        self.btnEdit.setText('Add goal')
         self.setStyleSheet('SceneGoalsWidget {border: 0px;}')
 
     @overrides
