@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>855</width>
+    <width>954</width>
     <height>808</height>
    </rect>
   </property>
@@ -349,22 +349,6 @@
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer_6">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Preferred</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>45</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
              <widget class="QLabel" name="lblDayEmoji">
               <property name="text">
                <string>emo</string>
@@ -375,13 +359,13 @@
              <widget class="QSpinBox" name="sbDay">
               <property name="minimumSize">
                <size>
-                <width>121</width>
+                <width>100</width>
                 <height>0</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
-                <width>150</width>
+                <width>100</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -436,6 +420,58 @@
             </property>
            </spacer>
           </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="lblType">
+              <property name="text">
+               <string>Scene structure:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cbType">
+              <property name="maximumSize">
+               <size>
+                <width>141</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string/>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>action</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>reaction</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
          </layout>
         </item>
         <item>
@@ -453,12 +489,15 @@
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">#wdgPov {border: 0px solid black;
+           <string notr="true">#wdgPov {border: 1px solid black;
 border-radius: 15px;
 }</string>
           </property>
+          <property name="frameShape">
+           <enum>QFrame::Box</enum>
+          </property>
           <property name="lineWidth">
-           <number>0</number>
+           <number>1</number>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_18">
            <property name="spacing">
@@ -738,6 +777,58 @@ QToolButton:disabled {
          </widget>
         </item>
         <item>
+         <widget class="QWidget" name="widget" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>230</height>
+           </size>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_15">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QLabel" name="lblCharacters_2">
+               <property name="text">
+                <string>Characters</string>
+               </property>
+              </widget>
+             </item>
+             <item alignment="Qt::AlignLeft">
+              <widget class="QToolButton" name="btnEditCharacters">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="popupMode">
+                <enum>QToolButton::InstantPopup</enum>
+               </property>
+               <property name="autoRaise">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="LabelsWidget" name="wdgCharacters" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_9">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -747,7 +838,7 @@ QToolButton:disabled {
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>40</width>
+            <width>10</width>
             <height>20</height>
            </size>
           </property>
@@ -757,32 +848,11 @@ QToolButton:disabled {
       </widget>
      </item>
      <item>
-      <widget class="QTabWidget" name="tabWidget">
+      <widget class="QStackedWidget" name="stackedWidget">
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
-       <property name="tabShape">
-        <enum>QTabWidget::Rounded</enum>
-       </property>
-       <property name="currentIndex">
-        <number>0</number>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>32</width>
-         <height>32</height>
-        </size>
-       </property>
-       <property name="elideMode">
-        <enum>Qt::ElideNone</enum>
-       </property>
-       <property name="documentMode">
-        <bool>false</bool>
-       </property>
-       <widget class="QWidget" name="tabGeneral">
-        <attribute name="title">
-         <string>Main</string>
-        </attribute>
+       <widget class="QWidget" name="stackedWidgetPage1" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <property name="spacing">
           <number>3</number>
@@ -799,6 +869,30 @@ QToolButton:disabled {
          <property name="bottomMargin">
           <number>2</number>
          </property>
+         <item>
+          <widget class="QGroupBox" name="gBoxSceneGoals">
+           <property name="title">
+            <string>Scene goals</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_16">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+           </layout>
+          </widget>
+         </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_9">
            <property name="spacing">
@@ -830,7 +924,7 @@ QToolButton:disabled {
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_5">
               <property name="spacing">
-               <number>4</number>
+               <number>3</number>
               </property>
               <property name="leftMargin">
                <number>2</number>
@@ -844,82 +938,6 @@ QToolButton:disabled {
               <property name="bottomMargin">
                <number>2</number>
               </property>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_3">
-                <property name="spacing">
-                 <number>2</number>
-                </property>
-                <item>
-                 <widget class="QLabel" name="lblType">
-                  <property name="text">
-                   <string>Scene structure:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="cbType">
-                  <property name="maximumSize">
-                   <size>
-                    <width>141</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string/>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>action</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>reaction</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_2">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_26">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="hLayoutGoal">
-                <item>
-                 <widget class="QLabel" name="lblType1">
-                  <property name="text">
-                   <string>Goal:</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_12">
                 <item>
@@ -975,98 +993,6 @@ QToolButton:disabled {
                    </size>
                   </property>
                  </spacer>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_10">
-                <item>
-                 <widget class="QCheckBox" name="cbConflict">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>14</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="lblType2">
-                  <property name="text">
-                   <string>Conflict:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btnAddConflict">
-                  <property name="text">
-                   <string>Add conflict</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_17">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_20">
-                <item>
-                 <spacer name="horizontalSpacer_24">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeType">
-                   <enum>QSizePolicy::Preferred</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>1</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="LabelsWidget" name="wdgConflicts" native="true">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>0</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                 </widget>
                 </item>
                </layout>
               </item>
@@ -1129,124 +1055,163 @@ QToolButton:disabled {
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="hLayoutOutcome">
-                <item>
-                 <widget class="QLabel" name="lblType3">
-                  <property name="text">
-                   <string>Outcome:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnDisaster">
-                  <property name="maximumSize">
-                   <size>
-                    <width>32</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="cursor">
-                   <cursorShape>PointingHandCursor</cursorShape>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>24</width>
-                    <height>24</height>
-                   </size>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                  <property name="toolButtonStyle">
-                   <enum>Qt::ToolButtonTextBesideIcon</enum>
-                  </property>
-                  <attribute name="buttonGroup">
-                   <string notr="true">btnGroupOutcome</string>
-                  </attribute>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnResolution">
-                  <property name="maximumSize">
-                   <size>
-                    <width>32</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="cursor">
-                   <cursorShape>PointingHandCursor</cursorShape>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>24</width>
-                    <height>24</height>
-                   </size>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="toolButtonStyle">
-                   <enum>Qt::ToolButtonTextBesideIcon</enum>
-                  </property>
-                  <attribute name="buttonGroup">
-                   <string notr="true">btnGroupOutcome</string>
-                  </attribute>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnTradeOff">
-                  <property name="maximumSize">
-                   <size>
-                    <width>32</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="cursor">
-                   <cursorShape>PointingHandCursor</cursorShape>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>24</width>
-                    <height>24</height>
-                   </size>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="toolButtonStyle">
-                   <enum>Qt::ToolButtonTextBesideIcon</enum>
-                  </property>
-                  <attribute name="buttonGroup">
-                   <string notr="true">btnGroupOutcome</string>
-                  </attribute>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_13">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
+               <widget class="QWidget" name="wdgOutcomeContainer" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <layout class="QHBoxLayout" name="hLayoutOutcome">
+                 <property name="spacing">
+                  <number>3</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <spacer name="horizontalSpacer_17">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Preferred</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="lblType3">
+                   <property name="text">
+                    <string>Outcome:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="btnDisaster">
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>24</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                   <property name="toolButtonStyle">
+                    <enum>Qt::ToolButtonTextBesideIcon</enum>
+                   </property>
+                   <attribute name="buttonGroup">
+                    <string notr="true">btnGroupOutcome</string>
+                   </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="btnResolution">
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>24</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="toolButtonStyle">
+                    <enum>Qt::ToolButtonTextBesideIcon</enum>
+                   </property>
+                   <attribute name="buttonGroup">
+                    <string notr="true">btnGroupOutcome</string>
+                   </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QToolButton" name="btnTradeOff">
+                   <property name="maximumSize">
+                    <size>
+                     <width>32</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>24</width>
+                     <height>24</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="toolButtonStyle">
+                    <enum>Qt::ToolButtonTextBesideIcon</enum>
+                   </property>
+                   <attribute name="buttonGroup">
+                    <string notr="true">btnGroupOutcome</string>
+                   </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_13">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>5</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_14">
@@ -1303,6 +1268,54 @@ QToolButton:disabled {
                    </size>
                   </property>
                  </spacer>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <item>
+                 <widget class="QGroupBox" name="groupBox">
+                  <property name="title">
+                   <string>Scene conflicts</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_4">
+                   <item>
+                    <widget class="QPushButton" name="btnAddConflict">
+                     <property name="maximumSize">
+                      <size>
+                       <width>120</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="LabelsWidget" name="wdgConflicts" native="true">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>23</width>
+                       <height>23</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                </layout>
               </item>
@@ -1426,33 +1439,6 @@ QToolButton:disabled {
                <number>1</number>
               </property>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_19">
-                <item>
-                 <widget class="QLabel" name="lblCharacters_2">
-                  <property name="text">
-                   <string>Characters</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnEditCharacters">
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="popupMode">
-                   <enum>QToolButton::InstantPopup</enum>
-                  </property>
-                  <property name="autoRaise">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="LabelsWidget" name="wdgCharacters" native="true"/>
-              </item>
-              <item>
                <spacer name="verticalSpacer_3">
                 <property name="orientation">
                  <enum>Qt::Vertical</enum>
@@ -1534,10 +1520,7 @@ QToolButton:disabled {
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tabNotes">
-        <attribute name="title">
-         <string>Notes</string>
-        </attribute>
+       <widget class="QWidget" name="stackedWidgetPage2" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_7">
          <property name="spacing">
           <number>2</number>
@@ -1566,10 +1549,7 @@ QToolButton:disabled {
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tabBuilder">
-        <attribute name="title">
-         <string>Scene builder</string>
-        </attribute>
+       <widget class="QWidget" name="stackedWidgetPage3" native="true">
         <layout class="QVBoxLayout" name="verticalLayout_10">
          <property name="spacing">
           <number>1</number>
@@ -1733,7 +1713,7 @@ QToolButton:disabled {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupArc"/>
   <buttongroup name="btnGroupOutcome"/>
+  <buttongroup name="btnGroupArc"/>
  </buttongroups>
 </ui>
