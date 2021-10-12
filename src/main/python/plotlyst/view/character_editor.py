@@ -42,8 +42,6 @@ class CharacterEditor:
         self.ui.setupUi(self.widget)
         self.novel = novel
 
-        self.ui.buttonGroup.buttonToggled.connect(self._tab_button_toggled)
-
         if character:
             self.character = character
             self._new_character = False
@@ -70,8 +68,6 @@ class CharacterEditor:
 
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
-
-        self.ui.btnBackstory.setChecked(True)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -144,9 +140,3 @@ class CharacterEditor:
             self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
 
         self._new_character = False
-
-    def _tab_button_toggled(self):
-        if self.ui.btnBackstory.isChecked():
-            self.ui.stackwidget.setCurrentWidget(self.ui.pageBackstory)
-        elif self.ui.btnNotes.isChecked():
-            self.ui.stackwidget.setCurrentWidget(self.ui.pageNotes)

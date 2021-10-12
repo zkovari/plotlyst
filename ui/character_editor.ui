@@ -188,84 +188,14 @@ border: 0px;
          </spacer>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <property name="spacing">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QPushButton" name="btnBackstory">
-            <property name="text">
-             <string>Backstory</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-            <property name="default">
-             <bool>false</bool>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">buttonGroup</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btnNotes">
-            <property name="text">
-             <string>Notes</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-            <property name="default">
-             <bool>false</bool>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">buttonGroup</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QStackedWidget" name="stackwidget">
-          <property name="frameShape">
-           <enum>QFrame::Box</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Sunken</enum>
-          </property>
-          <property name="lineWidth">
-           <number>1</number>
-          </property>
+         <widget class="QTabWidget" name="stackwidget">
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="pageBackstory" native="true">
+          <widget class="QWidget" name="stackwidgetPage1" native="true">
+           <attribute name="title">
+            <string>Backstory</string>
+           </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_2">
             <property name="spacing">
              <number>3</number>
@@ -424,7 +354,10 @@ border: 0px;
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="pageNotes">
+          <widget class="QWidget" name="stackwidgetPage2" native="true">
+           <attribute name="title">
+            <string>Notes</string>
+           </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_9">
             <property name="spacing">
              <number>3</number>
