@@ -17,10 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import pickle
+from abc import abstractmethod
+from typing import Optional
+
 import emoji
 from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent
-from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
+from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent
 from PyQt5.QtWidgets import QFrame, QApplication
 from fbs_runtime import platform
 from overrides import overrides
@@ -32,12 +36,48 @@ from src.main.python.plotlyst.view.generated.character_card_ui import Ui_Charact
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
 from src.main.python.plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar, avatars
+from src.main.python.plotlyst.view.layout import FlowLayout
 from src.main.python.plotlyst.view.widget.labels import CharacterAvatarLabel
 
 
-class _Card(QFrame):
+class CardMimeData(QMimeData):
+    def __init__(self, card: 'Card'):
+        super().__init__()
+        self.card = card
+
+
+class Card(QFrame):
     selected = pyqtSignal(object)
     doubleClicked = pyqtSignal(object)
+    dropped = pyqtSignal(object, object)
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.dragStartPosition: Optional[QPoint] = None
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.LeftButton:
+            self.dragStartPosition = event.pos()
+        else:
+            self.dragStartPosition = None
+        super(Card, self).mousePressEvent(event)
+
+    @overrides
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        if not event.buttons() & Qt.LeftButton:
+            return
+        if not self.dragStartPosition:
+            return
+        if (event.pos() - self.dragStartPosition).manhattanLength() < QApplication.startDragDistance():
+            return
+
+        drag = QDrag(self)
+        mimeData = CardMimeData(self)
+        mimeData.setData(self.mimeType(), QByteArray(pickle.dumps(self.objectName())))
+        drag.setPixmap(self.grab())
+        drag.setMimeData(mimeData)
+        drag.exec(Qt.MoveAction)
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -48,12 +88,39 @@ class _Card(QFrame):
         self.select()
         self.doubleClicked.emit(self)
 
+    @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        event.acceptProposedAction()
+
+    @overrides
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        if event.mimeData().hasFormat(self.mimeType()):
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    @overrides
+    def dropEvent(self, event: QDropEvent) -> None:
+        if isinstance(event.mimeData(), CardMimeData):
+            if event.mimeData().card is self:
+                event.ignore()
+                return
+
+            self.dropped.emit(event.mimeData().card, self)
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
     def select(self):
         self._setStyleSheet(selected=True)
         self.selected.emit(self)
 
     def clearSelection(self):
         self._setStyleSheet()
+
+    @abstractmethod
+    def mimeType(self) -> str:
+        pass
 
     def _setStyleSheet(self, selected: bool = False):
         border_color = self._borderColor(selected)
@@ -76,7 +143,7 @@ class _Card(QFrame):
         return '#2a4d69' if selected else '#adcbe3'
 
 
-class NovelCard(Ui_NovelCard, _Card):
+class NovelCard(Ui_NovelCard, Card):
 
     def __init__(self, novel: NovelDescriptor, parent=None):
         super().__init__(parent)
@@ -89,8 +156,12 @@ class NovelCard(Ui_NovelCard, _Card):
     def refresh(self):
         self.textName.setText(self.novel.title)
 
+    @overrides
+    def mimeType(self) -> str:
+        return 'application/novel-card'
 
-class CharacterCard(Ui_CharacterCard, _Card):
+
+class CharacterCard(Ui_CharacterCard, Card):
 
     def __init__(self, character: Character, parent=None):
         super().__init__(parent)
@@ -111,8 +182,12 @@ class CharacterCard(Ui_CharacterCard, _Card):
             self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
         self._setStyleSheet()
 
+    @overrides
+    def mimeType(self) -> str:
+        return 'application/character-card'
 
-class SceneCard(Ui_SceneCard, _Card):
+
+class SceneCard(Ui_SceneCard, Card):
     def __init__(self, scene: Scene, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -164,6 +239,10 @@ class SceneCard(Ui_SceneCard, _Card):
         self._setStyleSheet()
 
     @overrides
+    def mimeType(self) -> str:
+        return 'application/scene-card'
+
+    @overrides
     def enterEvent(self, event: QEvent) -> None:
         self.wdgCharacters.setEnabled(True)
 
@@ -182,3 +261,30 @@ class SceneCard(Ui_SceneCard, _Card):
         if self.scene.beat:
             return '#6b7d7d' if selected else PIVOTAL_COLOR
         return super(SceneCard, self)._borderColor(selected)
+
+
+class CardsView(QFrame):
+    swapped = pyqtSignal(object, object)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._layout = FlowLayout(spacing=9)
+        self.setLayout(self._layout)
+        self.setAcceptDrops(True)
+
+    @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        event.acceptProposedAction()
+        super(CardsView, self).dragEnterEvent(event)
+
+    @overrides
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        event.acceptProposedAction()
+
+    def clear(self):
+        self._layout.clear()
+
+    def addCard(self, card: Card):
+        card.setAcceptDrops(True)
+        card.dropped.connect(self.swapped.emit)
+        self._layout.addWidget(card)
