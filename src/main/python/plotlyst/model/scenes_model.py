@@ -32,6 +32,7 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REA
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -76,8 +77,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         _headers[self.ColArc] = 'Arc'
         _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
-        self._second_act_start: Optional[QModelIndex] = None
-        self._third_act_start: Optional[QModelIndex] = None
         self._relax_colors = False
 
         self._action_icon = IconRegistry.action_scene_icon()
@@ -86,8 +85,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._reaction_icon = IconRegistry.reaction_scene_icon()
         self._wip_brush = QBrush(QColor(WIP_COLOR))
         self._pivotal_brush = QBrush(QColor(PIVOTAL_COLOR))
-
-        self._find_acts()
 
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
@@ -272,32 +269,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self.orderChanged.emit()
         return True
 
-    @overrides
-    def beginResetModel(self) -> None:
-        self._find_acts()
-        super().beginResetModel()
-
     def setRelaxColors(self, enabled: bool):
         self._relax_colors = enabled
-
-    def isInAct(self, act: int, row: int) -> bool:
-        if act == 1 and self._second_act_start:
-            return row <= self._second_act_start.row()
-        elif act == 2 and self._second_act_start and self._third_act_start:
-            return self._second_act_start.row() < row <= self._third_act_start.row()
-        elif act == 2 and self._second_act_start:
-            return self._second_act_start.row() < row
-        elif act == 3 and self._third_act_start:
-            return row > self._third_act_start.row()
-
-        return False
-
-    def _find_acts(self):
-        for index, scene in enumerate(self._data):
-            if scene.beat and scene.beat.act == 1 and scene.beat.ends_act:
-                self._second_act_start = self.index(index, 0)
-            elif scene.beat and scene.beat.act == 2 and scene.beat.ends_act:
-                self._third_act_start = self.index(index, 0)
 
 
 class ScenesFilterProxyModel(QSortFilterProxyModel):
@@ -338,7 +311,7 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
             return False
 
         for act, toggled in self.acts_filter.items():
-            if self.sourceModel().isInAct(act, source_row) and not toggled:
+            if acts_registry.act(scene) == act and not toggled:
                 return False
 
         return filtered
