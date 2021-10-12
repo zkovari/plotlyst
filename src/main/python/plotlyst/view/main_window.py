@@ -45,6 +45,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 
@@ -69,6 +70,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             _novels = client.novels()
             if _novels:
                 self.novel = client.fetch_novel(_novels[0].id)
+
+        if self.novel:
+            acts_registry.set_novel(self.novel)
 
         self._init_menubar()
         self._init_toolbar()
@@ -262,6 +266,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._clear_novel_views()
 
         self.novel = client.fetch_novel(novel.id)
+        acts_registry.set_novel(self.novel)
         self._init_views()
         settings.set_last_novel_id(self.novel.id)
         self._register_events()
