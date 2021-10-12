@@ -32,7 +32,6 @@ from src.main.python.plotlyst.view.character_editor import CharacterEditor
 from src.main.python.plotlyst.view.common import ask_confirmation, busy
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.layout import FlowLayout
 from src.main.python.plotlyst.view.widget.cards import CharacterCard
 
 
@@ -59,14 +58,14 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-        self._cards_layout = FlowLayout(spacing=9)
-        self.ui.cards.setLayout(self._cards_layout)
         self.character_cards: List[CharacterCard] = []
         self.selected_card: Optional[CharacterCard] = None
         self._update_cards()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
+
+        self.ui.cards.swapped.connect(self._characters_swapped)
 
     @overrides
     def refresh(self):
@@ -79,11 +78,11 @@ class CharactersView(AbstractNovelView):
     def _update_cards(self):
         self.character_cards.clear()
         self.selected_card = None
-        self._cards_layout.clear()
+        self.ui.cards.clear()
 
         for character in self.novel.characters:
             card = CharacterCard(character)
-            self._cards_layout.addWidget(card)
+            self.ui.cards.addCard(card)
             self.character_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
@@ -101,6 +100,14 @@ class CharactersView(AbstractNovelView):
         self.selected_card = card
         self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
+
+    def _characters_swapped(self, removed: CharacterCard, moved_to: CharacterCard):
+        self.novel.characters.remove(removed.character)
+        pos = self.novel.characters.index(moved_to.character)
+        self.novel.characters.insert(pos, removed.character)
+
+        self.refresh()
+        self.repo.update_novel(self.novel)
 
     def _switch_view(self):
         if self.ui.btnCardsView.isChecked():
