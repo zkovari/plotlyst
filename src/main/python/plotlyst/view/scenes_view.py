@@ -37,7 +37,6 @@ from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import FlowLayout
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
@@ -116,8 +115,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
 
-        self._cards_layout = FlowLayout(spacing=9)
-        self.ui.cards.setLayout(self._cards_layout)
         self.scene_cards: List[SceneCard] = []
         self.selected_card: Optional[SceneCard] = None
         self._update_cards()
@@ -143,6 +140,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnNew.clicked.connect(self._new_scene)
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
+
+        self.ui.cards.swapped.connect(self._scenes_swapped)
 
     def _add_pov_filter_action(self, pov: Character):
         action = QAction(pov.name, self.ui.btnFilter)
@@ -270,11 +269,11 @@ class ScenesOutlineView(AbstractNovelView):
     def _update_cards(self):
         self.scene_cards.clear()
         self.selected_card = None
-        self._cards_layout.clear()
+        self.ui.cards.clear()
 
         for scene in self.novel.scenes:
             card = SceneCard(scene)
-            self._cards_layout.addWidget(card)
+            self.ui.cards.addCard(card)
             self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
@@ -398,8 +397,12 @@ class ScenesOutlineView(AbstractNovelView):
         self.novel.scenes.insert(i + 1, new_scene)
         new_scene.sequence = i + 1
         self.repo.insert_scene(self.novel, new_scene)
+        emit_event(SceneChangedEvent(self))
         self.refresh()
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
+
+        self.editor = SceneEditor(self.novel, new_scene)
+        self._switch_to_editor()
 
     def _on_delete(self):
         scene: Optional[Scene] = self._selected_scene()
@@ -416,6 +419,15 @@ class ScenesOutlineView(AbstractNovelView):
             index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
             if ask_confirmation(f'Are you sure you want to delete "{index.data()}"? (scenes will remain)'):
                 self.chaptersModel.removeChapter(index)
+
+    def _scenes_swapped(self, removed: SceneCard, moved_to: SceneCard):
+        self.novel.scenes.remove(removed.scene)
+        pos = self.novel.scenes.index(moved_to.scene)
+        self.novel.scenes.insert(pos, removed.scene)
+
+        emit_event(SceneChangedEvent(self))
+        self.refresh()
+        self.repo.update_novel(self.novel)
 
     def _on_scene_moved(self):
         self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])

@@ -558,7 +558,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>2</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="pageCards">
               <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -587,8 +587,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>98</width>
-                    <height>28</height>
+                    <width>370</width>
+                    <height>603</height>
                    </rect>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -608,9 +608,9 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QFrame" name="cards">
+                    <widget class="CardsView" name="cards">
                      <property name="styleSheet">
-                      <string notr="true">.QFrame {
+                      <string notr="true">.CardsView {
 	background-color: rgb(255, 255, 255);
 }</string>
                      </property>
@@ -884,6 +884,12 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>CardsView</class>
+   <extends>QFrame</extends>
+   <header>src.main.python.plotlyst.view.widget.cards</header>
+   <container>1</container>
+  </customwidget>
   <customwidget>
    <class>ActionBasedTreeView</class>
    <extends>QTreeView</extends>
