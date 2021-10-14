@@ -161,11 +161,11 @@ def test_change_stage(qtbot, filled_window: MainWindow):
 
     view.ui.btnStageSelector.menu().actions()[0].trigger()
     assert view.ui.btnStageSelector.text() == 'Outlined'
-    assert view.stagesProgress.stage().stage == 'Outlined'
+    assert view.stagesProgress.stage().text == 'Outlined'
 
     view.ui.btnStageSelector.menu().actions()[3].trigger()
     assert view.ui.btnStageSelector.text() == '3rd Draft'
-    assert view.stagesProgress.stage().stage == '3rd Draft'
+    assert view.stagesProgress.stage().text == '3rd Draft'
 
     charts = view.stagesProgress.charts()
     pie_series: QPieSeries = charts[0].chart.series()[0]
