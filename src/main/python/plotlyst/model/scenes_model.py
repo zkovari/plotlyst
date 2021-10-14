@@ -296,7 +296,6 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
     @overrides
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         filtered = super(ScenesFilterProxyModel, self).filterAcceptsRow(source_row, source_parent)
-
         if not filtered:
             return filtered
 
@@ -318,6 +317,8 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
 
 
 class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
+    SceneRole: int = Qt.UserRole + 1
+
     ColTitle: int = 0
     ColNoneStage: int = 1
 
@@ -336,6 +337,8 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if role == self.SceneRole:
+            return self._scene(index)
         if role == Qt.DecorationRole:
             if not self._scene(index).stage and index.column() == self.ColNoneStage:
                 return IconRegistry.wip_icon()

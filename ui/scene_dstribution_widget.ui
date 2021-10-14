@@ -177,6 +177,9 @@
        <property name="cursor" stdset="0">
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
        <property name="iconSize">
         <size>
          <width>28</width>

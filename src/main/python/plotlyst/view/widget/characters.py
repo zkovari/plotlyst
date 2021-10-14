@@ -29,7 +29,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
 from src.main.python.plotlyst.event.core import emit_critical
-from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
@@ -58,7 +58,10 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.btnTags.setIcon(IconRegistry.tags_icon())
 
         self._model = CharactersScenesDistributionTableModel(self.novel)
-        self._scenes_proxy = proxy(self._model)
+        self._scenes_proxy = DistributionFilterProxyModel()
+        self._scenes_proxy.setSourceModel(self._model)
+        self._scenes_proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
+        self._scenes_proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self._scenes_proxy.setSortRole(CharactersScenesDistributionTableModel.SortRole)
         self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.DescendingOrder)
         self.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
@@ -94,6 +97,9 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.spinAverage.setValue(self.average)
         self.tblSceneDistribution.horizontalHeader().setMaximumSectionSize(15)
         self._model.modelReset.emit()
+
+    def setActsFilter(self, act: int, filter: bool):
+        self._scenes_proxy.setActsFilter(act, filter)
 
     def _toggle_characters(self, toggled: bool):
         if toggled:

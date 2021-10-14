@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from typing import List, Any, Set, Optional
+from typing import List, Any, Set, Optional, Dict
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel, QSortFilterProxyModel, pyqtSignal, \
     QVariant
@@ -26,9 +26,10 @@ from PyQt5.QtGui import QFont, QColor, QBrush
 from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
-from src.main.python.plotlyst.core.domain import SelectionItem, Novel
+from src.main.python.plotlyst.core.domain import SelectionItem, Novel, Scene
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 def emit_column_changed_in_tree(model: TreeItemModel, column: int, parent: QModelIndex):
@@ -248,6 +249,7 @@ class DefaultSelectionItemsModel(SelectionItemsModel):
 
 class DistributionModel(QAbstractTableModel):
     SortRole: int = Qt.UserRole + 1
+    SceneRole: int = Qt.UserRole + 2
 
     IndexMeta: int = 0
     IndexTags: int = 1
@@ -264,6 +266,11 @@ class DistributionModel(QAbstractTableModel):
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if role == self.SceneRole:
+            if index.column() > self.IndexTags:
+                return self.novel.scenes[index.column() - 2]
+            else:
+                return None
         if index.column() == self.IndexTags:
             if role == Qt.ForegroundRole:
                 if self._highlighted_tags and index not in self._highlighted_tags:
@@ -344,3 +351,31 @@ class DistributionModel(QAbstractTableModel):
     @abstractmethod
     def _match_by_row_col(self, row: int, column: int) -> bool:
         pass
+
+
+class DistributionFilterProxyModel(QSortFilterProxyModel):
+
+    def __init__(self):
+        super().__init__()
+        self.acts_filter: Dict[int, bool] = {}
+
+    def setActsFilter(self, act: int, filter: bool):
+        self.acts_filter[act] = filter
+        self.invalidateFilter()
+
+    @overrides
+    def filterAcceptsColumn(self, source_column: int, source_parent: QModelIndex) -> bool:
+        filtered = super().filterAcceptsColumn(source_column, source_parent)
+        if not filtered:
+            return filtered
+
+        scene: Optional[Scene] = self.sourceModel().data(self.sourceModel().index(0, source_column),
+                                                         role=DistributionModel.SceneRole)
+        if not scene:
+            return filtered
+
+        for act, toggled in self.acts_filter.items():
+            if acts_registry.act(scene) == act and not toggled:
+                return False
+
+        return filtered

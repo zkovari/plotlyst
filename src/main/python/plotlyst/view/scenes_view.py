@@ -47,6 +47,7 @@ from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
+from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class ScenesOutlineView(AbstractNovelView):
@@ -124,6 +125,9 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.scene_cards: List[SceneCard] = []
         self.selected_card: Optional[SceneCard] = None
+        self.ui.btnAct1.toggled.connect(self._update_cards)
+        self.ui.btnAct2.toggled.connect(self._update_cards)
+        self.ui.btnAct3.toggled.connect(self._update_cards)
         self._update_cards()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
@@ -278,7 +282,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.selected_card = None
         self.ui.cards.clear()
 
+        acts_filter = {1: self.ui.btnAct1.isChecked(), 2: self.ui.btnAct2.isChecked(), 3: self.ui.btnAct3.isChecked()}
         for scene in self.novel.scenes:
+            if not acts_filter[acts_registry.act(scene)]:
+                continue
             card = SceneCard(scene)
             self.ui.cards.addCard(card)
             self.scene_cards.append(card)
@@ -321,6 +328,12 @@ class ScenesOutlineView(AbstractNovelView):
             if not self.characters_distribution:
                 self.characters_distribution = CharactersScenesDistributionWidget(self.novel)
                 self.ui.pageCharactersDistribution.layout().addWidget(self.characters_distribution)
+                self.ui.btnAct1.toggled.connect(partial(self.characters_distribution.setActsFilter, 1))
+                self.ui.btnAct2.toggled.connect(partial(self.characters_distribution.setActsFilter, 2))
+                self.ui.btnAct3.toggled.connect(partial(self.characters_distribution.setActsFilter, 3))
+                self.characters_distribution.setActsFilter(1, self.ui.btnAct1.isChecked())
+                self.characters_distribution.setActsFilter(2, self.ui.btnAct2.isChecked())
+                self.characters_distribution.setActsFilter(3, self.ui.btnAct3.isChecked())
         else:
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
             self.ui.tblSceneStages.clearSelection()
@@ -369,7 +382,17 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesModel.modelReset.emit()
         else:
             self.stagesModel = ScenesStageTableModel(self.novel)
-            self.ui.tblSceneStages.setModel(self.stagesModel)
+            self._stages_proxy = ScenesFilterProxyModel()
+            self._stages_proxy.setSourceModel(self.stagesModel)
+            self._stages_proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
+            self._stages_proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self.ui.tblSceneStages.setModel(self._stages_proxy)
+            self.ui.btnAct1.toggled.connect(partial(self._stages_proxy.setActsFilter, 1))
+            self.ui.btnAct2.toggled.connect(partial(self._stages_proxy.setActsFilter, 2))
+            self.ui.btnAct3.toggled.connect(partial(self._stages_proxy.setActsFilter, 3))
+            self._stages_proxy.setActsFilter(1, self.ui.btnAct1.isChecked())
+            self._stages_proxy.setActsFilter(2, self.ui.btnAct2.isChecked())
+            self._stages_proxy.setActsFilter(3, self.ui.btnAct3.isChecked())
             self.ui.tblSceneStages.verticalHeader().setStyleSheet(
                 '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
                    QHeaderView {background-color: white;}''')
