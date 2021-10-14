@@ -21,7 +21,7 @@ from functools import partial
 from typing import Optional, List, Set
 
 import emoji
-from PyQt5.QtCore import QObject, pyqtSignal, QSortFilterProxyModel, QModelIndex, QTimer, QItemSelectionModel, \
+from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QTimer, QItemSelectionModel, \
     QAbstractItemModel, Qt, QSize, QEvent
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
@@ -114,6 +114,12 @@ class SceneEditor(QObject):
         self.tblCharacters.verticalHeader().setVisible(False)
         self.tblCharacters.horizontalHeader().setVisible(False)
         self.tblCharacters.horizontalHeader().setDefaultSectionSize(200)
+        self.tblCharacters.setCursor(Qt.PointingHandCursor)
+
+        self._characters_model = CharactersSceneAssociationTableModel(self.novel)
+        self._characters_model.selection_changed.connect(self._character_changed)
+        self.tblCharacters.setModel(self._characters_model)
+        self.tblCharacters.clicked.connect(self._characters_model.toggleSelection)
 
         action = QWidgetAction(self.ui.btnEditCharacters)
         action.setDefaultWidget(self.tblCharacters)
@@ -257,11 +263,7 @@ class SceneEditor(QObject):
             self.ui.cbPivotal.setCurrentIndex(0)
         self.ui.textNotes.setPlainText(self.scene.notes)
 
-        self._characters_model = CharactersSceneAssociationTableModel(self.novel, self.scene)
-        self._characters_model.selection_changed.connect(self._character_changed)
-        self._characters_proxy_model = QSortFilterProxyModel()
-        self._characters_proxy_model.setSourceModel(self._characters_model)
-        self.tblCharacters.setModel(self._characters_proxy_model)
+        self._characters_model.setScene(self.scene)
         self._character_changed()
 
         action = QWidgetAction(self.ui.btnAddConflict)

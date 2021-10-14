@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Any
+from typing import List, Any, Optional
 
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon
@@ -67,8 +67,11 @@ class CharactersTableModel(QAbstractTableModel):
 class CharactersSceneAssociationTableModel(CharactersTableModel):
     selection_changed = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene: Scene):
+    def __init__(self, novel: Novel):
         super().__init__(novel)
+        self.scene: Optional[Scene] = None
+
+    def setScene(self, scene: Scene):
         self.scene = scene
 
     @overrides
@@ -77,38 +80,45 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if role == Qt.CheckStateRole:
-            if self._data[index.row()] is self.scene.pov:
-                return Qt.Checked
-            return Qt.Checked if self._data[index.row()] in self.scene.characters else Qt.Unchecked
-        elif role == Qt.FontRole:
-            if self._data[index.row()] in self.scene.characters:
+        if not self.scene:
+            return QVariant()
+
+        character: Character = self._data[index.row()]
+        if character is self.scene.pov:
+            if role == Qt.ToolTipRole:
+                return 'POV character'
+        elif character in self.scene.characters:
+            if role == Qt.FontRole:
                 font = QFont()
                 font.setBold(True)
                 return font
-        elif role == Qt.ToolTipRole:
-            if self._data[index.row()] is self.scene.pov:
-                return 'POV character'
-        return super(CharactersSceneAssociationTableModel, self).data(index, role)
+            elif role == Qt.CheckStateRole:
+                return Qt.Checked
+        elif role == Qt.CheckStateRole:
+            return Qt.Unchecked
 
-    @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
-        if role == Qt.CheckStateRole:
-            if value == Qt.Checked:
-                self.scene.characters.append(self._data[index.row()])
-            else:
-                self.scene.characters.remove(self._data[index.row()])
-            self.selection_changed.emit()
-            return True
-        else:
-            return super(CharactersTableModel, self).setData(index, value, role)
+        return super(CharactersSceneAssociationTableModel, self).data(index, role)
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         flags = super().flags(index)
+        if not self.scene:
+            return flags
         if self._data[index.row()] is self.scene.pov:
             return Qt.NoItemFlags
         return flags | Qt.ItemIsUserCheckable
+
+    def toggleSelection(self, index: QModelIndex):
+        character = self._data[index.row()]
+        if character is self.scene.pov:
+            return
+        if character in self.scene.characters:
+            self.scene.characters.remove(character)
+        else:
+            self.scene.characters.append(character)
+
+        self.selection_changed.emit()
+        self.modelReset.emit()
 
     def update(self):
         if self.scene.pov in self.scene.characters:
