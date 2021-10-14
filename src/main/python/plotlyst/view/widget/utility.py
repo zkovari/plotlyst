@@ -57,7 +57,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         #         print(iconName)
 
         filtered_icons = []
-        for type, icons_list in icons_registry.items():
+        for type, icons_list in icons_registry._items():
             for icon in icons_list:
                 if icon and icon != 'fa5s.' and icon != 'mdi.':
                     filtered_icons.append(self._IconItem(type, icon))

@@ -368,7 +368,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
                     return 'Title'
                 if section == self.ColNoneStage:
                     return 'None'
-                return self.novel.stages[section - 2].stage.replace(' ', '\n')
+                return self.novel.stages[section - 2].text.replace(' ', '\n')
         else:
             return self.verticalHeaderData(section, role)
 

@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 from functools import partial
 from typing import Optional, List
 
@@ -31,10 +32,13 @@ from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
+from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
+from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
@@ -114,6 +118,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
+
+        self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
+        self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
 
         self.scene_cards: List[SceneCard] = []
         self.selected_card: Optional[SceneCard] = None
@@ -336,42 +343,66 @@ class ScenesOutlineView(AbstractNovelView):
 
         emit_event(SceneSelectionClearedEvent(self))
 
+    def _customize_stages(self):
+        diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))
+        diag.wdgItemsEditor.tableView.setColumnHidden(SelectionItemsModel.ColIcon, True)
+        items = diag.display()
+        if items:
+            self.novel.stages.clear()
+            self.novel.stages.extend(items)
+
+            for scene in self.novel.scenes:
+                if scene.stage not in self.novel.stages:
+                    scene.stage = None
+                    self.repo.update_scene(scene)
+
+            self.repo.update_novel(self.novel)
+            self._init_stages_view()
+
     def _init_stages_view(self):
         def change_stage(stage: SceneStage):
             self.stagesProgress.setStage(stage)
-            self.ui.btnStageSelector.setText(stage.stage)
+            self.ui.btnStageSelector.setText(stage.text)
             self.stagesModel.setHighlightedStage(stage)
 
-        self.stagesModel = ScenesStageTableModel(self.novel)
-        self.ui.tblSceneStages.setModel(self.stagesModel)
-        self.ui.tblSceneStages.verticalHeader().setStyleSheet(
-            '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
-               QHeaderView {background-color: white;}''')
-        self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
-        self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
+        if self.stagesModel:
+            self.stagesModel.modelReset.emit()
+        else:
+            self.stagesModel = ScenesStageTableModel(self.novel)
+            self.ui.tblSceneStages.setModel(self.stagesModel)
+            self.ui.tblSceneStages.verticalHeader().setStyleSheet(
+                '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
+                   QHeaderView {background-color: white;}''')
+            self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
+            self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
 
         for col in range(1, self.stagesModel.columnCount()):
             self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
             w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
             self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
             self.ui.tblSceneStages.setColumnWidth(col, w + 10)
-        self.stagesProgress = SceneStageProgressCharts(self.novel)
-        self.ui.btnStageSelector.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
-        self.ui.btnStageSelector.setIcon(IconRegistry.progress_check_icon())
+
+        if not self.stagesProgress:
+            self.stagesProgress = SceneStageProgressCharts(self.novel)
+
+            self.ui.tblSceneStages.clicked.connect(self.stagesModel.changeStage)
+            self.ui.tblSceneStages.clicked.connect(self.stagesProgress.refresh)
+
+            self.ui.btnStageSelector.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+            self.ui.btnStageSelector.setIcon(IconRegistry.progress_check_icon())
+
         menu = QMenu(self.ui.btnStageSelector)
         for stage in self.novel.stages:
-            menu.addAction(stage.stage, partial(change_stage, stage))
+            menu.addAction(stage.text, partial(change_stage, stage))
         self.ui.btnStageSelector.setMenu(menu)
-        self.ui.btnStageSelector.setText(self.stagesProgress.stage().stage)
+        self.ui.btnStageSelector.setText(self.stagesProgress.stage().text)
         self.stagesModel.setHighlightedStage(self.stagesProgress.stage())
-
-        self.ui.tblSceneStages.clicked.connect(self.stagesModel.changeStage)
-        self.ui.tblSceneStages.clicked.connect(self.stagesProgress.refresh)
 
         if self.novel.scenes:
             self.stagesProgress.refresh()
-            for i, chartview in enumerate(self.stagesProgress.charts()):
-                self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
+            if not self.ui.wdgProgressCharts.layout().count():
+                for i, chartview in enumerate(self.stagesProgress.charts()):
+                    self.ui.wdgProgressCharts.layout().insertWidget(i, chartview)
 
     def _on_custom_menu_requested(self, pos: QPoint):
         def toggle_wip(scene: Scene):

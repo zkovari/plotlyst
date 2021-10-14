@@ -171,12 +171,6 @@ class SceneBuilderElement:
 
 
 @dataclass
-class SceneStage:
-    stage: str
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-
-
-@dataclass
 class StoryBeat:
     text: str
     act: int
@@ -203,6 +197,14 @@ class SelectionItem:
 
     def __hash__(self):
         return hash(self.text)
+
+
+@dataclass
+class SceneStage(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    def __hash__(self):
+        return hash(str(id))
 
 
 @dataclass

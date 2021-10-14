@@ -357,6 +357,10 @@ class IconRegistry:
         return IconRegistry.from_name('ei.adult')
 
     @staticmethod
+    def cog_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.cog')
+
+    @staticmethod
     def cause_icon() -> QIcon:
         return IconRegistry.from_name('mdi.ray-start')
 
@@ -367,6 +371,14 @@ class IconRegistry:
     @staticmethod
     def reversed_cause_and_effect_icon() -> QIcon:
         return IconRegistry.from_name('mdi.ray-end-arrow')
+
+    @staticmethod
+    def toggle_on_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.toggle-on')
+
+    @staticmethod
+    def toggle_off_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.toggle-off')
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:

@@ -204,6 +204,12 @@ class SelectionItemsModel(QAbstractTableModel):
             return True
         return False
 
+    def items(self) -> List[SelectionItem]:
+        _items = []
+        for row in range(self.rowCount()):
+            _items.append(self.item(self.index(row, 0)))
+        return _items
+
     @abstractmethod
     def item(self, index: QModelIndex) -> SelectionItem:
         pass
@@ -213,6 +219,31 @@ class SelectionItemsModel(QAbstractTableModel):
 
     def columnIsEditable(self, column: int) -> bool:
         return column == self.ColName
+
+
+class DefaultSelectionItemsModel(SelectionItemsModel):
+
+    def __init__(self, items: List[SelectionItem], parent=None):
+        super(DefaultSelectionItemsModel, self).__init__(parent)
+        self._items = items
+
+    @overrides
+    def rowCount(self, parent: QModelIndex = None) -> int:
+        return len(self._items)
+
+    @overrides
+    def _newItem(self) -> QModelIndex:
+        self._items.append(SelectionItem('new'))
+        return self.index(self.rowCount() - 1, 0)
+
+    @overrides
+    def item(self, index: QModelIndex) -> SelectionItem:
+        return self._items[index.row()]
+
+    @overrides
+    def remove(self, index: QModelIndex):
+        super().remove(index)
+        self._items.pop(index.row())
 
 
 class DistributionModel(QAbstractTableModel):

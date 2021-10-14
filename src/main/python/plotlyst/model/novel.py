@@ -24,10 +24,10 @@ from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel
 from PyQt5.QtGui import QIcon
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion, SelectionItem, Conflict
+from src.main.python.plotlyst.core.domain import Novel, DramaticQuestion, SelectionItem, Conflict, SceneStage
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import StorylineCreatedEvent, NovelReloadRequestedEvent
-from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.model.common import SelectionItemsModel, DefaultSelectionItemsModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -167,3 +167,10 @@ class NovelConflictsModel(QAbstractTableModel):
             RepositoryPersistenceManager.instance().update_novel(self.novel)
             return True
         return False
+
+
+class NovelStagesModel(DefaultSelectionItemsModel):
+    @overrides
+    def _newItem(self) -> QModelIndex:
+        self._items.append(SceneStage(''))
+        return self.index(self.rowCount() - 1, 0)
