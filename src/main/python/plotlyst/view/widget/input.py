@@ -104,6 +104,9 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
                             <h1>{title}</h1>''')
         self.textTitle.setReadOnly(title_read_only)
 
+    def setTitleVisible(self, visible: bool):
+        self.textTitle.setVisible(visible)
+
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent):

@@ -102,6 +102,7 @@ class CharacterInfo:
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
+    document: Optional[Document] = None
 
 
 @dataclass
@@ -317,6 +318,8 @@ class JsonClient:
     def delete_character(self, novel: Novel, character: Character):
         self._persist_novel(novel)
         self.__delete_info(self.characters_dir, character.id)
+        if character.document:
+            self.delete_document(novel, character.document)
 
     def _find_project_novel_info_or_fail(self, id: uuid.UUID) -> ProjectNovelInfo:
         for info in self.project.novels:
@@ -367,7 +370,7 @@ class JsonClient:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 character = Character(name=info.name, id=info.id, template_values=info.template_values,
-                                      backstory=info.backstory)
+                                      backstory=info.backstory, document=info.document)
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -512,7 +515,7 @@ class JsonClient:
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id,
-                                  backstory=char.backstory)
+                                  backstory=char.backstory, document=char.document)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):

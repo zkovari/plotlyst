@@ -88,6 +88,7 @@ class Character:
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
+    document: Optional['Document'] = None
 
     def enneagram(self) -> Optional['SelectionItem']:
         for value in self.template_values:

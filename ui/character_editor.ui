@@ -188,11 +188,11 @@ border: 0px;
          </spacer>
         </item>
         <item>
-         <widget class="QTabWidget" name="stackwidget">
+         <widget class="QTabWidget" name="tabAttributes">
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="stackwidgetPage1" native="true">
+          <widget class="QWidget" name="tabBackstory">
            <attribute name="title">
             <string>Backstory</string>
            </attribute>
@@ -354,7 +354,7 @@ border: 0px;
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="stackwidgetPage2" native="true">
+          <widget class="QWidget" name="tabNotes">
            <attribute name="title">
             <string>Notes</string>
            </attribute>
@@ -397,7 +397,4 @@ border: 0px;
  </customwidgets>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="buttonGroup"/>
- </buttongroups>
 </ui>

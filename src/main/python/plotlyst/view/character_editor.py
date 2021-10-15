@@ -22,7 +22,8 @@ from typing import Optional
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from fbs_runtime import platform
 
-from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEvent
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEvent, Document
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
@@ -57,6 +58,8 @@ class CharacterEditor:
         self.ui.btnCustomize.clicked.connect(self._customize_profile)
         self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon())
         self.ui.btnNewBackstory.clicked.connect(self._new_backstory)
+        self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
+        self.ui.textEdit.setTitleVisible(False)
 
         self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[0])
         self._init_profile_view()
@@ -125,6 +128,13 @@ class CharacterEditor:
 
         self.ui.wdgBackstory.layout().removeWidget(card)
 
+    def _tab_changed(self, index: int):
+        if self.ui.tabAttributes.widget(index) is self.ui.tabNotes:
+            if self.character.document:
+                if not self.character.document.loaded:
+                    json_client.load_document(self.novel, self.character.document)
+                self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
+
     def _save(self):
         name = self.profile.name()
         if not name:
@@ -138,5 +148,11 @@ class CharacterEditor:
         else:
             self.repo.update_character(self.character, self.profile.avatarUpdated())
             self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
+
+        if not self.character.document:
+            self.character.document = Document('', character_id=self.character.id)
+
+        self.character.document.content = self.ui.textEdit.textEditor.toHtml()
+        json_client.save_document(self.novel, self.character.document)
 
         self._new_character = False
