@@ -22,10 +22,12 @@ from enum import Enum
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
-    QKeyEvent, QPaintEvent
-from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle
+    QKeyEvent, QPaintEvent, QTextListFormat
+from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
+    QAction, QActionGroup, QComboBox
 from overrides import overrides
 
+from src.main.python.plotlyst.view.common import line
 from src.main.python.plotlyst.view.generated.rich_text_editor_widget_ui import Ui_RichTextEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -57,6 +59,11 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         super(RichTextEditor, self).__init__(parent)
         self.setupUi(self)
 
+        self.toolbar = QToolBar()
+        self.toolbar.setStyleSheet('.QToolBar {background-color: rgb(255, 255, 255);}')
+        self.toolbar.layout().setContentsMargins(3, 3, 3, 3)
+        self.toolbar.layout().setSpacing(5)
+        self.layout().insertWidget(0, self.toolbar)
         self.textTitle = AutoAdjustableTextEdit()
         self.textTitle.setStyleSheet('border: 0px;')
         self.layout().insertWidget(1, self.textTitle)
@@ -66,6 +73,14 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.textEditor.setTabStopDistance(
             QtGui.QFontMetricsF(self.textEditor.font()).horizontalAdvance(' ') * 4)
 
+        self.cbHeading = QComboBox()
+        self.cbHeading.setStyleSheet('''
+        QComboBox {
+            border: 0px;
+            padding: 1px 1px 1px 3px;
+        }
+        ''')
+
         self.cbHeading.addItem('Normal')
         self.cbHeading.addItem(IconRegistry.from_name('mdi.format-header-1', mdi_scale=1.4), '')
         self.cbHeading.addItem(IconRegistry.from_name('mdi.format-header-2'), '')
@@ -73,26 +88,58 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.cbHeading.setCurrentText('Normal')
         self.cbHeading.currentIndexChanged.connect(self._setHeading)
 
-        self.btnBold.setIcon(IconRegistry.from_name('fa5s.bold'))
-        self.btnBold.setShortcut(QKeySequence.Bold)
-        self.btnBold.clicked.connect(lambda x: self.textEditor.setFontWeight(QFont.Bold if x else QFont.Normal))
+        self.actionBold = QAction(IconRegistry.from_name('fa5s.bold'), '')
+        self.actionBold.triggered.connect(lambda x: self.textEditor.setFontWeight(QFont.Bold if x else QFont.Normal))
+        self.actionBold.setCheckable(True)
+        self.actionBold.setShortcut(QKeySequence.Bold)
 
-        self.btnItalic.setIcon(IconRegistry.from_name('fa5s.italic'))
-        self.btnItalic.setShortcut(QKeySequence.Italic)
-        self.btnItalic.clicked.connect(self.textEditor.setFontItalic)
+        self.actionItalic = QAction(IconRegistry.from_name('fa5s.italic'), '')
+        self.actionItalic.triggered.connect(self.textEditor.setFontItalic)
+        self.actionItalic.setCheckable(True)
+        self.actionItalic.setShortcut(QKeySequence.Italic)
 
-        self.btnUnderline.setIcon(IconRegistry.from_name('fa5s.underline'))
-        self.btnUnderline.setShortcut(QKeySequence.Underline)
-        self.btnUnderline.clicked.connect(self.textEditor.setFontUnderline)
+        self.actionUnderline = QAction(IconRegistry.from_name('fa5s.underline'), '')
+        self.actionUnderline.triggered.connect(self.textEditor.setFontUnderline)
+        self.actionUnderline.setCheckable(True)
+        self.actionUnderline.setShortcut(QKeySequence.Underline)
 
-        self.btnAlignLeft.setIcon(IconRegistry.from_name('fa5s.align-left'))
-        self.btnAlignLeft.clicked.connect(lambda: self.textEditor.setAlignment(Qt.AlignLeft))
+        self.actionAlignLeft = QAction(IconRegistry.from_name('fa5s.align-left'), '')
+        self.actionAlignLeft.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignLeft))
+        self.actionAlignLeft.setCheckable(True)
+        self.actionAlignLeft.setChecked(True)
+        self.actionAlignLeft.setShortcut(QKeySequence.Underline)
+        self.actionAlignCenter = QAction(IconRegistry.from_name('fa5s.align-center'), '')
+        self.actionAlignCenter.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignCenter))
+        self.actionAlignCenter.setCheckable(True)
+        self.actionAlignCenter.setShortcut(QKeySequence.Underline)
+        self.actionAlignRight = QAction(IconRegistry.from_name('fa5s.align-right'), '')
+        self.actionAlignRight.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignRight))
+        self.actionAlignRight.setCheckable(True)
+        self.actionAlignRight.setShortcut(QKeySequence.Underline)
 
-        self.btnAlignCenter.setIcon(IconRegistry.from_name('fa5s.align-center'))
-        self.btnAlignCenter.clicked.connect(lambda: self.textEditor.setAlignment(Qt.AlignCenter))
+        self.actionInsertList = QAction(IconRegistry.from_name('fa5s.list'), '')
+        self.actionInsertList.triggered.connect(
+            lambda: self.textEditor.textCursor().insertList(QTextListFormat.ListDisc))
+        self.actionInsertNumberedList = QAction(IconRegistry.from_name('fa5s.list-ol'), '')
+        self.actionInsertNumberedList.triggered.connect(
+            lambda: self.textEditor.textCursor().insertList(QTextListFormat.ListDecimal))
 
-        self.btnAlignRight.setIcon(IconRegistry.from_name('fa5s.align-right'))
-        self.btnAlignRight.clicked.connect(lambda: self.textEditor.setAlignment(Qt.AlignRight))
+        self.actionGroupAlignment = QActionGroup(self.toolbar)
+        self.actionGroupAlignment.addAction(self.actionAlignLeft)
+        self.actionGroupAlignment.addAction(self.actionAlignCenter)
+        self.actionGroupAlignment.addAction(self.actionAlignRight)
+
+        self.toolbar.addWidget(self.cbHeading)
+        self.toolbar.addAction(self.actionBold)
+        self.toolbar.addAction(self.actionItalic)
+        self.toolbar.addAction(self.actionUnderline)
+        self.toolbar.addWidget(line(vertical=True))
+        self.toolbar.addAction(self.actionAlignLeft)
+        self.toolbar.addAction(self.actionAlignCenter)
+        self.toolbar.addAction(self.actionAlignRight)
+        self.toolbar.addWidget(line(vertical=True))
+        self.toolbar.addAction(self.actionInsertList)
+        self.toolbar.addAction(self.actionInsertNumberedList)
 
     def setText(self, content: str, title: str = '', title_read_only: bool = False):
         self.textEditor.setHtml(content)
@@ -138,13 +185,13 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         return super(RichTextEditor, self).eventFilter(watched, event)
 
     def _updateFormat(self):
-        self.btnBold.setChecked(self.textEditor.fontWeight() == QFont.Bold)
-        self.btnItalic.setChecked(self.textEditor.fontItalic())
-        self.btnUnderline.setChecked(self.textEditor.fontUnderline())
+        self.actionBold.setChecked(self.textEditor.fontWeight() == QFont.Bold)
+        self.actionItalic.setChecked(self.textEditor.fontItalic())
+        self.actionUnderline.setChecked(self.textEditor.fontUnderline())
 
-        self.btnAlignLeft.setChecked(self.textEditor.alignment() == Qt.AlignLeft)
-        self.btnAlignCenter.setChecked(self.textEditor.alignment() == Qt.AlignCenter)
-        self.btnAlignRight.setChecked(self.textEditor.alignment() == Qt.AlignRight)
+        self.actionAlignLeft.setChecked(self.textEditor.alignment() == Qt.AlignLeft)
+        self.actionAlignCenter.setChecked(self.textEditor.alignment() == Qt.AlignCenter)
+        self.actionAlignRight.setChecked(self.textEditor.alignment() == Qt.AlignRight)
 
         self.cbHeading.blockSignals(True)
         cursor = self.textEditor.textCursor()

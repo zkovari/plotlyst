@@ -6,7 +6,7 @@ def test_rich_text_editor(qtbot):
     editor = RichTextEditor()
     show_widget(qtbot, editor)
 
-    editor.btnBold.setChecked(True)
+    editor.actionBold.setChecked(True)
 
     editor.cbHeading.setCurrentIndex(1)
 
