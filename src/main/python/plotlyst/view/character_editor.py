@@ -69,6 +69,9 @@ class CharacterEditor:
             card.deleteRequested.connect(self._remove_backstory)
             self.ui.wdgBackstory.layout().addWidget(card)
 
+        if self.character.document and self.character.document.loaded:
+            self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
+
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
 
@@ -130,9 +133,8 @@ class CharacterEditor:
 
     def _tab_changed(self, index: int):
         if self.ui.tabAttributes.widget(index) is self.ui.tabNotes:
-            if self.character.document:
-                if not self.character.document.loaded:
-                    json_client.load_document(self.novel, self.character.document)
+            if self.character.document and not self.character.document.loaded:
+                json_client.load_document(self.novel, self.character.document)
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
 
     def _save(self):
