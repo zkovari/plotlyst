@@ -18,13 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from enum import Enum
+from functools import partial
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent, QTextListFormat
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox
+    QAction, QActionGroup, QComboBox, QMenu
 from overrides import overrides
 
 from src.main.python.plotlyst.view.common import line
@@ -82,9 +83,9 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         ''')
 
         self.cbHeading.addItem('Normal')
-        self.cbHeading.addItem(IconRegistry.from_name('mdi.format-header-1', mdi_scale=1.4), '')
-        self.cbHeading.addItem(IconRegistry.from_name('mdi.format-header-2'), '')
-        self.cbHeading.addItem(IconRegistry.from_name('mdi.format-header-3', mdi_scale=1), '')
+        self.cbHeading.addItem(IconRegistry.heading_1_icon(), '')
+        self.cbHeading.addItem(IconRegistry.heading_2_icon(), '')
+        self.cbHeading.addItem(IconRegistry.heading_3_icon(), '')
         self.cbHeading.setCurrentText('Normal')
         self.cbHeading.currentIndexChanged.connect(self._setHeading)
 
@@ -181,6 +182,8 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
                     self.cbHeading.setCurrentIndex(0)
                     self._setHeading()
                     return True
+            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
+                self._showCommands()
 
         return super(RichTextEditor, self).eventFilter(watched, event)
 
@@ -218,6 +221,19 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.textEditor.mergeCurrentCharFormat(charFormat)
 
         cursor.endEditBlock()
+
+    def _showCommands(self):
+        def trigger(func):
+            self.textEditor.textCursor().deletePreviousChar()
+            func()
+
+        rect = self.textEditor.cursorRect(self.textEditor.textCursor())
+
+        menu = QMenu(self.textEditor)
+        menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
+        menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
+
+        menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
 
 class RotatedButtonOrientation(Enum):

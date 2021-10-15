@@ -381,6 +381,18 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.toggle-off')
 
     @staticmethod
+    def heading_1_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.format-header-1', mdi_scale=1.4)
+
+    @staticmethod
+    def heading_2_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.format-header-2')
+
+    @staticmethod
+    def heading_3_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.format-header-3', mdi_scale=1)
+
+    @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
         if name.startswith('md'):
