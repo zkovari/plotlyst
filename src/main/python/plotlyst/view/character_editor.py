@@ -151,6 +151,7 @@ class CharacterEditor:
 
         if not self.character.document:
             self.character.document = Document('', character_id=self.character.id)
+            self.character.document.loaded = True
 
         self.character.document.content = self.ui.textEdit.textEditor.toHtml()
         json_client.save_document(self.novel, self.character.document)

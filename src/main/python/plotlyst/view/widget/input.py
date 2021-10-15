@@ -107,6 +107,10 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
     def setTitleVisible(self, visible: bool):
         self.textTitle.setVisible(visible)
 
+    def clear(self):
+        self.textEditor.clear()
+        self.textTitle.clear()
+
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent):

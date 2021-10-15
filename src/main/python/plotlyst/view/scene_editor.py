@@ -21,7 +21,7 @@ from functools import partial
 from typing import Optional, List, Set
 
 import emoji
-from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QTimer, QItemSelectionModel, \
+from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
     QAbstractItemModel, Qt, QSize, QEvent
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
@@ -29,9 +29,10 @@ from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, 
 from fbs_runtime import platform
 from overrides import overrides
 
+from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
-    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, Conflict
+    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, Conflict, Document
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
@@ -41,6 +42,7 @@ from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuil
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
+from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel, ConflictLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneGoalsWidget, SceneDramaticQuestionsWidget, SceneTagsWidget
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -61,6 +63,11 @@ class SceneEditor(QObject):
             self._emoji_font = emoji_font(14)
         else:
             self._emoji_font = emoji_font(20)
+
+        self.ui.btnAttributes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+        self.ui.btnNotes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+        self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
+        self.ui.btnBuilder.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
 
         self.ui.btnVeryUnhappy.setFont(self._emoji_font)
         self.ui.btnVeryUnhappy.setText(emoji.emojize(':fearful_face:'))
@@ -109,6 +116,8 @@ class SceneEditor(QObject):
         self.ui.cbType.currentTextChanged.connect(self._on_type_changed)
         # self.ui.cbConflict.clicked.connect(self._on_conflict_toggled)
 
+        self.ui.textNotes.setTitleVisible(False)
+
         self.tblCharacters = QTableView()
         self.tblCharacters.setShowGrid(False)
         self.tblCharacters.verticalHeader().setVisible(False)
@@ -155,10 +164,6 @@ class SceneEditor(QObject):
         self.tagsEditor.setMinimumHeight(50)
         self.ui.wdgTagsContainer.layout().addWidget(self.tagsEditor)
 
-        self._save_timer = QTimer()
-        self._save_timer.setInterval(500)
-        self._save_timer.timeout.connect(self._save_scene)
-
         self._save_enabled = False
         self._update_view(scene)
 
@@ -168,14 +173,12 @@ class SceneEditor(QObject):
         self.ui.sbDay.valueChanged.connect(self._save_scene)
         self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
         self.ui.cbType.currentIndexChanged.connect(self._save_scene)
-        self.ui.textEvent1.textChanged.connect(self._pending_save)
-        self.ui.textEvent2.textChanged.connect(self._pending_save)
-        self.ui.textEvent3.textChanged.connect(self._pending_save)
-        self.ui.lineTitle.textEdited.connect(self._pending_save)
-        self.ui.textSynopsis.textChanged.connect(self._pending_save)
-        self.ui.textNotes.textChanged.connect(self._pending_save)
         self.ui.btnGroupArc.buttonClicked.connect(self._save_scene)
         self.ui.btnGroupOutcome.buttonToggled.connect(self._outcome_toggled)
+        self.ui.btnGroupPages.buttonToggled.connect(self._page_toggled)
+
+        self.repo = RepositoryPersistenceManager.instance()
+        self.ui.btnAttributes.setChecked(True)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -261,7 +264,11 @@ class SceneEditor(QObject):
             self.ui.cbPivotal.setCurrentText(self.scene.beat.text)
         else:
             self.ui.cbPivotal.setCurrentIndex(0)
-        self.ui.textNotes.setPlainText(self.scene.notes)
+
+        if self.ui.btnNotes.isChecked() or (self.scene.document and self.scene.document.loaded):
+            self._update_notes()
+        else:
+            self.ui.textNotes.clear()
 
         self._characters_model.setScene(self.scene)
         self._character_changed()
@@ -308,7 +315,6 @@ class SceneEditor(QObject):
         self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self, self.scene))
         self._scene_builder_palette_model.setElements(self.scene.builder_elements)
 
-        self.repo = RepositoryPersistenceManager.instance()
         self._save_enabled = True
 
     def _on_type_changed(self, text: str):
@@ -398,9 +404,22 @@ class SceneEditor(QObject):
         self.ui.btnAddConflict.setVisible(toggled)
         self.ui.wdgConflicts.setVisible(toggled)
 
-    def _pending_save(self):
-        if self._save_enabled:
-            self._save_timer.start(500)
+    def _page_toggled(self):
+        if self.ui.btnAttributes.isChecked():
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageStructure)
+        elif self.ui.btnNotes.isChecked():
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageNotes)
+            self._update_notes()
+        elif self.ui.btnBuilder.isChecked():
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageBuilder)
+
+    def _update_notes(self):
+        if self.scene.document:
+            if not self.scene.document.loaded:
+                json_client.load_document(self.novel, self.scene.document)
+            self.ui.textNotes.setText(self.scene.document.content, self.scene.title, title_read_only=True)
+        else:
+            self.ui.textNotes.clear()
 
     def _enabled_pov_arc_widgets(self, edition: bool):
         if self.scene.pov:
@@ -463,7 +482,6 @@ class SceneEditor(QObject):
         self._save_scene()
 
     def _save_scene(self):
-        self._save_timer.stop()
         if not self._save_enabled:
             return
 
@@ -478,7 +496,6 @@ class SceneEditor(QObject):
         self.scene.middle = self.ui.textEvent2.toPlainText()
         self.scene.end = self.ui.textEvent3.toPlainText()
         self.scene.day = self.ui.sbDay.value()
-        self.scene.notes = self.ui.textNotes.toPlainText()
 
         if self.ui.cbPivotal.currentIndex() > 0:
             self.scene.beat = self.ui.cbPivotal.currentData()
@@ -508,6 +525,14 @@ class SceneEditor(QObject):
             self.repo.insert_scene(self.novel, self.scene)
         else:
             self.repo.update_scene(self.scene)
+
+        if not self.scene.document:
+            self.scene.document = Document('', scene_id=self.scene.id)
+            self.scene.document.loaded = True
+
+        if self.scene.document.loaded:
+            self.scene.document.content = self.ui.textNotes.textEditor.toHtml()
+            json_client.save_document(self.novel, self.scene.document)
         self._new_scene = False
 
     def _conflicts_changed(self):
