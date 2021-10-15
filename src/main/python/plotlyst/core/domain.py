@@ -260,7 +260,6 @@ class Scene:
     day: int = 1
     beginning_type: str = ''
     ending_hook: str = ''
-    notes: str = ''
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
     action_resolution: bool = False
@@ -273,6 +272,7 @@ class Scene:
     goals: List[SceneGoal] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
+    document: Optional['Document'] = None
 
     def pov_arc(self) -> int:
         for arc in self.arcs:

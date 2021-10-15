@@ -138,7 +138,6 @@ class SceneInfo:
     dramatic_questions: List[uuid.UUID] = field(default_factory=list)
     storylines: List[uuid.UUID] = field(default_factory=list)
     day: int = 1
-    notes: str = ''
     chapter: Optional[uuid.UUID] = None
     arcs: List[CharacterArcInfo] = field(default_factory=list)
     action_resolution: bool = False
@@ -151,6 +150,7 @@ class SceneInfo:
     goals: List[str] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
+    document: Optional[Document] = None
 
 
 @dataclass
@@ -289,6 +289,8 @@ class JsonClient:
     def delete_scene(self, novel: Novel, scene: Scene):
         self._persist_novel(novel)
         self.__delete_info(self.scenes_dir, scene.id)
+        if scene.document:
+            self.delete_document(novel, scene.document)
 
     def insert_character(self, novel: Novel, character: Character):
         self.update_character(character, True)
@@ -467,12 +469,12 @@ class JsonClient:
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, day=info.day,
-                              notes=info.notes,
                               action_resolution=info.action_resolution, action_trade_off=info.action_trade_off,
                               without_action_conflict=info.without_action_conflict, sequence=seq,
                               dramatic_questions=scene_storylines, pov=pov, characters=scene_characters, arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
-                              conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags)
+                              conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags,
+                              document=info.document)
                 scenes.append(scene)
         return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=novel_info.dramatic_questions,
                      characters=characters,
@@ -527,7 +529,7 @@ class JsonClient:
         conflicts = [x.id for x in scene.conflicts]
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          beginning=scene.beginning, middle=scene.middle,
-                         end=scene.end, wip=scene.wip, day=scene.day, notes=scene.notes,
+                         end=scene.end, wip=scene.wip, day=scene.day,
                          action_resolution=scene.action_resolution, action_trade_off=scene.action_trade_off,
                          without_action_conflict=scene.without_action_conflict,
                          pov=self.__id_or_none(scene.pov), dramatic_questions=dramatic_questions, characters=characters,
@@ -536,7 +538,7 @@ class JsonClient:
                          stage=self.__id_or_none(scene.stage),
                          beat=self.__id_or_none(scene.beat),
                          conflicts=conflicts, goals=[x.text for x in scene.goals], comments=scene.comments,
-                         tags=scene.tags)
+                         tags=scene.tags, document=scene.document)
         self.__persist_info(self.scenes_dir, info)
 
     @staticmethod
