@@ -165,17 +165,53 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.tblCharacters.clearSelection()
 
 
+class CharacterToolButton(QToolButton):
+    def __init__(self, character: Character, parent=None):
+        super(CharacterToolButton, self).__init__(parent)
+        self.character = character
+        self.setIcon(QIcon(avatars.pixmap(self.character)))
+        self.setCheckable(True)
+        self.setCursor(Qt.PointingHandCursor)
+
+
 class CharacterSelectorWidget(QWidget):
-    characterToggled = pyqtSignal(Character)
+    characterToggled = pyqtSignal(Character, bool)
 
     def __init__(self, parent=None):
         super(CharacterSelectorWidget, self).__init__(parent)
         self._layout = QHBoxLayout()
+        self._layout.setSpacing(4)
+        self._layout.setContentsMargins(2, 2, 2, 2)
         self._btn_group = QButtonGroup()
         self._buttons: List[QToolButton] = []
         self.setLayout(self._layout)
+        self.exclusive: bool = True
+        self.setExclusive(self.exclusive)
+
+    def setExclusive(self, exclusive: bool):
+        self.exclusive = exclusive
+        self._btn_group.setExclusive(self.exclusive)
+
+    def characters(self) -> Iterable[Character]:
+        return [x.character for x in self._buttons]
 
     def setCharacters(self, characters: Iterable[Character]):
+        self.clear()
+
+        self._layout.addWidget(spacer_widget())
+        for char in characters:
+            self.addCharacter(char, checked=False)
+        self._layout.addWidget(spacer_widget())
+
+        if not self._buttons:
+            return
+        if self.exclusive:
+            self._buttons[0].setChecked(True)
+        else:
+            for btn in self._buttons:
+                btn.setChecked(True)
+
+    def clear(self):
         item = self._layout.itemAt(0)
         while item:
             self._layout.removeItem(item)
@@ -184,23 +220,16 @@ class CharacterSelectorWidget(QWidget):
             self._btn_group.removeButton(btn)
             btn.deleteLater()
         self._buttons.clear()
-        self._update(characters)
-        if self._buttons:
-            self._buttons[0].setChecked(True)
 
-    def _update(self, characters: Iterable[Character]):
-        self._layout.addWidget(spacer_widget())
-        for char in characters:
-            tool_btn = QToolButton()
-            tool_btn.setIcon(QIcon(avatars.pixmap(char)))
-            tool_btn.setCheckable(True)
-            tool_btn.toggled.connect(partial(self.characterToggled.emit, char))
+    def addCharacter(self, character: Character, checked: bool = True):
+        tool_btn = CharacterToolButton(character)
+        tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
 
-            self._buttons.append(tool_btn)
-            self._btn_group.addButton(tool_btn)
-            self._btn_group.setExclusive(True)
-            self._layout.addWidget(tool_btn)
-        self._layout.addWidget(spacer_widget())
+        self._buttons.append(tool_btn)
+        self._btn_group.addButton(tool_btn)
+        self._layout.addWidget(tool_btn)
+
+        tool_btn.setChecked(checked)
 
 
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
