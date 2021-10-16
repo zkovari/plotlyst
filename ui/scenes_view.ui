@@ -372,8 +372,14 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="styleSheet">
+             <string notr="true">QToolButton::menu-indicator{width:0px;}</string>
+            </property>
             <property name="text">
              <string/>
+            </property>
+            <property name="popupMode">
+             <enum>QToolButton::InstantPopup</enum>
             </property>
             <property name="base" stdset="0">
              <bool>true</bool>

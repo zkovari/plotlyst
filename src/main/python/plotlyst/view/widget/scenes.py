@@ -21,13 +21,14 @@ from abc import abstractmethod
 from typing import List, Set
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel
+from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel
 
@@ -109,3 +110,14 @@ class SceneTagsWidget(_SceneLabelsEditor):
     @overrides
     def items(self) -> List[SelectionItem]:
         return self.novel.tags
+
+
+class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super(SceneFilterWidget, self).__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+        self.povFilter.setExclusive(False)
+        self.povFilter.setCharacters(self.novel.pov_characters())
+
+        self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabPov), IconRegistry.character_icon())

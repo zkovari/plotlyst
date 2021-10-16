@@ -24,10 +24,10 @@ from typing import Optional, List
 import qtawesome
 from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
     QPoint
-from PyQt5.QtWidgets import QWidget, QHeaderView, QToolButton, QMenu, QAction
+from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu, QWidgetAction
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Scene, Novel, Character, Chapter, SceneStage
+from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent
@@ -47,6 +47,7 @@ from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
+from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
@@ -133,11 +134,12 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
 
-        self.ui.btnFilter.setPopupMode(QToolButton.InstantPopup)
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
-
-        for pov in self.novel.pov_characters():
-            self._add_pov_filter_action(pov)
+        action = QWidgetAction(self.ui.btnFilter)
+        self._scene_filter = SceneFilterWidget(self.novel)
+        action.setDefaultWidget(self._scene_filter)
+        self.ui.btnFilter.addAction(action)
+        self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
 
         self.ui.tblScenes.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tblScenes.customContextMenuRequested.connect(self._on_custom_menu_requested)
@@ -153,13 +155,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
         self.ui.cards.swapped.connect(self._scenes_swapped)
-
-    def _add_pov_filter_action(self, pov: Character):
-        action = QAction(pov.name, self.ui.btnFilter)
-        action.setCheckable(True)
-        action.setChecked(True)
-        action.triggered.connect(partial(self._proxy.setCharacterFilter, pov))
-        self.ui.btnFilter.addAction(action)
 
     @overrides
     def refresh(self):
@@ -260,8 +255,8 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _on_close_editor(self):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
-        if self.editor.scene.pov and self.editor.scene.pov.name not in [x.text() for x in self.ui.btnFilter.actions()]:
-            self._add_pov_filter_action(self.editor.scene.pov)
+        if self.editor.scene.pov and self.editor.scene.pov not in self._scene_filter.povFilter.characters():
+            self._scene_filter.povFilter.addCharacter(self.editor.scene.pov)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.editor.widget.deleteLater()
         self.editor = None
