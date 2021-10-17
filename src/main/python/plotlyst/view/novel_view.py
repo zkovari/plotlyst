@@ -170,6 +170,7 @@ The scenes can be associated to such story beats.</p>''')
         plot.set_character(edited_plot.character)
 
         self.story_lines_model.modelReset.emit()
+        self.repo.update_novel(self.novel)
 
     def _conflict_selected(self):
         selection = bool(self.ui.tblConflicts.selectedIndexes())
