@@ -19,9 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, Qt
+from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QAbstractItemView
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
@@ -33,6 +33,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
+    editRequested = pyqtSignal(SelectionItem)
+
     def __init__(self, parent=None):
         super(ItemsEditorWidget, self).__init__(parent)
         self.setupUi(self)
@@ -40,6 +42,7 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
 
         self.bgColorFieldEnabled: bool = False
         self.askRemovalConfirmation: bool = False
+        self.inlineEditionEnabled: bool = True
 
         self.btnAdd.setIcon(IconRegistry.plus_icon())
         self.btnAdd.clicked.connect(self._add)
@@ -70,6 +73,14 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         else:
             self.tableView.hideColumn(SelectionItemsModel.ColBgColor)
 
+    def setInlineEditionEnabled(self, enabled: bool):
+        self.inlineEditionEnabled = enabled
+
+        if self.inlineEditionEnabled:
+            self.tableView.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.AnyKeyPressed)
+        else:
+            self.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
     def setAdditionEnabled(self, enabled: bool):
         self.btnAdd.setEnabled(enabled)
         self.btnAdd.setVisible(enabled)
@@ -87,14 +98,21 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
             self.tableView.scrollToBottom()
         default_editable_col = self.model.defaultEditableColumn()
         if default_editable_col >= 0:
-            self.tableView.edit(self.model.index(row, default_editable_col))
+            index = self.model.index(row, default_editable_col)
+            if self.inlineEditionEnabled:
+                self.tableView.edit(index)
+            else:
+                self.editRequested.emit(self.model.item(index))
 
     def _edit(self):
         indexes = self.tableView.selectedIndexes()
         if not indexes:
             return
-        if self.model.columnIsEditable(indexes[0].column()):
-            self.tableView.edit(indexes[0])
+        if self.inlineEditionEnabled:
+            if self.model.columnIsEditable(indexes[0].column()):
+                self.tableView.edit(indexes[0])
+        else:
+            self.editRequested.emit(self.model.item(indexes[0]))
 
     def _remove(self):
         indexes = self.tableView.selectedIndexes()
