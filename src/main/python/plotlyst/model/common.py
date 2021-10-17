@@ -179,14 +179,15 @@ class SelectionItemsModel(QAbstractTableModel):
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
         item: SelectionItem = self.item(index)
         if role == Qt.EditRole:
-            was_checked = item in self._checked
-            if was_checked:
-                self._checked.remove(item)
-            item.text = value
-            if was_checked:
-                self._checked.add(item)
-            self.item_edited.emit()
-            return True
+            if index.column() == self.ColName:
+                was_checked = item in self._checked
+                if was_checked:
+                    self._checked.remove(item)
+                item.text = value
+                if was_checked:
+                    self._checked.add(item)
+                self.item_edited.emit()
+                return True
         if role == Qt.DecorationRole:
             item.icon = value[0]
             item.icon_color = value[1]
