@@ -74,5 +74,5 @@ class NovelStoryStructureUpdated(Event):
 
 
 @dataclass
-class StorylineCreatedEvent(Event):
+class PlotCreatedEvent(Event):
     pass

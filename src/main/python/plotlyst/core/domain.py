@@ -216,6 +216,53 @@ class DramaticQuestion(SelectionItem):
         return hash(str(id))
 
 
+class PlotType(Enum):
+    Main = 'main'
+    Internal = 'internal'
+    Subplot = 'subplot'
+
+
+class PlotValue(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    description: str = ''
+
+    def __hash__(self):
+        return hash(str(id))
+
+
+@dataclass
+class Plot(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    plot_type: PlotType = PlotType.Main
+    value: Optional[PlotValue] = None
+    character_id: Optional[uuid.UUID] = None
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
+
+    def __hash__(self):
+        return hash(str(id))
+
+    def set_character(self, character: Optional[Character]):
+        if character is None:
+            self.character_id = None
+            self._character = None
+        else:
+            self.character_id = character.id
+            self._character = character
+
+    def character(self, novel: 'Novel') -> Optional[Character]:
+        if not self.character_id:
+            return None
+        if not self._character:
+            for c in novel.characters:
+                if c.id == self.character_id:
+                    self._character = c
+                    break
+
+        return self._character
+
+
 class ConflictType(Enum):
     CHARACTER = 0
     SOCIETY = 1
@@ -764,6 +811,7 @@ class Novel(NovelDescriptor):
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
     dramatic_questions: List[DramaticQuestion] = field(default_factory=list)
+    plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
