@@ -1,36 +1,36 @@
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import default_story_structures
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.test.common import create_dramatic_question, go_to_novel, click_on_item, \
+from src.main.python.plotlyst.test.common import create_plot, go_to_novel, click_on_item, \
     patch_confirmed, go_to_scenes
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
 
 
-def test_create_dramatic_question(qtbot, filled_window: MainWindow):
+def test_create_plot(qtbot, filled_window: MainWindow):
     view: NovelView = go_to_novel(filled_window)
-    create_dramatic_question(qtbot, filled_window, 'New Storyline')
+    create_plot(qtbot, filled_window, 'New Storyline')
 
-    assert filled_window.novel.dramatic_questions
-    assert filled_window.novel.dramatic_questions[-1].text == 'New Storyline'
+    assert filled_window.novel.plots
+    assert filled_window.novel.plots[-1].text == 'New Storyline'
 
     persisted_novel = client.fetch_novel(view.novel.id)
     assert len(persisted_novel.dramatic_questions) == len(view.novel.dramatic_questions)
-    assert persisted_novel.dramatic_questions[-1].text == 'New Storyline'
+    assert persisted_novel.plots[-1].text == 'New Storyline'
 
 
-def test_delete_dramatic_question(qtbot, filled_window: MainWindow, monkeypatch):
+def _test_delete_dramatic_question(qtbot, filled_window: MainWindow, monkeypatch):
     view: NovelView = go_to_novel(filled_window)
     click_on_item(qtbot, view.ui.wdgDramaticQuestions.tableView, 0, SelectionItemsModel.ColName)
-    assert len(view.novel.dramatic_questions) == 3
-    dq = view.novel.dramatic_questions[0]
+    assert len(view.novel.plots) == 3
+    dq = view.novel.plots[0]
     assert dq in view.novel.scenes[0].dramatic_questions
 
     patch_confirmed(monkeypatch)
     view.ui.wdgDramaticQuestions.btnRemove.click()
 
-    assert len(view.novel.dramatic_questions) == 2
-    assert dq not in view.novel.dramatic_questions
+    assert len(view.novel.plots) == 2
+    assert dq not in view.novel.plots
     assert not view.novel.scenes[0].dramatic_questions
 
 
