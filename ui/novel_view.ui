@@ -201,7 +201,7 @@
      <item>
       <widget class="QLabel" name="lblStorylinesDescription_2">
        <property name="text">
-        <string>What are your story's dramatic questions?</string>
+        <string>Define your story's plots (main, internal, or subplots)</string>
        </property>
        <property name="wordWrap">
         <bool>false</bool>

@@ -35,7 +35,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     DramaticQuestion, ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
-    default_tags, default_documents, DocumentType, Causality
+    default_tags, default_documents, DocumentType, Causality, Plot
 
 
 class ApplicationDbVersion(Enum):
@@ -177,6 +177,7 @@ class NovelInfo:
     characters: List[uuid.UUID] = field(default_factory=list)
     storylines: List[DramaticQuestion] = field(default_factory=list)
     dramatic_questions: List[DramaticQuestion] = field(default_factory=list)
+    plots: List[Plot] = field(default_factory=list)
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
@@ -477,7 +478,7 @@ class JsonClient:
                               document=info.document)
                 scenes.append(scene)
         return Novel(title=project_novel_info.title, id=novel_info.id, dramatic_questions=novel_info.dramatic_questions,
-                     characters=characters,
+                     plots=novel_info.plots, characters=characters,
                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
                      story_structure=story_structure, character_profiles=novel_info.character_profiles,
                      conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags,
@@ -503,6 +504,7 @@ class JsonClient:
     def _persist_novel(self, novel: Novel):
         novel_info = NovelInfo(id=novel.id, scenes=[x.id for x in novel.scenes],
                                dramatic_questions=novel.dramatic_questions,
+                               plots=novel.plots,
                                characters=[x.id for x in novel.characters],
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
                                stages=novel.stages, story_structure=novel.story_structure.id,

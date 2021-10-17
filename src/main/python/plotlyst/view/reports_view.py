@@ -28,7 +28,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
-    StorylineCreatedEvent
+    PlotCreatedEvent
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.view.widget.characters import CharacterSelectorWid
 
 class ReportsView(AbstractNovelView):
     def __init__(self, novel: Novel):
-        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, StorylineCreatedEvent])
+        super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, PlotCreatedEvent])
         self.ui = Ui_ReportsView()
         self.ui.setupUi(self.widget)
         self.scene_selected = None

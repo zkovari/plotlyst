@@ -26,7 +26,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelDramaticQuestionsModel, NovelTagsModel
+from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -86,7 +86,7 @@ class SceneDramaticQuestionsWidget(_SceneLabelsEditor):
 
     @overrides
     def _initModel(self) -> SelectionItemsModel:
-        model = NovelDramaticQuestionsModel(self.novel)
+        model = NovelPlotsModel(self.novel)
         model.setEditable(False)
         return model
 
