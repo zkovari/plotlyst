@@ -500,6 +500,9 @@ QToolButton:hover {
        <property name="text">
         <string>Close</string>
        </property>
+       <property name="base" stdset="0">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -519,6 +522,9 @@ QToolButton:hover {
        <property name="positive" stdset="0">
         <bool>true</bool>
        </property>
+       <property name="base" stdset="0">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>
@@ -528,7 +534,7 @@ QToolButton:hover {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupAge"/>
   <buttongroup name="btnGroupEmotion"/>
+  <buttongroup name="btnGroupAge"/>
  </buttongroups>
 </ui>
