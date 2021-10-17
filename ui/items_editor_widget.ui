@@ -41,6 +41,9 @@
          <property name="text">
           <string/>
          </property>
+         <property name="shortcut">
+          <string>Ctrl+N</string>
+         </property>
          <property name="autoRaise">
           <bool>true</bool>
          </property>
@@ -53,6 +56,9 @@
          </property>
          <property name="text">
           <string/>
+         </property>
+         <property name="shortcut">
+          <string>E</string>
          </property>
          <property name="autoRaise">
           <bool>true</bool>
@@ -82,6 +88,9 @@
          </property>
          <property name="text">
           <string/>
+         </property>
+         <property name="shortcut">
+          <string>Del</string>
          </property>
          <property name="autoRaise">
           <bool>true</bool>
