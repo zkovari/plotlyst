@@ -104,7 +104,7 @@
                <item>
                 <widget class="QLabel" name="label">
                  <property name="text">
-                  <string>Right-click on a circle to change the dramatic questions associated to that scene.</string>
+                  <string>Right-click on a circle to change the plots associated to that scene.</string>
                  </property>
                 </widget>
                </item>
