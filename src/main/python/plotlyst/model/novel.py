@@ -24,7 +24,7 @@ from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel
 from PyQt5.QtGui import QIcon
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict, SceneStage, Plot
+from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict, SceneStage, Plot, PlotType
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import PlotCreatedEvent, NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel, DefaultSelectionItemsModel
@@ -79,6 +79,8 @@ class NovelPlotsModel(_NovelSelectionItemsModel):
                     return 'Plot title'
                 if section == self.ColPlotType:
                     return 'Type'
+                if section == self.ColCharacter:
+                    return 'Linked character'
                 if section == self.ColValueType:
                     return 'Value'
             if role == Qt.DecorationRole:
@@ -89,6 +91,30 @@ class NovelPlotsModel(_NovelSelectionItemsModel):
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         if index.column() < self.ColPlotType:
             return super(NovelPlotsModel, self).data(index, role)
+        plot: Plot = self.novel.plots[index.row()]
+        if index.column() == self.ColPlotType:
+            if plot.plot_type == PlotType.Main:
+                if role == Qt.DisplayRole:
+                    return 'Main'
+                if role == Qt.DecorationRole:
+                    return IconRegistry.cause_and_effect_icon()
+            if plot.plot_type == PlotType.Internal:
+                if role == Qt.DisplayRole:
+                    return 'Internal'
+                if role == Qt.DecorationRole:
+                    return IconRegistry.conflict_self_icon()
+            if plot.plot_type == PlotType.Subplot:
+                if role == Qt.DisplayRole:
+                    return 'Subplot'
+                if role == Qt.DecorationRole:
+                    return IconRegistry.from_name('mdi.source-branch')
+        if index.column() == self.ColCharacter:
+            character = plot.character(self.novel)
+            if character:
+                if role == Qt.DisplayRole:
+                    return character.name
+                if role == Qt.DecorationRole:
+                    return QIcon(avatars.pixmap(character))
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
