@@ -290,6 +290,12 @@ class SceneGoal(SelectionItem):
 
 
 @dataclass
+class ScenePlotValue:
+    plot: Plot
+    value: int = 0
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -302,7 +308,7 @@ class Scene:
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
     wip: bool = False
-    dramatic_questions: List[DramaticQuestion] = field(default_factory=list)
+    plot_values: List[ScenePlotValue] = field(default_factory=list)
     end_event: bool = True
     day: int = 1
     beginning_type: str = ''
@@ -326,6 +332,9 @@ class Scene:
             if arc.character == self.pov:
                 return arc.arc
         return NEUTRAL
+
+    def plots(self) -> List[Plot]:
+        return [x.plot for x in self.plot_values]
 
 
 def default_stages() -> List[SceneStage]:
@@ -810,7 +819,6 @@ class Novel(NovelDescriptor):
     story_structure: StoryStructure = default_story_structures[0]
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
-    dramatic_questions: List[DramaticQuestion] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
@@ -828,8 +836,8 @@ class Novel(NovelDescriptor):
         self.characters.extend(updated_novel.characters)
         self.chapters.clear()
         self.chapters.extend(updated_novel.chapters)
-        self.dramatic_questions.clear()
-        self.dramatic_questions.extend(updated_novel.dramatic_questions)
+        self.plots.clear()
+        self.plots.extend(updated_novel.plots)
         self.stages.clear()
         self.stages.extend(updated_novel.stages)
         self.character_profiles.clear()
@@ -838,6 +846,8 @@ class Novel(NovelDescriptor):
         self.conflicts.extend(updated_novel.conflicts)
         self.scene_goals.clear()
         self.scene_goals.extend(updated_novel.scene_goals)
+        self.tags.clear()
+        self.tags.extend(updated_novel.tags)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

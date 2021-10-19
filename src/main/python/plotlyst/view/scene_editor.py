@@ -32,7 +32,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, ACTION_SCENE, REACTION_SCENE, CharacterArc, \
     VERY_UNHAPPY, \
-    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, Conflict, Document
+    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, Conflict, Document, ScenePlotValue
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
@@ -284,7 +284,7 @@ class SceneEditor(QObject):
         self._conflicts_changed()
 
         self.questionsEditor.clear()
-        self.questionsEditor.setValue([x.text for x in self.scene.dramatic_questions])
+        self.questionsEditor.setValue([x.plot.text for x in self.scene.plot_values])
 
         self.tagsEditor.clear()
         self.tagsEditor.setValue(self.scene.tags)
@@ -499,8 +499,9 @@ class SceneEditor(QObject):
 
         if self.ui.cbPivotal.currentIndex() > 0:
             self.scene.beat = self.ui.cbPivotal.currentData()
-        self.scene.dramatic_questions.clear()
-        self.scene.dramatic_questions.extend(self.questionsEditor.selectedItems())
+        self.scene.plot_values.clear()
+        scene_plots = [ScenePlotValue(x) for x in self.questionsEditor.selectedItems()]
+        self.scene.plot_values.extend(scene_plots)
 
         self.scene.tags.clear()
         self.scene.tags.extend(self.tagsEditor.value())
