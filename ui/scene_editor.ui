@@ -1410,7 +1410,7 @@ QToolButton:disabled {
                    </sizepolicy>
                   </property>
                   <property name="text">
-                   <string>Associated dramatic questions:</string>
+                   <string>Associated plots:</string>
                   </property>
                  </widget>
                 </item>

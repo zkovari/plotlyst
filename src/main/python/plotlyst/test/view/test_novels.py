@@ -15,23 +15,23 @@ def test_create_plot(qtbot, filled_window: MainWindow):
     assert filled_window.novel.plots[-1].text == 'New Storyline'
 
     persisted_novel = client.fetch_novel(view.novel.id)
-    assert len(persisted_novel.dramatic_questions) == len(view.novel.dramatic_questions)
+    assert len(persisted_novel.plots) == len(view.novel.plots)
     assert persisted_novel.plots[-1].text == 'New Storyline'
 
 
-def _test_delete_dramatic_question(qtbot, filled_window: MainWindow, monkeypatch):
+def test_delete_dramatic_question(qtbot, filled_window: MainWindow, monkeypatch):
     view: NovelView = go_to_novel(filled_window)
     click_on_item(qtbot, view.ui.wdgDramaticQuestions.tableView, 0, SelectionItemsModel.ColName)
     assert len(view.novel.plots) == 3
-    dq = view.novel.plots[0]
-    assert dq in view.novel.scenes[0].dramatic_questions
+    plot = view.novel.plots[0]
+    assert plot == view.novel.scenes[0].plot_values[0].plot
 
     patch_confirmed(monkeypatch)
     view.ui.wdgDramaticQuestions.btnRemove.click()
 
     assert len(view.novel.plots) == 2
-    assert dq not in view.novel.plots
-    assert not view.novel.scenes[0].dramatic_questions
+    assert plot not in view.novel.plots
+    assert not view.novel.scenes[0].plot_values
 
 
 def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
