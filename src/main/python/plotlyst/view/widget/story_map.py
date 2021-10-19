@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QWidget, QMenu, QAction
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Scene, Novel, DramaticQuestion
+from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePlotValue, Plot
 from src.main.python.plotlyst.view.common import busy
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -51,7 +51,7 @@ class StoryLinesMapWidget(QWidget):
     def minimumSizeHint(self) -> QSize:
         if self.novel:
             x = self._scene_x(len(self.novel.scenes) - 1) + 50
-            y = self._story_line_y(len(self.novel.dramatic_questions)) * 2
+            y = self._story_line_y(len(self.novel.plots)) * 2
             return QSize(x, y)
         return super().minimumSizeHint()
 
@@ -80,18 +80,18 @@ class StoryLinesMapWidget(QWidget):
         self._scene_coord_y.clear()
         y = 0
         last_sc_x: Dict[int, int] = {}
-        for sl_i, story in enumerate(self.novel.dramatic_questions):
+        for sl_i, plot in enumerate(self.novel.plots):
             previous_y = 0
             previous_x = 0
             y = self._story_line_y(sl_i)
             path = QPainterPath()
-            painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(plot.color_hexa), 4, Qt.SolidLine))
             path.moveTo(0, y)
             path.lineTo(5, y)
 
             for sc_i, scene in enumerate(self.novel.scenes):
                 x = self._scene_x(sc_i)
-                if story in scene.dramatic_questions:
+                if plot in scene.plots():
                     if sc_i not in self._scene_coord_y.keys():
                         self._scene_coord_y[sc_i] = y
                     if previous_y > self._scene_coord_y[sc_i] or (previous_y == 0 and y > self._scene_coord_y[sc_i]):
@@ -117,28 +117,28 @@ class StoryLinesMapWidget(QWidget):
             self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), self._scene_coord_y[sc_i])
 
         for sc_i, scene in enumerate(self.novel.scenes):
-            if not scene.dramatic_questions:
+            if not scene.plots():
                 self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), 3)
 
-        if len(self.novel.dramatic_questions) <= 1:
+        if len(self.novel.plots) <= 1:
             return
 
         base_y = y
-        for sl_i, story in enumerate(self.novel.dramatic_questions):
+        for sl_i, plot in enumerate(self.novel.plots):
             y = 50 * (sl_i + 1) + 25 + base_y
-            painter.setPen(QPen(QColor(story.color_hexa), 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(plot.color_hexa), 4, Qt.SolidLine))
             painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
             painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
-            painter.drawText(5, y - 15, story.text)
+            painter.drawText(5, y - 15, plot.text)
 
             for sc_i, scene in enumerate(self.novel.scenes):
-                if story in scene.dramatic_questions:
+                if plot in scene.plots():
                     self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), y)
 
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
-        if scene.dramatic_questions:
+        if scene.plot_values:
             pen = Qt.red if scene is self._clicked_scene else Qt.black
-            if len(scene.dramatic_questions) == 1:
+            if len(scene.plot_values) == 1:
                 painter.setPen(QPen(pen, 3, Qt.SolidLine))
                 painter.setBrush(Qt.black)
                 painter.drawEllipse(x, y - 7, 14, 14)
@@ -172,23 +172,29 @@ class StoryLinesMapWidget(QWidget):
 
             menu = QMenu(self)
 
-            if self.novel.dramatic_questions:
-                for sl in self.novel.dramatic_questions:
-                    sl_action = QAction(truncate_string(sl.text, 70), menu)
-                    sl_action.setCheckable(True)
-                    if sl in self._clicked_scene.dramatic_questions:
-                        sl_action.setChecked(True)
-                    sl_action.triggered.connect(partial(self._dramatic_question_changed, sl))
-                    menu.addAction(sl_action)
+            if self.novel.plots:
+                for plot in self.novel.plots:
+                    plot_action = QAction(truncate_string(plot.text, 70), menu)
+                    plot_action.setCheckable(True)
+                    if plot in self._clicked_scene.plots():
+                        plot_action.setChecked(True)
+                    plot_action.triggered.connect(partial(self._plot_changed, plot))
+                    menu.addAction(plot_action)
 
                 menu.popup(self.mapToGlobal(pos))
 
     @busy
-    def _dramatic_question_changed(self, dramatic_question: DramaticQuestion, checked: bool):
+    def _plot_changed(self, plot: Plot, checked: bool):
         if checked:
-            self._clicked_scene.dramatic_questions.append(dramatic_question)
+            self._clicked_scene.plot_values.append(ScenePlotValue(plot))
         else:
-            self._clicked_scene.dramatic_questions.remove(dramatic_question)
+            to_be_removed = None
+            for plot_v in self._clicked_scene.plot_values:
+                if plot_v.plot is plot:
+                    to_be_removed = plot_v
+                    break
+            if to_be_removed:
+                self._clicked_scene.plot_values.remove(to_be_removed)
         RepositoryPersistenceManager.instance().update_scene(self._clicked_scene)
 
         self.update()

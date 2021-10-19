@@ -92,7 +92,7 @@ class SceneDramaticQuestionsWidget(_SceneLabelsEditor):
 
     @overrides
     def items(self) -> List[SelectionItem]:
-        return self.novel.dramatic_questions
+        return self.novel.plots
 
 
 class SceneTagsWidget(_SceneLabelsEditor):
