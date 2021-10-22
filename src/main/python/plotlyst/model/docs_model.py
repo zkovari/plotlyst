@@ -71,6 +71,8 @@ class DocumentsTreeModel(TreeItemModel):
             if role == Qt.DecorationRole:
                 if char:
                     return QIcon(avatars.pixmap(char))
+                if doc.icon:
+                    return IconRegistry.from_name(doc.icon, doc.icon_color)
             return super(DocumentsTreeModel, self).data(index, role)
         if index.column() == 1 and self._action_index and index.row() == self._action_index.row() \
                 and self._action_index.parent() == index.parent():

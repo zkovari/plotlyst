@@ -337,7 +337,7 @@ class JsonClient:
         if document.loaded:
             return
 
-        if document.type == DocumentType.DOCUMENT:
+        if document.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             content = self.__load_doc(novel, document.id)
             document.content = content
         else:
@@ -619,7 +619,7 @@ class JsonClient:
         if not os.path.exists(str(novel_doc_dir)):
             os.mkdir(novel_doc_dir)
 
-        if doc.type == DocumentType.DOCUMENT:
+        if doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
             with atomic_write(doc_file_path, overwrite=True) as f:
                 f.write(doc.content)

@@ -24,8 +24,9 @@ from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidge
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document, doc_characters_id, Character, DocumentType, \
+from src.main.python.plotlyst.core.domain import Novel, Document, Character, DocumentType, \
     Causality, CausalityItem
+from src.main.python.plotlyst.core.text import parse_structure_to_richtext
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
@@ -80,6 +81,10 @@ class DocumentsView(AbstractNovelView):
             doc.data = casuality
             doc.data_id = casuality.id
             json_client.save_document(self.novel, doc)
+        if doc_type == DocumentType.STORY_STRUCTURE:
+            doc.title = self.novel.story_structure.title
+            doc.icon = self.novel.story_structure.icon
+            doc.icon_color = self.novel.story_structure.icon_color
 
         doc.loaded = True
 
@@ -91,9 +96,12 @@ class DocumentsView(AbstractNovelView):
         self.ui.btnRemove.setEnabled(True)
         self._edit(index)
 
+        if doc_type == DocumentType.STORY_STRUCTURE:
+            self.ui.textEditor.textEditor.insertHtml(parse_structure_to_richtext(self.novel.story_structure))
+            self._save()
+
     def _doc_clicked(self, index: QModelIndex):
-        node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
-        self.ui.btnRemove.setEnabled(node.document.id != doc_characters_id)
+        self.ui.btnRemove.setEnabled(True)
         if index.column() == 0:
             self._edit(index)
         elif index.column() == 1:
@@ -120,6 +128,9 @@ class DocumentsView(AbstractNovelView):
 
         menu.addAction(IconRegistry.reversed_cause_and_effect_icon(), 'Reversed Cause and Effect',
                        lambda: self._add_doc(index, doc_type=DocumentType.REVERSED_CAUSE_AND_EFFECT))
+        struc = self.novel.story_structure
+        menu.addAction(IconRegistry.from_name(struc.icon, color=struc.icon_color), struc.title,
+                       lambda: self._add_doc(index, doc_type=DocumentType.STORY_STRUCTURE))
 
         menu.popup(self.ui.treeDocuments.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
@@ -139,7 +150,7 @@ class DocumentsView(AbstractNovelView):
 
         char = node.document.character(self.novel)
 
-        if self._current_doc.type == DocumentType.DOCUMENT:
+        if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
             self.ui.textEditor.setVisible(True)
             if char:
@@ -159,7 +170,7 @@ class DocumentsView(AbstractNovelView):
     def _save(self):
         if not self._current_doc:
             return
-        if self._current_doc.type == DocumentType.DOCUMENT:
+        if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self._current_doc.content = self.ui.textEditor.textEditor.toHtml()
         json_client.save_document(self.novel, self._current_doc)
 

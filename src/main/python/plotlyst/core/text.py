@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from src.main.python.plotlyst.core.domain import SceneBuilderElement, SceneBuilderElementType
+from src.main.python.plotlyst.core.domain import SceneBuilderElement, SceneBuilderElementType, StoryStructure
 
 
 class TextBuilder:
@@ -76,3 +76,11 @@ def _parse_to_text(el: SceneBuilderElement, text: TextBuilder, previous: Optiona
 
     for child in el.children:
         _parse_to_text(child, text, el)
+
+
+def parse_structure_to_richtext(structure: StoryStructure):
+    text = ''
+    for beat in structure.beats:
+        text += f'<h1>{beat.text}</h1><br>'
+
+    return text
