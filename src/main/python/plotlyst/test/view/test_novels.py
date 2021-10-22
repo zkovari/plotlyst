@@ -41,10 +41,10 @@ def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
     assert view.ui.cbStoryStructure.currentText() == 'Three Act Structure'
 
     patch_confirmed(monkeypatch)
-    view.ui.cbStoryStructure.setCurrentIndex(1)
+    view.ui.cbStoryStructure.setCurrentIndex(2)
 
     assert view.ui.cbStoryStructure.currentText() == 'Save the Cat'
-    assert view.novel.story_structure == default_story_structures[1]
+    assert view.novel.story_structure == default_story_structures[2]
 
     for scene in view.novel.scenes:
         assert scene.beat is None
