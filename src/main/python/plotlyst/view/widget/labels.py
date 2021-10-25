@@ -27,7 +27,7 @@ from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, Q
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem
+from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem, Novel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import line, text_color_with_bg_color
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
@@ -105,8 +105,9 @@ class CharacterAvatarLabel(QToolButton):
 
 
 class ConflictLabel(Label):
-    def __init__(self, conflict: Conflict, parent=None):
+    def __init__(self, novel: Novel, conflict: Conflict, parent=None):
         super(ConflictLabel, self).__init__(parent)
+        self.novel = novel
         self.conflict = conflict
 
         self.lblConflict = QLabel()
@@ -114,8 +115,8 @@ class ConflictLabel(Label):
         self.layout().addWidget(self.lblConflict)
 
         self.lblAvatar = QLabel()
-        if self.conflict.character:
-            set_avatar(self.lblAvatar, self.conflict.character, 24)
+        if self.conflict.conflicting_character(self.novel):
+            set_avatar(self.lblAvatar, self.conflict.conflicting_character(self.novel), 24)
         else:
             if self.conflict.type == ConflictType.CHARACTER:
                 icon = IconRegistry.conflict_character_icon()
@@ -133,7 +134,7 @@ class ConflictLabel(Label):
                 icon = IconRegistry.conflict_icon()
             self.lblAvatar.setPixmap(icon.pixmap(QSize(24, 24)))
         self.layout().addWidget(self.lblAvatar)
-        self.layout().addWidget(QLabel(self.conflict.keyphrase))
+        self.layout().addWidget(QLabel(self.conflict.text))
 
         self.setStyleSheet('''
                 ConflictLabel {

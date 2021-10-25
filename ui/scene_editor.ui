@@ -420,58 +420,6 @@
             </property>
            </spacer>
           </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <property name="spacing">
-             <number>2</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="lblType">
-              <property name="text">
-               <string>Scene structure:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="cbType">
-              <property name="maximumSize">
-               <size>
-                <width>141</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <item>
-               <property name="text">
-                <string/>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>action</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>reaction</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
          </layout>
         </item>
         <item>
@@ -993,7 +941,7 @@ QToolButton:disabled {
                  <number>2</number>
                 </property>
                 <item>
-                 <widget class="SceneStructureWidget" name="widget_6" native="true">
+                 <widget class="SceneStructureWidget" name="wdgSceneStructure" native="true">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                     <horstretch>0</horstretch>
@@ -1402,7 +1350,6 @@ QToolButton:disabled {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupOutcome"/>
   <buttongroup name="btnGroupArc"/>
   <buttongroup name="btnGroupPages"/>
  </buttongroups>

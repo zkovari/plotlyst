@@ -392,6 +392,9 @@ QToolButton {
          <property name="text">
           <string>Scene (action)</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">btnGroupType</string>
+         </attribute>
         </widget>
        </item>
        <item>
@@ -402,6 +405,9 @@ QToolButton {
          <property name="text">
           <string>Sequel</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">btnGroupType</string>
+         </attribute>
         </widget>
        </item>
        <item>
@@ -412,6 +418,9 @@ QToolButton {
          <property name="text">
           <string>Custom</string>
          </property>
+         <attribute name="buttonGroup">
+          <string notr="true">btnGroupType</string>
+         </attribute>
         </widget>
        </item>
       </layout>
@@ -728,4 +737,7 @@ QToolButton {
    </hints>
   </connection>
  </connections>
+ <buttongroups>
+  <buttongroup name="btnGroupType"/>
+ </buttongroups>
 </ui>

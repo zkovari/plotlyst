@@ -213,17 +213,17 @@ class NovelConflictsModel(QAbstractTableModel):
         if role == self.ConflictRole:
             return conflict
         if index.column() == self.ColPov and role == Qt.DecorationRole:
-            return QIcon(avatars.pixmap(conflict.pov))
+            return QIcon(avatars.pixmap(conflict.character(self.novel)))
         if index.column() == self.ColType and role == Qt.DecorationRole:
-            if conflict.character:
-                if conflict.character.avatar:
-                    return QIcon(avatars.pixmap(conflict.character))
+            if conflict.conflicting_character(self.novel):
+                if conflict.conflicting_character(self.novel).avatar:
+                    return QIcon(avatars.pixmap(conflict.conflicting_character(self.novel)))
                 else:
-                    return avatars.name_initial_icon(conflict.character)
+                    return avatars.name_initial_icon(conflict.conflicting_character(self.novel))
             else:
                 return IconRegistry.conflict_type_icon(conflict.type)
         if index.column() == self.ColPhrase and role == Qt.DisplayRole:
-            return conflict.keyphrase
+            return conflict.text
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -235,7 +235,7 @@ class NovelConflictsModel(QAbstractTableModel):
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = ...) -> bool:
         if index.column() == self.ColPhrase and role == Qt.EditRole:
-            self.novel.conflicts[index.row()].keyphrase = value
+            self.novel.conflicts[index.row()].text = value
             RepositoryPersistenceManager.instance().update_novel(self.novel)
             return True
         return False

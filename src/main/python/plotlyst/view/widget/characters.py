@@ -23,16 +23,15 @@ from typing import Iterable, List
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QHeaderView
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, Scene, BackstoryEvent, \
-    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY
+from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, SceneStructureItem, Scene
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
-from src.main.python.plotlyst.model.scenes_model import SceneConflictsTableModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
@@ -236,10 +235,11 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
     new_conflict_added = pyqtSignal(Conflict)
     conflict_selection_changed = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene: Scene, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, scene_structure_item: SceneStructureItem, parent=None):
         super(CharacterConflictWidget, self).__init__(parent)
         self.novel = novel
         self.scene = scene
+        self.scene_structure_item = scene_structure_item
         self.setupUi(self)
         self.setMaximumWidth(270)
 
@@ -263,21 +263,13 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self._type = ConflictType.CHARACTER
         self.btnCharacter.setChecked(True)
 
-        self._model = SceneConflictsTableModel(self.novel, self.scene)
-        self._model.selection_changed.connect(self.conflict_selection_changed.emit)
-        self.tblConflicts.setModel(self._model)
-        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsTableModel.ColType,
-                                                                  QHeaderView.ResizeToContents)
-        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsTableModel.ColPhrase,
-                                                                  QHeaderView.Stretch)
-
         self.btnAddNew.clicked.connect(self._add_new)
 
     def refresh(self):
         self.cbCharacter.clear()
         self._update_characters()
-        self._model.update()
-        self._model.modelReset.emit()
+        self.tblConflicts.model().update()
+        self.tblConflicts.model().modelReset.emit()
 
     def _update_characters(self):
         for char in self.novel.characters:
@@ -312,14 +304,14 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
     def _add_new(self):
         if not self.scene.pov:
             return emit_critical('Select POV character first')
-        conflict = Conflict(self.lineKey.text(), self._type, pov=self.scene.pov)
+        conflict = Conflict(self.lineKey.text(), self._type, character_id=self.scene.pov.id)
         if self._type == ConflictType.CHARACTER:
             conflict.character = self.cbCharacter.currentData()
 
         self.novel.conflicts.append(conflict)
-        self.scene.conflicts.append(conflict)
+        self.scene_structure_item.conflicts.append(conflict)
         self.repo.update_novel(self.novel)
-        self.repo.update_scene(self.scene)
+        # self.repo.update_scene(self.scene_structure_item)
         self.new_conflict_added.emit(conflict)
         self.refresh()
         self.lineKey.clear()

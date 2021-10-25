@@ -188,7 +188,7 @@ The scenes can be associated to such story beats.</p>''')
             return
 
         conflict = indexes[0].data(NovelConflictsModel.ConflictRole)
-        if ask_confirmation(f'Delete conflict "{conflict.keyphrase}"'):
+        if ask_confirmation(f'Delete conflict "{conflict.text}"'):
             for scene in self.novel.scenes:
                 if conflict in scene.conflicts:
                     scene.conflicts.remove(conflict)

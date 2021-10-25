@@ -35,7 +35,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
-    default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue
+    default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue, SceneType, SceneStructureAgenda
 
 
 class ApplicationDbVersion(Enum):
@@ -134,12 +134,13 @@ class SceneInfo:
     title: str
     id: uuid.UUID
     synopsis: str = ''
-    type: str = ''
+    type: SceneType = SceneType.ACTION
     beginning: str = ''
     middle: str = ''
     end: str = ''
     pov: Optional[uuid.UUID] = None
     characters: List[uuid.UUID] = field(default_factory=list)
+    agendas: List[SceneStructureAgenda] = field(default_factory=list)
     wip: bool = False
     plots: List[ScenePlotValueInfo] = field(default_factory=list)
     day: int = 1
@@ -147,7 +148,6 @@ class SceneInfo:
     arcs: List[CharacterArcInfo] = field(default_factory=list)
     action_resolution: bool = False
     action_trade_off: bool = False
-    without_action_conflict: bool = False
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
     beat: Optional[uuid.UUID] = None
@@ -164,13 +164,13 @@ class ChapterInfo:
     id: uuid.UUID
 
 
-@dataclass
-class ConflictInfo:
-    keyphrase: str
-    type: ConflictType
-    id: uuid.UUID
-    pov: uuid.UUID
-    character: Optional[uuid.UUID] = None
+# @dataclass
+# class ConflictInfo:
+#     type: ConflictType
+#     id: uuid.UUID
+#     pov: uuid.UUID
+#     text: str = ''
+#     character: Optional[uuid.UUID] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -184,7 +184,7 @@ class NovelInfo:
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
-    conflicts: List[ConflictInfo] = field(default_factory=list)
+    conflicts: List[Conflict] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
     tags: List[SelectionItem] = field(default_factory=default_tags)
     documents: List[Document] = field(default_factory=default_documents)
@@ -388,19 +388,19 @@ class JsonClient:
 
         conflicts = []
         conflict_ids = {}
-        for conflict_info in novel_info.conflicts:
-            pov = characters_ids.get(str(conflict_info.pov))
-            if not pov:
-                continue
-            character = None
-            if conflict_info.character:
-                character = characters_ids.get(str(conflict_info.character))
-                if character is None:
-                    continue
-
-            conflict = Conflict(keyphrase=conflict_info.keyphrase, type=conflict_info.type, id=conflict_info.id,
-                                pov=pov,
-                                character=character)
+        for conflict in novel_info.conflicts:
+            # pov = characters_ids.get(str(conflict_info.pov))
+            # if not pov:
+            #     continue
+            # character = None
+            # if conflict_info.character:
+            #     character = characters_ids.get(str(conflict_info.character))
+            #     if character is None:
+            #         continue
+            #
+            # conflict = Conflict(text=conflict_info.text, type=conflict_info.type, id=conflict_info.id,
+            #                     pov=pov,
+            #                     character=character)
             conflicts.append(conflict)
             conflict_ids[str(conflict.id)] = conflict
 
@@ -473,8 +473,9 @@ class JsonClient:
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, day=info.day,
                               action_resolution=info.action_resolution, action_trade_off=info.action_trade_off,
-                              without_action_conflict=info.without_action_conflict, sequence=seq,
-                              plot_values=scene_plots, pov=pov, characters=scene_characters, arcs=arcs,
+                              sequence=seq,
+                              plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
+                              arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
                               conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags,
                               document=info.document)
@@ -510,10 +511,7 @@ class JsonClient:
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
                                stages=novel.stages, story_structure=novel.story_structure.id,
                                character_profiles=novel.character_profiles,
-                               conflicts=[ConflictInfo(x.keyphrase, x.type, x.id,
-                                                       pov=x.pov.id,
-                                                       character=x.character.id if x.character else None) for x in
-                                          novel.conflicts],
+                               conflicts=novel.conflicts,
                                scene_goals=novel.scene_goals, tags=novel.tags, documents=novel.documents)
 
         self.__persist_info(self.novels_dir, novel_info)
@@ -534,8 +532,8 @@ class JsonClient:
                          beginning=scene.beginning, middle=scene.middle,
                          end=scene.end, wip=scene.wip, day=scene.day,
                          action_resolution=scene.action_resolution, action_trade_off=scene.action_trade_off,
-                         without_action_conflict=scene.without_action_conflict,
                          pov=self.__id_or_none(scene.pov), plots=plots, characters=characters,
+                         agendas=scene.agendas,
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
