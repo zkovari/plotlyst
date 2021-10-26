@@ -83,8 +83,6 @@ class SceneEditor(QObject):
         # self.ui.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
         # self.ui.btnTradeOff.setIcon(IconRegistry.tradeoff_icon(color='grey'))
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
-        # self.ui.btnAddConflict.setIcon(IconRegistry.conflict_icon())
-        # self.ui.btnAddConflict.setStyleSheet('QPushButton::menu-indicator{width:0px;}')
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
         self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
@@ -167,7 +165,6 @@ class SceneEditor(QObject):
         self.ui.sbDay.valueChanged.connect(self._save_scene)
         self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
         self.ui.btnGroupArc.buttonClicked.connect(self._save_scene)
-        # self.ui.btnGroupOutcome.buttonToggled.connect(self._outcome_toggled)
         self.ui.btnGroupPages.buttonToggled.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -193,18 +190,6 @@ class SceneEditor(QObject):
             if len(self.novel.scenes) > 1:
                 self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
-
-        # item = self.ui.gBoxSceneGoals.layout().itemAt(0)
-        # if item and isinstance(item.widget(), SceneGoalsWidget):
-        #     self.ui.gBoxSceneGoals.layout().removeItem(item)
-        #     item.widget().deleteLater()
-        # item = self.ui.vLayoutGoalConflict.itemAt(1)
-        # if item and isinstance(item.widget(), SceneGoalsWidget):
-        #     self.ui.vLayoutGoalConflict.removeItem(item)
-        #     item.widget().deleteLater()
-
-        # goalEditor = SceneGoalsWidget(self.novel, self.scene)
-        # self.ui.gBoxSceneGoals.layout().addWidget(goalEditor)
 
         for char_arc in self.scene.arcs:
             if scene.pov and char_arc.character == scene.pov:
@@ -255,16 +240,6 @@ class SceneEditor(QObject):
 
         self._characters_model.setScene(self.scene)
         self._character_changed()
-
-        # action = QWidgetAction(self.ui.btnAddConflict)
-        # self._character_conflict_widget = CharacterConflictWidget(self.novel, self.scene)
-        # self._character_conflict_widget.new_conflict_added.connect(self._new_conflict)
-        # self._character_conflict_widget.conflict_selection_changed.connect(self._conflicts_changed)
-        # action.setDefaultWidget(self._character_conflict_widget)
-        # menu = QMenu(self.ui.btnAddConflict)
-        # menu.addAction(action)
-        # self.ui.btnAddConflict.setMenu(menu)
-        # self._conflicts_changed()
 
         self.questionsEditor.clear()
         self.questionsEditor.setValue([x.plot.text for x in self.scene.plot_values])
@@ -444,8 +419,9 @@ class SceneEditor(QObject):
         self._character_changed()
         # self._character_conflict_widget.refresh()
         if self._save_enabled:
-            self.scene.conflicts.clear()
-            self._conflicts_changed()
+            self.ui.wdgSceneStructure.updatePov()
+            # self.scene.conflicts.clear()
+            # self._conflicts_changed()
 
     def _update_pov_avatar(self):
         if self.scene.pov:

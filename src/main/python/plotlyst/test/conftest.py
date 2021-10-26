@@ -22,7 +22,7 @@ import os
 import pytest
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Character, Scene, Chapter, REACTION_SCENE, \
+from src.main.python.plotlyst.core.domain import Character, Scene, Chapter, \
     Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotValue, SceneType
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -79,7 +79,7 @@ def init_project():
     internalplot = Plot(text='Lesser', plot_type=PlotType.Internal)
     subplot = Plot(text='Love', plot_type=PlotType.Subplot)
     novel.plots.extend([mainplot, internalplot, subplot])
-    conflict = Conflict('Test', ConflictType.SOCIETY, pov=char_a)
+    conflict = Conflict('Test', ConflictType.SOCIETY, character_id=char_a.id)
     novel.conflicts.append(conflict)
 
     chapter_1 = Chapter(title='1')
@@ -92,7 +92,7 @@ def init_project():
     scene_2 = Scene(title='Scene 2', synopsis='Scene 2 synopsis', pov=char_d, characters=[char_c, char_a],
                     plot_values=[ScenePlotValue(internalplot), ScenePlotValue(subplot)], sequence=1, chapter=chapter_2,
                     day=2,
-                    type=REACTION_SCENE,
+                    type=SceneType.REACTION,
                     beginning='Beginning', middle='Middle', end='End')
     novel.scenes.append(scene_1)
     novel.scenes.append(scene_2)

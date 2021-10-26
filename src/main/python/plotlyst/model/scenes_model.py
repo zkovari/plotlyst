@@ -396,7 +396,6 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
 
 
 class SceneConflictsModel(SelectionItemsModel):
-    selection_changed = pyqtSignal()
 
     def __init__(self, novel: Novel, scene: Scene, scene_structure_item: SceneStructureItem, parent=None):
         super().__init__(parent)
@@ -427,38 +426,14 @@ class SceneConflictsModel(SelectionItemsModel):
         conflict = self._conflicts[index.row()]
         if index.column() == self.ColIcon:
             if role == Qt.DecorationRole:
-                if conflict.character(self.novel):
+                if conflict.conflicting_character(self.novel):
                     if conflict.character(self.novel).avatar:
-                        return QIcon(avatars.pixmap(conflict.character(self.novel)))
+                        return QIcon(avatars.pixmap(conflict.conflicting_character(self.novel)))
                     else:
-                        return avatars.name_initial_icon(conflict.character(self.novel))
+                        return avatars.name_initial_icon(conflict.conflicting_character(self.novel))
                 else:
                     return IconRegistry.conflict_type_icon(conflict.type)
-            # if role == Qt.CheckStateRole:
-            #     if conflict in self.scene_structure_item.conflicts:
-            #         return Qt.Checked
-            #     else:
-            #         return Qt.Unchecked
         return super(SceneConflictsModel, self).data(index, role)
-
-    # @overrides
-    # def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-    #     flags = super().flags(index)
-    #     if index.column() == 0:
-    #         return flags | Qt.ItemIsUserCheckable
-    #     return flags
-
-    # @overrides
-    # def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
-    #     if role == Qt.CheckStateRole:
-    #         if value == Qt.Checked:
-    #             self.scene_structure_item.conflicts.append(self._conflicts[index.row()])
-    #         else:
-    #             self.scene_structure_item.conflicts.remove(self._conflicts[index.row()])
-    #         self.selection_changed.emit()
-    #         return True
-    #     else:
-    #         return super().setData(index, value, role)
 
 
 class SceneGoalsModel(SelectionItemsModel):

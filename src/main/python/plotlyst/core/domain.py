@@ -332,7 +332,7 @@ class SceneStructureItemType(Enum):
 class SceneOutcome(Enum):
     DISASTER = 0
     RESOLUTION = 1
-    OUTCOME = 2
+    TRADE_OFF = 2
 
 
 @dataclass

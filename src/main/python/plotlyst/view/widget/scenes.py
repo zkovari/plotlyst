@@ -22,17 +22,18 @@ from abc import abstractmethod
 from typing import List, Set, Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray
+from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QVBoxLayout, QHBoxLayout, QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal, SceneType, \
-    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict
+    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict, SceneOutcome
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
+from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
@@ -82,6 +83,7 @@ class SceneConflictsWidget(LabelsEditorWidget):
         self.btnEdit.setText('Track conflicts')
         self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.setStyleSheet('SceneConflictsWidget {border: 0px;}')
+        self._popup.new_conflict_added.connect(self.btnEdit.menu().hide)
 
     @overrides
     def _initModel(self) -> SelectionItemsModel:
@@ -91,6 +93,7 @@ class SceneConflictsWidget(LabelsEditorWidget):
     def _initPopupWidget(self) -> QWidget:
         widget = CharacterConflictWidget(self.novel, self.scene, self.scene_structure_item)
         widget.tblConflicts.setModel(self._model)
+        widget.tblConflicts.horizontalHeader().hideSection(SceneConflictsModel.ColBgColor)
         widget.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColIcon,
                                                                     QHeaderView.ResizeToContents)
         widget.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColName,
@@ -107,6 +110,33 @@ class SceneConflictsWidget(LabelsEditorWidget):
             self._wdgLabels.addLabel(ConflictLabel(self.novel, item))
         self.scene_structure_item.conflicts.clear()
         self.scene_structure_item.conflicts.extend(items)
+
+
+class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
+    def __init__(self, scene_structure_item: SceneStructureItem, parent=None):
+        super(SceneOutcomeSelector, self).__init__(parent)
+        self.scene_structure_item = scene_structure_item
+        self.setupUi(self)
+        self.btnDisaster.setIcon(IconRegistry.disaster_icon(color='grey'))
+        self.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
+        self.btnTradeOff.setIcon(IconRegistry.tradeoff_icon(color='grey'))
+
+        if self.scene_structure_item.outcome == SceneOutcome.DISASTER:
+            self.btnDisaster.setChecked(True)
+        elif self.scene_structure_item.outcome == SceneOutcome.RESOLUTION:
+            self.btnResolution.setChecked(True)
+        elif self.scene_structure_item.outcome == SceneOutcome.TRADE_OFF:
+            self.btnTradeOff.setChecked(True)
+
+        self.btnGroupOutcome.buttonClicked.connect(self._clicked)
+
+    def _clicked(self):
+        if self.btnDisaster.isChecked():
+            self.scene_structure_item.outcome = SceneOutcome.DISASTER
+        elif self.btnResolution.isChecked():
+            self.scene_structure_item.outcome = SceneOutcome.RESOLUTION
+        elif self.btnTradeOff.isChecked():
+            self.scene_structure_item.outcome = SceneOutcome.TRADE_OFF
 
 
 class _SceneLabelsEditor(LabelsEditorWidget):
@@ -217,29 +247,66 @@ class SceneStructureItemWidget(QWidget):
         self.scene_structure_item.text = self.text.toPlainText()
         return self.scene_structure_item
 
+    def activate(self):
+        self.text.setFocus()
+
 
 class SceneGoalItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super(SceneGoalItemWidget, self).__init__(novel, scene_structure_item, parent=parent)
-        self._layout.insertWidget(0, SceneGoalsWidget(self.novel, self.scene_structure_item))
+        self._wdgGoals = SceneGoalsWidget(self.novel, self.scene_structure_item)
+        self._layout.insertWidget(0, self._wdgGoals)
         self.text.setPlaceholderText('Goal')
+
+    @overrides
+    def activate(self):
+        self._wdgGoals.btnEdit.click()
 
 
 class SceneConflictItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene: Scene, scene_structure_item: SceneStructureItem, parent=None):
         super(SceneConflictItemWidget, self).__init__(novel, scene_structure_item, parent=parent)
-        self._layout.insertWidget(0, SceneConflictsWidget(self.novel, scene, self.scene_structure_item))
+        self._wdgConflicts = SceneConflictsWidget(self.novel, scene, self.scene_structure_item)
+        self._layout.insertWidget(0, self._wdgConflicts)
         self.text.setPlaceholderText('Conflict')
 
-        # action = QWidgetAction(self.btnAddConflict)
-        # self._character_conflict_widget = CharacterConflictWidget(self.novel, self.scene)
-        # self._character_conflict_widget.new_conflict_added.connect(self._new_conflict)
-        # self._character_conflict_widget.conflict_selection_changed.connect(self._conflicts_changed)
-        # action.setDefaultWidget(self._character_conflict_widget)
-        # menu = QMenu(self.ui.btnAddConflict)
-        # menu.addAction(action)
-        # self.ui.btnAddConflict.setMenu(menu)
-        # self._conflicts_changed()
+    @overrides
+    def activate(self):
+        self._wdgConflicts.btnEdit.click()
+
+
+class VisualSceneStructureItemWidget(SceneStructureItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(VisualSceneStructureItemWidget, self).__init__(novel, scene_structure_item, vertical=False, parent=parent)
+        self._btnIcon = QToolButton()
+        self._btnIcon.setStyleSheet('border: 0px;')
+        self._layout.insertWidget(0, self._btnIcon)
+
+
+class ReactionSceneItemWidget(VisualSceneStructureItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(ReactionSceneItemWidget, self).__init__(novel, scene_structure_item, parent=parent)
+        self._btnIcon.setIcon(IconRegistry.reaction_icon())
+
+
+class DilemmaSceneItemWidget(VisualSceneStructureItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(DilemmaSceneItemWidget, self).__init__(novel, scene_structure_item, parent=parent)
+        self._btnIcon.setIcon(IconRegistry.dilemma_icon())
+
+
+class DecisionSceneItemWidget(SceneGoalItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(DecisionSceneItemWidget, self).__init__(novel, scene_structure_item, parent=parent)
+        self._wdgGoals.btnEdit.setText('New goal')
+
+
+class SceneOutcomeItemWidget(SceneStructureItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(SceneOutcomeItemWidget, self).__init__(novel, scene_structure_item, vertical=False, parent=parent)
+
+        self._layout.insertWidget(0, SceneOutcomeSelector(self.scene_structure_item))
+        self.text.setPlaceholderText('Outcome')
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
@@ -307,6 +374,14 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                     widget = SceneGoalItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.CONFLICT:
                     widget = SceneConflictItemWidget(self.novel, self.scene, item)
+                elif item.type == SceneStructureItemType.OUTCOME:
+                    widget = SceneOutcomeItemWidget(self.novel, item)
+                elif item.type == SceneStructureItemType.REACTION:
+                    widget = ReactionSceneItemWidget(self.novel, item)
+                elif item.type == SceneStructureItemType.DILEMMA:
+                    widget = DilemmaSceneItemWidget(self.novel, item)
+                elif item.type == SceneStructureItemType.DECISION:
+                    widget = DecisionSceneItemWidget(self.novel, item)
                 else:
                     widget = SceneStructureItemWidget(self.novel, item)
                 widgets_per_parts.get(item.part, self.wdgEnd).layout().addWidget(widget)
@@ -320,12 +395,19 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.btnGroupType.buttonClicked.connect(self._type_changed)
 
-    def clear(self):
+    def updatePov(self):
+        self.clear(addPlaceholders=True)
+
+    def clear(self, addPlaceholders: bool = False):
         for widget in [self.wdgBeginning, self.wdgMiddle, self.wdgEnd]:
             while widget.layout().count():
                 item = widget.layout().takeAt(0)
                 if item:
                     item.widget().deleteLater()
+        if addPlaceholders:
+            self._addPlaceholder(self.wdgBeginning)
+            self._addPlaceholder(self.wdgMiddle)
+            self._addPlaceholder(self.wdgEnd)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -387,8 +469,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             return SceneStructureItemType.REACTION
         if dragged is self.btnDilemma:
             return SceneStructureItemType.DILEMMA
-        if dragged is self.btnOutcome:
-            return SceneStructureItemType.OUTCOME
+        if dragged is self.btnDecision:
+            return SceneStructureItemType.DECISION
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent):
@@ -421,13 +503,20 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         data: SceneStructureItemType = pickle.loads(event.mimeData().data(self.MimeType))
 
         if data == SceneStructureItemType.GOAL:
-            widget = SceneGoalItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.GOAL))
+            widget = SceneGoalItemWidget(self.novel, SceneStructureItem(data))
         elif data == SceneStructureItemType.CONFLICT:
-            widget = SceneConflictItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.CONFLICT))
+            widget = SceneConflictItemWidget(self.novel, self.scene, SceneStructureItem(data))
+        elif data == SceneStructureItemType.OUTCOME:
+            widget = SceneOutcomeItemWidget(self.novel, SceneStructureItem(data, outcome=SceneOutcome.DISASTER))
+        elif data == SceneStructureItemType.REACTION:
+            widget = ReactionSceneItemWidget(self.novel, SceneStructureItem(data))
+        elif data == SceneStructureItemType.DILEMMA:
+            widget = DilemmaSceneItemWidget(self.novel, SceneStructureItem(data))
+        elif data == SceneStructureItemType.DECISION:
+            widget = DecisionSceneItemWidget(self.novel, SceneStructureItem(data))
         else:
-            widget = AutoAdjustableTextEdit()
+            raise ValueError('Unknown scene structure item')
 
-        self._addPlaceholder(placeholder.parent())
         layout: QHBoxLayout = placeholder.parent().layout()
         index = layout.indexOf(placeholder)
         layout.takeAt(index)
@@ -435,6 +524,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         layout.insertWidget(index, widget)
 
         event.accept()
+
+        QTimer.singleShot(50, widget.activate)
 
     def _addPlaceholder(self, widget: QWidget):
         _placeholder = _PlaceHolder()

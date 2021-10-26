@@ -306,14 +306,13 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
             return emit_critical('Select POV character first')
         conflict = Conflict(self.lineKey.text(), self._type, character_id=self.scene.pov.id)
         if self._type == ConflictType.CHARACTER:
-            conflict.character = self.cbCharacter.currentData()
+            conflict.conflicting_character_id = self.cbCharacter.currentData().id
 
         self.novel.conflicts.append(conflict)
-        self.scene_structure_item.conflicts.append(conflict)
         self.repo.update_novel(self.novel)
-        # self.repo.update_scene(self.scene_structure_item)
         self.new_conflict_added.emit(conflict)
         self.refresh()
+        self.tblConflicts.model().checkItem(conflict)
         self.lineKey.clear()
 
 
