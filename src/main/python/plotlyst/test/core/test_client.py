@@ -1,5 +1,5 @@
 from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneType
 from src.main.python.plotlyst.test.conftest import init_project
 
 
@@ -36,8 +36,8 @@ def test_insert_scene(test_client):
     novel = Novel(title='test1')
     client.insert_novel(novel)
 
-    scene = Scene(title='Scene 1', synopsis='Test synopsis', type='action', wip=True, beginning='Beginning',
-                  middle='Middle', end='End', action_resolution=True, without_action_conflict=True,
+    scene = Scene(title='Scene 1', synopsis='Test synopsis', type=SceneType.ACTION, wip=True, beginning='Beginning',
+                  middle='Middle', end='End', action_resolution=True,
                   stage=novel.stages[1], beat=novel.story_structure.beats[0])
     novel.scenes.append(scene)
     client.insert_scene(novel, scene)

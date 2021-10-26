@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import uuid
+from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -25,11 +26,9 @@ from typing import List, Optional, Any, Dict
 
 from PyQt5.QtCore import Qt
 from dataclasses_json import dataclass_json, Undefined
+from overrides import overrides
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
-
-ACTION_SCENE = 'action'
-REACTION_SCENE = 'reaction'
 
 
 @dataclass
@@ -230,19 +229,7 @@ class PlotValue(SelectionItem):
         return hash(str(id))
 
 
-@dataclass
-class Plot(SelectionItem):
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    plot_type: PlotType = PlotType.Main
-    value: Optional[PlotValue] = None
-    character_id: Optional[uuid.UUID] = None
-
-    def __post_init__(self):
-        self._character: Optional[Character] = None
-
-    def __hash__(self):
-        return hash(str(id))
-
+class CharacterBased(ABC):
     def set_character(self, character: Optional[Character]):
         if character is None:
             self.character_id = None
@@ -263,6 +250,21 @@ class Plot(SelectionItem):
         return self._character
 
 
+@dataclass
+class Plot(SelectionItem, CharacterBased):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    plot_type: PlotType = PlotType.Main
+    value: Optional[PlotValue] = None
+    character_id: Optional[uuid.UUID] = None
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
+
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
+
+
 class ConflictType(Enum):
     CHARACTER = 0
     SOCIETY = 1
@@ -273,12 +275,29 @@ class ConflictType(Enum):
 
 
 @dataclass
-class Conflict:
-    keyphrase: str
-    type: ConflictType
-    pov: Character
+class Conflict(SelectionItem, CharacterBased):
+    type: ConflictType = ConflictType.CHARACTER
+    character_id: Optional[uuid.UUID] = None
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    character: Optional[Character] = None
+    conflicting_character_id: Optional[uuid.UUID] = None
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
+        self._conflicting_character: Optional[Character] = None
+
+    def conflicting_character(self, novel: 'Novel') -> Optional[Character]:
+        if not self.conflicting_character_id:
+            return None
+        if not self._conflicting_character:
+            for c in novel.characters:
+                if c.id == self.conflicting_character_id:
+                    self._conflicting_character = c
+                    break
+
+        return self._conflicting_character
+
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 @dataclass
@@ -295,29 +314,66 @@ class ScenePlotValue:
     value: int = 0
 
 
+class SceneType(Enum):
+    ACTION = 'action'
+    REACTION = 'reaction'
+    MIXED = ''
+
+
+class SceneStructureItemType(Enum):
+    GOAL = 0
+    CONFLICT = 1
+    OUTCOME = 2
+    REACTION = 3
+    DILEMMA = 4
+    DECISION = 5
+
+
+class SceneOutcome(Enum):
+    DISASTER = 0
+    RESOLUTION = 1
+    TRADE_OFF = 2
+
+
+@dataclass
+class SceneStructureItem:
+    type: SceneStructureItemType
+    part: int = 1
+    text: str = ''
+    conflicts: List[Conflict] = field(default_factory=list)
+    goals: List[SceneGoal] = field(default_factory=list)
+    outcome: Optional[SceneOutcome] = None
+
+
+@dataclass
+class SceneStructureAgenda(CharacterBased):
+    character_id: Optional[uuid.UUID] = None
+    items: List[SceneStructureItem] = field(default_factory=list)
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
+
+
 @dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     synopsis: str = ''
-    type: str = ''
+    type: SceneType = SceneType.ACTION
     sequence: int = 0
     beginning: str = ''
     middle: str = ''
     end: str = ''
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
+    agendas: List[SceneStructureAgenda] = field(default_factory=list)
     wip: bool = False
     plot_values: List[ScenePlotValue] = field(default_factory=list)
-    end_event: bool = True
     day: int = 1
-    beginning_type: str = ''
-    ending_hook: str = ''
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
     action_resolution: bool = False
     action_trade_off: bool = False
-    without_action_conflict: bool = False
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
     beat: Optional[StoryBeat] = None
@@ -808,7 +864,7 @@ class DocumentType(Enum):
 
 
 @dataclass
-class Document:
+class Document(CharacterBased):
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     type: DocumentType = DocumentType.DOCUMENT
@@ -825,17 +881,6 @@ class Document:
         self.data: Any = None
         self._character: Optional[Character] = None
         self._scene: Optional[Scene] = None
-
-    def character(self, novel: 'Novel') -> Optional[Character]:
-        if not self.character_id:
-            return None
-        if not self._character:
-            for c in novel.characters:
-                if c.id == self.character_id:
-                    self._character = c
-                    break
-
-        return self._character
 
     def scene(self, novel: 'Novel') -> Optional[Scene]:
         if not self.scene_id:

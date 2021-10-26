@@ -19,8 +19,7 @@ def test_editor_with_new_scene(qtbot):
     novel = Novel('Test-novel')
     view: SceneEditor = editor(qtbot, novel)
 
-    assert view.ui.cbType.currentIndex() == 1
-    assert view.ui.cbType.currentText() == 'action'
+    assert view.ui.wdgSceneStructure.rbScene.isChecked()
     assert view.ui.cbPov.currentIndex() == 0
     assert view.ui.cbPov.currentText() == 'Select POV ...'
 
@@ -32,7 +31,7 @@ def test_editor_with_none_values(qtbot):
 
     view: SceneEditor = editor(qtbot, novel, scene)
 
-    assert view.ui.cbType.currentIndex() == 0
+    assert view.ui.wdgSceneStructure.rbScene.isChecked()
 
 
 def test_display_scene_builder(qtbot):

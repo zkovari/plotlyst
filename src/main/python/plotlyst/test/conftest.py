@@ -22,9 +22,8 @@ import os
 import pytest
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Character, Scene, Chapter, ACTION_SCENE, \
-    REACTION_SCENE, \
-    Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotValue
+from src.main.python.plotlyst.core.domain import Character, Scene, Chapter, \
+    Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotValue, SceneType
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
@@ -80,7 +79,7 @@ def init_project():
     internalplot = Plot(text='Lesser', plot_type=PlotType.Internal)
     subplot = Plot(text='Love', plot_type=PlotType.Subplot)
     novel.plots.extend([mainplot, internalplot, subplot])
-    conflict = Conflict('Test', ConflictType.SOCIETY, pov=char_a)
+    conflict = Conflict('Test', ConflictType.SOCIETY, character_id=char_a.id)
     novel.conflicts.append(conflict)
 
     chapter_1 = Chapter(title='1')
@@ -88,12 +87,12 @@ def init_project():
     novel.chapters.append(chapter_1)
     novel.chapters.append(chapter_2)
     scene_1 = Scene(title='Scene 1', synopsis='Scene 1 synopsis', pov=char_a, characters=[char_b, char_c],
-                    plot_values=[ScenePlotValue(mainplot)], sequence=0, chapter=chapter_1, day=1, type=ACTION_SCENE,
+                    plot_values=[ScenePlotValue(mainplot)], sequence=0, chapter=chapter_1, day=1, type=SceneType.ACTION,
                     beginning='Beginning', middle='Middle', end='End', stage=novel.stages[1], conflicts=[conflict])
     scene_2 = Scene(title='Scene 2', synopsis='Scene 2 synopsis', pov=char_d, characters=[char_c, char_a],
                     plot_values=[ScenePlotValue(internalplot), ScenePlotValue(subplot)], sequence=1, chapter=chapter_2,
                     day=2,
-                    type=REACTION_SCENE,
+                    type=SceneType.REACTION,
                     beginning='Beginning', middle='Middle', end='End')
     novel.scenes.append(scene_1)
     novel.scenes.append(scene_2)

@@ -30,7 +30,7 @@ from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, ACTION_SCENE, REACTION_SCENE
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, SceneType
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
@@ -227,11 +227,11 @@ class SceneCard(Ui_SceneCard, Card):
         else:
             self.btnComments.setHidden(True)
 
-        if self.scene.type == ACTION_SCENE:
+        if self.scene.type == SceneType.ACTION:
             self.lblType.setPixmap(
                 IconRegistry.action_scene_icon(self.scene.action_resolution, self.scene.action_trade_off).pixmap(
                     QSize(24, 24, )))
-        elif self.scene.type == REACTION_SCENE:
+        elif self.scene.type == SceneType.REACTION:
             self.lblType.setPixmap(IconRegistry.reaction_scene_icon().pixmap(QSize(24, 24, )))
         else:
             self.lblType.clear()

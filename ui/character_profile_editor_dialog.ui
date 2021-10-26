@@ -50,7 +50,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QFrame" name="frame">
+        <widget class="QFrame" name="inventory">
          <property name="maximumSize">
           <size>
            <width>215</width>
@@ -58,9 +58,17 @@
           </size>
          </property>
          <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 255, 255);
-border-radius: 6px;
-border: 1 px solid black;</string>
+          <string notr="true">#inventory {
+	background-color: rgb(255, 255, 255);
+	border-radius: 6px;
+	border: 1 px solid black;
+}
+
+QToolButton {
+	background-color: rgb(255, 255, 255);
+	border-radius: 6px;
+	border: 1 px solid black;
+}</string>
          </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
