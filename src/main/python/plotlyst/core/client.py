@@ -34,7 +34,7 @@ from dataclasses_json import dataclass_json, Undefined
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    ConflictType, Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
+    Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
     default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue, SceneType, SceneStructureAgenda
 
 
@@ -162,15 +162,6 @@ class SceneInfo:
 class ChapterInfo:
     title: str
     id: uuid.UUID
-
-
-# @dataclass
-# class ConflictInfo:
-#     type: ConflictType
-#     id: uuid.UUID
-#     pov: uuid.UUID
-#     text: str = ''
-#     character: Optional[uuid.UUID] = None
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -389,18 +380,6 @@ class JsonClient:
         conflicts = []
         conflict_ids = {}
         for conflict in novel_info.conflicts:
-            # pov = characters_ids.get(str(conflict_info.pov))
-            # if not pov:
-            #     continue
-            # character = None
-            # if conflict_info.character:
-            #     character = characters_ids.get(str(conflict_info.character))
-            #     if character is None:
-            #         continue
-            #
-            # conflict = Conflict(text=conflict_info.text, type=conflict_info.type, id=conflict_info.id,
-            #                     pov=pov,
-            #                     character=character)
             conflicts.append(conflict)
             conflict_ids[str(conflict.id)] = conflict
 
