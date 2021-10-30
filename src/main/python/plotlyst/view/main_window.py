@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSide
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.locations_view import LocationsView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
@@ -58,7 +59,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.resize(1200, 830)
         if app_env.is_prod():
             self.setWindowState(Qt.WindowMaximized)
-        self.setWindowTitle('Plotlyst')
         self.novel = None
         self._current_text_widget = None
         last_novel_id = settings.last_novel_id()
@@ -136,6 +136,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.characters_view = CharactersView(self.novel)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
         self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
+        self.locations_view = LocationsView(self.novel)
         self.comments_view = CommentsView(self.novel)
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
@@ -149,12 +150,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnNovel.setIcon(IconRegistry.book_icon())
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnScenes.setIcon(IconRegistry.scene_icon())
+        self.btnLocations.setIcon(IconRegistry.location_icon())
         self.btnNotes.setIcon(IconRegistry.document_edition_icon())
         self.btnReport.setIcon(IconRegistry.reports_icon())
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)
         self.pageScenes.layout().addWidget(self.scenes_outline_view.widget)
+        self.pageLocations.layout().addWidget(self.locations_view.widget)
         self.pageNotes.layout().addWidget(self.notes_view.widget)
         self.pageReports.layout().addWidget(self.reports_view.widget)
 
@@ -177,6 +180,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
             self.scenes_outline_view.activate()
+        elif self.btnLocations.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageLocations)
+            self.locations_view.activate()
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
             self.notes_view.activate()

@@ -400,6 +400,17 @@ def default_stages() -> List[SceneStage]:
 
 
 @dataclass
+class Location:
+    name: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    children: List['Location'] = field(default_factory=list)
+    icon: str = ''
+    icon_color: str = 'black'
+    template_values: List[TemplateValue] = field(default_factory=list)
+    document: Optional['Document'] = None
+
+
+@dataclass
 class StoryStructure:
     title: str
     icon: str = ''
@@ -838,6 +849,49 @@ def default_character_profiles() -> List[ProfileTemplate]:
                             elements=fields)]
 
 
+sight_field = TemplateField('Sight', type=TemplateFieldType.LABELS,
+                            id=uuid.UUID('935e6595-27ae-426e-8b41-b315e9160ad9'),
+                            emoji=':eyes:',
+                            placeholder='Sight')
+
+location_name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':round_pushpin:',
+                                    placeholder='Name',
+                                    id=uuid.UUID('84f9bdee-c817-4caa-9e65-666cd0c4a546'), required=True,
+                                    highlighted=True,
+                                    frozen=True, show_label=False)
+
+smell_field = TemplateField('Smell', type=TemplateFieldType.LABELS,
+                            id=uuid.UUID('50245a33-599b-49c6-9746-094f12b4d667'),
+                            emoji=':nose:',
+                            placeholder='Smell')
+noise_field = TemplateField('Noise', type=TemplateFieldType.LABELS,
+                            id=uuid.UUID('76659d94-8753-4945-8d5c-e811189e3b49'),
+                            emoji=':speaker_high_volume:',
+                            placeholder='Noise')
+
+animals_field = TemplateField('Animals', type=TemplateFieldType.LABELS,
+                              id=uuid.UUID('3aa9cc09-312c-492a-bc19-6914bb1eeba6'),
+                              emoji=':paw_prints:',
+                              placeholder='Animals')
+nature_field = TemplateField('Nature', type=TemplateFieldType.LABELS,
+                             id=uuid.UUID('ab54bf84-1b69-4bb4-b1b4-c04ad2dd58b1'),
+                             emoji=':shamrock:',
+                             placeholder='Nature')
+
+
+def default_location_profiles() -> List[ProfileTemplate]:
+    fields = [ProfileElement(location_name_field, 0, 0, col_span=2, h_alignment=HAlignment.CENTER),
+              ProfileElement(sight_field, 1, 0),
+              ProfileElement(smell_field, 1, 1),
+              ProfileElement(noise_field, 2, 0),
+              ProfileElement(animals_field, 3, 0),
+              ProfileElement(nature_field, 3, 1),
+              ]
+    return [ProfileTemplate(title='Default location template',
+                            id=uuid.UUID('8a95aa51-a975-416e-83d4-e349b84565b1'),
+                            elements=fields)]
+
+
 @dataclass
 class CausalityItem(SelectionItem):
     links: List['CausalityItem'] = field(default_factory=list)
@@ -916,10 +970,12 @@ class Novel(NovelDescriptor):
     story_structure: StoryStructure = default_story_structures[0]
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
+    locations: List[Location] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
+    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)

@@ -30,7 +30,7 @@ from src.main.python.plotlyst.view.dialog.template import customize_character_pr
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterBackstoryCard
-from src.main.python.plotlyst.view.widget.template import ProfileTemplateView
+from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -61,7 +61,7 @@ class CharacterEditor:
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
 
-        self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[0])
+        self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
         self._init_profile_view()
 
         for backstory in self.character.backstory:
@@ -99,7 +99,7 @@ class CharacterEditor:
         updated = customize_character_profile(self.novel, profile_index, self.widget)
         if not updated:
             return
-        self.profile = ProfileTemplateView(self.character, self.novel.character_profiles[profile_index])
+        self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[profile_index])
 
         self.ui.wdgProfile.layout().takeAt(0)
         self._profile_container.deleteLater()
