@@ -114,7 +114,3 @@ class LocationsTreeModel(TreeItemModel):
         self.repo.update_novel(self.novel)
 
         self.modelReset.emit()
-
-    def _removeLocation(self, location: Location):
-        for child in location.children:
-            self._removeLocation(child)
