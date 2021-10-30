@@ -249,9 +249,13 @@ class TextSelectionWidget(QPushButton):
 
 
 class LabelsSelectionWidget(LabelsEditorWidget):
+    selectionChanged = pyqtSignal()
+
     def __init__(self, field: TemplateField, parent=None):
         self.field = field
         super(LabelsSelectionWidget, self).__init__(parent)
+        self._model.selection_changed.connect(self.selectionChanged.emit)
+        self._model.item_edited.connect(self.selectionChanged.emit)
 
     @overrides
     def items(self) -> List[SelectionItem]:
@@ -628,9 +632,34 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
 
 class ProfileTemplateView(_ProfileTemplateBase):
+    def __init__(self, values: List[TemplateValue], profile: ProfileTemplate):
+        super().__init__(profile)
+        self._name_widget: Optional[TemplateFieldWidget] = None
+        self.setProperty('mainFrame', True)
+        self.setValues(values)
+
+    def values(self) -> List[TemplateValue]:
+        values: List[TemplateValue] = []
+        for widget in self.widgets:
+            if widget is self._name_widget:
+                continue
+            values.append(TemplateValue(id=widget.field.id, value=widget.value()))
+
+        return values
+
+    def setValues(self, values: List[TemplateValue]):
+        ids = {}
+        for value in values:
+            ids[str(value.id)] = value.value
+
+        for widget in self.widgets:
+            if str(widget.field.id) in ids.keys():
+                widget.setValue(ids[str(widget.field.id)])
+
+
+class CharacterProfileTemplateView(ProfileTemplateView):
     def __init__(self, character: Character, profile: ProfileTemplate):
-        super(ProfileTemplateView, self).__init__(profile)
-        self.setObjectName('profileView')
+        super().__init__(character.template_values, profile)
         self.character = character
         self._name_widget: Optional[TemplateFieldWidget] = None
         self._avatar_widget: Optional[AvatarWidget] = None
@@ -663,12 +692,8 @@ class ProfileTemplateView(_ProfileTemplateBase):
         self._avatar_widget.setCharacter(self.character)
         if self._enneagram_widget:
             self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
-        self.setProperty('mainFrame', True)
-
-        self._selected: Optional[TemplateFieldWidget] = None
 
         self.setName(self.character.name)
-        self.setValues(self.character.template_values)
 
     def name(self) -> str:
         return self._name_widget.value()
@@ -678,24 +703,6 @@ class ProfileTemplateView(_ProfileTemplateBase):
 
     def avatarUpdated(self) -> bool:
         return self._avatar_widget.avatarUpdated
-
-    def values(self) -> List[TemplateValue]:
-        values: List[TemplateValue] = []
-        for widget in self.widgets:
-            if widget is self._name_widget:
-                continue
-            values.append(TemplateValue(id=widget.field.id, value=widget.value()))
-
-        return values
-
-    def setValues(self, values: List[TemplateValue]):
-        ids = {}
-        for value in values:
-            ids[str(value.id)] = value.value
-
-        for widget in self.widgets:
-            if str(widget.field.id) in ids.keys():
-                widget.setValue(ids[str(widget.field.id)])
 
     def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
         update_desire = False

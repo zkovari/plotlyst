@@ -35,7 +35,8 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
-    default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue, SceneType, SceneStructureAgenda
+    default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
+    Location, default_location_profiles
 
 
 class ApplicationDbVersion(Enum):
@@ -171,10 +172,12 @@ class NovelInfo:
     story_structure: uuid.UUID = default_story_structures[0].id
     scenes: List[uuid.UUID] = field(default_factory=list)
     characters: List[uuid.UUID] = field(default_factory=list)
+    locations: List[Location] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
+    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
     tags: List[SelectionItem] = field(default_factory=default_tags)
@@ -461,8 +464,9 @@ class JsonClient:
                 scenes.append(scene)
         return Novel(title=project_novel_info.title, id=novel_info.id,
                      plots=novel_info.plots, characters=characters,
-                     scenes=scenes, chapters=chapters, stages=novel_info.stages,
+                     scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
                      story_structure=story_structure, character_profiles=novel_info.character_profiles,
+                     location_profiles=novel_info.location_profiles,
                      conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags,
                      documents=novel_info.documents)
 
@@ -487,9 +491,11 @@ class JsonClient:
         novel_info = NovelInfo(id=novel.id, scenes=[x.id for x in novel.scenes],
                                plots=novel.plots,
                                characters=[x.id for x in novel.characters],
+                               locations=novel.locations,
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
                                stages=novel.stages, story_structure=novel.story_structure.id,
                                character_profiles=novel.character_profiles,
+                               location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,
                                scene_goals=novel.scene_goals, tags=novel.tags, documents=novel.documents)
 

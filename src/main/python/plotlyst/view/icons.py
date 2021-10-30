@@ -110,7 +110,7 @@ class IconRegistry:
 
     @staticmethod
     def location_icon() -> QIcon:
-        return qtawesome.icon('fa5s.location-arrow')
+        return qtawesome.icon('fa5s.location-arrow', color_on='darkBlue')
 
     @staticmethod
     def scene_icon() -> QIcon:
