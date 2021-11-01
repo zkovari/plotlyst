@@ -25,7 +25,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Location
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
-from src.main.python.plotlyst.model.tree_model import TreeItemModel
+from src.main.python.plotlyst.model.tree_model import TreeItemModel, NodeMimeData
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -36,10 +36,18 @@ class LocationNode(Node):
         self.location = location
 
 
+class LocationMimeData(NodeMimeData):
+    def __init__(self, node: LocationNode):
+        self.location = node.location
+        super(LocationMimeData, self).__init__(node)
+
+
 class LocationsTreeModel(TreeItemModel):
+    MimeType: str = 'application/location'
 
     def __init__(self, novel: Novel):
         super(LocationsTreeModel, self).__init__()
+        self.dragAndDropEnabled = True
         self.novel = novel
         self._action_index: Optional[QModelIndex] = None
         self.repo = RepositoryPersistenceManager.instance()
@@ -71,6 +79,38 @@ class LocationsTreeModel(TreeItemModel):
                 and self._action_index.parent() == index.parent():
             if role == Qt.DecorationRole:
                 return IconRegistry.plus_circle_icon('lightGrey')
+
+    @overrides
+    def dropMimeData(self, data: LocationMimeData, action: Qt.DropAction, row: int, column: int,
+                     parent: QModelIndex) -> bool:
+        old_parent: Node = data.node.parent
+        if old_parent is self.root:
+            old_index = self.novel.locations.index(data.location)
+            self.novel.locations.remove(data.location)
+        elif isinstance(old_parent, LocationMimeData):
+            old_index = old_parent.location.children.index(data.location)
+            old_parent.location.children.remove(data.location)
+        else:
+            return False
+
+        node_changed: bool = super().dropMimeData(data, action, row, column, parent)
+        if not node_changed:
+            return False
+
+        if data.node.parent is old_parent and old_index < row:
+            row -= 1
+
+        if data.node.parent is self.root:
+            self.novel.locations.insert(row, data.location)
+        else:
+            data.node.parent.location.children.insert(row, data.location)
+
+        self.repo.update_novel(self.novel)
+        return True
+
+    @overrides
+    def _mimeDataClass(self):
+        return LocationMimeData
 
     def displayAction(self, index: QModelIndex):
         if index.row() >= 0:
