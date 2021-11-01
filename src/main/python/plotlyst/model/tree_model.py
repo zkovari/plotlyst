@@ -17,11 +17,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any
+import pickle
+from typing import Any, List
 
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex, QVariant, Qt
+from PyQt5.QtCore import QAbstractItemModel, QModelIndex, QVariant, Qt, QMimeData, QByteArray
 from anytree import Node
 from overrides import overrides
+
+
+class NodeMimeData(QMimeData):
+    def __init__(self, node: Node):
+        self.node = node
+        super(NodeMimeData, self).__init__()
 
 
 class TreeItemModel(QAbstractItemModel):
@@ -30,6 +37,7 @@ class TreeItemModel(QAbstractItemModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.root = Node('root')
+        self.dragAndDropEnabled: bool = False
 
     def rootNode(self) -> Node:
         return self.root
@@ -104,9 +112,64 @@ class TreeItemModel(QAbstractItemModel):
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        if not index.isValid():
-            return Qt.NoItemFlags
+        flags = super().flags(index)
+        if self.dragAndDropEnabled:
+            return flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
         return super().flags(index)
+
+    @overrides
+    def mimeTypes(self) -> List[str]:
+        return [self.MimeType]
+
+    @overrides
+    def canDropMimeData(self, data: NodeMimeData, action: Qt.DropAction, row: int, column: int,
+                        parent: QModelIndex) -> bool:
+        if all(not data.hasFormat(x) for x in self.mimeTypes()):
+            return False
+        if not isinstance(data, self._mimeDataClass()):
+            return False
+        if parent.isValid():
+            if data.node is parent.internalPointer() or (data.node.parent is parent.internalPointer() and row < 0):
+                return False
+
+        return True
+
+    @overrides
+    def mimeData(self, indexes: List[QModelIndex]) -> QMimeData:
+        node = indexes[0].internalPointer()
+        clazz = self._mimeDataClass()
+        mime_data = clazz(node)
+        mime_data.setData(self.MimeType, QByteArray(pickle.dumps(node)))
+        return mime_data
+
+    @overrides
+    def dropMimeData(self, data: NodeMimeData, action: Qt.DropAction, row: int, column: int,
+                     parent: QModelIndex) -> bool:
+        if parent.isValid():
+            parent_node = parent.internalPointer()
+        else:
+            parent_node = self.root
+
+        node: Node = data.node
+        node.parent = parent_node
+        if node and row >= 0:
+            self._repositionNodeUnder(node, parent_node, row)
+
+        self.modelReset.emit()
+        return True
 
     def rootIndex(self) -> QModelIndex:
         return self.index(0, 0, QModelIndex())
+
+    def _mimeDataClass(self):
+        return NodeMimeData
+
+    def _repositionNodeUnder(self, node, parent, row: int):
+        children_list = list(parent.children)
+        old_index = children_list.index(node)
+        new_index = row
+        if old_index < new_index:
+            new_index -= 1
+        children_list.pop(old_index)
+        children_list.insert(new_index, node)
+        parent.children = children_list
