@@ -21,7 +21,7 @@ def test_add_new_doc(qtbot, filled_window: MainWindow):
     previous_size = len(view.novel.documents)
 
     view.ui.btnAdd.click()
-    click_on_item(qtbot, view.ui.treeDocuments, 0, 1, QModelIndex())
+    click_on_item(qtbot, view.ui.treeDocuments, 0, 2, QModelIndex())
     trigger_action_on_popup(qtbot, 'Document')
 
     persisted_novel = client.fetch_novel(view.novel.id)
@@ -33,5 +33,5 @@ def test_add_new_doc(qtbot, filled_window: MainWindow):
 
 def test_add_new_reversed_cause_and_effect_doc(qtbot, filled_window: MainWindow):
     view: DocumentsView = go_to_docs(filled_window)
-    click_on_item(qtbot, view.ui.treeDocuments, 0, 1, QModelIndex())
+    click_on_item(qtbot, view.ui.treeDocuments, 0, 2, QModelIndex())
     trigger_action_on_popup(qtbot, 'Reversed Cause and Effect')

@@ -33,6 +33,7 @@ from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -51,7 +52,8 @@ class DocumentsView(AbstractNovelView):
         self.model = DocumentsTreeModel(self.novel)
         self.ui.treeDocuments.setModel(self.model)
         self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.ui.treeDocuments.setColumnWidth(1, 20)
+        self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColMenu, 20)
+        self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColPlus, 20)
         self.ui.treeDocuments.clicked.connect(self._doc_clicked)
         self.ui.treeDocuments.expandAll()
         self.model.modelReset.connect(self.refresh)
@@ -104,8 +106,17 @@ class DocumentsView(AbstractNovelView):
         self.ui.btnRemove.setEnabled(True)
         if index.column() == 0:
             self._edit(index)
-        elif index.column() == 1:
+        elif index.column() == DocumentsTreeModel.ColMenu:
+            self._show_menu_popup(index)
+        elif index.column() == DocumentsTreeModel.ColPlus:
             self._show_docs_popup(index)
+
+    def _show_menu_popup(self, index: QModelIndex):
+        rect: QRect = self.ui.treeDocuments.visualRect(index)
+        menu = QMenu(self.ui.treeDocuments)
+        menu.addAction(IconRegistry.icons_icon(), 'Edit icon', lambda: self._change_icon(index))
+
+        menu.popup(self.ui.treeDocuments.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
     def _show_docs_popup(self, index: QModelIndex):
         def add_character(char_index: QModelIndex):
@@ -166,6 +177,14 @@ class DocumentsView(AbstractNovelView):
                 widget = CauseAndEffectDiagram(self._current_doc.data, reversed_=True)
                 widget.model.changed.connect(self._save)
                 self.ui.customEditorPage.layout().addWidget(widget)
+
+    def _change_icon(self, index: QModelIndex):
+        result = IconSelectorDialog().display()
+        if result:
+            node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
+            node.document.icon = result[0]
+            node.document.icon_color = result[1].name()
+            self.repo.update_novel(self.novel)
 
     def _save(self):
         if not self._current_doc:

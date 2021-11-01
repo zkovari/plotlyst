@@ -33,7 +33,7 @@
     <widget class="QWidget" name="wdgDocs" native="true">
      <property name="maximumSize">
       <size>
-       <width>210</width>
+       <width>260</width>
        <height>16777215</height>
       </size>
      </property>
@@ -101,9 +101,15 @@
       </item>
       <item>
        <widget class="ActionBasedTreeView" name="treeDocuments">
+        <property name="minimumSize">
+         <size>
+          <width>250</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>200</width>
+          <width>250</width>
           <height>16777215</height>
          </size>
         </property>

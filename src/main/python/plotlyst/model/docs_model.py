@@ -47,6 +47,9 @@ class DocumentMimeData(NodeMimeData):
 class DocumentsTreeModel(TreeItemModel):
     MimeType: str = 'application/document'
 
+    ColMenu: int = 1
+    ColPlus: int = 2
+
     def __init__(self, novel: Novel):
         super(DocumentsTreeModel, self).__init__()
         self.dragAndDropEnabled = True
@@ -63,7 +66,7 @@ class DocumentsTreeModel(TreeItemModel):
 
     @overrides
     def columnCount(self, parent: QModelIndex) -> int:
-        return 2
+        return 3
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
@@ -82,10 +85,13 @@ class DocumentsTreeModel(TreeItemModel):
                 if doc.icon:
                     return IconRegistry.from_name(doc.icon, doc.icon_color)
             return super(DocumentsTreeModel, self).data(index, role)
-        if index.column() == 1 and self._action_index and index.row() == self._action_index.row() \
+        if index.column() > 0 and self._action_index and index.row() == self._action_index.row() \
                 and self._action_index.parent() == index.parent():
             if role == Qt.DecorationRole:
-                return IconRegistry.plus_circle_icon('lightGrey')
+                if index.column() == self.ColMenu:
+                    return IconRegistry.dots_icon('grey')
+                if index.column() == self.ColPlus:
+                    return IconRegistry.plus_circle_icon()
 
     @overrides
     def _mimeDataClass(self):
@@ -127,7 +133,8 @@ class DocumentsTreeModel(TreeItemModel):
             self._action_index = index
         else:
             self._action_index = None
-        emit_column_changed_in_tree(self, 1, index)
+        emit_column_changed_in_tree(self, self.ColMenu, index)
+        emit_column_changed_in_tree(self, self.ColPlus, index)
 
     def insertDoc(self, doc: Document) -> QModelIndex:
         DocumentNode(doc, self.root)

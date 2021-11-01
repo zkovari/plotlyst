@@ -389,6 +389,14 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.format-header-2')
 
     @staticmethod
+    def dots_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.dots-horizontal', color)
+
+    @staticmethod
+    def icons_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.icons', color)
+
+    @staticmethod
     def heading_3_icon() -> QIcon:
         return IconRegistry.from_name('mdi.format-header-3', mdi_scale=1)
 

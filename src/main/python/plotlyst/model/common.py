@@ -146,7 +146,7 @@ class SelectionItemsModel(QAbstractTableModel):
             if item.icon:
                 return IconRegistry.from_name(item.icon,
                                               item.icon_color)
-            return IconRegistry.from_name('fa5s.icons', color='lightgrey')
+            return IconRegistry.icons_icon('lightgrey')
         if index.column() == self.ColIcon and role == Qt.BackgroundRole:
             if item.icon and item.icon_color in ['#ffffff', 'white']:
                 return QBrush(QColor('lightGrey'))
