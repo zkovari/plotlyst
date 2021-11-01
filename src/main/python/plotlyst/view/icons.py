@@ -401,6 +401,14 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.format-header-3', mdi_scale=1)
 
     @staticmethod
+    def template_icon() -> QIcon:
+        return IconRegistry.from_name('ei.magic', color='#35a7ff')
+
+    @staticmethod
+    def circle_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.circle-medium')
+
+    @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
         if name.startswith('md'):

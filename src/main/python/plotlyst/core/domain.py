@@ -327,6 +327,7 @@ class SceneStructureItemType(Enum):
     REACTION = 3
     DILEMMA = 4
     DECISION = 5
+    BEAT = 6
 
 
 class SceneOutcome(Enum):
@@ -349,6 +350,8 @@ class SceneStructureItem:
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     items: List[SceneStructureItem] = field(default_factory=list)
+    beginning_emotion: int = NEUTRAL
+    ending_emotion: int = NEUTRAL
 
     def __post_init__(self):
         self._character: Optional[Character] = None

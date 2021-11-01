@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SceneBeatItemWidget</class>
+ <widget class="QWidget" name="SceneBeatItemWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>370</width>
+    <height>138</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>3</number>
+   </property>
+   <property name="leftMargin">
+    <number>2</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
+    <number>2</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" name="layoutTop">
+     <property name="spacing">
+      <number>2</number>
+     </property>
+     <item>
+      <widget class="QToolButton" name="btnPlaceholder">
+       <property name="styleSheet">
+        <string notr="true">border: 0px;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="layoutMiddle">
+     <property name="spacing">
+      <number>2</number>
+     </property>
+     <item>
+      <widget class="QToolButton" name="btnIcon">
+       <property name="styleSheet">
+        <string notr="true">border: 0px;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="AutoAdjustableTextEdit" name="text"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>AutoAdjustableTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

@@ -79,9 +79,6 @@ class SceneEditor(QObject):
         self.ui.btnVeryHappy.setFont(self._emoji_font)
         self.ui.btnVeryHappy.setText(emoji.emojize(':smiling_face_with_smiling_eyes:'))
 
-        # self.ui.btnDisaster.setIcon(IconRegistry.disaster_icon(color='grey'))
-        # self.ui.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
-        # self.ui.btnTradeOff.setIcon(IconRegistry.tradeoff_icon(color='grey'))
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
@@ -275,97 +272,6 @@ class SceneEditor(QObject):
 
         self._save_enabled = True
 
-    def _on_type_changed(self, text: str):
-        pass
-        # if text == ACTION_SCENE:
-        #     pass
-        # self.ui.lblType1.setText('Goal:')
-        # self.ui.textEvent1.setPlaceholderText('Scene goal')
-        # self.ui.lblType2.setText('Conflict:')
-        # if not self.scene.without_action_conflict:
-        #     self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
-        # if self.scene.action_resolution:
-        #     self.ui.btnResolution.setChecked(True)
-        # elif self.scene.action_trade_off:
-        #     self.ui.btnTradeOff.setChecked(True)
-        # else:
-        #     self.ui.btnDisaster.setChecked(True)
-        # self._outcome_toggled()
-
-        # self.ui.wdgOutcomeContainer.setVisible(True)
-        # for btn in self.ui.btnGroupOutcome.buttons():
-        #     btn.setVisible(True)
-        # self.ui.cbConflict.setVisible(True)
-        # self.ui.cbConflict.setChecked(not self.scene.without_action_conflict)
-        # self._on_conflict_toggled(self.ui.cbConflict.isChecked())
-        # self.ui.btnAddConflict.setText('Add conflict')
-
-        # item = self.ui.vLayoutGoalConflict.itemAt(1)
-        # if item and isinstance(item.widget(), SceneGoalsWidget):
-        #     self.ui.vLayoutGoalConflict.removeItem(item)
-        #     self.ui.vLayoutGoalConflict.insertWidget(1, item.widget())
-        #     item.widget().btnEdit.setText('Add goal')
-
-        # return
-        # elif text == REACTION_SCENE:
-        #     pass
-        # self.ui.wdgOutcomeContainer.setHidden(True)
-        # for btn in self.ui.btnGroupOutcome.buttons():
-        #     btn.setHidden(True)
-        # self.ui.lblType1.setText('Reaction:')
-        # self.ui.textEvent1.setPlaceholderText('Reaction at the beginning')
-        # self.ui.lblType2.setText('Dilemma:')
-        # self.ui.textEvent2.setPlaceholderText('Dilemma throughout the scene')
-        # self.ui.lblType3.setText('Decision:')
-        # self.ui.textEvent3.setPlaceholderText('Decision in the end')
-        # self.ui.btnAddConflict.setText('Add cause')
-
-        # item = self.ui.vLayoutGoalConflict.itemAt(1)
-        # if item and isinstance(item.widget(), SceneGoalsWidget):
-        #     self.ui.vLayoutGoalConflict.removeItem(item)
-        #     self.ui.vLayoutGoalConflict.insertWidget(1, item.widget())
-        #     item.widget().btnEdit.setText('Add new goal')
-
-        # else:
-        #     pass
-        # self.ui.lblType1.setText('Beginning:')
-        # self.ui.textEvent1.setPlaceholderText('Beginning event of the scene')
-        # self.ui.lblType2.setText('Middle:')
-        # self.ui.textEvent2.setPlaceholderText('Middle part of the scene')
-        # self.ui.lblType3.setText('End:')
-        # self.ui.textEvent3.setPlaceholderText('Ending of the scene')
-        # self.ui.btnAddConflict.setText('Add conflict')
-
-        # self.ui.textEvent2.setEnabled(True)
-        # self.ui.lblType2.setVisible(True)
-        # self.ui.wdgOutcomeContainer.setHidden(True)
-        # for btn in self.ui.btnGroupOutcome.buttons():
-        #     btn.setHidden(True)
-        # self.ui.cbConflict.setHidden(True)
-
-        # self.ui.btnAddConflict.setVisible(True)
-        # self.ui.wdgConflicts.setVisible(True)
-
-    # def _outcome_toggled(self):
-    #     if self.ui.btnDisaster.isChecked():
-    #         self.ui.lblType3.setText('Disaster:')
-    #         self.ui.textEvent3.setPlaceholderText('Disaster in the end')
-    #     elif self.ui.btnResolution.isChecked():
-    #         self.ui.lblType3.setText('Resolution:')
-    #         self.ui.textEvent3.setPlaceholderText('Resolution in the end')
-    #     elif self.ui.btnTradeOff.isChecked():
-    #         self.ui.lblType3.setText('Trade-off:')
-    #         self.ui.textEvent3.setPlaceholderText('Bittersweet ending')
-
-    # def _on_conflict_toggled(self, toggled: bool):
-    #     if toggled:
-    #         self.ui.textEvent2.setPlaceholderText('Conflict throughout the scene')
-    #     else:
-    #         self.ui.textEvent2.setText('')
-    #         self.ui.textEvent2.setPlaceholderText('Middle part of the scene')
-    #     self.ui.btnAddConflict.setVisible(toggled)
-    #     self.ui.wdgConflicts.setVisible(toggled)
-
     def _page_toggled(self):
         if self.ui.btnAttributes.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageStructure)
@@ -417,11 +323,8 @@ class SceneEditor(QObject):
                         QComboBox {border: 0px black solid;}
                         ''')
         self._character_changed()
-        # self._character_conflict_widget.refresh()
         if self._save_enabled:
             self.ui.wdgSceneStructure.updatePov()
-            # self.scene.conflicts.clear()
-            # self._conflicts_changed()
 
     def _update_pov_avatar(self):
         if self.scene.pov:
@@ -452,15 +355,6 @@ class SceneEditor(QObject):
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.scene.agendas.clear()
         self.scene.agendas.extend(self.ui.wdgSceneStructure.agendas())
-        # self.scene.type = self.ui.cbType.currentText()
-        # self.scene.beginning = self.ui.textEvent1.toPlainText()
-        # if self.scene.type == ACTION_SCENE:
-        #     pass
-        # self.scene.without_action_conflict = not self.ui.cbConflict.isChecked()
-        # self.scene.action_resolution = self.ui.btnResolution.isChecked()
-        # self.scene.action_trade_off = self.ui.btnTradeOff.isChecked()
-        # self.scene.middle = self.ui.textEvent2.toPlainText()
-        # self.scene.end = self.ui.textEvent3.toPlainText()
         self.scene.day = self.ui.sbDay.value()
 
         if self.ui.cbPivotal.currentIndex() > 0:
@@ -501,15 +395,6 @@ class SceneEditor(QObject):
             self.scene.document.content = self.ui.textNotes.textEditor.toHtml()
             json_client.save_document(self.novel, self.scene.document)
         self._new_scene = False
-
-    # def _conflicts_changed(self):
-    #     self.ui.wdgConflicts.clear()
-    #     for conflict in self.scene.conflicts:
-    #         self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))
-
-    # def _new_conflict(self, conflict: Conflict):
-    #     self.ui.wdgConflicts.addLabel(ConflictLabel(conflict))
-    #     self.ui.btnAddConflict.menu().hide()
 
     def _on_close(self):
         self.scene.builder_elements.clear()

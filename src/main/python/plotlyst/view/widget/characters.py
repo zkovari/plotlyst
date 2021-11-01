@@ -20,19 +20,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Iterable, List
 
+import emoji
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy
+from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
-    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, SceneStructureItem, Scene
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, SceneStructureItem, Scene, NEUTRAL
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
@@ -405,3 +407,44 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
     def _remove(self):
         if ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
             self.deleteRequested.emit(self)
+
+
+class CharacterEmotionButton(QToolButton):
+    def __init__(self, parent=None):
+        super(CharacterEmotionButton, self).__init__(parent)
+        self._value = NEUTRAL
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setFixedSize(32, 32)
+        menu = QMenu(self)
+        self.setMenu(menu)
+        menu.setFixedWidth(32)
+        menu.setStyleSheet('padding-left: -32px;')
+        self.setPopupMode(QToolButton.InstantPopup)
+        if platform.is_windows():
+            self._emoji_font = emoji_font(14)
+        else:
+            self._emoji_font = emoji_font(20)
+        self.setFont(self._emoji_font)
+        menu.setFont(self._emoji_font)
+        menu.addAction(emoji.emojize(':smiling_face_with_smiling_eyes:'), lambda: self.setValue(VERY_HAPPY))
+        menu.addAction(emoji.emojize(':slightly_smiling_face:'), lambda: self.setValue(HAPPY))
+        menu.addAction(emoji.emojize(':neutral_face:'), lambda: self.setValue(NEUTRAL))
+        menu.addAction(emoji.emojize(':worried_face:'), lambda: self.setValue(UNHAPPY))
+        menu.addAction(emoji.emojize(':fearful_face:'), lambda: self.setValue(VERY_UNHAPPY))
+
+    def value(self) -> int:
+        return self._value
+
+    def setValue(self, value: int):
+        if value == VERY_UNHAPPY:
+            self.setText(emoji.emojize(":fearful_face:"))
+        elif value == UNHAPPY:
+            self.setText(emoji.emojize(":worried_face:"))
+        elif value == NEUTRAL:
+            self.setText(emoji.emojize(":neutral_face:"))
+        elif value == HAPPY:
+            self.setText(emoji.emojize(":slightly_smiling_face:"))
+        elif value == VERY_HAPPY:
+            self.setText(emoji.emojize(":smiling_face_with_smiling_eyes:"))
+
+        self._value = value
