@@ -328,6 +328,10 @@ class SceneStructureItemType(Enum):
     DILEMMA = 4
     DECISION = 5
     BEAT = 6
+    INCITING_INCIDENT = 7
+    RISING_ACTION = 8
+    CRISIS = 9
+    TICKING_CLOCK = 10
 
 
 class SceneOutcome(Enum):
@@ -962,6 +966,7 @@ def default_documents() -> List[Document]:
 def default_tags() -> List[SelectionItem]:
     return [SelectionItem('Flashback', icon='fa5s.backward', icon_color='white', color_hexa='#1b263b'),
             SelectionItem('Flashforward', icon='fa5s.forward', icon_color='white', color_hexa='#1b998b'),
+            SelectionItem('Ticking clock', icon='mdi.clock-alert-outline', icon_color='#f7cb15'),
             SelectionItem('Foreshadowing', icon='mdi.crystal-ball', icon_color='#76bed0'),
             SelectionItem('Cliffhanger', icon='mdi.target-account', icon_color='#f7cb15'),
             SelectionItem('Backstory', icon='mdi.archive', icon_color='#9a6d38'),

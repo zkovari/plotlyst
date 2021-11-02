@@ -409,6 +409,22 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.circle-medium')
 
     @staticmethod
+    def inciting_incident_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.bell-alert-outline', '#a2ad59')
+
+    @staticmethod
+    def rising_action_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.chart-line', '#08605f')
+
+    @staticmethod
+    def crisis_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.arrow-decision-outline', '#ce2d4f')
+
+    @staticmethod
+    def tickling_clock_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.clock-alert-outline', '#f7cb15')
+
+    @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
         if name.startswith('md'):

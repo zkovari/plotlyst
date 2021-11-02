@@ -250,7 +250,7 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
 
     view.characters_distribution.btnTags.click()
     model = view.characters_distribution.tblSceneDistribution.model()
-    assert model.rowCount() == 6
+    assert model.rowCount() == 7
 
 
 def test_add_scene_comment(qtbot, filled_window: MainWindow):

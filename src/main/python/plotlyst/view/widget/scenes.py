@@ -302,6 +302,33 @@ class DecisionSceneItemWidget(SceneGoalItemWidget):
         self.text.setPlaceholderText('New goal and action')
 
 
+class IncitingIncidentSceneItemWidget(SceneStructureItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super().__init__(novel, scene_structure_item, placeholder='Inciting incident of the scene', parent=parent)
+        self.btnIcon.setIcon(IconRegistry.inciting_incident_icon())
+
+
+class RisingActionSceneItemWidget(SceneStructureItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super().__init__(novel, scene_structure_item, placeholder='Increasing tension throughout the scene',
+                         parent=parent)
+        self.btnIcon.setIcon(IconRegistry.rising_action_icon())
+
+
+class CrisisSceneItemWidget(SceneStructureItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super().__init__(novel, scene_structure_item,
+                         placeholder='The impossible decision of two good or two equally bad outcomes', parent=parent)
+        self.btnIcon.setIcon(IconRegistry.crisis_icon())
+
+
+class TicklingClockSceneItemWidget(SceneStructureItemWidget):
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super().__init__(novel, scene_structure_item, placeholder='Ticking clock is activated to increase tension',
+                         parent=parent)
+        self.btnIcon.setIcon(IconRegistry.tickling_clock_icon())
+
+
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     MimeType: str = 'application/structure-item'
 
@@ -337,6 +364,11 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnDilemma.setIcon(IconRegistry.dilemma_icon())
         self.btnDecision.setIcon(IconRegistry.decision_icon())
 
+        self.btnIncitingIncident.setIcon(IconRegistry.inciting_incident_icon())
+        self.btnRisingAction.setIcon(IconRegistry.rising_action_icon())
+        self.btnCrisis.setIcon(IconRegistry.crisis_icon())
+        self.btnTickingClock.setIcon(IconRegistry.tickling_clock_icon())
+
         self._addPlaceholder(self.wdgBeginning)
         self._addPlaceholder(self.wdgMiddle)
         self._addPlaceholder(self.wdgEnd)
@@ -347,6 +379,10 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnReaction.installEventFilter(self)
         self.btnDilemma.installEventFilter(self)
         self.btnDecision.installEventFilter(self)
+        self.btnIncitingIncident.installEventFilter(self)
+        self.btnRisingAction.installEventFilter(self)
+        self.btnCrisis.installEventFilter(self)
+        self.btnTickingClock.installEventFilter(self)
 
         self.btnGroupType.buttonClicked.connect(self._type_clicked)
         self.btnGroupType.buttonToggled.connect(self._type_toggled)
@@ -382,6 +418,14 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                     widget = DilemmaSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.DECISION:
                     widget = DecisionSceneItemWidget(self.novel, item)
+                elif item.type == SceneStructureItemType.INCITING_INCIDENT:
+                    widget = IncitingIncidentSceneItemWidget(self.novel, item)
+                elif item.type == SceneStructureItemType.RISING_ACTION:
+                    widget = RisingActionSceneItemWidget(self.novel, item)
+                elif item.type == SceneStructureItemType.CRISIS:
+                    widget = CrisisSceneItemWidget(self.novel, item)
+                elif item.type == SceneStructureItemType.TICKING_CLOCK:
+                    widget = TicklingClockSceneItemWidget(self.novel, item)
                 else:
                     widget = SceneStructureItemWidget(self.novel, item)
                 widgets_per_parts.get(item.part, self.wdgEnd).layout().addWidget(widget)
@@ -481,6 +525,14 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             return SceneStructureItemType.DILEMMA
         if dragged is self.btnDecision:
             return SceneStructureItemType.DECISION
+        if dragged is self.btnIncitingIncident:
+            return SceneStructureItemType.INCITING_INCIDENT
+        if dragged is self.btnRisingAction:
+            return SceneStructureItemType.RISING_ACTION
+        if dragged is self.btnCrisis:
+            return SceneStructureItemType.CRISIS
+        if dragged is self.btnTickingClock:
+            return SceneStructureItemType.TICKING_CLOCK
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent):
@@ -526,10 +578,16 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             widget = DecisionSceneItemWidget(self.novel, SceneStructureItem(data))
         elif data == SceneStructureItemType.BEAT:
             widget = SceneStructureItemWidget(self.novel, SceneStructureItem(data))
+        elif data == SceneStructureItemType.INCITING_INCIDENT:
+            widget = IncitingIncidentSceneItemWidget(self.novel, SceneStructureItem(data))
+        elif data == SceneStructureItemType.RISING_ACTION:
+            widget = RisingActionSceneItemWidget(self.novel, SceneStructureItem(data))
+        elif data == SceneStructureItemType.CRISIS:
+            widget = CrisisSceneItemWidget(self.novel, SceneStructureItem(data))
+        elif data == SceneStructureItemType.TICKING_CLOCK:
+            widget = TicklingClockSceneItemWidget(self.novel, SceneStructureItem(data))
         else:
             raise ValueError('Unknown scene structure item')
-
-        parent = placeholder.parent()
 
         self._addWidget(placeholder, widget)
 
