@@ -823,6 +823,9 @@ QToolButton:disabled {
             <property name="checkable">
              <bool>true</bool>
             </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
             <attribute name="buttonGroup">
              <string notr="true">btnGroupPages</string>
             </attribute>
@@ -836,6 +839,9 @@ QToolButton:disabled {
             <property name="checkable">
              <bool>true</bool>
             </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
             <attribute name="buttonGroup">
              <string notr="true">btnGroupPages</string>
             </attribute>
@@ -847,6 +853,9 @@ QToolButton:disabled {
              <string>Builder</string>
             </property>
             <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="base" stdset="0">
              <bool>true</bool>
             </property>
             <attribute name="buttonGroup">
@@ -1325,13 +1334,13 @@ QToolButton:disabled {
  </widget>
  <customwidgets>
   <customwidget>
-   <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
+   <class>RotatedButton</class>
+   <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
-   <class>RotatedButton</class>
-   <extends>QPushButton</extends>
+   <class>RichTextEditor</class>
+   <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
