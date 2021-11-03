@@ -1022,6 +1022,9 @@ background-color: rgb(255, 255, 255);
        <property name="deconstructive" stdset="0">
         <bool>true</bool>
        </property>
+       <property name="base" stdset="0">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -1051,6 +1054,9 @@ background-color: rgb(255, 255, 255);
        <property name="text">
         <string>Cancel</string>
        </property>
+       <property name="base" stdset="0">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -1068,6 +1074,9 @@ background-color: rgb(255, 255, 255);
         <string>Save</string>
        </property>
        <property name="positive" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="base" stdset="0">
         <bool>true</bool>
        </property>
       </widget>
