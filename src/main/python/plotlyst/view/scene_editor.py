@@ -285,7 +285,7 @@ class SceneEditor(QObject):
         if self.scene.document:
             if not self.scene.document.loaded:
                 json_client.load_document(self.novel, self.scene.document)
-                self.ui.textNotes.setText(self.scene.document.content, self.scene.title, title_read_only=True)
+            self.ui.textNotes.setText(self.scene.document.content, self.scene.title, title_read_only=True)
         else:
             self.ui.textNotes.clear()
 
