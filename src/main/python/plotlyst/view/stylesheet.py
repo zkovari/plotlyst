@@ -41,6 +41,10 @@ QPushButton:pressed[base=true] {
                                       stop: 0 #d7d8db, stop: 1 #f6f7fa);
 }
 
+QPushButton:checked[base=true] {
+    background-color: lightgrey;
+}
+
 QPushButton:disabled[base=true] {
     opacity: 0.65;
 }
