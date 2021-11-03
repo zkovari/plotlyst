@@ -417,8 +417,7 @@ class CharacterEmotionButton(QToolButton):
         self.setFixedSize(32, 32)
         menu = QMenu(self)
         self.setMenu(menu)
-        menu.setFixedWidth(32)
-        menu.setStyleSheet('padding-left: -32px;')
+        menu.setMaximumWidth(64)
         self.setPopupMode(QToolButton.InstantPopup)
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
