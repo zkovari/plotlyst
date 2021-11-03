@@ -581,6 +581,9 @@ Clock</string>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_7">
+         <property name="spacing">
+          <number>2</number>
+         </property>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_6">
            <item>
@@ -642,7 +645,7 @@ Clock</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_8">
               <property name="spacing">
-               <number>3</number>
+               <number>1</number>
               </property>
               <property name="leftMargin">
                <number>2</number>
@@ -722,7 +725,7 @@ Clock</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_9">
               <property name="spacing">
-               <number>3</number>
+               <number>1</number>
               </property>
               <property name="leftMargin">
                <number>2</number>
@@ -802,7 +805,7 @@ Clock</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <property name="spacing">
-               <number>3</number>
+               <number>1</number>
               </property>
               <property name="leftMargin">
                <number>2</number>
