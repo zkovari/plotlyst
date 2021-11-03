@@ -37,6 +37,12 @@
      <property name="autoFormatting">
       <set>QTextEdit::AutoAll</set>
      </property>
+     <property name="documentTitle">
+      <string/>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::LinksAccessibleByMouse|Qt::TextEditable|Qt::TextEditorInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+     </property>
      <property name="placeholderText">
       <string>Write document</string>
      </property>
@@ -46,7 +52,4 @@
  </widget>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="btnGroupAlignment"/>
- </buttongroups>
 </ui>
