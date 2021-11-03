@@ -48,7 +48,7 @@ class LabelsWidget(QWidget):
 
     def __init__(self, parent=None):
         super(LabelsWidget, self).__init__(parent)
-        self.setLayout(FlowLayout(margin=1, spacing=4))
+        self.setLayout(FlowLayout(margin=0, spacing=3))
 
     def addText(self, text: str, color: str = '#7c98b3'):
         label = QLabel(truncate_string(text, 40))
@@ -224,15 +224,15 @@ class LabelsEditorWidget(QFrame):
             self.setLayout(QHBoxLayout())
         else:
             self.setLayout(QVBoxLayout())
-        self.layout().setSpacing(2)
-        self.layout().setContentsMargins(1, 1, 1, 1)
+        self.layout().setSpacing(1)
+        self.layout().setContentsMargins(0, 0, 0, 0)
         self._labels_index = {}
         self.clear()
 
         self.btnEdit = QPushButton()
         self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
         self.btnEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
-        self.btnEdit.setStyleSheet('QPushButton::menu-indicator{width:0px;}')
+        self.btnEdit.setStyleSheet('QPushButton::menu-indicator{width:0px;} QPushButton {padding:0 0 0 0;}')
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
