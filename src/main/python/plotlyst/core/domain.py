@@ -389,6 +389,7 @@ class Scene:
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     document: Optional['Document'] = None
+    manuscript: Optional['Document'] = None
 
     def pov_arc(self) -> int:
         for arc in self.arcs:

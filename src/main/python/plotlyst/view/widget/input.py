@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from enum import Enum
 from functools import partial
 
+import fbs_runtime.platform
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
@@ -62,14 +63,20 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
 
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet('.QToolBar {background-color: rgb(255, 255, 255);}')
-        self.toolbar.layout().setContentsMargins(3, 3, 3, 3)
+        self.setMargins(3, 3, 3, 3)
         self.toolbar.layout().setSpacing(5)
         self.layout().insertWidget(0, self.toolbar)
         self.textTitle = AutoAdjustableTextEdit()
         self.textTitle.setStyleSheet('border: 0px;')
         self.layout().insertWidget(1, self.textTitle)
 
+        if fbs_runtime.platform.is_linux():
+            self.textEditor.setFontFamily('Noto Sans Mono')
+        elif fbs_runtime.platform.is_mac():
+            self.textEditor.setFontFamily('Palatino')
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
+        self.textEditor.setViewportMargins(5, 5, 5, 5)
+        self.textEditor.setStyleSheet('QTextEdit {background: white; border: 0px;}')
         self.textEditor.installEventFilter(self)
         self.textEditor.setTabStopDistance(
             QtGui.QFontMetricsF(self.textEditor.font()).horizontalAdvance(' ') * 4)
@@ -154,6 +161,22 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
 
     def setTitleVisible(self, visible: bool):
         self.textTitle.setVisible(visible)
+
+    def setToolbarVisible(self, visible: bool):
+        self.toolbar.setVisible(visible)
+
+    def setMargins(self, left: int, top: int, right: int, bottom: int):
+        self.textEditor.setViewportMargins(left, top, right, bottom)
+
+    def setFormat(self, lineSpacing: int = 100, textIndent: int = 20):
+        blockFmt = QTextBlockFormat()
+        blockFmt.setTextIndent(textIndent)
+        blockFmt.setLineHeight(lineSpacing, QTextBlockFormat.ProportionalHeight)
+
+        theCursor = self.textEditor.textCursor()
+        theCursor.clearSelection()
+        theCursor.select(QTextCursor.Document)
+        theCursor.mergeBlockFormat(blockFmt)
 
     def clear(self):
         self.textEditor.clear()

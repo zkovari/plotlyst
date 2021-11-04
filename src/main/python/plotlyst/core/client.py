@@ -157,6 +157,7 @@ class SceneInfo:
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     document: Optional[Document] = None
+    manuscript: Optional[Document] = None
 
 
 @dataclass
@@ -460,7 +461,7 @@ class JsonClient:
                               arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
                               conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags,
-                              document=info.document)
+                              document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
         return Novel(title=project_novel_info.title, id=novel_info.id,
                      plots=novel_info.plots, characters=characters,
@@ -524,7 +525,7 @@ class JsonClient:
                          stage=self.__id_or_none(scene.stage),
                          beat=self.__id_or_none(scene.beat),
                          conflicts=conflicts, goals=[x.text for x in scene.goals], comments=scene.comments,
-                         tags=scene.tags, document=scene.document)
+                         tags=scene.tags, document=scene.document, manuscript=scene.manuscript)
         self.__persist_info(self.scenes_dir, info)
 
     @staticmethod
