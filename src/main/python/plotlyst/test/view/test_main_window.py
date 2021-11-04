@@ -90,7 +90,7 @@ def test_import_from_scrivener(qtbot, window: MainWindow, monkeypatch):
     assert_views(window)
 
 
-def test_sidebar_toggle(qtbot, filled_window: MainWindow):
+def _test_sidebar_toggle(qtbot, filled_window: MainWindow):
     view: HomeView = go_to_home(filled_window)
     assert len(view.novel_cards) == 1
 
@@ -104,3 +104,7 @@ def test_sidebar_toggle(qtbot, filled_window: MainWindow):
 
     filled_window.btnDocs.click()
     assert filled_window.wdgDocs.isVisible()
+
+
+def test_manuscript_mode(qtbot, filled_window: MainWindow):
+    filled_window.manuscript_mode.click()

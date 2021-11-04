@@ -17,11 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List
+from typing import List, Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton
+from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
@@ -43,6 +43,7 @@ from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.locations_view import LocationsView
+from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
@@ -61,6 +62,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.setWindowState(Qt.WindowMaximized)
         self.novel = None
         self._current_text_widget = None
+        self.manuscript_view: Optional[ManuscriptView] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
@@ -213,27 +215,69 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
+        self.outline_mode = QToolButton(self.toolBar)
+        self.outline_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.outline_mode.setText('Outline')
+        self.outline_mode.setCheckable(True)
+        self.outline_mode.setIcon(IconRegistry.decision_icon(color='black'))
+
+        self.manuscript_mode = QToolButton(self.toolBar)
+        self.manuscript_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.manuscript_mode.setText('Manuscript')
+        self.manuscript_mode.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
+        self.manuscript_mode.setCheckable(True)
+
+        self.reports_mode = QToolButton(self.toolBar)
+        self.reports_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.reports_mode.setText('Reports')
+        self.reports_mode.setIcon(IconRegistry.reports_icon())
+        self.reports_mode.setCheckable(True)
+
+        self._mode_btn_group = QButtonGroup()
+        self._mode_btn_group.addButton(self.outline_mode)
+        self._mode_btn_group.addButton(self.manuscript_mode)
+        self._mode_btn_group.addButton(self.reports_mode)
+        self._mode_btn_group.setExclusive(True)
+        self._mode_btn_group.buttonToggled.connect(self._panel_toggled)
+
         self.btnComments = QToolButton(self.toolBar)
         self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
         self.btnComments.setMinimumWidth(50)
-        self.btnComments.setCursor(Qt.PointingHandCursor)
         self.btnComments.setCheckable(True)
         self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
 
-        self.btnDocs = QToolButton(self.toolBar)
-        self.btnDocs.setIcon(IconRegistry.document_edition_icon())
-        self.btnDocs.setMinimumWidth(50)
-        self.btnDocs.setCursor(Qt.PointingHandCursor)
-        self.btnDocs.setCheckable(True)
-        self.btnDocs.toggled.connect(self.wdgDocs.setVisible)
+        # self.btnDocs = QToolButton(self.toolBar)
+        # self.btnDocs.setIcon(IconRegistry.document_edition_icon())
+        # self.btnDocs.setMinimumWidth(50)
+        # self.btnDocs.setCursor(Qt.PointingHandCursor)
+        # self.btnDocs.setCheckable(True)
+        # self.btnDocs.toggled.connect(self.wdgDocs.setVisible)
 
+        self.toolBar.addWidget(spacer_widget(5))
+        self.toolBar.addAction(IconRegistry.home_icon(), 'Home')
+        self.toolBar.addSeparator()
+        self.toolBar.addWidget(self.outline_mode)
+        self.toolBar.addWidget(self.manuscript_mode)
+        self.toolBar.addWidget(self.reports_mode)
         self.toolBar.addWidget(spacer_widget())
-
         self.toolBar.addWidget(self.btnComments)
-        self.toolBar.addWidget(self.btnDocs)
+        # self.toolBar.addWidget(self.btnDocs)
 
         self.wdgSidebar.setHidden(True)
         self.wdgDocs.setHidden(True)
+
+        self.outline_mode.setChecked(True)
+
+    def _panel_toggled(self):
+        if self.outline_mode.isChecked():
+            self.stackMainPanels.setCurrentWidget(self.pageOutline)
+            self._on_view_changed()
+        elif self.manuscript_mode.isChecked():
+            self.stackMainPanels.setCurrentWidget(self.pageManuscript)
+            if not self.manuscript_view:
+                self.manuscript_view = ManuscriptView(self.novel)
+                self.pageManuscript.layout().addWidget(self.manuscript_view.widget)
+            self.manuscript_view.activate()
 
     def _import_from_scrivener(self):
         self.btnHome.click()
@@ -297,6 +341,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.reports_view.widget.deleteLater()
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         self.comments_view.widget.deleteLater()
+
+        if self.pageManuscript.layout().count():
+            self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
+            self.manuscript_view.widget.deleteLater()
+            self.manuscript_view = None
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
