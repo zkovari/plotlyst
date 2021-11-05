@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from builtins import getattr
 from enum import Enum
 from functools import partial
 
@@ -24,13 +25,12 @@ import fbs_runtime.platform
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
-    QKeyEvent, QPaintEvent, QTextListFormat
+    QKeyEvent, QPaintEvent, QTextListFormat, QMouseEvent
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox, QMenu
+    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.view.common import line
-from src.main.python.plotlyst.view.generated.rich_text_editor_widget_ui import Ui_RichTextEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -56,19 +56,50 @@ class AutoAdjustableTextEdit(QTextEdit):
         self.setMaximumHeight(max(self._minHeight, size.height()))
 
 
-class RichTextEditor(QFrame, Ui_RichTextEditor):
+class _TextEditor(QTextEdit):
+    @overrides
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        cursor = self.cursorForPosition(event.pos())
+        data = cursor.block().userData()
+        errors = getattr(data, 'misspelled', [])
+        for start, length in errors:
+            # print(f' {start} {length} {cursor.positionInBlock()}')
+            if start <= cursor.positionInBlock() <= start + length:
+                QApplication.setOverrideCursor(Qt.PointingHandCursor)
+                return
+                # block_pos = cursor.block().position()
+                #
+                # cursor.setPosition(block_pos + start, QTextCursor.MoveAnchor)
+                # cursor.setPosition(block_pos + end, QTextCursor.KeepAnchor)
+        QApplication.restoreOverrideCursor()
+
+    @overrides
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        cursor = self.cursorForPosition(event.pos())
+        data = cursor.block().userData()
+        errors = getattr(data, 'misspelled', [])
+        for start, length in errors:
+            # print(f' {start} {length} {cursor.positionInBlock()}')
+            if start <= cursor.positionInBlock() <= start + length:
+                print(errors)
+
+
+class RichTextEditor(QFrame):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
-        self.setupUi(self)
+
+        self.setLayout(QVBoxLayout())
+        self.layout().setSpacing(0)
+        self.layout().setContentsMargins(2, 2, 2, 2)
 
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet('.QToolBar {background-color: rgb(255, 255, 255);}')
-        self.setMargins(3, 3, 3, 3)
         self.toolbar.layout().setSpacing(5)
-        self.layout().insertWidget(0, self.toolbar)
         self.textTitle = AutoAdjustableTextEdit()
         self.textTitle.setStyleSheet('border: 0px;')
-        self.layout().insertWidget(1, self.textTitle)
+
+        self.textEditor = _TextEditor()
+        self.textEditor.setMouseTracking(True)
 
         if fbs_runtime.platform.is_linux():
             self.textEditor.setFontFamily('Noto Sans Mono')
@@ -77,9 +108,16 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
         self.textEditor.setViewportMargins(5, 5, 5, 5)
         self.textEditor.setStyleSheet('QTextEdit {background: white; border: 0px;}')
+        self.setMouseTracking(True)
         self.textEditor.installEventFilter(self)
+        self.textEditor.setMouseTracking(True)
         self.textEditor.setTabStopDistance(
             QtGui.QFontMetricsF(self.textEditor.font()).horizontalAdvance(' ') * 4)
+        self.setMargins(3, 3, 3, 3)
+
+        self.layout().addWidget(self.toolbar)
+        self.layout().addWidget(self.textTitle)
+        self.layout().addWidget(self.textEditor)
 
         self.cbHeading = QComboBox()
         self.cbHeading.setStyleSheet('''
@@ -207,6 +245,14 @@ class RichTextEditor(QFrame, Ui_RichTextEditor):
                     return True
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
                 self._showCommands()
+        # print(event.type())
+        if isinstance(event, QMouseEvent):
+            # if event.type() == QEvent.MouseButtonRelease:
+            print('release')
+        # if event.type() == QEvent.MouseButtonPress:
+        #     print('press')
+        # if event.type() == QEvent.MouseButtonDblClick:
+        #     print('dclick')
 
         return super(RichTextEditor, self).eventFilter(watched, event)
 
