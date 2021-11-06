@@ -36,4 +36,3 @@ class LanguageToolServerSetupWorker(QRunnable):
             self.source.set_language_tool(tool)
         except Exception as e:
             self.source.set_language_tool_error(str(e))
-            
