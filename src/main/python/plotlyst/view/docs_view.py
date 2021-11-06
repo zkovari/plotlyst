@@ -200,16 +200,6 @@ class DocumentsView(AbstractNovelView):
             return
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self._current_doc.content = self.ui.textEditor.textEditor.toHtml()
-        if self.language_tool:
-            pass
-            # matches = self.language_tool.check(self.ui.textEditor.textEditor.toPlainText())
-            # print(matches)
-            # cursor = self.ui.textEditor.textEditor.textCursor()
-            # cursor.setPosition(48)
-            # cursor.select(QTextCursor.WordUnderCursor)
-            # format = QTextCharFormat()
-            # format.setToolTip('Test')
-            # cursor.mergeBlockCharFormat(format)
         json_client.save_document(self.novel, self._current_doc)
 
     def _title_changed(self):
@@ -221,6 +211,7 @@ class DocumentsView(AbstractNovelView):
                 self.repo.update_novel(self.novel)
 
 
+# partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
 class GrammarHighlighter(QSyntaxHighlighter):
 
     def __init__(self, document: QTextDocument):
@@ -233,8 +224,7 @@ class GrammarHighlighter(QSyntaxHighlighter):
         self._style_format.setUnderlineColor(Qt.blue)
         self._style_format.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
 
-        self._formats_per_issue = {'misspelling': self._misspelling_format, 'grammar': self._misspelling_format,
-                                   'style': self._style_format}
+        self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
 
         self._language_tool: Optional[LanguageTool] = None
 

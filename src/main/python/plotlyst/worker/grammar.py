@@ -30,6 +30,10 @@ class LanguageToolServerSetupWorker(QRunnable):
 
     @overrides
     def run(self) -> None:
-        tool = language_tool_python.LanguageTool('en-US')
-        tool.check('Test sentence.')
-        self.source.set_language_tool(tool)
+        try:
+            tool = language_tool_python.LanguageTool('en-US')
+            tool.check('Test sentence.')
+            self.source.set_language_tool(tool)
+        except Exception as e:
+            self.source.set_language_tool_error(str(e))
+            

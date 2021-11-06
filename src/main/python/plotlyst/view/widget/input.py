@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication
 from overrides import overrides
 
+from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.view.common import line
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -83,7 +84,7 @@ class _TextEditor(QTextEdit):
                 for i, repl in enumerate(replacements):
                     if i > 4:
                         break
-                    menu.addAction(repl, partial(self._replaceWord, cursor, repl, start, length))
+                    menu.addAction(truncate_string(repl), partial(self._replaceWord, cursor, repl, start, length))
                 menu.popup(self.mapToGlobal(event.pos()))
 
     def _replaceWord(self, cursor: QTextCursor, replacement: str, start: int, length: int):
