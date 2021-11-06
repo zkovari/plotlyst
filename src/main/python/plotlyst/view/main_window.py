@@ -17,18 +17,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import atexit
 from typing import List, Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
+from language_tool_python import LanguageTool
 from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
+from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender, \
+    emit_critical, emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
     SceneChangedEvent, NovelUpdatedEvent
@@ -48,6 +51,7 @@ from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.worker.cache import acts_registry
+from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 
@@ -82,12 +86,30 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._init_views()
 
         self.event_log_handler = EventLogHandler(self.statusBar())
+        event_log_reporter.info.connect(self.event_log_handler.on_info_event)
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
         event_sender.send.connect(event_dispatcher.dispatch)
         QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
 
         self.repo = RepositoryPersistenceManager.instance()
+
+        self.language_tool: Optional[LanguageTool] = None
+        self._threadpool = QThreadPool()
+        self._language_tool_setup_worker = LanguageToolServerSetupWorker(self)
+        if not app_env.test_env():
+            emit_info('Start initializing grammar checker...')
+            self._threadpool.start(self._language_tool_setup_worker)
+
+    def set_language_tool(self, tool: LanguageTool):
+        self.language_tool = tool
+        atexit.register(self.language_tool.close)
+        if self.docs_view:
+            self.notes_view.set_language_tool(self.language_tool)
+        emit_info('Grammar checker was set up.')
+
+    def set_language_tool_error(self, error: str):
+        emit_critical('Could not initialize grammar checker', error)
 
     @overrides
     def event_received(self, event: Event):
