@@ -25,7 +25,7 @@ import fbs_runtime.platform
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
-    QKeyEvent, QPaintEvent, QTextListFormat, QMouseEvent
+    QKeyEvent, QPaintEvent, QTextListFormat
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
     QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication
 from overrides import overrides
@@ -59,29 +59,42 @@ class AutoAdjustableTextEdit(QTextEdit):
 class _TextEditor(QTextEdit):
     @overrides
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        super(_TextEditor, self).mouseMoveEvent(event)
         cursor = self.cursorForPosition(event.pos())
         data = cursor.block().userData()
         errors = getattr(data, 'misspelled', [])
-        for start, length in errors:
-            # print(f' {start} {length} {cursor.positionInBlock()}')
+        for start, length, replacements in errors:
             if start <= cursor.positionInBlock() <= start + length:
-                QApplication.setOverrideCursor(Qt.PointingHandCursor)
+                if QApplication.overrideCursor() is None:
+                    QApplication.setOverrideCursor(Qt.PointingHandCursor)
                 return
-                # block_pos = cursor.block().position()
-                #
-                # cursor.setPosition(block_pos + start, QTextCursor.MoveAnchor)
-                # cursor.setPosition(block_pos + end, QTextCursor.KeepAnchor)
         QApplication.restoreOverrideCursor()
 
     @overrides
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        super(_TextEditor, self).mousePressEvent(event)
+        QApplication.restoreOverrideCursor()
         cursor = self.cursorForPosition(event.pos())
         data = cursor.block().userData()
         errors = getattr(data, 'misspelled', [])
-        for start, length in errors:
-            # print(f' {start} {length} {cursor.positionInBlock()}')
+        for start, length, replacements in errors:
             if start <= cursor.positionInBlock() <= start + length:
-                print(errors)
+                menu = QMenu(self)
+                for i, repl in enumerate(replacements):
+                    if i > 4:
+                        break
+                    menu.addAction(repl, partial(self._replaceWord, cursor, repl, start, length))
+                menu.popup(self.mapToGlobal(event.pos()))
+
+    def _replaceWord(self, cursor: QTextCursor, replacement: str, start: int, length: int):
+        block_pos = cursor.block().position()
+        cursor.setPosition(block_pos + start, QTextCursor.MoveAnchor)
+        cursor.setPosition(block_pos + start + length, QTextCursor.KeepAnchor)
+        cursor.beginEditBlock()
+        cursor.removeSelectedText()
+        cursor.insertText(replacement)
+        cursor.endEditBlock()
+        QApplication.restoreOverrideCursor()
 
 
 class RichTextEditor(QFrame):
@@ -245,14 +258,6 @@ class RichTextEditor(QFrame):
                     return True
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
                 self._showCommands()
-        # print(event.type())
-        if isinstance(event, QMouseEvent):
-            # if event.type() == QEvent.MouseButtonRelease:
-            print('release')
-        # if event.type() == QEvent.MouseButtonPress:
-        #     print('press')
-        # if event.type() == QEvent.MouseButtonDblClick:
-        #     print('dclick')
 
         return super(RichTextEditor, self).eventFilter(watched, event)
 

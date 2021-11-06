@@ -249,7 +249,7 @@ class GrammarHighlighter(QSyntaxHighlighter):
             for m in matches:
                 self.setFormat(m.offset, m.errorLength,
                                self._formats_per_issue.get(m.ruleIssueType, self._misspelling_format))
-                misspellings.append((m.offset, m.errorLength))
+                misspellings.append((m.offset, m.errorLength, m.replacements))
             data = QTextBlockUserData()
             data.misspelled = misspellings
             self.setCurrentBlockUserData(data)
