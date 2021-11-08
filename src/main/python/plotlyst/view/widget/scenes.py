@@ -22,7 +22,7 @@ from abc import abstractmethod
 from typing import List, Set, Optional, Union
 
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer
-from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent
+from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView
 from overrides import overrides
 
@@ -208,15 +208,29 @@ class _PlaceHolder(QFrame):
         super(_PlaceHolder, self).__init__()
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(5)
+        self.setFixedHeight(3)
+        self.setAcceptDrops(True)
+        self.setFrameStyle(QFrame.Box)
 
-        self.setStyleSheet('''
-                border: 0px;
-                color: lightgrey;''')
+        self.setStyle()
+
+    def setStyle(self, dropMode: bool = False) -> None:
+        if dropMode:
+            self.setLineWidth(2)
+        else:
+            self.setLineWidth(0)
 
     @overrides
     def parent(self) -> QWidget:
         return super(_PlaceHolder, self).parent()
+
+    @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        self.setStyle(True)
+
+    @overrides
+    def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
+        self.setStyle()
 
 
 def is_placeholder(widget: QWidget) -> bool:
@@ -231,8 +245,9 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.scene_structure_item = scene_structure_item
         self.setupUi(self)
 
-        self.text.setText(self.scene_structure_item.text)
         self.text.setPlaceholderText(placeholder)
+        self.text.setMaximumHeight(20)
+        self.text.setText(self.scene_structure_item.text)
         self.btnPlaceholder.setVisible(topVisible)
         self.btnIcon.setIcon(IconRegistry.circle_icon())
 
@@ -347,18 +362,18 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.rbScene.setIcon(IconRegistry.action_scene_icon())
         self.rbSequel.setIcon(IconRegistry.reaction_scene_icon())
-        self.rbCustom.setIcon(IconRegistry.from_name('mdi.arrow-decision'))
 
         self.btnTemplates.setIcon(IconRegistry.template_icon())
+
+        self.btnBeginningIcon.setIcon(IconRegistry.cause_icon(color='#02bcd4'))
+        self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex', color='#1bbc9c'))
+        self.btnEndIcon.setIcon(IconRegistry.from_name('mdi.ray-end', color='#ff7800'))
 
         self.btnSceneIcon.setIcon(IconRegistry.action_scene_icon())
         self.btnSequelIcon.setIcon(IconRegistry.reaction_scene_icon())
         self.btnGoal.setIcon(IconRegistry.goal_icon())
         self.btnConflict.setIcon(IconRegistry.conflict_icon())
         self.btnOutcome.setIcon(IconRegistry.disaster_icon())
-        self.btnBeginningIcon.setIcon(IconRegistry.cause_icon())
-        self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex'))
-        self.btnEndIcon.setIcon(IconRegistry.from_name('mdi.ray-end'))
 
         self.btnReaction.setIcon(IconRegistry.reaction_icon())
         self.btnDilemma.setIcon(IconRegistry.dilemma_icon())
@@ -607,7 +622,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def _addPlaceholder(self, widget: QWidget):
         _placeholder = _PlaceHolder()
         widget.layout().addWidget(_placeholder)
-        _placeholder.setAcceptDrops(True)
         _placeholder.installEventFilter(self)
 
     def _type_clicked(self):
