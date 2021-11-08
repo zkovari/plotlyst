@@ -218,11 +218,11 @@ class GrammarHighlighter(QSyntaxHighlighter):
         super(GrammarHighlighter, self).__init__(document)
         self._misspelling_format = QTextCharFormat()
         self._misspelling_format.setUnderlineColor(Qt.red)
-        self._misspelling_format.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
+        self._misspelling_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
 
         self._style_format = QTextCharFormat()
         self._style_format.setUnderlineColor(Qt.blue)
-        self._style_format.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
+        self._style_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
 
         self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
 
