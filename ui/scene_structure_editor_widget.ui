@@ -456,6 +456,19 @@ Clock</string>
     </layout>
    </item>
    <item>
+    <spacer name="verticalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>10</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout_5">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_12">
@@ -498,7 +511,7 @@ Clock</string>
           <cursorShape>PointingHandCursor</cursorShape>
          </property>
          <property name="text">
-          <string>Custom</string>
+          <string>Basic</string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">btnGroupType</string>
@@ -585,37 +598,64 @@ Clock</string>
           <number>2</number>
          </property>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <item>
-            <widget class="QToolButton" name="btnBeginningIcon">
-             <property name="styleSheet">
-              <string notr="true">border: 0px;</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>32</width>
-               <height>32</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_2">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Beginning</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <widget class="QWidget" name="wdgBeginningLabel" native="true">
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QToolButton" name="btnBeginningIcon">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>28</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border: 0px;</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>32</width>
+                <height>32</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_2">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>28</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+                <underline>true</underline>
+               </font>
+              </property>
+              <property name="text">
+               <string>Beginning</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_9">
@@ -668,6 +708,12 @@ Clock</string>
           <layout class="QHBoxLayout" name="horizontalLayout_5">
            <item>
             <widget class="QToolButton" name="btnMiddleIcon">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>28</height>
+              </size>
+             </property>
              <property name="styleSheet">
               <string notr="true">border: 0px;</string>
              </property>
@@ -684,10 +730,17 @@ Clock</string>
            </item>
            <item>
             <widget class="QLabel" name="label_3">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>28</height>
+              </size>
+             </property>
              <property name="font">
               <font>
                <weight>75</weight>
                <bold>true</bold>
+               <underline>true</underline>
               </font>
              </property>
              <property name="text">
@@ -748,6 +801,12 @@ Clock</string>
           <layout class="QHBoxLayout" name="horizontalLayout_7">
            <item>
             <widget class="QToolButton" name="btnEndIcon">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>28</height>
+              </size>
+             </property>
              <property name="styleSheet">
               <string notr="true">border: 0px;</string>
              </property>
@@ -764,10 +823,17 @@ Clock</string>
            </item>
            <item>
             <widget class="QLabel" name="label_4">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>28</height>
+              </size>
+             </property>
              <property name="font">
               <font>
                <weight>75</weight>
                <bold>true</bold>
+               <underline>true</underline>
               </font>
              </property>
              <property name="text">
@@ -836,7 +902,7 @@ Clock</string>
        <property name="sizeHint" stdset="0">
         <size>
          <width>20</width>
-         <height>40</height>
+         <height>10</height>
         </size>
        </property>
       </spacer>

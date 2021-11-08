@@ -361,8 +361,8 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.cog')
 
     @staticmethod
-    def cause_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.ray-start')
+    def cause_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.ray-start', color=color)
 
     @staticmethod
     def cause_and_effect_icon() -> QIcon:
