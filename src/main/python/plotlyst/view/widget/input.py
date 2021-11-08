@@ -36,10 +36,11 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class AutoAdjustableTextEdit(QTextEdit):
-    def __init__(self, parent=None, height: int = 40):
+    def __init__(self, parent=None, height: int = 25):
         super(AutoAdjustableTextEdit, self).__init__(parent)
         self.textChanged.connect(self._resizeToContent)
         self._minHeight = height
+        self.setAcceptRichText(False)
         self.setMaximumHeight(self._minHeight)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
