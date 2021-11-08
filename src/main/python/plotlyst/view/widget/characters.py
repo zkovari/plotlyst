@@ -410,9 +410,13 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
 
 
 class CharacterEmotionButton(QToolButton):
+    NEUTRAL_COLOR: str = 'rgb(171, 171, 171)'
+    emotionChanged = pyqtSignal()
+
     def __init__(self, parent=None):
         super(CharacterEmotionButton, self).__init__(parent)
         self._value = NEUTRAL
+        self._color = self.NEUTRAL_COLOR
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setFixedSize(32, 32)
         menu = QMenu(self)
@@ -437,13 +441,24 @@ class CharacterEmotionButton(QToolButton):
     def setValue(self, value: int):
         if value == VERY_UNHAPPY:
             self.setText(emoji.emojize(":fearful_face:"))
+            self._color = 'rgb(239, 0, 0)'
+
         elif value == UNHAPPY:
             self.setText(emoji.emojize(":worried_face:"))
+            self._color = 'rgb(255, 142, 43)'
         elif value == NEUTRAL:
             self.setText(emoji.emojize(":neutral_face:"))
+            self._color = self.NEUTRAL_COLOR
         elif value == HAPPY:
             self.setText(emoji.emojize(":slightly_smiling_face:"))
+            self._color = '#93e5ab'
         elif value == VERY_HAPPY:
             self.setText(emoji.emojize(":smiling_face_with_smiling_eyes:"))
+            self._color = 'rgb(0, 202, 148)'
 
         self._value = value
+        self.setStyleSheet(f'QToolButton {{background-color: {self._color};}}')
+        self.emotionChanged.emit()
+
+    def color(self) -> str:
+        return self._color

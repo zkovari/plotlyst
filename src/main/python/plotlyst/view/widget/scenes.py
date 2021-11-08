@@ -365,9 +365,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.btnTemplates.setIcon(IconRegistry.template_icon())
 
-        self.btnBeginningIcon.setIcon(IconRegistry.cause_icon(color='#02bcd4'))
-        self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex', color='#1bbc9c'))
-        self.btnEndIcon.setIcon(IconRegistry.from_name('mdi.ray-end', color='#ff7800'))
+        self.btnBeginningIcon.setIcon(IconRegistry.cause_icon())
+        self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex'))
+        self.btnEndIcon.setIcon(IconRegistry.from_name('mdi.ray-end'))
 
         self.btnSceneIcon.setIcon(IconRegistry.action_scene_icon())
         self.btnSequelIcon.setIcon(IconRegistry.reaction_scene_icon())
@@ -452,6 +452,10 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self.btnEmotionStart.setValue(NEUTRAL)
             self.btnEmotionEnd.setValue(NEUTRAL)
 
+        self._setEmotionColorChange()
+        self.btnEmotionStart.emotionChanged.connect(self._setEmotionColorChange)
+        self.btnEmotionEnd.emotionChanged.connect(self._setEmotionColorChange)
+
         if not self.wdgBeginning.layout().count():
             self._addPlaceholder(self.wdgBeginning)
         if not self.wdgMiddle.layout().count():
@@ -461,6 +465,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         if not self.agendas()[0].items:
             self._type_clicked()
+
+    def _setEmotionColorChange(self):
+        color_start = self.btnEmotionStart.color()
+        color_end = self.btnEmotionEnd.color()
+        self.btnEmotionRangeDisplay.setStyleSheet(f'''
+        background-color: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0,
+                                      stop: 0 {color_start}, stop: 1 {color_end});
+        color: white;
+        ''')
 
     def updatePov(self):
         self.clear(addPlaceholders=True)
