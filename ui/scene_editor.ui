@@ -571,6 +571,12 @@ border-radius: 15px;
           </property>
           <item>
            <widget class="RotatedButton" name="btnAttributes">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>90</height>
+             </size>
+            </property>
             <property name="text">
              <string>Structure</string>
             </property>
@@ -587,6 +593,12 @@ border-radius: 15px;
           </item>
           <item>
            <widget class="RotatedButton" name="btnNotes">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>90</height>
+             </size>
+            </property>
             <property name="text">
              <string>Notes</string>
             </property>
@@ -603,6 +615,12 @@ border-radius: 15px;
           </item>
           <item>
            <widget class="RotatedButton" name="btnBuilder">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>90</height>
+             </size>
+            </property>
             <property name="text">
              <string>Builder</string>
             </property>
@@ -714,7 +732,7 @@ border-radius: 15px;
                      <x>0</x>
                      <y>0</y>
                      <width>611</width>
-                     <height>237</height>
+                     <height>516</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -914,19 +932,6 @@ border-radius: 15px;
               </widget>
              </item>
             </layout>
-           </item>
-           <item>
-            <spacer name="verticalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>
