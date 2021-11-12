@@ -22,7 +22,9 @@ from typing import List, Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
+from fbs_runtime import platform
 from language_tool_python import LanguageTool
 from overrides import overrides
 
@@ -34,7 +36,7 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
     emit_critical, emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
-    SceneChangedEvent, NovelUpdatedEvent
+    SceneChangedEvent, NovelUpdatedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -45,6 +47,7 @@ from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSide
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.locations_view import LocationsView
 from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
@@ -130,6 +133,35 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, SceneChangedEvent):
             self.btnReport.setEnabled(True)
             event_dispatcher.deregister(self, SceneChangedEvent)
+        elif isinstance(event, OpenDistractionFreeMode):
+            self.stackMainPanels.setCurrentWidget(self.pageDistractionFree)
+            clear_layout(self.pageDistractionFree.layout())
+            self.pageDistractionFree.layout().addWidget(spacer_widget(100))
+            self.pageDistractionFree.layout().addWidget(event.editor)
+            self.pageDistractionFree.layout().addWidget(spacer_widget(100))
+            self.btnComments.setChecked(False)
+            self._toggle_fullscreen(on=True)
+
+    @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key_Escape:
+            if self.stackMainPanels.currentWidget() is self.pageDistractionFree:
+                editor = self.pageDistractionFree.layout().itemAt(1).widget()
+                self.manuscript_view.restore_editor(editor)
+                self.stackMainPanels.setCurrentWidget(self.pageManuscript)
+                self._toggle_fullscreen(on=False)
+        event.accept()
+
+    def _toggle_fullscreen(self, on: bool):
+        self.statusbar.setHidden(on)
+        self.toolBar.setHidden(on)
+        if not platform.is_mac():
+            self.menubar.setHidden(on)
+            if not on:
+                self.showMaximized()
+        if not self.isFullScreen():
+            if on:
+                self.showFullScreen()
 
     @busy
     def _flush_end_fetch_novel(self):
@@ -347,6 +379,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, NovelReloadRequestedEvent)
         event_dispatcher.register(self, NovelDeletedEvent)
         event_dispatcher.register(self, NovelUpdatedEvent)
+        event_dispatcher.register(self, OpenDistractionFreeMode)
         if self.novel and not self.novel.scenes:
             event_dispatcher.register(self, SceneChangedEvent)
 

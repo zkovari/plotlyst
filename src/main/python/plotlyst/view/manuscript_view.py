@@ -21,15 +21,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex
-from PyQt5.QtWidgets import QHeaderView
+from PyQt5.QtWidgets import QHeaderView, QTextEdit
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
-from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class ManuscriptView(AbstractNovelView):
@@ -44,8 +46,8 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.textEdit.setTitleVisible(False)
         self.ui.textEdit.setToolbarVisible(False)
-        self.ui.textEdit.setMargins(30, 30, 30, 30)
-        self.ui.textEdit.setFormat(130)
+
+        self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.external-link-alt'))
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
@@ -56,10 +58,14 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.clicked.connect(self._edit)
 
         self.ui.textEdit.textEditor.textChanged.connect(self._save)
+        self.ui.btnDistractionFree.clicked.connect(lambda: emit_event(OpenDistractionFreeMode(self, self.ui.textEdit)))
 
     @overrides
     def refresh(self):
         self.chaptersModel.modelReset.emit()
+
+    def restore_editor(self, editor: QTextEdit):
+        self.ui.pageText.layout().addWidget(editor)
 
     def _edit(self, index: QModelIndex):
         node = index.data(ChaptersTreeModel.NodeRole)
@@ -74,6 +80,8 @@ class ManuscriptView(AbstractNovelView):
 
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
+            self.ui.textEdit.setMargins(30, 30, 30, 30)
+            self.ui.textEdit.setFormat(130)
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 

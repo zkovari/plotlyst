@@ -32,8 +32,15 @@
     </property>
     <item>
      <widget class="QStackedWidget" name="stackMainPanels">
+      <property name="styleSheet">
+       <string notr="true">#pageDistractionFree {
+background-color:  rgb(0, 0, 0);
+}
+
+</string>
+      </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="pageOutline">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -569,6 +576,25 @@
         </property>
        </layout>
       </widget>
+      <widget class="QWidget" name="pageDistractionFree">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>
@@ -691,6 +717,12 @@
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
     <string>toolBar</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
