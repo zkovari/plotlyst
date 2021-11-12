@@ -434,6 +434,8 @@ class ScenesOutlineView(AbstractNovelView):
         menu = QMenu(self.ui.tblScenes)
         menu.addAction(IconRegistry.wip_icon(), 'Toggle WIP status', lambda: toggle_wip(scene))
         menu.addAction(IconRegistry.plus_icon(), 'Insert new scene', lambda: self._insert_scene_after(index))
+        menu.addSeparator()
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.ui.btnDelete.click)
 
         menu.popup(self.ui.tblScenes.viewport().mapToGlobal(pos))
 
