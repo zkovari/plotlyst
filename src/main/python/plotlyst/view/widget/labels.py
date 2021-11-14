@@ -56,7 +56,6 @@ class LabelsWidget(QWidget):
         label.setStyleSheet(
             f'''QLabel {{
                 background-color: {color}; border-radius: 6px; color: {text_color};
-                padding-left: 3px; padding-right: 3px;
             }}''')
 
         self.layout().addWidget(label)
