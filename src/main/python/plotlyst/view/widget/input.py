@@ -226,10 +226,10 @@ class RichTextEditor(QFrame):
         blockFmt.setTextIndent(textIndent)
         blockFmt.setLineHeight(lineSpacing, QTextBlockFormat.ProportionalHeight)
 
-        theCursor = self.textEditor.textCursor()
-        theCursor.clearSelection()
-        theCursor.select(QTextCursor.Document)
-        theCursor.mergeBlockFormat(blockFmt)
+        cursor = self.textEditor.textCursor()
+        cursor.clearSelection()
+        cursor.select(QTextCursor.Document)
+        cursor.mergeBlockFormat(blockFmt)
 
     def clear(self):
         self.textEditor.clear()
@@ -259,7 +259,8 @@ class RichTextEditor(QFrame):
                     self._setHeading()
                     return True
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
-                self._showCommands()
+                if self.textEditor.textCursor().positionInBlock() == 0:
+                    self._showCommands()
 
         return super(RichTextEditor, self).eventFilter(watched, event)
 
