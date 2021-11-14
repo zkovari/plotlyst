@@ -561,7 +561,7 @@ Clock</string>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <property name="spacing">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="CharacterEmotionButton" name="btnEmotionStart">
@@ -604,7 +604,7 @@ Clock</string>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_7">
          <property name="spacing">
-          <number>2</number>
+          <number>1</number>
          </property>
          <item>
           <widget class="QWidget" name="wdgBeginningLabel" native="true">
