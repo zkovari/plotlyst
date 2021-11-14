@@ -87,9 +87,9 @@ def test_scene_edition(qtbot, filled_window: MainWindow):
 def test_context_menu(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
     actions: List[QAction] = popup_actions_on_item(qtbot, view.ui.tblScenes, 0, ScenesTableModel.ColTitle)
-    assert len(actions) == 2
     assert actions[0].text() == 'Toggle WIP status'
     assert actions[1].text() == 'Insert new scene'
+    assert actions[3].text() == 'Delete'
 
 
 def test_toggle_wip_status(qtbot, filled_window: MainWindow):

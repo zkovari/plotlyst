@@ -403,7 +403,8 @@ class ScenesOutlineView(AbstractNovelView):
         if not self.stagesProgress:
             self.stagesProgress = SceneStageProgressCharts(self.novel)
 
-            self.ui.tblSceneStages.clicked.connect(self.stagesModel.changeStage)
+            self.ui.tblSceneStages.clicked.connect(
+                lambda x: self.stagesModel.changeStage(self._stages_proxy.mapToSource(x)))
             self.ui.tblSceneStages.clicked.connect(self.stagesProgress.refresh)
 
             self.ui.btnStageSelector.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
