@@ -21,7 +21,7 @@ import atexit
 from typing import List, Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtCore import Qt, QThreadPool, QObject, QEvent
 from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
@@ -95,6 +95,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
 
+        self.sliderDocWidth.valueChanged.connect(
+            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
+                                                                                self.width() / 3 - x, 0))
+        self.sliderDocWidth.installEventFilter(self)
+
         self.repo = RepositoryPersistenceManager.instance()
 
         self.language_tool: Optional[LanguageTool] = None
@@ -135,10 +140,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             event_dispatcher.deregister(self, SceneChangedEvent)
         elif isinstance(event, OpenDistractionFreeMode):
             self.stackMainPanels.setCurrentWidget(self.pageDistractionFree)
-            clear_layout(self.pageDistractionFree.layout())
-            self.pageDistractionFree.layout().addWidget(spacer_widget(100))
-            self.pageDistractionFree.layout().addWidget(event.editor)
-            self.pageDistractionFree.layout().addWidget(spacer_widget(100))
+            clear_layout(self.wdgDistractionFreeEditor.layout())
+            self.wdgDistractionFreeEditor.layout().addWidget(event.editor)
+            self.sliderDocWidth.setVisible(True)
+            self.sliderDocWidth.setMaximum(self.width() / 3)
+            self.sliderDocWidth.setValue(self.width() / 4)
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
 
@@ -146,11 +152,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Escape:
             if self.stackMainPanels.currentWidget() is self.pageDistractionFree:
-                editor = self.pageDistractionFree.layout().itemAt(1).widget()
+                editor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
                 self.manuscript_view.restore_editor(editor)
                 self.stackMainPanels.setCurrentWidget(self.pageManuscript)
                 self._toggle_fullscreen(on=False)
         event.accept()
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if watched is self.sliderDocWidth and event.type() == QEvent.Leave:
+            self.sliderDocWidth.setHidden(True)
+        return super(MainWindow, self).eventFilter(watched, event)
 
     def _toggle_fullscreen(self, on: bool):
         self.statusbar.setHidden(on)
