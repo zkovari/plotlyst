@@ -82,6 +82,8 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
             self.ui.textEdit.setMargins(30, 30, 30, 30)
             self.ui.textEdit.setFormat(130)
+            self.ui.textEdit.textEditor.selectAll()
+            self.ui.textEdit.textEditor.setFontPointSize(16)
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
