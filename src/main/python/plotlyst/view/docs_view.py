@@ -39,8 +39,9 @@ from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
-from src.main.python.plotlyst.view.widget.input import RotatedButton
+from src.main.python.plotlyst.view.widget.input import RotatedButton, RichTextEditor
 
 
 class DocumentsView(AbstractNovelView):
@@ -61,16 +62,13 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.expandAll()
         self.model.modelReset.connect(self.refresh)
 
-        self.ui.textEditor.textEditor.textChanged.connect(self._save)
-        self.ui.textEditor.textTitle.textChanged.connect(self._title_changed)
-        self.ui.textEditor.setHidden(True)
+        self.textEditor: Optional[RichTextEditor] = None
+        self.highlighter: Optional[GrammarHighlighter] = None
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
         self.ui.btnAdd.clicked.connect(self._add_doc)
         self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
         self.ui.btnRemove.clicked.connect(self._remove_doc)
-
-        self.highlighter = GrammarHighlighter(self.ui.textEditor.textEditor.document())
 
     @overrides
     def refresh(self):
@@ -79,7 +77,8 @@ class DocumentsView(AbstractNovelView):
 
     def set_language_tool(self, tool: LanguageTool):
         self.language_tool = tool
-        self.highlighter.setLanguageTool(self.language_tool)
+        if self.highlighter:
+            self.highlighter.setLanguageTool(self.language_tool)
 
     def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None,
                  doc_type: DocumentType = DocumentType.DOCUMENT):
@@ -108,7 +107,7 @@ class DocumentsView(AbstractNovelView):
         self._edit(index)
 
         if doc_type == DocumentType.STORY_STRUCTURE:
-            self.ui.textEditor.textEditor.insertHtml(parse_structure_to_richtext(self.novel.story_structure))
+            self.textEditor.textEditor.insertHtml(parse_structure_to_richtext(self.novel.story_structure))
             self._save()
 
     def _doc_clicked(self, index: QModelIndex):
@@ -119,6 +118,18 @@ class DocumentsView(AbstractNovelView):
             self._show_menu_popup(index)
         elif index.column() == DocumentsTreeModel.ColPlus:
             self._show_docs_popup(index)
+
+    def _init_text_editor(self):
+        self._clear_text_editor()
+
+        self.textEditor = RichTextEditor(self.ui.docEditorPage)
+        self.ui.docEditorPage.layout().addWidget(self.textEditor)
+        self.textEditor.textEditor.textChanged.connect(self._save)
+        self.textEditor.textTitle.textChanged.connect(self._title_changed)
+        self.highlighter = GrammarHighlighter(self.textEditor.textEditor.document(), self.language_tool)
+
+    def _clear_text_editor(self):
+        clear_layout(self.ui.docEditorPage.layout())
 
     def _show_menu_popup(self, index: QModelIndex):
         rect: QRect = self.ui.treeDocuments.visualRect(index)
@@ -159,9 +170,10 @@ class DocumentsView(AbstractNovelView):
         if not selected:
             return
         self.model.removeDoc(selected[0])
-        self.ui.textEditor.setVisible(False)
+        self._clear_text_editor()
 
     def _edit(self, index: QModelIndex):
+        self._init_text_editor()
         node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
         self._current_doc = node.document
 
@@ -172,11 +184,10 @@ class DocumentsView(AbstractNovelView):
 
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
-            self.ui.textEditor.setVisible(True)
             if char:
-                self.ui.textEditor.setText(self._current_doc.content, char.name, title_read_only=True)
+                self.textEditor.setText(self._current_doc.content, char.name, title_read_only=True)
             else:
-                self.ui.textEditor.setText(self._current_doc.content, self._current_doc.title)
+                self.textEditor.setText(self._current_doc.content, self._current_doc.title)
         else:
             self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
             while self.ui.customEditorPage.layout().count():
@@ -199,12 +210,12 @@ class DocumentsView(AbstractNovelView):
         if not self._current_doc:
             return
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
-            self._current_doc.content = self.ui.textEditor.textEditor.toHtml()
+            self._current_doc.content = self.textEditor.textEditor.toHtml()
         json_client.save_document(self.novel, self._current_doc)
 
     def _title_changed(self):
         if self._current_doc:
-            new_title = self.ui.textEditor.textTitle.toPlainText()
+            new_title = self.textEditor.textTitle.toPlainText()
             if new_title and new_title != self._current_doc.title:
                 self._current_doc.title = new_title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
@@ -214,7 +225,7 @@ class DocumentsView(AbstractNovelView):
 # partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
 class GrammarHighlighter(QSyntaxHighlighter):
 
-    def __init__(self, document: QTextDocument):
+    def __init__(self, document: QTextDocument, tool: Optional[LanguageTool] = None):
         super(GrammarHighlighter, self).__init__(document)
         self._misspelling_format = QTextCharFormat()
         self._misspelling_format.setUnderlineColor(Qt.red)
@@ -226,10 +237,11 @@ class GrammarHighlighter(QSyntaxHighlighter):
 
         self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
 
-        self._language_tool: Optional[LanguageTool] = None
+        self._language_tool: Optional[LanguageTool] = tool
 
     def setLanguageTool(self, tool: LanguageTool):
         self._language_tool = tool
+        self.rehighlight()
 
     @overrides
     def highlightBlock(self, text: str) -> None:

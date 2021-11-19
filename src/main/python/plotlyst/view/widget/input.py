@@ -63,6 +63,8 @@ class _TextEditor(QTextEdit):
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         super(_TextEditor, self).mouseMoveEvent(event)
         cursor = self.cursorForPosition(event.pos())
+        if cursor.atEnd():
+            return
         data = cursor.block().userData()
         errors = getattr(data, 'misspelled', [])
         for start, length, replacements in errors:
@@ -77,6 +79,8 @@ class _TextEditor(QTextEdit):
         super(_TextEditor, self).mousePressEvent(event)
         QApplication.restoreOverrideCursor()
         cursor = self.cursorForPosition(event.pos())
+        if cursor.atEnd():
+            return
         data = cursor.block().userData()
         errors = getattr(data, 'misspelled', [])
         for start, length, replacements in errors:
@@ -110,19 +114,24 @@ class RichTextEditor(QFrame):
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet('.QToolBar {background-color: rgb(255, 255, 255);}')
         self.toolbar.layout().setSpacing(5)
-        self.textTitle = AutoAdjustableTextEdit()
+        self.textTitle = AutoAdjustableTextEdit(height=50)
         self.textTitle.setStyleSheet('border: 0px;')
 
         self.textEditor = _TextEditor()
         self.textEditor.setMouseTracking(True)
 
-        if fbs_runtime.platform.is_linux():
-            self.textEditor.setFontFamily('Noto Sans Mono')
-        elif fbs_runtime.platform.is_mac():
-            self.textEditor.setFontFamily('Palatino')
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
         self.textEditor.setViewportMargins(5, 5, 5, 5)
-        self.textEditor.setStyleSheet('QTextEdit {background: white; border: 0px;}')
+
+        if fbs_runtime.platform.is_linux():
+            family = 'Noto Sans Mono'
+        elif fbs_runtime.platform.is_mac():
+            family = 'Palatino'
+        else:
+            family = 'Helvetica'
+        self.textEditor.setStyleSheet(f'QTextEdit {{background: white; border: 0px; font: {family}}}')
+        self.textEditor.setFontFamily(family)
+
         self.setMouseTracking(True)
         self.textEditor.installEventFilter(self)
         self.textEditor.setMouseTracking(True)
