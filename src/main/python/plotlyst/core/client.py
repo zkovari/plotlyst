@@ -104,6 +104,7 @@ class CharacterInfo:
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     document: Optional[Document] = None
+    journals: List['Document'] = field(default_factory=list)
 
 
 @dataclass
@@ -371,7 +372,7 @@ class JsonClient:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 character = Character(name=info.name, id=info.id, template_values=info.template_values,
-                                      backstory=info.backstory, document=info.document)
+                                      backstory=info.backstory, document=info.document, journals=info.journals)
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -504,7 +505,7 @@ class JsonClient:
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id,
-                                  backstory=char.backstory, document=char.document)
+                                  backstory=char.backstory, document=char.document, journals=char.journals)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
