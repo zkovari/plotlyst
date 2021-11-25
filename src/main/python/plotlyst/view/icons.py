@@ -185,8 +185,8 @@ class IconRegistry:
         return qtawesome.icon('mdi.notebook', color_on='darkBlue')
 
     @staticmethod
-    def document_edition_icon() -> QIcon:
-        return qtawesome.icon('ei.file-edit', color_on='darkBlue')
+    def document_edition_icon(color: str = 'black', color_on='darkBlue') -> QIcon:
+        return qtawesome.icon('ei.file-edit', color=color, color_on=color_on)
 
     @staticmethod
     def act_one_icon() -> QIcon:

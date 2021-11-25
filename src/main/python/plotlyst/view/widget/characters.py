@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import emoji
 from PyQt5 import QtCore
@@ -28,18 +28,23 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFr
 from fbs_runtime import platform
 from overrides import overrides
 
+from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
-    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, SceneStructureItem, Scene, NEUTRAL
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, SceneStructureItem, Scene, NEUTRAL, Document
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
+from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
+from src.main.python.plotlyst.view.layout import clear_layout
+from src.main.python.plotlyst.view.widget.cards import JournalCard
+from src.main.python.plotlyst.view.widget.input import RichTextEditor
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -465,3 +470,87 @@ class CharacterEmotionButton(QToolButton):
 
     def color(self) -> str:
         return self._color
+
+
+class JournalTextEdit(RichTextEditor):
+    def __init__(self, parent=None):
+        super(JournalTextEdit, self).__init__(parent)
+
+        self.setToolbarVisible(False)
+
+
+class JournalWidget(QWidget, Ui_JournalWidget):
+
+    def __init__(self, parent=None):
+        super(JournalWidget, self).__init__(parent)
+        self.setupUi(self)
+        self.novel: Optional[Novel] = None
+        self.character: Optional[Character] = None
+        self.textEditor: Optional[JournalTextEdit] = None
+
+        self.selected_card: Optional[JournalCard] = None
+
+        self.btnNew.setIcon(IconRegistry.document_edition_icon())
+        self.btnNew.clicked.connect(self._new)
+
+        self.btnBack.setIcon(IconRegistry.return_icon())
+        self.btnBack.clicked.connect(self._closeEditor)
+
+        self.stackedWidget.setCurrentWidget(self.pageCards)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def setCharacter(self, novel: Novel, character: Character):
+        self.novel = novel
+        self.character = character
+        self._update_cards()
+
+    def _new(self):
+        journal = Document(title='New Journal entry')
+        journal.loaded = True
+        self.character.journals.insert(0, journal)
+        self._update_cards()
+        card = self.cardsJournal.cardAt(0)
+        if card:
+            card.select()
+            self._edit(card)
+
+    def _update_cards(self):
+        self.selected_card = None
+        self.cardsJournal.clear()
+
+        for journal in self.character.journals:
+            card = JournalCard(journal)
+            self.cardsJournal.addCard(card)
+            card.selected.connect(self._card_selected)
+            card.doubleClicked.connect(self._edit)
+
+    def _card_selected(self, card: JournalCard):
+        if self.selected_card and self.selected_card is not card:
+            self.selected_card.clearSelection()
+        self.selected_card = card
+
+    @busy
+    def _edit(self, card: JournalCard):
+        if not card.journal.loaded:
+            json_client.load_document(self.novel, card.journal)
+
+        self.stackedWidget.setCurrentWidget(self.pageEditor)
+        clear_layout(self.wdgEditor.layout())
+
+        self.textEditor = JournalTextEdit(self.wdgEditor)
+        self.textEditor.setText(card.journal.content, card.journal.title)
+        self.wdgEditor.layout().addWidget(self.textEditor)
+        self.textEditor.textEditor.textChanged.connect(partial(self._textChanged, card.journal))
+        self.textEditor.textTitle.textChanged.connect(partial(self._titleChanged, card.journal))
+
+    def _closeEditor(self):
+        self.stackedWidget.setCurrentWidget(self.pageCards)
+        self.selected_card.refresh()
+
+    def _textChanged(self, journal: Document):
+        journal.content = self.textEditor.textEditor.toHtml()
+        json_client.save_document(self.novel, journal)
+
+    def _titleChanged(self, journal: Document):
+        journal.title = self.textEditor.textTitle.toPlainText()

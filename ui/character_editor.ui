@@ -379,6 +379,31 @@ border: 0px;
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="tabJournal">
+           <attribute name="title">
+            <string>Journal</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_10">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="JournalWidget" name="wdgJournal" native="true"/>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -391,8 +416,15 @@ border: 0px;
  <customwidgets>
   <customwidget>
    <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
+   <extends>QFrame</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>JournalWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.characters</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
