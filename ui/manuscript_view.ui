@@ -79,6 +79,9 @@
             <number>2</number>
            </property>
            <item>
+            <widget class="SprintWidget" name="wdgSprint" native="true"/>
+           </item>
+           <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -133,8 +136,14 @@
  <customwidgets>
   <customwidget>
    <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
+   <extends>QFrame</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SprintWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.manuscript</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

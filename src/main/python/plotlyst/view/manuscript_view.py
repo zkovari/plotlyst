@@ -48,6 +48,13 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.setToolbarVisible(False)
 
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.external-link-alt'))
+        # self.ui.btnTimer.setIcon(IconRegistry.timer_icon())
+        # menu = QMenu(self.ui.btnTimer)
+        # action = QWidgetAction(menu)
+        # self._timer_setup = TimerSetupWidget()
+        # action.setDefaultWidget(self._timer_setup)
+        # menu.addAction(action)
+        # self.ui.btnTimer.setMenu(menu)
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)

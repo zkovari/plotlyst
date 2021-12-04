@@ -22,7 +22,7 @@ from typing import List, Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt, QThreadPool, QObject, QEvent
-from PyQt5.QtGui import QKeyEvent
+from PyQt5.QtGui import QKeyEvent, QMouseEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
 from language_tool_python import LanguageTool
@@ -63,6 +63,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.resize(1000, 630)
+        # self.setMouseTracking(True)
         if app_env.is_dev():
             self.resize(1200, 830)
         if app_env.is_prod():
@@ -164,6 +165,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.sliderDocWidth.setHidden(True)
         return super(MainWindow, self).eventFilter(watched, event)
 
+    @overrides
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        print(event.pos())
+        super(MainWindow, self).mouseMoveEvent(event)
+
     def _toggle_fullscreen(self, on: bool):
         self.statusbar.setHidden(on)
         self.toolBar.setHidden(on)
@@ -174,6 +180,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not self.isFullScreen():
             if on:
                 self.showFullScreen()
+        # self.setMouseTracking(on)
 
     @busy
     def _flush_end_fetch_novel(self):
