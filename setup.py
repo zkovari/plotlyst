@@ -10,7 +10,7 @@ REQUIREMENTS: dict = {
     'core': [
         'PyQt5==5.15.4',
         'overrides==3.1.0',
-        'qtawesome==1.0.3',
+        'qtawesome==1.1.1',
         'PyQtChart==5.15.4',
         'anytree==2.8.0',
         'emoji==1.4.1',
