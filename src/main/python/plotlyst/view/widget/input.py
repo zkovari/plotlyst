@@ -63,7 +63,8 @@ class _TextEditor(QTextEdit):
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         super(_TextEditor, self).mouseMoveEvent(event)
         cursor = self.cursorForPosition(event.pos())
-        if cursor.atEnd():
+        if cursor.atBlockStart() or cursor.atBlockEnd():
+            QApplication.restoreOverrideCursor()
             return
         data = cursor.block().userData()
         errors = getattr(data, 'misspelled', [])
@@ -79,7 +80,8 @@ class _TextEditor(QTextEdit):
         super(_TextEditor, self).mousePressEvent(event)
         QApplication.restoreOverrideCursor()
         cursor = self.cursorForPosition(event.pos())
-        if cursor.atEnd():
+        if cursor.atBlockStart() or cursor.atBlockEnd():
+            QApplication.restoreOverrideCursor()
             return
         data = cursor.block().userData()
         errors = getattr(data, 'misspelled', [])
