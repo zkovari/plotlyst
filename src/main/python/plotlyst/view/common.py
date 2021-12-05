@@ -143,6 +143,16 @@ def text_color_with_bg_color(bg_color: str) -> str:
     return 'black' if hsp > 127.5 else 'white'
 
 
+def action(text: str, icon: Optional[QIcon] = None, slot=None) -> QAction:
+    _action = QAction(text)
+    if icon:
+        _action.setIcon(icon)
+    if slot:
+        _action.triggered.connect(slot)
+
+    return _action
+
+
 class PopupMenuBuilder:
     def __init__(self, parent: QWidget, viewport: QWidget, pos: QPoint):
         self._parent = parent
@@ -160,12 +170,10 @@ class PopupMenuBuilder:
         return PopupMenuBuilder(widget, widget, pos)
 
     def add_action(self, text: str, icon: Optional[QIcon] = None, slot=None) -> QAction:
-        if icon:
-            return self.menu.addAction(icon, text, slot) if slot else self.menu.addAction(icon, text)
-        elif slot:
-            return self.menu.addAction(text, slot)
-        else:
-            return self.menu.addAction(text)
+        _action = action(text, icon, slot)
+        _action.setParent(self.menu)
+        self.menu.addAction(_action)
+        return _action
 
     def add_submenu(self, text: str, icon: Optional[QIcon] = None) -> QMenu:
         submenu = QMenu(text, self.menu)

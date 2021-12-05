@@ -36,7 +36,8 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType, PopupMenuBuilder
+from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType, PopupMenuBuilder, \
+    action
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
@@ -304,6 +305,10 @@ class ScenesOutlineView(AbstractNovelView):
             self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
+
+            card.setPopupMenuActions(
+                [action('Insert new scene', IconRegistry.plus_icon(), partial(self._insert_scene_after, scene)),
+                 action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)])
 
     def _card_selected(self, card: SceneCard):
         if self.selected_card and self.selected_card is not card:

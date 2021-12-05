@@ -19,19 +19,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 import emoji
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
 from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent
-from PyQt5.QtWidgets import QFrame, QApplication
+from PyQt5.QtWidgets import QFrame, QApplication, QAction
 from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, SceneType, Document
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.common import emoji_font, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
@@ -56,6 +56,7 @@ class Card(QFrame):
         super().__init__(parent)
         self.dragStartPosition: Optional[QPoint] = None
         self._dragEnabled: bool = True
+        self._popup_actions: List[QAction] = []
 
     def isDragEnabled(self) -> bool:
         return self._dragEnabled
@@ -121,6 +122,11 @@ class Card(QFrame):
         else:
             event.ignore()
 
+    def setPopupMenuActions(self, actions: List[QAction]):
+        self._popup_actions = actions
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._contextMenuRequested)
+
     def select(self):
         self._setStyleSheet(selected=True)
         self.selected.emit(self)
@@ -151,6 +157,14 @@ class Card(QFrame):
 
     def _borderColor(self, selected: bool = False) -> str:
         return '#2a4d69' if selected else '#adcbe3'
+
+    def _contextMenuRequested(self, pos: QPoint):
+        self.select()
+        builder = PopupMenuBuilder.from_widget_position(self, pos)
+        for action in self._popup_actions:
+            action.setParent(builder.menu)
+            builder.menu.addAction(action)
+        builder.popup()
 
 
 class NovelCard(Ui_NovelCard, Card):
