@@ -34,7 +34,7 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.common import spacer_widget, PopupBuilder
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
@@ -143,27 +143,25 @@ class DocumentsView(AbstractNovelView):
             char = char_index.data(CharactersTableModel.CharacterRole)
             self._add_doc(index, character=char)
 
-        rect: QRect = self.ui.treeDocuments.visualRect(index)
-        menu = QMenu(self.ui.treeDocuments)
-        menu.addAction(IconRegistry.document_edition_icon(), 'Document', lambda: self._add_doc(index))
+        builder = PopupBuilder.from_index(self.ui.treeDocuments, index)
+        builder.add_action('Document', IconRegistry.document_edition_icon(), lambda: self._add_doc(index))
 
-        character_menu = QMenu('Characters', menu)
-        character_menu.setIcon(IconRegistry.character_icon())
-        action = QWidgetAction(character_menu)
+        character_menu = builder.add_submenu('Characters', IconRegistry.character_icon())
         _view = QListView()
+        _view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         _view.clicked.connect(add_character)
-        action.setDefaultWidget(_view)
         _view.setModel(CharactersTableModel(self.novel))
+        action = QWidgetAction(character_menu)
+        action.setDefaultWidget(_view)
         character_menu.addAction(action)
-        menu.addMenu(character_menu)
 
-        menu.addAction(IconRegistry.reversed_cause_and_effect_icon(), 'Reversed Cause and Effect',
-                       lambda: self._add_doc(index, doc_type=DocumentType.REVERSED_CAUSE_AND_EFFECT))
+        builder.add_action('Reversed Cause and Effect', IconRegistry.reversed_cause_and_effect_icon(),
+                           lambda: self._add_doc(index, doc_type=DocumentType.REVERSED_CAUSE_AND_EFFECT))
         struc = self.novel.story_structure
-        menu.addAction(IconRegistry.from_name(struc.icon, color=struc.icon_color), struc.title,
-                       lambda: self._add_doc(index, doc_type=DocumentType.STORY_STRUCTURE))
+        builder.add_action(struc.title, IconRegistry.from_name(struc.icon, color=struc.icon_color),
+                           lambda: self._add_doc(index, doc_type=DocumentType.STORY_STRUCTURE))
 
-        menu.popup(self.ui.treeDocuments.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+        builder.popup()
 
     def _remove_doc(self):
         selected = self.ui.treeDocuments.selectionModel().selectedIndexes()

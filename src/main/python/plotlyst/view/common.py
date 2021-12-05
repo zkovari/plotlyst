@@ -23,9 +23,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Any
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor
-from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog
+from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint
+from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
+    QMenu, QAbstractScrollArea, QAction
 from fbs_runtime import platform
 
 
@@ -140,3 +141,34 @@ def text_color_with_bg_color(bg_color: str) -> str:
     b = rgb[2]
     hsp = math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
     return 'black' if hsp > 127.5 else 'white'
+
+
+class PopupBuilder:
+    def __init__(self, parent: QAbstractScrollArea, pos: QPoint):
+        self._parent = parent
+        self.menu = QMenu(parent)
+        self.pos = pos
+
+    @staticmethod
+    def from_index(view: QAbstractItemView, index: QModelIndex) -> 'PopupBuilder':
+        rect: QRect = view.visualRect(index)
+        return PopupBuilder(view, QPoint(rect.x(), rect.y()))
+
+    def add_action(self, text: str, icon: Optional[QIcon] = None, slot=None) -> QAction:
+        if icon:
+            return self.menu.addAction(icon, text, slot) if slot else self.menu.addAction(icon, text)
+        elif slot:
+            return self.menu.addAction(text, slot)
+        else:
+            return self.menu.addAction(text)
+
+    def add_submenu(self, text: str, icon: Optional[QIcon] = None) -> QMenu:
+        submenu = QMenu(text, self.menu)
+        if icon:
+            submenu.setIcon(icon)
+        self.menu.addMenu(submenu)
+
+        return submenu
+
+    def popup(self):
+        self.menu.popup(self._parent.viewport().mapToGlobal(self.pos))
