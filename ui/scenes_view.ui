@@ -64,7 +64,7 @@
            <number>0</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>2</number>
           </property>
           <item>
            <spacer name="horizontalSpacer_5">
@@ -904,15 +904,15 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>ActionBasedTreeView</class>
+   <extends>QTreeView</extends>
+   <header>src.main.python.plotlyst.view.widget.tree_view</header>
+  </customwidget>
+  <customwidget>
    <class>CardsView</class>
    <extends>QFrame</extends>
    <header>src.main.python.plotlyst.view.widget.cards</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ActionBasedTreeView</class>
-   <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.tree_view</header>
   </customwidget>
   <customwidget>
    <class>RotatedButton</class>

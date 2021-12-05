@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any, Optional
+from typing import Any
 
 from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtGui import QIcon
@@ -26,7 +26,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
-from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
+from src.main.python.plotlyst.model.common import emit_column_changed_in_tree, ActionBasedTreeModel
 from src.main.python.plotlyst.model.tree_model import TreeItemModel, NodeMimeData
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -44,7 +44,7 @@ class DocumentMimeData(NodeMimeData):
         self.document = node.document
 
 
-class DocumentsTreeModel(TreeItemModel):
+class DocumentsTreeModel(TreeItemModel, ActionBasedTreeModel):
     MimeType: str = 'application/document'
 
     ColMenu: int = 1
@@ -54,7 +54,6 @@ class DocumentsTreeModel(TreeItemModel):
         super(DocumentsTreeModel, self).__init__()
         self.dragAndDropEnabled = True
         self.novel = novel
-        self._action_index: Optional[QModelIndex] = None
         self.repo = RepositoryPersistenceManager.instance()
         for doc in self.novel.documents:
             self._initNodes(doc, self.root)
@@ -125,14 +124,8 @@ class DocumentsTreeModel(TreeItemModel):
         self.repo.update_novel(self.novel)
         return True
 
-    def displayAction(self, index: QModelIndex):
-        if index.row() >= 0:
-            if self._action_index and self._action_index.row() == index.row() \
-                    and self._action_index.parent() == index.parent():  # same index
-                return
-            self._action_index = index
-        else:
-            self._action_index = None
+    @overrides
+    def _emitActionsChanged(self, index: QModelIndex):
         emit_column_changed_in_tree(self, self.ColMenu, index)
         emit_column_changed_in_tree(self, self.ColPlus, index)
 
