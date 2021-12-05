@@ -36,7 +36,7 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType, PopupBuilder
+from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType, PopupMenuBuilder
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
@@ -210,7 +210,7 @@ class ScenesOutlineView(AbstractNovelView):
             return
         chapter = self._selected_chapter()
         if chapter:
-            builder = PopupBuilder.from_index(self.ui.treeChapters, index)
+            builder = PopupMenuBuilder.from_index(self.ui.treeChapters, index)
             builder.add_action('Add scene', IconRegistry.scene_icon())
             builder.add_action('Insert chapter after', IconRegistry.chapter_icon(),
                                lambda: self._new_chapter(self.novel.chapters.index(chapter) + 1))

@@ -22,12 +22,12 @@ from typing import Dict, Optional
 
 from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal, QSize
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QColor, QMouseEvent
-from PyQt5.QtWidgets import QWidget, QMenu, QAction
+from PyQt5.QtWidgets import QWidget
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePlotValue, Plot
-from src.main.python.plotlyst.view.common import busy
+from src.main.python.plotlyst.view.common import busy, PopupMenuBuilder
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -170,18 +170,16 @@ class StoryLinesMapWidget(QWidget):
             self._clicked_scene: Scene = self.novel.scenes[index]
             self.update()
 
-            menu = QMenu(self)
-
+            builder = PopupMenuBuilder.from_widget_position(self, pos)
             if self.novel.plots:
                 for plot in self.novel.plots:
-                    plot_action = QAction(truncate_string(plot.text, 70), menu)
+                    plot_action = builder.add_action(truncate_string(plot.text, 70),
+                                                     slot=partial(self._plot_changed, plot))
                     plot_action.setCheckable(True)
                     if plot in self._clicked_scene.plots():
                         plot_action.setChecked(True)
-                    plot_action.triggered.connect(partial(self._plot_changed, plot))
-                    menu.addAction(plot_action)
 
-                menu.popup(self.mapToGlobal(pos))
+                builder.popup()
 
     @busy
     def _plot_changed(self, plot: Plot, checked: bool):

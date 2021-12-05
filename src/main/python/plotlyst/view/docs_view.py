@@ -34,7 +34,7 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import spacer_widget, PopupBuilder
+from src.main.python.plotlyst.view.common import spacer_widget, PopupMenuBuilder
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
@@ -143,7 +143,7 @@ class DocumentsView(AbstractNovelView):
             char = char_index.data(CharactersTableModel.CharacterRole)
             self._add_doc(index, character=char)
 
-        builder = PopupBuilder.from_index(self.ui.treeDocuments, index)
+        builder = PopupMenuBuilder.from_index(self.ui.treeDocuments, index)
         builder.add_action('Document', IconRegistry.document_edition_icon(), lambda: self._add_doc(index))
 
         character_menu = builder.add_submenu('Characters', IconRegistry.character_icon())
