@@ -66,13 +66,20 @@ class GoalScenesDistributionTableModel(DistributionModel):
 
     @overrides
     def _dataForMeta(self, index: QModelIndex, role: int = Qt.DisplayRole):
-        conflict: Conflict = self.novel.conflicts[index.row()]
+        goal: SceneGoal = self.novel.scene_goals[index.row()]
         if role == Qt.DecorationRole:
-            return QIcon(avatars.pixmap(conflict.pov))
+            if goal.icon:
+                return IconRegistry.from_name(goal.icon, goal.icon_color)
+            else:
+                return IconRegistry.goal_icon()
 
     @overrides
     def _match_by_row_col(self, row: int, column: int):
-        return self.novel.scene_goals[row] in self.novel.scenes[column - 2].goals
+        for agenda in self.novel.scenes[column - 2].agendas:
+            for item in agenda.items:
+                if self.novel.scene_goals[row] in item.goals:
+                    return True
+        return False
 
 
 class ConflictScenesDistributionTableModel(DistributionModel):
@@ -86,7 +93,7 @@ class ConflictScenesDistributionTableModel(DistributionModel):
         conflict: Conflict = self.novel.conflicts[index.row()]
         if role == Qt.DecorationRole:
             if conflict.type == ConflictType.CHARACTER:
-                return QIcon(avatars.pixmap(conflict.character))
+                return QIcon(avatars.pixmap(conflict.conflicting_character(self.novel)))
             elif conflict.type == ConflictType.SELF:
                 return IconRegistry.conflict_self_icon()
             elif conflict.type == ConflictType.NATURE:
@@ -101,17 +108,21 @@ class ConflictScenesDistributionTableModel(DistributionModel):
         if role == Qt.ToolTipRole:
             return conflict.type
         elif role == Qt.DisplayRole:
-            return conflict.keyphrase
+            return conflict.text
 
     @overrides
     def _dataForMeta(self, index: QModelIndex, role: int = Qt.DisplayRole):
         conflict: Conflict = self.novel.conflicts[index.row()]
         if role == Qt.DecorationRole:
-            return QIcon(avatars.pixmap(conflict.pov))
+            return QIcon(avatars.pixmap(conflict.character(self.novel)))
 
     @overrides
     def _match_by_row_col(self, row: int, column: int):
-        return self.novel.conflicts[row] in self.novel.scenes[column - 2].conflicts
+        for agenda in self.novel.scenes[column - 2].agendas:
+            for item in agenda.items:
+                if self.novel.conflicts[row] in item.conflicts:
+                    return True
+        return False
 
 
 class TagScenesDistributionTableModel(DistributionModel):
