@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
-from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -409,13 +409,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.clear()
         self.btnInventory.setChecked(False)
 
-        if self.scene.type == SceneType.ACTION:
-            self.rbScene.setChecked(True)
-        elif self.scene.type == SceneType.REACTION:
-            self.rbSequel.setChecked(True)
-        else:
-            self.btnInventory.setChecked(True)
-            self.rbCustom.setChecked(True)
+        self._checkSceneType()
 
         if scene.agendas and scene.agendas[0].items:
             widgets_per_parts = {1: self.wdgBeginning, 2: self.wdgMiddle, 3: self.wdgEnd}
@@ -465,6 +459,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         if not self.agendas()[0].items:
             self._type_clicked()
+
+    def _checkSceneType(self):
+        if self.scene.type == SceneType.ACTION:
+            self.rbScene.setChecked(True)
+        elif self.scene.type == SceneType.REACTION:
+            self.rbSequel.setChecked(True)
+        else:
+            self.btnInventory.setChecked(True)
+            self.rbCustom.setChecked(True)
 
     def _setEmotionColorChange(self):
         color_start = self.btnEmotionStart.color()
@@ -638,7 +641,18 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         _placeholder.installEventFilter(self)
 
     def _type_clicked(self):
-        self.clear(addPlaceholders=True)
+        if (self.rbScene.isChecked() and self.scene.type == SceneType.ACTION) or (
+                self.rbSequel.isChecked() and self.scene.type == SceneType.REACTION) or (
+                self.rbCustom.isChecked() and self.scene.type == SceneType.MIXED):
+            return
+
+        for item in self.agendas()[0].items:
+            if item.text or item.goals or item.conflicts:
+                if not ask_confirmation(
+                        "Some beats are filled up. Are you sure you want to change the scene's structure?"):
+                    self._checkSceneType()  # revert
+                    return
+                break
 
         if self.rbScene.isChecked():
             self.scene.type = SceneType.ACTION
@@ -662,6 +676,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                                               placeholder='Describe the ending of this scene')
             self.btnInventory.setChecked(True)
 
+        self.clear(addPlaceholders=True)
         self._addWidget(self.wdgBeginning.layout().itemAt(0).widget(), top)
         self._addWidget(self.wdgMiddle.layout().itemAt(0).widget(), middle)
         self._addWidget(self.wdgEnd.layout().itemAt(0).widget(), bottom)
