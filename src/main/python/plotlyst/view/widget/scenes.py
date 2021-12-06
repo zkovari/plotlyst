@@ -437,8 +437,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                     widget = TicklingClockSceneItemWidget(self.novel, item)
                 else:
                     widget = SceneStructureItemWidget(self.novel, item)
+
                 widgets_per_parts.get(item.part, self.wdgEnd).layout().addWidget(widget)
-                self._addPlaceholder(widgets_per_parts.get(item.part, self.wdgEnd))
+                self._addPlaceholder(widgets_per_parts[item.part])
+
+            for part in widgets_per_parts.values():
+                self._addPlaceholder(part, 0)
 
             self.btnEmotionStart.setValue(scene.agendas[0].beginning_emotion)
             self.btnEmotionEnd.setValue(scene.agendas[0].ending_emotion)
@@ -633,11 +637,17 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         layout.takeAt(index)
         placeholder.deleteLater()
         layout.insertWidget(index, widget)
-        self._addPlaceholder(parent)
 
-    def _addPlaceholder(self, widget: QWidget):
         _placeholder = _PlaceHolder()
-        widget.layout().addWidget(_placeholder)
+        layout.insertWidget(index + 1, _placeholder)
+        _placeholder.installEventFilter(self)
+
+    def _addPlaceholder(self, widget: QWidget, pos: int = -1):
+        _placeholder = _PlaceHolder()
+        if pos >= 0:
+            widget.layout().insertWidget(pos, _placeholder)
+        else:
+            widget.layout().addWidget(_placeholder)
         _placeholder.installEventFilter(self)
 
     def _type_clicked(self):
