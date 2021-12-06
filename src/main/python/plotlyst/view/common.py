@@ -185,3 +185,9 @@ class PopupMenuBuilder:
 
     def popup(self):
         self.menu.popup(self._viewport.mapToGlobal(self.pos))
+
+
+def retain_size_when_hidden(widget: QWidget):
+    policy = widget.sizePolicy()
+    policy.setRetainSizeWhenHidden(True)
+    widget.setSizePolicy(policy)

@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -238,6 +238,7 @@ def is_placeholder(widget: QWidget) -> bool:
 
 
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
+
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, placeholder: str = 'Beat',
                  topVisible: bool = False, parent=None):
         super(SceneStructureItemWidget, self).__init__(parent)
@@ -250,6 +251,10 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.text.setText(self.scene_structure_item.text)
         self.btnPlaceholder.setVisible(topVisible)
         self.btnIcon.setIcon(IconRegistry.circle_icon())
+        self.btnDelete.setIcon(IconRegistry.wrong_icon(color='black'))
+        self.btnDelete.clicked.connect(self._remove)
+        retain_size_when_hidden(self.btnDelete)
+        self.btnDelete.setHidden(True)
 
     def sceneStructureItem(self) -> SceneStructureItem:
         self.scene_structure_item.text = self.text.toPlainText()
@@ -257,6 +262,19 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
     def activate(self):
         self.text.setFocus()
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        self.btnDelete.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.btnDelete.setHidden(True)
+
+    def _remove(self):
+        if self.parent():
+            self.parent().layout().removeWidget(self)
+            self.deleteLater()
 
 
 class SceneGoalItemWidget(SceneStructureItemWidget):
