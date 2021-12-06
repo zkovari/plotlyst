@@ -88,6 +88,7 @@ class Character:
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     document: Optional['Document'] = None
+    journals: List['Document'] = field(default_factory=list)
 
     def enneagram(self) -> Optional['SelectionItem']:
         for value in self.template_values:
@@ -389,6 +390,7 @@ class Scene:
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     document: Optional['Document'] = None
+    manuscript: Optional['Document'] = None
 
     def pov_arc(self) -> int:
         for arc in self.arcs:

@@ -19,8 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, QRect, QPoint
+from PyQt5.QtCore import QModelIndex, QRect, QPoint, Qt
+from PyQt5.QtGui import QSyntaxHighlighter, QTextDocument, QTextCharFormat, QTextBlockUserData
 from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidget
+from language_tool_python import LanguageTool
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
@@ -32,13 +34,14 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.common import spacer_widget, PopupMenuBuilder
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
-from src.main.python.plotlyst.view.widget.input import RotatedButton
+from src.main.python.plotlyst.view.widget.input import RotatedButton, RichTextEditor
 
 
 class DocumentsView(AbstractNovelView):
@@ -48,6 +51,7 @@ class DocumentsView(AbstractNovelView):
         self.ui = Ui_NotesView()
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
+        self.language_tool: Optional[LanguageTool] = None
 
         self.model = DocumentsTreeModel(self.novel)
         self.ui.treeDocuments.setModel(self.model)
@@ -58,9 +62,8 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.expandAll()
         self.model.modelReset.connect(self.refresh)
 
-        self.ui.textEditor.textEditor.textChanged.connect(self._save)
-        self.ui.textEditor.textTitle.textChanged.connect(self._title_changed)
-        self.ui.textEditor.setHidden(True)
+        self.textEditor: Optional[RichTextEditor] = None
+        self.highlighter: Optional[GrammarHighlighter] = None
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
         self.ui.btnAdd.clicked.connect(self._add_doc)
@@ -71,6 +74,11 @@ class DocumentsView(AbstractNovelView):
     def refresh(self):
         self.ui.treeDocuments.expandAll()
         self.ui.btnRemove.setEnabled(False)
+
+    def set_language_tool(self, tool: LanguageTool):
+        self.language_tool = tool
+        if self.highlighter:
+            self.highlighter.setLanguageTool(self.language_tool)
 
     def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None,
                  doc_type: DocumentType = DocumentType.DOCUMENT):
@@ -99,7 +107,7 @@ class DocumentsView(AbstractNovelView):
         self._edit(index)
 
         if doc_type == DocumentType.STORY_STRUCTURE:
-            self.ui.textEditor.textEditor.insertHtml(parse_structure_to_richtext(self.novel.story_structure))
+            self.textEditor.textEditor.insertHtml(parse_structure_to_richtext(self.novel.story_structure))
             self._save()
 
     def _doc_clicked(self, index: QModelIndex):
@@ -110,6 +118,18 @@ class DocumentsView(AbstractNovelView):
             self._show_menu_popup(index)
         elif index.column() == DocumentsTreeModel.ColPlus:
             self._show_docs_popup(index)
+
+    def _init_text_editor(self):
+        self._clear_text_editor()
+
+        self.textEditor = RichTextEditor(self.ui.docEditorPage)
+        self.ui.docEditorPage.layout().addWidget(self.textEditor)
+        self.textEditor.textEditor.textChanged.connect(self._save)
+        self.textEditor.textTitle.textChanged.connect(self._title_changed)
+        self.highlighter = GrammarHighlighter(self.textEditor.textEditor.document(), self.language_tool)
+
+    def _clear_text_editor(self):
+        clear_layout(self.ui.docEditorPage.layout())
 
     def _show_menu_popup(self, index: QModelIndex):
         rect: QRect = self.ui.treeDocuments.visualRect(index)
@@ -123,36 +143,35 @@ class DocumentsView(AbstractNovelView):
             char = char_index.data(CharactersTableModel.CharacterRole)
             self._add_doc(index, character=char)
 
-        rect: QRect = self.ui.treeDocuments.visualRect(index)
-        menu = QMenu(self.ui.treeDocuments)
-        menu.addAction(IconRegistry.document_edition_icon(), 'Document', lambda: self._add_doc(index))
+        builder = PopupMenuBuilder.from_index(self.ui.treeDocuments, index)
+        builder.add_action('Document', IconRegistry.document_edition_icon(), lambda: self._add_doc(index))
 
-        character_menu = QMenu('Characters', menu)
-        character_menu.setIcon(IconRegistry.character_icon())
-        action = QWidgetAction(character_menu)
+        character_menu = builder.add_submenu('Characters', IconRegistry.character_icon())
         _view = QListView()
+        _view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         _view.clicked.connect(add_character)
-        action.setDefaultWidget(_view)
         _view.setModel(CharactersTableModel(self.novel))
+        action = QWidgetAction(character_menu)
+        action.setDefaultWidget(_view)
         character_menu.addAction(action)
-        menu.addMenu(character_menu)
 
-        menu.addAction(IconRegistry.reversed_cause_and_effect_icon(), 'Reversed Cause and Effect',
-                       lambda: self._add_doc(index, doc_type=DocumentType.REVERSED_CAUSE_AND_EFFECT))
+        builder.add_action('Reversed Cause and Effect', IconRegistry.reversed_cause_and_effect_icon(),
+                           lambda: self._add_doc(index, doc_type=DocumentType.REVERSED_CAUSE_AND_EFFECT))
         struc = self.novel.story_structure
-        menu.addAction(IconRegistry.from_name(struc.icon, color=struc.icon_color), struc.title,
-                       lambda: self._add_doc(index, doc_type=DocumentType.STORY_STRUCTURE))
+        builder.add_action(struc.title, IconRegistry.from_name(struc.icon, color=struc.icon_color),
+                           lambda: self._add_doc(index, doc_type=DocumentType.STORY_STRUCTURE))
 
-        menu.popup(self.ui.treeDocuments.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+        builder.popup()
 
     def _remove_doc(self):
         selected = self.ui.treeDocuments.selectionModel().selectedIndexes()
         if not selected:
             return
         self.model.removeDoc(selected[0])
-        self.ui.textEditor.setVisible(False)
+        self._clear_text_editor()
 
     def _edit(self, index: QModelIndex):
+        self._init_text_editor()
         node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
         self._current_doc = node.document
 
@@ -163,11 +182,10 @@ class DocumentsView(AbstractNovelView):
 
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
-            self.ui.textEditor.setVisible(True)
             if char:
-                self.ui.textEditor.setText(self._current_doc.content, char.name, title_read_only=True)
+                self.textEditor.setText(self._current_doc.content, char.name, title_read_only=True)
             else:
-                self.ui.textEditor.setText(self._current_doc.content, self._current_doc.title)
+                self.textEditor.setText(self._current_doc.content, self._current_doc.title)
         else:
             self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
             while self.ui.customEditorPage.layout().count():
@@ -190,16 +208,51 @@ class DocumentsView(AbstractNovelView):
         if not self._current_doc:
             return
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
-            self._current_doc.content = self.ui.textEditor.textEditor.toHtml()
+            self._current_doc.content = self.textEditor.textEditor.toHtml()
         json_client.save_document(self.novel, self._current_doc)
 
     def _title_changed(self):
         if self._current_doc:
-            new_title = self.ui.textEditor.textTitle.toPlainText()
+            new_title = self.textEditor.textTitle.toPlainText()
             if new_title and new_title != self._current_doc.title:
                 self._current_doc.title = new_title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
                 self.repo.update_novel(self.novel)
+
+
+# partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
+class GrammarHighlighter(QSyntaxHighlighter):
+
+    def __init__(self, document: QTextDocument, tool: Optional[LanguageTool] = None):
+        super(GrammarHighlighter, self).__init__(document)
+        self._misspelling_format = QTextCharFormat()
+        self._misspelling_format.setUnderlineColor(Qt.red)
+        self._misspelling_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+
+        self._style_format = QTextCharFormat()
+        self._style_format.setUnderlineColor(Qt.blue)
+        self._style_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+
+        self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
+
+        self._language_tool: Optional[LanguageTool] = tool
+
+    def setLanguageTool(self, tool: LanguageTool):
+        self._language_tool = tool
+        self.rehighlight()
+
+    @overrides
+    def highlightBlock(self, text: str) -> None:
+        if self._language_tool:
+            matches = self._language_tool.check(text)
+            misspellings = []
+            for m in matches:
+                self.setFormat(m.offset, m.errorLength,
+                               self._formats_per_issue.get(m.ruleIssueType, self._misspelling_format))
+                misspellings.append((m.offset, m.errorLength, m.replacements))
+            data = QTextBlockUserData()
+            data.misspelled = misspellings
+            self.setCurrentBlockUserData(data)
 
 
 class DocumentsSidebar(QWidget, AbstractNovelView, Ui_DocumentsSidebarWidget):

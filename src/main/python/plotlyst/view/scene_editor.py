@@ -22,7 +22,7 @@ from typing import Optional, List, Set
 
 import emoji
 from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
-    QAbstractItemModel, Qt, QSize, QEvent
+    QAbstractItemModel, Qt, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
     QWidgetAction, QTableView
@@ -30,9 +30,7 @@ from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, \
-    VERY_UNHAPPY, \
-    UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, SceneBuilderElement, Document, ScenePlotValue
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
@@ -67,17 +65,6 @@ class SceneEditor(QObject):
         self.ui.btnNotes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
         self.ui.btnBuilder.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
-
-        self.ui.btnVeryUnhappy.setFont(self._emoji_font)
-        self.ui.btnVeryUnhappy.setText(emoji.emojize(':fearful_face:'))
-        self.ui.btnUnHappy.setFont(self._emoji_font)
-        self.ui.btnUnHappy.setText(emoji.emojize(':worried_face:'))
-        self.ui.btnNeutral.setFont(self._emoji_font)
-        self.ui.btnNeutral.setText(emoji.emojize(':neutral_face:'))
-        self.ui.btnHappy.setFont(self._emoji_font)
-        self.ui.btnHappy.setText(emoji.emojize(':slightly_smiling_face:'))
-        self.ui.btnVeryHappy.setFont(self._emoji_font)
-        self.ui.btnVeryHappy.setText(emoji.emojize(':smiling_face_with_smiling_eyes:'))
 
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
 
@@ -156,25 +143,13 @@ class SceneEditor(QObject):
         self._save_enabled = False
         self._update_view(scene)
 
-        self.ui.wdgPov.installEventFilter(self)
-
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.sbDay.valueChanged.connect(self._save_scene)
         self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
-        self.ui.btnGroupArc.buttonClicked.connect(self._save_scene)
         self.ui.btnGroupPages.buttonToggled.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
         self.ui.btnAttributes.setChecked(True)
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Enter:
-            self._enabled_pov_arc_widgets(True)
-        if event.type() == QEvent.Leave:
-            self._enabled_pov_arc_widgets(False)
-
-        return super(SceneEditor, self).eventFilter(watched, event)
 
     def _update_view(self, scene: Optional[Scene] = None):
         if scene:
@@ -188,24 +163,10 @@ class SceneEditor(QObject):
                 self.scene.day = self.novel.scenes[-1].day
             self._new_scene = True
 
-        for char_arc in self.scene.arcs:
-            if scene.pov and char_arc.character == scene.pov:
-                if char_arc.arc == VERY_UNHAPPY:
-                    self.ui.btnVeryUnhappy.setChecked(True)
-                elif char_arc.arc == UNHAPPY:
-                    self.ui.btnUnHappy.setChecked(True)
-                elif char_arc.arc == NEUTRAL:
-                    self.ui.btnNeutral.setChecked(True)
-                elif char_arc.arc == HAPPY:
-                    self.ui.btnHappy.setChecked(True)
-                elif char_arc.arc == VERY_HAPPY:
-                    self.ui.btnVeryHappy.setChecked(True)
-
         if self.scene.pov:
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
         else:
             self.ui.cbPov.setCurrentIndex(0)
-        self._enabled_pov_arc_widgets(False)
         self._update_pov_avatar()
         self.ui.sbDay.setValue(self.scene.day)
 
@@ -289,34 +250,12 @@ class SceneEditor(QObject):
         else:
             self.ui.textNotes.clear()
 
-    def _enabled_pov_arc_widgets(self, edition: bool):
-        if self.scene.pov:
-            self.ui.btnVeryUnhappy.setVisible(edition)
-            self.ui.btnUnHappy.setVisible(edition)
-            self.ui.btnNeutral.setVisible(edition)
-            self.ui.btnHappy.setVisible(edition)
-            self.ui.btnVeryHappy.setVisible(edition)
-
-            if not edition:
-                self.ui.cbPov.setStyleSheet('border: 0px;')
-                for btn in self.ui.btnGroupArc.buttons():
-                    if btn.isChecked():
-                        btn.setVisible(True)
-        else:
-            self.ui.btnVeryUnhappy.setVisible(False)
-            self.ui.btnUnHappy.setVisible(False)
-            self.ui.btnNeutral.setVisible(False)
-            self.ui.btnHappy.setVisible(False)
-            self.ui.btnVeryHappy.setVisible(False)
-
     def _on_pov_changed(self):
         pov = self.ui.cbPov.currentData()
         if pov:
             self.scene.pov = pov
-            self._enabled_pov_arc_widgets(True)
         else:
             self.scene.pov = None
-            self._enabled_pov_arc_widgets(False)
         self._update_pov_avatar()
         self._characters_model.update()
         self.ui.cbPov.setStyleSheet('''
@@ -365,20 +304,6 @@ class SceneEditor(QObject):
 
         self.scene.tags.clear()
         self.scene.tags.extend(self.tagsEditor.value())
-
-        arc = NEUTRAL
-        if self.ui.btnVeryUnhappy.isChecked():
-            arc = VERY_UNHAPPY
-        elif self.ui.btnUnHappy.isChecked():
-            arc = UNHAPPY
-        elif self.ui.btnHappy.isChecked():
-            arc = HAPPY
-        elif self.ui.btnVeryHappy.isChecked():
-            arc = VERY_HAPPY
-
-        self.scene.arcs.clear()
-        if self.scene.pov:
-            self.scene.arcs.append(CharacterArc(arc, self.scene.pov))
 
         if self._new_scene:
             self.novel.scenes.append(self.scene)

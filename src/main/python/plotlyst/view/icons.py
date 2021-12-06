@@ -81,8 +81,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.filter')
 
     @staticmethod
-    def edit_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.pencil')
+    def edit_icon(color_on: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.pencil', color_on=color_on)
 
     @staticmethod
     def plus_edit_icon() -> QIcon:
@@ -185,8 +185,8 @@ class IconRegistry:
         return qtawesome.icon('mdi.notebook', color_on='darkBlue')
 
     @staticmethod
-    def document_edition_icon() -> QIcon:
-        return qtawesome.icon('ei.file-edit', color_on='darkBlue')
+    def document_edition_icon(color: str = 'black', color_on='darkBlue') -> QIcon:
+        return qtawesome.icon('ei.file-edit', color=color, color_on=color_on)
 
     @staticmethod
     def act_one_icon() -> QIcon:
@@ -209,8 +209,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.target', color='darkBlue')
 
     @staticmethod
-    def decision_icon() -> QIcon:
-        return qtawesome.icon('fa.lightbulb-o', color='#3cdbd3')
+    def decision_icon(color: str = '#3cdbd3', color_on='darkBlue') -> QIcon:
+        return IconRegistry.from_name('fa.lightbulb-o', color=color, color_on=color_on)
 
     @staticmethod
     def reaction_icon() -> QIcon:
@@ -361,8 +361,8 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.cog')
 
     @staticmethod
-    def cause_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.ray-start')
+    def cause_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.ray-start', color=color)
 
     @staticmethod
     def cause_and_effect_icon() -> QIcon:

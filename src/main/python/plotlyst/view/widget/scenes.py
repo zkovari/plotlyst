@@ -22,7 +22,7 @@ from abc import abstractmethod
 from typing import List, Set, Optional, Union
 
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer
-from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent
+from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView
 from overrides import overrides
 
@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
-from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -208,15 +208,29 @@ class _PlaceHolder(QFrame):
         super(_PlaceHolder, self).__init__()
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(5)
+        self.setFixedHeight(3)
+        self.setAcceptDrops(True)
+        self.setFrameStyle(QFrame.Box)
 
-        self.setStyleSheet('''
-                border: 0px;
-                color: lightgrey;''')
+        self.setStyle()
+
+    def setStyle(self, dropMode: bool = False) -> None:
+        if dropMode:
+            self.setLineWidth(2)
+        else:
+            self.setLineWidth(0)
 
     @overrides
     def parent(self) -> QWidget:
         return super(_PlaceHolder, self).parent()
+
+    @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        self.setStyle(True)
+
+    @overrides
+    def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
+        self.setStyle()
 
 
 def is_placeholder(widget: QWidget) -> bool:
@@ -224,6 +238,7 @@ def is_placeholder(widget: QWidget) -> bool:
 
 
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
+
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, placeholder: str = 'Beat',
                  topVisible: bool = False, parent=None):
         super(SceneStructureItemWidget, self).__init__(parent)
@@ -231,10 +246,15 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.scene_structure_item = scene_structure_item
         self.setupUi(self)
 
-        self.text.setText(self.scene_structure_item.text)
         self.text.setPlaceholderText(placeholder)
+        self.text.setMaximumHeight(20)
+        self.text.setText(self.scene_structure_item.text)
         self.btnPlaceholder.setVisible(topVisible)
         self.btnIcon.setIcon(IconRegistry.circle_icon())
+        self.btnDelete.setIcon(IconRegistry.wrong_icon(color='black'))
+        self.btnDelete.clicked.connect(self._remove)
+        retain_size_when_hidden(self.btnDelete)
+        self.btnDelete.setHidden(True)
 
     def sceneStructureItem(self) -> SceneStructureItem:
         self.scene_structure_item.text = self.text.toPlainText()
@@ -242,6 +262,19 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
     def activate(self):
         self.text.setFocus()
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        self.btnDelete.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.btnDelete.setHidden(True)
+
+    def _remove(self):
+        if self.parent():
+            self.parent().layout().removeWidget(self)
+            self.deleteLater()
 
 
 class SceneGoalItemWidget(SceneStructureItemWidget):
@@ -347,18 +380,18 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.rbScene.setIcon(IconRegistry.action_scene_icon())
         self.rbSequel.setIcon(IconRegistry.reaction_scene_icon())
-        self.rbCustom.setIcon(IconRegistry.from_name('mdi.arrow-decision'))
 
         self.btnTemplates.setIcon(IconRegistry.template_icon())
+
+        self.btnBeginningIcon.setIcon(IconRegistry.cause_icon())
+        self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex'))
+        self.btnEndIcon.setIcon(IconRegistry.from_name('mdi.ray-end'))
 
         self.btnSceneIcon.setIcon(IconRegistry.action_scene_icon())
         self.btnSequelIcon.setIcon(IconRegistry.reaction_scene_icon())
         self.btnGoal.setIcon(IconRegistry.goal_icon())
         self.btnConflict.setIcon(IconRegistry.conflict_icon())
         self.btnOutcome.setIcon(IconRegistry.disaster_icon())
-        self.btnBeginningIcon.setIcon(IconRegistry.cause_icon())
-        self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex'))
-        self.btnEndIcon.setIcon(IconRegistry.from_name('mdi.ray-end'))
 
         self.btnReaction.setIcon(IconRegistry.reaction_icon())
         self.btnDilemma.setIcon(IconRegistry.dilemma_icon())
@@ -394,13 +427,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.clear()
         self.btnInventory.setChecked(False)
 
-        if self.scene.type == SceneType.ACTION:
-            self.rbScene.setChecked(True)
-        elif self.scene.type == SceneType.REACTION:
-            self.rbSequel.setChecked(True)
-        else:
-            self.btnInventory.setChecked(True)
-            self.rbCustom.setChecked(True)
+        self._checkSceneType()
 
         if scene.agendas and scene.agendas[0].items:
             widgets_per_parts = {1: self.wdgBeginning, 2: self.wdgMiddle, 3: self.wdgEnd}
@@ -428,14 +455,22 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                     widget = TicklingClockSceneItemWidget(self.novel, item)
                 else:
                     widget = SceneStructureItemWidget(self.novel, item)
+
                 widgets_per_parts.get(item.part, self.wdgEnd).layout().addWidget(widget)
-                self._addPlaceholder(widgets_per_parts.get(item.part, self.wdgEnd))
+                self._addPlaceholder(widgets_per_parts[item.part])
+
+            for part in widgets_per_parts.values():
+                self._addPlaceholder(part, 0)
 
             self.btnEmotionStart.setValue(scene.agendas[0].beginning_emotion)
             self.btnEmotionEnd.setValue(scene.agendas[0].ending_emotion)
         else:
             self.btnEmotionStart.setValue(NEUTRAL)
             self.btnEmotionEnd.setValue(NEUTRAL)
+
+        self._setEmotionColorChange()
+        self.btnEmotionStart.emotionChanged.connect(self._setEmotionColorChange)
+        self.btnEmotionEnd.emotionChanged.connect(self._setEmotionColorChange)
 
         if not self.wdgBeginning.layout().count():
             self._addPlaceholder(self.wdgBeginning)
@@ -446,6 +481,24 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         if not self.agendas()[0].items:
             self._type_clicked()
+
+    def _checkSceneType(self):
+        if self.scene.type == SceneType.ACTION:
+            self.rbScene.setChecked(True)
+        elif self.scene.type == SceneType.REACTION:
+            self.rbSequel.setChecked(True)
+        else:
+            self.btnInventory.setChecked(True)
+            self.rbCustom.setChecked(True)
+
+    def _setEmotionColorChange(self):
+        color_start = self.btnEmotionStart.color()
+        color_end = self.btnEmotionEnd.color()
+        self.btnEmotionRangeDisplay.setStyleSheet(f'''
+        background-color: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0,
+                                      stop: 0 {color_start}, stop: 1 {color_end});
+        color: white;
+        ''')
 
     def updatePov(self):
         self.clear(addPlaceholders=True)
@@ -602,16 +655,32 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         layout.takeAt(index)
         placeholder.deleteLater()
         layout.insertWidget(index, widget)
-        self._addPlaceholder(parent)
 
-    def _addPlaceholder(self, widget: QWidget):
         _placeholder = _PlaceHolder()
-        widget.layout().addWidget(_placeholder)
-        _placeholder.setAcceptDrops(True)
+        layout.insertWidget(index + 1, _placeholder)
+        _placeholder.installEventFilter(self)
+
+    def _addPlaceholder(self, widget: QWidget, pos: int = -1):
+        _placeholder = _PlaceHolder()
+        if pos >= 0:
+            widget.layout().insertWidget(pos, _placeholder)
+        else:
+            widget.layout().addWidget(_placeholder)
         _placeholder.installEventFilter(self)
 
     def _type_clicked(self):
-        self.clear(addPlaceholders=True)
+        if (self.rbScene.isChecked() and self.scene.type == SceneType.ACTION) or (
+                self.rbSequel.isChecked() and self.scene.type == SceneType.REACTION) or (
+                self.rbCustom.isChecked() and self.scene.type == SceneType.MIXED):
+            return
+
+        for item in self.agendas()[0].items:
+            if item.text or item.goals or item.conflicts:
+                if not ask_confirmation(
+                        "Some beats are filled up. Are you sure you want to change the scene's structure?"):
+                    self._checkSceneType()  # revert
+                    return
+                break
 
         if self.rbScene.isChecked():
             self.scene.type = SceneType.ACTION
@@ -635,6 +704,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                                               placeholder='Describe the ending of this scene')
             self.btnInventory.setChecked(True)
 
+        self.clear(addPlaceholders=True)
         self._addWidget(self.wdgBeginning.layout().itemAt(0).widget(), top)
         self._addWidget(self.wdgMiddle.layout().itemAt(0).widget(), middle)
         self._addWidget(self.wdgEnd.layout().itemAt(0).widget(), bottom)

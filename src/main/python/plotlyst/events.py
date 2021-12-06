@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
 
+from PyQt5.QtWidgets import QTextEdit
+
 from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene
 from src.main.python.plotlyst.event.core import Event
 
@@ -76,3 +78,8 @@ class NovelStoryStructureUpdated(Event):
 @dataclass
 class PlotCreatedEvent(Event):
     pass
+
+
+@dataclass
+class OpenDistractionFreeMode(Event):
+    editor: QTextEdit

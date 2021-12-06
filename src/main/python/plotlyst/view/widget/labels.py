@@ -56,7 +56,6 @@ class LabelsWidget(QWidget):
         label.setStyleSheet(
             f'''QLabel {{
                 background-color: {color}; border-radius: 6px; color: {text_color};
-                padding-left: 3px; padding-right: 3px;
             }}''')
 
         self.layout().addWidget(label)
@@ -232,7 +231,7 @@ class LabelsEditorWidget(QFrame):
         self.btnEdit = QPushButton()
         self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
         self.btnEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
-        self.btnEdit.setStyleSheet('QPushButton::menu-indicator{width:0px;} QPushButton {padding:0 0 0 0;}')
+        self.btnEdit.setStyleSheet('QPushButton::menu-indicator{width:0px;} QPushButton {padding:1 5 1 5;}')
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)

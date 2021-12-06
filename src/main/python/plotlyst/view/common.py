@@ -23,9 +23,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Any
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor
-from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog
+from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint
+from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
+    QMenu, QAction
 from fbs_runtime import platform
 
 
@@ -140,3 +141,53 @@ def text_color_with_bg_color(bg_color: str) -> str:
     b = rgb[2]
     hsp = math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b))
     return 'black' if hsp > 127.5 else 'white'
+
+
+def action(text: str, icon: Optional[QIcon] = None, slot=None) -> QAction:
+    _action = QAction(text)
+    if icon:
+        _action.setIcon(icon)
+    if slot:
+        _action.triggered.connect(slot)
+
+    return _action
+
+
+class PopupMenuBuilder:
+    def __init__(self, parent: QWidget, viewport: QWidget, pos: QPoint):
+        self._parent = parent
+        self._viewport = viewport
+        self.menu = QMenu(parent)
+        self.pos = pos
+
+    @staticmethod
+    def from_index(view: QAbstractItemView, index: QModelIndex) -> 'PopupMenuBuilder':
+        rect: QRect = view.visualRect(index)
+        return PopupMenuBuilder(view, view.viewport(), QPoint(rect.x(), rect.y()))
+
+    @staticmethod
+    def from_widget_position(widget: QWidget, pos: QPoint) -> 'PopupMenuBuilder':
+        return PopupMenuBuilder(widget, widget, pos)
+
+    def add_action(self, text: str, icon: Optional[QIcon] = None, slot=None) -> QAction:
+        _action = action(text, icon, slot)
+        _action.setParent(self.menu)
+        self.menu.addAction(_action)
+        return _action
+
+    def add_submenu(self, text: str, icon: Optional[QIcon] = None) -> QMenu:
+        submenu = QMenu(text, self.menu)
+        if icon:
+            submenu.setIcon(icon)
+        self.menu.addMenu(submenu)
+
+        return submenu
+
+    def popup(self):
+        self.menu.popup(self._viewport.mapToGlobal(self.pos))
+
+
+def retain_size_when_hidden(widget: QWidget):
+    policy = widget.sizePolicy()
+    policy.setRetainSizeWhenHidden(True)
+    widget.setSizePolicy(policy)

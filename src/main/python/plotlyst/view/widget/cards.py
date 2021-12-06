@@ -19,20 +19,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 import emoji
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
 from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent
-from PyQt5.QtWidgets import QFrame, QApplication
+from PyQt5.QtWidgets import QFrame, QApplication, QAction
 from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, SceneType
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, SceneType, Document
+from src.main.python.plotlyst.view.common import emoji_font, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
+from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
 from src.main.python.plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar, avatars
@@ -54,10 +55,18 @@ class Card(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.dragStartPosition: Optional[QPoint] = None
+        self._dragEnabled: bool = True
+        self._popup_actions: List[QAction] = []
+
+    def isDragEnabled(self) -> bool:
+        return self._dragEnabled
+
+    def setDragEnabled(self, enabled: bool):
+        self._dragEnabled = enabled
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.LeftButton:
+        if self._dragEnabled and event.button() == Qt.LeftButton:
             self.dragStartPosition = event.pos()
         else:
             self.dragStartPosition = None
@@ -65,6 +74,8 @@ class Card(QFrame):
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        if not self._dragEnabled:
+            return
         if not event.buttons() & Qt.LeftButton:
             return
         if not self.dragStartPosition:
@@ -111,6 +122,11 @@ class Card(QFrame):
         else:
             event.ignore()
 
+    def setPopupMenuActions(self, actions: List[QAction]):
+        self._popup_actions = actions
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._contextMenuRequested)
+
     def select(self):
         self._setStyleSheet(selected=True)
         self.selected.emit(self)
@@ -141,6 +157,14 @@ class Card(QFrame):
 
     def _borderColor(self, selected: bool = False) -> str:
         return '#2a4d69' if selected else '#adcbe3'
+
+    def _contextMenuRequested(self, pos: QPoint):
+        self.select()
+        builder = PopupMenuBuilder.from_widget_position(self, pos)
+        for action in self._popup_actions:
+            action.setParent(builder.menu)
+            builder.menu.addAction(action)
+        builder.popup()
 
 
 class NovelCard(Ui_NovelCard, Card):
@@ -185,6 +209,27 @@ class CharacterCard(Ui_CharacterCard, Card):
     @overrides
     def mimeType(self) -> str:
         return 'application/character-card'
+
+
+class JournalCard(Card, Ui_JournalCard):
+
+    def __init__(self, journal: Document, parent=None):
+        super(JournalCard, self).__init__(parent)
+        self.setupUi(self)
+        self.journal = journal
+
+        self.refresh()
+        self.textTitle.setAlignment(Qt.AlignCenter)
+
+        self._setStyleSheet()
+        self.setDragEnabled(False)
+
+    @overrides
+    def mimeType(self) -> str:
+        return 'application/journal-card'
+
+    def refresh(self):
+        self.textTitle.setText(self.journal.title)
 
 
 class SceneCard(Ui_SceneCard, Card):
@@ -288,3 +333,8 @@ class CardsView(QFrame):
         card.setAcceptDrops(True)
         card.dropped.connect(self.swapped.emit)
         self._layout.addWidget(card)
+
+    def cardAt(self, pos: int) -> Optional[Card]:
+        item = self._layout.itemAt(pos)
+        if item and item.widget():
+            return item.widget()

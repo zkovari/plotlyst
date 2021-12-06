@@ -47,8 +47,11 @@ class EventLogReporter(QObject):
 event_log_reporter = EventLogReporter()
 
 
+def emit_info(message: str, highlighted: bool = False, time=3000):
+    event_log_reporter.info.emit(EventLog(message=message, highlighted=highlighted), time)
+
+
 def emit_critical(message: str, details: Optional[str] = None, time=5000):
-    """Emit a highlighted message through EventLogReporter's error signal"""
     event_log_reporter.error.emit(EventLog(message=message, details=details, highlighted=True), time)
 
 

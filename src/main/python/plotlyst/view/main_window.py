@@ -17,21 +17,26 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List
+import atexit
+from typing import List, Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton
+from PyQt5.QtCore import Qt, QThreadPool, QObject, QEvent
+from PyQt5.QtGui import QKeyEvent
+from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
+from fbs_runtime import platform
+from language_tool_python import LanguageTool
 from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender
+from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender, \
+    emit_critical, emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
-    SceneChangedEvent, NovelUpdatedEvent
+    SceneChangedEvent, NovelUpdatedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -42,11 +47,14 @@ from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSide
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.locations_view import LocationsView
+from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.worker.cache import acts_registry
+from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 
@@ -61,6 +69,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.setWindowState(Qt.WindowMaximized)
         self.novel = None
         self._current_text_widget = None
+        self.manuscript_view: Optional[ManuscriptView] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
@@ -80,12 +89,35 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._init_views()
 
         self.event_log_handler = EventLogHandler(self.statusBar())
+        event_log_reporter.info.connect(self.event_log_handler.on_info_event)
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
         event_sender.send.connect(event_dispatcher.dispatch)
         QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
 
+        self.sliderDocWidth.valueChanged.connect(
+            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
+                                                                                self.width() / 3 - x, 0))
+        self.sliderDocWidth.installEventFilter(self)
+
         self.repo = RepositoryPersistenceManager.instance()
+
+        self.language_tool: Optional[LanguageTool] = None
+        self._threadpool = QThreadPool()
+        self._language_tool_setup_worker = LanguageToolServerSetupWorker(self)
+        if not app_env.test_env():
+            emit_info('Start initializing grammar checker...')
+            self._threadpool.start(self._language_tool_setup_worker)
+
+    def set_language_tool(self, tool: LanguageTool):
+        self.language_tool = tool
+        atexit.register(self.language_tool.close)
+        if self.docs_view:
+            self.notes_view.set_language_tool(self.language_tool)
+        emit_info('Grammar checker was set up.')
+
+    def set_language_tool_error(self, error: str):
+        emit_critical('Could not initialize grammar checker', error)
 
     @overrides
     def event_received(self, event: Event):
@@ -106,6 +138,42 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, SceneChangedEvent):
             self.btnReport.setEnabled(True)
             event_dispatcher.deregister(self, SceneChangedEvent)
+        elif isinstance(event, OpenDistractionFreeMode):
+            self.stackMainPanels.setCurrentWidget(self.pageDistractionFree)
+            clear_layout(self.wdgDistractionFreeEditor.layout())
+            self.wdgDistractionFreeEditor.layout().addWidget(event.editor)
+            self.sliderDocWidth.setVisible(True)
+            self.sliderDocWidth.setMaximum(self.width() / 3)
+            self.sliderDocWidth.setValue(self.width() / 4)
+            self.btnComments.setChecked(False)
+            self._toggle_fullscreen(on=True)
+
+    @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key_Escape:
+            if self.stackMainPanels.currentWidget() is self.pageDistractionFree:
+                editor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
+                self.manuscript_view.restore_editor(editor)
+                self.stackMainPanels.setCurrentWidget(self.pageManuscript)
+                self._toggle_fullscreen(on=False)
+        event.accept()
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if watched is self.sliderDocWidth and event.type() == QEvent.Leave:
+            self.sliderDocWidth.setHidden(True)
+        return super(MainWindow, self).eventFilter(watched, event)
+
+    def _toggle_fullscreen(self, on: bool):
+        self.statusbar.setHidden(on)
+        self.toolBar.setHidden(on)
+        if not platform.is_mac():
+            self.menubar.setHidden(on)
+            if not on:
+                self.showMaximized()
+        if not self.isFullScreen():
+            if on:
+                self.showFullScreen()
 
     @busy
     def _flush_end_fetch_novel(self):
@@ -213,27 +281,69 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
+        self.outline_mode = QToolButton(self.toolBar)
+        self.outline_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.outline_mode.setText('Outline')
+        self.outline_mode.setCheckable(True)
+        self.outline_mode.setIcon(IconRegistry.decision_icon(color='black'))
+
+        self.manuscript_mode = QToolButton(self.toolBar)
+        self.manuscript_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.manuscript_mode.setText('Manuscript')
+        self.manuscript_mode.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
+        self.manuscript_mode.setCheckable(True)
+
+        self.reports_mode = QToolButton(self.toolBar)
+        self.reports_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.reports_mode.setText('Reports')
+        self.reports_mode.setIcon(IconRegistry.reports_icon())
+        self.reports_mode.setCheckable(True)
+
+        self._mode_btn_group = QButtonGroup()
+        self._mode_btn_group.addButton(self.outline_mode)
+        self._mode_btn_group.addButton(self.manuscript_mode)
+        self._mode_btn_group.addButton(self.reports_mode)
+        self._mode_btn_group.setExclusive(True)
+        self._mode_btn_group.buttonToggled.connect(self._panel_toggled)
+
         self.btnComments = QToolButton(self.toolBar)
         self.btnComments.setIcon(IconRegistry.from_name('mdi.comment-outline', color='#2e86ab'))
         self.btnComments.setMinimumWidth(50)
-        self.btnComments.setCursor(Qt.PointingHandCursor)
         self.btnComments.setCheckable(True)
         self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
 
-        self.btnDocs = QToolButton(self.toolBar)
-        self.btnDocs.setIcon(IconRegistry.document_edition_icon())
-        self.btnDocs.setMinimumWidth(50)
-        self.btnDocs.setCursor(Qt.PointingHandCursor)
-        self.btnDocs.setCheckable(True)
-        self.btnDocs.toggled.connect(self.wdgDocs.setVisible)
+        # self.btnDocs = QToolButton(self.toolBar)
+        # self.btnDocs.setIcon(IconRegistry.document_edition_icon())
+        # self.btnDocs.setMinimumWidth(50)
+        # self.btnDocs.setCursor(Qt.PointingHandCursor)
+        # self.btnDocs.setCheckable(True)
+        # self.btnDocs.toggled.connect(self.wdgDocs.setVisible)
 
+        self.toolBar.addWidget(spacer_widget(5))
+        self.toolBar.addAction(IconRegistry.home_icon(), 'Home')
+        self.toolBar.addSeparator()
+        self.toolBar.addWidget(self.outline_mode)
+        self.toolBar.addWidget(self.manuscript_mode)
+        self.toolBar.addWidget(self.reports_mode)
         self.toolBar.addWidget(spacer_widget())
-
         self.toolBar.addWidget(self.btnComments)
-        self.toolBar.addWidget(self.btnDocs)
+        # self.toolBar.addWidget(self.btnDocs)
 
         self.wdgSidebar.setHidden(True)
         self.wdgDocs.setHidden(True)
+
+        self.outline_mode.setChecked(True)
+
+    def _panel_toggled(self):
+        if self.outline_mode.isChecked():
+            self.stackMainPanels.setCurrentWidget(self.pageOutline)
+            self._on_view_changed()
+        elif self.manuscript_mode.isChecked():
+            self.stackMainPanels.setCurrentWidget(self.pageManuscript)
+            if not self.manuscript_view:
+                self.manuscript_view = ManuscriptView(self.novel)
+                self.pageManuscript.layout().addWidget(self.manuscript_view.widget)
+            self.manuscript_view.activate()
 
     def _import_from_scrivener(self):
         self.btnHome.click()
@@ -281,6 +391,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, NovelReloadRequestedEvent)
         event_dispatcher.register(self, NovelDeletedEvent)
         event_dispatcher.register(self, NovelUpdatedEvent)
+        event_dispatcher.register(self, OpenDistractionFreeMode)
         if self.novel and not self.novel.scenes:
             event_dispatcher.register(self, SceneChangedEvent)
 
@@ -297,6 +408,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.reports_view.widget.deleteLater()
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         self.comments_view.widget.deleteLater()
+
+        if self.pageManuscript.layout().count():
+            self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
+            self.manuscript_view.widget.deleteLater()
+            self.manuscript_view = None
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:

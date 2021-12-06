@@ -380,3 +380,25 @@ class DistributionFilterProxyModel(QSortFilterProxyModel):
                 return False
 
         return filtered
+
+
+class ActionBasedTreeModel:
+    def __init__(self):
+        self._action_index: Optional[QModelIndex] = None
+
+    def displayAction(self, index: QModelIndex):
+        self._updateActionIndex(index)
+        self._emitActionsChanged(index)
+
+    def _updateActionIndex(self, index: QModelIndex):
+        if index.row() >= 0:
+            if self._action_index and self._action_index.row() == index.row() \
+                    and self._action_index.parent() == index.parent():  # same index
+                return
+            self._action_index = index
+        else:
+            self._action_index = None
+
+    @abstractmethod
+    def _emitActionsChanged(self, index: QModelIndex):
+        pass

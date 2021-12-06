@@ -61,6 +61,8 @@ class CharacterEditor:
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
 
+        self.ui.wdgJournal.setCharacter(self.novel, self.character)
+
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
         self._init_profile_view()
 

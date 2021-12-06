@@ -144,6 +144,9 @@
    </item>
    <item>
     <widget class="QStackedWidget" name="stackedEditor">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
      <widget class="QWidget" name="docEditorPage">
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <property name="spacing">
@@ -161,16 +164,6 @@
        <property name="bottomMargin">
         <number>1</number>
        </property>
-       <item>
-        <widget class="RichTextEditor" name="textEditor">
-         <property name="frameShape">
-          <enum>QFrame::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="customEditorPage">
@@ -201,12 +194,6 @@
    <class>ActionBasedTreeView</class>
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.tree_view</header>
-  </customwidget>
-  <customwidget>
-   <class>RichTextEditor</class>
-   <extends>QFrame</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

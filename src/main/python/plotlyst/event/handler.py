@@ -26,6 +26,7 @@ from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QMessageBox, QWidget, QStatusBar, QApplication
 
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventLog, Severity, \
     emit_critical, EventListener, Event
 from src.main.python.plotlyst.view.dialog.error import ErrorMessageBox
@@ -37,6 +38,14 @@ class EventLogHandler:
     def __init__(self, statusbar: QStatusBar):
         self.statusbar = statusbar
         self._error_event = asyncio.Event()
+
+    def on_info_event(self, event: EventLog, time: int) -> None:
+        if app_env.test_env():
+            return
+        if not event.highlighted:
+            self.statusbar.showMessage(event.message, time)
+            self.statusbar.setStyleSheet('color: #235789;')
+        self._handle_highlighted_event(event, Severity.INFO)
 
     def on_error_event(self, event: EventLog, time: int) -> None:
         if not self._error_event.is_set():

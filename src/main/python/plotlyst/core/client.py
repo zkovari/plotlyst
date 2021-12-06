@@ -104,6 +104,7 @@ class CharacterInfo:
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     document: Optional[Document] = None
+    journals: List['Document'] = field(default_factory=list)
 
 
 @dataclass
@@ -157,6 +158,7 @@ class SceneInfo:
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     document: Optional[Document] = None
+    manuscript: Optional[Document] = None
 
 
 @dataclass
@@ -370,7 +372,7 @@ class JsonClient:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 character = Character(name=info.name, id=info.id, template_values=info.template_values,
-                                      backstory=info.backstory, document=info.document)
+                                      backstory=info.backstory, document=info.document, journals=info.journals)
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -460,7 +462,7 @@ class JsonClient:
                               arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
                               conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags,
-                              document=info.document)
+                              document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
         return Novel(title=project_novel_info.title, id=novel_info.id,
                      plots=novel_info.plots, characters=characters,
@@ -503,7 +505,7 @@ class JsonClient:
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id,
-                                  backstory=char.backstory, document=char.document)
+                                  backstory=char.backstory, document=char.document, journals=char.journals)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
@@ -524,7 +526,7 @@ class JsonClient:
                          stage=self.__id_or_none(scene.stage),
                          beat=self.__id_or_none(scene.beat),
                          conflicts=conflicts, goals=[x.text for x in scene.goals], comments=scene.comments,
-                         tags=scene.tags, document=scene.document)
+                         tags=scene.tags, document=scene.document, manuscript=scene.manuscript)
         self.__persist_info(self.scenes_dir, info)
 
     @staticmethod

@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, List
+from typing import Optional
 
 from PyQt5.QtCore import QItemSelection
 from overrides import overrides
@@ -58,7 +58,6 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-        self.character_cards: List[CharacterCard] = []
         self.selected_card: Optional[CharacterCard] = None
         self._update_cards()
 
@@ -76,14 +75,12 @@ class CharactersView(AbstractNovelView):
         self._update_cards()
 
     def _update_cards(self):
-        self.character_cards.clear()
         self.selected_card = None
         self.ui.cards.clear()
 
         for character in self.novel.characters:
             card = CharacterCard(character)
             self.ui.cards.addCard(card)
-            self.character_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
 
