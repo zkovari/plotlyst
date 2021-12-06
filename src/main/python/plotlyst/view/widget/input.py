@@ -33,6 +33,7 @@ from overrides import overrides
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.view.common import line
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 
 
 class AutoAdjustableTextEdit(QTextEdit):
@@ -356,3 +357,7 @@ class RotatedButton(QPushButton):
         size = super(RotatedButton, self).sizeHint()
         size.transpose()
         return size
+
+
+class Toggle(AnimatedToggle):
+    pass
