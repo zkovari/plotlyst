@@ -23,11 +23,11 @@ from functools import partial
 
 import fbs_runtime.platform
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
-    QKeyEvent, QPaintEvent, QTextListFormat
+    QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication
+    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
@@ -361,3 +361,95 @@ class RotatedButton(QPushButton):
 
 class Toggle(AnimatedToggle):
     pass
+
+
+class _PowerBar(QFrame):
+    def __init__(self, steps: int = 10, startColor: str = 'red', endColor: str = 'green', parent=None):
+        super(_PowerBar, self).__init__(parent)
+        self.steps = steps
+        self.startColor = startColor
+        self.endColor = endColor
+        self.value: int = 0
+
+    @overrides
+    def sizeHint(self) -> QSize:
+        return QSize(10 * self.steps, 30)
+
+    @overrides
+    def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), Qt.white)
+        gradient = QLinearGradient(0, 0, self.width(), self.height())
+        gradient.setColorAt(0, QColor(self.startColor))
+        gradient.setColorAt(1, QColor(self.endColor))
+        brush = QBrush(gradient)
+        painter.setBrush(brush)
+
+        painter.fillRect(0, 0, self.value * 10, self.height(), brush)
+
+    def increase(self):
+        if self.value < self.steps:
+            self.value += 1
+            self.update()
+
+    def decrease(self):
+        if self.value > 0:
+            self.value -= 1
+            self.update()
+
+
+class PowerBar(QFrame):
+    MINUS_COLOR_IDLE: str = '#c75146'
+    MINUS_COLOR_ACTIVE: str = '#ad2e24'
+    PLUS_COLOR_IDLE: str = '#52b788'
+    PLUS_COLOR_ACTIVE: str = '#81171b'
+
+    def __init__(self, parent=None):
+        super(PowerBar, self).__init__(parent)
+
+        self.setFrameStyle(QFrame.Box)
+        self.setLayout(QHBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(3)
+        self.btnMinus = QToolButton()
+        self.btnMinus.setIcon(IconRegistry.minus_icon(self.MINUS_COLOR_IDLE))
+        self.btnPlus = QToolButton()
+        self.btnPlus.setIcon(IconRegistry.plus_circle_icon(self.PLUS_COLOR_IDLE))
+        self._styleButton(self.btnMinus)
+        self._styleButton(self.btnPlus)
+        self.btnMinus.clicked.connect(self.decrease)
+        self.btnPlus.clicked.connect(self.increase)
+
+        self._bar = _PowerBar(startColor='#e1ecf7', endColor='#2ec4b6')
+        self.layout().addWidget(self.btnMinus)
+        self.layout().addWidget(self._bar)
+        self.layout().addWidget(self.btnPlus)
+
+    def _styleButton(self, button: QToolButton):
+        button.setStyleSheet('border: 0px;')
+        button.installEventFilter(self)
+        button.setIconSize(QSize(14, 14))
+        button.setCursor(Qt.PointingHandCursor)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(watched, QToolButton):
+            if event.type() == QEvent.Enter:
+                watched.setIconSize(QSize(16, 16))
+            elif event.type() == QEvent.Leave:
+                watched.setIconSize(QSize(14, 14))
+
+        return super(PowerBar, self).eventFilter(watched, event)
+
+    def value(self) -> int:
+        return self._bar.value
+
+    def decrease(self):
+        self.btnMinus.setIcon(IconRegistry.minus_icon(self.MINUS_COLOR_ACTIVE))
+        QTimer.singleShot(100, lambda: self.btnMinus.setIcon(IconRegistry.minus_icon(self.MINUS_COLOR_IDLE)))
+        self._bar.decrease()
+
+    def increase(self):
+        self.btnPlus.setIcon(IconRegistry.plus_circle_icon(self.PLUS_COLOR_ACTIVE))
+        QTimer.singleShot(100, lambda: self.btnPlus.setIcon(IconRegistry.plus_circle_icon(self.PLUS_COLOR_IDLE)))
+        self._bar.increase()
