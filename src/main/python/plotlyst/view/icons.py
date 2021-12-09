@@ -97,8 +97,8 @@ class IconRegistry:
         return qtawesome.icon('ei.plus-sign', color=color)
 
     @staticmethod
-    def minus_icon() -> QIcon:
-        return qtawesome.icon('fa5s.minus', color='red')
+    def minus_icon(color: str = 'red') -> QIcon:
+        return qtawesome.icon('fa5s.minus', color=color)
 
     @staticmethod
     def history_icon() -> QIcon:
