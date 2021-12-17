@@ -196,6 +196,7 @@ class SelectionItem:
     color_hexa: str = ''
     meta: Dict[str, Any] = field(default_factory=dict)
 
+    @overrides
     def __hash__(self):
         return hash(self.text)
 
@@ -723,22 +724,27 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                 compact=True)
 mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('bc5408a4-c2bd-4370-b46b-95f20018af01'),
-                           selections=[SelectionItem('INTJ'),
-                                       SelectionItem('INTP'),
-                                       SelectionItem('ENTJ'),
-                                       SelectionItem('ENTP'),
-                                       SelectionItem('INFJ'),
-                                       SelectionItem('INFP'),
-                                       SelectionItem('ENFJ'),
-                                       SelectionItem('ENFP'),
-                                       SelectionItem('ISTJ'),
-                                       SelectionItem('ISFJ'),
-                                       SelectionItem('ESTJ'),
-                                       SelectionItem('ESFJ'),
-                                       SelectionItem('ISTP'),
-                                       SelectionItem('ISFP'),
-                                       SelectionItem('ESTP'),
-                                       SelectionItem('ESFP'), ], compact=True)
+                           selections=[SelectionItem('ISTJ', icon='mdi.magnify', icon_color='#2a9d8f'),  # green
+                                       SelectionItem('ISFJ', icon='mdi.fireplace', icon_color='#2a9d8f'),
+                                       SelectionItem('ESTP', icon='ei.fire', icon_color='#2a9d8f'),
+                                       SelectionItem('ESFP', icon='mdi.microphone-variant', icon_color='#2a9d8f'),
+
+                                       SelectionItem('INFJ', icon='ph.tree-fill', icon_color='#e9c46a'),  # yellow
+                                       SelectionItem('INTJ', icon='fa5s.drafting-compass', icon_color='#e9c46a'),
+                                       SelectionItem('ENFP', icon='fa5.sun', icon_color='#e9c46a'),
+                                       SelectionItem('ENTP', icon='fa5.lightbulb', icon_color='#e9c46a'),
+
+                                       SelectionItem('ISTP', icon='fa5s.hammer', icon_color='#457b9d'),  # blue
+                                       SelectionItem('INTP', icon='ei.puzzle', icon_color='#457b9d'),
+                                       SelectionItem('ESTJ', icon='mdi.gavel', icon_color='#457b9d'),
+                                       SelectionItem('ENTJ', icon='fa5.compass', icon_color='#457b9d'),
+
+                                       SelectionItem('ISFP', icon='mdi6.violin', icon_color='#d00000'),  # red
+                                       SelectionItem('INFP', icon='fa5s.cloud-sun', icon_color='#d00000'),
+                                       SelectionItem('ESFJ', icon='mdi6.cupcake', icon_color='#d00000'),
+                                       SelectionItem('ENFJ', icon='mdi6.flower', icon_color='#d00000'),
+                                       ],
+                           compact=True)
 
 positive_traits = sorted(['Generous', 'Objective', 'Principled', 'Rational',
                           'Structured', 'Caring', 'Warm', 'Driven', 'Ambitious', 'Self-aware', 'Sensitive',
