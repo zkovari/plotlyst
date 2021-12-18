@@ -392,8 +392,6 @@ class Scene:
     day: int = 1
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
-    action_resolution: bool = False
-    action_trade_off: bool = False
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
     beat: Optional[StoryBeat] = None
@@ -412,6 +410,20 @@ class Scene:
 
     def plots(self) -> List[Plot]:
         return [x.plot for x in self.plot_values]
+
+    def outcome_resolution(self) -> bool:
+        return self.__is_outcome(SceneOutcome.RESOLUTION)
+
+    def outcome_trade_off(self) -> bool:
+        return self.__is_outcome(SceneOutcome.TRADE_OFF)
+
+    def __is_outcome(self, expected) -> bool:
+        if self.agendas:
+            for item_ in reversed(self.agendas[0].items):
+                if item_.outcome is not None:
+                    return item_.outcome == expected
+
+        return False
 
 
 def default_stages() -> List[SceneStage]:

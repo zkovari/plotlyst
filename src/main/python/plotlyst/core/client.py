@@ -148,8 +148,6 @@ class SceneInfo:
     day: int = 1
     chapter: Optional[uuid.UUID] = None
     arcs: List[CharacterArcInfo] = field(default_factory=list)
-    action_resolution: bool = False
-    action_trade_off: bool = False
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
     beat: Optional[uuid.UUID] = None
@@ -456,7 +454,6 @@ class JsonClient:
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, day=info.day,
-                              action_resolution=info.action_resolution, action_trade_off=info.action_trade_off,
                               sequence=seq,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               arcs=arcs,
@@ -518,7 +515,6 @@ class JsonClient:
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          beginning=scene.beginning, middle=scene.middle,
                          end=scene.end, wip=scene.wip, day=scene.day,
-                         action_resolution=scene.action_resolution, action_trade_off=scene.action_trade_off,
                          pov=self.__id_or_none(scene.pov), plots=plots, characters=characters,
                          agendas=scene.agendas,
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),

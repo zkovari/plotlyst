@@ -274,7 +274,7 @@ class SceneCard(Ui_SceneCard, Card):
 
         if self.scene.type == SceneType.ACTION:
             self.lblType.setPixmap(
-                IconRegistry.action_scene_icon(self.scene.action_resolution, self.scene.action_trade_off).pixmap(
+                IconRegistry.action_scene_icon(self.scene.outcome_resolution(), self.scene.outcome_trade_off()).pixmap(
                     QSize(24, 24, )))
         elif self.scene.type == SceneType.REACTION:
             self.lblType.setPixmap(IconRegistry.reaction_scene_icon().pixmap(QSize(24, 24, )))
