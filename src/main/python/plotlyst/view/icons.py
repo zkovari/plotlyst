@@ -140,12 +140,12 @@ class IconRegistry:
             color = '#832161'
         else:
             color = '#fe4a49'
-        return qtawesome.icon('fa.circle', 'fa5s.yin-yang',
+        return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1}, {'color': color}])
 
     @staticmethod
     def reaction_scene_icon() -> QIcon:
-        return qtawesome.icon('fa.circle', 'fa5s.yin-yang',
+        return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1}, {'color': '#4b86b4'}])
 
     @staticmethod
@@ -202,7 +202,7 @@ class IconRegistry:
 
     @staticmethod
     def table_icon() -> QIcon:
-        return qtawesome.icon('fa.list-alt')
+        return qtawesome.icon('fa5.list-alt')
 
     @staticmethod
     def goal_icon() -> QIcon:
@@ -210,19 +210,19 @@ class IconRegistry:
 
     @staticmethod
     def decision_icon(color: str = '#3cdbd3', color_on='darkBlue') -> QIcon:
-        return IconRegistry.from_name('fa.lightbulb-o', color=color, color_on=color_on)
+        return IconRegistry.from_name('fa5.lightbulb', color=color, color_on=color_on)
 
     @staticmethod
     def reaction_icon() -> QIcon:
-        return qtawesome.icon('fa.shield')
+        return qtawesome.icon('fa5s.shield-alt')
 
     @staticmethod
     def disaster_icon(color: str = '#f4442e', color_on: str = '#f4442e') -> QIcon:
-        return qtawesome.icon('fa.bomb', color=color, color_on=color_on)
+        return qtawesome.icon('fa5s.bomb', color=color, color_on=color_on)
 
     @staticmethod
     def dilemma_icon() -> QIcon:
-        return qtawesome.icon('fa.question-circle-o')
+        return qtawesome.icon('fa5s.question-circle')
 
     @staticmethod
     def conflict_icon(color: str = '#f3a712') -> QIcon:
@@ -330,7 +330,7 @@ class IconRegistry:
 
     @staticmethod
     def conflict_technology_icon() -> QIcon:
-        return IconRegistry.from_name('fa.gears', color='#4a5859')
+        return IconRegistry.from_name('ei.cogs', color='#4a5859')
 
     @staticmethod
     def conflict_supernatural_icon() -> QIcon:
@@ -346,7 +346,7 @@ class IconRegistry:
 
     @staticmethod
     def child_icon() -> QIcon:
-        return IconRegistry.from_name('fa.child')
+        return IconRegistry.from_name('fa5s.child')
 
     @staticmethod
     def teenager_icon() -> QIcon:
