@@ -95,6 +95,11 @@ class Character:
             if value.id == enneagram_field.id:
                 return _enneagram_choices.get(value.value)
 
+    def mbti(self) -> Optional['SelectionItem']:
+        for value in self.template_values:
+            if value.id == mbti_field.id:
+                return _mbti_choices.get(value.value)
+
     def role(self) -> Optional['SelectionItem']:
         for value in self.template_values:
             if value.id == role_field.id:
@@ -104,6 +109,12 @@ class Character:
                 if item.text == 'Protagonist' and self.gender() == 1:
                     return SelectionItem(item.text, item.type, 'fa5s.chess-queen', item.icon_color)
                 return item
+
+    def goals(self) -> List[str]:
+        for value in self.template_values:
+            if value.id == goal_field.id:
+                return value.value
+        return []
 
     def gender(self) -> int:
         for value in self.template_values:
@@ -764,11 +775,18 @@ for trait in positive_traits:
 for trait in negative_traits:
     traits_field.selections.append(SelectionItem(trait, meta={'positive': False}))
 
-_enneagram_choices = {}
-for item in enneagram_field.selections:
-    if item.type != SelectionItemType.CHOICE:
-        continue
-    _enneagram_choices[item.text] = item
+
+def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
+    _choices = {}
+    for item in field.selections:
+        if item.type != SelectionItemType.CHOICE:
+            continue
+        _choices[item.text] = item
+    return _choices
+
+
+_enneagram_choices = get_selection_values(enneagram_field)
+_mbti_choices = get_selection_values(mbti_field)
 
 goal_field = TemplateField('Goals', type=TemplateFieldType.LABELS,
                            id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'),

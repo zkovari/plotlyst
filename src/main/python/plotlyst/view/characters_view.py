@@ -45,10 +45,16 @@ class CharactersView(AbstractNovelView):
 
         self.model = CharactersTableModel(novel)
         self._proxy = proxy(self.model)
-        self.ui.listCharacters.setModel(self._proxy)
+        self.ui.tblCharacters.setModel(self._proxy)
+        self._proxy.setSortRole(CharactersTableModel.SortRole)
 
-        self.ui.listCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
-        self.ui.listCharacters.doubleClicked.connect(self.ui.btnEdit.click)
+        self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColName, 200)
+        self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColRole, 40)
+        self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColEnneagram, 40)
+        self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColMbti, 90)
+
+        self.ui.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
+        self.ui.tblCharacters.doubleClicked.connect(self.ui.btnEdit.click)
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
@@ -112,12 +118,12 @@ class CharactersView(AbstractNovelView):
             self._enable_action_buttons(bool(self.selected_card))
         else:
             self.ui.stackCharacters.setCurrentWidget(self.ui.pageTableView)
-            self._enable_action_buttons(len(self.ui.listCharacters.selectedIndexes()) > 0)
+            self._enable_action_buttons(len(self.ui.tblCharacters.selectedIndexes()) > 0)
 
     def _on_edit(self):
         character = None
         if self.ui.btnTableView.isChecked():
-            indexes = self.ui.listCharacters.selectedIndexes()
+            indexes = self.ui.tblCharacters.selectedIndexes()
             if indexes:
                 character = indexes[0].data(role=CharactersTableModel.CharacterRole)
         else:
@@ -153,7 +159,7 @@ class CharactersView(AbstractNovelView):
     def _on_delete(self, checked: bool):
         character = None
         if self.ui.btnTableView.isChecked():
-            indexes = self.ui.listCharacters.selectedIndexes()
+            indexes = self.ui.tblCharacters.selectedIndexes()
             if indexes:
                 character = indexes[0].data(role=CharactersTableModel.CharacterRole)
         else:
