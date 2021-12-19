@@ -24,6 +24,7 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QLabel
 
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
@@ -190,15 +191,15 @@ class IconRegistry:
 
     @staticmethod
     def act_one_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-1-circle', color='#02bcd4')
+        return IconRegistry.from_name('mdi.numeric-1-circle', color=ACT_ONE_COLOR)
 
     @staticmethod
     def act_two_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-2-circle', color='#1bbc9c')
+        return IconRegistry.from_name('mdi.numeric-2-circle', color=ACT_TWO_COLOR)
 
     @staticmethod
     def act_three_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-3-circle', color='#ff7800')
+        return IconRegistry.from_name('mdi.numeric-3-circle', color=ACT_THREE_COLOR)
 
     @staticmethod
     def table_icon() -> QIcon:

@@ -23,6 +23,10 @@ EXIT_CODE_RESTART = 10
 WIP_COLOR: str = '#f6cd61'
 PIVOTAL_COLOR: str = '#3da4ab'
 
+ACT_ONE_COLOR: str = '#02bcd4'
+ACT_TWO_COLOR: str = '#1bbc9c'
+ACT_THREE_COLOR: str = '#ff7800'
+
 
 def truncate_string(text: str, length: int = 25):
     return (text[:length] + '...') if len(text) > length else text

@@ -169,17 +169,7 @@
       <number>4</number>
      </property>
      <item>
-      <spacer name="horizontalSpacer_8">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>25</height>
-        </size>
-       </property>
-      </spacer>
+      <widget class="SceneStoryStructureWidget" name="wdgStructure" native="true"/>
      </item>
      <item>
       <widget class="QWidget" name="wdgTop" native="true">
@@ -732,7 +722,7 @@ border-radius: 15px;
                      <x>0</x>
                      <y>0</y>
                      <width>611</width>
-                     <height>516</height>
+                     <height>541</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -1114,18 +1104,24 @@ border-radius: 15px;
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
-   <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
    <class>LabelsWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.labels</header>
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>RichTextEditor</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
    <class>SceneStructureWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
    <container>1</container>
@@ -1134,7 +1130,6 @@ border-radius: 15px;
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupArc"/>
   <buttongroup name="btnGroupPages"/>
  </buttongroups>
 </ui>

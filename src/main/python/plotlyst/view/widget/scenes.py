@@ -21,11 +21,13 @@ import pickle
 from abc import abstractmethod
 from typing import List, Set, Optional, Union
 
-from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer
-from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent
+from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize
+from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, QPainter, \
+    QPaintEvent, QPen, QColor, QResizeEvent
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView
 from overrides import overrides
 
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict, SceneOutcome, NEUTRAL
 from src.main.python.plotlyst.model.common import SelectionItemsModel
@@ -722,3 +724,63 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _dragDestroyed(self):
         self._dragged = None
+
+
+class SceneStoryStructureWidget(QWidget):
+    def __init__(self, parent=None):
+        super(SceneStoryStructureWidget, self).__init__(parent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.midpoint = QToolButton(self)
+
+        self._margin = 5
+
+    @overrides
+    def minimumSizeHint(self) -> QSize:
+        return QSize(300, 45)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.midpoint.setGeometry(self.width() / 2, 20, 20, 20)
+
+    @overrides
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        pass
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        painter.setPen(QPen(QColor(ACT_ONE_COLOR), 1, Qt.SolidLine))
+        painter.setBrush(QColor(ACT_ONE_COLOR))
+
+        width = event.rect().width() - 2 * self._margin
+
+        rect = event.rect()
+        rect.setHeight(20)
+
+        rect.setX(self._xForAct(1))
+        rect.setWidth(width * 0.2)
+        painter.drawRoundedRect(rect, 15, 15)
+
+        painter.setPen(QPen(QColor(ACT_THREE_COLOR), 1, Qt.SolidLine))
+        painter.setBrush(QColor(ACT_THREE_COLOR))
+        rect.setX(self._xForAct(3))
+        rect.setWidth(width * 0.2)
+        painter.drawRoundedRect(rect, 15, 15)
+
+        painter.setPen(QPen(QColor(ACT_TWO_COLOR), 1, Qt.SolidLine))
+        painter.setBrush(QColor(ACT_TWO_COLOR))
+
+        rect.setX(self._xForAct(2))
+        rect.setWidth(width * 0.6 + 16)
+        painter.drawRect(rect)
+
+    def _xForAct(self, act: int):
+        if act == 1:
+            return self.rect().x() + self._margin
+        width = self.rect().width() - 2 * self._margin
+        if act == 2:
+            return width * 0.2 - 8
+        if act == 3:
+            return width * 0.8 - 8
