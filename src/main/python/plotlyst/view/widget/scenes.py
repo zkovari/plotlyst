@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from abc import abstractmethod
-from typing import List, Set, Optional, Union
+from typing import List, Set, Optional, Union, Tuple
 
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, QPainter, \
@@ -29,7 +29,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal, SceneType, \
-    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict, SceneOutcome, NEUTRAL
+    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict, SceneOutcome, NEUTRAL, StoryBeat
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
@@ -730,9 +730,20 @@ class SceneStoryStructureWidget(QWidget):
     def __init__(self, parent=None):
         super(SceneStoryStructureWidget, self).__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
-        self.midpoint = QToolButton(self)
 
+        self.novel: Optional[Novel] = None
+        self._beats: List[Tuple[StoryBeat, QToolButton]] = []
         self._margin = 5
+
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+        self._beats.clear()
+        for beat in self.novel.story_structure.beats:
+            btn = QToolButton(self)
+            if beat.icon:
+                btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+            self._beats.append((beat, btn))
+        self.update()
 
     @overrides
     def minimumSizeHint(self) -> QSize:
@@ -740,7 +751,9 @@ class SceneStoryStructureWidget(QWidget):
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.midpoint.setGeometry(self.width() / 2, 20, 20, 20)
+        if self._beats:
+            for beat in self._beats:
+                beat[1].setGeometry(self.width() * beat[0].percentage / 100 - 12, 20, 24, 24)
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -766,14 +779,14 @@ class SceneStoryStructureWidget(QWidget):
         painter.setPen(QPen(QColor(ACT_THREE_COLOR), 1, Qt.SolidLine))
         painter.setBrush(QColor(ACT_THREE_COLOR))
         rect.setX(self._xForAct(3))
-        rect.setWidth(width * 0.2)
+        rect.setWidth(width * 0.25)
         painter.drawRoundedRect(rect, 15, 15)
 
         painter.setPen(QPen(QColor(ACT_TWO_COLOR), 1, Qt.SolidLine))
         painter.setBrush(QColor(ACT_TWO_COLOR))
 
         rect.setX(self._xForAct(2))
-        rect.setWidth(width * 0.6 + 16)
+        rect.setWidth(width * 0.55 + 16)
         painter.drawRect(rect)
 
     def _xForAct(self, act: int):
@@ -783,4 +796,4 @@ class SceneStoryStructureWidget(QWidget):
         if act == 2:
             return width * 0.2 - 8
         if act == 3:
-            return width * 0.8 - 8
+            return width * 0.75 - 8

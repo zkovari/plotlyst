@@ -85,6 +85,7 @@ class SceneEditor(QObject):
             if beat.ends_act:
                 self.ui.cbPivotal.insertSeparator(self.ui.cbPivotal.count())
         self.ui.cbPivotal.view().setRowHidden(0, True)
+        self.ui.wdgStructure.setNovel(self.novel)
 
         self.ui.cbPov.addItem('Select POV ...', None)
         self.ui.cbPov.addItem('', None)
