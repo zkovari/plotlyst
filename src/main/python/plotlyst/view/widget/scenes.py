@@ -24,7 +24,7 @@ from typing import List, Set, Optional, Union, Tuple
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, QPainter, \
     QPaintEvent, QPen, QColor, QResizeEvent
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView, QSplitter
 from overrides import overrides
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
@@ -732,28 +732,59 @@ class SceneStoryStructureWidget(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
 
         self.novel: Optional[Novel] = None
+        self._acts: List[QToolButton] = []
         self._beats: List[Tuple[StoryBeat, QToolButton]] = []
+        self._wdgLine = QWidget(self)
+        self._wdgLine.setLayout(QHBoxLayout())
+        self._wdgLine.layout().setSpacing(0)
+        self._wdgLine.layout().setContentsMargins(0, 0, 0, 0)
+        self._lineHeight: int = 22
+        self._beatHeight: int = 20
         self._margin = 5
 
     def setNovel(self, novel: Novel):
         self.novel = novel
+        self._acts.clear()
         self._beats.clear()
         for beat in self.novel.story_structure.beats:
             btn = QToolButton(self)
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+            btn.setStyleSheet('border:0px;')
             self._beats.append((beat, btn))
+
+        splitter = QSplitter(self._wdgLine)
+        splitter.setContentsMargins(0, 0, 0, 0)
+        splitter.setChildrenCollapsible(False)
+        splitter.setHandleWidth(1)
+        self._wdgLine.layout().addWidget(splitter)
+
+        act = self._actButton('Act 1', ACT_ONE_COLOR, left=True)
+        self._acts.append(act)
+        self._wdgLine.layout().addWidget(act)
+        splitter.addWidget(act)
+        act = self._actButton('Act 2', ACT_TWO_COLOR)
+        self._acts.append(act)
+        splitter.addWidget(act)
+
+        act = self._actButton('Act 3', ACT_THREE_COLOR, right=True)
+        self._acts.append(act)
+        splitter.addWidget(act)
+        splitter.setSizes([200, 550, 250])
         self.update()
 
     @overrides
     def minimumSizeHint(self) -> QSize:
-        return QSize(300, 45)
+        return QSize(300, self._lineHeight + self._beatHeight)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         if self._beats:
             for beat in self._beats:
-                beat[1].setGeometry(self.width() * beat[0].percentage / 100 - 12, 20, 24, 24)
+                beat[1].setGeometry(self.width() * beat[0].percentage / 100 - self._lineHeight // 2, self._lineHeight,
+                                    self._beatHeight,
+                                    self._beatHeight)
+        self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -761,6 +792,7 @@ class SceneStoryStructureWidget(QWidget):
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
+        return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
@@ -797,3 +829,24 @@ class SceneStoryStructureWidget(QWidget):
             return width * 0.2 - 8
         if act == 3:
             return width * 0.75 - 8
+
+    def _actButton(self, text: str, color: str, left: bool = False, right: bool = False) -> QToolButton:
+        act = QToolButton(self)
+        act.setText(text)
+        act.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        act.setFixedHeight(self._lineHeight)
+        act.setStyleSheet(f'''
+        QToolButton {{
+            background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 {color}, stop: 1 {color});
+            border: 1px solid #8f8f91;
+            border-top-left-radius: {8 if left else 0}px;
+            border-bottom-left-radius: {8 if left else 0}px;
+            border-top-right-radius: {8 if right else 0}px;
+            border-bottom-right-radius: {8 if right else 0}px;
+            color:white;
+            padding: 0px;
+        }}
+        ''')
+
+        return act
