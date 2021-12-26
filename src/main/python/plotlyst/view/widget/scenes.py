@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from abc import abstractmethod
+from functools import partial
 from typing import List, Set, Optional, Union, Tuple
 
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize
@@ -33,7 +34,7 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, set_opacity
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -750,7 +751,11 @@ class SceneStoryStructureWidget(QWidget):
             btn = QToolButton(self)
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+            btn.setCursor(Qt.PointingHandCursor)
             btn.setStyleSheet('border:0px;')
+            btn.setCheckable(True)
+            btn.toggled.connect(partial(self._btnToggled, btn))
+            self._btnToggled(btn, False)
             self._beats.append((beat, btn))
 
         splitter = QSplitter(self._wdgLine)
@@ -835,6 +840,8 @@ class SceneStoryStructureWidget(QWidget):
         act.setText(text)
         act.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         act.setFixedHeight(self._lineHeight)
+        act.setCursor(Qt.PointingHandCursor)
+        act.setCheckable(True)
         act.setStyleSheet(f'''
         QToolButton {{
             background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -846,7 +853,14 @@ class SceneStoryStructureWidget(QWidget):
             border-bottom-right-radius: {8 if right else 0}px;
             color:white;
             padding: 0px;
+            opacity: 200;
         }}
         ''')
 
+        act.setChecked(True)
+        act.toggled.connect(partial(self._btnToggled, act))
+
         return act
+
+    def _btnToggled(self, btn: QToolButton, toggled: bool):
+        set_opacity(btn, 1.0 if toggled else 0.3)

@@ -26,7 +26,7 @@ from typing import Optional, Any
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
-    QMenu, QAction
+    QMenu, QAction, QGraphicsOpacityEffect
 from fbs_runtime import platform
 
 
@@ -191,3 +191,9 @@ def retain_size_when_hidden(widget: QWidget):
     policy = widget.sizePolicy()
     policy.setRetainSizeWhenHidden(True)
     widget.setSizePolicy(policy)
+
+
+def set_opacity(wdg: QWidget, opacity: float):
+    op = QGraphicsOpacityEffect(wdg)
+    op.setOpacity(opacity)
+    wdg.setGraphicsEffect(op)
