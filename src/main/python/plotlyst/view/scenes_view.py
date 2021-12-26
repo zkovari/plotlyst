@@ -133,7 +133,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct1.toggled.connect(self._update_cards)
         self.ui.btnAct2.toggled.connect(self._update_cards)
         self.ui.btnAct3.toggled.connect(self._update_cards)
-        self._update_cards()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
@@ -144,6 +143,9 @@ class ScenesOutlineView(AbstractNovelView):
         action.setDefaultWidget(self._scene_filter)
         self.ui.btnFilter.addAction(action)
         self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
+        self._scene_filter.povFilter.characterToggled.connect(self._update_cards)
+
+        self._update_cards()
 
         self.ui.tblScenes.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tblScenes.customContextMenuRequested.connect(self._on_custom_menu_requested)
@@ -297,8 +299,11 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.cards.clear()
 
         acts_filter = {1: self.ui.btnAct1.isChecked(), 2: self.ui.btnAct2.isChecked(), 3: self.ui.btnAct3.isChecked()}
+        active_povs = self._scene_filter.povFilter.characters(all=False)
         for scene in self.novel.scenes:
             if not acts_filter[acts_registry.act(scene)]:
+                continue
+            if scene.pov and scene.pov not in active_povs:
                 continue
             card = SceneCard(scene)
             self.ui.cards.addCard(card)

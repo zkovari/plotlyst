@@ -198,8 +198,8 @@ class CharacterSelectorWidget(QWidget):
         self.exclusive = exclusive
         self._btn_group.setExclusive(self.exclusive)
 
-    def characters(self) -> Iterable[Character]:
-        return [x.character for x in self._buttons]
+    def characters(self, all: bool = True) -> Iterable[Character]:
+        return [x.character for x in self._buttons if all or x.isChecked()]
 
     def setCharacters(self, characters: Iterable[Character]):
         self.clear()
