@@ -26,8 +26,9 @@ from typing import Optional, Any
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
-    QMenu, QAction, QGraphicsOpacityEffect
+    QMenu, QAction, QGraphicsOpacityEffect, QProxyStyle, QStyle, QStyleOption, QStyleHintReturn
 from fbs_runtime import platform
+from overrides import overrides
 
 
 class EditorCommandType(Enum):
@@ -197,3 +198,13 @@ def set_opacity(wdg: QWidget, opacity: float):
     op = QGraphicsOpacityEffect(wdg)
     op.setOpacity(opacity)
     wdg.setGraphicsEffect(op)
+
+
+class InstantTooltipStyle(QProxyStyle):
+    @overrides
+    def styleHint(self, hint: QStyle.StyleHint, option: Optional[QStyleOption] = None, widget: Optional[QWidget] = None,
+                  returnData: Optional[QStyleHintReturn] = None) -> int:
+        if hint == QStyle.SH_ToolTip_WakeUpDelay or hint == QStyle.SH_ToolTip_FallAsleepDelay:
+            return 0
+
+        return super(InstantTooltipStyle, self).styleHint(hint, option, widget, returnData)

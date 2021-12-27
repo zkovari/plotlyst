@@ -189,8 +189,10 @@ class SceneEditor(QObject):
             else:
                 item.setFlags(item.flags() | Qt.ItemIsEnabled)
 
+        self.ui.wdgStructure.unhighlightBeats()
         if self.scene.beat:
             self.ui.cbPivotal.setCurrentText(self.scene.beat.text)
+            self.ui.wdgStructure.highlightBeat(self.scene.beat)
         else:
             self.ui.cbPivotal.setCurrentIndex(0)
         self.ui.wdgStructure.uncheckActs()

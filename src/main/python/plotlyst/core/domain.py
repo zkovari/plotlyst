@@ -193,6 +193,10 @@ class StoryBeat:
     icon_color: str = 'black'
     percentage: int = 0
 
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
+
 
 class SelectionItemType(Enum):
     CHOICE = 0

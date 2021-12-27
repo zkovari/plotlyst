@@ -33,7 +33,8 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, set_opacity
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, set_opacity, \
+    InstantTooltipStyle
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -42,6 +43,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel, ConflictLabel
+from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class SceneGoalsWidget(LabelsEditorWidget):
@@ -741,21 +743,28 @@ class SceneStoryStructureWidget(QWidget):
         self._lineHeight: int = 22
         self._beatHeight: int = 20
         self._margin = 5
-        self._actsClickable: bool = True
 
     def setNovel(self, novel: Novel):
         self.novel = novel
         self._acts.clear()
         self._beats.clear()
+
+        occupied_beats = acts_registry.occupied_beats()
         for beat in self.novel.story_structure.beats:
             btn = QToolButton(self)
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-            btn.setCursor(Qt.PointingHandCursor)
-            btn.setStyleSheet('border:0px;')
-            btn.setCheckable(True)
+            btn.setStyleSheet(f'''QToolButton {{background-color: rgba(0,0,0,0); border:0px;}}
+            QToolTip {{border: 0px;}}
+            ''')
+            btn.setStyle(InstantTooltipStyle(btn.style()))
+            btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
             btn.toggled.connect(partial(self._beatToggled, btn))
-            self._beatToggled(btn, False)
+            btn.installEventFilter(self)
+            if beat not in occupied_beats:
+                btn.setCursor(Qt.PointingHandCursor)
+                btn.setCheckable(True)
+                self._beatToggled(btn, False)
             self._beats.append((beat, btn))
 
         splitter = QSplitter(self._wdgLine)
@@ -780,7 +789,16 @@ class SceneStoryStructureWidget(QWidget):
 
     @overrides
     def minimumSizeHint(self) -> QSize:
-        return QSize(300, self._lineHeight + self._beatHeight)
+        return QSize(300, self._lineHeight + self._beatHeight + 8)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(watched, QToolButton) and watched.isCheckable() and not watched.isChecked():
+            if event.type() == QEvent.Enter:
+                set_opacity(watched, 0.5)
+            elif event.type() == QEvent.Leave:
+                set_opacity(watched, 0.2)
+        return super(SceneStoryStructureWidget, self).eventFilter(watched, event)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -790,41 +808,6 @@ class SceneStoryStructureWidget(QWidget):
                                     self._beatHeight,
                                     self._beatHeight)
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
-
-    # @overrides
-    # def mouseMoveEvent(self, event: QMouseEvent) -> None:
-    #     pass
-    #
-    # @overrides
-    # def paintEvent(self, event: QPaintEvent) -> None:
-    #     return
-    #     painter = QPainter(self)
-    #     painter.setRenderHint(QPainter.Antialiasing)
-    #
-    #     painter.setPen(QPen(QColor(ACT_ONE_COLOR), 1, Qt.SolidLine))
-    #     painter.setBrush(QColor(ACT_ONE_COLOR))
-    #
-    #     width = event.rect().width() - 2 * self._margin
-    #
-    #     rect = event.rect()
-    #     rect.setHeight(20)
-    #
-    #     rect.setX(self._xForAct(1))
-    #     rect.setWidth(width * 0.2)
-    #     painter.drawRoundedRect(rect, 15, 15)
-    #
-    #     painter.setPen(QPen(QColor(ACT_THREE_COLOR), 1, Qt.SolidLine))
-    #     painter.setBrush(QColor(ACT_THREE_COLOR))
-    #     rect.setX(self._xForAct(3))
-    #     rect.setWidth(width * 0.25)
-    #     painter.drawRoundedRect(rect, 15, 15)
-    #
-    #     painter.setPen(QPen(QColor(ACT_TWO_COLOR), 1, Qt.SolidLine))
-    #     painter.setBrush(QColor(ACT_TWO_COLOR))
-    #
-    #     rect.setX(self._xForAct(2))
-    #     rect.setWidth(width * 0.55 + 16)
-    #     painter.drawRect(rect)
 
     def uncheckActs(self):
         for act in self._acts:
@@ -836,7 +819,18 @@ class SceneStoryStructureWidget(QWidget):
     def setActsClickable(self, clickable: bool):
         for act in self._acts:
             act.setEnabled(clickable)
-        # self._actsClickable = clickable
+
+    def highlightBeat(self, beat: StoryBeat):
+        for b, btn in self._beats:
+            if beat == b:
+                btn.setStyleSheet(
+                    f'QToolButton {{border: 4px dotted #9b2226; border-radius: 6;}} QToolTip {{border: 0px;}}')
+                btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
+
+    def unhighlightBeats(self):
+        for _, btn in self._beats:
+            btn.setStyleSheet('border: 0px;')
+            btn.setFixedSize(self._beatHeight, self._beatHeight)
 
     def _xForAct(self, act: int):
         if act == 1:
@@ -865,7 +859,6 @@ class SceneStoryStructureWidget(QWidget):
             border-bottom-right-radius: {8 if right else 0}px;
             color:white;
             padding: 0px;
-            opacity: 200;
         }}
         ''')
 
@@ -875,8 +868,7 @@ class SceneStoryStructureWidget(QWidget):
         return act
 
     def _actToggled(self, btn: QToolButton, toggled: bool):
-        # if self._actsClickable:
-        set_opacity(btn, 1.0 if toggled else 0.3)
+        set_opacity(btn, 1.0 if toggled else 0.2)
 
     def _beatToggled(self, btn: QToolButton, toggled: bool):
-        set_opacity(btn, 1.0 if toggled else 0.3)
+        set_opacity(btn, 1.0 if toggled else 0.2)
