@@ -23,8 +23,7 @@ from functools import partial
 from typing import List, Set, Optional, Union, Tuple
 
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize
-from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, QPainter, \
-    QPaintEvent, QPen, QColor, QResizeEvent
+from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, QResizeEvent
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView, QSplitter
 from overrides import overrides
 
@@ -742,6 +741,7 @@ class SceneStoryStructureWidget(QWidget):
         self._lineHeight: int = 22
         self._beatHeight: int = 20
         self._margin = 5
+        self._actsClickable: bool = True
 
     def setNovel(self, novel: Novel):
         self.novel = novel
@@ -754,8 +754,8 @@ class SceneStoryStructureWidget(QWidget):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setStyleSheet('border:0px;')
             btn.setCheckable(True)
-            btn.toggled.connect(partial(self._btnToggled, btn))
-            self._btnToggled(btn, False)
+            btn.toggled.connect(partial(self._beatToggled, btn))
+            self._beatToggled(btn, False)
             self._beats.append((beat, btn))
 
         splitter = QSplitter(self._wdgLine)
@@ -791,40 +791,52 @@ class SceneStoryStructureWidget(QWidget):
                                     self._beatHeight)
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
 
-    @overrides
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        pass
+    # @overrides
+    # def mouseMoveEvent(self, event: QMouseEvent) -> None:
+    #     pass
+    #
+    # @overrides
+    # def paintEvent(self, event: QPaintEvent) -> None:
+    #     return
+    #     painter = QPainter(self)
+    #     painter.setRenderHint(QPainter.Antialiasing)
+    #
+    #     painter.setPen(QPen(QColor(ACT_ONE_COLOR), 1, Qt.SolidLine))
+    #     painter.setBrush(QColor(ACT_ONE_COLOR))
+    #
+    #     width = event.rect().width() - 2 * self._margin
+    #
+    #     rect = event.rect()
+    #     rect.setHeight(20)
+    #
+    #     rect.setX(self._xForAct(1))
+    #     rect.setWidth(width * 0.2)
+    #     painter.drawRoundedRect(rect, 15, 15)
+    #
+    #     painter.setPen(QPen(QColor(ACT_THREE_COLOR), 1, Qt.SolidLine))
+    #     painter.setBrush(QColor(ACT_THREE_COLOR))
+    #     rect.setX(self._xForAct(3))
+    #     rect.setWidth(width * 0.25)
+    #     painter.drawRoundedRect(rect, 15, 15)
+    #
+    #     painter.setPen(QPen(QColor(ACT_TWO_COLOR), 1, Qt.SolidLine))
+    #     painter.setBrush(QColor(ACT_TWO_COLOR))
+    #
+    #     rect.setX(self._xForAct(2))
+    #     rect.setWidth(width * 0.55 + 16)
+    #     painter.drawRect(rect)
 
-    @overrides
-    def paintEvent(self, event: QPaintEvent) -> None:
-        return
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+    def uncheckActs(self):
+        for act in self._acts:
+            act.setChecked(False)
 
-        painter.setPen(QPen(QColor(ACT_ONE_COLOR), 1, Qt.SolidLine))
-        painter.setBrush(QColor(ACT_ONE_COLOR))
+    def setActChecked(self, act: int, checked: bool = True):
+        self._acts[act - 1].setChecked(checked)
 
-        width = event.rect().width() - 2 * self._margin
-
-        rect = event.rect()
-        rect.setHeight(20)
-
-        rect.setX(self._xForAct(1))
-        rect.setWidth(width * 0.2)
-        painter.drawRoundedRect(rect, 15, 15)
-
-        painter.setPen(QPen(QColor(ACT_THREE_COLOR), 1, Qt.SolidLine))
-        painter.setBrush(QColor(ACT_THREE_COLOR))
-        rect.setX(self._xForAct(3))
-        rect.setWidth(width * 0.25)
-        painter.drawRoundedRect(rect, 15, 15)
-
-        painter.setPen(QPen(QColor(ACT_TWO_COLOR), 1, Qt.SolidLine))
-        painter.setBrush(QColor(ACT_TWO_COLOR))
-
-        rect.setX(self._xForAct(2))
-        rect.setWidth(width * 0.55 + 16)
-        painter.drawRect(rect)
+    def setActsClickable(self, clickable: bool):
+        for act in self._acts:
+            act.setEnabled(clickable)
+        # self._actsClickable = clickable
 
     def _xForAct(self, act: int):
         if act == 1:
@@ -858,9 +870,13 @@ class SceneStoryStructureWidget(QWidget):
         ''')
 
         act.setChecked(True)
-        act.toggled.connect(partial(self._btnToggled, act))
+        act.toggled.connect(partial(self._actToggled, act))
 
         return act
 
-    def _btnToggled(self, btn: QToolButton, toggled: bool):
+    def _actToggled(self, btn: QToolButton, toggled: bool):
+        # if self._actsClickable:
+        set_opacity(btn, 1.0 if toggled else 0.3)
+
+    def _beatToggled(self, btn: QToolButton, toggled: bool):
         set_opacity(btn, 1.0 if toggled else 0.3)

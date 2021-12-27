@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneDramaticQuestionsWidget, SceneTagsWidget
+from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -86,6 +87,7 @@ class SceneEditor(QObject):
                 self.ui.cbPivotal.insertSeparator(self.ui.cbPivotal.count())
         self.ui.cbPivotal.view().setRowHidden(0, True)
         self.ui.wdgStructure.setNovel(self.novel)
+        self.ui.wdgStructure.setActsClickable(False)
 
         self.ui.cbPov.addItem('Select POV ...', None)
         self.ui.cbPov.addItem('', None)
@@ -191,6 +193,8 @@ class SceneEditor(QObject):
             self.ui.cbPivotal.setCurrentText(self.scene.beat.text)
         else:
             self.ui.cbPivotal.setCurrentIndex(0)
+        self.ui.wdgStructure.uncheckActs()
+        self.ui.wdgStructure.setActChecked(acts_registry.act(self.scene))
 
         if self.ui.btnNotes.isChecked() or (self.scene.document and self.scene.document.loaded):
             self._update_notes()
