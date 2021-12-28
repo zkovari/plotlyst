@@ -17,11 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, Dict
+from typing import Optional, Dict, Set
 
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.core.domain import Novel, Scene, StoryBeat
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
@@ -34,6 +34,7 @@ class NovelActsRegistry(EventListener):
         event_dispatcher.register(self, SceneDeletedEvent)
         self.novel: Optional[Novel] = None
         self._acts_per_scenes: Dict[str, int] = {}
+        self._beats: Set[StoryBeat] = set()
         self._acts_endings: Dict[int, int] = {}
 
     def set_novel(self, novel: Novel):
@@ -47,6 +48,7 @@ class NovelActsRegistry(EventListener):
 
     def refresh(self):
         self._acts_per_scenes.clear()
+        self._beats.clear()
         self._acts_endings.clear()
 
         for index, scene in enumerate(self.novel.scenes):
@@ -58,9 +60,14 @@ class NovelActsRegistry(EventListener):
                 self._acts_per_scenes[str(scene.id)] = 2
             else:
                 self._acts_per_scenes[str(scene.id)] = len(self._acts_endings) + 1
+            if scene.beat:
+                self._beats.add(scene.beat)
 
     def act(self, scene: Scene) -> int:
         return self._acts_per_scenes.get(str(scene.id), 1)
+
+    def occupied_beats(self) -> Set[StoryBeat]:
+        return self._beats
 
 
 acts_registry = NovelActsRegistry()
