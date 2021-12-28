@@ -80,6 +80,7 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
             self.tableView.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.AnyKeyPressed)
         else:
             self.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.tableView.doubleClicked.connect(self._edit)
 
     def setAdditionEnabled(self, enabled: bool):
         self.btnAdd.setEnabled(enabled)

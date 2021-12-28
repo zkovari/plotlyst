@@ -95,6 +95,11 @@ class Character:
             if value.id == enneagram_field.id:
                 return _enneagram_choices.get(value.value)
 
+    def mbti(self) -> Optional['SelectionItem']:
+        for value in self.template_values:
+            if value.id == mbti_field.id:
+                return _mbti_choices.get(value.value)
+
     def role(self) -> Optional['SelectionItem']:
         for value in self.template_values:
             if value.id == role_field.id:
@@ -104,6 +109,12 @@ class Character:
                 if item.text == 'Protagonist' and self.gender() == 1:
                     return SelectionItem(item.text, item.type, 'fa5s.chess-queen', item.icon_color)
                 return item
+
+    def goals(self) -> List[str]:
+        for value in self.template_values:
+            if value.id == goal_field.id:
+                return value.value
+        return []
 
     def gender(self) -> int:
         for value in self.template_values:
@@ -180,6 +191,11 @@ class StoryBeat:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = ''
     icon_color: str = 'black'
+    percentage: int = 0
+
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
 
 
 class SelectionItemType(Enum):
@@ -196,6 +212,7 @@ class SelectionItem:
     color_hexa: str = ''
     meta: Dict[str, Any] = field(default_factory=dict)
 
+    @overrides
     def __hash__(self):
         return hash(self.text)
 
@@ -380,8 +397,6 @@ class Scene:
     day: int = 1
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
-    action_resolution: bool = False
-    action_trade_off: bool = False
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
     beat: Optional[StoryBeat] = None
@@ -400,6 +415,20 @@ class Scene:
 
     def plots(self) -> List[Plot]:
         return [x.plot for x in self.plot_values]
+
+    def outcome_resolution(self) -> bool:
+        return self.__is_outcome(SceneOutcome.RESOLUTION)
+
+    def outcome_trade_off(self) -> bool:
+        return self.__is_outcome(SceneOutcome.TRADE_OFF)
+
+    def __is_outcome(self, expected) -> bool:
+        if self.agendas:
+            for item_ in reversed(self.agendas[0].items):
+                if item_.outcome is not None:
+                    return item_.outcome == expected
+
+        return False
 
 
 def default_stages() -> List[SceneStage]:
@@ -437,47 +466,47 @@ default_story_structures = [StoryStructure(title='Three Act Structure',
                                                             icon='fa5.image',
                                                             icon_color='#1ea896',
                                                             id=uuid.UUID('40365047-e7df-4543-8816-f9f8dcce12da'),
-                                                            act=1),
+                                                            act=1, percentage=1),
                                                   StoryBeat(text='Inciting Incident',
                                                             icon='mdi.bell-alert-outline',
                                                             icon_color='#a2ad59',
                                                             id=uuid.UUID('a0c2d94a-b53c-485e-a279-f2548bdb38ec'),
-                                                            act=1),
+                                                            act=1, percentage=10),
                                                   StoryBeat(text='Plot Point One',
                                                             icon='mdi.dice-1',
                                                             icon_color='#2a4494',
                                                             id=uuid.UUID('8d85c960-1c63-44d4-812d-545d3ba4d153'), act=1,
-                                                            ends_act=True),
+                                                            ends_act=True, percentage=20),
                                                   StoryBeat(text='Rising Action',
                                                             icon='fa5s.chart-line',
                                                             icon_color='#08605f',
                                                             id=uuid.UUID('991354ea-2e8e-46f2-bd42-11fa56f73801'),
-                                                            act=2),
+                                                            act=2, percentage=30),
                                                   StoryBeat(text='Midpoint',
                                                             icon='mdi.middleware-outline',
                                                             icon_color='#bb0a21',
                                                             id=uuid.UUID('3f817e10-85d1-46af-91c6-70f1ad5c0542'),
-                                                            act=2),
+                                                            act=2, percentage=50),
                                                   StoryBeat(text='Dark Night of the Soul',
                                                             icon='mdi.weather-night',
                                                             icon_color='#494368',
                                                             id=uuid.UUID('4ded5006-c90a-4825-9de7-e16bf62017a3'), act=2,
-                                                            ends_act=True),
+                                                            ends_act=True, percentage=75),
                                                   StoryBeat(text='Pre Climax',
                                                             icon='mdi.escalator-up',
                                                             icon_color='#f4b393',
                                                             id=uuid.UUID('17a85b2a-76fb-44ec-a367-bccf6cd5f8aa'),
-                                                            act=3),
+                                                            act=3, percentage=80),
                                                   StoryBeat(text='Climax',
                                                             icon='mdi.triangle-outline',
                                                             icon_color='#ce2d4f',
                                                             id=uuid.UUID('342eb27c-52ff-40c2-8c5e-cf563d4e38bc'),
-                                                            act=3),
+                                                            act=3, percentage=90),
                                                   StoryBeat(text='Denouement',
                                                             icon='fa5s.water',
                                                             icon_color='#7192be',
                                                             id=uuid.UUID('996695b1-8db6-4c68-8dc4-51bbfe720e8b'),
-                                                            act=3),
+                                                            act=3, percentage=99),
                                                   ]),
                             StoryStructure(title="Weiland's 10 Beats",
                                            id=uuid.UUID('57157873-3443-4832-9381-b33606f35fb2'),
@@ -486,51 +515,51 @@ default_story_structures = [StoryStructure(title='Three Act Structure',
                                                             id=uuid.UUID('93394a0a-7fbc-4b94-bbfc-bb4b416c19f5'),
                                                             icon='mdi.hook',
                                                             icon_color='#829399',
-                                                            act=1),
+                                                            act=1, percentage=1),
                                                   StoryBeat(text='Inciting Event',
                                                             id=uuid.UUID('319bdd5a-9514-4fc7-9e26-1cc55bd22b8e'),
                                                             icon='mdi.bell-alert-outline',
                                                             icon_color='#a2ad59',
-                                                            act=1),
+                                                            act=1, percentage=8),
                                                   StoryBeat(text='Key Event',
                                                             id=uuid.UUID('c0b0c68e-012d-44ab-96bf-ad3da25331aa'),
                                                             icon='mdi.key',
-                                                            act=1),
+                                                            act=1, percentage=16),
                                                   StoryBeat(text='First Plot Point',
                                                             id=uuid.UUID('221c4fc7-bf67-430c-bd0b-8de856dc65bc'),
                                                             icon='mdi.dice-1',
                                                             icon_color='#2a4494',
-                                                            act=1, ends_act=True),
+                                                            act=1, ends_act=True, percentage=20),
                                                   StoryBeat(text='First Pinch Point',
                                                             id=uuid.UUID('6f3caa23-eca8-4d24-906e-0ac697087109'),
                                                             icon='fa5s.thermometer-three-quarters',
                                                             icon_color='#b81365',
-                                                            act=2),
+                                                            act=2, percentage=37),
                                                   StoryBeat(text='Midpoint',
                                                             id=uuid.UUID('ecf0a27d-079a-4ffa-9ee3-0a5b068124f3'),
                                                             icon='mdi.middleware-outline',
                                                             icon_color='#2e86ab',
-                                                            act=2),
+                                                            act=2, percentage=50),
                                                   StoryBeat(text='Second Pinch Point',
                                                             id=uuid.UUID('584810ed-cb97-4e58-91e1-a9d080a1b380'),
                                                             icon='fa5s.biohazard',
                                                             icon_color='#cd533b',
-                                                            act=2),
+                                                            act=2, percentage=62),
                                                   StoryBeat(text='Third Plot Point',
                                                             id=uuid.UUID('7383dbc5-3616-4cb7-9cb0-685369ce53c9'),
                                                             icon='mdi.dice-3',
                                                             icon_color='#6a0136',
-                                                            act=2, ends_act=True),
+                                                            act=2, ends_act=True, percentage=75),
                                                   StoryBeat(text='Climax',
                                                             id=uuid.UUID('cf2b7e41-a67b-4837-8196-9ec447e6ae36'),
                                                             icon='mdi.triangle-outline',
                                                             icon_color='#ce2d4f',
-                                                            act=3),
+                                                            act=3, percentage=90),
                                                   StoryBeat(text='Resolution',
                                                             id=uuid.UUID('752cd22c-870e-474d-919c-35f6c082bfa8'),
                                                             icon='fa5s.water',
                                                             icon_color='#7192be',
-                                                            act=3),
+                                                            act=3, percentage=99),
                                                   ]),
                             StoryStructure(title='Save the Cat',
                                            id=uuid.UUID('1f1c4433-6afa-48e1-a8dc-f8fcb94bfede'),
@@ -723,22 +752,27 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                 compact=True)
 mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('bc5408a4-c2bd-4370-b46b-95f20018af01'),
-                           selections=[SelectionItem('INTJ'),
-                                       SelectionItem('INTP'),
-                                       SelectionItem('ENTJ'),
-                                       SelectionItem('ENTP'),
-                                       SelectionItem('INFJ'),
-                                       SelectionItem('INFP'),
-                                       SelectionItem('ENFJ'),
-                                       SelectionItem('ENFP'),
-                                       SelectionItem('ISTJ'),
-                                       SelectionItem('ISFJ'),
-                                       SelectionItem('ESTJ'),
-                                       SelectionItem('ESFJ'),
-                                       SelectionItem('ISTP'),
-                                       SelectionItem('ISFP'),
-                                       SelectionItem('ESTP'),
-                                       SelectionItem('ESFP'), ], compact=True)
+                           selections=[SelectionItem('ISTJ', icon='mdi.magnify', icon_color='#2a9d8f'),  # green
+                                       SelectionItem('ISFJ', icon='mdi.fireplace', icon_color='#2a9d8f'),
+                                       SelectionItem('ESTP', icon='ei.fire', icon_color='#2a9d8f'),
+                                       SelectionItem('ESFP', icon='mdi.microphone-variant', icon_color='#2a9d8f'),
+
+                                       SelectionItem('INFJ', icon='ph.tree-fill', icon_color='#e9c46a'),  # yellow
+                                       SelectionItem('INTJ', icon='fa5s.drafting-compass', icon_color='#e9c46a'),
+                                       SelectionItem('ENFP', icon='fa5.sun', icon_color='#e9c46a'),
+                                       SelectionItem('ENTP', icon='fa5.lightbulb', icon_color='#e9c46a'),
+
+                                       SelectionItem('ISTP', icon='fa5s.hammer', icon_color='#457b9d'),  # blue
+                                       SelectionItem('INTP', icon='ei.puzzle', icon_color='#457b9d'),
+                                       SelectionItem('ESTJ', icon='mdi.gavel', icon_color='#457b9d'),
+                                       SelectionItem('ENTJ', icon='fa5.compass', icon_color='#457b9d'),
+
+                                       SelectionItem('ISFP', icon='mdi6.violin', icon_color='#d00000'),  # red
+                                       SelectionItem('INFP', icon='fa5s.cloud-sun', icon_color='#d00000'),
+                                       SelectionItem('ESFJ', icon='mdi6.cupcake', icon_color='#d00000'),
+                                       SelectionItem('ENFJ', icon='mdi6.flower', icon_color='#d00000'),
+                                       ],
+                           compact=True)
 
 positive_traits = sorted(['Generous', 'Objective', 'Principled', 'Rational',
                           'Structured', 'Caring', 'Warm', 'Driven', 'Ambitious', 'Self-aware', 'Sensitive',
@@ -758,11 +792,18 @@ for trait in positive_traits:
 for trait in negative_traits:
     traits_field.selections.append(SelectionItem(trait, meta={'positive': False}))
 
-_enneagram_choices = {}
-for item in enneagram_field.selections:
-    if item.type != SelectionItemType.CHOICE:
-        continue
-    _enneagram_choices[item.text] = item
+
+def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
+    _choices = {}
+    for item in field.selections:
+        if item.type != SelectionItemType.CHOICE:
+            continue
+        _choices[item.text] = item
+    return _choices
+
+
+_enneagram_choices = get_selection_values(enneagram_field)
+_mbti_choices = get_selection_values(mbti_field)
 
 goal_field = TemplateField('Goals', type=TemplateFieldType.LABELS,
                            id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'),

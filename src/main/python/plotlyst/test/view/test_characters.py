@@ -24,7 +24,7 @@ def test_edit_character(qtbot, filled_window: MainWindow):
 
     assert not view.ui.btnEdit.isEnabled()
     assert not view.ui.btnDelete.isEnabled()
-    click_on_item(qtbot, view.ui.listCharacters, 0)
+    click_on_item(qtbot, view.ui.tblCharacters, 0)
     assert view.ui.btnEdit.isEnabled()
     assert view.ui.btnDelete.isEnabled()
 
@@ -46,7 +46,7 @@ def test_delete_character(qtbot, filled_window: MainWindow, monkeypatch):
 
     view.ui.btnTableView.click()
 
-    click_on_item(qtbot, view.ui.listCharacters, 0)
+    click_on_item(qtbot, view.ui.tblCharacters, 0)
 
     alfred = view.novel.characters[0]
     assert view.novel.scenes[0].pov == alfred

@@ -14,6 +14,21 @@
    <string>Form</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_7">
+   <property name="spacing">
+    <number>3</number>
+   </property>
+   <property name="leftMargin">
+    <number>2</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
+    <number>2</number>
+   </property>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
@@ -169,14 +184,17 @@
       <number>4</number>
      </property>
      <item>
-      <spacer name="horizontalSpacer_8">
+      <widget class="SceneStoryStructureWidget" name="wdgStructure" native="true"/>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
-         <height>25</height>
+         <height>10</height>
         </size>
        </property>
       </spacer>
@@ -322,32 +340,6 @@
             <property name="spacing">
              <number>3</number>
             </property>
-            <item>
-             <widget class="QLabel" name="lblBeatEmoji">
-              <property name="text">
-               <string>emo</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="cbPivotal">
-              <property name="minimumSize">
-               <size>
-                <width>150</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>200</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="placeholderText">
-               <string/>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="QLabel" name="lblDayEmoji">
               <property name="text">
@@ -731,8 +723,8 @@ border-radius: 15px;
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>611</width>
-                     <height>516</height>
+                     <width>628</width>
+                     <height>541</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -1114,18 +1106,24 @@ border-radius: 15px;
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
-   <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
    <class>LabelsWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.labels</header>
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>RichTextEditor</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
    <class>SceneStructureWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
    <container>1</container>
@@ -1134,7 +1132,6 @@ border-radius: 15px;
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupArc"/>
   <buttongroup name="btnGroupPages"/>
  </buttongroups>
 </ui>

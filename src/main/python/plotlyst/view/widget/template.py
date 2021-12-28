@@ -33,8 +33,8 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field, SelectionItemType, \
-    enneagram_field, traits_field, desire_field, fear_field, goal_field, HAlignment, VAlignment
-from src.main.python.plotlyst.core.help import enneagram_help
+    enneagram_field, traits_field, desire_field, fear_field, goal_field, HAlignment, VAlignment, mbti_field
+from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
@@ -155,7 +155,7 @@ class TextSelectionWidget(QPushButton):
     def __init__(self, field: TemplateField, help: Dict[Any, str], parent=None):
         super(TextSelectionWidget, self).__init__(parent)
         self.field = field
-        self.setStyleSheet('padding: 0px;')
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
         self.setText(self.placeholder_text)
         menu = QMenu(self)
@@ -179,7 +179,10 @@ class TextSelectionWidget(QPushButton):
         self._selected = self._items.get(value)
         if self._selected:
             self.setText(self._selected.text)
-            self.setIcon(IconRegistry.from_name(self._selected.icon, self._selected.icon_color))
+            if self._selected.icon:
+                self.setIcon(IconRegistry.from_name(self._selected.icon, self._selected.icon_color))
+            else:
+                self.setIcon(IconRegistry.empty_icon())
         else:
             self.setText(self.placeholder_text)
             self.setIcon(IconRegistry.empty_icon())
@@ -193,15 +196,13 @@ class TextSelectionWidget(QPushButton):
     class Popup(QFrame, Ui_FieldTextSelectionWidget):
         selected = pyqtSignal(SelectionItem)
 
-        def __init__(self, field: TemplateField, help: Dict[Any, str], parent=None):
+        def __init__(self, field: TemplateField, help_: Dict[Any, str], parent=None):
             super().__init__(parent)
             self.setupUi(self)
-            self.setMaximumHeight(350)
-            self.setMinimumWidth(400)
-            self.setMinimumHeight(350)
+            self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
             self.field = field
-            self.help = help
+            self.help = help_
 
             self.model = TemplateFieldSelectionModel(self.field)
             self.model.setEditable(False)
@@ -421,6 +422,8 @@ class TemplateFieldWidget(QFrame):
     def _fieldWidget(self) -> QWidget:
         if self.field.id == enneagram_field.id:
             widget = TextSelectionWidget(self.field, enneagram_help)
+        elif self.field.id == mbti_field.id:
+            widget = TextSelectionWidget(self.field, mbti_help)
         elif self.field.id == traits_field.id:
             widget = TraitSelectionWidget(self.field)
         elif self.field.type == TemplateFieldType.NUMERIC:

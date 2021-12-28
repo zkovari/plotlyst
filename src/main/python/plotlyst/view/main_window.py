@@ -71,6 +71,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.novel = None
         self._current_text_widget = None
         self.manuscript_view: Optional[ManuscriptView] = None
+        self.reports_view: Optional[ReportsView] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
@@ -137,7 +138,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel.title = event.novel.title
         elif isinstance(event, SceneChangedEvent):
-            self.btnReport.setEnabled(True)
             event_dispatcher.deregister(self, SceneChangedEvent)
         elif isinstance(event, OpenDistractionFreeMode):
             self.stackMainPanels.setCurrentWidget(self.pageDistractionFree)
@@ -220,23 +220,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.wdgDocs.layout().addWidget(self.docs_view)
 
         self.notes_view = DocumentsView(self.novel)
-        self.reports_view = ReportsView(self.novel)
 
         self.btnNovel.setIcon(IconRegistry.book_icon())
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnScenes.setIcon(IconRegistry.scene_icon())
         self.btnLocations.setIcon(IconRegistry.location_icon())
         self.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.btnReport.setIcon(IconRegistry.reports_icon())
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)
         self.pageScenes.layout().addWidget(self.scenes_outline_view.widget)
         self.pageLocations.layout().addWidget(self.locations_view.widget)
         self.pageNotes.layout().addWidget(self.notes_view.widget)
-        self.pageReports.layout().addWidget(self.reports_view.widget)
 
-        self.btnReport.setEnabled(len(self.novel.scenes) > 0)
         if self.novel.scenes:
             self.btnScenes.setChecked(True)
         else:
@@ -261,9 +257,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
             self.notes_view.activate()
-        elif self.btnReport.isChecked():
-            self.stackedWidget.setCurrentWidget(self.pageReports)
-            self.reports_view.activate()
 
     def _init_menubar(self):
         if app_env.is_prod():
@@ -290,19 +283,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _init_toolbar(self):
         self.outline_mode = QToolButton(self.toolBar)
         self.outline_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.outline_mode.setText('Outline')
+        self.outline_mode.setText('Plan')
         self.outline_mode.setCheckable(True)
         self.outline_mode.setIcon(IconRegistry.decision_icon(color='black'))
 
         self.manuscript_mode = QToolButton(self.toolBar)
         self.manuscript_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.manuscript_mode.setText('Manuscript')
+        self.manuscript_mode.setText('Write')
         self.manuscript_mode.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
         self.manuscript_mode.setCheckable(True)
 
         self.reports_mode = QToolButton(self.toolBar)
         self.reports_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.reports_mode.setText('Reports')
+        self.reports_mode.setText('Analyze')
         self.reports_mode.setIcon(IconRegistry.reports_icon())
         self.reports_mode.setCheckable(True)
 
@@ -319,13 +312,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.setCheckable(True)
         self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
 
-        # self.btnDocs = QToolButton(self.toolBar)
-        # self.btnDocs.setIcon(IconRegistry.document_edition_icon())
-        # self.btnDocs.setMinimumWidth(50)
-        # self.btnDocs.setCursor(Qt.PointingHandCursor)
-        # self.btnDocs.setCheckable(True)
-        # self.btnDocs.toggled.connect(self.wdgDocs.setVisible)
-
         self.toolBar.addWidget(spacer_widget(5))
         self.toolBar.addAction(IconRegistry.home_icon(), 'Home')
         self.toolBar.addSeparator()
@@ -334,7 +320,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(self.reports_mode)
         self.toolBar.addWidget(spacer_widget())
         self.toolBar.addWidget(self.btnComments)
-        # self.toolBar.addWidget(self.btnDocs)
 
         self.wdgSidebar.setHidden(True)
         self.wdgDocs.setHidden(True)
@@ -351,6 +336,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.manuscript_view = ManuscriptView(self.novel)
                 self.pageManuscript.layout().addWidget(self.manuscript_view.widget)
             self.manuscript_view.activate()
+        elif self.reports_mode.isChecked():
+            self.stackMainPanels.setCurrentWidget(self.pageReports)
+            if not self.reports_view:
+                self.reports_view = ReportsView(self.novel)
+                self.pageReports.layout().addWidget(self.reports_view.widget)
+            self.reports_view.activate()
 
     def _import_from_scrivener(self):
         self.btnHome.click()
@@ -411,8 +402,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.scenes_outline_view.widget.deleteLater()
         self.pageNotes.layout().removeWidget(self.notes_view.widget)
         self.notes_view.widget.deleteLater()
-        self.pageReports.layout().removeWidget(self.reports_view.widget)
-        self.reports_view.widget.deleteLater()
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         self.comments_view.widget.deleteLater()
 

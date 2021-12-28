@@ -17,14 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any, Optional
+from typing import Any
 
 from PyQt5.QtCore import QModelIndex, Qt
 from anytree import Node
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Location
-from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
+from src.main.python.plotlyst.model.common import emit_column_changed_in_tree, ActionBasedTreeModel
 from src.main.python.plotlyst.model.tree_model import TreeItemModel, NodeMimeData
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -42,14 +42,13 @@ class LocationMimeData(NodeMimeData):
         super(LocationMimeData, self).__init__(node)
 
 
-class LocationsTreeModel(TreeItemModel):
+class LocationsTreeModel(TreeItemModel, ActionBasedTreeModel):
     MimeType: str = 'application/location'
 
     def __init__(self, novel: Novel):
         super(LocationsTreeModel, self).__init__()
         self.dragAndDropEnabled = True
         self.novel = novel
-        self._action_index: Optional[QModelIndex] = None
         self.repo = RepositoryPersistenceManager.instance()
         for location in self.novel.locations:
             self._initNodes(location, self.root)
@@ -112,14 +111,8 @@ class LocationsTreeModel(TreeItemModel):
     def _mimeDataClass(self):
         return LocationMimeData
 
-    def displayAction(self, index: QModelIndex):
-        if index.row() >= 0:
-            if self._action_index and self._action_index.row() == index.row() \
-                    and self._action_index.parent() == index.parent():  # same index
-                return
-            self._action_index = index
-        else:
-            self._action_index = None
+    @overrides
+    def _emitActionsChanged(self, index: QModelIndex):
         emit_column_changed_in_tree(self, 1, index)
 
     def insertLocation(self, location: Location) -> QModelIndex:
@@ -141,6 +134,7 @@ class LocationsTreeModel(TreeItemModel):
         return self.index(len(node.location.children) - 1, 0, parent_index)
 
     def removeLocation(self, index: QModelIndex):
+        self._action_index = None
         node: LocationNode = index.internalPointer()
         location: Location = node.location
 

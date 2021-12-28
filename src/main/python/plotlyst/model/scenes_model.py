@@ -126,9 +126,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 if self._data[index.row()].wip:
                     return IconRegistry.wip_icon()
                 elif self._data[index.row()].type == SceneType.ACTION:
-                    if self._data[index.row()].action_resolution:
+                    if self._data[index.row()].outcome_resolution():
                         return self._resolved_action_icon
-                    if self._data[index.row()].action_trade_off:
+                    if self._data[index.row()].outcome_trade_off():
                         return self._trade_off_action_icon
                     return self._action_icon
                 elif self._data[index.row()].type == SceneType.REACTION:
@@ -153,9 +153,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColEnd:
                 if self._data[index.row()].type == SceneType.ACTION:
-                    if self._data[index.row()].action_resolution:
+                    if self._data[index.row()].outcome_resolution():
                         return IconRegistry.success_icon()
-                    if self._data[index.row()].action_trade_off:
+                    if self._data[index.row()].outcome_trade_off():
                         return IconRegistry.tradeoff_icon()
                     return IconRegistry.disaster_icon()
                 if self._data[index.row()].type == SceneType.REACTION:

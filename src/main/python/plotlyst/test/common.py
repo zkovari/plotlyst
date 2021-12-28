@@ -112,7 +112,7 @@ def edit_item(qtbot, view: QAbstractItemView, row: int, col: int, type, set_valu
     editor = view.indexWidget(index)
     assert editor, "Editor should be open"
     assert isinstance(editor, type)
-    # editor.setCurrentIndex(0)
+
     set_value_func(editor)
     view.itemDelegate().commitData.emit(editor)
     view.itemDelegate().closeEditor.emit(editor)
@@ -139,7 +139,7 @@ def go_to_home(window: MainWindow) -> HomeView:
 
 
 def go_to_reports(window: MainWindow) -> ReportsView:
-    window.btnReport.setChecked(True)
+    window.reports_mode.setChecked(True)
     return window.reports_view
 
 

@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, List, Set
+from typing import Optional, List
 
 import emoji
 from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
@@ -30,7 +30,7 @@ from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue, StoryBeat
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneDramaticQuestionsWidget, SceneTagsWidget
+from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -74,17 +75,11 @@ class SceneEditor(QObject):
         self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
         self.ui.lblSynopsisEmoji.setText(emoji.emojize(':scroll:'))
-        self.ui.lblBeatEmoji.setFont(self._emoji_font)
-        self.ui.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
 
-        self.ui.cbPivotal.addItem('Select story beat...', None)
-        self.ui.cbPivotal.addItem('', None)
-        for beat in self.novel.story_structure.beats:
-            icon = IconRegistry.from_name(beat.icon, beat.icon_color) if beat.icon else QIcon('')
-            self.ui.cbPivotal.addItem(icon, beat.text, beat)
-            if beat.ends_act:
-                self.ui.cbPivotal.insertSeparator(self.ui.cbPivotal.count())
-        self.ui.cbPivotal.view().setRowHidden(0, True)
+        self.ui.wdgStructure.setNovel(self.novel)
+        self.ui.wdgStructure.setActsClickable(False)
+        self.ui.wdgStructure.beatSelected.connect(self._beat_selected)
+        self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
         self.ui.cbPov.addItem('Select POV ...', None)
         self.ui.cbPov.addItem('', None)
@@ -144,8 +139,6 @@ class SceneEditor(QObject):
         self._update_view(scene)
 
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
-        self.ui.sbDay.valueChanged.connect(self._save_scene)
-        self.ui.cbPivotal.currentIndexChanged.connect(self._save_scene)
         self.ui.btnGroupPages.buttonToggled.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -175,21 +168,11 @@ class SceneEditor(QObject):
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
 
-        occupied_beats: Set[str] = set([x.beat.text for x in self.novel.scenes if x.beat])
-        for i in range(self.ui.cbPivotal.count()):
-            if i < 2:
-                continue
-            beat = self.ui.cbPivotal.itemData(i)
-            item = self.ui.cbPivotal.model().item(i)
-            if beat and beat.text in occupied_beats:
-                item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
-            else:
-                item.setFlags(item.flags() | Qt.ItemIsEnabled)
-
+        self.ui.wdgStructure.unhighlightBeats()
         if self.scene.beat:
-            self.ui.cbPivotal.setCurrentText(self.scene.beat.text)
-        else:
-            self.ui.cbPivotal.setCurrentIndex(0)
+            self.ui.wdgStructure.highlightBeat(self.scene.beat)
+        self.ui.wdgStructure.uncheckActs()
+        self.ui.wdgStructure.setActChecked(acts_registry.act(self.scene))
 
         if self.ui.btnNotes.isChecked() or (self.scene.document and self.scene.document.loaded):
             self._update_notes()
@@ -241,6 +224,19 @@ class SceneEditor(QObject):
             self._update_notes()
         elif self.ui.btnBuilder.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageBuilder)
+
+    def _beat_selected(self, beat: StoryBeat):
+        if self.scene.beat and self.scene.beat != beat:
+            self.ui.wdgStructure.toggleBeat(self.scene.beat, False)
+        self.scene.beat = beat
+        self.ui.wdgStructure.unhighlightBeats()
+        self.ui.wdgStructure.highlightBeat(beat)
+
+    def _beat_removed(self, beat: StoryBeat):
+        if self.scene.beat and self.scene.beat == beat:
+            self.scene.beat = None
+            self.ui.wdgStructure.unhighlightBeats()
+            self.ui.wdgStructure.toggleBeat(beat, False)
 
     def _update_notes(self):
         if self.scene.document:
@@ -296,8 +292,6 @@ class SceneEditor(QObject):
         self.scene.agendas.extend(self.ui.wdgSceneStructure.agendas())
         self.scene.day = self.ui.sbDay.value()
 
-        if self.ui.cbPivotal.currentIndex() > 0:
-            self.scene.beat = self.ui.cbPivotal.currentData()
         self.scene.plot_values.clear()
         scene_plots = [ScenePlotValue(x) for x in self.questionsEditor.selectedItems()]
         self.scene.plot_values.extend(scene_plots)

@@ -53,7 +53,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnFear.setIcon(IconRegistry.from_name('mdi.spider-thread'))
         self.btnGoal.setIcon(IconRegistry.goal_icon())
         self.btnEnneagram.setIcon(IconRegistry.from_name('mdi.numeric-9-box-outline'))
-        self.btnMbti.setIcon(IconRegistry.from_name('fa.group'))
+        self.btnMbti.setIcon(IconRegistry.from_name('ei.group-alt'))
         self.btnTraits.setIcon(IconRegistry.from_name('ei.adjust'))
         self.btnDesire.setIcon(IconRegistry.from_name('fa5s.coins', color='#e1bc29'))
         self.btnMisbelief.setIcon(IconRegistry.error_icon())

@@ -24,6 +24,7 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QLabel
 
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
@@ -97,8 +98,8 @@ class IconRegistry:
         return qtawesome.icon('ei.plus-sign', color=color)
 
     @staticmethod
-    def minus_icon() -> QIcon:
-        return qtawesome.icon('fa5s.minus', color='red')
+    def minus_icon(color: str = 'red') -> QIcon:
+        return qtawesome.icon('fa5s.minus', color=color)
 
     @staticmethod
     def history_icon() -> QIcon:
@@ -140,12 +141,12 @@ class IconRegistry:
             color = '#832161'
         else:
             color = '#fe4a49'
-        return qtawesome.icon('fa.circle', 'fa5s.yin-yang',
+        return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1}, {'color': color}])
 
     @staticmethod
     def reaction_scene_icon() -> QIcon:
-        return qtawesome.icon('fa.circle', 'fa5s.yin-yang',
+        return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1}, {'color': '#4b86b4'}])
 
     @staticmethod
@@ -190,19 +191,19 @@ class IconRegistry:
 
     @staticmethod
     def act_one_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-1-circle', color='#02bcd4')
+        return IconRegistry.from_name('mdi.numeric-1-circle', color=ACT_ONE_COLOR)
 
     @staticmethod
     def act_two_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-2-circle', color='#1bbc9c')
+        return IconRegistry.from_name('mdi.numeric-2-circle', color=ACT_TWO_COLOR)
 
     @staticmethod
     def act_three_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-3-circle', color='#ff7800')
+        return IconRegistry.from_name('mdi.numeric-3-circle', color=ACT_THREE_COLOR)
 
     @staticmethod
     def table_icon() -> QIcon:
-        return qtawesome.icon('fa.list-alt')
+        return qtawesome.icon('fa5.list-alt')
 
     @staticmethod
     def goal_icon() -> QIcon:
@@ -210,19 +211,19 @@ class IconRegistry:
 
     @staticmethod
     def decision_icon(color: str = '#3cdbd3', color_on='darkBlue') -> QIcon:
-        return IconRegistry.from_name('fa.lightbulb-o', color=color, color_on=color_on)
+        return IconRegistry.from_name('fa5.lightbulb', color=color, color_on=color_on)
 
     @staticmethod
     def reaction_icon() -> QIcon:
-        return qtawesome.icon('fa.shield')
+        return qtawesome.icon('fa5s.shield-alt')
 
     @staticmethod
     def disaster_icon(color: str = '#f4442e', color_on: str = '#f4442e') -> QIcon:
-        return qtawesome.icon('fa.bomb', color=color, color_on=color_on)
+        return qtawesome.icon('fa5s.bomb', color=color, color_on=color_on)
 
     @staticmethod
     def dilemma_icon() -> QIcon:
-        return qtawesome.icon('fa.question-circle-o')
+        return qtawesome.icon('fa5s.question-circle')
 
     @staticmethod
     def conflict_icon(color: str = '#f3a712') -> QIcon:
@@ -330,7 +331,7 @@ class IconRegistry:
 
     @staticmethod
     def conflict_technology_icon() -> QIcon:
-        return IconRegistry.from_name('fa.gears', color='#4a5859')
+        return IconRegistry.from_name('ei.cogs', color='#4a5859')
 
     @staticmethod
     def conflict_supernatural_icon() -> QIcon:
@@ -346,7 +347,7 @@ class IconRegistry:
 
     @staticmethod
     def child_icon() -> QIcon:
-        return IconRegistry.from_name('fa.child')
+        return IconRegistry.from_name('fa5s.child')
 
     @staticmethod
     def teenager_icon() -> QIcon:

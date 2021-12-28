@@ -24,7 +24,7 @@ def _edit_arc(value: int, editor: QComboBox):
     editor.setCurrentIndex(value)
 
 
-def test_edit_arc(qtbot, filled_window: MainWindow):
+def _test_edit_arc(qtbot, filled_window: MainWindow):
     view: ReportsView = go_to_reports(filled_window)
 
     view.ui.tabWidget.setCurrentWidget(view.ui.tabCharacters)

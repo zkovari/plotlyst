@@ -19,19 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from abc import abstractmethod
-from typing import List, Set, Optional, Union
+from functools import partial
+from typing import List, Set, Optional, Union, Tuple
 
-from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer
-from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView
+from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal
+from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
+    QResizeEvent, QCursor
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView, QSplitter
 from overrides import overrides
 
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal, SceneType, \
-    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict, SceneOutcome, NEUTRAL
+    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict, SceneOutcome, NEUTRAL, StoryBeat
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
-from src.main.python.plotlyst.view.common import spacer_widget
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
+    set_opacity, InstantTooltipStyle, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -40,6 +44,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel, ConflictLabel
+from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class SceneGoalsWidget(LabelsEditorWidget):
@@ -238,6 +243,7 @@ def is_placeholder(widget: QWidget) -> bool:
 
 
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
+
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, placeholder: str = 'Beat',
                  topVisible: bool = False, parent=None):
         super(SceneStructureItemWidget, self).__init__(parent)
@@ -250,6 +256,10 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.text.setText(self.scene_structure_item.text)
         self.btnPlaceholder.setVisible(topVisible)
         self.btnIcon.setIcon(IconRegistry.circle_icon())
+        self.btnDelete.setIcon(IconRegistry.wrong_icon(color='black'))
+        self.btnDelete.clicked.connect(self._remove)
+        retain_size_when_hidden(self.btnDelete)
+        self.btnDelete.setHidden(True)
 
     def sceneStructureItem(self) -> SceneStructureItem:
         self.scene_structure_item.text = self.text.toPlainText()
@@ -257,6 +267,19 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
     def activate(self):
         self.text.setFocus()
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        self.btnDelete.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.btnDelete.setHidden(True)
+
+    def _remove(self):
+        if self.parent():
+            self.parent().layout().removeWidget(self)
+            self.deleteLater()
 
 
 class SceneGoalItemWidget(SceneStructureItemWidget):
@@ -409,13 +432,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.clear()
         self.btnInventory.setChecked(False)
 
-        if self.scene.type == SceneType.ACTION:
-            self.rbScene.setChecked(True)
-        elif self.scene.type == SceneType.REACTION:
-            self.rbSequel.setChecked(True)
-        else:
-            self.btnInventory.setChecked(True)
-            self.rbCustom.setChecked(True)
+        self._checkSceneType()
 
         if scene.agendas and scene.agendas[0].items:
             widgets_per_parts = {1: self.wdgBeginning, 2: self.wdgMiddle, 3: self.wdgEnd}
@@ -443,8 +460,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                     widget = TicklingClockSceneItemWidget(self.novel, item)
                 else:
                     widget = SceneStructureItemWidget(self.novel, item)
+
                 widgets_per_parts.get(item.part, self.wdgEnd).layout().addWidget(widget)
-                self._addPlaceholder(widgets_per_parts.get(item.part, self.wdgEnd))
+                self._addPlaceholder(widgets_per_parts[item.part])
+
+            for part in widgets_per_parts.values():
+                self._addPlaceholder(part, 0)
 
             self.btnEmotionStart.setValue(scene.agendas[0].beginning_emotion)
             self.btnEmotionEnd.setValue(scene.agendas[0].ending_emotion)
@@ -465,6 +486,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         if not self.agendas()[0].items:
             self._type_clicked()
+
+    def _checkSceneType(self):
+        if self.scene.type == SceneType.ACTION:
+            self.rbScene.setChecked(True)
+        elif self.scene.type == SceneType.REACTION:
+            self.rbSequel.setChecked(True)
+        else:
+            self.btnInventory.setChecked(True)
+            self.rbCustom.setChecked(True)
 
     def _setEmotionColorChange(self):
         color_start = self.btnEmotionStart.color()
@@ -630,15 +660,32 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         layout.takeAt(index)
         placeholder.deleteLater()
         layout.insertWidget(index, widget)
-        self._addPlaceholder(parent)
 
-    def _addPlaceholder(self, widget: QWidget):
         _placeholder = _PlaceHolder()
-        widget.layout().addWidget(_placeholder)
+        layout.insertWidget(index + 1, _placeholder)
+        _placeholder.installEventFilter(self)
+
+    def _addPlaceholder(self, widget: QWidget, pos: int = -1):
+        _placeholder = _PlaceHolder()
+        if pos >= 0:
+            widget.layout().insertWidget(pos, _placeholder)
+        else:
+            widget.layout().addWidget(_placeholder)
         _placeholder.installEventFilter(self)
 
     def _type_clicked(self):
-        self.clear(addPlaceholders=True)
+        if (self.rbScene.isChecked() and self.scene.type == SceneType.ACTION) or (
+                self.rbSequel.isChecked() and self.scene.type == SceneType.REACTION) or (
+                self.rbCustom.isChecked() and self.scene.type == SceneType.MIXED):
+            return
+
+        for item in self.agendas()[0].items:
+            if item.text or item.goals or item.conflicts:
+                if not ask_confirmation(
+                        "Some beats are filled up. Are you sure you want to change the scene's structure?"):
+                    self._checkSceneType()  # revert
+                    return
+                break
 
         if self.rbScene.isChecked():
             self.scene.type = SceneType.ACTION
@@ -662,6 +709,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                                               placeholder='Describe the ending of this scene')
             self.btnInventory.setChecked(True)
 
+        self.clear(addPlaceholders=True)
         self._addWidget(self.wdgBeginning.layout().itemAt(0).widget(), top)
         self._addWidget(self.wdgMiddle.layout().itemAt(0).widget(), middle)
         self._addWidget(self.wdgEnd.layout().itemAt(0).widget(), bottom)
@@ -679,3 +727,169 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _dragDestroyed(self):
         self._dragged = None
+
+
+class SceneStoryStructureWidget(QWidget):
+    beatSelected = pyqtSignal(StoryBeat)
+    beatRemovalRequested = pyqtSignal(StoryBeat)
+
+    def __init__(self, parent=None):
+        super(SceneStoryStructureWidget, self).__init__(parent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+
+        self.novel: Optional[Novel] = None
+        self._acts: List[QToolButton] = []
+        self._beats: List[Tuple[StoryBeat, QToolButton]] = []
+        self._wdgLine = QWidget(self)
+        self._wdgLine.setLayout(QHBoxLayout())
+        self._wdgLine.layout().setSpacing(0)
+        self._wdgLine.layout().setContentsMargins(0, 0, 0, 0)
+        self._lineHeight: int = 22
+        self._beatHeight: int = 20
+        self._margin = 5
+
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+        self._acts.clear()
+        self._beats.clear()
+
+        occupied_beats = acts_registry.occupied_beats()
+        for beat in self.novel.story_structure.beats:
+            btn = QToolButton(self)
+            if beat.icon:
+                btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+            btn.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
+            btn.setStyle(InstantTooltipStyle(btn.style()))
+            btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
+            btn.toggled.connect(partial(self._beatToggled, btn))
+            btn.clicked.connect(partial(self._beatClicked, beat, btn))
+            btn.installEventFilter(self)
+            btn.setCursor(Qt.PointingHandCursor)
+            if beat not in occupied_beats:
+                btn.setCheckable(True)
+                self._beatToggled(btn, False)
+            self._beats.append((beat, btn))
+
+        splitter = QSplitter(self._wdgLine)
+        splitter.setContentsMargins(0, 0, 0, 0)
+        splitter.setChildrenCollapsible(False)
+        splitter.setHandleWidth(1)
+        self._wdgLine.layout().addWidget(splitter)
+
+        act = self._actButton('Act 1', ACT_ONE_COLOR, left=True)
+        self._acts.append(act)
+        self._wdgLine.layout().addWidget(act)
+        splitter.addWidget(act)
+        act = self._actButton('Act 2', ACT_TWO_COLOR)
+        self._acts.append(act)
+        splitter.addWidget(act)
+
+        act = self._actButton('Act 3', ACT_THREE_COLOR, right=True)
+        self._acts.append(act)
+        splitter.addWidget(act)
+        splitter.setSizes([200, 550, 250])
+        self.update()
+
+    @overrides
+    def minimumSizeHint(self) -> QSize:
+        return QSize(300, self._lineHeight + self._beatHeight + 8)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(watched, QToolButton) and watched.isCheckable() and not watched.isChecked():
+            if event.type() == QEvent.Enter:
+                set_opacity(watched, 0.5)
+            elif event.type() == QEvent.Leave:
+                set_opacity(watched, 0.2)
+        return super(SceneStoryStructureWidget, self).eventFilter(watched, event)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        if self._beats:
+            for beat in self._beats:
+                beat[1].setGeometry(self.width() * beat[0].percentage / 100 - self._lineHeight // 2, self._lineHeight,
+                                    self._beatHeight,
+                                    self._beatHeight)
+        self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
+
+    def uncheckActs(self):
+        for act in self._acts:
+            act.setChecked(False)
+
+    def setActChecked(self, act: int, checked: bool = True):
+        self._acts[act - 1].setChecked(checked)
+
+    def setActsClickable(self, clickable: bool):
+        for act in self._acts:
+            act.setEnabled(clickable)
+
+    def highlightBeat(self, beat: StoryBeat):
+        for b, btn in self._beats:
+            if beat == b:
+                btn.setStyleSheet('QToolButton {border: 4px dotted #9b2226; border-radius: 6;} QToolTip {border: 0px;}')
+                btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
+
+    def unhighlightBeats(self):
+        for _, btn in self._beats:
+            btn.setStyleSheet('border: 0px;')
+            btn.setFixedSize(self._beatHeight, self._beatHeight)
+
+    def toggleBeat(self, beat: StoryBeat, toggled: bool):
+        for b, btn in self._beats:
+            if beat == b:
+                if toggled:
+                    btn.setCheckable(False)
+                else:
+                    btn.setCursor(Qt.PointingHandCursor)
+                    btn.setCheckable(True)
+                    self._beatToggled(btn, False)
+
+    def _xForAct(self, act: int):
+        if act == 1:
+            return self.rect().x() + self._margin
+        width = self.rect().width() - 2 * self._margin
+        if act == 2:
+            return width * 0.2 - 8
+        if act == 3:
+            return width * 0.75 - 8
+
+    def _actButton(self, text: str, color: str, left: bool = False, right: bool = False) -> QToolButton:
+        act = QToolButton(self)
+        act.setText(text)
+        act.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        act.setFixedHeight(self._lineHeight)
+        act.setCursor(Qt.PointingHandCursor)
+        act.setCheckable(True)
+        act.setStyleSheet(f'''
+        QToolButton {{
+            background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 {color}, stop: 1 {color});
+            border: 1px solid #8f8f91;
+            border-top-left-radius: {8 if left else 0}px;
+            border-bottom-left-radius: {8 if left else 0}px;
+            border-top-right-radius: {8 if right else 0}px;
+            border-bottom-right-radius: {8 if right else 0}px;
+            color:white;
+            padding: 0px;
+        }}
+        ''')
+
+        act.setChecked(True)
+        act.toggled.connect(partial(self._actToggled, act))
+
+        return act
+
+    def _actToggled(self, btn: QToolButton, toggled: bool):
+        set_opacity(btn, 1.0 if toggled else 0.2)
+
+    def _beatToggled(self, btn: QToolButton, toggled: bool):
+        set_opacity(btn, 1.0 if toggled else 0.2)
+
+    def _beatClicked(self, beat: StoryBeat, btn: QToolButton):
+        if btn.isCheckable() and btn.isChecked():
+            self.beatSelected.emit(beat)
+            btn.setCheckable(False)
+        elif not btn.isCheckable():
+            builder = PopupMenuBuilder.from_widget_position(self, self.mapFromGlobal(QCursor.pos()))
+            builder.add_action('Remove', IconRegistry.trash_can_icon(), lambda: self.beatRemovalRequested.emit(beat))
+            builder.popup()

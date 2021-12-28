@@ -20,12 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from typing import Any, Dict, List
 
-from PyQt5.QtCore import QModelIndex, Qt, QVariant, QMimeData, QByteArray, pyqtSignal, QPersistentModelIndex
+from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray, pyqtSignal, QPersistentModelIndex, QVariant
 from PyQt5.QtGui import QFont, QColor
 from anytree import Node
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene
+from src.main.python.plotlyst.model.common import ActionBasedTreeModel, emit_column_changed_in_tree
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -43,6 +44,10 @@ class SceneNode(Node):
         self.scene = scene
 
 
+class EmptyNode(Node):
+    pass
+
+
 class UncategorizedChapterNode(Node):
     def __init__(self, parent):
         super(UncategorizedChapterNode, self).__init__('<Uncategorized>', parent)
@@ -54,9 +59,11 @@ class SceneMimeData(QMimeData):
         super(SceneMimeData, self).__init__()
 
 
-class ChaptersTreeModel(TreeItemModel):
+class ChaptersTreeModel(TreeItemModel, ActionBasedTreeModel):
     MimeType: str = 'application/scene'
     orderChanged = pyqtSignal()
+
+    ColPlus: int = 1
 
     def __init__(self, novel: Novel, parent=None):
         super(ChaptersTreeModel, self).__init__(parent)
@@ -66,9 +73,21 @@ class ChaptersTreeModel(TreeItemModel):
         self.update()
 
     @overrides
+    def columnCount(self, parent: QModelIndex) -> int:
+        return 2
+
+    @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        if index.column() > 0 and self._action_index and index.row() == self._action_index.row() \
+                and self._action_index.parent() == index.parent():
+            if role == Qt.DecorationRole:
+                if index.column() == self.ColPlus:
+                    return IconRegistry.plus_circle_icon()
         if index.column() > 0:
+            if role == self.NodeRole:
+                return index.internalPointer()
             return QVariant()
+
         node = index.internalPointer()
         if isinstance(node, ChapterNode):
             if role == Qt.DisplayRole:
@@ -86,10 +105,12 @@ class ChaptersTreeModel(TreeItemModel):
         if isinstance(node, UncategorizedChapterNode) and role == Qt.DisplayRole:
             if node.children:
                 return f'{node.name} ({len(node.children)})'
+
         return super().data(index, role)
 
     def update(self):
         self.root.children = []
+        self._action_index = None
         chapters: Dict[str, ChapterNode] = {}
         for chapter in self.novel.chapters:
             chapters[chapter.sid()] = ChapterNode(chapter, self.root)
@@ -97,16 +118,17 @@ class ChaptersTreeModel(TreeItemModel):
             if scene.chapter:
                 SceneNode(scene, chapters[scene.chapter.sid()])
 
-        Node('', self.root)  # to mimic empty space
+        EmptyNode('', self.root)  # to mimic empty space
         dummy_parent = UncategorizedChapterNode(self.root)
         for scene in self.novel.scenes:
             if not scene.chapter:
                 SceneNode(scene, dummy_parent)
 
-    def newChapter(self) -> Chapter:
-        index = len(self.novel.chapters)
-        chapter = Chapter(title=str(index + 1))
-        self.novel.chapters.append(chapter)
+    def newChapter(self, index: int = -1) -> Chapter:
+        if index < 0:
+            index = len(self.novel.chapters)
+        chapter = Chapter(title='')
+        self.novel.chapters.insert(index, chapter)
 
         self.update()
         self.modelReset.emit()
@@ -126,7 +148,7 @@ class ChaptersTreeModel(TreeItemModel):
             if scene.chapter and scene.chapter.id == node.chapter.id:
                 scene.chapter = None
                 self.repo.update_scene(scene)
-
+        self._action_index = None
         self.update()
         self.modelReset.emit()
 
@@ -188,8 +210,20 @@ class ChaptersTreeModel(TreeItemModel):
 
         return True
 
-    def displayAction(self, index: QModelIndex):
-        pass
+    @overrides
+    def _updateActionIndex(self, index: QModelIndex):
+        super(ChaptersTreeModel, self)._updateActionIndex(index)
+
+        node = index.internalPointer()
+        if isinstance(node, (UncategorizedChapterNode, EmptyNode)):
+            self._action_index = None
+        elif isinstance(node, SceneNode):
+            if node.scene.chapter is None:
+                self._action_index = None
+
+    @overrides
+    def _emitActionsChanged(self, index: QModelIndex):
+        emit_column_changed_in_tree(self, self.ColPlus, index)
 
     def _dropUnderNode(self, parent_node: Node, node: SceneNode, row: int):
         old_parent_node: Node = node.parent

@@ -122,9 +122,9 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
             self._model = GoalScenesDistributionTableModel(self.novel)
             self._scenes_proxy.setSourceModel(self._model)
             self.tblCharacters.showColumn(0)
-            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 30)
-            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 140)
-            self.tblCharacters.setMaximumWidth(140)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 34)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+            self.tblCharacters.setMaximumWidth(204)
 
             self.spinAverage.setVisible(False)
 
@@ -133,9 +133,9 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
             self._model = ConflictScenesDistributionTableModel(self.novel)
             self._scenes_proxy.setSourceModel(self._model)
             self.tblCharacters.showColumn(0)
-            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 30)
-            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 140)
-            self.tblCharacters.setMaximumWidth(140)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 34)
+            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
+            self.tblCharacters.setMaximumWidth(204)
 
             self.spinAverage.setVisible(False)
 
@@ -198,8 +198,8 @@ class CharacterSelectorWidget(QWidget):
         self.exclusive = exclusive
         self._btn_group.setExclusive(self.exclusive)
 
-    def characters(self) -> Iterable[Character]:
-        return [x.character for x in self._buttons]
+    def characters(self, all: bool = True) -> Iterable[Character]:
+        return [x.character for x in self._buttons if all or x.isChecked()]
 
     def setCharacters(self, characters: Iterable[Character]):
         self.clear()

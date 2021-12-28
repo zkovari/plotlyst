@@ -19,49 +19,72 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Any, Optional
 
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, QVariant, pyqtSignal
+from PyQt5.QtCore import QModelIndex, Qt, QVariant, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Character, Novel, Scene
-from src.main.python.plotlyst.view.icons import avatars
+from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SelectionItem, enneagram_field
+from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 
 
-class CharactersTableModel(QAbstractTableModel):
+class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
     CharacterRole = Qt.UserRole + 1
+    SortRole = Qt.UserRole + 2
 
     ColName = 0
-    ColAge = 1
+    ColRole = 1
+    ColEnneagram = 2
+    ColMbti = 3
+    ColGoals = 4
 
     def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
         self._data: List[Character] = novel.characters
-        self._headers = []
-        for _ in range(2):
-            self._headers.append('')
-        self._headers[self.ColName] = 'Name'
-        self._headers[self.ColAge] = 'Age'
+        _headers = [''] * 5
+        _headers[self.ColName] = 'Name'
+        _headers[self.ColRole] = ''
+        _headers[self.ColEnneagram] = ''
+        _headers[self.ColMbti] = 'MBTI'
+        _headers[self.ColGoals] = 'Story goals'
+        super().__init__(_headers, parent)
 
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
         return len(self._data)
 
     @overrides
-    def columnCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
-        return len(self._headers)
-
-    @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
-        if not index.isValid():
-            return QVariant()
-
+        character: Character = self._data[index.row()]
         if role == self.CharacterRole:
-            return self._data[index.row()]
-        elif role == Qt.DisplayRole:
-            if index.column() == self.ColName:
-                return self._data[index.row()].name
-        elif role == Qt.DecorationRole:
-            return QIcon(avatars.pixmap(self._data[index.row()]))
+            return character
+
+        if index.column() == self.ColName:
+            if role == Qt.DisplayRole or role == self.SortRole:
+                return character.name
+            if role == Qt.DecorationRole:
+                return QIcon(avatars.pixmap(character))
+        if index.column() == self.ColRole:
+            return self._dataForSelectionItem(character.role(), role, displayText=False)
+        if index.column() == self.ColEnneagram:
+            enneagram = character.enneagram()
+            if role == self.SortRole:
+                return enneagram_field.selections.index(enneagram)
+            return self._dataForSelectionItem(enneagram, role, displayText=False)
+        if index.column() == self.ColMbti:
+            return self._dataForSelectionItem(character.mbti(), role)
+        if index.column() == self.ColGoals:
+            if role == Qt.DisplayRole or role == self.SortRole:
+                return ', '.join(character.goals())
+
+    def _dataForSelectionItem(self, item: SelectionItem, role: int, displayText: bool = True, sortByText: bool = True):
+        if item is None:
+            return QVariant()
+        if displayText and role == Qt.DisplayRole:
+            return item.text
+        if sortByText and role == self.SortRole:
+            return item.text
+        if role == Qt.DecorationRole:
+            return IconRegistry.from_name(item.icon, item.icon_color)
 
 
 class CharactersSceneAssociationTableModel(CharactersTableModel):

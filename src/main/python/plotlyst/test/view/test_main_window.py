@@ -11,11 +11,10 @@ from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
 
 
-def assert_views(window: MainWindow, visible: bool = True, scene_dependent_enabled: bool = True):
+def assert_views(window: MainWindow, visible: bool = True):
     assert window.btnNovel.isVisible() == visible
     assert window.btnCharacters.isVisible() == visible
     assert window.btnScenes.isVisible() == visible
-    assert window.btnReport.isVisible() == visible
     assert window.btnNotes.isVisible() == visible
 
     if not visible:
@@ -25,7 +24,6 @@ def assert_views(window: MainWindow, visible: bool = True, scene_dependent_enabl
     assert window.btnCharacters.isEnabled()
     assert window.btnScenes.isEnabled()
     assert window.btnNotes.isEnabled()
-    assert window.btnReport.isEnabled() == scene_dependent_enabled
 
 
 def test_empty_window(qtbot, window: MainWindow):
@@ -61,7 +59,7 @@ def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
 
     view.ui.btnActivate.click()
 
-    assert_views(filled_window, scene_dependent_enabled=False)
+    assert_views(filled_window)
     first_card = view.novel_cards[0]
     assert first_card.novel.id
     qtbot.mouseClick(first_card, Qt.LeftButton)
