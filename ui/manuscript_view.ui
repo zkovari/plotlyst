@@ -38,6 +38,9 @@
       <attribute name="headerVisible">
        <bool>false</bool>
       </attribute>
+      <attribute name="headerStretchLastSection">
+       <bool>false</bool>
+      </attribute>
      </widget>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
@@ -136,7 +139,7 @@
  <customwidgets>
   <customwidget>
    <class>RichTextEditor</class>
-   <extends>QFrame</extends>
+   <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
    <container>1</container>
   </customwidget>

@@ -19,9 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
 
-from PyQt5.QtCore import QObject, QTimer, pyqtSignal
+import pkg_resources
+from PyQt5.QtCore import QObject, QTimer, pyqtSignal, QUrl
+from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
 
+from src.main.python.plotlyst.view.common import retain_size_when_hidden
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -45,10 +48,23 @@ class TimerModel(QObject):
         self.value = value
         self._timer.start()
 
+    def stop(self):
+        self._timer.stop()
+        self.value = self.DefaultValue
+
     def remainingTime(self):
         minutes = self.value // 60
         seconds = self.value % 60
         return minutes, seconds
+
+    def isActive(self) -> bool:
+        return self._timer.isActive()
+
+    def toggle(self):
+        if self._timer.isActive():
+            self._timer.stop()
+        else:
+            self._timer.start()
 
     def _tick(self):
         self.value -= 1
@@ -73,11 +89,13 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         super(SprintWidget, self).__init__(parent)
         self.setupUi(self)
         self._model = None
+        self._compact: bool = False
         self.setModel(TimerModel())
 
         self._toggleState(False)
 
         self.btnTimer.setIcon(IconRegistry.timer_icon())
+        self.btnReset.setIcon(IconRegistry.restore_alert_icon('#9b2226'))
         menu = QMenu(self.btnTimer)
         action = QWidgetAction(menu)
         self._timer_setup = TimerSetupWidget()
@@ -86,14 +104,27 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self.btnTimer.setMenu(menu)
 
         self._timer_setup.btnStart.clicked.connect(self.start)
+        self.btnPause.clicked.connect(self._pauseStartTimer)
+        self.btnReset.clicked.connect(self._reset)
+
+        self._effect = QSoundEffect()
+        self._effect.setSource(
+            QUrl.fromLocalFile(pkg_resources.resource_filename('src.main.python.plotlyst.core.resources', 'cork.wav')))
+        self._effect.setVolume(0.3)
 
     def model(self) -> TimerModel:
         return self._model
 
     def setModel(self, model: TimerModel):
         self._model = model
-
         self._model.valueChanged.connect(self._updateTimer)
+        self._model.finished.connect(self._finished)
+        self._toggleState(self._model.isActive())
+
+    def setCompactMode(self, compact: bool):
+        self._compact = compact
+        self._toggleState(self.model().isActive())
+        self.time.setStyleSheet('border: 0px; color: white; background-color: rgba(0,0,0,0);')
 
     def start(self):
         self._toggleState(True)
@@ -103,10 +134,34 @@ class SprintWidget(QWidget, Ui_SprintWidget):
 
     def _toggleState(self, running: bool):
         self.time.setVisible(running)
-        self.btnPause.setVisible(running)
-        self.btnReset.setVisible(running)
+        if running:
+            self.btnPause.setChecked(True)
+            self.btnPause.setIcon(IconRegistry.pause_icon())
+        if self._compact:
+            self.btnTimer.setHidden(running)
+            retain_size_when_hidden(self.btnPause)
+            retain_size_when_hidden(self.btnReset)
+            self.btnPause.setHidden(True)
+            self.btnReset.setHidden(True)
+        else:
+            self.btnPause.setVisible(running)
+            self.btnReset.setVisible(running)
 
     def _updateTimer(self):
         mins, secs = self._model.remainingTime()
         time = datetime.time(minute=mins, second=secs)
         self.time.setTime(time)
+
+    def _pauseStartTimer(self, played: bool):
+        self.model().toggle()
+        if played:
+            self.btnPause.setIcon(IconRegistry.pause_icon())
+        else:
+            self.btnPause.setIcon(IconRegistry.play_icon())
+
+    def _reset(self):
+        self.model().stop()
+        self._toggleState(False)
+
+    def _finished(self):
+        self._effect.play()

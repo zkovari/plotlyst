@@ -430,6 +430,14 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.timer-outline')
 
     @staticmethod
+    def pause_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.pause', '#3f37c9')
+
+    @staticmethod
+    def play_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.play', '#2a9d8f')
+
+    @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
         if name.startswith('md'):

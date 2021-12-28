@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>239</width>
-    <height>118</height>
+    <width>185</width>
+    <height>108</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,7 +23,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Start a writing sprint using a timer:</string>
+      <string>Start a writing sprint:</string>
      </property>
     </widget>
    </item>
@@ -34,6 +34,9 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="specialValueText">
+      <string/>
      </property>
      <property name="prefix">
       <string>Minutes: </string>
@@ -57,7 +60,7 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>40</width>
-       <height>20</height>
+       <height>10</height>
       </size>
      </property>
     </spacer>

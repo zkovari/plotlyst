@@ -101,8 +101,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.expandAll()
         self.chaptersModel.orderChanged.connect(self._on_scene_moved)
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
-        self.ui.treeChapters.setColumnWidth(1, 20)
-        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
