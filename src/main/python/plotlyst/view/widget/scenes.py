@@ -22,8 +22,9 @@ from abc import abstractmethod
 from functools import partial
 from typing import List, Set, Optional, Union, Tuple
 
-from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize
-from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, QResizeEvent
+from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal
+from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, QResizeEvent, \
+    QCursor
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView, QSplitter
 from overrides import overrides
 
@@ -33,8 +34,8 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, set_opacity, \
-    InstantTooltipStyle
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
+    set_opacity, InstantTooltipStyle, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -729,6 +730,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
 
 class SceneStoryStructureWidget(QWidget):
+    beatSelected = pyqtSignal(StoryBeat)
+    beatRemovalRequested = pyqtSignal(StoryBeat)
+
     def __init__(self, parent=None):
         super(SceneStoryStructureWidget, self).__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
@@ -754,15 +758,14 @@ class SceneStoryStructureWidget(QWidget):
             btn = QToolButton(self)
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-            btn.setStyleSheet(f'''QToolButton {{background-color: rgba(0,0,0,0); border:0px;}}
-            QToolTip {{border: 0px;}}
-            ''')
+            btn.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
             btn.setStyle(InstantTooltipStyle(btn.style()))
             btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
             btn.toggled.connect(partial(self._beatToggled, btn))
+            btn.clicked.connect(partial(self._beatClicked, beat, btn))
             btn.installEventFilter(self)
+            btn.setCursor(Qt.PointingHandCursor)
             if beat not in occupied_beats:
-                btn.setCursor(Qt.PointingHandCursor)
                 btn.setCheckable(True)
                 self._beatToggled(btn, False)
             self._beats.append((beat, btn))
@@ -823,14 +826,23 @@ class SceneStoryStructureWidget(QWidget):
     def highlightBeat(self, beat: StoryBeat):
         for b, btn in self._beats:
             if beat == b:
-                btn.setStyleSheet(
-                    f'QToolButton {{border: 4px dotted #9b2226; border-radius: 6;}} QToolTip {{border: 0px;}}')
+                btn.setStyleSheet('QToolButton {border: 4px dotted #9b2226; border-radius: 6;} QToolTip {border: 0px;}')
                 btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
 
     def unhighlightBeats(self):
         for _, btn in self._beats:
             btn.setStyleSheet('border: 0px;')
             btn.setFixedSize(self._beatHeight, self._beatHeight)
+
+    def toggleBeat(self, beat: StoryBeat, toggled: bool):
+        for b, btn in self._beats:
+            if beat == b:
+                if toggled:
+                    btn.setCheckable(False)
+                else:
+                    btn.setCursor(Qt.PointingHandCursor)
+                    btn.setCheckable(True)
+                    self._beatToggled(btn, False)
 
     def _xForAct(self, act: int):
         if act == 1:
@@ -872,3 +884,12 @@ class SceneStoryStructureWidget(QWidget):
 
     def _beatToggled(self, btn: QToolButton, toggled: bool):
         set_opacity(btn, 1.0 if toggled else 0.2)
+
+    def _beatClicked(self, beat: StoryBeat, btn: QToolButton):
+        if btn.isCheckable() and btn.isChecked():
+            self.beatSelected.emit(beat)
+            btn.setCheckable(False)
+        elif not btn.isCheckable():
+            builder = PopupMenuBuilder.from_widget_position(self, self.mapFromGlobal(QCursor.pos()))
+            builder.add_action('Remove', IconRegistry.trash_can_icon(), lambda: self.beatRemovalRequested.emit(beat))
+            builder.popup()
