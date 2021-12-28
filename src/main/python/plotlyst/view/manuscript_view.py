@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex
+from PyQt5.QtGui import QTextCursor
 from PyQt5.QtWidgets import QHeaderView, QTextEdit
 from overrides import overrides
 
@@ -47,18 +48,19 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.setTitleVisible(False)
         self.ui.textEdit.setToolbarVisible(False)
 
-        self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.external-link-alt'))
+        self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
         self.ui.treeChapters.expandAll()
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
-        self.ui.treeChapters.setColumnWidth(1, 20)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.clicked.connect(self._edit)
 
         self.ui.textEdit.textEditor.textChanged.connect(self._save)
-        self.ui.btnDistractionFree.clicked.connect(lambda: emit_event(OpenDistractionFreeMode(self, self.ui.textEdit)))
+        self.ui.btnDistractionFree.clicked.connect(
+            lambda: emit_event(OpenDistractionFreeMode(self, self.ui.textEdit, self.ui.wdgSprint.model())))
 
     @overrides
     def refresh(self):
@@ -82,8 +84,9 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
             self.ui.textEdit.setMargins(30, 30, 30, 30)
             self.ui.textEdit.setFormat(130)
-            self.ui.textEdit.textEditor.selectAll()
+            self.ui.textEdit.textEditor.textCursor().select(QTextCursor.Document)
             self.ui.textEdit.textEditor.setFontPointSize(16)
+            self.ui.textEdit.textEditor.textCursor().clearSelection()
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 

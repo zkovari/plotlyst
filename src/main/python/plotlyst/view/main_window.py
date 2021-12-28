@@ -99,6 +99,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.sliderDocWidth.valueChanged.connect(
             lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
                                                                                 self.width() / 3 - x, 0))
+        self.wdgSprint.setCompactMode(True)
         self.sliderDocWidth.installEventFilter(self)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -141,7 +142,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, OpenDistractionFreeMode):
             self.stackMainPanels.setCurrentWidget(self.pageDistractionFree)
             clear_layout(self.wdgDistractionFreeEditor.layout())
+            if event.timer:
+                self.wdgSprint.setModel(event.timer)
             self.wdgDistractionFreeEditor.layout().addWidget(event.editor)
+            event.editor.setFocus()
             self.sliderDocWidth.setVisible(True)
             self.sliderDocWidth.setMaximum(self.width() / 3)
             self.sliderDocWidth.setValue(self.width() / 4)

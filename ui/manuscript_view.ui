@@ -38,6 +38,9 @@
       <attribute name="headerVisible">
        <bool>false</bool>
       </attribute>
+      <attribute name="headerStretchLastSection">
+       <bool>false</bool>
+      </attribute>
      </widget>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
@@ -78,6 +81,9 @@
            <property name="bottomMargin">
             <number>2</number>
            </property>
+           <item>
+            <widget class="SprintWidget" name="wdgSprint" native="true"/>
+           </item>
            <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
@@ -135,6 +141,12 @@
    <class>RichTextEditor</class>
    <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SprintWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.manuscript</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
