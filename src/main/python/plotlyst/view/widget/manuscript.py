@@ -18,12 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
+from typing import Optional
 
-import pkg_resources
 from PyQt5.QtCore import QObject, QTimer, pyqtSignal, QUrl
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
 
+from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import retain_size_when_hidden
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
@@ -107,10 +108,7 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self.btnPause.clicked.connect(self._pauseStartTimer)
         self.btnReset.clicked.connect(self._reset)
 
-        self._effect = QSoundEffect()
-        self._effect.setSource(
-            QUrl.fromLocalFile(pkg_resources.resource_filename('src.main.python.plotlyst.core.resources', 'cork.wav')))
-        self._effect.setVolume(0.3)
+        self._effect: Optional[QSoundEffect] = None
 
     def model(self) -> TimerModel:
         return self._model
@@ -164,4 +162,8 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self._toggleState(False)
 
     def _finished(self):
+        if self._effect is None:
+            self._effect = QSoundEffect()
+            self._effect.setSource(QUrl.fromLocalFile(resource_registry.cork))
+            self._effect.setVolume(0.3)
         self._effect.play()

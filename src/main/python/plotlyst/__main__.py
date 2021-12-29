@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from src.main.python.plotlyst.resources import resource_registry
 
 try:
     import argparse
@@ -101,12 +102,9 @@ if __name__ == '__main__':
         if platform.is_linux() and QApplication.font().pointSize() < 12:
             font = QFont('Helvetica', 12)
             QApplication.setFont(font)
-        # if platform.is_mac():
-        #     font = QFont('Palatino')
-        #     font.setPointSize(QApplication.font().pointSize())
-        #     QApplication.setFont(font)
         app.setStyleSheet(APP_STYLESHEET)
         settings.init_org()
+        resource_registry.set_up(appctxt)
 
         workspace: Optional[str] = settings.workspace()
 

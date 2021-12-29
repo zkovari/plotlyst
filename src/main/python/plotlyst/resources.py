@@ -1,0 +1,36 @@
+"""
+Plotlyst
+Copyright (C) 2021  Zsolt Kovari
+
+This file is part of Plotlyst.
+
+Plotlyst is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Plotlyst is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
+
+
+class ResourceRegistry:
+
+    def __init__(self):
+        self._cork = None
+
+    def set_up(self, app_context: ApplicationContext):
+        self._cork = app_context.get_resource('cork.wav')
+
+    @property
+    def cork(self):
+        return self._cork
+
+
+resource_registry = ResourceRegistry()
