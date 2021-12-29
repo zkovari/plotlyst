@@ -272,13 +272,32 @@ class RichTextEditor(QFrame):
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
                 if self.textEditor.textCursor().atBlockStart():
                     self._showCommands()
+
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
                 cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
                 if cursor.selectedText() == ' ':
                     self.textEditor.textCursor().deletePreviousChar()
                     self.textEditor.textCursor().insertText('.')
+            elif event.type() == QEvent.KeyPress and event.text().isalpha() and self._atSentenceStart(cursor):
+                self.textEditor.textCursor().insertText(event.text().upper())
+                return True
 
         return super(RichTextEditor, self).eventFilter(watched, event)
+
+    def _atSentenceStart(self, cursor: QTextCursor) -> bool:
+        if cursor.atBlockStart():
+            return True
+        if cursor.positionInBlock() == 1:
+            return False
+        cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+        if cursor.selectedText() == '.':
+            return True
+        elif cursor.selectedText() == ' ':
+            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+            if cursor.selectedText().startswith('.'):
+                return True
+
+        return False
 
     def _updateFormat(self):
         self.actionBold.setChecked(self.textEditor.fontWeight() == QFont.Bold)
