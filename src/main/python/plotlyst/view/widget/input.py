@@ -281,18 +281,25 @@ class RichTextEditor(QFrame):
             elif event.type() == QEvent.KeyPress and event.text().isalpha() and self._atSentenceStart(cursor):
                 self.textEditor.textCursor().insertText(event.text().upper())
                 return True
+            elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_QuoteDbl:
+                self.textEditor.textCursor().insertText(event.text())
+                cursor.movePosition(QTextCursor.PreviousCharacter)
+                self.textEditor.setTextCursor(cursor)
 
         return super(RichTextEditor, self).eventFilter(watched, event)
 
     def _atSentenceStart(self, cursor: QTextCursor) -> bool:
         if cursor.atBlockStart():
             return True
-        if cursor.positionInBlock() == 1:
-            return False
+
         cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
         if cursor.selectedText() == '.':
             return True
-        elif cursor.selectedText() == ' ':
+        if cursor.atBlockStart() and cursor.selectedText() == '"':
+            return True
+        if cursor.positionInBlock() == 1:
+            return False
+        elif cursor.selectedText() == ' ' or cursor.selectedText() == '"':
             cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
             if cursor.selectedText().startswith('.'):
                 return True
