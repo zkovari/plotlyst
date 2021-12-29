@@ -250,8 +250,8 @@ class RichTextEditor(QFrame):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent):
+            cursor = self.textEditor.textCursor()
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
-                cursor = self.textEditor.textCursor()
                 _list = cursor.block().textList()
                 if _list and _list.count() > 1:
                     cursor.beginEditBlock()
@@ -263,7 +263,6 @@ class RichTextEditor(QFrame):
                     cursor.endEditBlock()
                     return True
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-                cursor = self.textEditor.textCursor()
                 level = cursor.blockFormat().headingLevel()
                 if level > 0:  # heading
                     cursor.insertBlock()
@@ -271,8 +270,13 @@ class RichTextEditor(QFrame):
                     self._setHeading()
                     return True
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
-                if self.textEditor.textCursor().positionInBlock() == 0:
+                if self.textEditor.textCursor().atBlockStart():
                     self._showCommands()
+            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
+                cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+                if cursor.selectedText() == ' ':
+                    self.textEditor.textCursor().deletePreviousChar()
+                    self.textEditor.textCursor().insertText('.')
 
         return super(RichTextEditor, self).eventFilter(watched, event)
 
