@@ -5,6 +5,9 @@ set -e
 
 # generates Python code from Qt UI files. See .pyqt5ac.yml for reference
 #pyqt5ac --config .pyqt5ac.yml
+
+mkdir -p src/main/python/plotlyst/view/generated
+
 pyuic6 ui/about_dialog.ui -o src/main/python/plotlyst/view/generated/about_dialog_ui.py
 pyuic6 ui/avatar_widget.ui -o src/main/python/plotlyst/view/generated/avatar_widget.ui.py
 pyuic6 ui/backstory_editor_dialog.ui -o src/main/python/plotlyst/view/generated/backstory_editor_dialog.ui.py
