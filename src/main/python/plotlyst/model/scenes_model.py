@@ -64,6 +64,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
     ColSynopsis = 9
 
     def __init__(self, novel: Novel, parent=None):
+        self.novel = novel
         self._data: List[Scene] = novel.scenes
         _headers = [''] * 10
         _headers[self.ColTitle] = 'Title'
@@ -95,87 +96,88 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         if not index.isValid():
             return QVariant()
 
+        scene: Scene = self._data[index.row()]
         if role == self.SceneRole:
-            return self._data[index.row()]
+            return scene
         elif role == Qt.FontRole:
-            if self._data[index.row()].wip:
+            if scene.wip or not scene.title:
                 font = QFont()
                 font.setItalic(True)
                 return font
         elif role == Qt.BackgroundRole:
             if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
-                if self._data[index.row()].wip:
+                if scene.wip:
                     return self._wip_brush
-                elif self._data[index.row()].beat:
+                elif scene.beat:
                     return self._pivotal_brush
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
-                return self._data[index.row()].title
+                return scene.title if scene.title else f'Scene {self.novel.scenes.index(scene) + 1}'
             if index.column() == self.ColSynopsis:
-                return self._data[index.row()].synopsis
+                return scene.synopsis
             if index.column() == self.ColTime:
-                return self._data[index.row()].day
+                return scene.day
             if index.column() == self.ColBeginning:
-                return self._data[index.row()].beginning
+                return scene.beginning
             if index.column() == self.ColMiddle:
-                return self._data[index.row()].middle
+                return scene.middle
             if index.column() == self.ColEnd:
-                return self._data[index.row()].end
+                return scene.end
         elif role == Qt.DecorationRole:
             if index.column() == self.ColType:
-                if self._data[index.row()].wip:
+                if scene.wip:
                     return IconRegistry.wip_icon()
-                elif self._data[index.row()].type == SceneType.ACTION:
-                    if self._data[index.row()].outcome_resolution():
+                elif scene.type == SceneType.ACTION:
+                    if scene.outcome_resolution():
                         return self._resolved_action_icon
-                    if self._data[index.row()].outcome_trade_off():
+                    if scene.outcome_trade_off():
                         return self._trade_off_action_icon
                     return self._action_icon
-                elif self._data[index.row()].type == SceneType.REACTION:
+                elif scene.type == SceneType.REACTION:
                     return self._reaction_icon
             elif index.column() == self.ColPov:
-                if self._data[index.row()].pov:
-                    return QIcon(avatars.pixmap(self._data[index.row()].pov))
+                if scene.pov:
+                    return QIcon(avatars.pixmap(scene.pov))
             elif index.column() == self.ColBeginning:
-                if self._data[index.row()].type == SceneType.ACTION:
+                if scene.type == SceneType.ACTION:
                     return IconRegistry.goal_icon()
-                if self._data[index.row()].type == SceneType.REACTION:
+                if scene.type == SceneType.REACTION:
                     return IconRegistry.reaction_icon()
                 return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColMiddle:
-                if self._data[index.row()].type == SceneType.ACTION:
-                    if self._data[index.row()].middle:
+                if scene.type == SceneType.ACTION:
+                    if scene.middle:
                         return IconRegistry.conflict_icon()
                     else:
                         return IconRegistry.conflict_icon(color='lightgrey')
-                if self._data[index.row()].type == SceneType.REACTION:
+                if scene.type == SceneType.REACTION:
                     return IconRegistry.dilemma_icon()
                 return IconRegistry.invisible_white_icon()
             elif index.column() == self.ColEnd:
-                if self._data[index.row()].type == SceneType.ACTION:
-                    if self._data[index.row()].outcome_resolution():
+                if scene.type == SceneType.ACTION:
+                    if scene.outcome_resolution():
                         return IconRegistry.success_icon()
-                    if self._data[index.row()].outcome_trade_off():
+                    if scene.outcome_trade_off():
                         return IconRegistry.tradeoff_icon()
                     return IconRegistry.disaster_icon()
-                if self._data[index.row()].type == SceneType.REACTION:
+                if scene.type == SceneType.REACTION:
                     return IconRegistry.decision_icon()
                 return IconRegistry.invisible_white_icon()
         elif role == Qt.ToolTipRole:
             if index.column() == self.ColType:
-                if self._data[index.row()].beginning:
-                    tip = f' - {self._data[index.row()].beginning}\n\n'
-                    tip += f' - {self._data[index.row()].middle}\n\n'
-                    tip += f' - {self._data[index.row()].end}'
+                if scene.beginning:
+                    tip = f' - {scene.beginning}\n\n'
+                    tip += f' - {scene.middle}\n\n'
+                    tip += f' - {scene.end}'
                     return tip
-                elif self._data[index.row()].middle:
-                    return self._data[index.row()].middle
-                elif self._data[index.row()].end:
-                    return self._data[index.row()].end
+                elif scene.middle:
+                    return scene.middle
+                elif scene.end:
+                    return scene.end
             elif index.column() == self.ColPov:
-                return self._data[index.row()].pov.name if self._data[index.row()].pov else ''
+                return scene.pov.name if scene.pov else ''
             elif index.column() == self.ColSynopsis:
-                return self._data[index.row()].synopsis
+                return scene.synopsis
 
     @overrides
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
@@ -206,23 +208,25 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
+        scene: Scene = self._data[index.row()]
+
         if index.column() == self.ColSynopsis:
-            self._data[index.row()].synopsis = value
+            scene.synopsis = value
         elif index.column() == self.ColBeginning:
-            self._data[index.row()].beginning = value
+            scene.beginning = value
         elif index.column() == self.ColMiddle:
-            self._data[index.row()].middle = value
+            scene.middle = value
         elif index.column() == self.ColEnd:
-            self._data[index.row()].end = value
+            scene.end = value
         elif index.column() == self.ColArc:
-            if self._data[index.row()].arcs:
-                for arc in self._data[index.row()].arcs:
-                    if arc.character is self._data[index.row()].pov:
+            if scene.arcs:
+                for arc in scene.arcs:
+                    if arc.character is scene.pov:
                         arc.arc = value
             else:
-                self._data[index.row()].arcs.append(CharacterArc(value, self._data[index.row()].pov))
+                scene.arcs.append(CharacterArc(value, scene.pov))
         elif index.column() == self.ColTime:
-            self._data[index.row()].day = value
+            scene.day = value
         else:
             return False
         self.valueChanged.emit(index)
