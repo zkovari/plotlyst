@@ -142,8 +142,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, OpenDistractionFreeMode):
             self.stackMainPanels.setCurrentWidget(self.pageDistractionFree)
             clear_layout(self.wdgDistractionFreeEditor.layout())
-            if event.timer:
+            if event.timer and event.timer.isActive():
+                self.wdgHeader.setVisible(True)
                 self.wdgSprint.setModel(event.timer)
+            else:
+                self.wdgHeader.setHidden(True)
             self.wdgDistractionFreeEditor.layout().addWidget(event.editor)
             event.editor.setFocus()
             self.sliderDocWidth.setVisible(True)

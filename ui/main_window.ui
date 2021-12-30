@@ -556,6 +556,21 @@ background-color: rgb(39, 39, 39);
            </sizepolicy>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>2</number>
+           </property>
            <item alignment="Qt::AlignLeft">
             <widget class="SprintWidget" name="wdgSprint" native="true"/>
            </item>
@@ -574,6 +589,12 @@ background-color: rgb(39, 39, 39);
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
           </property>
           <property name="styleSheet">
            <string notr="true"/>
