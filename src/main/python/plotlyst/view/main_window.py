@@ -148,7 +148,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             event.editor.setFocus()
             self.sliderDocWidth.setVisible(True)
             self.sliderDocWidth.setMaximum(self.width() / 3)
-            self.sliderDocWidth.setValue(self.width() / 4)
+            if self.sliderDocWidth.value() <= 2:
+                self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
 
