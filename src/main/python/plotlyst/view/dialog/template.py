@@ -21,9 +21,9 @@ import pickle
 from typing import Optional
 
 import emoji
-from PyQt5.QtCore import Qt, QMimeData, QObject, QEvent, QByteArray
-from PyQt5.QtGui import QDrag, QMouseEvent
-from PyQt5.QtWidgets import QDialog, QToolButton
+from PyQt6.QtCore import Qt, QMimeData, QObject, QEvent, QByteArray
+from PyQt6.QtGui import QDrag, QMouseEvent
+from PyQt6.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import age_field, gender_field, \
@@ -123,7 +123,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent):
-        if event.buttons() & Qt.LeftButton and self._dragged and self._dragged.isEnabled():
+        if event.buttons() & Qt.MouseButton.LeftButton and self._dragged and self._dragged.isEnabled():
             drag = QDrag(self._dragged)
             pix = self._dragged.grab()
             if self._dragged is self.btnAge:

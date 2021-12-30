@@ -22,10 +22,10 @@ from typing import Optional, List, Any, Dict, Set
 
 import emoji
 import qtawesome
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
-from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
+from PyQt6 import QtGui
+from PyQt6.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
+from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
     QSpacerItem, QTextEdit, QWidgetAction, QMenu, QListView, QPushButton
 from fbs_runtime import platform
@@ -60,7 +60,7 @@ class _ProfileTemplateBase(QWidget):
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
 
-        self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
 
         self.widgets: List[TemplateFieldWidget] = []
         self._initGrid(editor_mode)
@@ -120,7 +120,7 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
         self.avatarUpdated: bool = False
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Fixed)
 
     def setCharacter(self, character: Character):
         self.character = character
@@ -155,7 +155,7 @@ class TextSelectionWidget(QPushButton):
     def __init__(self, field: TemplateField, help: Dict[Any, str], parent=None):
         super(TextSelectionWidget, self).__init__(parent)
         self.field = field
-        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
 
         self.setText(self.placeholder_text)
         menu = QMenu(self)
@@ -199,7 +199,7 @@ class TextSelectionWidget(QPushButton):
         def __init__(self, field: TemplateField, help_: Dict[Any, str], parent=None):
             super().__init__(parent)
             self.setupUi(self)
-            self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+            self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
 
             self.field = field
             self.help = help_
@@ -352,16 +352,16 @@ class TemplateFieldWidget(QFrame):
         self.lblEmoji = QLabel()
         if self.field.emoji:
             self.updateEmoji(emoji.emojize(self.field.emoji))
-            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
+            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignmentFlag.AlignTop)
         elif editor_mode:
-            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
+            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.lblName = QLabel()
         self.lblName.setText(self.field.name)
         if self.field.type in [TemplateFieldType.LABELS, TemplateFieldType.SMALL_TEXT]:
-            label_alignment = Qt.AlignTop
+            label_alignment = Qt.AlignmentFlag.AlignTop
         else:
-            label_alignment = Qt.AlignVCenter
+            label_alignment = Qt.AlignmentFlag.AlignVCenter
         self.layout.addWidget(self.lblName, alignment=label_alignment)
 
         if not field.show_label:
@@ -489,20 +489,20 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             if item and isinstance(item.widget(), TemplateFieldWidget):
                 pos = self.gridLayout.getItemPosition(i)
                 item = self.gridLayout.itemAtPosition(pos[0], pos[1])
-                if item.alignment() & Qt.AlignRight:
+                if item.alignment() & Qt.AlignmentFlag.AlignRight:
                     h_alignment = HAlignment.RIGHT
-                elif item.alignment() & Qt.AlignLeft:
+                elif item.alignment() & Qt.AlignmentFlag.AlignLeft:
                     h_alignment = HAlignment.LEFT
-                elif item.alignment() & Qt.AlignHCenter:
+                elif item.alignment() & Qt.AlignmentFlag.AlignHCenter:
                     h_alignment = HAlignment.CENTER
-                elif item.alignment() & Qt.AlignJustify:
+                elif item.alignment() & Qt.AlignmentFlag.AlignJustify:
                     h_alignment = HAlignment.JUSTIFY
                 else:
                     h_alignment = HAlignment.DEFAULT
 
-                if item.alignment() & Qt.AlignTop:
+                if item.alignment() & Qt.AlignmentFlag.AlignTop:
                     v_alignment = VAlignment.TOP
-                elif item.alignment() & Qt.AlignBottom:
+                elif item.alignment() & Qt.AlignmentFlag.AlignBottom:
                     v_alignment = VAlignment.BOTTOM
                 else:
                     v_alignment = VAlignment.CENTER

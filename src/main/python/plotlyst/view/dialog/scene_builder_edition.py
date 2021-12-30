@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from dataclasses import dataclass
 from typing import Optional, List
 
-from PyQt5.QtCore import QVariantAnimation, QVariant, pyqtSlot, QEasingCurve, QEventLoop, QTimer
-from PyQt5.QtGui import QIcon, QPalette, QColor
-from PyQt5.QtWidgets import QDialog, QApplication, QLabel
+from PyQt6.QtCore import QVariantAnimation, QVariant, pyqtSlot, QEasingCurve, QEventLoop, QTimer
+from PyQt6.QtGui import QIcon, QPalette, QColor
+from PyQt6.QtWidgets import QDialog, QApplication, QLabel
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Scene, Character, NpcCharacter, SceneBuilderElement

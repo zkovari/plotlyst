@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import emoji
-from PyQt5.QtWidgets import QDialog
+from PyQt6.QtWidgets import QDialog
 from fbs_runtime import platform
 
 from src.main.python.plotlyst.core.domain import BackstoryEvent, NEUTRAL, VERY_HAPPY, VERY_UNHAPPY, UNHAPPY, HAPPY

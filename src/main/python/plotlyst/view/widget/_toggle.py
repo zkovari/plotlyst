@@ -33,10 +33,11 @@ from qtpy.QtWidgets import QCheckBox
 
 
 class _Toggle(QCheckBox):
-    _transparent_pen = QPen(Qt.transparent)
+    _transparent_pen = QPen(Qt.GlobalColor.transparent)
     _light_grey_pen = QPen(Qt.lightGray)
 
-    def __init__(self, parent=None, bar_color=Qt.gray, checked_color="#00B0FF", handle_color=Qt.white):
+    def __init__(self, parent=None, bar_color=Qt.GlobalColor.gray, checked_color="#00B0FF",
+                 handle_color=Qt.GlobalColor.white):
         super().__init__(parent)
         self._bar_brush = QBrush(bar_color)
         self._bar_checked_brush = QBrush(QColor(checked_color).lighter())
@@ -65,7 +66,7 @@ class _Toggle(QCheckBox):
         handleRadius = round(0.24 * contRect.height())
 
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         painter.setPen(self._transparent_pen)
         barRect = QRectF(
@@ -157,7 +158,7 @@ class AnimatedToggle(_Toggle):
         handleRadius = round(0.24 * contRect.height())
 
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         painter.setPen(self._transparent_pen)
         barRect = QRectF(

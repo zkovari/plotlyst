@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Dict, Optional
 
-from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal, QSize
-from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QColor, QMouseEvent
-from PyQt5.QtWidgets import QWidget
+from PyQt6.QtCore import Qt, QPoint, QEvent, pyqtSignal, QSize
+from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QColor, QMouseEvent
+from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
@@ -41,7 +41,7 @@ class StoryLinesMapWidget(QWidget):
         self._scene_coord_y: Dict[int, int] = {}
         self._clicked_scene: Optional[Scene] = None
 
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu_requested)
 
     def setNovel(self, novel: Novel):
@@ -75,8 +75,8 @@ class StoryLinesMapWidget(QWidget):
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), Qt.white)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.fillRect(self.rect(), Qt.GlobalColor.white)
         self._scene_coord_y.clear()
         y = 0
         last_sc_x: Dict[int, int] = {}
@@ -128,7 +128,7 @@ class StoryLinesMapWidget(QWidget):
             y = 50 * (sl_i + 1) + 25 + base_y
             painter.setPen(QPen(QColor(plot.color_hexa), 4, Qt.SolidLine))
             painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
-            painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
+            painter.setPen(QPen(Qt.GlobalColor.black, 5, Qt.SolidLine))
             painter.drawText(5, y - 15, plot.text)
 
             for sc_i, scene in enumerate(self.novel.scenes):
@@ -137,19 +137,19 @@ class StoryLinesMapWidget(QWidget):
 
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
         if scene.plot_values:
-            pen = Qt.red if scene is self._clicked_scene else Qt.black
+            pen = Qt.GlobalColor.red if scene is self._clicked_scene else Qt.GlobalColor.black
             if len(scene.plot_values) == 1:
                 painter.setPen(QPen(pen, 3, Qt.SolidLine))
-                painter.setBrush(Qt.black)
+                painter.setBrush(Qt.GlobalColor.black)
                 painter.drawEllipse(x, y - 7, 14, 14)
             else:
                 painter.setPen(QPen(pen, 3, Qt.SolidLine))
-                painter.setBrush(Qt.white)
+                painter.setBrush(Qt.GlobalColor.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
         else:
-            pen = Qt.red if scene is self._clicked_scene else Qt.gray
+            pen = Qt.GlobalColor.red if scene is self._clicked_scene else Qt.GlobalColor.gray
             painter.setPen(QPen(pen, 3, Qt.SolidLine))
-            painter.setBrush(Qt.gray)
+            painter.setBrush(Qt.GlobalColor.gray)
             painter.drawEllipse(x, y, 14, 14)
 
     @staticmethod
