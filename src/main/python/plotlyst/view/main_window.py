@@ -49,10 +49,11 @@ from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.locations_view import LocationsView
-from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
+from src.main.python.plotlyst.view.manuscript_view import ManuscriptView, SentenceHighlighter
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.widget.input import RichTextEditor
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
@@ -100,7 +101,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
                                                                                 self.width() / 3 - x, 0))
         self.wdgSprint.setCompactMode(True)
-        self.sliderDocWidth.installEventFilter(self)
+        self.wdgBottom.installEventFilter(self)
+        self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
+        self.btnReturn.clicked.connect(lambda: self._toggle_fullscreen(on=False))
+        self._sentenceHighlighter: Optional[SentenceHighlighter] = None
+        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkblue'))
+        self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -149,7 +155,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.wdgHeader.setHidden(True)
             self.wdgDistractionFreeEditor.layout().addWidget(event.editor)
             event.editor.setFocus()
-            self.sliderDocWidth.setVisible(True)
+            self.wdgBottom.setVisible(True)
             self.sliderDocWidth.setMaximum(self.width() / 3)
             if self.sliderDocWidth.value() <= 2:
                 self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
@@ -160,16 +166,13 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Escape:
             if self.stackMainPanels.currentWidget() is self.pageDistractionFree:
-                editor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
-                self.manuscript_view.restore_editor(editor)
-                self.stackMainPanels.setCurrentWidget(self.pageManuscript)
                 self._toggle_fullscreen(on=False)
         event.accept()
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if watched is self.sliderDocWidth and event.type() == QEvent.Leave:
-            self.sliderDocWidth.setHidden(True)
+        if watched is self.wdgBottom and event.type() == QEvent.Leave:
+            self.wdgBottom.setHidden(True)
         return super(MainWindow, self).eventFilter(watched, event)
 
     def _toggle_fullscreen(self, on: bool):
@@ -182,6 +185,21 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not self.isFullScreen():
             if on:
                 self.showFullScreen()
+        if on:
+            self._toggle_manuscript_focus(self.btnFocus.isChecked())
+        else:
+            editor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
+            self._toggle_manuscript_focus(False)
+            self.manuscript_view.restore_editor(editor)
+            self.stackMainPanels.setCurrentWidget(self.pageManuscript)
+
+    def _toggle_manuscript_focus(self, toggled: bool):
+        if toggled:
+            editor: RichTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
+            self._sentenceHighlighter = SentenceHighlighter(editor.textEditor)
+        elif self._sentenceHighlighter is not None:
+            self._sentenceHighlighter.deleteLater()
+            self._sentenceHighlighter = None
 
     @busy
     def _flush_end_fetch_novel(self):

@@ -20,7 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex
+from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt
+from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor
 from PyQt5.QtWidgets import QHeaderView, QTextEdit
 from overrides import overrides
 
@@ -92,3 +93,34 @@ class ManuscriptView(AbstractNovelView):
             return
         self._current_doc.content = self.ui.textEdit.textEditor.toHtml()
         json_client.save_document(self.novel, self._current_doc)
+
+
+class SentenceHighlighter(QSyntaxHighlighter):
+
+    def __init__(self, textedit: QTextEdit):
+        super(SentenceHighlighter, self).__init__(textedit.document())
+        self._editor = textedit
+
+        self._hidden_format = QTextCharFormat()
+        self._hidden_format.setForeground(QColor('#dee2e6'))
+
+        self._visible_format = QTextCharFormat()
+        self._visible_format.setForeground(Qt.black)
+
+        self._prevBlock: Optional[QTextBlock] = None
+        self._editor.cursorPositionChanged.connect(self.rehighlight)
+
+    @overrides
+    def highlightBlock(self, text: str) -> None:
+        self.setFormat(0, len(text), self._hidden_format)
+        if self._editor.textCursor().block() == self.currentBlock():
+            text = self._editor.textCursor().block().text()
+            finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
+            pos = self._editor.textCursor().positionInBlock()
+            boundary = finder.toNextBoundary()
+            prev_boundary = 0
+            while -1 < boundary < pos:
+                prev_boundary = boundary
+                boundary = finder.toNextBoundary()
+
+            self.setFormat(prev_boundary, boundary - prev_boundary, self._visible_format)
