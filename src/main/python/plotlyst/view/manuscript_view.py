@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex
-from PyQt5.QtGui import QTextCursor
 from PyQt5.QtWidgets import QHeaderView, QTextEdit
 from overrides import overrides
 
@@ -84,9 +83,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
             self.ui.textEdit.setMargins(30, 30, 30, 30)
             self.ui.textEdit.setFormat(130)
-            self.ui.textEdit.textEditor.textCursor().select(QTextCursor.Document)
-            self.ui.textEdit.textEditor.setFontPointSize(16)
-            self.ui.textEdit.textEditor.textCursor().clearSelection()
+            self.ui.textEdit.setFontPointSize(16)
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 

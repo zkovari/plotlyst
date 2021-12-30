@@ -27,7 +27,7 @@ from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout
+    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
@@ -95,6 +95,19 @@ class _TextEditor(QTextEdit):
                     menu.addAction(truncate_string(repl), partial(self._replaceWord, cursor, repl, start, length))
                 menu.popup(self.mapToGlobal(event.pos()))
 
+    # def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+    #     super(_TextEditor, self).paintEvent(event)
+    #     painter = QPainter(self.viewport())
+    #     painter.setRenderHint(QPainter.Antialiasing)
+    #     painter.setPen(QPen(QColor('#02bcd4'), 20, Qt.SolidLine))
+    #     painter.setBrush(QColor('#02bcd4'))
+    #     # painter.begin()
+    #     # painter.setPen(QPen(Qt.black), 12, Qt.SolidLine)
+    #     self.textCursor().position()
+    #     rect = self.cursorRect(self.textCursor())
+    #     painter.drawText(rect.x(), rect.y(), 'Painted text')
+    #     # painter.drawLine(0, 0, self.width(), self.height())
+
     def _replaceWord(self, cursor: QTextCursor, replacement: str, start: int, length: int):
         block_pos = cursor.block().position()
         cursor.setPosition(block_pos + start, QTextCursor.MoveAnchor)
@@ -134,6 +147,12 @@ class RichTextEditor(QFrame):
             family = 'Helvetica'
         self.textEditor.setStyleSheet(f'QTextEdit {{background: white; border: 0px; font: {family}}}')
         self.textEditor.setFontFamily(family)
+
+        self._lblPlaceholder = QLabel(self.textEditor)
+        font = QFont(family)
+        font.setItalic(True)
+        self._lblPlaceholder.setFont(font)
+        self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
         self.setMouseTracking(True)
         self.textEditor.installEventFilter(self)
@@ -243,6 +262,14 @@ class RichTextEditor(QFrame):
         cursor.select(QTextCursor.Document)
         cursor.mergeBlockFormat(blockFmt)
 
+    def setFontPointSize(self, size: int):
+        self.textEditor.textCursor().select(QTextCursor.Document)
+        self.textEditor.setFontPointSize(size)
+        font = self._lblPlaceholder.font()
+        font.setPointSize(size)
+        self._lblPlaceholder.setFont(font)
+        self.textEditor.textCursor().clearSelection()
+
     def clear(self):
         self.textEditor.clear()
         self.textTitle.clear()
@@ -250,6 +277,14 @@ class RichTextEditor(QFrame):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent):
+            # if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
+            #     if self._lblPlaceholder.isVisible():
+            #         self.textEditor.textCursor().insertText(self._lblPlaceholder.text())
+            #         self._lblPlaceholder.hide()
+            #         return True
+            # elif event.type() == QEvent.KeyPress and self._lblPlaceholder.isVisible():
+            #     self._lblPlaceholder.hide()
+
             cursor = self.textEditor.textCursor()
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
                 _list = cursor.block().textList()
@@ -285,6 +320,12 @@ class RichTextEditor(QFrame):
                 self.textEditor.textCursor().insertText(event.text())
                 cursor.movePosition(QTextCursor.PreviousCharacter)
                 self.textEditor.setTextCursor(cursor)
+            # elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
+            #     self._lblPlaceholder.setText(' said ')
+            #     self._lblPlaceholder.show()
+            #     rect = self.textEditor.cursorRect(cursor)
+            #     self._lblPlaceholder.move(rect.x() + self.textEditor.viewportMargins().left(),
+            #                               rect.y() + self.textEditor.viewportMargins().top())
 
         return super(RichTextEditor, self).eventFilter(watched, event)
 
