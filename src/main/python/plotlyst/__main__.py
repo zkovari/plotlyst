@@ -34,8 +34,6 @@ try:
     from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
     from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
-    from PyQt6 import QtWidgets
-    from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QFileDialog, QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt6 import ApplicationContext

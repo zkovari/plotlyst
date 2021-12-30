@@ -8,7 +8,7 @@ with (HERE / 'README.md').open('rt') as fh:
 
 REQUIREMENTS: dict = {
     'core': [
-        'PyQt6==6.2.2',
+        'PyQt6==6.2.0',
         'overrides==3.1.0',
         'qtawesome==1.1.1',
         'PyQt6-Charts==6.2',
