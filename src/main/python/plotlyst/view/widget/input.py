@@ -421,6 +421,7 @@ class RotatedButton(QPushButton):
             painter.translate(-1 * self.height(), 0)
         option.rect = option.rect.transposed()
         painter.drawControl(QStyle.ControlElement.CE_PushButton, option)
+        painter.end()
 
     @overrides
     def sizeHint(self):
