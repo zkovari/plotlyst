@@ -23,6 +23,7 @@ REQUIREMENTS: dict = {
         'pytest==6.2.4',
         'pytest-qt==4.0.2',
         'pytest-cov==2.12.1',
+        'pytest-randomly==3.10.3',
     ],
     'dev': [
         'pyqt6-tools',
