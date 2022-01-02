@@ -23,16 +23,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-# Based on https://github.com/pythonguis/python-qtwidgets
-
 from overrides import overrides
-from qtpy.QtCore import Qt, QPoint, QSize, QRectF, QPointF, QPropertyAnimation, QEasingCurve, \
+from qtpy.QtCore import Qt, QRect, QPoint, QSize, QRectF, QPointF, QPropertyAnimation, QEasingCurve, \
     Property, QSequentialAnimationGroup
 from qtpy.QtGui import QBrush, QColor, QPen, QPaintEvent, QPainter
 from qtpy.QtWidgets import QCheckBox
 
 
 class _Toggle(QCheckBox):
+    # Based on https://github.com/pythonguis/python-qtwidgets
     _transparent_pen = QPen(Qt.GlobalColor.transparent)
     _light_grey_pen = QPen(Qt.lightGray)
 
@@ -161,7 +160,7 @@ class AnimatedToggle(_Toggle):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         painter.setPen(self._transparent_pen)
-        barRect = QRectF(
+        barRect = QRect(
             0, 0,
             contRect.width() - handleRadius, 0.40 * contRect.height()
         )
