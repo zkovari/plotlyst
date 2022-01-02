@@ -52,7 +52,7 @@ class _ProfileTemplateBase(QWidget):
         self.layout = QVBoxLayout(self)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setFocusPolicy(Qt.NoFocus)
+        self.scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.scrollAreaWidgetContents = QWidget()
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setSpacing(4)
@@ -91,7 +91,7 @@ class _PlaceHolder(QFrame):
         self.btn = QToolButton()
         self.btn.setIcon(qtawesome.icon('ei.plus-sign', color='lightgrey'))
         self.btn.setText('<Drop here>')
-        self.btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.btn.setStyleSheet('''
                 background-color: rgb(255, 255, 255);
                 border: 0px;
@@ -120,7 +120,7 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
         self.avatarUpdated: bool = False
-        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
     def setCharacter(self, character: Character):
         self.character = character
@@ -286,7 +286,7 @@ class TraitSelectionWidget(LabelsSelectionWidget):
         _lstTraitsView.setMinimumHeight(300)
         _lstTraitsView.setModel(self._model)
         _lstTraitsView.setModelColumn(TemplateFieldSelectionModel.ColName)
-        _lstTraitsView.setViewMode(QListView.IconMode)
+        _lstTraitsView.setViewMode(QListView.ViewMode.IconMode)
 
         return _lstTraitsView
 
@@ -317,7 +317,7 @@ class ButtonSelectionWidget(QWidget):
             btn.setIcon(_icon(item))
             btn.setToolTip(item.text)
             btn.setCheckable(True)
-            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
             self.buttons.append(btn)
             self.layout.addWidget(btn)
             self.group.addButton(btn, i)
@@ -569,7 +569,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.MouseButtonRelease:
+        if event.type() == QEvent.Type.MouseButtonRelease:
             if isinstance(watched, (QToolButton, QPushButton)):
                 if isinstance(watched.parent(), AvatarWidget):
                     self._select(watched.parent().parent())
@@ -577,10 +577,10 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
                     self._select(watched.parent())
             else:
                 self._select(watched)
-        elif event.type() == QEvent.DragEnter:
+        elif event.type() == QEvent.Type.DragEnter:
             self._target_to_drop = watched
             self.dragMoveEvent(event)
-        elif event.type() == QEvent.Drop:
+        elif event.type() == QEvent.Type.Drop:
             self.dropEvent(event)
             self._target_to_drop = None
         return super().eventFilter(watched, event)
@@ -691,7 +691,7 @@ class CharacterProfileTemplateView(ProfileTemplateView):
         if not self._avatar_widget:
             raise ValueError('Obligatory avatar field is missing from profile')
 
-        self._name_widget.wdgEditor.setFocusPolicy(Qt.StrongFocus)
+        self._name_widget.wdgEditor.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._avatar_widget.setCharacter(self.character)
         if self._enneagram_widget:
             self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)

@@ -69,7 +69,7 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self._scenes_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._scenes_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._scenes_proxy.setSortRole(CharactersScenesDistributionTableModel.SortRole)
-        self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.DescendingOrder)
+        self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.SortOrder.DescendingOrder)
         self.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
         self.tblSceneDistribution.setModel(self._scenes_proxy)
         self.tblSceneDistribution.hideColumn(0)
@@ -177,7 +177,7 @@ class CharacterToolButton(QToolButton):
         self.character = character
         self.setIcon(QIcon(avatars.pixmap(self.character)))
         self.setCheckable(True)
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
 class CharacterSelectorWidget(QWidget):
@@ -422,12 +422,12 @@ class CharacterEmotionButton(QToolButton):
         super(CharacterEmotionButton, self).__init__(parent)
         self._value = NEUTRAL
         self._color = self.NEUTRAL_COLOR
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setFixedSize(32, 32)
         menu = QMenu(self)
         self.setMenu(menu)
         menu.setMaximumWidth(64)
-        self.setPopupMode(QToolButton.InstantPopup)
+        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
         else:
