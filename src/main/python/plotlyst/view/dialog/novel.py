@@ -43,7 +43,7 @@ class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
         if novel:
             self.lineTitle.setText(novel.title)
         result = self.exec()
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return None
         return self.lineTitle.text()
 
@@ -92,7 +92,7 @@ class PlotEditorDialog(QDialog, Ui_PlotEditorDialog):
 
     def display(self) -> Optional[PlotEditionResult]:
         result = self.exec()
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return None
         plot_type = PlotType.Main
         if self.rbInternalPlot.isChecked():

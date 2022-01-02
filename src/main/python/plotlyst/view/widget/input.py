@@ -458,6 +458,8 @@ class _PowerBar(QFrame):
 
         painter.fillRect(0, 0, self.value * 10, self.height(), brush)
 
+        painter.end()
+
     def increase(self):
         if self.value < self.steps:
             self.value += 1

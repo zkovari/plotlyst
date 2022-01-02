@@ -90,7 +90,7 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
 
     def display(self) -> Optional[BackstoryEvent]:
         result = self.exec()
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return None
 
         emotion = NEUTRAL

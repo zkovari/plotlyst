@@ -109,11 +109,11 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         self._dragged = watched
-        if event.type() == QEvent.MouseButtonPress:
+        if event.type() == QEvent.Type.MouseButtonPress:
             self.mousePressEvent(event)
-        elif event.type() == QEvent.MouseMove:
+        elif event.type() == QEvent.Type.MouseMove:
             self.mouseMoveEvent(event)
-        elif event.type() == QEvent.MouseButtonRelease:
+        elif event.type() == QEvent.Type.MouseButtonRelease:
             self.mouseReleaseEvent(event)
         return super().eventFilter(watched, event)
 
@@ -160,12 +160,12 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             drag.setPixmap(pix)
             drag.setHotSpot(event.pos())
             drag.destroyed.connect(self._dragDestroyed)
-            drag.exec_()
+            drag.exec()
 
     def display(self) -> Optional[ProfileTemplate]:
         result = self.exec()
 
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return None
         if self._restore_requested:
             return default_character_profiles()[0]
