@@ -18,13 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
-from typing import Optional, List, Any, Dict, Set
+from typing import Optional, List, Any, Dict, Set, Union
 
 import emoji
 import qtawesome
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
-from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent
+from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent, QPixmap
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
     QSpacerItem, QTextEdit, QWidgetAction, QMenu, QListView, QPushButton
@@ -37,6 +37,7 @@ from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldTyp
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
+from src.main.python.plotlyst.view.dialog.utility import ArtbreederDialog
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -119,6 +120,9 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         self.character: Optional[Character] = None
         self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
+        self.btnAi.setIcon(IconRegistry.from_name('mdi.robot-happy-outline', 'white'))
+        # self.btnAi.setStyle(InstantTooltipStyle(self.btnAi.style()))
+        self.btnAi.clicked.connect(self._select_ai)
         self.avatarUpdated: bool = False
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
@@ -136,6 +140,9 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         if image is None:
             QMessageBox.warning(self.widget, 'Error while uploading image', 'Could not upload image')
             return
+        self._update_avatar(image)
+
+    def _update_avatar(self, image: Union[QImage, QPixmap]):
         array = QByteArray()
         buffer = QBuffer(array)
         buffer.open(QIODevice.WriteOnly)
@@ -146,6 +153,12 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         set_avatar(self.lblAvatar, self.character)
 
         self.avatarUpdated = True
+
+    def _select_ai(self):
+        diag = ArtbreederDialog()
+        pixmap = diag.display()
+        if pixmap:
+            self._update_avatar(pixmap)
 
 
 class TextSelectionWidget(QPushButton):
