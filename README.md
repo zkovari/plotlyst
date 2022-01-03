@@ -5,7 +5,7 @@
 
 # Author
 
-Copyright (C) 2021  Zsolt Kovari
+Copyright (C) 2021-2022  Zsolt Kovari
 
 # License
 
