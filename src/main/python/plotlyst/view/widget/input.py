@@ -88,6 +88,11 @@ class GrammarHighlighter(QSyntaxHighlighter, EventListener):
         event_dispatcher.register(self, LanguageToolSet)
 
     @overrides
+    def deleteLater(self) -> None:
+        event_dispatcher.deregister(self, LanguageToolSet)
+        super(GrammarHighlighter, self).deleteLater()
+
+    @overrides
     def event_received(self, event: Event):
         if isinstance(event, LanguageToolSet):
             self._language_tool = language_tool_proxy.tool

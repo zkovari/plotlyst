@@ -54,8 +54,9 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
-        self._spellcheck_clicked(self.ui.btnSpellCheckIcon.isChecked())
+        self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
@@ -101,11 +102,13 @@ class ManuscriptView(AbstractNovelView):
         self._current_doc.content = self.ui.textEdit.textEditor.toHtml()
         json_client.save_document(self.novel, self._current_doc)
 
+    def _spellcheck_toggled(self, toggled: bool):
+        set_opacity(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
+
     def _spellcheck_clicked(self, checked: bool):
         def init_highlighter():
             self.highlighter = GrammarHighlighter(self.ui.textEdit.textEditor.document())
 
-        set_opacity(self.ui.btnSpellCheckIcon, 1 if checked else 0.4)
         if checked:
             if language_tool_proxy.is_failed():
                 self.ui.cbSpellCheck.setChecked(False)
