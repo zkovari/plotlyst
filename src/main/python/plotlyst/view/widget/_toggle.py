@@ -53,7 +53,7 @@ class _Toggle(QCheckBox):
 
     @overrides
     def sizeHint(self) -> QSize:
-        return QSize(58, 45)
+        return QSize(58, 35)
 
     @overrides
     def hitButton(self, pos: QPoint) -> bool:
@@ -62,7 +62,7 @@ class _Toggle(QCheckBox):
     @overrides
     def paintEvent(self, event: QPaintEvent):
         contRect = self.contentsRect()
-        handleRadius = round(0.24 * contRect.height())
+        handleRadius = round(0.20 * contRect.height())
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -70,7 +70,7 @@ class _Toggle(QCheckBox):
         painter.setPen(self._transparent_pen)
         barRect = QRectF(
             0, 0,
-            contRect.width() - handleRadius, 0.40 * contRect.height()
+            contRect.width() - handleRadius, contRect.height()
         )
         barRect.moveCenter(contRect.center())
         rounding = barRect.height() / 2
@@ -121,7 +121,6 @@ class AnimatedToggle(_Toggle):
 
     def __init__(self, *args, pulse_unchecked_color="#44999999",
                  pulse_checked_color="#4400B0EE", **kwargs):
-
         self._pulse_radius = 0
 
         super().__init__(*args, **kwargs)
@@ -133,7 +132,7 @@ class AnimatedToggle(_Toggle):
         self.pulse_anim = QPropertyAnimation(self, b"pulse_radius", self)
         self.pulse_anim.setDuration(350)
         self.pulse_anim.setStartValue(10)
-        self.pulse_anim.setEndValue(20)
+        self.pulse_anim.setEndValue(18)
 
         self.animations_group = QSequentialAnimationGroup()
         self.animations_group.addAnimation(self.animation)
@@ -154,7 +153,7 @@ class AnimatedToggle(_Toggle):
     @overrides
     def paintEvent(self, event: QPaintEvent):
         contRect = self.contentsRect()
-        handleRadius = round(0.24 * contRect.height())
+        handleRadius = round(0.30 * contRect.height())
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -162,7 +161,7 @@ class AnimatedToggle(_Toggle):
         painter.setPen(self._transparent_pen)
         barRect = QRectF(
             0, 0,
-            contRect.width() - handleRadius, 0.40 * contRect.height()
+            contRect.width() - handleRadius, 0.60 * contRect.height()
         )
         barRect.moveCenter(contRect.center())
         rounding = barRect.height() / 2

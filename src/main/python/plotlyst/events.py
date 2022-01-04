@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from PyQt5.QtWidgets import QTextEdit
+from language_tool_python import LanguageTool
 
 from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene
 from src.main.python.plotlyst.event.core import Event
@@ -86,3 +87,8 @@ class PlotCreatedEvent(Event):
 class OpenDistractionFreeMode(Event):
     editor: QTextEdit
     timer: Optional[TimerModel] = None
+
+
+@dataclass
+class LanguageToolSet(Event):
+    tool: LanguageTool

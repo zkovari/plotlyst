@@ -20,9 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex, QRect, QPoint, Qt
-from PyQt5.QtGui import QSyntaxHighlighter, QTextDocument, QTextCharFormat, QTextBlockUserData
 from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidget
-from language_tool_python import LanguageTool
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
@@ -41,7 +39,7 @@ from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
-from src.main.python.plotlyst.view.widget.input import RotatedButton, RichTextEditor
+from src.main.python.plotlyst.view.widget.input import RotatedButton, RichTextEditor, GrammarHighlighter
 
 
 class DocumentsView(AbstractNovelView):
@@ -51,7 +49,6 @@ class DocumentsView(AbstractNovelView):
         self.ui = Ui_NotesView()
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
-        self.language_tool: Optional[LanguageTool] = None
 
         self.model = DocumentsTreeModel(self.novel)
         self.ui.treeDocuments.setModel(self.model)
@@ -74,11 +71,6 @@ class DocumentsView(AbstractNovelView):
     def refresh(self):
         self.ui.treeDocuments.expandAll()
         self.ui.btnRemove.setEnabled(False)
-
-    def set_language_tool(self, tool: LanguageTool):
-        self.language_tool = tool
-        if self.highlighter:
-            self.highlighter.setLanguageTool(self.language_tool)
 
     def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None,
                  doc_type: DocumentType = DocumentType.DOCUMENT):
@@ -126,7 +118,7 @@ class DocumentsView(AbstractNovelView):
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
         self.textEditor.textEditor.textChanged.connect(self._save)
         self.textEditor.textTitle.textChanged.connect(self._title_changed)
-        self.highlighter = GrammarHighlighter(self.textEditor.textEditor.document(), self.language_tool)
+        self.highlighter = GrammarHighlighter(self.textEditor.textEditor.document())
 
     def _clear_text_editor(self):
         clear_layout(self.ui.docEditorPage.layout())
@@ -218,41 +210,6 @@ class DocumentsView(AbstractNovelView):
                 self._current_doc.title = new_title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
                 self.repo.update_novel(self.novel)
-
-
-# partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
-class GrammarHighlighter(QSyntaxHighlighter):
-
-    def __init__(self, document: QTextDocument, tool: Optional[LanguageTool] = None):
-        super(GrammarHighlighter, self).__init__(document)
-        self._misspelling_format = QTextCharFormat()
-        self._misspelling_format.setUnderlineColor(Qt.red)
-        self._misspelling_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
-
-        self._style_format = QTextCharFormat()
-        self._style_format.setUnderlineColor(Qt.blue)
-        self._style_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
-
-        self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
-
-        self._language_tool: Optional[LanguageTool] = tool
-
-    def setLanguageTool(self, tool: LanguageTool):
-        self._language_tool = tool
-        self.rehighlight()
-
-    @overrides
-    def highlightBlock(self, text: str) -> None:
-        if self._language_tool:
-            matches = self._language_tool.check(text)
-            misspellings = []
-            for m in matches:
-                self.setFormat(m.offset, m.errorLength,
-                               self._formats_per_issue.get(m.ruleIssueType, self._misspelling_format))
-                misspellings.append((m.offset, m.errorLength, m.replacements))
-            data = QTextBlockUserData()
-            data.misspelled = misspellings
-            self.setCurrentBlockUserData(data)
 
 
 class DocumentsSidebar(QWidget, AbstractNovelView, Ui_DocumentsSidebarWidget):
