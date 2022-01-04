@@ -23,12 +23,11 @@ from typing import Optional
 from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt, QTimer
 from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor
 from PyQt5.QtWidgets import QHeaderView, QTextEdit
-from fesa_nav.event.core import emit_error
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
-from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.event.core import emit_event, emit_critical
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -110,7 +109,7 @@ class ManuscriptView(AbstractNovelView):
         if checked:
             if language_tool_proxy.is_failed():
                 self.ui.cbSpellCheck.setChecked(False)
-                emit_error(language_tool_proxy.error)
+                emit_critical(language_tool_proxy.error)
             else:
                 QTimer.singleShot(10, init_highlighter)
         else:
