@@ -20,20 +20,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from builtins import getattr
 from enum import Enum
 from functools import partial
+from typing import Optional
 
 import fbs_runtime.platform
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
-    QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor
+    QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
+    QTextDocument, QTextBlockUserData
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
     QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel
+from language_tool_python import LanguageTool
 from overrides import overrides
 
 from src.main.python.plotlyst.common import truncate_string
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import LanguageToolSet
 from src.main.python.plotlyst.view.common import line
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
+from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 
 
 class AutoAdjustableTextEdit(QTextEdit):
@@ -57,6 +64,52 @@ class AutoAdjustableTextEdit(QTextEdit):
     def _resizeToContent(self):
         size = self.document().size()
         self.setMaximumHeight(max(self._minHeight, size.height()))
+
+
+# partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
+class GrammarHighlighter(QSyntaxHighlighter, EventListener):
+
+    def __init__(self, document: QTextDocument):
+        super(GrammarHighlighter, self).__init__(document)
+        self._misspelling_format = QTextCharFormat()
+        self._misspelling_format.setUnderlineColor(Qt.red)
+        self._misspelling_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+
+        self._style_format = QTextCharFormat()
+        self._style_format.setUnderlineColor(Qt.blue)
+        self._style_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+
+        self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
+
+        self._language_tool: Optional[LanguageTool] = None
+        if language_tool_proxy.is_set():
+            self._language_tool = language_tool_proxy.tool
+
+        event_dispatcher.register(self, LanguageToolSet)
+
+    @overrides
+    def deleteLater(self) -> None:
+        event_dispatcher.deregister(self, LanguageToolSet)
+        super(GrammarHighlighter, self).deleteLater()
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, LanguageToolSet):
+            self._language_tool = language_tool_proxy.tool
+            self.rehighlight()
+
+    @overrides
+    def highlightBlock(self, text: str) -> None:
+        if self._language_tool:
+            matches = self._language_tool.check(text)
+            misspellings = []
+            for m in matches:
+                self.setFormat(m.offset, m.errorLength,
+                               self._formats_per_issue.get(m.ruleIssueType, self._misspelling_format))
+                misspellings.append((m.offset, m.errorLength, m.replacements))
+            data = QTextBlockUserData()
+            data.misspelled = misspellings
+            self.setCurrentBlockUserData(data)
 
 
 class _TextEditor(QTextEdit):
@@ -432,7 +485,10 @@ class RotatedButton(QPushButton):
 
 
 class Toggle(AnimatedToggle):
-    pass
+    def __init__(self, parent=None):
+        super(Toggle, self).__init__(parent=parent)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setMinimumWidth(50)
 
 
 class _PowerBar(QFrame):

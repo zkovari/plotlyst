@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import atexit
 from typing import List, Optional
 
 import qtawesome
@@ -25,7 +24,6 @@ from PyQt5.QtCore import Qt, QThreadPool, QObject, QEvent
 from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
-from language_tool_python import LanguageTool
 from overrides import overrides
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
@@ -33,7 +31,7 @@ from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender, \
-    emit_critical, emit_info
+    emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
     SceneChangedEvent, NovelUpdatedEvent, OpenDistractionFreeMode
@@ -110,22 +108,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-        self.language_tool: Optional[LanguageTool] = None
         self._threadpool = QThreadPool()
-        self._language_tool_setup_worker = LanguageToolServerSetupWorker(self)
+        self._language_tool_setup_worker = LanguageToolServerSetupWorker()
         if not app_env.test_env():
             emit_info('Start initializing grammar checker...')
             self._threadpool.start(self._language_tool_setup_worker)
-
-    def set_language_tool(self, tool: LanguageTool):
-        self.language_tool = tool
-        atexit.register(self.language_tool.close)
-        if self.docs_view:
-            self.notes_view.set_language_tool(self.language_tool)
-        emit_info('Grammar checker was set up.')
-
-    def set_language_tool_error(self, error: str):
-        emit_critical('Could not initialize grammar checker', error)
 
     @overrides
     def event_received(self, event: Event):

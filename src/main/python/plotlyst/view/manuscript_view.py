@@ -20,19 +20,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt
+from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt, QTimer
 from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor
 from PyQt5.QtWidgets import QHeaderView, QTextEdit
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
-from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.event.core import emit_event, emit_critical
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.common import set_opacity
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.input import GrammarHighlighter
+from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 
 
 class ManuscriptView(AbstractNovelView):
@@ -42,6 +45,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
+        self.highlighter: Optional[GrammarHighlighter] = None
         self.ui.splitter.setSizes([100, 500])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
@@ -49,6 +53,10 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.setToolbarVisible(False)
 
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
+        self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
+        self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
+        self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
@@ -93,6 +101,23 @@ class ManuscriptView(AbstractNovelView):
             return
         self._current_doc.content = self.ui.textEdit.textEditor.toHtml()
         json_client.save_document(self.novel, self._current_doc)
+
+    def _spellcheck_toggled(self, toggled: bool):
+        set_opacity(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
+
+    def _spellcheck_clicked(self, checked: bool):
+        def init_highlighter():
+            self.highlighter = GrammarHighlighter(self.ui.textEdit.textEditor.document())
+
+        if checked:
+            if language_tool_proxy.is_failed():
+                self.ui.cbSpellCheck.setChecked(False)
+                emit_critical(language_tool_proxy.error)
+            else:
+                QTimer.singleShot(10, init_highlighter)
+        elif self.highlighter:
+            self.highlighter.deleteLater()
+            self.highlighter = None
 
 
 class SentenceHighlighter(QSyntaxHighlighter):

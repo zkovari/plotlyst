@@ -85,7 +85,6 @@ class _AvatarButton(QToolButton):
 
 
 class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
-    PortraitsUrl = 'https://raw.githubusercontent.com/plotlyst/artbreeder-scraper/main/resources/artbreeder/portraits.json'
 
     def __init__(self, parent=None):
         super(ArtbreederDialog, self).__init__(parent)
@@ -112,7 +111,8 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
             return self._pixmap
 
     def fetch(self):
-        urls_request = QNetworkRequest(QUrl(self.PortraitsUrl))
+        urls_request = QNetworkRequest(QUrl(
+            'https://raw.githubusercontent.com/plotlyst/artbreeder-scraper/main/resources/artbreeder/portraits.json'))
 
         self.manager.finished.connect(self._finished)
         self.manager.get(urls_request)
