@@ -115,10 +115,9 @@ class ManuscriptView(AbstractNovelView):
                 emit_critical(language_tool_proxy.error)
             else:
                 QTimer.singleShot(10, init_highlighter)
-        else:
-            if self.highlighter:
-                self.highlighter.deleteLater()
-                self.highlighter = None
+        elif self.highlighter:
+            self.highlighter.deleteLater()
+            self.highlighter = None
 
 
 class SentenceHighlighter(QSyntaxHighlighter):
