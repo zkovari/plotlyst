@@ -485,7 +485,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self._addPlaceholder(self.wdgEnd)
 
         if not self.agendas()[0].items:
-            self._type_clicked()
+            self._type_clicked(lazy=False)
 
     def _checkSceneType(self):
         if self.scene.type == SceneType.ACTION:
@@ -673,8 +673,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             widget.layout().addWidget(_placeholder)
         _placeholder.installEventFilter(self)
 
-    def _type_clicked(self):
-        if (self.rbScene.isChecked() and self.scene.type == SceneType.ACTION) or (
+    def _type_clicked(self, lazy: bool = True):
+        if lazy and (self.rbScene.isChecked() and self.scene.type == SceneType.ACTION) or (
                 self.rbSequel.isChecked() and self.scene.type == SceneType.REACTION) or (
                 self.rbCustom.isChecked() and self.scene.type == SceneType.MIXED):
             return
