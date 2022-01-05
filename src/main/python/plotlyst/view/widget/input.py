@@ -337,6 +337,12 @@ class RichTextEditor(QFrame):
             #         return True
             # elif event.type() == QEvent.KeyPress and self._lblPlaceholder.isVisible():
             #     self._lblPlaceholder.hide()
+            if self.toolbar.isHidden():
+                if event.type() == QEvent.KeyPress and event.key() == Qt.Key_I and event.modifiers() & Qt.ControlModifier:
+                    self.textEditor.setFontItalic(not self.textEditor.fontItalic())
+                if event.type() == QEvent.KeyPress and event.key() == Qt.Key_B and event.modifiers() & Qt.ControlModifier:
+                    self.textEditor.setFontWeight(
+                        QFont.Bold if self.textEditor.fontWeight() == QFont.Normal else QFont.Normal)
 
             cursor = self.textEditor.textCursor()
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
