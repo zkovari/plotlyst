@@ -26,6 +26,8 @@ from anytree import Node
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.model.common import ActionBasedTreeModel, emit_column_changed_in_tree
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -210,6 +212,8 @@ class ChaptersTreeModel(TreeItemModel, ActionBasedTreeModel):
         self.layoutAboutToBeChanged.emit([QPersistentModelIndex(parent)])
         self.layoutChanged.emit([QPersistentModelIndex(parent)])
         RepositoryPersistenceManager.instance().update_scene(node.scene)
+
+        emit_event(SceneChangedEvent(self))
 
         return True
 
