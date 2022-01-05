@@ -24,7 +24,7 @@ from typing import Optional
 
 import fbs_runtime.platform
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData
@@ -113,6 +113,14 @@ class GrammarHighlighter(QSyntaxHighlighter, EventListener):
 
 
 class _TextEditor(QTextEdit):
+
+    def __init__(self, parent=None):
+        super(_TextEditor, self).__init__(parent)
+        self._pasteAsPlain: bool = False
+
+    def setPasteAsPlainText(self, plain: bool):
+        self._pasteAsPlain = plain
+
     @overrides
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         super(_TextEditor, self).mouseMoveEvent(event)
@@ -147,6 +155,13 @@ class _TextEditor(QTextEdit):
                         break
                     menu.addAction(truncate_string(repl), partial(self._replaceWord, cursor, repl, start, length))
                 menu.popup(self.mapToGlobal(event.pos()))
+
+    @overrides
+    def insertFromMimeData(self, source: QMimeData) -> None:
+        if self._pasteAsPlain:
+            self.insertPlainText(source.text())
+        else:
+            super(_TextEditor, self).insertFromMimeData(source)
 
     # def paintEvent(self, event: QtGui.QPaintEvent) -> None:
     #     super(_TextEditor, self).paintEvent(event)
@@ -302,6 +317,9 @@ class RichTextEditor(QFrame):
     def setToolbarVisible(self, visible: bool):
         self.toolbar.setVisible(visible)
 
+    def setPasteAsPlainText(self, plain: bool):
+        self.textEditor.setPasteAsPlainText(plain)
+
     def setMargins(self, left: int, top: int, right: int, bottom: int):
         self.textEditor.setViewportMargins(left, top, right, bottom)
 
@@ -337,10 +355,10 @@ class RichTextEditor(QFrame):
             #         return True
             # elif event.type() == QEvent.KeyPress and self._lblPlaceholder.isVisible():
             #     self._lblPlaceholder.hide()
-            if self.toolbar.isHidden():
-                if event.type() == QEvent.KeyPress and event.key() == Qt.Key_I and event.modifiers() & Qt.ControlModifier:
+            if self.toolbar.isHidden() and event.type() == QEvent.KeyPress:
+                if event.key() == Qt.Key_I and event.modifiers() & Qt.ControlModifier:
                     self.textEditor.setFontItalic(not self.textEditor.fontItalic())
-                if event.type() == QEvent.KeyPress and event.key() == Qt.Key_B and event.modifiers() & Qt.ControlModifier:
+                if event.key() == Qt.Key_B and event.modifiers() & Qt.ControlModifier:
                     self.textEditor.setFontWeight(
                         QFont.Bold if self.textEditor.fontWeight() == QFont.Normal else QFont.Normal)
 

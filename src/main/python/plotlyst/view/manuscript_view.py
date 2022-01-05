@@ -66,6 +66,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.clicked.connect(self._edit)
 
+        self.ui.textEdit.setPasteAsPlainText(True)
         self.ui.textEdit.textEditor.textChanged.connect(self._save)
         self.ui.btnDistractionFree.clicked.connect(
             lambda: emit_event(OpenDistractionFreeMode(self, self.ui.textEdit, self.ui.wdgSprint.model())))
