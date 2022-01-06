@@ -201,6 +201,11 @@ class CharacterCard(Ui_CharacterCard, Card):
         if enneagram:
             self.lblEnneagram.setPixmap(
                 IconRegistry.from_name(enneagram.icon, enneagram.icon_color).pixmap(QSize(28, 28)))
+        mbti = self.character.mbti()
+        if mbti:
+            self.btnMbti.setStyleSheet(f'color: {mbti.icon_color};border:0px;')
+            self.btnMbti.setText(mbti.text)
+            self.btnMbti.setIcon(IconRegistry.from_name(mbti.icon, mbti.icon_color))
         role = self.character.role()
         if role:
             self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
