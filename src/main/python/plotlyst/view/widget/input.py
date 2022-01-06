@@ -28,16 +28,18 @@ from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData
+from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel
+    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel, QFileDialog
 from language_tool_python import LanguageTool
 from overrides import overrides
+from slugify import slugify
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
-from src.main.python.plotlyst.view.common import line
+from src.main.python.plotlyst.view.common import line, spacer_widget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
@@ -284,6 +286,12 @@ class RichTextEditor(QFrame):
         self.actionInsertNumberedList.triggered.connect(
             lambda: self.textEditor.textCursor().insertList(QTextListFormat.ListDecimal))
 
+        self.actionExportToPdf = QAction(IconRegistry.from_name('mdi.file-export-outline'), '')
+        self.actionExportToPdf.triggered.connect(self._exportPdf)
+
+        self.actionPrint = QAction(IconRegistry.from_name('mdi.printer'), '')
+        self.actionPrint.triggered.connect(self._print)
+
         self.actionGroupAlignment = QActionGroup(self.toolbar)
         self.actionGroupAlignment.addAction(self.actionAlignLeft)
         self.actionGroupAlignment.addAction(self.actionAlignCenter)
@@ -300,6 +308,9 @@ class RichTextEditor(QFrame):
         self.toolbar.addWidget(line(vertical=True))
         self.toolbar.addAction(self.actionInsertList)
         self.toolbar.addAction(self.actionInsertNumberedList)
+        self.toolbar.addWidget(spacer_widget())
+        self.toolbar.addAction(self.actionExportToPdf)
+        self.toolbar.addAction(self.actionPrint)
 
     def setText(self, content: str, title: str = '', title_read_only: bool = False):
         self.textEditor.setHtml(content)
@@ -471,6 +482,28 @@ class RichTextEditor(QFrame):
         menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
 
         menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+
+    def _exportPdf(self):
+        title = slugify(self.textTitle.toPlainText(), separator='_')
+        fn, _ = QFileDialog.getSaveFileName(self, 'Export PDF', f'{title}.pdf',
+                                            'PDF files (*.pdf);;All Files()')
+        if fn:
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setOutputFileName(fn)
+            printer.setDocName(self.textTitle.toPlainText())
+            self.__printHtml(printer)
+
+    def _print(self):
+        printer = QPrinter(QPrinter.HighResolution)
+        dialog = QPrintDialog(printer, self)
+        if dialog.exec_() == QPrintDialog.Accepted:
+            self.__printHtml(printer)
+
+    def __printHtml(self, printer: QPrinter):
+        richtext = RichTextEditor()  # create a new instance without the highlighters associated to it
+        richtext.setText(self.textEditor.toHtml())
+        richtext.textEditor.print(printer)
 
 
 class RotatedButtonOrientation(Enum):
