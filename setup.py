@@ -18,7 +18,7 @@ REQUIREMENTS: dict = {
         'atomicwrites==1.4.0',
         'dataclasses-json==0.5.2',
         'language-tool-python==2.6.1',
-        'python-slugify==5.0.2,'
+        'python-slugify==5.0.2',
     ],
     'test': [
         'pytest==6.2.4',
