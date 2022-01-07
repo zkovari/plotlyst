@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from builtins import getattr
 from enum import Enum
 from functools import partial
 from typing import Optional
@@ -35,7 +34,6 @@ from language_tool_python import LanguageTool
 from overrides import overrides
 from slugify import slugify
 
-from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import TextStatistics
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -43,6 +41,7 @@ from src.main.python.plotlyst.events import LanguageToolSet
 from src.main.python.plotlyst.view.common import line, spacer_widget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
+from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 
 
@@ -109,12 +108,16 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
     def __init__(self, document: QTextDocument):
         super(GrammarHighlighter, self).__init__(document)
         self._misspelling_format = QTextCharFormat()
-        self._misspelling_format.setUnderlineColor(Qt.red)
+        self._misspelling_format.setUnderlineColor(QColor('#d90429'))
         self._misspelling_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
 
         self._style_format = QTextCharFormat()
-        self._style_format.setUnderlineColor(Qt.blue)
+        self._style_format.setUnderlineColor(QColor('#5e60ce'))
         self._style_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+
+        self._grammar_format = QTextCharFormat()
+        self._grammar_format.setUnderlineColor(QColor('#ffc300'))
+        self._grammar_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
 
         self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
 
@@ -142,8 +145,8 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
             misspellings = []
             for m in matches:
                 self.setFormat(m.offset, m.errorLength,
-                               self._formats_per_issue.get(m.ruleIssueType, self._misspelling_format))
-                misspellings.append((m.offset, m.errorLength, m.replacements))
+                               self._formats_per_issue.get(m.ruleIssueType, self._grammar_format))
+                misspellings.append((m.offset, m.errorLength, m.replacements, m.message, m.ruleIssueType))
             data = self._currentblockData()
             data.misspellings = misspellings
 
@@ -184,9 +187,8 @@ class _TextEditor(QTextEdit):
         if cursor.atBlockStart() or cursor.atBlockEnd():
             QApplication.restoreOverrideCursor()
             return
-        data = cursor.block().userData()
-        errors = getattr(data, 'misspelled', [])
-        for start, length, replacements in errors:
+
+        for start, length, replacements, msg, style in self._errors(cursor):
             if start <= cursor.positionInBlock() <= start + length:
                 if QApplication.overrideCursor() is None:
                     QApplication.setOverrideCursor(Qt.PointingHandCursor)
@@ -201,16 +203,16 @@ class _TextEditor(QTextEdit):
         if cursor.atBlockStart() or cursor.atBlockEnd():
             QApplication.restoreOverrideCursor()
             return
-        data = cursor.block().userData()
-        errors = getattr(data, 'misspelled', [])
-        for start, length, replacements in errors:
+
+        for start, length, replacements, msg, style in self._errors(cursor):
             if start <= cursor.positionInBlock() <= start + length:
-                menu = QMenu(self)
-                for i, repl in enumerate(replacements):
-                    if i > 4:
-                        break
-                    menu.addAction(truncate_string(repl), partial(self._replaceWord, cursor, repl, start, length))
-                menu.popup(self.mapToGlobal(event.pos()))
+                menu = GrammarPopupMenu(self)
+                menu.init(replacements, msg, style)
+                pos = self.mapToGlobal(event.pos())
+                pos.setY(pos.y() + self.viewportMargins().top())
+                pos.setX(pos.x() + self.viewportMargins().left())
+                menu.popupWidget().replacementRequested.connect(partial(self._replaceWord, cursor, start, length))
+                menu.popup(pos)
 
     @overrides
     def insertFromMimeData(self, source: QMimeData) -> None:
@@ -218,6 +220,13 @@ class _TextEditor(QTextEdit):
             self.insertPlainText(source.text())
         else:
             super(_TextEditor, self).insertFromMimeData(source)
+
+    def _errors(self, cursor: QTextCursor):
+        data = cursor.block().userData()
+        if data and isinstance(data, TextBlockData):
+            return data.misspellings
+
+        return []
 
     # def paintEvent(self, event: QtGui.QPaintEvent) -> None:
     #     super(_TextEditor, self).paintEvent(event)
@@ -232,7 +241,7 @@ class _TextEditor(QTextEdit):
     #     painter.drawText(rect.x(), rect.y(), 'Painted text')
     #     # painter.drawLine(0, 0, self.width(), self.height())
 
-    def _replaceWord(self, cursor: QTextCursor, replacement: str, start: int, length: int):
+    def _replaceWord(self, cursor: QTextCursor, start: int, length: int, replacement: str):
         block_pos = cursor.block().position()
         cursor.setPosition(block_pos + start, QTextCursor.MoveAnchor)
         cursor.setPosition(block_pos + start + length, QTextCursor.KeepAnchor)
