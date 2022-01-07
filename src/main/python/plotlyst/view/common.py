@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Any
 
-from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint
+from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QGraphicsOpacityEffect, QProxyStyle, QStyle, QStyleOption, QStyleHintReturn
@@ -208,3 +208,26 @@ class InstantTooltipStyle(QProxyStyle):
             return 0
 
         return super(InstantTooltipStyle, self).styleHint(hint, option, widget, returnData)
+
+
+def decrease_font_size(widget: QWidget, step: int = 1):
+    font = widget.font()
+    font.setPointSize(font.pointSize() - 1 * step)
+    widget.setFont(font)
+
+
+class OpacityEventFilter(QObject):
+
+    def __init__(self, enterOpacity: float = 1.0, leaveOpacity: float = 0.4, parent=None):
+        super(OpacityEventFilter, self).__init__(parent)
+        self.enterOpacity = enterOpacity
+        self.leaveOpacity = leaveOpacity
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Enter:
+            set_opacity(watched, self.enterOpacity)
+        elif event.type() == QEvent.Leave:
+            set_opacity(watched, self.leaveOpacity)
+
+        return super(OpacityEventFilter, self).eventFilter(watched, event)

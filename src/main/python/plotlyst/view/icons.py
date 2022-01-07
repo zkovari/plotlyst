@@ -41,6 +41,10 @@ class IconRegistry:
         return qtawesome.icon('ei.remove', color=color)
 
     @staticmethod
+    def close_icon(color: str = 'black') -> QIcon:
+        return qtawesome.icon('ei.remove', color=color)
+
+    @staticmethod
     def cancel_icon() -> QIcon:
         return qtawesome.icon('mdi.backspace', color='red')
 
