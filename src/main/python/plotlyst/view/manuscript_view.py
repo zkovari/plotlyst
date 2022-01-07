@@ -76,9 +76,12 @@ class ManuscriptView(AbstractNovelView):
         self.chaptersModel.modelReset.emit()
 
     def restore_editor(self, editor: QTextEdit):
-        self.ui.pageText.layout().addWidget(editor)
+        self.ui.pageText.layout().insertWidget(1, editor)
 
     def _edit(self, index: QModelIndex):
+        def set_wc():
+            self.ui.lblWordCount.setText(f'<html><b>{self.ui.textEdit.statistics().word_count}</b> words')
+
         node = index.data(ChaptersTreeModel.NodeRole)
         if isinstance(node, SceneNode):
             if not node.scene.manuscript:
@@ -94,6 +97,9 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setMargins(30, 30, 30, 30)
             self.ui.textEdit.setFormat(130)
             self.ui.textEdit.setFontPointSize(16)
+            set_wc()
+            self.ui.textEdit.textEditor.textChanged.connect(set_wc)
+
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 

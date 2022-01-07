@@ -36,6 +36,7 @@ from overrides import overrides
 from slugify import slugify
 
 from src.main.python.plotlyst.common import truncate_string
+from src.main.python.plotlyst.core.domain import TextStatistics
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
@@ -68,8 +69,42 @@ class AutoAdjustableTextEdit(QTextEdit):
         self.setMaximumHeight(max(self._minHeight, size.height()))
 
 
+class TextBlockData(QTextBlockUserData):
+    def __init__(self):
+        super(TextBlockData, self).__init__()
+        self._misspellings = []
+        self._wordCount: int = -1
+
+    @property
+    def misspellings(self):
+        return self._misspellings
+
+    @misspellings.setter
+    def misspellings(self, value):
+        self._misspellings.clear()
+        self._misspellings.extend(value)
+
+    @property
+    def wordCount(self):
+        return self._wordCount
+
+    @wordCount.setter
+    def wordCount(self, value):
+        self._wordCount = value
+
+
+class AbstractTextBlockHighlighter(QSyntaxHighlighter):
+    def _currentblockData(self) -> TextBlockData:
+        data = self.currentBlockUserData()
+        if data is None or not isinstance(data, TextBlockData):
+            data = TextBlockData()
+            self.setCurrentBlockUserData(data)
+
+        return data
+
+
 # partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
-class GrammarHighlighter(QSyntaxHighlighter, EventListener):
+class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
     def __init__(self, document: QTextDocument):
         super(GrammarHighlighter, self).__init__(document)
@@ -109,9 +144,17 @@ class GrammarHighlighter(QSyntaxHighlighter, EventListener):
                 self.setFormat(m.offset, m.errorLength,
                                self._formats_per_issue.get(m.ruleIssueType, self._misspelling_format))
                 misspellings.append((m.offset, m.errorLength, m.replacements))
-            data = QTextBlockUserData()
-            data.misspelled = misspellings
-            self.setCurrentBlockUserData(data)
+            data = self._currentblockData()
+            data.misspellings = misspellings
+
+
+class BlockStatistics(AbstractTextBlockHighlighter):
+
+    @overrides
+    def highlightBlock(self, text: str) -> None:
+        data = self._currentblockData()
+        wc = len([x for x in text.split(' ') if x])
+        data.wordCount = wc
 
 
 class _TextEditor(QTextEdit):
@@ -119,9 +162,20 @@ class _TextEditor(QTextEdit):
     def __init__(self, parent=None):
         super(_TextEditor, self).__init__(parent)
         self._pasteAsPlain: bool = False
+        self._blockStatistics = BlockStatistics(self.document())
 
     def setPasteAsPlainText(self, plain: bool):
         self._pasteAsPlain = plain
+
+    def statistics(self) -> TextStatistics:
+        wc = 0
+        for i in range(self.document().blockCount()):
+            block = self.document().findBlockByNumber(i)
+            data = block.userData()
+            if isinstance(data, TextBlockData):
+                wc += data.wordCount
+
+        return TextStatistics(wc)
 
     @overrides
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -355,6 +409,9 @@ class RichTextEditor(QFrame):
     def clear(self):
         self.textEditor.clear()
         self.textTitle.clear()
+
+    def statistics(self) -> TextStatistics:
+        return self.textEditor.statistics()
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
