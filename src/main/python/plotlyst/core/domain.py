@@ -968,6 +968,11 @@ class DocumentType(Enum):
 
 
 @dataclass
+class TextStatistics:
+    word_count: int = -1
+
+
+@dataclass
 class Document(CharacterBased):
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
