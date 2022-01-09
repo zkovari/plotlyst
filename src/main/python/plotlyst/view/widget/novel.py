@@ -17,18 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional
 
-from PyQt5.QtCore import Qt, QEvent, QObject
-from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame
+from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
+from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import StoryStructure, default_story_structures, Novel, StoryBeat
-from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent
+from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.view.layout import FlowLayout, clear_layout
+from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 
 
 class _StoryStructureButton(QPushButton):
@@ -72,6 +74,8 @@ class _StoryStructureButton(QPushButton):
 
 
 class BeatWidget(QFrame, Ui_BeatWidget):
+    beatHighlighted = pyqtSignal(StoryBeat)
+
     def __init__(self, beat: StoryBeat, parent=None):
         super(BeatWidget, self).__init__(parent)
         self.setupUi(self)
@@ -81,10 +85,9 @@ class BeatWidget(QFrame, Ui_BeatWidget):
         transparent(self.lblTitle)
         transparent(self.lblDescription)
         transparent(self.btnIcon)
-        self.btnIcon.setAttribute(Qt.WA_TranslucentBackground)
         if beat.icon:
             self.btnIcon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-            self.lblTitle.setStyleSheet(f'color: {beat.icon_color};')
+        self.lblTitle.setStyleSheet(f'color: {beat.icon_color};')
 
         self.cbToggle.setHidden(True)
         self.installEventFilter(self)
@@ -94,6 +97,7 @@ class BeatWidget(QFrame, Ui_BeatWidget):
         if event.type() == QEvent.Enter:
             self.cbToggle.setVisible(True)
             self.setStyleSheet('.BeatWidget {background-color: #DBF5FA;}')
+            self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Leave:
             self.cbToggle.setHidden(True)
             self.setStyleSheet('.BeatWidget {background-color: white;}')
@@ -107,15 +111,50 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.setupUi(self)
         self.wdgTemplates.setLayout(FlowLayout(2, 3))
 
-        for structure in default_story_structures:
-            self.wdgTemplates.layout().addWidget(_StoryStructureButton(structure))
+        self._btnGroupStructure = QButtonGroup()
+        self._btnGroupStructure.setExclusive(True)
 
         self.novel: Optional[Novel] = None
+        self.beats.installEventFilter(self)
 
     def setNovel(self, novel: Novel):
         self.novel = novel
-        self.wdgPreview.setNovel(self.novel)
+        for structure in default_story_structures:
+            btn = _StoryStructureButton(structure)
+            btn.toggled.connect(partial(self._structureToggled, structure))
+            self._btnGroupStructure.addButton(btn)
+            self.wdgTemplates.layout().addWidget(btn)
 
-        for i, beat in enumerate(self.novel.story_structure.beats):
-            wdg = BeatWidget(beat, self)
-            self.beats.layout().addWidget(wdg, i // 2, i % 2)
+            if structure == self.novel.story_structure:
+                btn.setChecked(True)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Leave:
+            self.wdgPreview.unhighlightBeats()
+
+        return super(StoryStructureEditor, self).eventFilter(watched, event)
+
+    def _structureToggled(self, structure: StoryStructure, toggled: bool):
+        if not toggled:
+            return
+        clear_layout(self.beats.layout())
+        self.novel.story_structure = structure
+
+        if self.wdgPreview.novel is not None:
+            item = self.layout().takeAt(1)
+            item.widget().deleteLater()
+            self.wdgPreview = SceneStoryStructureWidget(self)
+            self.layout().insertWidget(1, self.wdgPreview)
+        self.wdgPreview.setNovel(self.novel, checkOccupiedBeats=False)
+        row = 0
+        col = 0
+        for beat in structure.beats:
+            wdg = BeatWidget(beat)
+            if beat.act - 1 > col:  # new act
+                self.beats.layout().addWidget(spacer_widget(vertical=True), row + 1, col)
+                col = beat.act - 1
+                row = 0
+            self.beats.layout().addWidget(wdg, row, col)
+            row += 1
+            wdg.beatHighlighted.connect(self.wdgPreview.highlightBeat)

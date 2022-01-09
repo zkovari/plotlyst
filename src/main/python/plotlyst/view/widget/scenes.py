@@ -748,7 +748,7 @@ class SceneStoryStructureWidget(QWidget):
         self._beatHeight: int = 20
         self._margin = 5
 
-    def setNovel(self, novel: Novel):
+    def setNovel(self, novel: Novel, checkOccupiedBeats: bool = True):
         self.novel = novel
         self._acts.clear()
         self._beats.clear()
@@ -765,7 +765,7 @@ class SceneStoryStructureWidget(QWidget):
             btn.clicked.connect(partial(self._beatClicked, beat, btn))
             btn.installEventFilter(self)
             btn.setCursor(Qt.PointingHandCursor)
-            if beat not in occupied_beats:
+            if checkOccupiedBeats and beat not in occupied_beats:
                 btn.setCheckable(True)
                 self._beatToggled(btn, False)
             self._beats.append((beat, btn))
@@ -823,7 +823,9 @@ class SceneStoryStructureWidget(QWidget):
         for act in self._acts:
             act.setEnabled(clickable)
 
-    def highlightBeat(self, beat: StoryBeat):
+    def highlightBeat(self, beat: StoryBeat, single: bool = True):
+        if single:
+            self.unhighlightBeats()
         for b, btn in self._beats:
             if beat == b:
                 btn.setStyleSheet('QToolButton {border: 4px dotted #9b2226; border-radius: 6;} QToolTip {border: 0px;}')
