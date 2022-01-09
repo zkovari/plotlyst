@@ -21,12 +21,14 @@ import functools
 import math
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Any
+from functools import partial
+from typing import Optional, Any, Tuple, List
 
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
-    QMenu, QAction, QGraphicsOpacityEffect, QProxyStyle, QStyle, QStyleOption, QStyleHintReturn
+    QMenu, QAction, QGraphicsOpacityEffect, QProxyStyle, QStyle, QStyleOption, QStyleHintReturn, QAbstractButton, \
+    QStackedWidget, QLabel
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -218,16 +220,36 @@ def decrease_font_size(widget: QWidget, step: int = 1):
 
 class OpacityEventFilter(QObject):
 
-    def __init__(self, enterOpacity: float = 1.0, leaveOpacity: float = 0.4, parent=None):
+    def __init__(self, enterOpacity: float = 1.0, leaveOpacity: float = 0.4,
+                 parent=None, ignoreCheckedButton: bool = False):
         super(OpacityEventFilter, self).__init__(parent)
         self.enterOpacity = enterOpacity
         self.leaveOpacity = leaveOpacity
+        self.ignoreCheckedButton = ignoreCheckedButton
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if self.ignoreCheckedButton and isinstance(watched, QAbstractButton) and watched.isChecked():
+            return super(OpacityEventFilter, self).eventFilter(watched, event)
         if event.type() == QEvent.Enter:
             set_opacity(watched, self.enterOpacity)
         elif event.type() == QEvent.Leave:
             set_opacity(watched, self.leaveOpacity)
 
         return super(OpacityEventFilter, self).eventFilter(watched, event)
+
+
+def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
+    def _open(widget: QWidget, toggled: bool):
+        if toggled:
+            stack.setCurrentWidget(widget)
+
+    for btn, wdg in buttons:
+        btn.toggled.connect(partial(_open, wdg))
+
+
+def transparent(widget: QWidget):
+    if isinstance(widget, QLabel):
+        widget.setAttribute(Qt.WA_TranslucentBackground)
+    else:
+        widget.setStyleSheet(f'{widget.__class__.__name__} {{border: 0px; background-color: rgba(0, 0, 0, 0);}}')
