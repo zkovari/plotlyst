@@ -23,9 +23,8 @@ from PyQt5.QtWidgets import QHBoxLayout, QWidget, QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Plot
-from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
-    NovelStoryStructureUpdated, SceneChangedEvent
+    SceneChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel, NovelConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
@@ -104,25 +103,8 @@ class NovelView(AbstractNovelView):
     def refresh(self):
         self.ui.lblTitle.setText(self.novel.title)
         self.story_lines_model.modelReset.emit()
-        # self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
         self.conflict_model.modelReset.emit()
         self._conflict_selected()
-
-    def _story_structure_changed(self):
-        structure = self.ui.cbStoryStructure.currentData()
-        if self.novel.story_structure.id == structure.id:
-            return
-        beats = [x for x in self.novel.scenes if x.beat]
-        if beats and not ask_confirmation(
-                'Scenes are already associated to your previous story beats. Continue?'):
-            self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
-            return
-        for scene in beats:
-            scene.beat = None
-            self.repo.update_scene(scene)
-        self.novel.story_structure = structure
-        self.repo.update_novel(self.novel)
-        emit_event(NovelStoryStructureUpdated(self))
 
     def _edit_plot(self, plot: Plot):
         edited_plot: Optional[PlotEditionResult] = PlotEditorDialog(self.novel, plot).display()

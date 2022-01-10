@@ -25,12 +25,16 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGr
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import StoryStructure, default_story_structures, Novel, StoryBeat
-from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import NovelStoryStructureUpdated
+from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget, \
+    ask_confirmation
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout, clear_layout
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class _StoryStructureButton(QPushButton):
@@ -116,12 +120,14 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
         self.novel: Optional[Novel] = None
         self.beats.installEventFilter(self)
+        self.repo = RepositoryPersistenceManager.instance()
 
     def setNovel(self, novel: Novel):
         self.novel = novel
         for structure in default_story_structures:
             btn = _StoryStructureButton(structure)
             btn.toggled.connect(partial(self._structureToggled, structure))
+            btn.clicked.connect(partial(self._structureClicked, structure))
             self._btnGroupStructure.addButton(btn)
             self.wdgTemplates.layout().addWidget(btn)
 
@@ -158,3 +164,19 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             self.beats.layout().addWidget(wdg, row, col)
             row += 1
             wdg.beatHighlighted.connect(self.wdgPreview.highlightBeat)
+
+    def _structureClicked(self, structure: StoryStructure, toggled: bool):
+        if not toggled:
+            return
+
+        beats = [x for x in self.novel.scenes if x.beat]
+        if beats and not ask_confirmation(
+                'Scenes are already associated to your previous story beats. Continue?'):
+            self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
+            return
+        for scene in beats:
+            scene.beat = None
+            self.repo.update_scene(scene)
+        self.novel.story_structure = structure
+        self.repo.update_novel(self.novel)
+        emit_event(NovelStoryStructureUpdated(self))
