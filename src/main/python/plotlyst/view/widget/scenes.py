@@ -754,7 +754,7 @@ class SceneStoryStructureWidget(QWidget):
         self._beats.clear()
 
         occupied_beats = acts_registry.occupied_beats()
-        for beat in self.novel.story_structure.beats:
+        for beat in self.novel.active_story_structure.beats:
             btn = QToolButton(self)
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))

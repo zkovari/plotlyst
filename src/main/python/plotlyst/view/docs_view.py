@@ -84,9 +84,10 @@ class DocumentsView(AbstractNovelView):
             doc.data_id = casuality.id
             json_client.save_document(self.novel, doc)
         if doc_type == DocumentType.STORY_STRUCTURE:
-            doc.title = self.novel.story_structure.title
-            doc.icon = self.novel.story_structure.icon
-            doc.icon_color = self.novel.story_structure.icon_color
+            print(self.novel.active_story_structure)
+            doc.title = self.novel.active_story_structure.title
+            doc.icon = self.novel.active_story_structure.icon
+            doc.icon_color = self.novel.active_story_structure.icon_color
 
         doc.loaded = True
 
@@ -99,7 +100,7 @@ class DocumentsView(AbstractNovelView):
         self._edit(index)
 
         if doc_type == DocumentType.STORY_STRUCTURE:
-            self.textEditor.textEditor.insertHtml(parse_structure_to_richtext(self.novel.story_structure))
+            self.textEditor.textEditor.insertHtml(parse_structure_to_richtext(self.novel.active_story_structure))
             self._save()
 
     def _doc_clicked(self, index: QModelIndex):
@@ -149,7 +150,7 @@ class DocumentsView(AbstractNovelView):
 
         builder.add_action('Reversed Cause and Effect', IconRegistry.reversed_cause_and_effect_icon(),
                            lambda: self._add_doc(index, doc_type=DocumentType.REVERSED_CAUSE_AND_EFFECT))
-        struc = self.novel.story_structure
+        struc = self.novel.active_story_structure
         builder.add_action(struc.title, IconRegistry.from_name(struc.icon, color=struc.icon_color),
                            lambda: self._add_doc(index, doc_type=DocumentType.STORY_STRUCTURE))
 

@@ -253,3 +253,9 @@ def transparent(widget: QWidget):
         widget.setAttribute(Qt.WA_TranslucentBackground)
     else:
         widget.setStyleSheet(f'{widget.__class__.__name__} {{border: 0px; background-color: rgba(0, 0, 0, 0);}}')
+
+
+def bold(widget: QWidget, enabled: bool = True):
+    font = widget.font()
+    font.setBold(enabled)
+    widget.setFont(font)

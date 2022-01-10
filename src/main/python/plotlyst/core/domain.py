@@ -192,6 +192,7 @@ class StoryBeat:
     icon: str = ''
     icon_color: str = 'black'
     percentage: int = 0
+    enabled: bool = True
 
     @overrides
     def __hash__(self):
@@ -456,6 +457,7 @@ class StoryStructure:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     beats: List[StoryBeat] = field(default_factory=list)
     custom: bool = False
+    active: bool = False
 
 
 default_story_structures = [StoryStructure(title='Three Act Structure',
@@ -1047,7 +1049,7 @@ def default_tags() -> List[SelectionItem]:
 
 @dataclass
 class Novel(NovelDescriptor):
-    story_structure: StoryStructure = default_story_structures[0]
+    story_structures: List[StoryStructure] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
     locations: List[Location] = field(default_factory=list)
@@ -1091,6 +1093,12 @@ class Novel(NovelDescriptor):
                 pov_ids.add(str(scene.pov.id))
 
         return povs
+
+    @property
+    def active_story_structure(self) -> Optional[StoryStructure]:
+        for structure in self.story_structures:
+            if structure.active:
+                return structure
 
 
 @dataclass

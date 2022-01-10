@@ -36,16 +36,17 @@ def test_delete_dramatic_question(qtbot, filled_window: MainWindow, monkeypatch)
 
 def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
     view: NovelView = go_to_novel(filled_window)
-    view.novel.scenes[0].beat = view.novel.story_structure.beats[0]
+    view.novel.scenes[0].beat = view.novel.active_story_structure.beats[0]
 
     btn = view.ui.wdgStructure.btnGroupStructure.buttons()[0]
     assert btn.isChecked() and btn.text() == 'Three Act Structure'
 
     patch_confirmed(monkeypatch)
     btn = view.ui.wdgStructure.btnGroupStructure.buttons()[2]
+    print(btn.text())
     btn.click()
 
-    assert view.novel.story_structure == default_story_structures[2]
+    assert view.novel.active_story_structure == default_story_structures[2]
 
     for scene in view.novel.scenes:
         assert scene.beat is None
@@ -53,4 +54,4 @@ def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
     go_to_scenes(filled_window)
 
     persisted_novel = client.fetch_novel(view.novel.id)
-    assert persisted_novel.story_structure == view.novel.story_structure
+    assert persisted_novel.active_story_structure == view.novel.active_story_structure
