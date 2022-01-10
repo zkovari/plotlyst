@@ -38,12 +38,13 @@ def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
     view: NovelView = go_to_novel(filled_window)
     view.novel.scenes[0].beat = view.novel.story_structure.beats[0]
 
-    assert view.ui.cbStoryStructure.currentText() == 'Three Act Structure'
+    btn = view.ui.wdgStructure.btnGroupStructure.buttons()[0]
+    assert btn.isChecked() and btn.text() == 'Three Act Structure'
 
     patch_confirmed(monkeypatch)
-    view.ui.cbStoryStructure.setCurrentIndex(2)
+    btn = view.ui.wdgStructure.btnGroupStructure.buttons()[2]
+    btn.click()
 
-    assert view.ui.cbStoryStructure.currentText() == 'Save the Cat'
     assert view.novel.story_structure == default_story_structures[2]
 
     for scene in view.novel.scenes:
@@ -53,14 +54,3 @@ def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
 
     persisted_novel = client.fetch_novel(view.novel.id)
     assert persisted_novel.story_structure == view.novel.story_structure
-
-
-def test_structure_info(qtbot, filled_window: MainWindow):
-    view: NovelView = go_to_novel(filled_window)
-
-    assert not view.ui.btnStoryStructureInfo.isChecked()
-    view.ui.btnStoryStructureInfo.click()
-    assert view.ui.textStoryStructureInfo.isVisible()
-
-    view.ui.btnStoryStructureInfo.click()
-    assert not view.ui.textStoryStructureInfo.height()

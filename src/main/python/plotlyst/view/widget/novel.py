@@ -115,8 +115,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.setupUi(self)
         self.wdgTemplates.setLayout(FlowLayout(2, 3))
 
-        self._btnGroupStructure = QButtonGroup()
-        self._btnGroupStructure.setExclusive(True)
+        self.btnGroupStructure = QButtonGroup()
+        self.btnGroupStructure.setExclusive(True)
 
         self.novel: Optional[Novel] = None
         self.beats.installEventFilter(self)
@@ -128,7 +128,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             btn = _StoryStructureButton(structure)
             btn.toggled.connect(partial(self._structureToggled, structure))
             btn.clicked.connect(partial(self._structureClicked, structure))
-            self._btnGroupStructure.addButton(btn)
+            self.btnGroupStructure.addButton(btn)
             self.wdgTemplates.layout().addWidget(btn)
 
             if structure == self.novel.story_structure:
