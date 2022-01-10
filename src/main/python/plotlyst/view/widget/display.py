@@ -19,7 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
+from PyQt5.QtChart import QChartView
 from PyQt5.QtCore import QPropertyAnimation
+from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QPushButton, QWidget
 
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -57,3 +59,9 @@ class ToggleHelp(QPushButton):
             animation.start()
 
         self.setText(u'\u02C7' if checked else u'\u00BB')
+
+
+class Chart(QChartView):
+    def __init__(self, parent=None):
+        super(Chart, self).__init__(parent)
+        self.setRenderHint(QPainter.Antialiasing)
