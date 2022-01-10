@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import codecs
-import json
 import os
 import pathlib
 import uuid
@@ -478,11 +477,6 @@ class JsonClient:
             raise IOError(f'Could not find novel with id {id}')
         with open(path) as json_file:
             data = json_file.read()
-            data_json = json.loads(data)
-            # if isinstance(data_json['story_structure'], dict):
-            #     data_json['story_structure'] = self.project.story_structures[0].id
-            #     return NovelInfo.from_dict(data_json)
-            # else:
             return NovelInfo.from_json(data)
 
     def _persist_project(self):

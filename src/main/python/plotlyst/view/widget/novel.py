@@ -190,7 +190,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             self.beats.layout().addWidget(wdg, row, col)
             row += 1
             wdg.beatHighlighted.connect(self.wdgPreview.highlightBeat)
-            wdg.beatToggled.connect(lambda: self.repo.update_novel(self.novel))
+            wdg.beatToggled.connect(self._beatToggled)
 
     def _structureClicked(self, structure: StoryStructure, toggled: bool):
         if not toggled:
@@ -207,3 +207,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
         self.repo.update_novel(self.novel)
         emit_event(NovelStoryStructureUpdated(self))
+
+    def _beatToggled(self, beat: StoryBeat):
+        self.wdgPreview.toggleBeatVisibility(beat)
+        self.repo.update_novel(self.novel)

@@ -1095,10 +1095,11 @@ class Novel(NovelDescriptor):
         return povs
 
     @property
-    def active_story_structure(self) -> Optional[StoryStructure]:
+    def active_story_structure(self) -> StoryStructure:
         for structure in self.story_structures:
             if structure.active:
                 return structure
+        return self.story_structures[0]
 
 
 @dataclass
