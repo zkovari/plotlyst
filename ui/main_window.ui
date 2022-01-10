@@ -49,7 +49,7 @@ background-color: rgb(39, 39, 39);
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="pageOutline">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -101,53 +101,6 @@ background-color: rgb(39, 39, 39);
               </size>
              </property>
             </spacer>
-           </item>
-           <item>
-            <widget class="QToolButton" name="btnHome">
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>50</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>50</height>
-              </size>
-             </property>
-             <property name="cursor">
-              <cursorShape>PointingHandCursor</cursorShape>
-             </property>
-             <property name="toolTip">
-              <string>Home</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>32</width>
-               <height>32</height>
-              </size>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-             <property name="base" stdset="0">
-              <bool>true</bool>
-             </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroup</string>
-             </attribute>
-            </widget>
-           </item>
-           <item>
-            <widget class="Line" name="line">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
            </item>
            <item>
             <widget class="QToolButton" name="btnNovel">
@@ -370,25 +323,6 @@ background-color: rgb(39, 39, 39);
           <property name="cursor">
            <cursorShape>ArrowCursor</cursorShape>
           </property>
-          <widget class="QWidget" name="pageHome">
-           <layout class="QVBoxLayout" name="verticalLayout_2">
-            <property name="spacing">
-             <number>0</number>
-            </property>
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-           </layout>
-          </widget>
           <widget class="QWidget" name="pageNovel">
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <property name="spacing">
@@ -488,7 +422,7 @@ background-color: rgb(39, 39, 39);
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="pageHome_2">
+      <widget class="QWidget" name="pageHome">
        <layout class="QVBoxLayout" name="verticalLayout_11">
         <property name="spacing">
          <number>3</number>

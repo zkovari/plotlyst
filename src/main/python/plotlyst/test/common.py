@@ -134,7 +134,7 @@ def go_to_novel(window: MainWindow) -> NovelView:
 
 
 def go_to_home(window: MainWindow) -> HomeView:
-    window.btnHome.setChecked(True)
+    window.home_mode.setChecked(True)
     return window.home_view
 
 

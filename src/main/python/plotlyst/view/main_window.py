@@ -83,9 +83,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if self.novel:
             acts_registry.set_novel(self.novel)
 
+        self.home_view = HomeView()
+        self.pageHome.layout().addWidget(self.home_view.widget)
+        self.home_view.loadNovel.connect(self._load_new_novel)
+
         self._init_menubar()
         self._init_toolbar()
-
         self._init_views()
 
         self.event_log_handler = EventLogHandler(self.statusBar())
@@ -124,9 +127,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel = None
                 self._clear_novel_views()
-                for btn in self.buttonGroup.buttons():
-                    if btn is not self.btnHome:
-                        btn.setHidden(True)
         elif isinstance(event, NovelUpdatedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel.title = event.novel.title
@@ -196,18 +196,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     @busy
     def _init_views(self):
-        self.home_view = HomeView()
-        self.btnHome.setIcon(IconRegistry.home_icon())
-        self.pageHome.layout().addWidget(self.home_view.widget)
-        self.home_view.loadNovel.connect(self._load_new_novel)
-
         self.buttonGroup.buttonToggled.connect(self._on_view_changed)
-        self.btnHome.setChecked(True)
 
         if not self.novel:
             for btn in self.buttonGroup.buttons():
-                if btn is not self.btnHome:
-                    btn.setHidden(True)
+                btn.setHidden(True)
             return
 
         for btn in self.buttonGroup.buttons():
@@ -242,13 +235,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if self.novel.scenes:
             self.btnScenes.setChecked(True)
         else:
-            self.btnCharacters.setChecked(True)
+            self.btnNovel.setChecked(True)
 
     def _on_view_changed(self):
-        if self.btnHome.isChecked():
-            self.stackedWidget.setCurrentWidget(self.pageHome)
-            self.home_view.activate()
-        elif self.btnNovel.isChecked():
+        if self.btnNovel.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNovel)
             self.novel_view.activate()
         elif self.btnCharacters.isChecked():
@@ -287,6 +277,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
+        self.home_mode = QToolButton(self.toolBar)
+        self.home_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.home_mode.setText('Home')
+        self.home_mode.setCheckable(True)
+        self.home_mode.setIcon(IconRegistry.home_icon())
+
         self.outline_mode = QToolButton(self.toolBar)
         self.outline_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.outline_mode.setText('Plan')
@@ -306,6 +302,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.reports_mode.setCheckable(True)
 
         self._mode_btn_group = QButtonGroup()
+        self._mode_btn_group.addButton(self.home_mode)
         self._mode_btn_group.addButton(self.outline_mode)
         self._mode_btn_group.addButton(self.manuscript_mode)
         self._mode_btn_group.addButton(self.reports_mode)
@@ -319,8 +316,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
 
         self.toolBar.addWidget(spacer_widget(5))
-        self.toolBar.addAction(IconRegistry.home_icon(), 'Home')
+        self.toolBar.addWidget(self.home_mode)
+        self.toolBar.addWidget(spacer_widget(5))
         self.toolBar.addSeparator()
+        self.toolBar.addWidget(spacer_widget(5))
         self.toolBar.addWidget(self.outline_mode)
         self.toolBar.addWidget(self.manuscript_mode)
         self.toolBar.addWidget(self.reports_mode)
@@ -330,9 +329,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.wdgSidebar.setHidden(True)
         self.wdgDocs.setHidden(True)
 
-        self.outline_mode.setChecked(True)
+        if self.novel:
+            self.outline_mode.setChecked(True)
+        else:
+            self.home_mode.setChecked(True)
+            self.outline_mode.setDisabled(True)
+            self.manuscript_mode.setDisabled(True)
+            self.reports_mode.setDisabled(True)
 
     def _panel_toggled(self):
+        if self.home_mode.isChecked():
+            self.stackMainPanels.setCurrentWidget(self.pageHome)
         if self.outline_mode.isChecked():
             self.stackMainPanels.setCurrentWidget(self.pageOutline)
             self._on_view_changed()
@@ -350,7 +357,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.reports_view.activate()
 
     def _import_from_scrivener(self):
-        self.btnHome.click()
+        self.home_mode.setChecked(True)
         self.home_view.import_from_scrivener()
 
     def _increase_font_size(self):
@@ -378,10 +385,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if self.novel and self.novel.id == novel.id:
             return
 
+        self.outline_mode.setEnabled(True)
+        self.manuscript_mode.setEnabled(True)
+        self.reports_mode.setEnabled(True)
+
         self.repo.flush()
         event_dispatcher.clear()
-        self.pageHome.layout().removeWidget(self.home_view.widget)
-        self.home_view.widget.deleteLater()
         if self.novel:
             self._clear_novel_views()
 
@@ -390,6 +399,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._init_views()
         settings.set_last_novel_id(self.novel.id)
         self._register_events()
+
+        self.outline_mode.setChecked(True)
 
     def _register_events(self):
         event_dispatcher.register(self, NovelReloadRequestedEvent)
@@ -415,6 +426,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
             self.manuscript_view.widget.deleteLater()
             self.manuscript_view = None
+
+        self.outline_mode.setDisabled(True)
+        self.manuscript_mode.setDisabled(True)
+        self.reports_mode.setDisabled(True)
 
     def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
         for cmd in commands:
