@@ -49,6 +49,7 @@ from src.main.python.plotlyst.view.widget.characters import CharactersScenesDist
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget
+from src.main.python.plotlyst.view.widget.story_map import StoryLinesMapWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
@@ -61,6 +62,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.setupUi(self.widget)
 
         self.editor: Optional[SceneEditor] = None
+        self.storymap_view: Optional[StoryLinesMapWidget] = None
         self.timeline_view: Optional[TimelineView] = None
         self.stagesModel: Optional[ScenesStageTableModel] = None
         self.stagesProgress: Optional[SceneStageProgressCharts] = None
@@ -121,6 +123,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
+        self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.passport-biometric', color_on='darkBlue'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
@@ -334,6 +337,14 @@ class ScenesOutlineView(AbstractNovelView):
         elif self.ui.btnCardsView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageCards)
             self.ui.tblScenes.clearSelection()
+        elif self.ui.btnStorymap.isChecked():
+            self.ui.stackScenes.setCurrentWidget(self.ui.pageStorymap)
+            self.ui.tblScenes.clearSelection()
+            self.ui.tblSceneStages.clearSelection()
+            if not self.storymap_view:
+                self.storymap_view = StoryLinesMapWidget()
+                self.storymap_view.setNovel(self.novel)
+                self.ui.pageStorymap.layout().addWidget(self.storymap_view)
         elif self.ui.btnTimelineView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageTimeline)
             self.ui.tblScenes.clearSelection()

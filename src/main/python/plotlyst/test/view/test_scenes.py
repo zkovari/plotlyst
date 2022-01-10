@@ -130,6 +130,9 @@ def test_switch_views(qtbot, filled_window: MainWindow):
     assert pie_series.count() == 2
     assert pie_series.slices()[0].percentage() == 0.5
 
+    view.ui.btnStorymap.click()
+    view.storymap_view.grab().toImage()
+
 
 def test_change_stage(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
