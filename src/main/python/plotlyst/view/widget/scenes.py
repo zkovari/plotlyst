@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from abc import abstractmethod
 from functools import partial
-from typing import List, Set, Optional, Union, Tuple
+from typing import List, Set, Optional, Union, Dict
 
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
@@ -739,7 +739,7 @@ class SceneStoryStructureWidget(QWidget):
 
         self.novel: Optional[Novel] = None
         self._acts: List[QToolButton] = []
-        self._beats: List[Tuple[StoryBeat, QToolButton]] = []
+        self._beats: Dict[StoryBeat, QToolButton] = {}
         self._wdgLine = QWidget(self)
         self._wdgLine.setLayout(QHBoxLayout())
         self._wdgLine.layout().setSpacing(0)
@@ -748,13 +748,13 @@ class SceneStoryStructureWidget(QWidget):
         self._beatHeight: int = 20
         self._margin = 5
 
-    def setNovel(self, novel: Novel):
+    def setNovel(self, novel: Novel, checkOccupiedBeats: bool = True):
         self.novel = novel
         self._acts.clear()
         self._beats.clear()
 
         occupied_beats = acts_registry.occupied_beats()
-        for beat in self.novel.story_structure.beats:
+        for beat in self.novel.active_story_structure.beats:
             btn = QToolButton(self)
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
@@ -765,10 +765,12 @@ class SceneStoryStructureWidget(QWidget):
             btn.clicked.connect(partial(self._beatClicked, beat, btn))
             btn.installEventFilter(self)
             btn.setCursor(Qt.PointingHandCursor)
-            if beat not in occupied_beats:
+            if checkOccupiedBeats and beat not in occupied_beats:
                 btn.setCheckable(True)
                 self._beatToggled(btn, False)
-            self._beats.append((beat, btn))
+            self._beats[beat] = btn
+            if not beat.enabled:
+                btn.setHidden(True)
 
         splitter = QSplitter(self._wdgLine)
         splitter.setContentsMargins(0, 0, 0, 0)
@@ -805,11 +807,10 @@ class SceneStoryStructureWidget(QWidget):
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
-        if self._beats:
-            for beat in self._beats:
-                beat[1].setGeometry(self.width() * beat[0].percentage / 100 - self._lineHeight // 2, self._lineHeight,
-                                    self._beatHeight,
-                                    self._beatHeight)
+        for beat, btn in self._beats.items():
+            btn.setGeometry(self.width() * beat.percentage / 100 - self._lineHeight // 2, self._lineHeight,
+                            self._beatHeight,
+                            self._beatHeight)
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
 
     def uncheckActs(self):
@@ -823,26 +824,38 @@ class SceneStoryStructureWidget(QWidget):
         for act in self._acts:
             act.setEnabled(clickable)
 
-    def highlightBeat(self, beat: StoryBeat):
-        for b, btn in self._beats:
-            if beat == b:
-                btn.setStyleSheet('QToolButton {border: 4px dotted #9b2226; border-radius: 6;} QToolTip {border: 0px;}')
-                btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
+    def highlightBeat(self, beat: StoryBeat, single: bool = True):
+        if single:
+            self.unhighlightBeats()
+        btn = self._beats.get(beat)
+        if btn is None:
+            return
+        btn.setStyleSheet('QToolButton {border: 4px dotted #9b2226; border-radius: 6;} QToolTip {border: 0px;}')
+        btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
 
     def unhighlightBeats(self):
-        for _, btn in self._beats:
+        for btn in self._beats.values():
             btn.setStyleSheet('border: 0px;')
             btn.setFixedSize(self._beatHeight, self._beatHeight)
 
     def toggleBeat(self, beat: StoryBeat, toggled: bool):
-        for b, btn in self._beats:
-            if beat == b:
-                if toggled:
-                    btn.setCheckable(False)
-                else:
-                    btn.setCursor(Qt.PointingHandCursor)
-                    btn.setCheckable(True)
-                    self._beatToggled(btn, False)
+        btn = self._beats.get(beat)
+        if btn is None:
+            return
+
+        if toggled:
+            btn.setCheckable(False)
+        else:
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCheckable(True)
+            self._beatToggled(btn, False)
+
+    def toggleBeatVisibility(self, beat: StoryBeat):
+        btn = self._beats.get(beat)
+        if btn is None:
+            return
+
+        btn.setVisible(beat.enabled)
 
     def _xForAct(self, act: int):
         if act == 1:

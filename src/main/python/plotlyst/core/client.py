@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import codecs
-import json
 import os
 import pathlib
 import uuid
@@ -169,7 +168,7 @@ class ChapterInfo:
 @dataclass
 class NovelInfo:
     id: uuid.UUID
-    story_structure: uuid.UUID = default_story_structures[0].id
+    story_structures: List[StoryStructure] = field(default_factory=list)
     scenes: List[uuid.UUID] = field(default_factory=list)
     characters: List[uuid.UUID] = field(default_factory=list)
     locations: List[Location] = field(default_factory=list)
@@ -390,13 +389,16 @@ class JsonClient:
         for goal in novel_info.scene_goals:
             goals_index[goal.text] = goal
 
-        story_structure: StoryStructure = self.project.story_structures[0]
-        for structure in self.project.story_structures:
-            if structure.id == novel_info.story_structure:
-                story_structure = structure
+        if not novel_info.story_structures:
+            novel_info.story_structures = self.project.story_structures
+
+        if all([not x.active for x in novel_info.story_structures]):
+            novel_info.story_structures[0].active = True
+
         beat_ids = {}
-        for beat in story_structure.beats:
-            beat_ids[str(beat.id)] = beat
+        for structure in novel_info.story_structures:
+            for beat in structure.beats:
+                beat_ids[str(beat.id)] = beat
 
         scenes: List[Scene] = []
         for seq, scene_id in enumerate(novel_info.scenes):
@@ -464,7 +466,7 @@ class JsonClient:
         return Novel(title=project_novel_info.title, id=novel_info.id,
                      plots=novel_info.plots, characters=characters,
                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
-                     story_structure=story_structure, character_profiles=novel_info.character_profiles,
+                     story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                      location_profiles=novel_info.location_profiles,
                      conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags,
                      documents=novel_info.documents)
@@ -475,12 +477,7 @@ class JsonClient:
             raise IOError(f'Could not find novel with id {id}')
         with open(path) as json_file:
             data = json_file.read()
-            data_json = json.loads(data)
-            if isinstance(data_json['story_structure'], dict):
-                data_json['story_structure'] = self.project.story_structures[0].id
-                return NovelInfo.from_dict(data_json)
-            else:
-                return NovelInfo.from_json(data)
+            return NovelInfo.from_json(data)
 
     def _persist_project(self):
         with atomic_write(self.project_file_path, overwrite=True) as f:
@@ -492,7 +489,7 @@ class JsonClient:
                                characters=[x.id for x in novel.characters],
                                locations=novel.locations,
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
-                               stages=novel.stages, story_structure=novel.story_structure.id,
+                               stages=novel.stages, story_structures=novel.story_structures,
                                character_profiles=novel.character_profiles,
                                location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,

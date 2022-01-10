@@ -1,6 +1,6 @@
 from typing import Optional
 
-from src.main.python.plotlyst.core.domain import Novel, Scene
+from src.main.python.plotlyst.core.domain import Novel, Scene, default_story_structures
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
 
@@ -16,7 +16,8 @@ def editor(qtbot, novel: Novel, scene: Optional[Scene] = None):
 
 
 def test_editor_with_new_scene(qtbot):
-    novel = Novel('Test-novel')
+    novel = Novel('Test-novel', story_structures=default_story_structures)
+    novel.story_structures[0].active = True
     view: SceneEditor = editor(qtbot, novel)
 
     assert view.ui.wdgSceneStructure.rbScene.isChecked()
@@ -25,7 +26,8 @@ def test_editor_with_new_scene(qtbot):
 
 
 def test_editor_with_none_values(qtbot):
-    novel = Novel('Test-novel')
+    novel = Novel('Test-novel', story_structures=default_story_structures)
+    novel.story_structures[0].active = True
     scene = Scene(title='')
     novel.scenes.append(scene)
 

@@ -192,6 +192,7 @@ class StoryBeat:
     icon: str = ''
     icon_color: str = 'black'
     percentage: int = 0
+    enabled: bool = True
 
     @overrides
     def __hash__(self):
@@ -456,6 +457,7 @@ class StoryStructure:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     beats: List[StoryBeat] = field(default_factory=list)
     custom: bool = False
+    active: bool = False
 
 
 default_story_structures = [StoryStructure(title='Three Act Structure',
@@ -565,62 +567,86 @@ default_story_structures = [StoryStructure(title='Three Act Structure',
                                            id=uuid.UUID('1f1c4433-6afa-48e1-a8dc-f8fcb94bfede'),
                                            icon='fa5s.cat',
                                            beats=[StoryBeat(text='Opening Image',
+                                                            icon='fa5.image',
+                                                            icon_color='#1ea896',
                                                             id=uuid.UUID('249bba52-98b8-4577-8b3c-94481f6bf622'),
-                                                            act=1),
+                                                            act=1, percentage=1),
                                                   StoryBeat(text='Set-up',
+                                                            icon='mdi.toy-brick-outline',
                                                             id=uuid.UUID('7ce4345b-60eb-4cd6-98cc-7cce98028839'),
-                                                            act=1),
+                                                            act=1, percentage=3),
                                                   StoryBeat(text='Theme Stated',
+                                                            icon='ei.idea-alt',
                                                             id=uuid.UUID('1c8b0903-f169-48d5-bcec-3e842f360150'),
-                                                            act=1),
+                                                            act=1, percentage=5),
                                                   StoryBeat(text='Catalyst',
+                                                            icon='fa5s.vial',
                                                             id=uuid.UUID('cc3d8641-bcdf-402b-ba84-7ff59b2cc76a'),
-                                                            act=1),
+                                                            act=1, percentage=10),
                                                   StoryBeat(text='Debate',
+                                                            icon='ph.circle-wavy-question-light',
                                                             id=uuid.UUID('0203696e-dc54-4a10-820a-bfdf392a82dc'),
-                                                            act=1),
+                                                            act=1, percentage=14),
                                                   StoryBeat(text='Break into Two',
+                                                            icon='mdi6.clock-time-three-outline',
                                                             id=uuid.UUID('43eb267f-2840-437b-9eac-9e52d80eba2b'),
-                                                            act=1, ends_act=True),
+                                                            act=1, ends_act=True, percentage=20),
                                                   StoryBeat(text='B Story',
+                                                            icon='mdi.alpha-b-box',
                                                             id=uuid.UUID('64229c74-5513-4391-9b45-c54ad106c137'),
-                                                            act=2),
+                                                            act=2, percentage=25),
                                                   StoryBeat(text='Fun and Games',
+                                                            icon='fa5s.gamepad',
                                                             id=uuid.UUID('490157f0-f255-4ab3-82f3-bc5cb22ce03b'),
-                                                            act=2),
+                                                            act=2, percentage=27),
                                                   StoryBeat(text='Midpoint',
+                                                            icon='mdi.middleware-outline',
+                                                            icon_color='#2e86ab',
                                                             id=uuid.UUID('af4fb4e9-f287-47b6-b219-be75af752622'),
-                                                            act=2),
+                                                            act=2, percentage=50),
                                                   StoryBeat(text='Bad Guys Close In',
+                                                            icon='fa5s.biohazard',
+                                                            icon_color='#cd533b',
                                                             id=uuid.UUID('2060c95f-dcdb-4074-a096-4b054f70d57a'),
-                                                            act=2),
+                                                            act=2, percentage=62),
                                                   StoryBeat(text='All is Lost',
+                                                            icon='mdi.trophy-broken',
                                                             id=uuid.UUID('2971ce1a-eb69-4ac1-9f2d-74407e6fac92'),
-                                                            act=2),
+                                                            act=2, percentage=70),
                                                   StoryBeat(text='Dark Night of the Soul',
+                                                            icon='mdi.weather-night',
+                                                            icon_color='#494368',
                                                             id=uuid.UUID('c0e89a87-224d-4b97-b4f5-a2ace08fdadb'),
-                                                            act=2),
+                                                            act=2, percentage=74),
                                                   StoryBeat(text='Break into Three',
+                                                            icon='mdi.clock-time-nine-outline',
                                                             id=uuid.UUID('677f83ad-355a-47fb-8ff7-812997bdb23a'),
-                                                            act=2, ends_act=True),
+                                                            act=2, ends_act=True, percentage=78),
                                                   StoryBeat(text='Gather the Team',
+                                                            icon='ri.team-fill',
                                                             id=uuid.UUID('777d81b6-b427-4fc0-ba8d-01cde45eedde'),
-                                                            act=3),
+                                                            act=3, percentage=82),
                                                   StoryBeat(text='Execute the Plan',
+                                                            icon='mdi.format-list-checks',
                                                             id=uuid.UUID('b99012a6-8c41-43c8-845d-7595ce7140d9'),
-                                                            act=3),
+                                                            act=3, percentage=84),
                                                   StoryBeat(text='High Tower Surprise',
+                                                            icon='mdi.lighthouse-on',
                                                             id=uuid.UUID('fe77f4f2-9064-4b06-8062-920635aa415c'),
-                                                            act=3),
+                                                            act=3, percentage=88),
                                                   StoryBeat(text='Dig Deep Down',
+                                                            icon='mdi.shovel',
                                                             id=uuid.UUID('a5c4d0aa-9811-4988-8611-3483b2499732'),
-                                                            act=3),
+                                                            act=3, percentage=92),
                                                   StoryBeat(text='Execute a New Plan',
+                                                            icon='mdi.lightbulb-on',
                                                             id=uuid.UUID('13d535f6-6b3d-4211-ae44-e0fcf3970186'),
-                                                            act=3),
+                                                            act=3, percentage=95),
                                                   StoryBeat(text='Final Image',
+                                                            icon='fa5s.water',
+                                                            icon_color='#7192be',
                                                             id=uuid.UUID('12d5ec21-af96-4e51-9c26-06583d830d87'),
-                                                            act=3),
+                                                            act=3, percentage=99),
                                                   ])]
 
 
@@ -1023,7 +1049,7 @@ def default_tags() -> List[SelectionItem]:
 
 @dataclass
 class Novel(NovelDescriptor):
-    story_structure: StoryStructure = default_story_structures[0]
+    story_structures: List[StoryStructure] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
     locations: List[Location] = field(default_factory=list)
@@ -1067,6 +1093,13 @@ class Novel(NovelDescriptor):
                 pov_ids.add(str(scene.pov.id))
 
         return povs
+
+    @property
+    def active_story_structure(self) -> StoryStructure:
+        for structure in self.story_structures:
+            if structure.active:
+                return structure
+        return self.story_structures[0]
 
 
 @dataclass

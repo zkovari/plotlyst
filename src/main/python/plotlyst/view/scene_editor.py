@@ -229,7 +229,6 @@ class SceneEditor(QObject):
         if self.scene.beat and self.scene.beat != beat:
             self.ui.wdgStructure.toggleBeat(self.scene.beat, False)
         self.scene.beat = beat
-        self.ui.wdgStructure.unhighlightBeats()
         self.ui.wdgStructure.highlightBeat(beat)
 
     def _beat_removed(self, beat: StoryBeat):
