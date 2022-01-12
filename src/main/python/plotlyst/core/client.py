@@ -22,7 +22,7 @@ import os
 import pathlib
 import uuid
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import IntEnum
 from typing import List, Optional, Any, Dict
 
 from PyQt5.QtCore import QByteArray, QBuffer, QIODevice
@@ -38,15 +38,11 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Location, default_location_profiles
 
 
-class ApplicationDbVersion(Enum):
-    R0 = 0  # before ApplicationModel existed
-    R1 = 1
-    R2 = 2
-    R3 = 3
-    R4 = 4  # add SceneBuilderElementModel
+class ApplicationNovelVersion(IntEnum):
+    R0 = 0
 
 
-LATEST = ApplicationDbVersion.R4
+LATEST_VERSION = [x for x in ApplicationNovelVersion][-1]
 
 
 class SqlClient:
@@ -181,6 +177,7 @@ class NovelInfo:
     scene_goals: List[SceneGoal] = field(default_factory=list)
     tags: List[SelectionItem] = field(default_factory=default_tags)
     documents: List[Document] = field(default_factory=default_documents)
+    version: ApplicationNovelVersion = ApplicationNovelVersion.R0
 
 
 @dataclass
@@ -463,6 +460,8 @@ class JsonClient:
                               conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags,
                               document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
+
+        print(novel_info.version)
         return Novel(title=project_novel_info.title, id=novel_info.id,
                      plots=novel_info.plots, characters=characters,
                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
@@ -493,7 +492,8 @@ class JsonClient:
                                character_profiles=novel.character_profiles,
                                location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,
-                               scene_goals=novel.scene_goals, tags=novel.tags, documents=novel.documents)
+                               scene_goals=novel.scene_goals, tags=novel.tags, documents=novel.documents,
+                               version=LATEST_VERSION)
 
         self.__persist_info(self.novels_dir, novel_info)
 

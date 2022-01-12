@@ -34,12 +34,12 @@ class CharacterReportNode(Node):
 class ReportsTreeModel(TreeItemModel):
     def __init__(self, parent=None):
         super(ReportsTreeModel, self).__init__(parent)
-        node = CharacterReportNode('Characters', self.root)
+        CharacterReportNode('Characters', self.root)
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         node = index.internalPointer()
         if isinstance(node, CharacterReportNode) and role == Qt.DecorationRole:
             return IconRegistry.character_icon()
-        
+
         return super(ReportsTreeModel, self).data(index, role)
