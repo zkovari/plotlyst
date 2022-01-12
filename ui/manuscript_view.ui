@@ -40,6 +40,9 @@
      <property name="handleWidth">
       <number>4</number>
      </property>
+     <property name="childrenCollapsible">
+      <bool>false</bool>
+     </property>
      <widget class="QTreeView" name="treeChapters">
       <attribute name="headerVisible">
        <bool>false</bool>
