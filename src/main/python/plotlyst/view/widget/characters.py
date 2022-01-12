@@ -23,8 +23,8 @@ from typing import Iterable, List, Optional
 import emoji
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy
+from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -35,14 +35,15 @@ from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
+    OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
-from src.main.python.plotlyst.view.icons import avatars, IconRegistry
-from src.main.python.plotlyst.view.layout import clear_layout
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
+from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import RichTextEditor
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -336,14 +337,13 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.btnEdit.clicked.connect(self._edit)
         self.btnRemove.setVisible(False)
         self.btnRemove.setIcon(IconRegistry.wrong_icon(color='black'))
-        self.btnAddConflict.setVisible(False)
-        self.btnAddConflict.setIcon(IconRegistry.conflict_icon())
+        self.btnRemove.installEventFilter(OpacityEventFilter(parent=self.btnRemove))
         self.textSummary.textChanged.connect(self._synopsis_changed)
         self.btnRemove.clicked.connect(self._remove)
 
         self.refresh()
 
-        self.setMinimumWidth(100)
+        self.setMinimumWidth(30)
 
     @overrides
     def enterEvent(self, event: QtCore.QEvent) -> None:
@@ -365,9 +365,10 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
             bg_color = '#df2935'
         self.setStyleSheet(f'''
                     CharacterBackstoryCard {{
-                        border: 0px;
-                        border-radius: 12px;
-                        background-color: {bg_color};
+                        border-top: 6px solid {bg_color};
+                        border-bottom-left-radius: 12px;
+                        border-bottom-right-radius: 12px;
+                        background-color: #ffe8d6;
                         }}
                     ''')
 
@@ -412,6 +413,70 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
     def _remove(self):
         if ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
             self.deleteRequested.emit(self)
+
+
+class CharacterTimelineWidget(QWidget):
+    def __init__(self, parent=None):
+        super(CharacterTimelineWidget, self).__init__(parent)
+        self.character: Optional[Character] = None
+        self._layout = vbox(self)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._spacers: List[QWidget] = []
+
+    def setCharacter(self, character: Character):
+        self.character = character
+        self.refresh()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        for sp in self._spacers:
+            sp.setFixedWidth(self.width() // 2 + 3)
+
+    def refresh(self):
+        if self.character is None:
+            return
+        clear_layout(self.layout())
+
+        lblCharacter = QLabel(self)
+        lblCharacter.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        transparent(lblCharacter)
+        set_avatar(lblCharacter, self.character, 64)
+
+        self._layout.addWidget(lblCharacter, alignment=Qt.AlignHCenter | Qt.AlignTop)
+
+        for i, backstory in enumerate(self.character.backstory):
+            card = CharacterBackstoryCard(backstory)
+            card.deleteRequested.connect(self._remove)
+            container = QWidget(self)
+            hbox(container, 0, 3)
+            _spacer = spacer_widget()
+            _spacer.setFixedWidth(self.width() // 2 + 3)
+            self._spacers.append(_spacer)
+            self._layout.addWidget(container)
+            if i % 2 == 0:
+                container.layout().addWidget(_spacer)
+                container.layout().addWidget(card)
+            else:
+                container.layout().addWidget(card)
+                container.layout().addWidget(_spacer)
+
+        if self.character.backstory:
+            self.layout().addWidget(spacer_widget(vertical=True))
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setBrush(QBrush(QColor('#1d3557')))
+        painter.drawRect(self.width() / 2 - 3, 64, 6, self.height() - 64)
+
+        painter.end()
+
+    def _remove(self, card: CharacterBackstoryCard):
+        if card.backstory in self.character.backstory:
+            self.character.backstory.remove(card.backstory)
+
+        self.layout().removeWidget(card)
 
 
 class CharacterEmotionButton(QToolButton):

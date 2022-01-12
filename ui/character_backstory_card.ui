@@ -27,16 +27,16 @@
     <number>3</number>
    </property>
    <property name="leftMargin">
-    <number>6</number>
+    <number>0</number>
    </property>
    <property name="topMargin">
     <number>2</number>
    </property>
    <property name="rightMargin">
-    <number>6</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>8</number>
+    <number>0</number>
    </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -111,25 +111,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="btnAddConflict">
-       <property name="cursor">
-        <cursorShape>ArrowCursor</cursorShape>
-       </property>
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
-       <property name="text">
-        <string>Add conflict</string>
-       </property>
-       <property name="popupMode">
-        <enum>QToolButton::InstantPopup</enum>
-       </property>
-       <property name="toolButtonStyle">
-        <enum>Qt::ToolButtonTextBesideIcon</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QToolButton" name="btnRemove">
        <property name="cursor">
         <cursorShape>PointingHandCursor</cursorShape>
@@ -149,6 +130,13 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="AutoAdjustableTextEdit" name="textSummary">
@@ -171,7 +159,8 @@
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">border: 0px solid grey;</string>
+      <string notr="true">border: 0px solid grey;
+background-color: rgba(0, 0, 0, 0);</string>
      </property>
      <property name="placeholderText">
       <string>Event's summary</string>

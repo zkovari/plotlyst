@@ -25,10 +25,12 @@ class ResourceRegistry:
     def __init__(self):
         self._cork = None
         self._frame1 = None
+        self._cover1 = None
 
     def set_up(self, app_context: ApplicationContext):
         self._cork = app_context.get_resource('cork.wav')
         self._frame1 = app_context.get_resource('frame_1.png')
+        self._cover1 = app_context.get_resource('cover_1.jpg')
 
     @property
     def cork(self):
@@ -37,6 +39,10 @@ class ResourceRegistry:
     @property
     def frame1(self):
         return self._frame1
+
+    @property
+    def cover1(self):
+        return self._cover1
 
 
 resource_registry = ResourceRegistry()

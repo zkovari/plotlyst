@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt5.QtCore import QRect, Qt, QSize, QPoint
-from PyQt5.QtWidgets import QSizePolicy, QLayout, QLayoutItem
+from PyQt5.QtWidgets import QSizePolicy, QLayout, QLayoutItem, QWidget, QVBoxLayout, QHBoxLayout
 from overrides import overrides
 
 
@@ -125,3 +125,21 @@ def clear_layout(layout: QLayout):
     while layout.count():
         item = layout.takeAt(0)
         item.widget().deleteLater()
+
+
+def hbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QHBoxLayout:
+    _layout = QHBoxLayout()
+    widget.setLayout(_layout)
+    widget.layout().setContentsMargins(margin, margin, margin, margin)
+    widget.layout().setSpacing(spacing)
+
+    return _layout
+
+
+def vbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QVBoxLayout:
+    _layout = QVBoxLayout()
+    widget.setLayout(_layout)
+    widget.layout().setContentsMargins(margin, margin, margin, margin)
+    widget.layout().setSpacing(spacing)
+
+    return _layout

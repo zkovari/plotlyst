@@ -221,11 +221,12 @@ def decrease_font_size(widget: QWidget, step: int = 1):
 class OpacityEventFilter(QObject):
 
     def __init__(self, enterOpacity: float = 1.0, leaveOpacity: float = 0.4,
-                 parent=None, ignoreCheckedButton: bool = False):
+                 parent: QWidget = None, ignoreCheckedButton: bool = False):
         super(OpacityEventFilter, self).__init__(parent)
         self.enterOpacity = enterOpacity
         self.leaveOpacity = leaveOpacity
         self.ignoreCheckedButton = ignoreCheckedButton
+        set_opacity(parent, leaveOpacity)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
