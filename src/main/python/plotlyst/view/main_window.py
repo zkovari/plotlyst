@@ -255,6 +255,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.notes_view.activate()
 
     def _init_menubar(self):
+        self.menubar.setContextMenuPolicy(Qt.PreventContextMenu)
         if app_env.is_prod():
             self.menuFile.removeAction(self.actionRestart)
         else:
@@ -277,6 +278,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
+        self.toolBar.setContextMenuPolicy(Qt.PreventContextMenu)
         self.home_mode = QToolButton(self.toolBar)
         self.home_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.home_mode.setText('Home')
