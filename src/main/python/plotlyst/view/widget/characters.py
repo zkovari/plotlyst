@@ -36,7 +36,7 @@ from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter
+    OpacityEventFilter, increase_font
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
@@ -344,11 +344,12 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
 
         self.btnType = QToolButton(self)
         self.btnType.setIconSize(QSize(24, 24))
-        self.btnType.setIcon(IconRegistry.wip_icon())
+        self.btnType.setIcon(IconRegistry.from_name(backstory.type_icon, backstory.type_color))
 
-        self.refresh()
+        increase_font(self.lblKeyphrase, 2)
 
         self.setMinimumWidth(30)
+        self.refresh()
 
     @overrides
     def enterEvent(self, event: QtCore.QEvent) -> None:
@@ -389,22 +390,6 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.lblKeyphrase.setText(self.backstory.keyphrase)
         self.textSummary.setPlainText(self.backstory.synopsis)
 
-        if self.backstory.as_baby:
-            self.lblAge.setText('0-3')
-            self.lblAgeIcon.setPixmap(IconRegistry.baby_icon().pixmap(24, 24))
-        elif self.backstory.as_child:
-            self.lblAge.setText('3-12')
-            self.lblAgeIcon.setPixmap(IconRegistry.child_icon().pixmap(24, 24))
-        elif self.backstory.as_teenager:
-            self.lblAge.setText('12-18')
-            self.lblAgeIcon.setPixmap(IconRegistry.teenager_icon().pixmap(24, 24))
-        elif self.backstory.as_adult:
-            self.lblAgeIcon.setPixmap(IconRegistry.adult_icon().pixmap(24, 24))
-        else:
-            self.lblAge.clear()
-        if self.backstory.age > 0:
-            self.lblAge.setText(str(self.backstory.age))
-
     def _enableActionButtons(self, enabled: bool):
         self.btnEdit.setVisible(enabled)
         self.btnRemove.setVisible(enabled)
@@ -416,12 +401,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         backstory = BackstoryEditorDialog(self.backstory).display()
         if backstory:
             self.backstory.keyphrase = backstory.keyphrase
-            self.backstory.age = backstory.age
             self.backstory.emotion = backstory.emotion
-            self.backstory.as_baby = backstory.as_baby
-            self.backstory.as_child = backstory.as_child
-            self.backstory.as_teenager = backstory.as_teenager
-            self.backstory.as_adult = backstory.as_adult
             self.refresh()
 
     def _remove(self):
@@ -462,13 +442,12 @@ class _ControlButtons(QWidget):
 
     def __init__(self, parent=None):
         super(_ControlButtons, self).__init__(parent)
-        vbox(self, margin=5)
+        vbox(self)
 
         self.btnPlaceholderCircle = QToolButton(self)
 
         self.btnPlus = QToolButton(self)
         self.btnPlus.setIcon(IconRegistry.plus_icon('white'))
-        self.btnPlus.setToolTip('Add new event')
         self.btnSeparator = QToolButton(self)
         self.btnSeparator.setIcon(IconRegistry.from_name('ri.separator', 'white'))
         self.btnSeparator.setToolTip('Insert separator')

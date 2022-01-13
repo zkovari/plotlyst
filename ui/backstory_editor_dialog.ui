@@ -15,12 +15,9 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Specify the event's keyphrase in one or two words. This will serve later as a reference to this event.</string>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
+    <widget class="Subtitle" name="wdgKeyphraseTitle" native="true">
+     <property name="title" stdset="0">
+      <string>Event's keyphrase</string>
      </property>
     </widget>
    </item>
@@ -38,15 +35,8 @@
     </widget>
    </item>
    <item>
-    <widget class="Line" name="line_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_4">
-     <property name="text">
+    <widget class="Subtitle" name="widget" native="true">
+     <property name="title" stdset="0">
       <string>Happy or unhappy memory?</string>
      </property>
     </widget>
@@ -308,155 +298,27 @@ QToolButton:hover {
     </layout>
    </item>
    <item>
-    <widget class="Line" name="line">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+    <widget class="Subtitle" name="widget_2" native="true">
+     <property name="title" stdset="0">
+      <string>Type of event</string>
+     </property>
+     <property name="description" stdset="0">
+      <string>Select an event type that fits the most, or add a custom one.</string>
      </property>
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>The character's age when the event occurred:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="lblAge">
-       <property name="font">
-        <font>
-         <pointsize>15</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QToolButton" name="btnBaby">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupAge</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnChild">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupAge</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnTeenager">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupAge</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnAdult">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">btnGroupAge</string>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="sbAge">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="prefix">
-        <string>Specific age: </string>
-       </property>
-       <property name="maximum">
-        <number>9999999</number>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
+    <widget class="QFrame" name="wdgTypes">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
    </item>
    <item>
     <spacer name="verticalSpacer">
@@ -500,6 +362,9 @@ QToolButton:hover {
        <property name="text">
         <string>Close</string>
        </property>
+       <property name="shortcut">
+        <string>Esc</string>
+       </property>
        <property name="base" stdset="0">
         <bool>true</bool>
        </property>
@@ -519,6 +384,9 @@ QToolButton:hover {
        <property name="text">
         <string>Save</string>
        </property>
+       <property name="shortcut">
+        <string>Return</string>
+       </property>
        <property name="positive" stdset="0">
         <bool>true</bool>
        </property>
@@ -531,10 +399,18 @@ QToolButton:hover {
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Subtitle</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupEmotion"/>
   <buttongroup name="btnGroupAge"/>
+  <buttongroup name="btnGroupEmotion"/>
  </buttongroups>
 </ui>

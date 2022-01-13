@@ -212,7 +212,13 @@ class InstantTooltipStyle(QProxyStyle):
         return super(InstantTooltipStyle, self).styleHint(hint, option, widget, returnData)
 
 
-def decrease_font_size(widget: QWidget, step: int = 1):
+def increase_font(widget: QWidget, step: int = 1):
+    font = widget.font()
+    font.setPointSize(font.pointSize() + 1 * step)
+    widget.setFont(font)
+
+
+def decrease_font(widget: QWidget, step: int = 1):
     font = widget.font()
     font.setPointSize(font.pointSize() - 1 * step)
     widget.setFont(font)
@@ -265,3 +271,4 @@ def bold(widget: QWidget, enabled: bool = True):
 def gc(object: QObject):
     object.setParent(None)
     object.deleteLater()
+    

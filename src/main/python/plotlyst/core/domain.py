@@ -61,23 +61,15 @@ class AgePeriod(Enum):
     ADULT = 3
 
 
+class BackstoryEventType(Enum):
+    Event = 'event'
+
+
 @dataclass
 class BackstoryEvent(Event):
-    age: int = 0
-    as_baby: bool = False
-    as_child: bool = False
-    as_teenager: bool = False
-    as_adult: bool = False
-
-    def period(self) -> AgePeriod:
-        if self.as_baby:
-            return AgePeriod.BABY
-        if self.as_child:
-            return AgePeriod.CHILD
-        if self.as_teenager:
-            return AgePeriod.TEENAGER
-        if self.as_adult:
-            return AgePeriod.ADULT
+    type: BackstoryEventType = BackstoryEventType.Event
+    type_icon: str = 'ri.calendar-event-fill'
+    type_color: str = 'darkBlue'
 
 
 @dataclass

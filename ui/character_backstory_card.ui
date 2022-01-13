@@ -69,53 +69,22 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QLabel" name="lblAgeIcon">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="lblAge">
-          <property name="font">
-           <font>
-            <pointsize>15</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Preferred</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
          <widget class="QLabel" name="lblKeyphrase">
           <property name="font">
            <font>
-            <pointsize>16</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
            </font>
           </property>
           <property name="text">
            <string>Keyphrase</string>
           </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
-        <item>
+        <item alignment="Qt::AlignTop">
          <widget class="QToolButton" name="btnEdit">
           <property name="cursor">
            <cursorShape>PointingHandCursor</cursorShape>
@@ -128,17 +97,7 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="LabelsWidget" name="wdgLabels" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-        <item>
+        <item alignment="Qt::AlignTop">
          <widget class="QToolButton" name="btnRemove">
           <property name="cursor">
            <cursorShape>PointingHandCursor</cursorShape>
@@ -201,12 +160,6 @@ background-color: rgba(0, 0, 0, 0);</string>
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>LabelsWidget</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.labels</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>AutoAdjustableTextEdit</class>
    <extends>QTextEdit</extends>
