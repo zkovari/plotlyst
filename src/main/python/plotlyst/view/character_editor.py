@@ -56,7 +56,7 @@ class CharacterEditor:
         self.ui.btnCustomize.setIcon(IconRegistry.customization_icon())
         self.ui.btnCustomize.clicked.connect(self._customize_profile)
         self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon())
-        # self.ui.btnNewBackstory.clicked.connect(self._new_backstory)
+        self.ui.btnNewBackstory.clicked.connect(self.ui.wdgBackstory.add)
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
 

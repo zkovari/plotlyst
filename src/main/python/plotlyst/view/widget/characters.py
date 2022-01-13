@@ -36,7 +36,7 @@ from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter, gc
+    OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
@@ -525,6 +525,7 @@ class CharacterTimelineWidget(QWidget):
     def refresh(self):
         if self.character is None:
             return
+        self._spacers.clear()
         clear_layout(self.layout())
 
         lblCharacter = QLabel(self)
@@ -542,10 +543,10 @@ class CharacterTimelineWidget(QWidget):
             self._spacers.append(event.spacer)
             event.spacer.setFixedWidth(self.width() // 2 + 3)
 
-            self._addControlButtons()
+            self._addControlButtons(i)
             self._layout.addWidget(event)
 
-        self._addControlButtons()
+        self._addControlButtons(-1)
         self.layout().addWidget(spacer_widget(vertical=True))
 
     @overrides
@@ -557,40 +558,27 @@ class CharacterTimelineWidget(QWidget):
 
         painter.end()
 
-    def _add(self, controlWidget: Optional[_ControlButtons] = None):
+    def add(self, pos: int = -1):
         backstory: Optional[BackstoryEvent] = BackstoryEditorDialog().display()
         if backstory:
-            # index = None
-            # for i, _bck in enumerate(self.character.backstory):
-            #     if backstory.period() == _bck.period() and backstory.age and _bck.age > backstory.age:
-            #         index = i
-            #         break
-            #     elif backstory.period().value < _bck.period().value:
-            #         index = i
-            #         break
             card = CharacterBackstoryCard(backstory)
             card.deleteRequested.connect(self._remove)
-            # if index is None:
-            # self.ui.wdgBackstory.layout().addWidget(card)
-            # self.character.backstory.append(backstory)
 
-            if controlWidget:
-                self._layout.replaceWidget(controlWidget, card)
-                gc(controlWidget)
+            if pos > 0:
+                self.character.backstory.insert(pos, backstory)
             else:
-                self.ui.wdgBackstory.layout().addWidget(card)
-                # self.character.backstory.append(backstory)
-                print('add to the end')
+                self.character.backstory.append(backstory)
+            self.refresh()
 
     def _remove(self, card: CharacterBackstoryCard):
         if card.backstory in self.character.backstory:
             self.character.backstory.remove(card.backstory)
 
-        self.layout().removeWidget(card)
+        self.refresh()
 
-    def _addControlButtons(self):
+    def _addControlButtons(self, pos: int):
         control = _ControlButtons(self)
-        control.btnPlus.clicked.connect(partial(self._add, control))
+        control.btnPlus.clicked.connect(partial(self.add, pos))
         self._layout.addWidget(control, alignment=Qt.AlignHCenter)
 
 
