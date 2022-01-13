@@ -23,14 +23,12 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from fbs_runtime import platform
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, BackstoryEvent, Document
+from src.main.python.plotlyst.core.domain import Novel, Character, Document
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
-from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.characters import CharacterBackstoryCard
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -58,7 +56,7 @@ class CharacterEditor:
         self.ui.btnCustomize.setIcon(IconRegistry.customization_icon())
         self.ui.btnCustomize.clicked.connect(self._customize_profile)
         self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon())
-        self.ui.btnNewBackstory.clicked.connect(self._new_backstory)
+        # self.ui.btnNewBackstory.clicked.connect(self._new_backstory)
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
 
@@ -108,25 +106,25 @@ class CharacterEditor:
         self._profile_container.deleteLater()
         self._init_profile_view()
 
-    def _new_backstory(self):
-        backstory: Optional[BackstoryEvent] = BackstoryEditorDialog().display()
-        if backstory:
-            index = None
-            for i, _bck in enumerate(self.character.backstory):
-                if backstory.period() == _bck.period() and backstory.age and _bck.age > backstory.age:
-                    index = i
-                    break
-                elif backstory.period().value < _bck.period().value:
-                    index = i
-                    break
-            card = CharacterBackstoryCard(backstory)
-            card.deleteRequested.connect(self._remove_backstory)
-            if index is None:
-                self.ui.wdgBackstory.layout().addWidget(card)
-                self.character.backstory.append(backstory)
-            else:
-                self.ui.wdgBackstory.layout().insertWidget(index, card)
-                self.character.backstory.insert(index, backstory)
+    # def _new_backstory(self):
+    #     backstory: Optional[BackstoryEvent] = BackstoryEditorDialog().display()
+    #     if backstory:
+    #         index = None
+    #         for i, _bck in enumerate(self.character.backstory):
+    #             if backstory.period() == _bck.period() and backstory.age and _bck.age > backstory.age:
+    #                 index = i
+    #                 break
+    #             elif backstory.period().value < _bck.period().value:
+    #                 index = i
+    #                 break
+    #         card = CharacterBackstoryCard(backstory)
+    #         card.deleteRequested.connect(self._remove_backstory)
+    #         if index is None:
+    #             self.ui.wdgBackstory.layout().addWidget(card)
+    #             self.character.backstory.append(backstory)
+    #         else:
+    #             self.ui.wdgBackstory.layout().insertWidget(index, card)
+    #             self.character.backstory.insert(index, backstory)
 
     # def _remove_backstory(self, card: CharacterBackstoryCard):
     #     if card.backstory in self.character.backstory:

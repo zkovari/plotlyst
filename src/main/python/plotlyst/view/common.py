@@ -260,3 +260,8 @@ def bold(widget: QWidget, enabled: bool = True):
     font = widget.font()
     font.setBold(enabled)
     widget.setFont(font)
+
+
+def gc(object: QObject):
+    object.setParent(None)
+    object.deleteLater()
