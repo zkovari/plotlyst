@@ -271,4 +271,3 @@ def bold(widget: QWidget, enabled: bool = True):
 def gc(object: QObject):
     object.setParent(None)
     object.deleteLater()
-    

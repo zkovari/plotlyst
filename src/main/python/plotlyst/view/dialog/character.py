@@ -17,10 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple
 
 import emoji
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QDialog, QToolButton, QButtonGroup
 from fbs_runtime import platform
 
@@ -35,15 +35,46 @@ from src.main.python.plotlyst.view.layout import FlowLayout
 class _BackstoryEventTypeButton(QToolButton):
     def __init__(self, type: BackstoryEventType, parent=None):
         super(_BackstoryEventTypeButton, self).__init__(parent)
+        self._icons: Dict[BackstoryEventType, Tuple[str, str]] = {
+            BackstoryEventType.Event: ('ri.calendar-event-fill', 'darkBlue'),
+            BackstoryEventType.Birthday: ('fa5s.birthday-cake', '#03543f'),
+            BackstoryEventType.Education: ('fa5s.graduation-cap', 'black'),
+            BackstoryEventType.Job: ('fa5s.briefcase', '#9c6644'),
+            BackstoryEventType.Love: ('ei.heart', '#e63946'),
+            BackstoryEventType.Friendship: ('fa5s.user-friends', '#457b9d'),
+            BackstoryEventType.Death: ('fa5s.skull-crossbones', 'black'),
+            BackstoryEventType.Violence: ('mdi.knife-military', '#6c757d'),
+            BackstoryEventType.Accident: ('fa5s.car-crash', '#a0001c'),
+            BackstoryEventType.Promotion: ('mdi.ladder', '#6f4518'),
+            BackstoryEventType.Travel: ('fa5s.train', '#a0001c'),
+            BackstoryEventType.Breakup: ('fa5s.heart-broken', '#a4133c'),
+            BackstoryEventType.Farewell: ('mdi6.hand-wave', '#656d4a'),
+            BackstoryEventType.Award: ('fa5s.award', '#40916c'),
+            BackstoryEventType.Family: ('mdi6.human-male-female-child', '#34a0a4'),
+            BackstoryEventType.Home: ('fa5s.home', '#4c334d'),
+            BackstoryEventType.Game: ('mdi.gamepad-variant', '#277da1'),
+            BackstoryEventType.Sport: ('fa5.futbol', '#0096c7'),
+            BackstoryEventType.Crime: ('fa5s.gavel', '#a68a64'),
+            BackstoryEventType.Gift: ('fa5s.gift', '#b298dc'),
+            BackstoryEventType.Medical: ('fa5s.medkit', '#849669'),
+            BackstoryEventType.Catastrophe: ('fa5s.meteor', '#f48c06'),
+            BackstoryEventType.Fortune: ('ph.coin-fill', '#ffb703'),
+            BackstoryEventType.Injury: ('fa5s.user-injured', '#c05299'),
+            BackstoryEventType.Loss: ('mdi.trophy-broken', '#f9c74f'),
+        }
         self.type = type
-        if type == BackstoryEventType.Event:
-            self._color = 'darkBlue'
-            self.setIcon(IconRegistry.from_name('ri.calendar-event-fill', self._color))
+        self.color = 'black'
+
+        self.color: str = self._icons[type][1]
+        self.iconName: str = self._icons[type][0]
+        self.setIcon(IconRegistry.from_name(self.iconName, self.color))
+
         self.setToolTip(f'<html><b>{type.name}</b></html>')
-        self.setStyleSheet(f'QToolTip {{color: {self._color}}}')
+        self.setStyleSheet(f'QToolTip {{color: {self.color}}}')
 
         self.setCheckable(True)
         self.setCursor(Qt.PointingHandCursor)
+        self.setIconSize(QSize(24, 24))
 
         self.setStyle(InstantTooltipStyle(self.style()))
 
@@ -119,4 +150,6 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
         elif self.btnVeryHappy.isChecked():
             emotion = VERY_HAPPY
 
-        return BackstoryEvent(self.lineKeyphrase.text(), synopsis='', emotion=emotion)
+        btn: _BackstoryEventTypeButton = self._btnTypeGroup.checkedButton()
+        return BackstoryEvent(self.lineKeyphrase.text(), synopsis='', emotion=emotion,
+                              type=btn.type, type_icon=btn.iconName, type_color=btn.color)

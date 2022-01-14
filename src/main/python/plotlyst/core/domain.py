@@ -63,6 +63,30 @@ class AgePeriod(Enum):
 
 class BackstoryEventType(Enum):
     Event = 'event'
+    Birthday = 'birth'
+    Education = 'education'
+    Job = 'fa5s.briefcase'
+    Love = 'love'
+    Family = 'family'
+    Home = 'home'
+    Friendship = 'friendship'
+    Fortune = 'fortune'
+    Promotion = 'promotion'
+    Award = 'award'
+    Death = 'death'
+    Violence = 'violence'
+    Accident = 'accident'
+    Crime = 'crime'
+    Catastrophe = 'catastrophe'
+    Loss = 'loss'
+    Medical = 'medical'
+    Injury = 'injury'
+    Breakup = 'breakup'
+    Farewell = 'farewell'
+    Travel = 'travel'
+    Game = 'game'
+    Sport = 'sport'
+    Gift = 'gift'
 
 
 @dataclass

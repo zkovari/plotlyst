@@ -344,7 +344,6 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
 
         self.btnType = QToolButton(self)
         self.btnType.setIconSize(QSize(24, 24))
-        self.btnType.setIcon(IconRegistry.from_name(backstory.type_icon, backstory.type_color))
 
         increase_font(self.lblKeyphrase, 2)
 
@@ -387,6 +386,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
                         border-radius: 18px; padding: 4px;
                     }}''')
 
+        self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, self.backstory.type_color))
         self.lblKeyphrase.setText(self.backstory.keyphrase)
         self.textSummary.setPlainText(self.backstory.synopsis)
 
@@ -402,6 +402,9 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         if backstory:
             self.backstory.keyphrase = backstory.keyphrase
             self.backstory.emotion = backstory.emotion
+            self.backstory.type = backstory.type
+            self.backstory.type_icon = backstory.type_icon
+            self.backstory.type_color = backstory.type_color
             self.refresh()
 
     def _remove(self):
