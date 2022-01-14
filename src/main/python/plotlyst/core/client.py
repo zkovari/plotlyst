@@ -461,7 +461,6 @@ class JsonClient:
                               document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
 
-        print(novel_info.version)
         return Novel(title=project_novel_info.title, id=novel_info.id,
                      plots=novel_info.plots, characters=characters,
                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
