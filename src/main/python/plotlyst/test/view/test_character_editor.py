@@ -12,7 +12,7 @@ def test_backstory(qtbot, monkeypatch):
 
     assert editor.ui.wdgBackstory.layout().count() == 3  # lbl, control, spacer
 
-    backstory = BackstoryEvent('Test', '', emotion=VERY_UNHAPPY, as_baby=True)
+    backstory = BackstoryEvent('Test', '', emotion=VERY_UNHAPPY)
     monkeypatch.setattr(BackstoryEditorDialog, "display", lambda *args: backstory)
     editor.ui.btnNewBackstory.click()
 
