@@ -22,9 +22,9 @@ from typing import Iterable, List, Optional
 
 import emoji
 from PyQt5 import QtCore
-from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy
+from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent
+from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -35,14 +35,15 @@ from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
+    OpacityEventFilter, increase_font
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
-from src.main.python.plotlyst.view.icons import avatars, IconRegistry
-from src.main.python.plotlyst.view.layout import clear_layout
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
+from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import RichTextEditor
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -334,16 +335,20 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.btnEdit.setVisible(False)
         self.btnEdit.setIcon(IconRegistry.edit_icon())
         self.btnEdit.clicked.connect(self._edit)
+        self.btnEdit.installEventFilter(OpacityEventFilter(parent=self.btnEdit))
         self.btnRemove.setVisible(False)
         self.btnRemove.setIcon(IconRegistry.wrong_icon(color='black'))
-        self.btnAddConflict.setVisible(False)
-        self.btnAddConflict.setIcon(IconRegistry.conflict_icon())
+        self.btnRemove.installEventFilter(OpacityEventFilter(parent=self.btnRemove))
         self.textSummary.textChanged.connect(self._synopsis_changed)
         self.btnRemove.clicked.connect(self._remove)
 
-        self.refresh()
+        self.btnType = QToolButton(self)
+        self.btnType.setIconSize(QSize(24, 24))
 
-        self.setMinimumWidth(100)
+        increase_font(self.lblKeyphrase, 2)
+
+        self.setMinimumWidth(30)
+        self.refresh()
 
     @overrides
     def enterEvent(self, event: QtCore.QEvent) -> None:
@@ -352,6 +357,10 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
     @overrides
     def leaveEvent(self, event: QtCore.QEvent) -> None:
         self._enableActionButtons(False)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.btnType.setGeometry(self.width() // 2 - 18, 2, 36, 38)
 
     def refresh(self):
         bg_color: str = 'rgb(171, 171, 171)'
@@ -363,32 +372,23 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
             bg_color = 'rgb(255, 142, 43)'
         elif self.backstory.emotion == VERY_UNHAPPY:
             bg_color = '#df2935'
-        self.setStyleSheet(f'''
-                    CharacterBackstoryCard {{
-                        border: 0px;
-                        border-radius: 12px;
-                        background-color: {bg_color};
+        self.cardFrame.setStyleSheet(f'''
+                    #cardFrame {{
+                        border-top: 8px solid {bg_color};
+                        border-bottom-left-radius: 12px;
+                        border-bottom-right-radius: 12px;
+                        background-color: #ffe8d6;
                         }}
                     ''')
+        self.btnType.setStyleSheet(
+            f'''QToolButton {{
+                        background-color: white; border: 3px solid {bg_color};
+                        border-radius: 18px; padding: 4px;
+                    }}''')
 
+        self.btnType.setIcon(IconRegistry.from_name(self.backstory.type_icon, self.backstory.type_color))
         self.lblKeyphrase.setText(self.backstory.keyphrase)
         self.textSummary.setPlainText(self.backstory.synopsis)
-
-        if self.backstory.as_baby:
-            self.lblAge.setText('0-3')
-            self.lblAgeIcon.setPixmap(IconRegistry.baby_icon().pixmap(24, 24))
-        elif self.backstory.as_child:
-            self.lblAge.setText('3-12')
-            self.lblAgeIcon.setPixmap(IconRegistry.child_icon().pixmap(24, 24))
-        elif self.backstory.as_teenager:
-            self.lblAge.setText('12-18')
-            self.lblAgeIcon.setPixmap(IconRegistry.teenager_icon().pixmap(24, 24))
-        elif self.backstory.as_adult:
-            self.lblAgeIcon.setPixmap(IconRegistry.adult_icon().pixmap(24, 24))
-        else:
-            self.lblAge.clear()
-        if self.backstory.age > 0:
-            self.lblAge.setText(str(self.backstory.age))
 
     def _enableActionButtons(self, enabled: bool):
         self.btnEdit.setVisible(enabled)
@@ -401,17 +401,167 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         backstory = BackstoryEditorDialog(self.backstory).display()
         if backstory:
             self.backstory.keyphrase = backstory.keyphrase
-            self.backstory.age = backstory.age
             self.backstory.emotion = backstory.emotion
-            self.backstory.as_baby = backstory.as_baby
-            self.backstory.as_child = backstory.as_child
-            self.backstory.as_teenager = backstory.as_teenager
-            self.backstory.as_adult = backstory.as_adult
+            self.backstory.type = backstory.type
+            self.backstory.type_icon = backstory.type_icon
+            self.backstory.type_color = backstory.type_color
             self.refresh()
 
     def _remove(self):
         if ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
             self.deleteRequested.emit(self)
+
+
+class CharacterBackstoryEvent(QWidget):
+    def __init__(self, backstory: BackstoryEvent, aligment: int = Qt.AlignRight, parent=None):
+        super(CharacterBackstoryEvent, self).__init__(parent)
+        self.aligment = aligment
+        self.card = CharacterBackstoryCard(backstory)
+
+        self._layout = hbox(self, 0, 3)
+        self.spacer = spacer_widget()
+        self.spacer.setFixedWidth(self.width() // 2 + 3)
+        if aligment == Qt.AlignRight:
+            self.layout().addWidget(self.spacer)
+            self.layout().addWidget(self.card)
+        elif aligment == Qt.AlignLeft:
+            self.layout().addWidget(self.card)
+            self.layout().addWidget(self.spacer)
+        else:
+            self.layout().addWidget(self.card)
+
+    def toggleAlignment(self):
+        if self.aligment == Qt.AlignLeft:
+            self.aligment = Qt.AlignRight
+            self._layout.takeAt(0)
+            self._layout.addWidget(self.spacer)
+        else:
+            self.aligment = Qt.AlignLeft
+            self._layout.takeAt(1)
+            self._layout.insertWidget(0, self.spacer)
+
+
+class _ControlButtons(QWidget):
+
+    def __init__(self, parent=None):
+        super(_ControlButtons, self).__init__(parent)
+        vbox(self)
+
+        self.btnPlaceholderCircle = QToolButton(self)
+
+        self.btnPlus = QToolButton(self)
+        self.btnPlus.setIcon(IconRegistry.plus_icon('white'))
+        self.btnSeparator = QToolButton(self)
+        self.btnSeparator.setIcon(IconRegistry.from_name('ri.separator', 'white'))
+        self.btnSeparator.setToolTip('Insert separator')
+
+        self.layout().addWidget(self.btnPlaceholderCircle)
+        self.layout().addWidget(self.btnPlus)
+        self.layout().addWidget(self.btnSeparator)
+
+        self.btnPlus.setHidden(True)
+        self.btnSeparator.setHidden(True)
+
+        bg_color = '#1d3557'
+        for btn in [self.btnPlaceholderCircle, self.btnPlus, self.btnSeparator]:
+            btn.setStyleSheet(f'''
+                QToolButton {{ background-color: {bg_color}; border: 1px;
+                        border-radius: 13px; padding: 2px;}}
+                QToolButton:pressed {{background-color: grey;}}
+            ''')
+            btn.setCursor(Qt.PointingHandCursor)
+
+        self.installEventFilter(self)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Enter:
+            self.btnPlaceholderCircle.setHidden(True)
+            self.btnPlus.setVisible(True)
+            self.btnSeparator.setVisible(True)
+        elif event.type() == QEvent.Leave:
+            self.btnPlaceholderCircle.setVisible(True)
+            self.btnPlus.setHidden(True)
+            self.btnSeparator.setHidden(True)
+
+        return super().eventFilter(watched, event)
+
+
+class CharacterTimelineWidget(QWidget):
+    def __init__(self, parent=None):
+        super(CharacterTimelineWidget, self).__init__(parent)
+        self.character: Optional[Character] = None
+        self._layout = vbox(self, spacing=0)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._spacers: List[QWidget] = []
+
+    def setCharacter(self, character: Character):
+        self.character = character
+        self.refresh()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        for sp in self._spacers:
+            sp.setFixedWidth(self.width() // 2 + 3)
+
+    def refresh(self):
+        if self.character is None:
+            return
+        self._spacers.clear()
+        clear_layout(self.layout())
+
+        lblCharacter = QLabel(self)
+        lblCharacter.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        transparent(lblCharacter)
+        set_avatar(lblCharacter, self.character, 64)
+
+        self._layout.addWidget(lblCharacter, alignment=Qt.AlignHCenter | Qt.AlignTop)
+
+        for i, backstory in enumerate(self.character.backstory):
+            orientation = Qt.AlignRight if i % 2 == 0 else Qt.AlignLeft
+            event = CharacterBackstoryEvent(backstory, orientation, self)
+            event.card.deleteRequested.connect(self._remove)
+
+            self._spacers.append(event.spacer)
+            event.spacer.setFixedWidth(self.width() // 2 + 3)
+
+            self._addControlButtons(i)
+            self._layout.addWidget(event)
+
+        self._addControlButtons(-1)
+        self.layout().addWidget(spacer_widget(vertical=True))
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setBrush(QBrush(QColor('#1d3557')))
+        painter.drawRect(self.width() / 2 - 3, 64, 6, self.height() - 64)
+
+        painter.end()
+
+    def add(self, pos: int = -1):
+        backstory: Optional[BackstoryEvent] = BackstoryEditorDialog().display()
+        if backstory:
+            card = CharacterBackstoryCard(backstory)
+            card.deleteRequested.connect(self._remove)
+
+            if pos > 0:
+                self.character.backstory.insert(pos, backstory)
+            else:
+                self.character.backstory.append(backstory)
+            self.refresh()
+
+    def _remove(self, card: CharacterBackstoryCard):
+        if card.backstory in self.character.backstory:
+            self.character.backstory.remove(card.backstory)
+
+        self.refresh()
+
+    def _addControlButtons(self, pos: int):
+        control = _ControlButtons(self)
+        control.btnPlus.clicked.connect(partial(self.add, pos))
+        self._layout.addWidget(control, alignment=Qt.AlignHCenter)
 
 
 class CharacterEmotionButton(QToolButton):

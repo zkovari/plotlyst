@@ -11,11 +11,3 @@ def test_backstory_editor(qtbot):
     assert diag.btnSave.isEnabled()
 
     diag.btnVeryUnhappy.click()
-    diag.btnBaby.click()
-    assert diag.lblAge.text() == '0-3'
-    diag.btnChild.click()
-    assert diag.lblAge.text() == '3-12'
-    diag.btnTeenager.click()
-    assert diag.lblAge.text() == '12-18'
-    diag.btnAdult.click()
-    assert diag.lblAge.text() == 'Adulthood'

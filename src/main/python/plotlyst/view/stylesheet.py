@@ -23,6 +23,10 @@ APP_STYLESHEET = '''
     icon-size: 20px;
 }
 
+QToolTip {
+    border: 0px;
+}
+
 QPushButton[base=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #f6f7fa, stop: 1 #dadbde);

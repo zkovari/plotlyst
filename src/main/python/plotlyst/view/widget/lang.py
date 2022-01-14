@@ -22,7 +22,7 @@ from typing import List
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction, QPushButton
 
-from src.main.python.plotlyst.view.common import decrease_font_size, set_opacity, OpacityEventFilter
+from src.main.python.plotlyst.view.common import decrease_font, OpacityEventFilter
 from src.main.python.plotlyst.view.generated.grammar_popup_ui import Ui_GrammarPopup
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout
@@ -36,9 +36,7 @@ class GrammarPopup(QWidget, Ui_GrammarPopup):
         self.setupUi(self)
         self.wdgReplacements.setLayout(FlowLayout(margin=3, spacing=3))
         self.btnClose.setIcon(IconRegistry.close_icon())
-        leaveOpacity = 0.4
-        set_opacity(self.btnClose, leaveOpacity)
-        self.btnClose.installEventFilter(OpacityEventFilter(leaveOpacity=leaveOpacity, parent=self))
+        self.btnClose.installEventFilter(OpacityEventFilter(parent=self.btnClose))
 
     def init(self, replacements: List[str], msg: str, style: str):
         if style in ['misspelling']:
@@ -49,7 +47,7 @@ class GrammarPopup(QWidget, Ui_GrammarPopup):
             self.lblType.setStyleSheet('color: #ffc300;')
         self.lblType.setText(style.capitalize())
         self.lblMessage.setText(msg)
-        decrease_font_size(self.lblMessage)
+        decrease_font(self.lblMessage)
         for i, replacement in enumerate(replacements):
             if i > 4:
                 break

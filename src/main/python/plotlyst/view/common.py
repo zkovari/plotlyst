@@ -212,7 +212,13 @@ class InstantTooltipStyle(QProxyStyle):
         return super(InstantTooltipStyle, self).styleHint(hint, option, widget, returnData)
 
 
-def decrease_font_size(widget: QWidget, step: int = 1):
+def increase_font(widget: QWidget, step: int = 1):
+    font = widget.font()
+    font.setPointSize(font.pointSize() + 1 * step)
+    widget.setFont(font)
+
+
+def decrease_font(widget: QWidget, step: int = 1):
     font = widget.font()
     font.setPointSize(font.pointSize() - 1 * step)
     widget.setFont(font)
@@ -221,11 +227,12 @@ def decrease_font_size(widget: QWidget, step: int = 1):
 class OpacityEventFilter(QObject):
 
     def __init__(self, enterOpacity: float = 1.0, leaveOpacity: float = 0.4,
-                 parent=None, ignoreCheckedButton: bool = False):
+                 parent: QWidget = None, ignoreCheckedButton: bool = False):
         super(OpacityEventFilter, self).__init__(parent)
         self.enterOpacity = enterOpacity
         self.leaveOpacity = leaveOpacity
         self.ignoreCheckedButton = ignoreCheckedButton
+        set_opacity(parent, leaveOpacity)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -259,3 +266,8 @@ def bold(widget: QWidget, enabled: bool = True):
     font = widget.font()
     font.setBold(enabled)
     widget.setFont(font)
+
+
+def gc(object: QObject):
+    object.setParent(None)
+    object.deleteLater()

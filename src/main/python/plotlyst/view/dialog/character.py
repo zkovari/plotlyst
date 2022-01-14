@@ -17,29 +17,72 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, Dict, Tuple
 
 import emoji
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtWidgets import QDialog, QToolButton, QButtonGroup
 from fbs_runtime import platform
 
-from src.main.python.plotlyst.core.domain import BackstoryEvent, NEUTRAL, VERY_HAPPY, VERY_UNHAPPY, UNHAPPY, HAPPY
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.core.domain import BackstoryEvent, NEUTRAL, VERY_HAPPY, VERY_UNHAPPY, UNHAPPY, HAPPY, \
+    BackstoryEventType
+from src.main.python.plotlyst.view.common import emoji_font, InstantTooltipStyle
 from src.main.python.plotlyst.view.generated.backstory_editor_dialog_ui import Ui_BackstoryEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import FlowLayout
+
+
+class _BackstoryEventTypeButton(QToolButton):
+    def __init__(self, type: BackstoryEventType, parent=None):
+        super(_BackstoryEventTypeButton, self).__init__(parent)
+        self._icons: Dict[BackstoryEventType, Tuple[str, str]] = {
+            BackstoryEventType.Event: ('ri.calendar-event-fill', 'darkBlue'),
+            BackstoryEventType.Birthday: ('fa5s.birthday-cake', '#03543f'),
+            BackstoryEventType.Education: ('fa5s.graduation-cap', 'black'),
+            BackstoryEventType.Job: ('fa5s.briefcase', '#9c6644'),
+            BackstoryEventType.Love: ('ei.heart', '#e63946'),
+            BackstoryEventType.Friendship: ('fa5s.user-friends', '#457b9d'),
+            BackstoryEventType.Death: ('fa5s.skull-crossbones', 'black'),
+            BackstoryEventType.Violence: ('mdi.knife-military', '#6c757d'),
+            BackstoryEventType.Accident: ('fa5s.car-crash', '#a0001c'),
+            BackstoryEventType.Promotion: ('mdi.ladder', '#6f4518'),
+            BackstoryEventType.Travel: ('fa5s.train', '#a0001c'),
+            BackstoryEventType.Breakup: ('fa5s.heart-broken', '#a4133c'),
+            BackstoryEventType.Farewell: ('mdi6.hand-wave', '#656d4a'),
+            BackstoryEventType.Award: ('fa5s.award', '#40916c'),
+            BackstoryEventType.Family: ('mdi6.human-male-female-child', '#34a0a4'),
+            BackstoryEventType.Home: ('fa5s.home', '#4c334d'),
+            BackstoryEventType.Game: ('mdi.gamepad-variant', '#277da1'),
+            BackstoryEventType.Sport: ('fa5.futbol', '#0096c7'),
+            BackstoryEventType.Crime: ('fa5s.gavel', '#a68a64'),
+            BackstoryEventType.Gift: ('fa5s.gift', '#b298dc'),
+            BackstoryEventType.Medical: ('fa5s.medkit', '#849669'),
+            BackstoryEventType.Catastrophe: ('fa5s.meteor', '#f48c06'),
+            BackstoryEventType.Fortune: ('ph.coin-fill', '#ffb703'),
+            BackstoryEventType.Injury: ('fa5s.user-injured', '#c05299'),
+            BackstoryEventType.Loss: ('mdi.trophy-broken', '#f9c74f'),
+        }
+        self.type = type
+        self.color = 'black'
+
+        self.color: str = self._icons[type][1]
+        self.iconName: str = self._icons[type][0]
+        self.setIcon(IconRegistry.from_name(self.iconName, self.color))
+
+        self.setToolTip(f'<html><b>{type.name}</b></html>')
+        self.setStyleSheet(f'QToolTip {{color: {self.color}}}')
+
+        self.setCheckable(True)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setIconSize(QSize(24, 24))
+
+        self.setStyle(InstantTooltipStyle(self.style()))
 
 
 class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
     def __init__(self, backstory: Optional[BackstoryEvent] = None, parent=None):
         super(BackstoryEditorDialog, self).__init__(parent)
         self.setupUi(self)
-
-        self.btnBaby.setIcon(IconRegistry.baby_icon())
-        self.btnChild.setIcon(IconRegistry.child_icon())
-        self.btnTeenager.setIcon(IconRegistry.teenager_icon())
-        self.btnAdult.setIcon(IconRegistry.adult_icon())
-        self.btnGroupAge.buttonToggled.connect(self._btn_age_toggled)
-        self.btnAdult.setChecked(True)
 
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
@@ -57,25 +100,27 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
         self.btnVeryHappy.setFont(self._emoji_font)
         self.btnVeryHappy.setText(emoji.emojize(':smiling_face_with_smiling_eyes:'))
 
+        self.wdgTypes.setLayout(FlowLayout(2, 3))
+        self._btnTypeGroup = QButtonGroup(self)
+        self._btnTypeGroup.setExclusive(True)
+
+        self._typeButtons: Dict[BackstoryEventType, QToolButton] = {}
+        for event in BackstoryEventType:
+            btn = _BackstoryEventTypeButton(event)
+            self._typeButtons[event] = btn
+            self._btnTypeGroup.addButton(btn)
+            self.wdgTypes.layout().addWidget(btn)
+
         self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
-        self.sbAge.valueChanged.connect(self._age_changed)
 
         self.btnSave.setDisabled(True)
         self.btnSave.clicked.connect(self.accept)
         self.btnClose.clicked.connect(self.reject)
 
+        self._typeButtons[BackstoryEventType.Event].setChecked(True)
+
         if backstory:
             self.lineKeyphrase.setText(backstory.keyphrase)
-            if backstory.age > 0:
-                self.sbAge.setValue(backstory.age)
-            elif backstory.as_baby:
-                self.btnBaby.setChecked(True)
-            elif backstory.as_child:
-                self.btnChild.setChecked(True)
-            elif backstory.as_teenager:
-                self.btnTeenager.setChecked(True)
-            elif backstory.as_adult:
-                self.btnAdult.setChecked(True)
 
             if backstory.emotion == VERY_UNHAPPY:
                 self.btnVeryUnhappy.setChecked(True)
@@ -87,6 +132,8 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
                 self.btnHappy.setChecked(True)
             if backstory.emotion == VERY_HAPPY:
                 self.btnVeryHappy.setChecked(True)
+
+            self._typeButtons[backstory.type].setChecked(True)
 
     def display(self) -> Optional[BackstoryEvent]:
         result = self.exec()
@@ -103,28 +150,6 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
         elif self.btnVeryHappy.isChecked():
             emotion = VERY_HAPPY
 
-        return BackstoryEvent(self.lineKeyphrase.text(), synopsis='', age=self.sbAge.value(), emotion=emotion,
-                              as_baby=self.btnBaby.isChecked(), as_child=self.btnChild.isChecked(),
-                              as_teenager=self.btnTeenager.isChecked(), as_adult=self.btnAdult.isChecked())
-
-    def _age_changed(self, value: int):
-        if 0 < value <= 3:
-            self.btnBaby.setChecked(True)
-        elif 3 < value <= 12:
-            self.btnChild.setChecked(True)
-        elif 12 < value <= 18:
-            self.btnTeenager.setChecked(True)
-        elif value > 18:
-            self.btnAdult.setChecked(True)
-
-        self.lblAge.setText(str(value))
-
-    def _btn_age_toggled(self):
-        if self.btnBaby.isChecked():
-            self.lblAge.setText('0-3')
-        elif self.btnChild.isChecked():
-            self.lblAge.setText('3-12')
-        elif self.btnTeenager.isChecked():
-            self.lblAge.setText('12-18')
-        elif self.btnAdult.isChecked():
-            self.lblAge.setText('Adulthood')
+        btn: _BackstoryEventTypeButton = self._btnTypeGroup.checkedButton()
+        return BackstoryEvent(self.lineKeyphrase.text(), synopsis='', emotion=emotion,
+                              type=btn.type, type_icon=btn.iconName, type_color=btn.color)

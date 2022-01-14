@@ -20,11 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt5.QtCore import QRect, Qt, QSize, QPoint
-from PyQt5.QtWidgets import QSizePolicy, QLayout, QLayoutItem
+from PyQt5.QtWidgets import QSizePolicy, QLayout, QLayoutItem, QWidget, QVBoxLayout, QHBoxLayout
 from overrides import overrides
 
-
 # based on https://doc.qt.io/qt-5/qtwidgets-layouts-flowlayout-example.html
+from src.main.python.plotlyst.view.common import gc
+
+
 class FlowLayout(QLayout):
     def __init__(self, margin: int = -1, spacing: int = -1, parent=None):
         super().__init__(parent)
@@ -124,4 +126,22 @@ class FlowLayout(QLayout):
 def clear_layout(layout: QLayout):
     while layout.count():
         item = layout.takeAt(0)
-        item.widget().deleteLater()
+        gc(item.widget())
+
+
+def hbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QHBoxLayout:
+    _layout = QHBoxLayout()
+    widget.setLayout(_layout)
+    widget.layout().setContentsMargins(margin, margin, margin, margin)
+    widget.layout().setSpacing(spacing)
+
+    return _layout
+
+
+def vbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QVBoxLayout:
+    _layout = QVBoxLayout()
+    widget.setLayout(_layout)
+    widget.layout().setContentsMargins(margin, margin, margin, margin)
+    widget.layout().setSpacing(spacing)
+
+    return _layout
