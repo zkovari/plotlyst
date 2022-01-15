@@ -23,7 +23,7 @@ from typing import Optional
 
 import fbs_runtime.platform
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData, QThreadPool
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData
@@ -42,7 +42,7 @@ from src.main.python.plotlyst.view.common import line, spacer_widget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
-from src.main.python.plotlyst.worker.grammar import language_tool_proxy
+from src.main.python.plotlyst.worker.grammar import language_tool_proxy, GrammarChecker
 
 
 class AutoAdjustableTextEdit(QTextEdit):
@@ -105,8 +105,10 @@ class AbstractTextBlockHighlighter(QSyntaxHighlighter):
 # partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
 class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
-    def __init__(self, document: QTextDocument):
+    def __init__(self, document: QTextDocument, checkEnabled: bool = True):
         super(GrammarHighlighter, self).__init__(document)
+        self._checkEnabled: bool = checkEnabled
+
         self._misspelling_format = QTextCharFormat()
         self._misspelling_format.setUnderlineColor(QColor('#d90429'))
         self._misspelling_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
@@ -125,7 +127,16 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         if language_tool_proxy.is_set():
             self._language_tool = language_tool_proxy.tool
 
+        self._threadpool = QThreadPool()
+        self._grammar_checker = GrammarChecker(self)
+
         event_dispatcher.register(self, LanguageToolSet)
+
+    def checkEnabled(self) -> bool:
+        return self._checkEnabled
+
+    def setCheckEnabled(self, enabled: bool):
+        self._checkEnabled = enabled
 
     @overrides
     def deleteLater(self) -> None:
@@ -136,11 +147,11 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
     def event_received(self, event: Event):
         if isinstance(event, LanguageToolSet):
             self._language_tool = language_tool_proxy.tool
-            self.rehighlight()
+            self.asyncRehighlight()
 
     @overrides
     def highlightBlock(self, text: str) -> None:
-        if self._language_tool:
+        if self._checkEnabled and self._language_tool:
             matches = self._language_tool.check(text)
             misspellings = []
             for m in matches:
@@ -149,6 +160,16 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
                 misspellings.append((m.offset, m.errorLength, m.replacements, m.message, m.ruleIssueType))
             data = self._currentblockData()
             data.misspellings = misspellings
+
+    @overrides
+    def rehighlight(self) -> None:
+        if self._checkEnabled and self._language_tool:
+            super(GrammarHighlighter, self).rehighlight()
+
+    def asyncRehighlight(self):
+        if self._checkEnabled and self._language_tool:
+            # self._grammar_checker = GrammarChecker(self)
+            self._threadpool.start(self._grammar_checker)
 
 
 class BlockStatistics(AbstractTextBlockHighlighter):

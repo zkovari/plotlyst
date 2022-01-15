@@ -31,7 +31,7 @@ from src.main.python.plotlyst.event.core import emit_event, emit_critical
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import set_opacity
+from src.main.python.plotlyst.view.common import set_opacity, gc
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import GrammarHighlighter
@@ -93,12 +93,19 @@ class ManuscriptView(AbstractNovelView):
                 json_client.load_document(self.novel, self._current_doc)
 
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
+            if self.highlighter:
+                self.highlighter.setCheckEnabled(False)
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
+
             self.ui.textEdit.setMargins(30, 30, 30, 30)
             self.ui.textEdit.setFormat(130)
             self.ui.textEdit.setFontPointSize(16)
             set_wc()
             self.ui.textEdit.textEditor.textChanged.connect(set_wc)
+
+            if self.highlighter:
+                self.highlighter.setCheckEnabled(self.ui.cbSpellCheck.isChecked())
+                self.highlighter.asyncRehighlight()
 
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
@@ -113,18 +120,21 @@ class ManuscriptView(AbstractNovelView):
         set_opacity(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
 
     def _spellcheck_clicked(self, checked: bool):
-        def init_highlighter():
-            self.highlighter = GrammarHighlighter(self.ui.textEdit.textEditor.document())
-
         if checked:
             if language_tool_proxy.is_failed():
                 self.ui.cbSpellCheck.setChecked(False)
                 emit_critical(language_tool_proxy.error)
             else:
-                QTimer.singleShot(10, init_highlighter)
+                QTimer.singleShot(10, self.init_highlighter)
         elif self.highlighter:
-            self.highlighter.deleteLater()
+            gc(self.highlighter)
             self.highlighter = None
+
+    def init_highlighter(self):
+        if self.highlighter is None:
+            self.highlighter = GrammarHighlighter(self.ui.textEdit.textEditor.document(), checkEnabled=False)
+        self.highlighter.setCheckEnabled(True)
+        self.highlighter.asyncRehighlight()
 
 
 class SentenceHighlighter(QSyntaxHighlighter):
