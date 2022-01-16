@@ -22,13 +22,13 @@ import math
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-from typing import Optional, Any, Tuple, List
+from typing import Optional, Any, Tuple, List, Union
 
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QGraphicsOpacityEffect, QProxyStyle, QStyle, QStyleOption, QStyleHintReturn, QAbstractButton, \
-    QStackedWidget, QLabel
+    QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -275,3 +275,13 @@ def bold(widget: QWidget, enabled: bool = True):
 def gc(object: QObject):
     object.setParent(None)
     object.deleteLater()
+
+
+def popup(btn: Union[QPushButton, QToolButton], popup: QWidget):
+    menu = QMenu(btn)
+    action = QWidgetAction(menu)
+    action.setDefaultWidget(popup)
+    menu.addAction(action)
+    if isinstance(btn, QToolButton):
+        btn.setPopupMode(QToolButton.InstantPopup)
+    btn.setMenu(menu)
