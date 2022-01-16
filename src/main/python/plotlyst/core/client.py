@@ -35,7 +35,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
     default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
-    Location, default_location_profiles
+    Location, default_location_profiles, three_act_structure
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -196,7 +196,6 @@ def _default_story_structures():
 @dataclass
 class Project:
     novels: List[ProjectNovelInfo] = field(default_factory=list)
-    story_structures: List[StoryStructure] = field(default_factory=_default_story_structures)
 
 
 class JsonClient:
@@ -222,8 +221,6 @@ class JsonClient:
             with open(self.project_file_path) as json_file:
                 data = json_file.read()
                 self.project = Project.from_json(data)
-                self.project.story_structures = [x for x in self.project.story_structures if x.custom]
-                self.project.story_structures.extend(default_story_structures)
             self._persist_project()
 
         self._workspace = workspace
@@ -389,7 +386,7 @@ class JsonClient:
             goals_index[goal.text] = goal
 
         if not novel_info.story_structures:
-            novel_info.story_structures = self.project.story_structures
+            novel_info.story_structures = [three_act_structure]
 
         if all([not x.active for x in novel_info.story_structures]):
             novel_info.story_structures[0].active = True

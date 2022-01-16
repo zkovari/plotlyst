@@ -1,5 +1,5 @@
 from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, SceneType, default_story_structures
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneType, default_story_structures, three_act_structure
 from src.main.python.plotlyst.test.conftest import init_project
 
 
@@ -10,7 +10,7 @@ def test_insert_novel(test_client):
 
     novels = client.novels()
     persisted_novel = client.fetch_novel(novels[0].id)
-    novel.story_structures = default_story_structures
+    novel.story_structures = [three_act_structure]
     assert novel == persisted_novel
 
 

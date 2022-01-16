@@ -1,5 +1,5 @@
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import default_story_structures
+from src.main.python.plotlyst.core.domain import weiland_10_beats
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.test.common import create_plot, go_to_novel, click_on_item, \
     patch_confirmed, go_to_scenes
@@ -42,11 +42,12 @@ def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
     assert btn.isChecked() and btn.text() == 'Three Act Structure'
 
     patch_confirmed(monkeypatch)
+    view.ui.wdgStructure.structureSelector.cbSaveTheCat.click()
+    view.ui.wdgStructure.structureSelector.cbWeiland10Beats.click()
     btn = view.ui.wdgStructure.btnGroupStructure.buttons()[2]
-    print(btn.text())
     btn.click()
 
-    assert view.novel.active_story_structure == default_story_structures[2]
+    assert view.novel.active_story_structure == weiland_10_beats
 
     for scene in view.novel.scenes:
         assert scene.beat is None

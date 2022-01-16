@@ -24,11 +24,14 @@ from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat
+from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
+    three_act_structure, save_the_cat, weiland_10_beats
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated
-from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget, bold
+from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget, bold, \
+    popup, gc
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
+from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout, clear_layout
@@ -132,12 +135,56 @@ class BeatWidget(QFrame, Ui_BeatWidget):
         self.beatToggled.emit(self.beat)
 
 
+class StoryStructureSelector(QWidget, Ui_StoryStructureSelector):
+    structureClicked = pyqtSignal(StoryStructure, bool)
+
+    def __init__(self, parent=None):
+        super(StoryStructureSelector, self).__init__(parent)
+        self.setupUi(self)
+        self.novel: Optional[Novel] = None
+        self.cb3act.clicked.connect(partial(self.structureClicked.emit, three_act_structure))
+        self.cbWeiland10Beats.clicked.connect(partial(self.structureClicked.emit, weiland_10_beats))
+        self.cbSaveTheCat.clicked.connect(partial(self.structureClicked.emit, save_the_cat))
+        self.buttonGroup.buttonToggled.connect(self._btnToggled)
+
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+
+        self.cb3act.setChecked(False)
+        self.cbWeiland10Beats.setChecked(False)
+        self.cbSaveTheCat.setChecked(False)
+
+        for structure in self.novel.story_structures:
+            if structure.id == three_act_structure.id:
+                self.cb3act.setChecked(True)
+            elif structure.id == weiland_10_beats.id:
+                self.cbWeiland10Beats.setChecked(True)
+            elif structure.id == save_the_cat.id:
+                self.cbSaveTheCat.setChecked(True)
+
+    def _btnToggled(self):
+        checked_buttons = []
+        for btn in self.buttonGroup.buttons():
+            btn.setVisible(True)
+            if btn.isChecked():
+                if checked_buttons:
+                    return
+                checked_buttons.append(btn)
+
+        if len(checked_buttons) == 1:
+            checked_buttons[0].setHidden(True)
+
+
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
     def __init__(self, parent=None):
         super(StoryStructureEditor, self).__init__(parent)
         self.setupUi(self)
         self.wdgTemplates.setLayout(FlowLayout(2, 3))
 
+        self.btnTemplateEditor.setIcon(IconRegistry.plus_edit_icon())
+        self.structureSelector = StoryStructureSelector(self.btnTemplateEditor)
+        self.structureSelector.structureClicked.connect(self._structureSelectionChanged)
+        popup(self.btnTemplateEditor, self.structureSelector)
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
@@ -147,15 +194,34 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
     def setNovel(self, novel: Novel):
         self.novel = novel
+        self.structureSelector.setNovel(self.novel)
         for structure in self.novel.story_structures:
-            btn = _StoryStructureButton(structure)
-            btn.toggled.connect(partial(self._structureToggled, structure))
-            btn.clicked.connect(partial(self._structureClicked, structure))
-            self.btnGroupStructure.addButton(btn)
-            self.wdgTemplates.layout().addWidget(btn)
+            self._addStructure(structure)
 
-            if structure.active:
-                btn.setChecked(True)
+    def _addStructure(self, structure: StoryStructure):
+        btn = _StoryStructureButton(structure)
+        btn.toggled.connect(partial(self._activeStructureToggled, structure))
+        btn.clicked.connect(partial(self._activeStructureClicked, structure))
+        self.btnGroupStructure.addButton(btn)
+        self.wdgTemplates.layout().addWidget(btn)
+        if structure.active:
+            btn.setChecked(True)
+
+    def _removeStructure(self, structure: StoryStructure):
+        to_be_removed = []
+        activate_new = False
+        for btn in self.btnGroupStructure.buttons():
+            if btn.structure().id == structure.id:
+                to_be_removed.append(btn)
+                if btn.isChecked():
+                    activate_new = True
+
+        for btn in to_be_removed:
+            self.btnGroupStructure.removeButton(btn)
+            self.wdgTemplates.layout().removeWidget(btn)
+            gc(btn)
+        if activate_new and self.btnGroupStructure.buttons():
+            self.btnGroupStructure.buttons()[0].setChecked(True)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -164,7 +230,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
         return super(StoryStructureEditor, self).eventFilter(watched, event)
 
-    def _structureToggled(self, structure: StoryStructure, toggled: bool):
+    def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
         if not toggled:
             return
         clear_layout(self.beats.layout())
@@ -192,7 +258,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             wdg.beatHighlighted.connect(self.wdgPreview.highlightBeat)
             wdg.beatToggled.connect(self._beatToggled)
 
-    def _structureClicked(self, structure: StoryStructure, toggled: bool):
+    def _activeStructureClicked(self, structure: StoryStructure, toggled: bool):
         if not toggled:
             return
 
@@ -210,4 +276,17 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
     def _beatToggled(self, beat: StoryBeat):
         self.wdgPreview.toggleBeatVisibility(beat)
+        self.repo.update_novel(self.novel)
+
+    def _structureSelectionChanged(self, structure: StoryStructure, toggled: bool):
+        if toggled:
+            self.novel.story_structures.append(structure)
+            self._addStructure(structure)
+        else:
+            matched_structures = [x for x in self.novel.story_structures if x.id == structure.id]
+            if matched_structures:
+                for st in matched_structures:
+                    self.novel.story_structures.remove(st)
+            self._removeStructure(structure)
+
         self.repo.update_novel(self.novel)
