@@ -232,11 +232,12 @@ class OpacityEventFilter(QObject):
         self.enterOpacity = enterOpacity
         self.leaveOpacity = leaveOpacity
         self.ignoreCheckedButton = ignoreCheckedButton
-        set_opacity(parent, leaveOpacity)
+        if not ignoreCheckedButton or not self._checkedButton(parent):
+            set_opacity(parent, leaveOpacity)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if self.ignoreCheckedButton and isinstance(watched, QAbstractButton) and watched.isChecked():
+        if self.ignoreCheckedButton and self._checkedButton(watched):
             return super(OpacityEventFilter, self).eventFilter(watched, event)
         if event.type() == QEvent.Enter:
             set_opacity(watched, self.enterOpacity)
@@ -244,6 +245,9 @@ class OpacityEventFilter(QObject):
             set_opacity(watched, self.leaveOpacity)
 
         return super(OpacityEventFilter, self).eventFilter(watched, event)
+
+    def _checkedButton(self, obj: QObject) -> bool:
+        return isinstance(obj, QAbstractButton) and obj.isChecked()
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):

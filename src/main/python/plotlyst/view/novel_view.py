@@ -29,7 +29,7 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel, NovelConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages
+from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages, OpacityEventFilter
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
@@ -98,6 +98,25 @@ class NovelView(AbstractNovelView):
                                                       (self.ui.btnSynopsis, self.ui.pageSynopsis),
                                                       (self.ui.btnTags, self.ui.pageTags)])
         self.ui.btnStructure.setChecked(True)
+
+        for btn in self.ui.buttonGroup.buttons():
+            btn.setStyleSheet('''
+            QPushButton {
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #89c2d9);
+                border: 2px solid #2c7da0;
+                border-radius: 6px;
+                color: white;
+                padding: 2px;
+                font: bold;
+            }
+            QPushButton:checked {
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #014f86);
+                border: 2px solid #013a63;
+            }
+            ''')
+            btn.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=btn, ignoreCheckedButton=True))
 
     @overrides
     def refresh(self):
