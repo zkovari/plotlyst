@@ -162,8 +162,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.tag-plus')
 
     @staticmethod
-    def tags_icon() -> QIcon:
-        return qtawesome.icon('ei.tags')
+    def tags_icon(color: str = 'black') -> QIcon:
+        return qtawesome.icon('ei.tags', color=color)
 
     @staticmethod
     def graph_icon() -> QIcon:
@@ -210,8 +210,8 @@ class IconRegistry:
         return qtawesome.icon('fa5.list-alt')
 
     @staticmethod
-    def goal_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.target', color='darkBlue')
+    def goal_icon(color: str = 'darkBlue') -> QIcon:
+        return IconRegistry.from_name('mdi.target', color=color)
 
     @staticmethod
     def decision_icon(color: str = '#3cdbd3', color_on='darkBlue') -> QIcon:

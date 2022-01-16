@@ -92,6 +92,12 @@ class NovelView(AbstractNovelView):
         self.ui.wdgTagsContainer.setLayout(_layout)
         self.ui.wdgTagsContainer.layout().addWidget(tags_editor)
 
+        self.ui.btnStructure.setIcon(IconRegistry.from_name('fa5s.theater-masks', 'white'))
+        self.ui.btnPlot.setIcon(IconRegistry.from_name('mdi.chart-bell-curve-cumulative', 'white'))
+        self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
+        self.ui.btnGoals.setIcon(IconRegistry.goal_icon('white'))
+        self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
+
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnStructure, self.ui.pageStructure),
                                                       (self.ui.btnPlot, self.ui.pagePlot),
                                                       (self.ui.btnGoals, self.ui.pageGoals),
