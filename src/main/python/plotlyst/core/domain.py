@@ -1092,6 +1092,8 @@ class Novel(NovelDescriptor):
     scene_goals: List[SceneGoal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)
     tags: List[SelectionItem] = field(default_factory=default_tags)
+    logline: str = ''
+    synopsis: Optional['Document'] = None
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title

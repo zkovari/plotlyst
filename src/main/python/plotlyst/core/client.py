@@ -177,6 +177,8 @@ class NovelInfo:
     scene_goals: List[SceneGoal] = field(default_factory=list)
     tags: List[SelectionItem] = field(default_factory=default_tags)
     documents: List[Document] = field(default_factory=default_documents)
+    logline: str = ''
+    synopsis: Optional['Document'] = None
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
 
 
@@ -467,7 +469,7 @@ class JsonClient:
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                      location_profiles=novel_info.location_profiles,
                      conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags,
-                     documents=novel_info.documents)
+                     documents=novel_info.documents, logline=novel_info.logline, synopsis=novel_info.synopsis)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -492,6 +494,7 @@ class JsonClient:
                                location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,
                                scene_goals=novel.scene_goals, tags=novel.tags, documents=novel.documents,
+                               logline=novel.logline, synopsis=novel.synopsis,
                                version=LATEST_VERSION)
 
         self.__persist_info(self.novels_dir, novel_info)

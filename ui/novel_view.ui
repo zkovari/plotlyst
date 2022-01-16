@@ -237,7 +237,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -312,7 +312,70 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="pageSynopsis"/>
+     <widget class="QWidget" name="pageSynopsis">
+      <layout class="QVBoxLayout" name="verticalLayout_8">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="Subtitle" name="widget" native="true">
+         <property name="title" stdset="0">
+          <string>Logline</string>
+         </property>
+         <property name="description" stdset="0">
+          <string>Write one or two sentences summary of your book.</string>
+         </property>
+         <property name="icon" stdset="0">
+          <string>mdi.elevator-passenger</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="textLogline">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>50</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Subtitle" name="widget_2" native="true">
+         <property name="title" stdset="0">
+          <string>Synopsis</string>
+         </property>
+         <property name="description" stdset="0">
+          <string>Summarize your whole book in 500 words.</string>
+         </property>
+         <property name="icon" stdset="0">
+          <string>fa5s.scroll</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="RichTextEditor" name="textSynopsis"/>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="pageGoals">
       <layout class="QVBoxLayout" name="verticalLayout_7">
        <property name="spacing">
@@ -549,6 +612,18 @@
    <class>StoryStructureEditor</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.novel</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RichTextEditor</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>Subtitle</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

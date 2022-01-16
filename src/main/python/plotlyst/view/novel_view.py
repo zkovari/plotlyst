@@ -22,7 +22,8 @@ from typing import List, Optional
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QHeaderView
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Plot
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Plot, Document
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
@@ -45,7 +46,22 @@ class NovelView(AbstractNovelView):
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
+        self.ui.btnStructure.setIcon(IconRegistry.from_name('fa5s.theater-masks', 'white'))
+        self.ui.btnPlot.setIcon(IconRegistry.from_name('mdi.chart-bell-curve-cumulative', 'white'))
+        self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
+        self.ui.btnGoals.setIcon(IconRegistry.goal_icon('white'))
+        self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
+
         self.ui.lblTitle.setText(self.novel.title)
+        self.ui.textLogline.setPlainText(self.novel.logline)
+        self.ui.textLogline.textChanged.connect(self._logline_changed)
+
+        self.ui.textSynopsis.setToolbarVisible(False)
+        self.ui.textSynopsis.setTitleVisible(False)
+        if self.novel.synopsis:
+            json_client.load_document(self.novel, self.novel.synopsis)
+            self.ui.textSynopsis.setText(self.novel.synopsis.content)
+        self.ui.textSynopsis.textEditor.textChanged.connect(self._synopsis_changed)
 
         self.ui.btnGoalIcon.setIcon(IconRegistry.goal_icon())
         self.ui.btnConflictIcon.setIcon(IconRegistry.conflict_icon())
@@ -91,12 +107,6 @@ class NovelView(AbstractNovelView):
         _layout.setContentsMargins(0, 0, 0, 0)
         self.ui.wdgTagsContainer.setLayout(_layout)
         self.ui.wdgTagsContainer.layout().addWidget(tags_editor)
-
-        self.ui.btnStructure.setIcon(IconRegistry.from_name('fa5s.theater-masks', 'white'))
-        self.ui.btnPlot.setIcon(IconRegistry.from_name('mdi.chart-bell-curve-cumulative', 'white'))
-        self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
-        self.ui.btnGoals.setIcon(IconRegistry.goal_icon('white'))
-        self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnStructure, self.ui.pageStructure),
                                                       (self.ui.btnPlot, self.ui.pagePlot),
@@ -167,6 +177,18 @@ class NovelView(AbstractNovelView):
                     self.repo.update_scene(scene)
             self.novel.conflicts.remove(conflict)
             self.repo.update_novel(self.novel)
+
+    def _logline_changed(self):
+        self.novel.logline = self.ui.textLogline.toPlainText()
+        self.repo.update_novel(self.novel)
+
+    def _synopsis_changed(self):
+        if self.novel.synopsis is None:
+            self.novel.synopsis = Document('Synopsis')
+            self.novel.synopsis.loaded = True
+            self.repo.update_novel(self.novel)
+        self.novel.synopsis.content = self.ui.textSynopsis.textEditor.toHtml()
+        json_client.save_document(self.novel, self.novel.synopsis)
 
 
 class NovelTagsEditor(LabelsEditorWidget):

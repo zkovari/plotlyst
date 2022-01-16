@@ -22,12 +22,12 @@ from typing import Optional
 from PyQt5.QtChart import QChartView
 from PyQt5.QtCore import QPropertyAnimation
 from PyQt5.QtGui import QPainter, QShowEvent
-from PyQt5.QtWidgets import QPushButton, QWidget, QLabel
+from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton
 from overrides import overrides
 
-from src.main.python.plotlyst.view.common import bold, increase_font
+from src.main.python.plotlyst.view.common import bold, increase_font, transparent, spacer_widget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import vbox
+from src.main.python.plotlyst.view.layout import vbox, group
 
 
 class ToggleHelp(QPushButton):
@@ -75,14 +75,22 @@ class Subtitle(QWidget):
         super(Subtitle, self).__init__(parent)
         vbox(self, margin=0, spacing=0)
         self.lblTitle = QLabel(self)
+        self.icon = QToolButton(self)
+        transparent(self.icon)
         self.lblDescription = QLabel(self)
         bold(self.lblTitle)
         increase_font(self.lblTitle)
 
+        self._iconName: str = ''
+        self._descSpacer = spacer_widget(20)
+
         self.lblDescription.setStyleSheet('color: #8d99ae;')
         self.lblDescription.setWordWrap(True)
-        self.layout().addWidget(self.lblTitle)
-        self.layout().addWidget(self.lblDescription)
+        self.layout().addWidget(group(self.icon, self.lblTitle, parent=self))
+        self.layout().addWidget(group(self._descSpacer, self.lblDescription, parent=self))
+
+    def setIconName(self, icon: str):
+        self._iconName = icon
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
@@ -94,3 +102,12 @@ class Subtitle(QWidget):
                 self.lblDescription.setText(desc)
             else:
                 self.lblDescription.setHidden(True)
+        if not self._iconName:
+            self._iconName = self.property('icon')
+
+        if self._iconName:
+            self.icon.setIcon(IconRegistry.from_name(self._iconName))
+            self._descSpacer.setMaximumWidth(20)
+        else:
+            self.icon.setHidden(True)
+            self._descSpacer.setMaximumWidth(5)
