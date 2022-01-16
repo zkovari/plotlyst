@@ -207,7 +207,7 @@ class IconRegistry:
 
     @staticmethod
     def table_icon() -> QIcon:
-        return qtawesome.icon('fa5.list-alt')
+        return qtawesome.icon('fa5.list-alt', color_on='darkBlue')
 
     @staticmethod
     def goal_icon(color: str = 'darkBlue') -> QIcon:
@@ -304,7 +304,7 @@ class IconRegistry:
 
     @staticmethod
     def cards_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.cards')
+        return IconRegistry.from_name('mdi.cards', color_on='darkBlue')
 
     @staticmethod
     def conflict_type_icon(type: ConflictType) -> QIcon:

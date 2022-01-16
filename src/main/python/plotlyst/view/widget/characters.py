@@ -202,7 +202,7 @@ class CharacterSelectorWidget(QWidget):
     def characters(self, all: bool = True) -> Iterable[Character]:
         return [x.character for x in self._buttons if all or x.isChecked()]
 
-    def setCharacters(self, characters: Iterable[Character]):
+    def setCharacters(self, characters: Iterable[Character], checkAll: bool = True):
         self.clear()
 
         self._layout.addWidget(spacer_widget())
@@ -214,7 +214,7 @@ class CharacterSelectorWidget(QWidget):
             return
         if self.exclusive:
             self._buttons[0].setChecked(True)
-        else:
+        elif checkAll:
             for btn in self._buttons:
                 btn.setChecked(True)
 
@@ -325,6 +325,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
+    edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
 
     def __init__(self, backstory: BackstoryEvent, parent=None):
@@ -396,6 +397,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
 
     def _synopsis_changed(self):
         self.backstory.synopsis = self.textSummary.toPlainText()
+        self.edited.emit()
 
     def _edit(self):
         backstory = BackstoryEditorDialog(self.backstory).display()
@@ -406,6 +408,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
             self.backstory.type_icon = backstory.type_icon
             self.backstory.type_color = backstory.type_color
             self.refresh()
+            self.edited.emit()
 
     def _remove(self):
         if ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
@@ -488,6 +491,8 @@ class _ControlButtons(QWidget):
 
 
 class CharacterTimelineWidget(QWidget):
+    changed = pyqtSignal()
+
     def __init__(self, parent=None):
         super(CharacterTimelineWidget, self).__init__(parent)
         self.character: Optional[Character] = None
@@ -528,6 +533,8 @@ class CharacterTimelineWidget(QWidget):
             self._addControlButtons(i)
             self._layout.addWidget(event)
 
+            event.card.edited.connect(self.changed.emit)
+
         self._addControlButtons(-1)
         self.layout().addWidget(spacer_widget(vertical=True))
 
@@ -551,12 +558,14 @@ class CharacterTimelineWidget(QWidget):
             else:
                 self.character.backstory.append(backstory)
             self.refresh()
+            self.changed.emit()
 
     def _remove(self, card: CharacterBackstoryCard):
         if card.backstory in self.character.backstory:
             self.character.backstory.remove(card.backstory)
 
         self.refresh()
+        self.changed.emit()
 
     def _addControlButtons(self, pos: int):
         control = _ControlButtons(self)
