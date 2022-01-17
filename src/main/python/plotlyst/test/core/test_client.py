@@ -1,5 +1,6 @@
 from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, SceneType, default_story_structures, three_act_structure
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneType, default_story_structures, three_act_structure, \
+    SceneStoryBeat
 from src.main.python.plotlyst.test.conftest import init_project
 
 
@@ -40,7 +41,8 @@ def test_insert_scene(test_client):
 
     scene = Scene(title='Scene 1', synopsis='Test synopsis', type=SceneType.ACTION, wip=True, beginning='Beginning',
                   middle='Middle', end='End',
-                  stage=novel.stages[1], beat=novel.active_story_structure.beats[0])
+                  stage=novel.stages[1],
+                  beats=[SceneStoryBeat(novel.active_story_structure.id, novel.active_story_structure.beats[0].id)])
     novel.scenes.append(scene)
     client.insert_scene(novel, scene)
 

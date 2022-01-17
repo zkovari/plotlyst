@@ -30,7 +30,8 @@ from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue, StoryBeat
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue, StoryBeat, \
+    SceneStoryBeat
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
@@ -169,8 +170,8 @@ class SceneEditor(QObject):
         self.ui.textSynopsis.setText(self.scene.synopsis)
 
         self.ui.wdgStructure.unhighlightBeats()
-        if self.scene.beat:
-            self.ui.wdgStructure.highlightBeat(self.scene.beat)
+        if self.scene.beat(self.novel):
+            self.ui.wdgStructure.highlightBeat(self.scene.beat(self.novel))
         self.ui.wdgStructure.uncheckActs()
         self.ui.wdgStructure.setActChecked(acts_registry.act(self.scene))
 
@@ -226,14 +227,15 @@ class SceneEditor(QObject):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageBuilder)
 
     def _beat_selected(self, beat: StoryBeat):
-        if self.scene.beat and self.scene.beat != beat:
-            self.ui.wdgStructure.toggleBeat(self.scene.beat, False)
-        self.scene.beat = beat
+        if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:
+            self.ui.wdgStructure.toggleBeat(self.scene.beat(self.novel), False)
+            self.scene.remove_beat(self.novel)
+        self.scene.beats.append(SceneStoryBeat(self.novel.active_story_structure.id, beat.id))
         self.ui.wdgStructure.highlightBeat(beat)
 
     def _beat_removed(self, beat: StoryBeat):
-        if self.scene.beat and self.scene.beat == beat:
-            self.scene.beat = None
+        if self.scene.beat(self.novel) == beat:
+            self.scene.remove_beat(self.novel)
             self.ui.wdgStructure.unhighlightBeats()
             self.ui.wdgStructure.toggleBeat(beat, False)
 

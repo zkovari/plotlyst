@@ -262,15 +262,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         if not toggled:
             return
 
-        beats = [x for x in self.novel.scenes if x.beat]
-        # if beats and not ask_confirmation(
-        #         'Scenes are already associated to your previous story beats. Continue?'):
-        #     self.ui.cbStoryStructure.setCurrentText(self.novel.story_structure.title)
-        #     return
-        for scene in beats:
-            scene.beat = None
-            self.repo.update_scene(scene)
-
         self.repo.update_novel(self.novel)
         emit_event(NovelStoryStructureUpdated(self))
 

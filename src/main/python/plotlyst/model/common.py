@@ -290,8 +290,8 @@ class DistributionModel(QAbstractTableModel):
             return self._dataForMeta(index, role)
         elif role == Qt.ToolTipRole:
             tooltip = f'{index.column() - 1}. {self.novel.scenes[index.column() - 2].title}'
-            if self.novel.scenes[index.column() - 2].beat:
-                tooltip += f' ({self.novel.scenes[index.column() - 2].beat.text})'
+            if self.novel.scenes[index.column() - 2].beat(self.novel):
+                tooltip += f' ({self.novel.scenes[index.column() - 2].beat(self.novel).text})'
             return tooltip
         elif role == Qt.BackgroundRole:
             if self._match(index):
@@ -303,7 +303,7 @@ class DistributionModel(QAbstractTableModel):
                         return QBrush(QColor(Qt.gray))
                 if self.novel.scenes[index.column() - 2].wip:
                     return QBrush(QColor(WIP_COLOR))
-                if self.novel.scenes[index.column() - 2].beat:
+                if self.novel.scenes[index.column() - 2].beat(self.novel):
                     return QBrush(QColor(PIVOTAL_COLOR))
                 return QBrush(QColor('darkblue'))
         return QVariant()
