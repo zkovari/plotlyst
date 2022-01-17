@@ -397,6 +397,24 @@ class SceneStructureAgenda(CharacterBased):
 
 
 @dataclass
+class SceneStoryBeat:
+    structure_id: uuid.UUID
+    beat_id: uuid.UUID
+
+    def __post_init__(self):
+        self._beat: Optional[StoryBeat] = None
+
+    def beat(self, structure: 'StoryStructure') -> Optional[StoryBeat]:
+        if not self._beat and self.structure_id == structure.id:
+            for b in structure.beats:
+                if b.id == self.beat_id:
+                    self._beat = b
+                    break
+
+        return self._beat
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -416,13 +434,31 @@ class Scene:
     arcs: List[CharacterArc] = field(default_factory=list)
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
-    beat: Optional[StoryBeat] = None
+    beats: List[SceneStoryBeat] = field(default_factory=list)
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[SceneGoal] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     document: Optional['Document'] = None
     manuscript: Optional['Document'] = None
+
+    def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
+        structure = novel.active_story_structure
+        for b in self.beats:
+            if b.structure_id == structure.id:
+                return b.beat(structure)
+
+    def remove_beat(self, novel: 'Novel'):
+        beat = self.beat(novel)
+        if not beat:
+            return
+        beat_structure = None
+        for b in self.beats:
+            if b.beat_id == beat.id:
+                beat_structure = b
+                break
+        if beat_structure:
+            self.beats.remove(beat_structure)
 
     def pov_arc(self) -> int:
         for arc in self.arcs:

@@ -35,7 +35,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
     default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
-    Location, default_location_profiles, three_act_structure
+    Location, default_location_profiles, three_act_structure, SceneStoryBeat
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -145,7 +145,7 @@ class SceneInfo:
     arcs: List[CharacterArcInfo] = field(default_factory=list)
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
-    beat: Optional[uuid.UUID] = None
+    beats: List[SceneStoryBeat] = field(default_factory=list)
     conflicts: List[uuid.UUID] = field(default_factory=list)
     goals: List[str] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
@@ -391,10 +391,10 @@ class JsonClient:
         if all([not x.active for x in novel_info.story_structures]):
             novel_info.story_structures[0].active = True
 
-        beat_ids = {}
-        for structure in novel_info.story_structures:
-            for beat in structure.beats:
-                beat_ids[str(beat.id)] = beat
+        # beat_ids = {}
+        # for structure in novel_info.story_structures:
+        #     for beat in structure.beats:
+        #         beat_ids[str(beat.id)] = beat
 
         scenes: List[Scene] = []
         for seq, scene_id in enumerate(novel_info.scenes):
@@ -448,14 +448,13 @@ class JsonClient:
                     if str(arc.character) in characters_ids.keys():
                         arcs.append(CharacterArc(arc=arc.arc, character=characters_ids[str(arc.character)]))
 
-                beat = beat_ids.get(str(info.beat))
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, day=info.day,
                               sequence=seq,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               arcs=arcs,
-                              chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
+                              chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,
                               conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags,
                               document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
@@ -516,7 +515,7 @@ class JsonClient:
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
-                         beat=self.__id_or_none(scene.beat),
+                         beats=scene.beats,
                          conflicts=conflicts, goals=[x.text for x in scene.goals], comments=scene.comments,
                          tags=scene.tags, document=scene.document, manuscript=scene.manuscript)
         self.__persist_info(self.scenes_dir, info)

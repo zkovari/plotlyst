@@ -52,16 +52,17 @@ class NovelActsRegistry(EventListener):
         self._acts_endings.clear()
 
         for index, scene in enumerate(self.novel.scenes):
-            if scene.beat and scene.beat.act == 1 and scene.beat.ends_act:
+            beat = scene.beat(self.novel)
+            if beat and beat.act == 1 and beat.ends_act:
                 self._acts_endings[1] = index
                 self._acts_per_scenes[str(scene.id)] = 1
-            elif scene.beat and scene.beat.act == 2 and scene.beat.ends_act:
+            elif beat and beat.act == 2 and beat.ends_act:
                 self._acts_endings[2] = index
                 self._acts_per_scenes[str(scene.id)] = 2
             else:
                 self._acts_per_scenes[str(scene.id)] = len(self._acts_endings) + 1
-            if scene.beat:
-                self._beats.add(scene.beat)
+            if beat:
+                self._beats.add(scene.beat(self.novel))
 
     def act(self, scene: Scene) -> int:
         return self._acts_per_scenes.get(str(scene.id), 1)
