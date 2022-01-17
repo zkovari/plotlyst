@@ -277,11 +277,13 @@ def gc(object: QObject):
     object.deleteLater()
 
 
-def popup(btn: Union[QPushButton, QToolButton], popup: QWidget):
+def popup(btn: Union[QPushButton, QToolButton], popup: QWidget, hideMenuIcon: bool = True):
     menu = QMenu(btn)
     action = QWidgetAction(menu)
     action.setDefaultWidget(popup)
     menu.addAction(action)
     if isinstance(btn, QToolButton):
         btn.setPopupMode(QToolButton.InstantPopup)
+    if hideMenuIcon:
+        btn.setStyleSheet(f'{btn.styleSheet()}\n{btn.__class__.__name__}::menu-indicator {{width:0px;}}')
     btn.setMenu(menu)
