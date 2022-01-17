@@ -227,13 +227,13 @@ class CharacterSelectorWidget(QWidget):
 
     def addCharacter(self, character: Character, checked: bool = True):
         tool_btn = CharacterToolButton(character)
-        tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
 
         self._buttons.append(tool_btn)
         self._btn_group.addButton(tool_btn)
         self._layout.addWidget(tool_btn)
 
         tool_btn.setChecked(checked)
+        tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
 
 
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):

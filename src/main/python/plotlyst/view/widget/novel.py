@@ -196,10 +196,20 @@ class StoryStructureCharacterLinkWidget(QWidget, Ui_StoryStructureCharacterLink,
         self.wdgCharacters.characterToggled.connect(self._characterToggled)
         event_dispatcher.register(self, NovelStoryStructureUpdated)
 
+        self.refresh()
+
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelStoryStructureUpdated):
-            self.wdgCharacters.setCharacters(self.novel.characters, checkAll=False)
+            self.refresh()
+
+    def refresh(self):
+        self.wdgCharacters.clear()
+        for char in self.novel.characters:
+            if char is self.novel.active_story_structure.character(self.novel):
+                self.wdgCharacters.addCharacter(char)
+            else:
+                self.wdgCharacters.addCharacter(char, checked=False)
 
     def _characterToggled(self, character: Character, toggled: bool):
         if toggled:
@@ -237,10 +247,18 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.beats.installEventFilter(self)
         self.repo = RepositoryPersistenceManager.instance()
 
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Leave:
+            self.wdgPreview.unhighlightBeats()
+
+        return super(StoryStructureEditor, self).eventFilter(watched, event)
+
     def setNovel(self, novel: Novel):
         self.novel = novel
         self.wdgCharacterLink = StoryStructureCharacterLinkWidget(self.novel)
         self.wdgCharacterLink.linkCharacter.connect(self._linkCharacter)
+        self.wdgCharacterLink.unlinkCharacter.connect(self._unlinkCharacter)
         popup(self.btnLinkCharacter, self.wdgCharacterLink)
         self.structureSelector.setNovel(self.novel)
         for structure in self.novel.story_structures:
@@ -259,7 +277,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         to_be_removed = []
         activate_new = False
         for btn in self.btnGroupStructure.buttons():
-            if btn.structure().id == structure.id:
+            if btn.structure().id == structure.id and btn.structure().character_id == structure.character_id:
                 to_be_removed.append(btn)
                 if btn.isChecked():
                     activate_new = True
@@ -270,20 +288,24 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             gc(btn)
         if activate_new and self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[0].setChecked(True)
+            emit_event(NovelStoryStructureUpdated(self))
 
     def _linkCharacter(self, character: Character):
         new_structure = copy.deepcopy(self.novel.active_story_structure)
-        # if not self.novel.active_story_structure.character_id:
         new_structure.set_character(character)
         self.novel.story_structures.append(new_structure)
         self._addStructure(new_structure)
+        self.repo.update_novel(self.novel)
+        emit_event(NovelStoryStructureUpdated(self))
 
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Leave:
-            self.wdgPreview.unhighlightBeats()
-
-        return super(StoryStructureEditor, self).eventFilter(watched, event)
+    def _unlinkCharacter(self, character: Character):
+        active_structure_id = self.novel.active_story_structure.id
+        matched_structures = [x for x in self.novel.story_structures if
+                              x.id == active_structure_id and x.character_id == character.id]
+        if matched_structures:
+            for st in matched_structures:
+                self.novel.story_structures.remove(st)
+                self._removeStructure(st)
 
     def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
         if not toggled:
