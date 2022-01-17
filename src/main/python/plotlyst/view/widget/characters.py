@@ -204,16 +204,13 @@ class CharacterSelectorWidget(QWidget):
 
         self._layout.addWidget(spacer_widget())
         for char in characters:
-            self.addCharacter(char, checked=False)
+            self.addCharacter(char, checked=checkAll)
         self._layout.addWidget(spacer_widget())
 
         if not self._buttons:
             return
         if self.exclusive:
             self._buttons[0].setChecked(True)
-        elif checkAll:
-            for btn in self._buttons:
-                btn.setChecked(True)
 
     def clear(self):
         item = self._layout.itemAt(0)
@@ -233,7 +230,9 @@ class CharacterSelectorWidget(QWidget):
         self._layout.addWidget(tool_btn)
 
         tool_btn.setChecked(checked)
+
         tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
+        tool_btn.installEventFilter(OpacityEventFilter(parent=tool_btn, ignoreCheckedButton=True))
 
 
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
