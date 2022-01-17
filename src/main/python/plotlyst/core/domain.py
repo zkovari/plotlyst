@@ -474,7 +474,10 @@ class StoryStructure:
     beats: List[StoryBeat] = field(default_factory=list)
     custom: bool = False
     active: bool = False
-    
+
+    def act_beats(self) -> List[StoryBeat]:
+        return [x for x in self.beats if x.ends_act]
+
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
