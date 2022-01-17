@@ -391,11 +391,6 @@ class JsonClient:
         if all([not x.active for x in novel_info.story_structures]):
             novel_info.story_structures[0].active = True
 
-        # beat_ids = {}
-        # for structure in novel_info.story_structures:
-        #     for beat in structure.beats:
-        #         beat_ids[str(beat.id)] = beat
-
         scenes: List[Scene] = []
         for seq, scene_id in enumerate(novel_info.scenes):
             path = self.scenes_dir.joinpath(self.__json_file(scene_id))

@@ -413,6 +413,10 @@ class SceneStoryBeat:
 
         return self._beat
 
+    @staticmethod
+    def of(structure: 'StoryStructure', beat: StoryBeat) -> 'SceneStoryBeat':
+        return SceneStoryBeat(structure.id, beat.id)
+
 
 @dataclass
 class Scene:
