@@ -62,8 +62,8 @@ class IconRegistry:
         return qtawesome.icon('fa5.circle', color='white')
 
     @staticmethod
-    def copy_icon() -> QIcon:
-        return qtawesome.icon('fa5.copy')
+    def copy_icon(color_on: str = 'black') -> QIcon:
+        return qtawesome.icon('fa5.copy', color_on=color_on)
 
     @staticmethod
     def paste_icon() -> QIcon:

@@ -24,7 +24,7 @@ import emoji
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -186,12 +186,9 @@ class CharacterSelectorWidget(QWidget):
 
     def __init__(self, parent=None):
         super(CharacterSelectorWidget, self).__init__(parent)
-        self._layout = QHBoxLayout()
-        self._layout.setSpacing(4)
-        self._layout.setContentsMargins(2, 2, 2, 2)
+        self._layout = hbox(self)
         self._btn_group = QButtonGroup()
         self._buttons: List[QToolButton] = []
-        self.setLayout(self._layout)
         self.exclusive: bool = True
         self.setExclusive(self.exclusive)
 

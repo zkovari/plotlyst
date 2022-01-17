@@ -400,6 +400,7 @@ class SceneStructureAgenda(CharacterBased):
 class SceneStoryBeat:
     structure_id: uuid.UUID
     beat_id: uuid.UUID
+    character_id: Optional[uuid.UUID] = None
 
     def __post_init__(self):
         self._beat: Optional[StoryBeat] = None
@@ -407,7 +408,7 @@ class SceneStoryBeat:
     def beat(self, structure: 'StoryStructure') -> Optional[StoryBeat]:
         if not self._beat and self.structure_id == structure.id:
             for b in structure.beats:
-                if b.id == self.beat_id:
+                if b.id == self.beat_id and self.character_id == structure.character_id:
                     self._beat = b
                     break
 
@@ -415,7 +416,7 @@ class SceneStoryBeat:
 
     @staticmethod
     def of(structure: 'StoryStructure', beat: StoryBeat) -> 'SceneStoryBeat':
-        return SceneStoryBeat(structure.id, beat.id)
+        return SceneStoryBeat(structure.id, beat.id, structure.character_id)
 
 
 @dataclass
@@ -449,7 +450,7 @@ class Scene:
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure
         for b in self.beats:
-            if b.structure_id == structure.id:
+            if b.structure_id == structure.id and b.character_id == structure.character_id:
                 return b.beat(structure)
 
     def remove_beat(self, novel: 'Novel'):
@@ -506,7 +507,7 @@ class Location:
 
 
 @dataclass
-class StoryStructure:
+class StoryStructure(CharacterBased):
     title: str
     icon: str = ''
     icon_color: str = 'black'
@@ -514,6 +515,10 @@ class StoryStructure:
     beats: List[StoryBeat] = field(default_factory=list)
     custom: bool = False
     active: bool = False
+    character_id: Optional[uuid.UUID] = None
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
 
     def act_beats(self) -> List[StoryBeat]:
         return [x for x in self.beats if x.ends_act]

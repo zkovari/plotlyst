@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt5.QtChart import QChartView
 from PyQt5.QtCore import QPropertyAnimation
 from PyQt5.QtGui import QPainter, QShowEvent
-from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton
+from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
 from overrides import overrides
 
 from src.main.python.plotlyst.view.common import bold, increase_font, transparent, spacer_widget
@@ -86,6 +86,7 @@ class Subtitle(QWidget):
 
         self.lblDescription.setStyleSheet('color: #8d99ae;')
         self.lblDescription.setWordWrap(True)
+        self.lblDescription.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.layout().addWidget(group(self.icon, self.lblTitle, parent=self))
         self.layout().addWidget(group(self._descSpacer, self.lblDescription, parent=self))
 
