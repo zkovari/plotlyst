@@ -230,7 +230,7 @@ class SceneEditor(QObject):
         if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:
             self.ui.wdgStructure.toggleBeat(self.scene.beat(self.novel), False)
             self.scene.remove_beat(self.novel)
-        self.scene.beats.append(SceneStoryBeat(self.novel.active_story_structure.id, beat.id))
+        self.scene.beats.append(SceneStoryBeat.of(self.novel.active_story_structure, beat))
         self.ui.wdgStructure.highlightBeat(beat)
 
     def _beat_removed(self, beat: StoryBeat):
