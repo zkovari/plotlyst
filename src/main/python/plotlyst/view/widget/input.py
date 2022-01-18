@@ -59,9 +59,8 @@ class AutoAdjustableTextEdit(QTextEdit):
         self.setPlainText(text)
 
     @overrides
-    def setPlainText(self, text: str) -> None:
-        super(AutoAdjustableTextEdit, self).setPlainText(text)
-        QTimer.singleShot(50, self._resizeToContent)
+    def showEvent(self, a0: QtGui.QShowEvent) -> None:
+        self._resizeToContent()
 
     def _resizeToContent(self):
         size = self.document().size()
