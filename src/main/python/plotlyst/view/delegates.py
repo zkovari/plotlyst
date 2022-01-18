@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QModelIndex, \
     QAbstractItemModel, QSize
+from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QComboBox, QLineEdit, QSpinBox
 from overrides import overrides
@@ -38,6 +39,7 @@ class ScenesViewDelegate(QStyledItemDelegate):
     @overrides
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
         super(ScenesViewDelegate, self).paint(painter, option, index)
+        painter.setRenderHint(QPainter.Antialiasing)
         if index.column() == ScenesTableModel.ColCharacters:
             scene: Scene = index.data(ScenesTableModel.SceneRole)
             x = 3
