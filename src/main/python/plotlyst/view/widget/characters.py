@@ -176,6 +176,7 @@ class CharacterToolButton(QToolButton):
     def __init__(self, character: Character, parent=None):
         super(CharacterToolButton, self).__init__(parent)
         self.character = character
+        self.setToolTip(character.name)
         self.setIcon(QIcon(avatars.pixmap(self.character)))
         self.setCheckable(True)
         self.setCursor(Qt.PointingHandCursor)
