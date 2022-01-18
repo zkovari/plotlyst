@@ -21,7 +21,6 @@ from typing import Optional
 
 import language_tool_python
 from PyQt5.QtCore import QRunnable
-from PyQt5.QtGui import QSyntaxHighlighter
 from language_tool_python import LanguageTool
 from overrides import overrides
 
@@ -75,15 +74,3 @@ class LanguageToolProxy:
 
 
 language_tool_proxy = LanguageToolProxy()
-
-
-class GrammarChecker(QRunnable):
-
-    def __init__(self, highlighter: QSyntaxHighlighter):
-        super(GrammarChecker, self).__init__()
-        self.highlighter = highlighter
-
-    @overrides
-    def run(self) -> None:
-        print('check in worker')
-        self.highlighter.rehighlight()

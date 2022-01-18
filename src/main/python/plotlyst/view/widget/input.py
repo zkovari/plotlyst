@@ -23,7 +23,7 @@ from typing import Optional
 
 import fbs_runtime.platform
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData, QThreadPool
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData
@@ -42,7 +42,7 @@ from src.main.python.plotlyst.view.common import line, spacer_widget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
-from src.main.python.plotlyst.worker.grammar import language_tool_proxy, GrammarChecker
+from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 
 
 class AutoAdjustableTextEdit(QTextEdit):
@@ -127,8 +127,10 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         if language_tool_proxy.is_set():
             self._language_tool = language_tool_proxy.tool
 
-        self._threadpool = QThreadPool()
-        self._grammar_checker = GrammarChecker(self)
+        self._currentAsyncBlock: int = 0
+        self._asyncTimer = QTimer()
+        self._asyncTimer.setInterval(10)
+        self._asyncTimer.timeout.connect(self._highlightNextBlock)
 
         event_dispatcher.register(self, LanguageToolSet)
 
@@ -137,6 +139,13 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
     def setCheckEnabled(self, enabled: bool):
         self._checkEnabled = enabled
+        if not enabled:
+            self._asyncTimer.stop()
+
+    @overrides
+    def setDocument(self, doc: Optional[QTextDocument]) -> None:
+        self._asyncTimer.stop()
+        super(GrammarHighlighter, self).setDocument(doc)
 
     @overrides
     def deleteLater(self) -> None:
@@ -161,15 +170,18 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
             data = self._currentblockData()
             data.misspellings = misspellings
 
-    @overrides
-    def rehighlight(self) -> None:
-        if self._checkEnabled and self._language_tool:
-            super(GrammarHighlighter, self).rehighlight()
-
     def asyncRehighlight(self):
         if self._checkEnabled and self._language_tool:
-            # self._grammar_checker = GrammarChecker(self)
-            self._threadpool.start(self._grammar_checker)
+            self._currentAsyncBlock = 0
+            self._asyncTimer.start()
+
+    def _highlightNextBlock(self):
+        if self._currentAsyncBlock >= self.document().blockCount():
+            return self._asyncTimer.stop()
+
+        block = self.document().findBlockByNumber(self._currentAsyncBlock)
+        self.rehighlightBlock(block)
+        self._currentAsyncBlock += 1
 
 
 class BlockStatistics(AbstractTextBlockHighlighter):
