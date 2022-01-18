@@ -105,8 +105,10 @@ class AbstractTextBlockHighlighter(QSyntaxHighlighter):
 # partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
 class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
-    def __init__(self, document: QTextDocument):
+    def __init__(self, document: QTextDocument, checkEnabled: bool = True):
         super(GrammarHighlighter, self).__init__(document)
+        self._checkEnabled: bool = checkEnabled
+
         self._misspelling_format = QTextCharFormat()
         self._misspelling_format.setUnderlineColor(QColor('#d90429'))
         self._misspelling_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
@@ -125,7 +127,25 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         if language_tool_proxy.is_set():
             self._language_tool = language_tool_proxy.tool
 
+        self._currentAsyncBlock: int = 0
+        self._asyncTimer = QTimer()
+        self._asyncTimer.setInterval(10)
+        self._asyncTimer.timeout.connect(self._highlightNextBlock)
+
         event_dispatcher.register(self, LanguageToolSet)
+
+    def checkEnabled(self) -> bool:
+        return self._checkEnabled
+
+    def setCheckEnabled(self, enabled: bool):
+        self._checkEnabled = enabled
+        if not enabled:
+            self._asyncTimer.stop()
+
+    @overrides
+    def setDocument(self, doc: Optional[QTextDocument]) -> None:
+        self._asyncTimer.stop()
+        super(GrammarHighlighter, self).setDocument(doc)
 
     @overrides
     def deleteLater(self) -> None:
@@ -136,11 +156,11 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
     def event_received(self, event: Event):
         if isinstance(event, LanguageToolSet):
             self._language_tool = language_tool_proxy.tool
-            self.rehighlight()
+            self.asyncRehighlight()
 
     @overrides
     def highlightBlock(self, text: str) -> None:
-        if self._language_tool:
+        if self._checkEnabled and self._language_tool:
             matches = self._language_tool.check(text)
             misspellings = []
             for m in matches:
@@ -149,6 +169,19 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
                 misspellings.append((m.offset, m.errorLength, m.replacements, m.message, m.ruleIssueType))
             data = self._currentblockData()
             data.misspellings = misspellings
+
+    def asyncRehighlight(self):
+        if self._checkEnabled and self._language_tool:
+            self._currentAsyncBlock = 0
+            self._asyncTimer.start()
+
+    def _highlightNextBlock(self):
+        if self._currentAsyncBlock >= self.document().blockCount():
+            return self._asyncTimer.stop()
+
+        block = self.document().findBlockByNumber(self._currentAsyncBlock)
+        self.rehighlightBlock(block)
+        self._currentAsyncBlock += 1
 
 
 class BlockStatistics(AbstractTextBlockHighlighter):

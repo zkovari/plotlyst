@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt, QTimer
+from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt
 from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor
 from PyQt5.QtWidgets import QHeaderView, QTextEdit
 from overrides import overrides
@@ -45,7 +45,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
-        self.highlighter: Optional[GrammarHighlighter] = None
+        self.highlighter = GrammarHighlighter(self.ui.textEdit.textEditor.document(), checkEnabled=False)
         self.ui.splitter.setSizes([100, 500])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
@@ -93,12 +93,18 @@ class ManuscriptView(AbstractNovelView):
                 json_client.load_document(self.novel, self._current_doc)
 
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
+            self.highlighter.setCheckEnabled(False)
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
+
             self.ui.textEdit.setMargins(30, 30, 30, 30)
             self.ui.textEdit.setFormat(130)
             self.ui.textEdit.setFontPointSize(16)
             set_wc()
             self.ui.textEdit.textEditor.textChanged.connect(set_wc)
+
+            if self.ui.cbSpellCheck.isChecked():
+                self.highlighter.setCheckEnabled(True)
+                self.highlighter.asyncRehighlight()
 
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
@@ -113,18 +119,16 @@ class ManuscriptView(AbstractNovelView):
         set_opacity(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
 
     def _spellcheck_clicked(self, checked: bool):
-        def init_highlighter():
-            self.highlighter = GrammarHighlighter(self.ui.textEdit.textEditor.document())
-
         if checked:
             if language_tool_proxy.is_failed():
                 self.ui.cbSpellCheck.setChecked(False)
                 emit_critical(language_tool_proxy.error)
             else:
-                QTimer.singleShot(10, init_highlighter)
+                self.highlighter.setCheckEnabled(True)
+                self.highlighter.asyncRehighlight()
         elif self.highlighter:
-            self.highlighter.deleteLater()
-            self.highlighter = None
+            self.highlighter.setCheckEnabled(False)
+            self.highlighter.rehighlight()
 
 
 class SentenceHighlighter(QSyntaxHighlighter):
