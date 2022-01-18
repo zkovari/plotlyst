@@ -35,7 +35,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
     default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
-    Location, default_location_profiles
+    Location, default_location_profiles, three_act_structure, SceneStoryBeat
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -145,7 +145,7 @@ class SceneInfo:
     arcs: List[CharacterArcInfo] = field(default_factory=list)
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
-    beat: Optional[uuid.UUID] = None
+    beats: List[SceneStoryBeat] = field(default_factory=list)
     conflicts: List[uuid.UUID] = field(default_factory=list)
     goals: List[str] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
@@ -177,6 +177,8 @@ class NovelInfo:
     scene_goals: List[SceneGoal] = field(default_factory=list)
     tags: List[SelectionItem] = field(default_factory=default_tags)
     documents: List[Document] = field(default_factory=default_documents)
+    logline: str = ''
+    synopsis: Optional['Document'] = None
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
 
 
@@ -194,7 +196,6 @@ def _default_story_structures():
 @dataclass
 class Project:
     novels: List[ProjectNovelInfo] = field(default_factory=list)
-    story_structures: List[StoryStructure] = field(default_factory=_default_story_structures)
 
 
 class JsonClient:
@@ -220,8 +221,6 @@ class JsonClient:
             with open(self.project_file_path) as json_file:
                 data = json_file.read()
                 self.project = Project.from_json(data)
-                self.project.story_structures = [x for x in self.project.story_structures if x.custom]
-                self.project.story_structures.extend(default_story_structures)
             self._persist_project()
 
         self._workspace = workspace
@@ -387,15 +386,10 @@ class JsonClient:
             goals_index[goal.text] = goal
 
         if not novel_info.story_structures:
-            novel_info.story_structures = self.project.story_structures
+            novel_info.story_structures = [three_act_structure]
 
         if all([not x.active for x in novel_info.story_structures]):
             novel_info.story_structures[0].active = True
-
-        beat_ids = {}
-        for structure in novel_info.story_structures:
-            for beat in structure.beats:
-                beat_ids[str(beat.id)] = beat
 
         scenes: List[Scene] = []
         for seq, scene_id in enumerate(novel_info.scenes):
@@ -449,14 +443,13 @@ class JsonClient:
                     if str(arc.character) in characters_ids.keys():
                         arcs.append(CharacterArc(arc=arc.arc, character=characters_ids[str(arc.character)]))
 
-                beat = beat_ids.get(str(info.beat))
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, day=info.day,
                               sequence=seq,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               arcs=arcs,
-                              chapter=chapter, builder_elements=builder_elements, stage=stage, beat=beat,
+                              chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,
                               conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags,
                               document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
@@ -467,7 +460,7 @@ class JsonClient:
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                      location_profiles=novel_info.location_profiles,
                      conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags,
-                     documents=novel_info.documents)
+                     documents=novel_info.documents, logline=novel_info.logline, synopsis=novel_info.synopsis)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -492,6 +485,7 @@ class JsonClient:
                                location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,
                                scene_goals=novel.scene_goals, tags=novel.tags, documents=novel.documents,
+                               logline=novel.logline, synopsis=novel.synopsis,
                                version=LATEST_VERSION)
 
         self.__persist_info(self.novels_dir, novel_info)
@@ -516,7 +510,7 @@ class JsonClient:
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
-                         beat=self.__id_or_none(scene.beat),
+                         beats=scene.beats,
                          conflicts=conflicts, goals=[x.text for x in scene.goals], comments=scene.comments,
                          tags=scene.tags, document=scene.document, manuscript=scene.manuscript)
         self.__persist_info(self.scenes_dir, info)

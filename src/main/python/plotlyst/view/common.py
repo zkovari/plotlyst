@@ -22,13 +22,13 @@ import math
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-from typing import Optional, Any, Tuple, List
+from typing import Optional, Any, Tuple, List, Union
 
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QGraphicsOpacityEffect, QProxyStyle, QStyle, QStyleOption, QStyleHintReturn, QAbstractButton, \
-    QStackedWidget, QLabel
+    QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -232,11 +232,12 @@ class OpacityEventFilter(QObject):
         self.enterOpacity = enterOpacity
         self.leaveOpacity = leaveOpacity
         self.ignoreCheckedButton = ignoreCheckedButton
-        set_opacity(parent, leaveOpacity)
+        if not ignoreCheckedButton or not self._checkedButton(parent):
+            set_opacity(parent, leaveOpacity)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if self.ignoreCheckedButton and isinstance(watched, QAbstractButton) and watched.isChecked():
+        if self.ignoreCheckedButton and self._checkedButton(watched):
             return super(OpacityEventFilter, self).eventFilter(watched, event)
         if event.type() == QEvent.Enter:
             set_opacity(watched, self.enterOpacity)
@@ -244,6 +245,9 @@ class OpacityEventFilter(QObject):
             set_opacity(watched, self.leaveOpacity)
 
         return super(OpacityEventFilter, self).eventFilter(watched, event)
+
+    def _checkedButton(self, obj: QObject) -> bool:
+        return isinstance(obj, QAbstractButton) and obj.isChecked()
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
@@ -271,3 +275,15 @@ def bold(widget: QWidget, enabled: bool = True):
 def gc(object: QObject):
     object.setParent(None)
     object.deleteLater()
+
+
+def popup(btn: Union[QPushButton, QToolButton], popup: QWidget, hideMenuIcon: bool = True):
+    menu = QMenu(btn)
+    action = QWidgetAction(menu)
+    action.setDefaultWidget(popup)
+    menu.addAction(action)
+    if isinstance(btn, QToolButton):
+        btn.setPopupMode(QToolButton.InstantPopup)
+    if hideMenuIcon:
+        btn.setStyleSheet(f'{btn.styleSheet()}\n{btn.__class__.__name__}::menu-indicator {{width:0px;}}')
+    btn.setMenu(menu)

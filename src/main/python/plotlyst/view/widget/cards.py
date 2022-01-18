@@ -30,7 +30,7 @@ from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, SceneType, Document
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, SceneType, Document, Novel
 from src.main.python.plotlyst.view.common import emoji_font, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
@@ -238,10 +238,11 @@ class JournalCard(Card, Ui_JournalCard):
 
 
 class SceneCard(Ui_SceneCard, Card):
-    def __init__(self, scene: Scene, parent=None):
+    def __init__(self, scene: Scene, novel: Novel, parent=None):
         super().__init__(parent)
         self.setupUi(self)
         self.scene = scene
+        self.novel = novel
 
         self.wdgCharacters.layout().setSpacing(1)
 
@@ -257,10 +258,11 @@ class SceneCard(Ui_SceneCard, Card):
         for char in scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
-        if self.scene.beat:
-            if self.scene.beat.icon:
+        beat = self.scene.beat(self.novel)
+        if beat:
+            if beat.icon:
                 self.lblBeatEmoji.setPixmap(
-                    IconRegistry.from_name(self.scene.beat.icon, self.scene.beat.icon_color).pixmap(24, 24))
+                    IconRegistry.from_name(beat.icon, beat.icon_color).pixmap(24, 24))
             else:
                 if platform.is_windows():
                     self._emoji_font = emoji_font(14)
@@ -302,13 +304,13 @@ class SceneCard(Ui_SceneCard, Card):
 
     @overrides
     def _borderSize(self, selected: bool = False) -> int:
-        if self.scene.beat:
+        if self.scene.beat(self.novel):
             return 7 if selected else 5
         return super(SceneCard, self)._borderSize(selected)
 
     @overrides
     def _borderColor(self, selected: bool = False) -> str:
-        if self.scene.beat:
+        if self.scene.beat(self.novel):
             return '#6b7d7d' if selected else PIVOTAL_COLOR
         return super(SceneCard, self)._borderColor(selected)
 

@@ -22,17 +22,19 @@ from typing import Optional
 from PyQt5.QtCore import QItemSelection
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, CharacterChangedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
-from src.main.python.plotlyst.view.common import ask_confirmation, busy
+from src.main.python.plotlyst.view.common import ask_confirmation, busy, link_buttons_to_pages, gc
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.cards import CharacterCard
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
 
 
 class CharactersView(AbstractNovelView):
@@ -57,6 +59,10 @@ class CharactersView(AbstractNovelView):
         self.ui.tblCharacters.doubleClicked.connect(self.ui.btnEdit.click)
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
+        self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
+        self.ui.wdgCharacterSelector.setExclusive(False)
+        self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
+
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
@@ -64,10 +70,17 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
+        self.widget.setStyleSheet(
+            f'''#scrollAreaBackstoryContent {{background-image: url({resource_registry.cover1});}}
+                                       ''')
+
         self.selected_card: Optional[CharacterCard] = None
         self._update_cards()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
+        link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
+                                                        (self.ui.btnTableView, self.ui.pageTableView),
+                                                        (self.ui.btnBackstoryView, self.ui.pageBackstory)])
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.cards.swapped.connect(self._characters_swapped)
@@ -114,11 +127,14 @@ class CharactersView(AbstractNovelView):
 
     def _switch_view(self):
         if self.ui.btnCardsView.isChecked():
-            self.ui.stackCharacters.setCurrentWidget(self.ui.pageCardsView)
             self._enable_action_buttons(bool(self.selected_card))
-        else:
-            self.ui.stackCharacters.setCurrentWidget(self.ui.pageTableView)
+            self.ui.wdgToolbar.setVisible(True)
+        elif self.ui.btnTableView.isChecked():
             self._enable_action_buttons(len(self.ui.tblCharacters.selectedIndexes()) > 0)
+            self.ui.wdgToolbar.setVisible(True)
+        else:
+            self.ui.wdgToolbar.setVisible(False)
+            self.ui.wdgCharacterSelector.setCharacters(self.novel.characters, checkAll=False)
 
     def _on_edit(self):
         character = None
@@ -171,3 +187,16 @@ class CharactersView(AbstractNovelView):
         self.repo.delete_character(self.novel, character)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()
+
+    def _backstory_character_toggled(self, character: Character, toggled: bool):
+        if toggled:
+            wdg = CharacterTimelineWidget(self.ui.scrollAreaBackstoryContent)
+            wdg.setCharacter(character)
+            self.ui.scrollAreaBackstoryContent.layout().addWidget(wdg)
+            wdg.changed.connect(lambda: self.repo.update_character(character))
+        else:
+            for i in range(self.ui.scrollAreaBackstoryContent.layout().count()):
+                wdg = self.ui.scrollAreaBackstoryContent.layout().itemAt(i).widget()
+                if isinstance(wdg, CharacterTimelineWidget) and wdg.character.id == character.id:
+                    self.ui.scrollAreaBackstoryContent.layout().removeWidget(wdg)
+                    return gc(wdg)

@@ -145,3 +145,15 @@ def vbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QVBoxLayout:
     widget.layout().setSpacing(spacing)
 
     return _layout
+
+
+def group(*widgets, vertical: bool = True, margin: int = 2, spacing: int = 3, parent=None) -> QWidget:
+    container = QWidget(parent)
+    if vertical:
+        hbox(container, margin, spacing)
+    else:
+        vbox(container, margin, spacing)
+
+    for w in widgets:
+        container.layout().addWidget(w)
+    return container

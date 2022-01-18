@@ -108,7 +108,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
             if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
                 if scene.wip:
                     return self._wip_brush
-                elif scene.beat:
+                elif scene.beat(self.novel):
                     return self._pivotal_brush
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:

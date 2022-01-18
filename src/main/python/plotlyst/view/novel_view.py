@@ -22,14 +22,15 @@ from typing import List, Optional
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QHeaderView
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Plot
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Plot, Document
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel, NovelConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages
+from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages, OpacityEventFilter
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
@@ -45,7 +46,22 @@ class NovelView(AbstractNovelView):
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
+        self.ui.btnStructure.setIcon(IconRegistry.from_name('fa5s.theater-masks', 'white'))
+        self.ui.btnPlot.setIcon(IconRegistry.from_name('mdi.chart-bell-curve-cumulative', 'white'))
+        self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
+        self.ui.btnGoals.setIcon(IconRegistry.goal_icon('white'))
+        self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
+
         self.ui.lblTitle.setText(self.novel.title)
+        self.ui.textLogline.setPlainText(self.novel.logline)
+        self.ui.textLogline.textChanged.connect(self._logline_changed)
+
+        self.ui.textSynopsis.setToolbarVisible(False)
+        self.ui.textSynopsis.setTitleVisible(False)
+        if self.novel.synopsis:
+            json_client.load_document(self.novel, self.novel.synopsis)
+            self.ui.textSynopsis.setText(self.novel.synopsis.content)
+        self.ui.textSynopsis.textEditor.textChanged.connect(self._synopsis_changed)
 
         self.ui.btnGoalIcon.setIcon(IconRegistry.goal_icon())
         self.ui.btnConflictIcon.setIcon(IconRegistry.conflict_icon())
@@ -99,6 +115,25 @@ class NovelView(AbstractNovelView):
                                                       (self.ui.btnTags, self.ui.pageTags)])
         self.ui.btnStructure.setChecked(True)
 
+        for btn in self.ui.buttonGroup.buttons():
+            btn.setStyleSheet('''
+            QPushButton {
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #89c2d9);
+                border: 2px solid #2c7da0;
+                border-radius: 6px;
+                color: white;
+                padding: 2px;
+                font: bold;
+            }
+            QPushButton:checked {
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #014f86);
+                border: 2px solid #013a63;
+            }
+            ''')
+            btn.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=btn, ignoreCheckedButton=True))
+
     @overrides
     def refresh(self):
         self.ui.lblTitle.setText(self.novel.title)
@@ -142,6 +177,18 @@ class NovelView(AbstractNovelView):
                     self.repo.update_scene(scene)
             self.novel.conflicts.remove(conflict)
             self.repo.update_novel(self.novel)
+
+    def _logline_changed(self):
+        self.novel.logline = self.ui.textLogline.toPlainText()
+        self.repo.update_novel(self.novel)
+
+    def _synopsis_changed(self):
+        if self.novel.synopsis is None:
+            self.novel.synopsis = Document('Synopsis')
+            self.novel.synopsis.loaded = True
+            self.repo.update_novel(self.novel)
+        self.novel.synopsis.content = self.ui.textSynopsis.textEditor.toHtml()
+        json_client.save_document(self.novel, self.novel.synopsis)
 
 
 class NovelTagsEditor(LabelsEditorWidget):

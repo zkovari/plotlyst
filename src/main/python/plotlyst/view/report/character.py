@@ -75,9 +75,10 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
                 if scene.pov:
                     self.pov_number[scene.pov.name] += 1
 
-            if scene.beat and scene.beat.act == 1 and scene.beat.ends_act:
+            beat = scene.beat(self.novel)
+            if beat and beat.act == 1 and beat.ends_act:
                 in_act_2 = True
-            elif scene.beat and scene.beat.act == 2 and scene.beat.ends_act:
+            elif beat and beat.act == 2 and beat.ends_act:
                 in_act_3 = True
 
         series = QPieSeries()

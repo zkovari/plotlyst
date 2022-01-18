@@ -31,6 +31,7 @@ from overrides import overrides
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict, SceneOutcome, NEUTRAL, StoryBeat
+from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
@@ -789,7 +790,15 @@ class SceneStoryStructureWidget(QWidget):
         act = self._actButton('Act 3', ACT_THREE_COLOR, right=True)
         self._acts.append(act)
         splitter.addWidget(act)
-        splitter.setSizes([200, 550, 250])
+
+        beats = self.novel.active_story_structure.act_beats()
+        if not len(beats) == 2:
+            return emit_critical('Only 3 acts are supported at the moment for story structure widget')
+
+        splitter.setSizes([10 * beats[0].percentage,
+                           10 * (beats[1].percentage - beats[0].percentage),
+                           10 * (100 - beats[1].percentage)])
+        splitter.setDisabled(True)
         self.update()
 
     @overrides

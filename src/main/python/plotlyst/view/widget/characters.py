@@ -24,7 +24,7 @@ import emoji
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -186,12 +186,9 @@ class CharacterSelectorWidget(QWidget):
 
     def __init__(self, parent=None):
         super(CharacterSelectorWidget, self).__init__(parent)
-        self._layout = QHBoxLayout()
-        self._layout.setSpacing(4)
-        self._layout.setContentsMargins(2, 2, 2, 2)
+        self._layout = hbox(self)
         self._btn_group = QButtonGroup()
         self._buttons: List[QToolButton] = []
-        self.setLayout(self._layout)
         self.exclusive: bool = True
         self.setExclusive(self.exclusive)
 
@@ -202,21 +199,18 @@ class CharacterSelectorWidget(QWidget):
     def characters(self, all: bool = True) -> Iterable[Character]:
         return [x.character for x in self._buttons if all or x.isChecked()]
 
-    def setCharacters(self, characters: Iterable[Character]):
+    def setCharacters(self, characters: Iterable[Character], checkAll: bool = True):
         self.clear()
 
         self._layout.addWidget(spacer_widget())
         for char in characters:
-            self.addCharacter(char, checked=False)
+            self.addCharacter(char, checked=checkAll)
         self._layout.addWidget(spacer_widget())
 
         if not self._buttons:
             return
         if self.exclusive:
             self._buttons[0].setChecked(True)
-        else:
-            for btn in self._buttons:
-                btn.setChecked(True)
 
     def clear(self):
         item = self._layout.itemAt(0)
@@ -230,13 +224,15 @@ class CharacterSelectorWidget(QWidget):
 
     def addCharacter(self, character: Character, checked: bool = True):
         tool_btn = CharacterToolButton(character)
-        tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
 
         self._buttons.append(tool_btn)
         self._btn_group.addButton(tool_btn)
         self._layout.addWidget(tool_btn)
 
         tool_btn.setChecked(checked)
+
+        tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
+        tool_btn.installEventFilter(OpacityEventFilter(parent=tool_btn, ignoreCheckedButton=True))
 
 
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
@@ -325,6 +321,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
+    edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
 
     def __init__(self, backstory: BackstoryEvent, parent=None):
@@ -396,6 +393,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
 
     def _synopsis_changed(self):
         self.backstory.synopsis = self.textSummary.toPlainText()
+        self.edited.emit()
 
     def _edit(self):
         backstory = BackstoryEditorDialog(self.backstory).display()
@@ -406,6 +404,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
             self.backstory.type_icon = backstory.type_icon
             self.backstory.type_color = backstory.type_color
             self.refresh()
+            self.edited.emit()
 
     def _remove(self):
         if ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
@@ -488,6 +487,8 @@ class _ControlButtons(QWidget):
 
 
 class CharacterTimelineWidget(QWidget):
+    changed = pyqtSignal()
+
     def __init__(self, parent=None):
         super(CharacterTimelineWidget, self).__init__(parent)
         self.character: Optional[Character] = None
@@ -528,6 +529,8 @@ class CharacterTimelineWidget(QWidget):
             self._addControlButtons(i)
             self._layout.addWidget(event)
 
+            event.card.edited.connect(self.changed.emit)
+
         self._addControlButtons(-1)
         self.layout().addWidget(spacer_widget(vertical=True))
 
@@ -551,12 +554,14 @@ class CharacterTimelineWidget(QWidget):
             else:
                 self.character.backstory.append(backstory)
             self.refresh()
+            self.changed.emit()
 
     def _remove(self, card: CharacterBackstoryCard):
         if card.backstory in self.character.backstory:
             self.character.backstory.remove(card.backstory)
 
         self.refresh()
+        self.changed.emit()
 
     def _addControlButtons(self, pos: int):
         control = _ControlButtons(self)
