@@ -35,6 +35,7 @@ class NovelActsRegistry(EventListener):
         self.novel: Optional[Novel] = None
         self._acts_per_scenes: Dict[str, int] = {}
         self._beats: Set[StoryBeat] = set()
+        self._scenes_per_beats: Dict[StoryBeat, Scene] = {}
         self._acts_endings: Dict[int, int] = {}
 
     def set_novel(self, novel: Novel):
@@ -48,6 +49,7 @@ class NovelActsRegistry(EventListener):
 
     def refresh(self):
         self._acts_per_scenes.clear()
+        self._scenes_per_beats.clear()
         self._beats.clear()
         self._acts_endings.clear()
 
@@ -62,13 +64,17 @@ class NovelActsRegistry(EventListener):
             else:
                 self._acts_per_scenes[str(scene.id)] = len(self._acts_endings) + 1
             if beat:
-                self._beats.add(scene.beat(self.novel))
+                self._beats.add(beat)
+                self._scenes_per_beats[beat] = scene
 
     def act(self, scene: Scene) -> int:
         return self._acts_per_scenes.get(str(scene.id), 1)
 
     def occupied_beats(self) -> Set[StoryBeat]:
         return self._beats
+
+    def scene(self, beat: StoryBeat) -> Optional[Scene]:
+        return self._scenes_per_beats.get(beat)
 
 
 acts_registry = NovelActsRegistry()

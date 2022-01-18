@@ -27,10 +27,10 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGr
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    three_act_structure, save_the_cat, weiland_10_beats, Character
+    three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import NovelStoryStructureUpdated
+from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget, bold, \
     popup, gc
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
@@ -41,6 +41,7 @@ from src.main.python.plotlyst.view.generated.story_structure_settings_ui import 
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import FlowLayout, clear_layout
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -87,7 +88,7 @@ class _StoryStructureButton(QPushButton):
         self.setFont(font)
 
 
-class BeatWidget(QFrame, Ui_BeatWidget):
+class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     beatHighlighted = pyqtSignal(StoryBeat)
     beatToggled = pyqtSignal(StoryBeat)
 
@@ -111,23 +112,60 @@ class BeatWidget(QFrame, Ui_BeatWidget):
         self.cbToggle.clicked.connect(self._beatClicked)
         self.cbToggle.setChecked(self.beat.enabled)
 
+        self.scene: Optional[Scene] = None
         self.repo = RepositoryPersistenceManager.instance()
 
+        self.refresh()
+
         self.installEventFilter(self)
+
+        self.textSynopsis.textChanged.connect(self._synopsisEdited)
+        event_dispatcher.register(self, SceneChangedEvent)
+        event_dispatcher.register(self, SceneDeletedEvent)
+
+    def refresh(self):
+        self.stackedWidget.setCurrentWidget(self.pageInfo)
+        for b in acts_registry.occupied_beats():
+            if b.id == self.beat.id:
+                self.stackedWidget.setCurrentWidget(self.pageScene)
+                self.scene = acts_registry.scene(b)
+                if self.scene:
+                    self.lblSceneTitle.setText(self.scene.title)
+                    self.textSynopsis.setText(self.scene.synopsis)
+                    if self.scene.pov:
+                        self.btnPov.setIcon(QIcon(avatars.pixmap(self.scene.pov)))
+                    if self.scene.type == SceneType.ACTION:
+                        self.btnSceneType.setIcon(
+                            IconRegistry.action_scene_icon(self.scene.outcome_resolution(),
+                                                           self.scene.outcome_trade_off()))
+                    elif self.scene.type == SceneType.REACTION:
+                        self.btnSceneType.setIcon(IconRegistry.reaction_scene_icon())
+                else:
+                    self.textSynopsis.clear()
+
+    @overrides
+    def event_received(self, event: Event):
+        self.refresh()
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Enter:
-            if self._canBeToggled():
+            if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setVisible(True)
             self.setStyleSheet('.BeatWidget {background-color: #DBF5FA;}')
             self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Leave:
-            if self._canBeToggled():
+            if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setHidden(True)
             self.setStyleSheet('.BeatWidget {background-color: white;}')
 
         return super(BeatWidget, self).eventFilter(watched, event)
+
+    def _infoPage(self) -> bool:
+        return self.stackedWidget.currentWidget() == self.pageInfo
+
+    def _scenePage(self) -> bool:
+        return self.stackedWidget.currentWidget() == self.pageScene
 
     def _canBeToggled(self):
         if self.beat.text == 'Midpoint' or self.beat.ends_act:
@@ -141,6 +179,11 @@ class BeatWidget(QFrame, Ui_BeatWidget):
     def _beatClicked(self, checked: bool):
         self.beat.enabled = checked
         self.beatToggled.emit(self.beat)
+
+    def _synopsisEdited(self):
+        if self.scene:
+            self.scene.synopsis = self.textSynopsis.toPlainText()
+            self.repo.update_scene(self.scene)
 
 
 class StoryStructureSelector(QWidget, Ui_StoryStructureSelector):
