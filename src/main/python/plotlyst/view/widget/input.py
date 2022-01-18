@@ -320,6 +320,8 @@ class RichTextEditor(QFrame):
         self._lblPlaceholder.setFont(font)
         self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
+        self.setFontPointSize(13)
+
         self.setMouseTracking(True)
         self.textEditor.installEventFilter(self)
         self.textEditor.setMouseTracking(True)
