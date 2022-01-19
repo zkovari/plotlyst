@@ -408,8 +408,9 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
             self.edited.emit()
 
     def _remove(self):
-        if ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
-            self.deleteRequested.emit(self)
+        if self.backstory.synopsis and not ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
+            return
+        self.deleteRequested.emit(self)
 
 
 class CharacterBackstoryEvent(QWidget):
@@ -435,10 +436,12 @@ class CharacterBackstoryEvent(QWidget):
             self.aligment = Qt.AlignRight
             self._layout.takeAt(0)
             self._layout.addWidget(self.spacer)
+            self._layout.setAlignment(self.card, Qt.AlignRight)
         else:
             self.aligment = Qt.AlignLeft
             self._layout.takeAt(1)
             self._layout.insertWidget(0, self.spacer)
+            self._layout.setAlignment(self.card, Qt.AlignLeft)
 
 
 class _ControlButtons(QWidget):
