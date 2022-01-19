@@ -24,8 +24,9 @@ from PyQt5.QtCore import QRunnable
 from language_tool_python import LanguageTool
 from overrides import overrides
 
-from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
-from src.main.python.plotlyst.events import LanguageToolSet
+from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import LanguageToolSet, ManuscriptLanguageChanged
 
 
 class LanguageToolServerSetupWorker(QRunnable):
@@ -40,10 +41,17 @@ class LanguageToolServerSetupWorker(QRunnable):
             language_tool_proxy.set_error(str(e))
 
 
-class LanguageToolProxy:
+class LanguageToolProxy(EventListener):
+
     def __init__(self):
         self._language_tool: Optional[LanguageTool] = None
         self._error: Optional[str] = None
+        event_dispatcher.register(self, ManuscriptLanguageChanged)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, ManuscriptLanguageChanged) and self.is_set():
+            self._language_tool.language = event.lang
 
     def set(self, language_tool: LanguageTool):
         self._language_tool = language_tool

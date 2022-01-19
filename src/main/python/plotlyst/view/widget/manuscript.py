@@ -18,62 +18,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
+from functools import partial
 from typing import Optional
 
-from PyQt5.QtCore import QObject, QTimer, pyqtSignal, QUrl
+from PyQt5.QtCore import QUrl
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
 
+from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.sprint import TimerModel
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import ManuscriptLanguageChanged
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import retain_size_when_hidden
+from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-
-
-class TimerModel(QObject):
-    DefaultValue: int = 60 * 5
-
-    valueChanged = pyqtSignal()
-    finished = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super(TimerModel, self).__init__(parent)
-        self.value: int = self.DefaultValue
-
-        self._timer = QTimer()
-        self._timer.setInterval(1000)
-        self._timer.timeout.connect(self._tick)
-
-    def start(self, value: int):
-        self.value = value
-        self._timer.start()
-
-    def stop(self):
-        self._timer.stop()
-        self.value = self.DefaultValue
-
-    def remainingTime(self):
-        minutes = self.value // 60
-        seconds = self.value % 60
-        return minutes, seconds
-
-    def isActive(self) -> bool:
-        return self._timer.isActive()
-
-    def toggle(self):
-        if self._timer.isActive():
-            self._timer.stop()
-        else:
-            self._timer.start()
-
-    def _tick(self):
-        self.value -= 1
-        self.valueChanged.emit()
-
-        if self.value == 0:
-            self._timer.stop()
-            self.finished.emit()
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -167,3 +128,18 @@ class SprintWidget(QWidget, Ui_SprintWidget):
             self._effect.setSource(QUrl.fromLocalFile(resource_registry.cork))
             self._effect.setVolume(0.3)
         self._effect.play()
+
+
+class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
+
+    def __init__(self, novel: Novel, parent=None):
+        super(ManuscriptContextMenuWidget, self).__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+
+        self.cbSpanish.clicked.connect(partial(self._changed, 'es'))
+
+    def _changed(self, lang: str, checked: bool):
+        if not checked:
+            return
+        emit_event(ManuscriptLanguageChanged(self, lang))

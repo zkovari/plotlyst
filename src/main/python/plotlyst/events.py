@@ -24,8 +24,8 @@ from PyQt5.QtWidgets import QTextEdit
 from language_tool_python import LanguageTool
 
 from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene
+from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.event.core import Event
-from src.main.python.plotlyst.view.widget.manuscript import TimerModel
 
 
 @dataclass
@@ -92,3 +92,8 @@ class OpenDistractionFreeMode(Event):
 @dataclass
 class LanguageToolSet(Event):
     tool: LanguageTool
+
+
+@dataclass
+class ManuscriptLanguageChanged(Event):
+    lang: str

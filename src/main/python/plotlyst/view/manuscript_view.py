@@ -31,10 +31,11 @@ from src.main.python.plotlyst.event.core import emit_event, emit_critical
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import set_opacity
+from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, popup
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import GrammarHighlighter
+from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 
 
@@ -54,6 +55,10 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        self.ui.btnContext.setIcon(IconRegistry.context_icon())
+        self.ui.btnContext.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self.ui.btnContext))
+        self._contextMenuWidget = ManuscriptContextMenuWidget(novel, self.widget)
+        popup(self.ui.btnContext, self._contextMenuWidget)
         self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
         self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
