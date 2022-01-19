@@ -51,7 +51,7 @@ class AutoAdjustableTextEdit(QTextEdit):
         self.textChanged.connect(self._resizeToContent)
         self._minHeight = height
         self.setAcceptRichText(False)
-        self.setMaximumHeight(self._minHeight)
+        self.setFixedHeight(self._minHeight)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     @overrides
@@ -64,7 +64,7 @@ class AutoAdjustableTextEdit(QTextEdit):
 
     def _resizeToContent(self):
         size = self.document().size()
-        self.setMaximumHeight(max(self._minHeight, size.height()))
+        self.setFixedHeight(max(self._minHeight, size.height()))
 
 
 class TextBlockData(QTextBlockUserData):
