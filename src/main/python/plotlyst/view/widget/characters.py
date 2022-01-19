@@ -324,11 +324,13 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
+    relationChanged = pyqtSignal()
 
-    def __init__(self, backstory: BackstoryEvent, parent=None):
+    def __init__(self, backstory: BackstoryEvent, first: bool = False, parent=None):
         super(CharacterBackstoryCard, self).__init__(parent)
         self.setupUi(self)
         self.backstory = backstory
+        self.first = first
 
         self.btnEdit.setVisible(False)
         self.btnEdit.setIcon(IconRegistry.edit_icon())
@@ -397,15 +399,21 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.edited.emit()
 
     def _edit(self):
-        backstory = BackstoryEditorDialog(self.backstory).display()
+        backstory = BackstoryEditorDialog(self.backstory, showRelationOption=not self.first).display()
         if backstory:
+            relation_changed = False
+            if self.backstory.follow_up != backstory.follow_up:
+                relation_changed = True
             self.backstory.keyphrase = backstory.keyphrase
             self.backstory.emotion = backstory.emotion
             self.backstory.type = backstory.type
             self.backstory.type_icon = backstory.type_icon
             self.backstory.type_color = backstory.type_color
+            self.backstory.follow_up = backstory.follow_up
             self.refresh()
             self.edited.emit()
+            if relation_changed:
+                self.relationChanged.emit()
 
     def _remove(self):
         if self.backstory.synopsis and not ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
@@ -414,31 +422,31 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
 
 
 class CharacterBackstoryEvent(QWidget):
-    def __init__(self, backstory: BackstoryEvent, aligment: int = Qt.AlignRight, parent=None):
+    def __init__(self, backstory: BackstoryEvent, alignment: int = Qt.AlignRight, first: bool = False, parent=None):
         super(CharacterBackstoryEvent, self).__init__(parent)
-        self.aligment = aligment
-        self.card = CharacterBackstoryCard(backstory)
+        self.alignment = alignment
+        self.card = CharacterBackstoryCard(backstory, first)
 
         self._layout = hbox(self, 0, 3)
         self.spacer = spacer_widget()
         self.spacer.setFixedWidth(self.width() // 2 + 3)
-        if aligment == Qt.AlignRight:
+        if self.alignment == Qt.AlignRight:
             self.layout().addWidget(self.spacer)
             self._layout.addWidget(self.card, alignment=Qt.AlignLeft)
-        elif aligment == Qt.AlignLeft:
+        elif self.alignment == Qt.AlignLeft:
             self._layout.addWidget(self.card, alignment=Qt.AlignRight)
             self.layout().addWidget(self.spacer)
         else:
             self.layout().addWidget(self.card)
 
     def toggleAlignment(self):
-        if self.aligment == Qt.AlignLeft:
-            self.aligment = Qt.AlignRight
+        if self.alignment == Qt.AlignLeft:
+            self.alignment = Qt.AlignRight
             self._layout.takeAt(0)
             self._layout.addWidget(self.spacer)
             self._layout.setAlignment(self.card, Qt.AlignRight)
         else:
-            self.aligment = Qt.AlignLeft
+            self.alignment = Qt.AlignLeft
             self._layout.takeAt(1)
             self._layout.insertWidget(0, self.spacer)
             self._layout.setAlignment(self.card, Qt.AlignLeft)
@@ -522,9 +530,16 @@ class CharacterTimelineWidget(QWidget):
 
         self._layout.addWidget(lblCharacter, alignment=Qt.AlignHCenter | Qt.AlignTop)
 
+        prev_alignment = None
         for i, backstory in enumerate(self.character.backstory):
-            orientation = Qt.AlignRight if i % 2 == 0 else Qt.AlignLeft
-            event = CharacterBackstoryEvent(backstory, orientation, self)
+            if prev_alignment is None:
+                alignment = Qt.AlignRight
+            elif backstory.follow_up and prev_alignment:
+                alignment = prev_alignment
+            else:
+                alignment = Qt.AlignRight if prev_alignment == Qt.AlignLeft else Qt.AlignLeft
+            prev_alignment = alignment
+            event = CharacterBackstoryEvent(backstory, alignment, first=i == 0, parent=self)
             event.card.deleteRequested.connect(self._remove)
 
             self._spacers.append(event.spacer)
@@ -534,6 +549,8 @@ class CharacterTimelineWidget(QWidget):
             self._layout.addWidget(event)
 
             event.card.edited.connect(self.changed.emit)
+            event.card.relationChanged.connect(self.changed.emit)
+            event.card.relationChanged.connect(self.refresh)
 
         self._addControlButtons(-1)
         self.layout().addWidget(spacer_widget(vertical=True))

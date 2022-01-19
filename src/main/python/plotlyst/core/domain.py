@@ -94,6 +94,7 @@ class BackstoryEvent(Event):
     type: BackstoryEventType = BackstoryEventType.Event
     type_icon: str = 'ri.calendar-event-fill'
     type_color: str = 'darkBlue'
+    follow_up: bool = False
 
 
 @dataclass

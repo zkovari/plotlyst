@@ -80,7 +80,7 @@ class _BackstoryEventTypeButton(QToolButton):
 
 
 class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
-    def __init__(self, backstory: Optional[BackstoryEvent] = None, parent=None):
+    def __init__(self, backstory: Optional[BackstoryEvent] = None, showRelationOption: bool = True, parent=None):
         super(BackstoryEditorDialog, self).__init__(parent)
         self.setupUi(self)
 
@@ -134,6 +134,12 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
                 self.btnVeryHappy.setChecked(True)
 
             self._typeButtons[backstory.type].setChecked(True)
+            self.cbRelated.setChecked(backstory.follow_up)
+
+        if not showRelationOption:
+            self.cbRelated.setChecked(False)
+            self.cbRelated.setHidden(True)
+            self.wdgRelation.setHidden(True)
 
     def display(self) -> Optional[BackstoryEvent]:
         result = self.exec()
@@ -152,4 +158,5 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
 
         btn: _BackstoryEventTypeButton = self._btnTypeGroup.checkedButton()
         return BackstoryEvent(self.lineKeyphrase.text(), synopsis='', emotion=emotion,
-                              type=btn.type, type_icon=btn.iconName, type_color=btn.color)
+                              type=btn.type, type_icon=btn.iconName, type_color=btn.color,
+                              follow_up=self.cbRelated.isChecked())
