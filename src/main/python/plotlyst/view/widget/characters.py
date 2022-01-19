@@ -423,9 +423,9 @@ class CharacterBackstoryEvent(QWidget):
         self.spacer.setFixedWidth(self.width() // 2 + 3)
         if aligment == Qt.AlignRight:
             self.layout().addWidget(self.spacer)
-            self.layout().addWidget(self.card)
+            self._layout.addWidget(self.card, alignment=Qt.AlignLeft)
         elif aligment == Qt.AlignLeft:
-            self.layout().addWidget(self.card)
+            self._layout.addWidget(self.card, alignment=Qt.AlignRight)
             self.layout().addWidget(self.spacer)
         else:
             self.layout().addWidget(self.card)
