@@ -19,13 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
+import emoji
 from PyQt5.QtChart import QChartView
 from PyQt5.QtCore import QPropertyAnimation
 from PyQt5.QtGui import QPainter, QShowEvent
 from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
+from fbs_runtime import platform
 from overrides import overrides
 
-from src.main.python.plotlyst.view.common import bold, increase_font, transparent, spacer_widget
+from src.main.python.plotlyst.view.common import bold, increase_font, transparent, spacer_widget, emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import vbox, group
 
@@ -112,3 +114,27 @@ class Subtitle(QWidget):
         else:
             self.icon.setHidden(True)
             self._descSpacer.setMaximumWidth(5)
+
+
+class Emoji(QLabel):
+    def __init__(self, parent=None):
+        super(Emoji, self).__init__(parent)
+        if platform.is_windows():
+            self._emojiFont = emoji_font(14)
+        else:
+            self._emojiFont = emoji_font(20)
+
+        self.setFont(self._emojiFont)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if self.text():
+            return
+        emoji_name: str = self.property('emoji')
+        if not emoji_name:
+            return
+
+        if emoji_name.startswith(':'):
+            self.setText(emoji.emojize(emoji_name))
+        else:
+            self.setText(emoji.emojize(f':{emoji_name}:'))
