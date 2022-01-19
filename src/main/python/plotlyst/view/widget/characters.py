@@ -24,19 +24,20 @@ import emoji
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor
-from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton
 from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, SceneStructureItem, Scene, NEUTRAL, Document
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter, increase_font
+    OpacityEventFilter, increase_font, popup
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
@@ -236,6 +237,31 @@ class CharacterSelectorWidget(QWidget):
         tool_btn.installEventFilter(OpacityEventFilter(parent=tool_btn, ignoreCheckedButton=True))
 
 
+class CharacterLinkWidget(QWidget):
+    def __init__(self, parent=None):
+        super(CharacterLinkWidget, self).__init__(parent)
+        hbox(self)
+        self.novel = app_env.novel
+        self.btnLinkCharacter = QPushButton(self)
+        self.layout().addWidget(self.btnLinkCharacter)
+        self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
+        self.btnLinkCharacter.setCursor(Qt.PointingHandCursor)
+        self.btnLinkCharacter.setStyleSheet('''
+                QPushButton {
+                    border: 2px dotted grey;
+                    border-radius: 6px;
+                    font: italic;
+                }
+                QPushButton:hover {
+                    border: 2px dotted darkBlue;
+                }
+            ''')
+
+        self.selectorWidget = CharacterSelectorWidget(self.btnLinkCharacter)
+        self.selectorWidget.setCharacters(self.novel.characters)
+        popup(self.btnLinkCharacter, self.selectorWidget)
+
+
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
     new_conflict_added = pyqtSignal(Conflict)
     conflict_selection_changed = pyqtSignal()
@@ -341,6 +367,10 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.btnRemove.installEventFilter(OpacityEventFilter(parent=self.btnRemove))
         self.textSummary.textChanged.connect(self._synopsis_changed)
         self.btnRemove.clicked.connect(self._remove)
+
+        hbox(self.wdgLinks)
+        self.characterLink = CharacterLinkWidget(self)
+        self.wdgLinks.layout().addWidget(self.characterLink, alignment=Qt.AlignLeft)
 
         self.btnType = QToolButton(self)
         self.btnType.setIconSize(QSize(24, 24))

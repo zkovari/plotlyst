@@ -82,6 +82,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.novel:
             acts_registry.set_novel(self.novel)
+            app_env.novel = self.novel
 
         self.home_view = HomeView()
         self.pageHome.layout().addWidget(self.home_view.widget)
@@ -398,6 +399,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.novel = client.fetch_novel(novel.id)
         acts_registry.set_novel(self.novel)
+        app_env.novel = self.novel
         self._init_views()
         settings.set_last_novel_id(self.novel.id)
         self._register_events()
