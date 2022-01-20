@@ -329,6 +329,7 @@ class RichTextEditor(QFrame):
 
         self.textEditor = _TextEditor()
         self.textEditor.setMouseTracking(True)
+        self.textEditor.setAutoFormatting(QTextEdit.AutoAll)
 
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
         self.textEditor.setViewportMargins(5, 5, 5, 5)
@@ -348,7 +349,7 @@ class RichTextEditor(QFrame):
         self._lblPlaceholder.setFont(font)
         self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
-        self.setFontPointSize(13)
+        self.setFontPointSize(16)
 
         self.setMouseTracking(True)
         self.textEditor.installEventFilter(self)
