@@ -389,7 +389,20 @@
             <number>2</number>
            </property>
            <item alignment="Qt::AlignTop">
-            <widget class="CharacterSelectorButtons" name="wdgCharacterSelector" native="true"/>
+            <widget class="CharacterSelectorButtons" name="wdgCharacterSelector" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QScrollArea" name="scrollArea_2">

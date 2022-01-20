@@ -595,7 +595,7 @@ class CharacterTimelineWidget(QWidget):
             card = CharacterBackstoryCard(backstory)
             card.deleteRequested.connect(self._remove)
 
-            if pos > 0:
+            if pos >= 0:
                 self.character.backstory.insert(pos, backstory)
             else:
                 self.character.backstory.append(backstory)
