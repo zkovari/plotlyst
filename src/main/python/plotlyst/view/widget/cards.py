@@ -317,12 +317,14 @@ class SceneCard(Ui_SceneCard, Card):
 
 class CardsView(QFrame):
     swapped = pyqtSignal(object, object)
+    selectionCleared = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._layout = FlowLayout(spacing=9)
         self.setLayout(self._layout)
         self.setAcceptDrops(True)
+        self._selected: Optional[Card] = None
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
@@ -333,11 +335,20 @@ class CardsView(QFrame):
     def dragMoveEvent(self, event: QDragMoveEvent) -> None:
         event.acceptProposedAction()
 
+    @overrides
+    def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        if self._selected:
+            self._selected.clearSelection()
+            self._selected = None
+            self.selectionCleared.emit()
+
     def clear(self):
+        self._selected = None
         self._layout.clear()
 
     def addCard(self, card: Card):
         card.setAcceptDrops(True)
+        card.selected.connect(self._cardSelected)
         card.dropped.connect(self.swapped.emit)
         self._layout.addWidget(card)
 
@@ -345,3 +356,6 @@ class CardsView(QFrame):
         item = self._layout.itemAt(pos)
         if item and item.widget():
             return item.widget()
+
+    def _cardSelected(self, card: Card):
+        self._selected = card

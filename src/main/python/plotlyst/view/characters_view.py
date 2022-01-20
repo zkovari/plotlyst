@@ -75,6 +75,7 @@ class CharactersView(AbstractNovelView):
                                        ''')
 
         self.selected_card: Optional[CharacterCard] = None
+        self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
         self._update_cards()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
