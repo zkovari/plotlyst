@@ -147,6 +147,15 @@ def vbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QVBoxLayout:
     return _layout
 
 
+def flow(widget: QWidget, margin: int = 2, spacing: int = 3) -> FlowLayout:
+    _layout = FlowLayout()
+    widget.setLayout(_layout)
+    widget.layout().setContentsMargins(margin, margin, margin, margin)
+    widget.layout().setSpacing(spacing)
+
+    return _layout
+
+
 def group(*widgets, vertical: bool = True, margin: int = 2, spacing: int = 3, parent=None) -> QWidget:
     container = QWidget(parent)
     if vertical:
