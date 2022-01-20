@@ -51,7 +51,7 @@ from src.main.python.plotlyst.view.manuscript_view import ManuscriptView, Senten
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.widget.input import RichTextEditor
+from src.main.python.plotlyst.view.widget.input import RichTextEditor, CapitalizationEventFilter
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
@@ -116,6 +116,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not app_env.test_env():
             emit_info('Start initializing grammar checker...')
             self._threadpool.start(self._language_tool_setup_worker)
+            
+            QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
 
     @overrides
     def event_received(self, event: Event):

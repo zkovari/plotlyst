@@ -29,7 +29,8 @@ from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTex
     QTextDocument, QTextBlockUserData
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel, QFileDialog
+    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel, QFileDialog, \
+    QLineEdit
 from language_tool_python import LanguageTool
 from overrides import overrides
 from slugify import slugify
@@ -284,6 +285,34 @@ class _TextEditor(QTextEdit):
         QApplication.restoreOverrideCursor()
 
 
+class CapitalizationEventFilter(QObject):
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(event, QKeyEvent) and event.type() == QEvent.KeyPress:
+            if event.text().isalpha() and self._empty(watched):
+                inserted = self._insert(watched, event.text().upper())
+                if inserted:
+                    return True
+        return super(CapitalizationEventFilter, self).eventFilter(watched, event)
+
+    def _empty(self, widget) -> bool:
+        if isinstance(widget, QLineEdit):
+            return not widget.text()
+        elif isinstance(widget, QTextEdit):
+            return not widget.toPlainText()
+        return False
+
+    def _insert(self, widget, text: str) -> bool:
+        if isinstance(widget, QLineEdit):
+            widget.insert(text)
+            return True
+        elif isinstance(widget, QTextEdit):
+            widget.insertPlainText(text)
+            return True
+        return False
+
+
 class RichTextEditor(QFrame):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
@@ -501,9 +530,6 @@ class RichTextEditor(QFrame):
                 if cursor.selectedText() == ' ':
                     self.textEditor.textCursor().deletePreviousChar()
                     self.textEditor.textCursor().insertText('.')
-            elif event.type() == QEvent.KeyPress and event.text().isalpha() and self._atSentenceStart(cursor):
-                self.textEditor.textCursor().insertText(event.text().upper())
-                return True
             elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_QuoteDbl:
                 self.textEditor.textCursor().insertText(event.text())
                 cursor.movePosition(QTextCursor.PreviousCharacter)
