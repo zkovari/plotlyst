@@ -358,6 +358,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         for struct in self.novel.story_structures:
             struct.active = False
         structure.active = True
+        acts_registry.refresh()
 
         if self.wdgPreview.novel is not None:
             item = self.layout().takeAt(1)
