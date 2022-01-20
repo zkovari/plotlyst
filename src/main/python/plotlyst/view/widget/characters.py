@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Dict
 
 import emoji
 from PyQt5 import QtCore
@@ -36,14 +36,14 @@ from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter, increase_font
+    OpacityEventFilter, increase_font, gc
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
-from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox
+from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox, flow
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import RichTextEditor
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -182,20 +182,29 @@ class CharacterToolButton(QToolButton):
         self.setCursor(Qt.PointingHandCursor)
 
 
-class CharacterSelectorWidget(QWidget):
+class CharacterSelectorButtons(QWidget):
     characterToggled = pyqtSignal(Character, bool)
 
-    def __init__(self, parent=None):
-        super(CharacterSelectorWidget, self).__init__(parent)
-        self._layout = hbox(self)
+    def __init__(self, parent=None, exclusive: bool = True):
+        super(CharacterSelectorButtons, self).__init__(parent)
+        hbox(self)
+        self.layout().addWidget(spacer_widget())
+        self.container = QWidget()
+        self._layout = flow(self.container)
+
+        self.layout().addWidget(self.container)
+        self.layout().addWidget(spacer_widget())
+
         self._btn_group = QButtonGroup()
         self._buttons: List[QToolButton] = []
-        self.exclusive: bool = True
-        self.setExclusive(self.exclusive)
+        self._buttonsPerCharacters: Dict[Character, QToolButton] = {}
+        self.setExclusive(exclusive)
+
+    def exclusive(self) -> bool:
+        return self._btn_group.exclusive()
 
     def setExclusive(self, exclusive: bool):
-        self.exclusive = exclusive
-        self._btn_group.setExclusive(self.exclusive)
+        self._btn_group.setExclusive(exclusive)
 
     def characters(self, all: bool = True) -> Iterable[Character]:
         return [x.character for x in self._buttons if all or x.isChecked()]
@@ -203,30 +212,27 @@ class CharacterSelectorWidget(QWidget):
     def setCharacters(self, characters: Iterable[Character], checkAll: bool = True):
         self.clear()
 
-        self._layout.addWidget(spacer_widget())
         for char in characters:
             self.addCharacter(char, checked=checkAll)
-        self._layout.addWidget(spacer_widget())
 
         if not self._buttons:
             return
-        if self.exclusive:
+        if self._btn_group.exclusive():
             self._buttons[0].setChecked(True)
 
-    def clear(self):
-        item = self._layout.itemAt(0)
-        while item:
-            self._layout.removeItem(item)
-            item = self._layout.itemAt(0)
-        for btn in self._buttons:
-            self._btn_group.removeButton(btn)
-            btn.deleteLater()
-        self._buttons.clear()
+    def updateCharacters(self, characters: Iterable[Character], checkAll: bool = True):
+        if not self._buttons:
+            return self.setCharacters(characters, checkAll)
+
+        for c in characters:
+            if c not in self._buttonsPerCharacters.keys():
+                self.addCharacter(c, checkAll)
 
     def addCharacter(self, character: Character, checked: bool = True):
         tool_btn = CharacterToolButton(character)
 
         self._buttons.append(tool_btn)
+        self._buttonsPerCharacters[character] = tool_btn
         self._btn_group.addButton(tool_btn)
         self._layout.addWidget(tool_btn)
 
@@ -234,6 +240,25 @@ class CharacterSelectorWidget(QWidget):
 
         tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
         tool_btn.installEventFilter(OpacityEventFilter(parent=tool_btn, ignoreCheckedButton=True))
+
+    def removeCharacter(self, character: Character):
+        if character not in self._buttonsPerCharacters:
+            return
+
+        btn = self._buttonsPerCharacters.pop(character)
+        self._layout.removeWidget(btn)
+        self._btn_group.removeButton(btn)
+        gc(btn)
+
+    def clear(self):
+        clear_layout(self._layout)
+
+        for btn in self._buttons:
+            self._btn_group.removeButton(btn)
+            gc(btn)
+
+        self._buttons.clear()
+        self._buttonsPerCharacters.clear()
 
 
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):

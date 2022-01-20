@@ -135,7 +135,7 @@ class CharactersView(AbstractNovelView):
             self.ui.wdgToolbar.setVisible(True)
         else:
             self.ui.wdgToolbar.setVisible(False)
-            self.ui.wdgCharacterSelector.setCharacters(self.novel.characters, checkAll=False)
+            self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
 
     def _on_edit(self):
         character = None
@@ -185,10 +185,12 @@ class CharactersView(AbstractNovelView):
         if not ask_confirmation(f'Are you sure you want to delete character {character.name}?'):
             return
         self.novel.characters.remove(character)
+        self.ui.wdgCharacterSelector.removeCharacter(character)
         self.repo.delete_character(self.novel, character)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()
 
+    @busy
     def _backstory_character_toggled(self, character: Character, toggled: bool):
         if toggled:
             wdg = CharacterTimelineWidget(self.ui.scrollAreaBackstoryContent)

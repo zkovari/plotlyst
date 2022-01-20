@@ -93,6 +93,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="shortcut">
+             <string>1</string>
+            </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
@@ -115,6 +118,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="shortcut">
+             <string>2</string>
+            </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
@@ -133,6 +139,9 @@
             </property>
             <property name="text">
              <string/>
+            </property>
+            <property name="shortcut">
+             <string>3</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -380,7 +389,7 @@
             <number>2</number>
            </property>
            <item alignment="Qt::AlignTop">
-            <widget class="CharacterSelectorWidget" name="wdgCharacterSelector" native="true"/>
+            <widget class="CharacterSelectorButtons" name="wdgCharacterSelector" native="true"/>
            </item>
            <item>
             <widget class="QScrollArea" name="scrollArea_2">
@@ -393,7 +402,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>890</width>
-                <height>647</height>
+                <height>637</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -546,7 +555,7 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>CharacterSelectorWidget</class>
+   <class>CharacterSelectorButtons</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.characters</header>
    <container>1</container>

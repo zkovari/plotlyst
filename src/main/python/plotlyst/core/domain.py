@@ -139,6 +139,9 @@ class Character:
                 return value.value[0] if value.value else -1
         return -1
 
+    def __hash__(self):
+        return hash(str(self.id))
+
 
 class NpcCharacter(Character):
     pass
