@@ -116,7 +116,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not app_env.test_env():
             emit_info('Start initializing grammar checker...')
             self._threadpool.start(self._language_tool_setup_worker)
-            
+
             QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
 
     @overrides
@@ -281,6 +281,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     def _init_toolbar(self):
         self.toolBar.setContextMenuPolicy(Qt.PreventContextMenu)
+        if platform.is_mac():
+            self.toolBar.setStyleSheet('font: 14px;')
         self.home_mode = QToolButton(self.toolBar)
         self.home_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.home_mode.setText('Home')
