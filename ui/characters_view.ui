@@ -61,7 +61,7 @@
            <number>0</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>4</number>
           </property>
           <property name="rightMargin">
            <number>0</number>
@@ -415,7 +415,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>890</width>
-                <height>637</height>
+                <height>633</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -486,8 +486,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>876</width>
-                <height>656</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">

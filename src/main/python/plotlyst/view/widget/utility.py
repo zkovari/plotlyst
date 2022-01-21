@@ -49,14 +49,6 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self.btnSymbols.setIcon(IconRegistry.from_name('mdi.symbol', color_on='darkGreen'))
         self.btnAll.setChecked(True)
 
-        # qtawesome._instance()
-        # fontMaps = qtawesome._resource['iconic'].charmap
-        # for fontCollection, fontData in fontMaps.items():
-        #     if fontCollection != 'mdi':
-        #         continue
-        #     for iconName in fontData:
-        #         print(iconName)
-
         filtered_icons = []
         for type, icons_list in icons_registry.items():
             for icon in icons_list:
