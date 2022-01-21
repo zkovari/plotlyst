@@ -188,12 +188,12 @@ class CharacterSelectorButtons(QWidget):
     def __init__(self, parent=None, exclusive: bool = True):
         super(CharacterSelectorButtons, self).__init__(parent)
         hbox(self)
-        self.layout().addWidget(spacer_widget())
         self.container = QWidget()
+        self.container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+
         self._layout = flow(self.container)
 
         self.layout().addWidget(self.container)
-        self.layout().addWidget(spacer_widget())
 
         self._btn_group = QButtonGroup()
         self._buttons: List[QToolButton] = []
