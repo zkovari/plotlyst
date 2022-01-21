@@ -44,6 +44,9 @@
       <bool>false</bool>
      </property>
      <widget class="QTreeView" name="treeChapters">
+      <property name="indentation">
+       <number>10</number>
+      </property>
       <attribute name="headerVisible">
        <bool>false</bool>
       </attribute>

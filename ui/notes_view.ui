@@ -131,6 +131,9 @@
         <property name="defaultDropAction">
          <enum>Qt::MoveAction</enum>
         </property>
+        <property name="indentation">
+         <number>10</number>
+        </property>
         <attribute name="headerVisible">
          <bool>false</bool>
         </attribute>
