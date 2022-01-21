@@ -367,12 +367,13 @@ class RichTextEditor(QFrame):
         self.layout().addWidget(self.textEditor)
 
         self.cbHeading = QComboBox()
-        self.cbHeading.setStyleSheet('''
-        QComboBox {
-            border: 0px;
-            padding: 1px 1px 1px 3px;
-        }
-        ''')
+        if platform.is_linux() or platform.is_windows():
+            self.cbHeading.setStyleSheet('''
+                QComboBox {
+                    border: 0px;
+                    padding: 1px 1px 1px 3px;
+                }
+            ''')
 
         self.cbHeading.addItem('Normal')
         self.cbHeading.addItem(IconRegistry.heading_1_icon(), '')
