@@ -341,7 +341,7 @@ class RichTextEditor(QFrame):
         if platform.is_linux():
             family = 'Noto Sans Mono'
         elif platform.is_mac():
-            family = 'Palatino'
+            family = 'Helvetica Neue'
         else:
             family = 'Helvetica'
         self.textEditor.setStyleSheet(f'QTextEdit {{background: white; border: 0px; font: {family}}}')
