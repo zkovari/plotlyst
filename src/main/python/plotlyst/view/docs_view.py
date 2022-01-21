@@ -19,8 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, QRect, QPoint, Qt
+from PyQt5.QtCore import QModelIndex, QRect, QPoint, Qt, QSize
 from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidget
+from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
@@ -58,6 +59,10 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.clicked.connect(self._doc_clicked)
         self.ui.treeDocuments.expandAll()
         self.model.modelReset.connect(self.refresh)
+
+        if platform.is_mac():
+            self.ui.btnRemove.setIconSize(QSize(15, 15))
+            self.ui.btnAdd.setIconSize(QSize(15, 15))
 
         self.textEditor: Optional[RichTextEditor] = None
         self.highlighter: Optional[GrammarHighlighter] = None

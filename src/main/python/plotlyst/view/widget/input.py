@@ -21,7 +21,6 @@ from enum import Enum
 from functools import partial
 from typing import Optional
 
-import fbs_runtime.platform
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
@@ -31,6 +30,7 @@ from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
     QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel, QFileDialog, \
     QLineEdit
+from fbs_runtime import platform
 from language_tool_python import LanguageTool
 from overrides import overrides
 from slugify import slugify
@@ -322,6 +322,10 @@ class RichTextEditor(QFrame):
         self.layout().setContentsMargins(2, 2, 2, 2)
 
         self.toolbar = QToolBar()
+        if platform.is_mac():
+            self.toolbar.setIconSize(QSize(15, 15))
+        else:
+            self.toolbar.setIconSize(QSize(17, 17))
         self.toolbar.setStyleSheet('.QToolBar {background-color: rgb(255, 255, 255);}')
         self.toolbar.layout().setSpacing(5)
         self.textTitle = AutoAdjustableTextEdit(height=50)
@@ -334,9 +338,9 @@ class RichTextEditor(QFrame):
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
         self.textEditor.setViewportMargins(5, 5, 5, 5)
 
-        if fbs_runtime.platform.is_linux():
+        if platform.is_linux():
             family = 'Noto Sans Mono'
-        elif fbs_runtime.platform.is_mac():
+        elif platform.is_mac():
             family = 'Palatino'
         else:
             family = 'Helvetica'
