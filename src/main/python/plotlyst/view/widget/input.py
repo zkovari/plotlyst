@@ -290,7 +290,7 @@ class CapitalizationEventFilter(QObject):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent) and event.type() == QEvent.KeyPress:
-            if event.text().isalpha() and self._empty(watched):
+            if event.text().isalpha() and self._empty(watched) and 'filter' not in watched.objectName().lower():
                 inserted = self._insert(watched, event.text().upper())
                 if inserted:
                     return True
@@ -698,6 +698,8 @@ class _PowerBar(QFrame):
         painter.setBrush(brush)
 
         painter.fillRect(0, 0, self.value * 10, self.height(), brush)
+
+        painter.end()
 
     def increase(self):
         if self.value < self.steps:

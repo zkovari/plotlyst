@@ -19,11 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any
 
-from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSortFilterProxyModel
+from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView
 from overrides import overrides
 
+from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.common import show_color_picker
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -62,8 +63,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
                 if icon and icon != 'fa5s.' and icon != 'mdi.':
                     filtered_icons.append(self._IconItem(type, icon))
         self.model = self._Model(filtered_icons)
-        self._proxy = QSortFilterProxyModel()
-        self._proxy.setSourceModel(self.model)
+        self._proxy = proxy(self.model)
         self._proxy.setFilterRole(self._Model.IconTypeRole)
         self.lstIcons.setModel(self._proxy)
         self.lstIcons.setViewMode(QListView.IconMode)
