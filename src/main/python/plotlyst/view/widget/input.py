@@ -248,6 +248,43 @@ class _TextEditor(QTextEdit):
                 menu.popup(pos)
 
     @overrides
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        cursor = self.textCursor()
+        if event.key() == Qt.Key_Tab:
+            list_ = cursor.block().textList()
+            if list_:
+                cursor.beginEditBlock()
+                block = cursor.block()
+
+                new_format = list_.format()
+                new_format.setIndent(list_.format().indent() + 1)
+                cursor.insertList(new_format)
+                list_.removeItem(list_.itemNumber(block))
+                cursor.deletePreviousChar()
+
+                cursor.endEditBlock()
+                return
+        if event.key() == Qt.Key_Backtab:
+            list_ = cursor.block().textList()
+            if list_:
+                indent = list_.format().indent()
+                if indent > 1:
+                    cursor.beginEditBlock()
+                    new_format = list_.format()
+                    new_format.setIndent(indent - 1)
+                    list_.setFormat(new_format)
+                    cursor.endEditBlock()
+                return
+        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
+            level = cursor.blockFormat().headingLevel()
+            if level > 0:  # heading
+                cursor.insertBlock()
+                self.cbHeading.setCurrentIndex(0)
+                self._setHeading()
+                return
+        super(_TextEditor, self).keyPressEvent(event)
+
+    @overrides
     def insertFromMimeData(self, source: QMimeData) -> None:
         if self._pasteAsPlain:
             self.insertPlainText(source.text())
@@ -509,24 +546,6 @@ class RichTextEditor(QFrame):
                         QFont.Bold if self.textEditor.fontWeight() == QFont.Normal else QFont.Normal)
 
             cursor = self.textEditor.textCursor()
-            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
-                _list = cursor.block().textList()
-                if _list and _list.count() > 1:
-                    cursor.beginEditBlock()
-                    block = cursor.block()
-                    _list.remove(block)
-                    _list.format().setIndent(_list.format().indent() + 1)
-                    cursor.insertList(_list.format())
-
-                    cursor.endEditBlock()
-                    return True
-            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-                level = cursor.blockFormat().headingLevel()
-                if level > 0:  # heading
-                    cursor.insertBlock()
-                    self.cbHeading.setCurrentIndex(0)
-                    self._setHeading()
-                    return True
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
                 if self.textEditor.textCursor().atBlockStart():
                     self._showCommands()
