@@ -663,10 +663,13 @@ class CharacterEmotionButton(QToolButton):
             self._color = 'rgb(0, 202, 148)'
 
         self._value = value
-        self.setStyleSheet(f'''QToolButton {{
+        self.setStyleSheet(f'''
+        QToolButton {{
             background-color: {self._color};
             border-radius: 10px;
-        }}''')
+        }}
+        QToolButton::menu-indicator {{width:0px;}}
+        ''')
         self.emotionChanged.emit()
 
     def color(self) -> str:
