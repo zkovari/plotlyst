@@ -22,9 +22,10 @@ from abc import abstractmethod
 from typing import Optional, List
 
 import emoji
+import qtanim
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
-from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent
+from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor
 from PyQt5.QtWidgets import QFrame, QApplication, QAction
 from fbs_runtime import platform
 from overrides import overrides
@@ -63,6 +64,10 @@ class Card(QFrame):
 
     def setDragEnabled(self, enabled: bool):
         self._dragEnabled = enabled
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        qtanim.glow(self, color=QColor('#0096c7'))
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -296,6 +301,7 @@ class SceneCard(Ui_SceneCard, Card):
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
+        super(SceneCard, self).enterEvent(event)
         self.wdgCharacters.setEnabled(True)
 
     @overrides

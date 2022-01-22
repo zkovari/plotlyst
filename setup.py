@@ -19,6 +19,7 @@ REQUIREMENTS: dict = {
         'dataclasses-json==0.5.2',
         'language-tool-python==2.6.1',
         'python-slugify==5.0.2',
+        'git+https://github.com/plotlyst/qt-anim.git',
     ],
     'test': [
         'pytest==6.2.4',
