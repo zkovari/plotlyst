@@ -22,6 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest-xvfb
           pip install -e .[dev]
+          pip install git+https://github.com/plotlyst/qt-anim.git
       - name: Test with pytest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -42,6 +43,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .[dev]
+          pip install git+https://github.com/plotlyst/qt-anim.git
       - name: Test with pytest
         run: |
           pyqt5ac --config .pyqt5ac.yml
