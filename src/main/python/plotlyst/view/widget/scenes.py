@@ -25,7 +25,8 @@ from typing import List, Set, Optional, Union, Dict
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
     QResizeEvent, QCursor
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView, QSplitter
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView, QSplitter, \
+    QPushButton
 from overrides import overrides
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
@@ -739,7 +740,7 @@ class SceneStoryStructureWidget(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
 
         self.novel: Optional[Novel] = None
-        self._acts: List[QToolButton] = []
+        self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
         self._wdgLine = QWidget(self)
         self._wdgLine.setLayout(QHBoxLayout())
@@ -875,15 +876,15 @@ class SceneStoryStructureWidget(QWidget):
         if act == 3:
             return width * 0.75 - 8
 
-    def _actButton(self, text: str, color: str, left: bool = False, right: bool = False) -> QToolButton:
-        act = QToolButton(self)
+    def _actButton(self, text: str, color: str, left: bool = False, right: bool = False) -> QPushButton:
+        act = QPushButton(self)
         act.setText(text)
         act.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         act.setFixedHeight(self._lineHeight)
         act.setCursor(Qt.PointingHandCursor)
         act.setCheckable(True)
         act.setStyleSheet(f'''
-        QToolButton {{
+        QPushButton {{
             background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 {color}, stop: 1 {color});
             border: 1px solid #8f8f91;
