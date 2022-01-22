@@ -20,9 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, Dict, Tuple
 
 import emoji
-from PyQt5.QtCore import Qt, QSize
+import qtanim
+from PyQt5.QtCore import Qt, QSize, QObject, QEvent
 from PyQt5.QtWidgets import QDialog, QToolButton, QButtonGroup
 from fbs_runtime import platform
+from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import BackstoryEvent, NEUTRAL, VERY_HAPPY, VERY_UNHAPPY, UNHAPPY, HAPPY, \
     BackstoryEventType
@@ -113,6 +115,7 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
 
         self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
 
+        self.btnSave.installEventFilter(self)
         self.btnSave.setDisabled(True)
         self.btnSave.clicked.connect(self.accept)
         self.btnClose.clicked.connect(self.reject)
@@ -160,3 +163,10 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
         return BackstoryEvent(self.lineKeyphrase.text(), synopsis='', emotion=emotion,
                               type=btn.type, type_icon=btn.iconName, type_color=btn.color,
                               follow_up=self.cbRelated.isChecked())
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.MouseButtonRelease and not watched.isEnabled():
+            qtanim.shake(self.lineKeyphrase)
+
+        return super(BackstoryEditorDialog, self).eventFilter(watched, event)
