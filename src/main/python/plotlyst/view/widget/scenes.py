@@ -37,7 +37,7 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
-    set_opacity, InstantTooltipStyle, PopupMenuBuilder
+    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -261,6 +261,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnDelete.setIcon(IconRegistry.wrong_icon(color='black'))
         self.btnDelete.clicked.connect(self._remove)
         retain_size_when_hidden(self.btnDelete)
+        self.btnDelete.installEventFilter(OpacityEventFilter(parent=self.btnDelete))
         self.btnDelete.setHidden(True)
 
     def sceneStructureItem(self) -> SceneStructureItem:
