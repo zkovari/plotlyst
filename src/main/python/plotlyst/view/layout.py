@@ -123,10 +123,11 @@ class FlowLayout(QLayout):
         return y + lineHeight - rect.y() + bottom
 
 
-def clear_layout(layout: QLayout):
+def clear_layout(layout: QLayout, autoDelete: bool = True):
     while layout.count():
         item = layout.takeAt(0)
-        gc(item.widget())
+        if autoDelete:
+            gc(item.widget())
 
 
 def hbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QHBoxLayout:
