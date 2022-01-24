@@ -106,7 +106,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
         self.btnReturn.clicked.connect(lambda: self._toggle_fullscreen(on=False))
         self._sentenceHighlighter: Optional[SentenceHighlighter] = None
-        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkblue'))
+        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkBlue'))
         self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
 
         self.repo = RepositoryPersistenceManager.instance()

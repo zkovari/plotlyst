@@ -19,16 +19,68 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any
 
-from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal
+from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget, QListView
+from PyQt5.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
 from overrides import overrides
 
 from src.main.python.plotlyst.model.common import proxy
-from src.main.python.plotlyst.view.common import show_color_picker
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import flow
 from src.main.python.plotlyst.view.widget._icons import icons_registry
+
+
+class ColorButton(QToolButton):
+    def __init__(self, color: str, parent=None):
+        super(ColorButton, self).__init__(parent)
+        self.color = color
+
+
+class ColorPicker(QWidget):
+    colorPicked = pyqtSignal(QColor)
+
+    def __init__(self, parent=None):
+        super(ColorPicker, self).__init__(parent)
+        flow(self)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+
+        self.btnGroup = QButtonGroup(self)
+        self.btnGroup.setExclusive(True)
+
+        for color in ['#0077b6', '#00b4d8', '#007200', '#2a9d8f', '#94d2bd', '#ffe66d', '#ffd000', '#f48c06', '#e85d04',
+                      '#dc2f02',
+                      '#ffc6ff', '#b5179e', '#7209b7', '#d6ccc2', '#6c757d', '#dda15e', '#bc6c25', 'black']:
+            btn = ColorButton(color, self)
+            btn.setIconSize(QSize(22, 22))
+            btn.setCheckable(True)
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.setStyleSheet(f'''
+            QToolButton {{
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
+                                      stop: 0 {color});
+                border-radius: 12px;
+            }}
+            QToolButton:hover {{
+                border: 1px dashed darkGrey;
+            }}
+            QToolButton:pressed {{
+                border: 1px solid white;
+            }}
+            ''')
+            self.btnGroup.addButton(btn)
+            self.layout().addWidget(btn)
+        self.btnGroup.buttonClicked.connect(self._clicked)
+
+    def color(self) -> QColor:
+        btn = self.btnGroup.checkedButton()
+        if btn:
+            return QColor(btn.color)
+        else:
+            return QColor(Qt.black)
+
+    def _clicked(self, btn: ColorButton):
+        self.colorPicked.emit(QColor(btn.color))
 
 
 class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
@@ -41,13 +93,24 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self.btnFilterIcon.setIcon(IconRegistry.from_name('mdi.magnify'))
 
         self.btnPeople.setIcon(IconRegistry.from_name('mdi.account', color_on='darkGreen'))
+        self.btnPeople.setToolTip('People and emotions')
         self.btnFood.setIcon(IconRegistry.from_name('fa5s.ice-cream', color_on='darkGreen'))
+        self.btnFood.setToolTip('Food and beverage')
         self.btnNature.setIcon(IconRegistry.from_name('mdi.nature', color_on='darkGreen'))
+        self.btnNature.setToolTip('Nature')
         self.btnSports.setIcon(IconRegistry.from_name('fa5s.football-ball', color_on='darkGreen'))
+        self.btnSports.setToolTip('Sports')
         self.btnObjects.setIcon(IconRegistry.from_name('fa5.lightbulb', color_on='darkGreen'))
+        self.btnObjects.setToolTip('Objects')
         self.btnPlaces.setIcon(IconRegistry.from_name('ei.globe', color_on='darkGreen'))
+        self.btnPlaces.setToolTip('Places and travel')
         self.btnSymbols.setIcon(IconRegistry.from_name('mdi.symbol', color_on='darkGreen'))
+        self.btnSymbols.setToolTip('Symbols')
         self.btnAll.setChecked(True)
+
+        self.colorPicker = ColorPicker(self)
+        self.colorPicker.colorPicked.connect(self._colorPicked)
+        self.hLayoutTop.insertWidget(0, self.colorPicker)
 
         filtered_icons = []
         for type, icons_list in icons_registry.items():
@@ -59,34 +122,21 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self._proxy.setFilterRole(self._Model.IconTypeRole)
         self.lstIcons.setModel(self._proxy)
         self.lstIcons.setViewMode(QListView.IconMode)
-        self.lstIcons.clicked.connect(self._icon_clicked)
+        self.lstIcons.clicked.connect(self._iconClicked)
 
-        self.lineFilter.textChanged.connect(self._text_changed)
+        self.lineFilter.textChanged.connect(self._textChanged)
 
-        self.buttonGroup.buttonToggled.connect(self._filter_toggled)
+        self.buttonGroup.buttonToggled.connect(self._filterToggled)
 
-        self._color: QColor = QColor('black')
-        self._update_button_color()
+    def _colorPicked(self, color: QColor):
+        self.model.setColor(color)
 
-        self.btnColor.clicked.connect(self._change_color)
-
-    def _update_button_color(self):
-        self.btnColor.setStyleSheet(f'''
-        background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 {self._color.name()}, stop: 1 {self._color.name()}) ;''')
-
-    def _change_color(self):
-        color = show_color_picker(self._color)
-        if color.isValid():
-            self._color = color
-            self._update_button_color()
-
-    def _text_changed(self, text: str):
+    def _textChanged(self, text: str):
         self.btnAll.setChecked(True)
         self._proxy.setFilterRole(self._Model.IconAliasRole)
         self._proxy.setFilterRegExp(text)
 
-    def _filter_toggled(self):
+    def _filterToggled(self):
         self.lineFilter.clear()
         self._proxy.setFilterRole(self._Model.IconTypeRole)
         if self.btnPeople.isChecked():
@@ -106,9 +156,9 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         elif self.btnAll.isChecked():
             self._proxy.setFilterFixedString('')
 
-    def _icon_clicked(self, index: QModelIndex):
+    def _iconClicked(self, index: QModelIndex):
         icon_alias: str = index.data(role=self._Model.IconAliasRole)
-        self.iconSelected.emit(icon_alias, self._color)
+        self.iconSelected.emit(icon_alias, self.colorPicker.color())
 
     class _IconItem:
         def __init__(self, type: str, name: str):
@@ -123,6 +173,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         def __init__(self, icons):
             super().__init__()
             self.icons = icons
+            self.color: str = 'black'
 
         @overrides
         def rowCount(self, parent: QModelIndex = ...) -> int:
@@ -135,4 +186,11 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
             if role == self.IconTypeRole:
                 return self.icons[index.row()].type
             if role == Qt.DecorationRole:
-                return IconRegistry.from_name(self.icons[index.row()].name)
+                return IconRegistry.from_name(self.icons[index.row()].name, self.color)
+
+            if role == Qt.ToolTipRole:
+                return self.icons[index.row()].name.split('.')[1].replace('-', ' ').capitalize()
+
+        def setColor(self, color: QColor):
+            self.color = color.name()
+            self.modelReset.emit()

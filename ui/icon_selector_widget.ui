@@ -30,34 +30,7 @@
     <number>2</number>
    </property>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Change color:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btnColor">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
+    <layout class="QHBoxLayout" name="hLayoutTop">
      <item>
       <widget class="QToolButton" name="btnFilterIcon">
        <property name="styleSheet">
@@ -74,7 +47,7 @@
        </property>
       </widget>
      </item>
-     <item>
+     <item alignment="Qt::AlignTop">
       <widget class="QLineEdit" name="lineFilter">
        <property name="maximumSize">
         <size>
@@ -124,14 +97,20 @@
        <number>1</number>
       </property>
       <item>
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Quick filter:</string>
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-       </widget>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
-       <widget class="QToolButton" name="btnAll">
+       <widget class="QRadioButton" name="btnAll">
         <property name="minimumSize">
          <size>
           <width>32</width>
