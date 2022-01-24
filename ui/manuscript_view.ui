@@ -177,8 +177,8 @@
           </property>
           <property name="styleSheet">
            <string notr="true">#wdgBottom {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 0.5, y2: 0.5, x3: 1, y3: 1,
-                                      stop: 0 #FFFFFF, stop: 1 #E1E1E1, stop: 2 #E7E7E7);
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
+                                      stop: 0 #FFFFFF, stop: 0.5 #E1E1E1, stop: 1 #E7E7E7);
 	border-bottom-left-radius: 6px;
 	border-bottom-right-radius: 6px;
     border: 1px hidden black;
