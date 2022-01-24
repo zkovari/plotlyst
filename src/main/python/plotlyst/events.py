@@ -92,3 +92,8 @@ class OpenDistractionFreeMode(Event):
 @dataclass
 class LanguageToolSet(Event):
     tool: LanguageTool
+
+
+@dataclass
+class ToggleOutlineViewTitle(Event):
+    visible: bool

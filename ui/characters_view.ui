@@ -61,7 +61,7 @@
            <number>0</number>
           </property>
           <property name="topMargin">
-           <number>4</number>
+           <number>2</number>
           </property>
           <property name="rightMargin">
            <number>0</number>
@@ -171,6 +171,13 @@
         </widget>
        </item>
        <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QWidget" name="wdgToolbar" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <property name="spacing">
@@ -180,13 +187,13 @@
            <number>6</number>
           </property>
           <property name="topMargin">
-           <number>4</number>
+           <number>2</number>
           </property>
           <property name="rightMargin">
            <number>1</number>
           </property>
           <property name="bottomMargin">
-           <number>4</number>
+           <number>2</number>
           </property>
           <item>
            <widget class="QPushButton" name="btnNew">

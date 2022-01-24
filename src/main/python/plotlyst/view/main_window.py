@@ -34,7 +34,7 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
     emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
-    SceneChangedEvent, NovelUpdatedEvent, OpenDistractionFreeMode
+    SceneChangedEvent, NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -150,6 +150,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
+        elif isinstance(event, ToggleOutlineViewTitle):
+            self.wdgTitle.setVisible(event.visible)
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -239,22 +241,37 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         else:
             self.btnNovel.setChecked(True)
 
-    def _on_view_changed(self):
+    def _on_view_changed(self, btn=None, checked: bool = True):
+        if not checked:
+            return
+
+        title = None
         if self.btnNovel.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNovel)
             self.novel_view.activate()
         elif self.btnCharacters.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageCharacters)
+            title = self.characters_view.title
             self.characters_view.activate()
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
+            title = self.scenes_outline_view.title
             self.scenes_outline_view.activate()
         elif self.btnLocations.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageLocations)
+            title = self.locations_view.title
             self.locations_view.activate()
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
+            title = self.notes_view.title
             self.notes_view.activate()
+
+        if title:
+            clear_layout(self.wdgTitle.layout(), autoDelete=False)
+            self.wdgTitle.layout().addWidget(title)
+            self.wdgTitle.setVisible(True)
+        else:
+            self.wdgTitle.setHidden(True)
 
     def _init_menubar(self):
         self.menubar.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -413,6 +430,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, NovelDeletedEvent)
         event_dispatcher.register(self, NovelUpdatedEvent)
         event_dispatcher.register(self, OpenDistractionFreeMode)
+        event_dispatcher.register(self, ToggleOutlineViewTitle)
         if self.novel and not self.novel.scenes:
             event_dispatcher.register(self, SceneChangedEvent)
 

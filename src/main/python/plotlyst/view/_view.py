@@ -38,6 +38,7 @@ class AbstractView(QObject, EventListener):
         super().__init__(None)
         self._refresh_on_activation: bool = False
         self.widget = QWidget()
+        self.title: Optional[QWidget] = None
         if event_types:
             self._event_types = event_types
         else:

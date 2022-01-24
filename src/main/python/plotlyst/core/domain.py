@@ -931,6 +931,9 @@ fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fa
 desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='Desire (select Enneagram to autofill)',
                              id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'), show_label=False)
+
+henchmen_role = SelectionItem('Henchmen', icon='mdi.shuriken', icon_color='#596475')
+tertiary_role = SelectionItem('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68')
 role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION, emoji=':chess_pawn:',
                            id=uuid.UUID('131b9de6-ac95-4db5-b9a1-33200100b676'),
                            selections=[SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c'),
@@ -940,7 +943,7 @@ role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION, emoji=
                                        SelectionItem('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b'),
                                        SelectionItem('Contagonist', icon='mdi.biohazard', icon_color='#ea9010'),
                                        SelectionItem('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946'),
-                                       SelectionItem('Henchmen', icon='mdi.shuriken', icon_color='#596475'),
+                                       henchmen_role,
                                        SelectionItem('', type=SelectionItemType.SEPARATOR),
                                        SelectionItem('Guide', icon='mdi.compass-rose', icon_color='#80ced7'),
                                        SelectionItem('Confidant', icon='fa5s.user-friends', icon_color='#304d6d'),
@@ -952,7 +955,7 @@ role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION, emoji=
                                        SelectionItem('', type=SelectionItemType.SEPARATOR),
                                        SelectionItem('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a'),
                                        SelectionItem('', type=SelectionItemType.SEPARATOR),
-                                       SelectionItem('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68'),
+                                       tertiary_role,
                                        ], compact=True)
 
 _role_choices = {}
@@ -1182,6 +1185,13 @@ class Novel(NovelDescriptor):
                 pov_ids.add(str(scene.pov.id))
 
         return povs
+
+    def major_characters(self) -> List[Character]:
+        return [x for x in self.characters if
+                x.role() and x.role().text not in [tertiary_role.text, henchmen_role.text]]
+
+    def minor_characters(self) -> List[Character]:
+        return [x for x in self.characters if x.role() and x.role().text in [tertiary_role.text, henchmen_role.text]]
 
     @property
     def active_story_structure(self) -> StoryStructure:
