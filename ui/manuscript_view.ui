@@ -64,7 +64,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="spacing">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="leftMargin">
          <number>0</number>
@@ -176,7 +176,14 @@
            </sizepolicy>
           </property>
           <property name="styleSheet">
-           <string notr="true">#wdgBottom {background-color: #f5f3f4;}</string>
+           <string notr="true">#wdgBottom {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0.5, y2: 0.5, x3: 1, y3: 1,
+                                      stop: 0 #FFFFFF, stop: 1 #E1E1E1, stop: 2 #E7E7E7);
+	border-bottom-left-radius: 6px;
+	border-bottom-right-radius: 6px;
+    border: 1px hidden black;
+    border-top: 0px;
+}</string>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <property name="spacing">
@@ -192,9 +199,9 @@
             <number>2</number>
            </property>
            <property name="bottomMargin">
-            <number>1</number>
+            <number>2</number>
            </property>
-           <item alignment="Qt::AlignHCenter">
+           <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
             <widget class="QLabel" name="lblWordCount">
              <property name="text">
               <string>wc</string>
