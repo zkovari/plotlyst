@@ -129,7 +129,7 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
         self._currentAsyncBlock: int = 0
         self._asyncTimer = QTimer()
-        self._asyncTimer.setInterval(10)
+        self._asyncTimer.setInterval(20)
         self._asyncTimer.timeout.connect(self._highlightNextBlock)
 
         event_dispatcher.register(self, LanguageToolSet)
@@ -146,11 +146,6 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
     def setDocument(self, doc: Optional[QTextDocument]) -> None:
         self._asyncTimer.stop()
         super(GrammarHighlighter, self).setDocument(doc)
-
-    @overrides
-    def deleteLater(self) -> None:
-        event_dispatcher.deregister(self, LanguageToolSet)
-        super(GrammarHighlighter, self).deleteLater()
 
     @overrides
     def event_received(self, event: Event):

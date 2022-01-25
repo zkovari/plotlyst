@@ -22,7 +22,7 @@ import logging
 import traceback
 from typing import Optional, List, Dict, TypeVar
 
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QObject
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QMessageBox, QWidget, QStatusBar, QApplication
 
@@ -102,6 +102,8 @@ class EventDispatcher:
         if event_type not in self._listeners.keys():
             self._listeners[event_type] = []
         self._listeners[event_type].append(listener)
+        if isinstance(listener, QObject):
+            listener.destroyed.connect(lambda: self.deregister(listener, event_type))
 
     def clear(self):
         self._listeners.clear()

@@ -123,12 +123,6 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         event_dispatcher.register(self, SceneChangedEvent)
         event_dispatcher.register(self, SceneDeletedEvent)
 
-    @overrides
-    def deleteLater(self) -> None:
-        event_dispatcher.deregister(self, SceneChangedEvent)
-        event_dispatcher.deregister(self, SceneDeletedEvent)
-        super(BeatWidget, self).deleteLater()
-
     def refresh(self):
         self.stackedWidget.setCurrentWidget(self.pageInfo)
         for b in acts_registry.occupied_beats():
