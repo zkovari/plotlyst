@@ -252,7 +252,8 @@ class SceneCard(Ui_SceneCard, Card):
         self.wdgCharacters.layout().setSpacing(1)
 
         self.textTitle.setFontPointSize(QApplication.font().pointSize() + 1)
-        self.textTitle.setText(self.scene.title)
+        self.textTitle.setText(
+            self.scene.title if self.scene.title else f'Scene {self.novel.scenes.index(self.scene) + 1}')
         self.textTitle.setAlignment(Qt.AlignCenter)
 
         self.btnPov.clicked.connect(self.select)
