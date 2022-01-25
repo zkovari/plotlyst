@@ -43,7 +43,7 @@ from src.main.python.plotlyst.view.common import line, spacer_widget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
-from src.main.python.plotlyst.worker.grammar import language_tool_proxy
+from src.main.python.plotlyst.worker.grammar import language_tool_proxy, dictionary
 
 
 class AutoAdjustableTextEdit(QTextEdit):
@@ -159,6 +159,8 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
             matches = self._language_tool.check(text)
             misspellings = []
             for m in matches:
+                if dictionary.is_known_word(text[m.offset:m.offset + m.errorLength]):
+                    continue
                 self.setFormat(m.offset, m.errorLength,
                                self._formats_per_issue.get(m.ruleIssueType, self._grammar_format))
                 misspellings.append((m.offset, m.errorLength, m.replacements, m.message, m.ruleIssueType))

@@ -53,7 +53,7 @@ from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.input import RichTextEditor, CapitalizationEventFilter
 from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker
+from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 
@@ -82,6 +82,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.novel:
             acts_registry.set_novel(self.novel)
+            dictionary.set_novel(self.novel)
 
         self.home_view = HomeView()
         self.pageHome.layout().addWidget(self.home_view.widget)
@@ -419,6 +420,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.novel = client.fetch_novel(novel.id)
         acts_registry.set_novel(self.novel)
+        dictionary.set_novel(self.novel)
         self._init_views()
         settings.set_last_novel_id(self.novel.id)
         self._register_events()
