@@ -94,10 +94,10 @@ class Dictionary(EventListener):
 
     def refresh(self):
         self.words.clear()
-        for c in self.novel.characters:
-            self.words.add(c.name)
-        for l in self.novel.locations:
-            self.words.add(l.name)
+        for character in self.novel.characters:
+            self.words.add(character.name)
+        for location in self.novel.locations:
+            self.words.add(location.name)
 
     def is_known_word(self, word: str) -> bool:
         return word in self.words
