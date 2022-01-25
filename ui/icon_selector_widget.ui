@@ -31,7 +31,7 @@
    </property>
    <item>
     <layout class="QHBoxLayout" name="hLayoutTop">
-     <item>
+     <item alignment="Qt::AlignTop">
       <widget class="QToolButton" name="btnFilterIcon">
        <property name="styleSheet">
         <string notr="true">border: 0px;</string>
