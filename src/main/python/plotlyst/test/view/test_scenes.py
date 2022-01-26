@@ -104,7 +104,7 @@ def test_insert_new_scene_after(qtbot, filled_window: MainWindow):
 
     assert len(view.novel.scenes) == 3
     assert_data(view.tblModel, 'Scene 1', 0, ScenesTableModel.ColTitle)
-    assert_data(view.tblModel, 'Untitled', 1, ScenesTableModel.ColTitle)
+    assert_data(view.tblModel, 'Scene 2', 1, ScenesTableModel.ColTitle)
     assert_data(view.tblModel, 'Scene 2', 2, ScenesTableModel.ColTitle)
 
 

@@ -43,6 +43,7 @@ from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_Sc
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import hbox
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel, ConflictLabel
@@ -370,6 +371,55 @@ class TicklingClockSceneItemWidget(SceneStructureItemWidget):
         self.btnIcon.setIcon(IconRegistry.tickling_clock_icon())
 
 
+class _SceneTypeButton(QPushButton):
+    def __init__(self, type: SceneType, parent=None):
+        super(_SceneTypeButton, self).__init__(parent)
+        self.type = type
+        self.setCheckable(True)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+
+        if type == SceneType.ACTION:
+            bgColor = '#eae4e9'
+            borderColor = '#f94144'
+            bgColorChecked = '#f4978e'
+            borderColorChecked = '#fb5607'
+            self.setText('Scene (action)')
+            self.setIcon(IconRegistry.action_scene_icon())
+        else:
+            bgColor = '#bee1e6'
+            borderColor = '#168aad'
+            bgColorChecked = '#89c2d9'
+            borderColorChecked = '#1a759f'
+            self.setText('Sequel (reaction)')
+            self.setIcon(IconRegistry.reaction_scene_icon())
+
+        self.setStyleSheet(f'''
+            QPushButton {{
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
+                                      stop: 0 {bgColor};);
+                border: 2px solid {borderColor};
+                border-radius: 6px;
+                padding: 2px;
+            }}
+            QPushButton:checked {{
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
+                                      stop: 0 {bgColorChecked});
+                border: 3px solid {borderColorChecked};
+                padding: 1px;
+            }}
+            ''')
+        self._toggled(self.isChecked())
+        self.installEventFilter(OpacityEventFilter(0.7, 0.5, self, ignoreCheckedButton=True))
+        self.toggled.connect(self._toggled)
+
+    def _toggled(self, toggled: bool):
+        set_opacity(self, 1.0 if toggled else 0.5)
+        font = self.font()
+        font.setBold(toggled)
+        self.setFont(font)
+
+
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     MimeType: str = 'application/structure-item'
 
@@ -386,10 +436,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.btnInventory.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
 
-        self.rbScene.setIcon(IconRegistry.action_scene_icon())
-        self.rbSequel.setIcon(IconRegistry.reaction_scene_icon())
+        self.btnScene = _SceneTypeButton(SceneType.ACTION)
+        self.btnSequel = _SceneTypeButton(SceneType.REACTION)
 
-        self.btnTemplates.setIcon(IconRegistry.template_icon())
+        hbox(self.wdgTypes)
+        self.wdgTypes.layout().addWidget(self.btnScene)
+        self.wdgTypes.layout().addWidget(self.btnSequel)
 
         self.btnBeginningIcon.setIcon(IconRegistry.cause_icon())
         self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex'))
@@ -425,8 +477,11 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnCrisis.installEventFilter(self)
         self.btnTickingClock.installEventFilter(self)
 
-        self.btnGroupType.buttonClicked.connect(self._type_clicked)
-        self.btnGroupType.buttonToggled.connect(self._type_toggled)
+        self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
+        self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
+
+        self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
+        self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
     def setScene(self, novel: Novel, scene: Scene):
         self.novel = novel
@@ -488,16 +543,17 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self._addPlaceholder(self.wdgEnd)
 
         if not self.agendas()[0].items:
-            self._type_clicked(lazy=False)
+            self._typeClicked(SceneType.ACTION, True, lazy=False)
 
     def _checkSceneType(self):
         if self.scene.type == SceneType.ACTION:
-            self.rbScene.setChecked(True)
+            self.btnScene.setChecked(True)
+            self.btnSequel.setChecked(False)
         elif self.scene.type == SceneType.REACTION:
-            self.rbSequel.setChecked(True)
+            self.btnSequel.setChecked(True)
+            self.btnScene.setChecked(False)
         else:
             self.btnInventory.setChecked(True)
-            self.rbCustom.setChecked(True)
 
     def _setEmotionColorChange(self):
         color_start = self.btnEmotionStart.color()
@@ -676,10 +732,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             widget.layout().addWidget(_placeholder)
         _placeholder.installEventFilter(self)
 
-    def _type_clicked(self, lazy: bool = True):
-        if lazy and (self.rbScene.isChecked() and self.scene.type == SceneType.ACTION) or (
-                self.rbSequel.isChecked() and self.scene.type == SceneType.REACTION) or (
-                self.rbCustom.isChecked() and self.scene.type == SceneType.MIXED):
+    def _typeClicked(self, type: SceneType, checked: bool, lazy: bool = True):
+        if lazy and type == self.scene.type and checked:
             return
 
         for item in self.agendas()[0].items:
@@ -690,18 +744,20 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                     return
                 break
 
-        if self.rbScene.isChecked():
-            self.scene.type = SceneType.ACTION
+        if type == SceneType.ACTION and checked:
+            self.scene.type = type
             top = SceneGoalItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.GOAL))
             middle = SceneConflictItemWidget(self.novel, self.scene,
                                              SceneStructureItem(SceneStructureItemType.CONFLICT))
             bottom = SceneOutcomeItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.OUTCOME,
                                                                            outcome=SceneOutcome.DISASTER))
-        elif self.rbSequel.isChecked():
-            self.scene.type = SceneType.REACTION
+            self.btnSequel.setChecked(False)
+        elif type == SceneType.REACTION and checked:
+            self.scene.type = type
             top = ReactionSceneItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.REACTION))
             middle = DilemmaSceneItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.DILEMMA))
             bottom = DecisionSceneItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.DECISION))
+            self.btnScene.setChecked(False)
         else:
             self.scene.type = SceneType.MIXED
             top = SceneStructureItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.BEAT),
@@ -716,17 +772,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._addWidget(self.wdgBeginning.layout().itemAt(0).widget(), top)
         self._addWidget(self.wdgMiddle.layout().itemAt(0).widget(), middle)
         self._addWidget(self.wdgEnd.layout().itemAt(0).widget(), bottom)
-
-    def _type_toggled(self):
-        font = self.rbScene.font()
-        font.setBold(self.rbScene.isChecked())
-        self.rbScene.setFont(font)
-        font = self.rbSequel.font()
-        font.setBold(self.rbSequel.isChecked())
-        self.rbSequel.setFont(font)
-        font = self.rbCustom.font()
-        font.setBold(self.rbCustom.isChecked())
-        self.rbCustom.setFont(font)
 
     def _dragDestroyed(self):
         self._dragged = None
