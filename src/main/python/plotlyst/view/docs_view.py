@@ -51,6 +51,8 @@ class DocumentsView(AbstractNovelView):
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
 
+        self.ui.splitter.setSizes([100, 500])
+
         self.model = DocumentsTreeModel(self.novel)
         self.ui.treeDocuments.setModel(self.model)
         self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.Stretch)
