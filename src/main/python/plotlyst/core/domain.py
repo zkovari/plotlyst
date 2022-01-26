@@ -371,6 +371,8 @@ class SceneStructureItemType(Enum):
     RISING_ACTION = 8
     CRISIS = 9
     TICKING_CLOCK = 10
+    HOOK = 11
+    EXPOSITION = 12
 
 
 class SceneOutcome(Enum):

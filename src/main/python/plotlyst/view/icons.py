@@ -418,6 +418,10 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.bell-alert-outline', '#a2ad59')
 
     @staticmethod
+    def hook_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.hook', '#829399')
+
+    @staticmethod
     def rising_action_icon() -> QIcon:
         return IconRegistry.from_name('fa5s.chart-line', '#08605f')
 
@@ -426,8 +430,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.arrow-decision-outline', '#ce2d4f')
 
     @staticmethod
-    def tickling_clock_icon() -> QIcon:
+    def ticking_clock_icon() -> QIcon:
         return IconRegistry.from_name('mdi.clock-alert-outline', '#f7cb15')
+
+    @staticmethod
+    def exposition_icon() -> QIcon:
+        return IconRegistry.from_name('fa5.image', '#1ea896')
 
     @staticmethod
     def timer_icon() -> QIcon:
