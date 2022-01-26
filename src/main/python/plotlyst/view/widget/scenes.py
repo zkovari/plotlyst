@@ -44,20 +44,21 @@ from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_Sc
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
+from src.main.python.plotlyst.view.layout import flow
+from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget, CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel, ConflictLabel
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class SceneGoalsWidget(LabelsEditorWidget):
 
-    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+    def __init__(self, novel: Novel, agenda: SceneStructureAgenda, parent=None):
         self.novel = novel
-        self.scene_structure_item = scene_structure_item
+        self.agenda = agenda
         super(SceneGoalsWidget, self).__init__(parent=parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
-        self.setValue([x.text for x in self.scene_structure_item.goals])
+        self.setValue([x.text for x in self.agenda.goals(self.novel)])
         self.btnEdit.setIcon(IconRegistry.goal_icon())
         self.btnEdit.setText('Track goals')
         self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
@@ -75,19 +76,20 @@ class SceneGoalsWidget(LabelsEditorWidget):
 
     @overrides
     def _addItems(self, items: Set[SceneGoal]):
-        for item in items:
-            self._wdgLabels.addLabel(GoalLabel(item))
-        self.scene_structure_item.goals.clear()
-        self.scene_structure_item.goals.extend(items)
+        pass
+        # for item in items:
+        #     self._wdgLabels.addLabel(GoalLabel(item))
+        # self.agenda.goal_ids.clear()
+        # self.agenda.goal_ids.extend(items)
 
 
 class SceneConflictsWidget(LabelsEditorWidget):
-    def __init__(self, novel: Novel, scene: Scene, scene_structure_item: SceneStructureItem, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
         self.novel = novel
         self.scene = scene
-        self.scene_structure_item = scene_structure_item
+        self.agenda = agenda
         super(SceneConflictsWidget, self).__init__(parent=parent)
-        self.setValue([x.text for x in self.scene_structure_item.conflicts])
+        self.setValue([x.text for x in self.agenda.conflicts(self.novel)])
         self.btnEdit.setIcon(IconRegistry.conflict_icon())
         self.btnEdit.setText('Track conflicts')
         self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
@@ -115,10 +117,11 @@ class SceneConflictsWidget(LabelsEditorWidget):
 
     @overrides
     def _addItems(self, items: Set[Conflict]):
-        for item in items:
-            self._wdgLabels.addLabel(ConflictLabel(self.novel, item))
-        self.scene_structure_item.conflicts.clear()
-        self.scene_structure_item.conflicts.extend(items)
+        pass
+        # for item in items:
+        #     self._wdgLabels.addLabel(ConflictLabel(self.novel, item))
+        # self.scene_structure_item.conflicts.clear()
+        # self.scene_structure_item.conflicts.extend(items)
 
 
 class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
@@ -292,28 +295,16 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
 class SceneGoalItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneGoalItemWidget, self).__init__(novel, scene_structure_item, placeholder='Goal', topVisible=True,
+        super(SceneGoalItemWidget, self).__init__(novel, scene_structure_item, placeholder='Goal',
                                                   parent=parent)
-        self._wdgGoals = SceneGoalsWidget(self.novel, self.scene_structure_item)
-        self.layoutTop.addWidget(self._wdgGoals)
         self.btnIcon.setIcon(IconRegistry.goal_icon())
-
-    @overrides
-    def activate(self):
-        self._wdgGoals.btnEdit.click()
 
 
 class SceneConflictItemWidget(SceneStructureItemWidget):
-    def __init__(self, novel: Novel, scene: Scene, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneConflictItemWidget, self).__init__(novel, scene_structure_item, topVisible=True, parent=parent)
-        self._wdgConflicts = SceneConflictsWidget(self.novel, scene, self.scene_structure_item)
-        self.layoutTop.addWidget(self._wdgConflicts)
-        self.text.setPlaceholderText('Conflict')
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(SceneConflictItemWidget, self).__init__(novel, scene_structure_item, placeholder='Conflict',
+                                                      parent=parent)
         self.btnIcon.setIcon(IconRegistry.conflict_icon())
-
-    @overrides
-    def activate(self):
-        self._wdgConflicts.btnEdit.click()
 
 
 class SceneOutcomeItemWidget(SceneStructureItemWidget):
@@ -340,12 +331,11 @@ class DilemmaSceneItemWidget(SceneStructureItemWidget):
         self.btnIcon.setIcon(IconRegistry.dilemma_icon())
 
 
-class DecisionSceneItemWidget(SceneGoalItemWidget):
+class DecisionSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(DecisionSceneItemWidget, self).__init__(novel, scene_structure_item, parent=parent)
-        self._wdgGoals.btnEdit.setText('New goal')
+        super(DecisionSceneItemWidget, self).__init__(novel, scene_structure_item, placeholder='New goal and action',
+                                                      parent=parent)
         self.btnIcon.setIcon(IconRegistry.decision_icon())
-        self.text.setPlaceholderText('New goal and action')
 
 
 class HookSceneItemWidget(SceneStructureItemWidget):
@@ -374,7 +364,7 @@ class CrisisSceneItemWidget(SceneStructureItemWidget):
         self.btnIcon.setIcon(IconRegistry.crisis_icon())
 
 
-class TicklingClockSceneItemWidget(SceneStructureItemWidget):
+class TickingClockSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super().__init__(novel, scene_structure_item, placeholder='Ticking clock is activated to increase tension',
                          parent=parent)
@@ -460,6 +450,10 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.wdgTypes.layout().addWidget(self.btnScene)
         self.wdgTypes.layout().addWidget(self.btnSequel)
 
+        flow(self.wdgGoalConflictContainer)
+        self.wdgGoalConflictContainer.layout().addWidget(
+            CharacterConflictSelector(self.novel, self.wdgGoalConflictContainer))
+
         self.btnBeginningIcon.setIcon(IconRegistry.cause_icon())
         self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex'))
         self.btnEndIcon.setIcon(IconRegistry.from_name('mdi.ray-end'))
@@ -522,7 +516,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                     widget = SceneGoalItemWidget(self.novel, item)
                     self.btnGoal.setDisabled(True)
                 elif item.type == SceneStructureItemType.CONFLICT:
-                    widget = SceneConflictItemWidget(self.novel, self.scene, item)
+                    widget = SceneConflictItemWidget(self.novel, item)
                     self.btnConflict.setDisabled(True)
                 elif item.type == SceneStructureItemType.OUTCOME:
                     widget = SceneOutcomeItemWidget(self.novel, item)
@@ -543,7 +537,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                 elif item.type == SceneStructureItemType.CRISIS:
                     widget = CrisisSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.TICKING_CLOCK:
-                    widget = TicklingClockSceneItemWidget(self.novel, item)
+                    widget = TickingClockSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.EXPOSITION:
                     widget = ExpositionSceneItemWidget(self.novel, item)
                 else:
@@ -720,7 +714,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if data == SceneStructureItemType.GOAL:
             widget = SceneGoalItemWidget(self.novel, SceneStructureItem(data))
         elif data == SceneStructureItemType.CONFLICT:
-            widget = SceneConflictItemWidget(self.novel, self.scene, SceneStructureItem(data))
+            widget = SceneConflictItemWidget(self.novel, SceneStructureItem(data))
         elif data == SceneStructureItemType.OUTCOME:
             widget = SceneOutcomeItemWidget(self.novel, SceneStructureItem(data, outcome=SceneOutcome.DISASTER))
         elif data == SceneStructureItemType.REACTION:
@@ -740,7 +734,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         elif data == SceneStructureItemType.CRISIS:
             widget = CrisisSceneItemWidget(self.novel, SceneStructureItem(data))
         elif data == SceneStructureItemType.TICKING_CLOCK:
-            widget = TicklingClockSceneItemWidget(self.novel, SceneStructureItem(data))
+            widget = TickingClockSceneItemWidget(self.novel, SceneStructureItem(data))
         elif data == SceneStructureItemType.EXPOSITION:
             widget = ExpositionSceneItemWidget(self.novel, SceneStructureItem(data))
         else:
@@ -777,7 +771,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             return
 
         for item in self.agendas()[0].items:
-            if item.text or item.goals or item.conflicts:
+            if item.text or self.agendas()[0].goals(self.novel) or self.agendas()[0].conflicts(self.novel):
                 if not ask_confirmation(
                         "Some beats are filled up. Are you sure you want to change the scene's structure?"):
                     self._checkSceneType()  # revert
@@ -787,8 +781,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if type == SceneType.ACTION and checked:
             self.scene.type = type
             top = SceneGoalItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.GOAL))
-            middle = SceneConflictItemWidget(self.novel, self.scene,
-                                             SceneStructureItem(SceneStructureItemType.CONFLICT))
+            middle = SceneConflictItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.CONFLICT))
             bottom = SceneOutcomeItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.OUTCOME,
                                                                            outcome=SceneOutcome.DISASTER))
             self.btnSequel.setChecked(False)

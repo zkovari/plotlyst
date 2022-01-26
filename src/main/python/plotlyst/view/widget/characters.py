@@ -24,7 +24,7 @@ import emoji
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor
-from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -344,6 +344,39 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.refresh()
         self.tblConflicts.model().checkItem(conflict)
         self.lineKey.clear()
+
+
+class CharacterConflictSelector(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super(CharacterConflictSelector, self).__init__(parent)
+        self.novel = novel
+        hbox(self)
+
+        self.btnLinkConflict = QPushButton(self)
+        self.btnLinkConflict.setText('Track conflict')
+        self.layout().addWidget(self.btnLinkConflict)
+        self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
+        self.btnLinkConflict.setCursor(Qt.PointingHandCursor)
+        self.btnLinkConflict.setStyleSheet('''
+                        QPushButton {
+                            border: 2px dotted grey;
+                            border-radius: 6px;
+                            font: italic;
+                        }
+                        QPushButton:hover {
+                            border: 2px dotted orange;
+                            color: orange;
+                            font: normal;
+                        }
+                        QPushButton:pressed {
+                            border: 2px solid white;
+                        }
+                    ''')
+
+        self.btnLinkConflict.installEventFilter(OpacityEventFilter(parent=self.btnLinkConflict))
+        # self.selectorWidget = CharacterConflictWidget(self.btnLinkConflict)
+        # self.selectorWidget.setCharacters(self.novel.characters)
+        # popup(self.btnLinkCharacter, self.selectorWidget)
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):

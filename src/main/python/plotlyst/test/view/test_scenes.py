@@ -114,12 +114,6 @@ def test_switch_views(qtbot, filled_window: MainWindow):
     view.ui.btnTableView.click()
     assert view.ui.tblScenes.verticalHeader().isVisible()
 
-    view.ui.btnActionsView.click()
-    assert_data(view.tblModel, 'Beginning', 0, ScenesTableModel.ColBeginning)
-    assert_data(view.tblModel, 'Middle', 0, ScenesTableModel.ColMiddle)
-    assert_data(view.tblModel, 'End', 0, ScenesTableModel.ColEnd)
-    assert view.ui.tblScenes.verticalHeader().isVisible()
-
     view.ui.btnStatusView.click()
     assert view.stagesModel
     assert view.stagesProgress

@@ -146,8 +146,6 @@ class SceneInfo:
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
     beats: List[SceneStoryBeat] = field(default_factory=list)
-    conflicts: List[uuid.UUID] = field(default_factory=list)
-    goals: List[str] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     document: Optional[Document] = None
@@ -413,15 +411,15 @@ class JsonClient:
                     if str(char_id) in characters_ids.keys():
                         scene_characters.append(characters_ids[str(char_id)])
 
-                scene_conflicts = []
-                for conflict_id in info.conflicts:
-                    if str(conflict_id) in conflict_ids.keys():
-                        scene_conflicts.append(conflict_ids[str(conflict_id)])
+                # scene_conflicts = []
+                # for conflict_id in info.conflicts:
+                #     if str(conflict_id) in conflict_ids.keys():
+                #         scene_conflicts.append(conflict_ids[str(conflict_id)])
 
-                scene_goals = []
-                for goal_text in info.goals:
-                    if goal_text in goals_index.keys():
-                        scene_goals.append(goals_index[goal_text])
+                # scene_goals = []
+                # for goal_text in info.goals:
+                #     if goal_text in goals_index.keys():
+                #         scene_goals.append(goals_index[goal_text])
 
                 if info.chapter and str(info.chapter) in chapters_ids.keys():
                     chapter = chapters_ids[str(info.chapter)]
@@ -450,7 +448,7 @@ class JsonClient:
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,
-                              conflicts=scene_conflicts, goals=scene_goals, comments=info.comments, tags=info.tags,
+                              comments=info.comments, tags=info.tags,
                               document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
 
@@ -501,7 +499,6 @@ class JsonClient:
         arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]
         builder_elements = [self.__get_scene_builder_element_info(x) for x in
                             scene.builder_elements]
-        conflicts = [x.id for x in scene.conflicts]
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          beginning=scene.beginning, middle=scene.middle,
                          end=scene.end, wip=scene.wip, day=scene.day,
@@ -510,8 +507,7 @@ class JsonClient:
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
-                         beats=scene.beats,
-                         conflicts=conflicts, goals=[x.text for x in scene.goals], comments=scene.comments,
+                         beats=scene.beats, comments=scene.comments,
                          tags=scene.tags, document=scene.document, manuscript=scene.manuscript)
         self.__persist_info(self.scenes_dir, info)
 

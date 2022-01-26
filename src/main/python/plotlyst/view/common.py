@@ -272,6 +272,12 @@ def bold(widget: QWidget, enabled: bool = True):
     widget.setFont(font)
 
 
+def italic(widget: QWidget, enabled: bool = True):
+    font = widget.font()
+    font.setItalic(enabled)
+    widget.setFont(font)
+
+
 def gc(object: QObject):
     object.setParent(None)
     object.deleteLater()

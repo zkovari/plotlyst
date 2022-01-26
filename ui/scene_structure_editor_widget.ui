@@ -370,6 +370,9 @@ incident</string>
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_5">
+     <property name="spacing">
+      <number>3</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_12">
        <item alignment="Qt::AlignHCenter">
@@ -448,6 +451,9 @@ incident</string>
          <property name="spacing">
           <number>1</number>
          </property>
+         <item>
+          <widget class="QWidget" name="wdgGoalConflictContainer" native="true"/>
+         </item>
          <item>
           <widget class="QWidget" name="wdgBeginningLabel" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout_6">

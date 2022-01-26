@@ -386,8 +386,6 @@ class SceneStructureItem:
     type: SceneStructureItemType
     part: int = 1
     text: str = ''
-    conflicts: List[Conflict] = field(default_factory=list)
-    goals: List[SceneGoal] = field(default_factory=list)
     outcome: Optional[SceneOutcome] = None
 
 
@@ -395,11 +393,26 @@ class SceneStructureItem:
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     items: List[SceneStructureItem] = field(default_factory=list)
+    conflict_ids: List[uuid.UUID] = field(default_factory=list)
+    goal_ids: List[uuid.UUID] = field(default_factory=list)
+    outcome: Optional[SceneOutcome] = None
     beginning_emotion: int = NEUTRAL
     ending_emotion: int = NEUTRAL
 
     def __post_init__(self):
         self._character: Optional[Character] = None
+
+    def conflicts(self, novel: 'Novel') -> List[Conflict]:
+        conflicts_ = []
+        for id_ in self.conflict_ids:
+            for conflict in novel.conflicts:
+                if conflict.id == id_:
+                    conflicts_.append(conflict)
+
+        return conflicts_
+
+    def goals(self, novel: 'Novel') -> List[SceneGoal]:
+        return []
 
 
 @dataclass
@@ -446,8 +459,6 @@ class Scene:
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
     beats: List[SceneStoryBeat] = field(default_factory=list)
-    conflicts: List[Conflict] = field(default_factory=list)
-    goals: List[SceneGoal] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     document: Optional['Document'] = None
