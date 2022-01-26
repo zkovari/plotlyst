@@ -488,6 +488,9 @@ class RichTextEditor(QFrame):
                             <h1>{title}</h1>''')
         self.textTitle.setReadOnly(title_read_only)
 
+    def setPlaceholderText(self, text: str):
+        self.textEditor.setPlaceholderText(text)
+
     def setTitleVisible(self, visible: bool):
         self.textTitle.setVisible(visible)
 

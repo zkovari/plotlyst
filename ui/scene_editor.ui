@@ -572,6 +572,12 @@ border-radius: 15px;
           </property>
           <item>
            <widget class="RotatedButton" name="btnAttributes">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -594,6 +600,12 @@ border-radius: 15px;
           </item>
           <item>
            <widget class="RotatedButton" name="btnNotes">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -616,6 +628,12 @@ border-radius: 15px;
           </item>
           <item>
            <widget class="RotatedButton" name="btnBuilder">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -658,7 +676,7 @@ border-radius: 15px;
           <enum>Qt::NoFocus</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="pageStructure">
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -732,8 +750,8 @@ border-radius: 15px;
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>628</width>
-                     <height>541</height>
+                     <width>631</width>
+                     <height>547</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -764,13 +782,6 @@ border-radius: 15px;
                     </item>
                    </layout>
                   </widget>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="Line" name="line">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
                  </widget>
                 </item>
                 <item>
@@ -877,13 +888,6 @@ border-radius: 15px;
               </widget>
              </item>
              <item>
-              <widget class="Line" name="line_2">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-              </widget>
-             </item>
-             <item>
               <spacer name="horizontalSpacer_19">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -954,7 +958,11 @@ border-radius: 15px;
             <number>2</number>
            </property>
            <item>
-            <widget class="RichTextEditor" name="textNotes"/>
+            <widget class="RichTextEditor" name="textNotes">
+             <property name="placeholderText">
+              <string>Scene notes or type '/' for commands</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -1110,15 +1118,15 @@ border-radius: 15px;
  </widget>
  <customwidgets>
   <customwidget>
+   <class>RotatedButton</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
    <class>RichTextEditor</class>
    <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>RotatedButton</class>
-   <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>LabelsWidget</class>
