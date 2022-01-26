@@ -92,7 +92,7 @@
           <number>0</number>
          </property>
          <property name="leftMargin">
-          <number>0</number>
+          <number>20</number>
          </property>
          <property name="topMargin">
           <number>0</number>
@@ -116,6 +116,25 @@
            </property>
            <property name="text">
             <string>Title</string>
+           </property>
+          </widget>
+         </item>
+         <item alignment="Qt::AlignTop">
+          <widget class="QToolButton" name="btnEditNovel">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QToolButton {
+	border: 0px;
+}
+
+QToolButton:pressed {
+	border: 1px solid black;
+}</string>
+           </property>
+           <property name="text">
+            <string/>
            </property>
           </widget>
          </item>
@@ -671,6 +690,12 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>RichTextEditor</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>ItemsEditorWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.items_editor</header>
@@ -680,12 +705,6 @@
    <class>StoryStructureEditor</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.novel</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
    <container>1</container>
   </customwidget>
   <customwidget>

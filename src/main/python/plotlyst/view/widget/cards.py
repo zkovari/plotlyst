@@ -178,12 +178,12 @@ class NovelCard(Ui_NovelCard, Card):
         super().__init__(parent)
         self.setupUi(self)
         self.novel = novel
-        self.textName.setText(self.novel.title)
-        self.textName.setAlignment(Qt.AlignCenter)
         self._setStyleSheet()
+        self.refresh()
 
     def refresh(self):
         self.textName.setText(self.novel.title)
+        self.textName.setAlignment(Qt.AlignCenter)
 
     @overrides
     def mimeType(self) -> str:

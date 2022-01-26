@@ -19,20 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
+from PyQt5.QtCore import QObject, QEvent
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Plot, Document
+from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel, NovelConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages, OpacityEventFilter
+from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages, OpacityEventFilter, \
+    retain_size_when_hidden
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
-from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult
+from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult, NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -51,6 +54,13 @@ class NovelView(AbstractNovelView):
         self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('white'))
         self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
+
+        self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
+        self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))
+        self.ui.btnEditNovel.clicked.connect(self._edit_novel)
+        retain_size_when_hidden(self.ui.btnEditNovel)
+        self.ui.wdgTitle.installEventFilter(self)
+        self.ui.btnEditNovel.setHidden(True)
 
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textLogline.setPlainText(self.novel.logline)
@@ -140,6 +150,23 @@ class NovelView(AbstractNovelView):
         self.story_lines_model.modelReset.emit()
         self.conflict_model.modelReset.emit()
         self._conflict_selected()
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Enter:
+            self.ui.btnEditNovel.setVisible(True)
+        elif event.type() == QEvent.Leave:
+            self.ui.btnEditNovel.setHidden(True)
+
+        return super(NovelView, self).eventFilter(watched, event)
+
+    def _edit_novel(self):
+        title = NovelEditionDialog().display(self.novel)
+        if title:
+            self.novel.title = title
+            self.repo.update_project_novel(self.novel)
+            self.ui.lblTitle.setText(self.novel.title)
+            emit_event(NovelUpdatedEvent(self, self.novel))
 
     def _edit_plot(self, plot: Plot):
         edited_plot: Optional[PlotEditionResult] = PlotEditorDialog(self.novel, plot).display()
