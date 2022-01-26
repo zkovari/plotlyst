@@ -28,6 +28,7 @@ from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDr
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView, QSplitter, \
     QPushButton
 from overrides import overrides
+from qtanim import fade_out
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal, SceneType, \
@@ -37,13 +38,12 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
-    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter
+    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import hbox
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, GoalLabel, ConflictLabel
@@ -282,8 +282,12 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
     def _remove(self):
         if self.parent():
-            self.parent().layout().removeWidget(self)
-            self.deleteLater()
+            anim = fade_out(self, duration=150)
+            anim.finished.connect(self.__destroy)
+
+    def __destroy(self):
+        self.parent().layout().removeWidget(self)
+        gc(self)
 
 
 class SceneGoalItemWidget(SceneStructureItemWidget):
@@ -439,7 +443,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnScene = _SceneTypeButton(SceneType.ACTION)
         self.btnSequel = _SceneTypeButton(SceneType.REACTION)
 
-        hbox(self.wdgTypes)
         self.wdgTypes.layout().addWidget(self.btnScene)
         self.wdgTypes.layout().addWidget(self.btnSequel)
 
