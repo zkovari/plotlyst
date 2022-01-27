@@ -19,8 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, QRect, QPoint, Qt
-from PyQt5.QtWidgets import QHeaderView, QMenu, QWidgetAction, QListView, QWidget
+from PyQt5.QtCore import QModelIndex, Qt, QSize
+from PyQt5.QtWidgets import QHeaderView, QWidgetAction, QListView, QWidget
+from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
@@ -50,6 +51,8 @@ class DocumentsView(AbstractNovelView):
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
 
+        self.ui.splitter.setSizes([100, 500])
+
         self.model = DocumentsTreeModel(self.novel)
         self.ui.treeDocuments.setModel(self.model)
         self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.Stretch)
@@ -59,18 +62,18 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.expandAll()
         self.model.modelReset.connect(self.refresh)
 
+        if platform.is_mac():
+            self.ui.btnAdd.setIconSize(QSize(15, 15))
+
         self.textEditor: Optional[RichTextEditor] = None
         self.highlighter: Optional[GrammarHighlighter] = None
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
         self.ui.btnAdd.clicked.connect(self._add_doc)
-        self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
-        self.ui.btnRemove.clicked.connect(self._remove_doc)
 
     @overrides
     def refresh(self):
         self.ui.treeDocuments.expandAll()
-        self.ui.btnRemove.setEnabled(False)
 
     def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None,
                  doc_type: DocumentType = DocumentType.DOCUMENT):
@@ -96,7 +99,6 @@ class DocumentsView(AbstractNovelView):
         else:
             index = self.model.insertDoc(doc)
         self.ui.treeDocuments.select(index)
-        self.ui.btnRemove.setEnabled(True)
         self._edit(index)
 
         if doc_type == DocumentType.STORY_STRUCTURE:
@@ -104,7 +106,6 @@ class DocumentsView(AbstractNovelView):
             self._save()
 
     def _doc_clicked(self, index: QModelIndex):
-        self.ui.btnRemove.setEnabled(True)
         if index.column() == 0:
             self._edit(index)
         elif index.column() == DocumentsTreeModel.ColMenu:
@@ -125,11 +126,12 @@ class DocumentsView(AbstractNovelView):
         clear_layout(self.ui.docEditorPage.layout())
 
     def _show_menu_popup(self, index: QModelIndex):
-        rect: QRect = self.ui.treeDocuments.visualRect(index)
-        menu = QMenu(self.ui.treeDocuments)
-        menu.addAction(IconRegistry.icons_icon(), 'Edit icon', lambda: self._change_icon(index))
+        builder = PopupMenuBuilder.from_index(self.ui.treeDocuments, index)
+        builder.add_action('Edit icon', IconRegistry.icons_icon(), lambda: self._change_icon(index))
+        builder.add_separator()
+        builder.add_action('Delete', IconRegistry.minus_icon(), self._remove_doc)
 
-        menu.popup(self.ui.treeDocuments.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+        builder.popup()
 
     def _show_docs_popup(self, index: QModelIndex):
         def add_character(char_index: QModelIndex):

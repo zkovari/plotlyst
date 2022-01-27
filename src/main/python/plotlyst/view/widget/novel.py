@@ -39,7 +39,7 @@ from src.main.python.plotlyst.view.generated.story_structure_character_link_widg
 from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.layout import FlowLayout, clear_layout
+from src.main.python.plotlyst.view.layout import clear_layout, flow
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -265,7 +265,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
     def __init__(self, parent=None):
         super(StoryStructureEditor, self).__init__(parent)
         self.setupUi(self)
-        self.wdgTemplates.setLayout(FlowLayout(2, 3))
+        flow(self.wdgTemplates)
 
         self.btnTemplateEditor.setIcon(IconRegistry.plus_edit_icon())
         self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
@@ -358,6 +358,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         for struct in self.novel.story_structures:
             struct.active = False
         structure.active = True
+        acts_registry.refresh()
 
         if self.wdgPreview.novel is not None:
             item = self.layout().takeAt(1)

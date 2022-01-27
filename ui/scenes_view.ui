@@ -58,7 +58,7 @@
            <number>0</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>4</number>
           </property>
           <property name="rightMargin">
            <number>0</number>
@@ -538,6 +538,21 @@
          </property>
          <widget class="QWidget" name="wgtChapters" native="true">
           <layout class="QVBoxLayout" name="verticalLayout_2">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>2</number>
+           </property>
            <item>
             <widget class="ActionBasedTreeView" name="treeChapters">
              <property name="sizePolicy">
@@ -556,7 +571,7 @@
               <enum>QAbstractItemView::DragDrop</enum>
              </property>
              <property name="indentation">
-              <number>20</number>
+              <number>10</number>
              </property>
              <property name="rootIsDecorated">
               <bool>true</bool>
@@ -954,6 +969,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>RotatedButton</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
    <class>ActionBasedTreeView</class>
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.tree_view</header>
@@ -963,11 +983,6 @@
    <extends>QFrame</extends>
    <header>src.main.python.plotlyst.view.widget.cards</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>RotatedButton</class>
-   <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

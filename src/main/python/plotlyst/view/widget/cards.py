@@ -22,9 +22,10 @@ from abc import abstractmethod
 from typing import Optional, List
 
 import emoji
+import qtanim
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
-from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent
+from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor
 from PyQt5.QtWidgets import QFrame, QApplication, QAction
 from fbs_runtime import platform
 from overrides import overrides
@@ -63,6 +64,10 @@ class Card(QFrame):
 
     def setDragEnabled(self, enabled: bool):
         self._dragEnabled = enabled
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        qtanim.glow(self, color=QColor('#0096c7'))
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -173,12 +178,12 @@ class NovelCard(Ui_NovelCard, Card):
         super().__init__(parent)
         self.setupUi(self)
         self.novel = novel
-        self.textName.setText(self.novel.title)
-        self.textName.setAlignment(Qt.AlignCenter)
         self._setStyleSheet()
+        self.refresh()
 
     def refresh(self):
         self.textName.setText(self.novel.title)
+        self.textName.setAlignment(Qt.AlignCenter)
 
     @overrides
     def mimeType(self) -> str:
@@ -247,7 +252,8 @@ class SceneCard(Ui_SceneCard, Card):
         self.wdgCharacters.layout().setSpacing(1)
 
         self.textTitle.setFontPointSize(QApplication.font().pointSize() + 1)
-        self.textTitle.setText(self.scene.title)
+        self.textTitle.setText(
+            self.scene.title if self.scene.title else f'Scene {self.novel.scenes.index(self.scene) + 1}')
         self.textTitle.setAlignment(Qt.AlignCenter)
 
         self.btnPov.clicked.connect(self.select)
@@ -296,6 +302,7 @@ class SceneCard(Ui_SceneCard, Card):
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
+        super(SceneCard, self).enterEvent(event)
         self.wdgCharacters.setEnabled(True)
 
     @overrides
@@ -317,12 +324,14 @@ class SceneCard(Ui_SceneCard, Card):
 
 class CardsView(QFrame):
     swapped = pyqtSignal(object, object)
+    selectionCleared = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._layout = FlowLayout(spacing=9)
         self.setLayout(self._layout)
         self.setAcceptDrops(True)
+        self._selected: Optional[Card] = None
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
@@ -333,11 +342,20 @@ class CardsView(QFrame):
     def dragMoveEvent(self, event: QDragMoveEvent) -> None:
         event.acceptProposedAction()
 
+    @overrides
+    def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        if self._selected:
+            self._selected.clearSelection()
+            self._selected = None
+            self.selectionCleared.emit()
+
     def clear(self):
+        self._selected = None
         self._layout.clear()
 
     def addCard(self, card: Card):
         card.setAcceptDrops(True)
+        card.selected.connect(self._cardSelected)
         card.dropped.connect(self.swapped.emit)
         self._layout.addWidget(card)
 
@@ -345,3 +363,6 @@ class CardsView(QFrame):
         item = self._layout.itemAt(pos)
         if item and item.widget():
             return item.widget()
+
+    def _cardSelected(self, card: Card):
+        self._selected = card

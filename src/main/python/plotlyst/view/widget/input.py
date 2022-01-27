@@ -21,7 +21,6 @@ from enum import Enum
 from functools import partial
 from typing import Optional
 
-import fbs_runtime.platform
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
@@ -29,20 +28,23 @@ from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTex
     QTextDocument, QTextBlockUserData
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel, QFileDialog
+    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel, QFileDialog, \
+    QLineEdit
+from fbs_runtime import platform
 from language_tool_python import LanguageTool
 from overrides import overrides
 from slugify import slugify
 
 from src.main.python.plotlyst.core.domain import TextStatistics
+from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
-from src.main.python.plotlyst.view.common import line, spacer_widget
+from src.main.python.plotlyst.view.common import line, spacer_widget, OpacityEventFilter, transparent
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
-from src.main.python.plotlyst.worker.grammar import language_tool_proxy
+from src.main.python.plotlyst.worker.grammar import language_tool_proxy, dictionary
 
 
 class AutoAdjustableTextEdit(QTextEdit):
@@ -51,7 +53,7 @@ class AutoAdjustableTextEdit(QTextEdit):
         self.textChanged.connect(self._resizeToContent)
         self._minHeight = height
         self.setAcceptRichText(False)
-        self.setMaximumHeight(self._minHeight)
+        self.setFixedHeight(self._minHeight)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     @overrides
@@ -64,7 +66,7 @@ class AutoAdjustableTextEdit(QTextEdit):
 
     def _resizeToContent(self):
         size = self.document().size()
-        self.setMaximumHeight(max(self._minHeight, size.height()))
+        self.setFixedHeight(max(self._minHeight, size.height()))
 
 
 class TextBlockData(QTextBlockUserData):
@@ -128,7 +130,7 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
         self._currentAsyncBlock: int = 0
         self._asyncTimer = QTimer()
-        self._asyncTimer.setInterval(10)
+        self._asyncTimer.setInterval(20)
         self._asyncTimer.timeout.connect(self._highlightNextBlock)
 
         event_dispatcher.register(self, LanguageToolSet)
@@ -147,11 +149,6 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         super(GrammarHighlighter, self).setDocument(doc)
 
     @overrides
-    def deleteLater(self) -> None:
-        event_dispatcher.deregister(self, LanguageToolSet)
-        super(GrammarHighlighter, self).deleteLater()
-
-    @overrides
     def event_received(self, event: Event):
         if isinstance(event, LanguageToolSet):
             self._language_tool = language_tool_proxy.tool
@@ -163,6 +160,8 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
             matches = self._language_tool.check(text)
             misspellings = []
             for m in matches:
+                if dictionary.is_known_word(text[m.offset:m.offset + m.errorLength]):
+                    continue
                 self.setFormat(m.offset, m.errorLength,
                                self._formats_per_issue.get(m.ruleIssueType, self._grammar_format))
                 misspellings.append((m.offset, m.errorLength, m.replacements, m.message, m.ruleIssueType))
@@ -188,8 +187,7 @@ class BlockStatistics(AbstractTextBlockHighlighter):
     @overrides
     def highlightBlock(self, text: str) -> None:
         data = self._currentblockData()
-        wc = len([x for x in text.split(' ') if x])
-        data.wordCount = wc
+        data.wordCount = wc(text)
 
 
 class _TextEditor(QTextEdit):
@@ -247,6 +245,43 @@ class _TextEditor(QTextEdit):
                 menu.popup(pos)
 
     @overrides
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        cursor = self.textCursor()
+        if event.key() == Qt.Key_Tab:
+            list_ = cursor.block().textList()
+            if list_:
+                cursor.beginEditBlock()
+                block = cursor.block()
+
+                new_format = list_.format()
+                new_format.setIndent(list_.format().indent() + 1)
+                cursor.insertList(new_format)
+                list_.removeItem(list_.itemNumber(block))
+                cursor.deletePreviousChar()
+
+                cursor.endEditBlock()
+                return
+        if event.key() == Qt.Key_Backtab:
+            list_ = cursor.block().textList()
+            if list_:
+                indent = list_.format().indent()
+                if indent > 1:
+                    cursor.beginEditBlock()
+                    new_format = list_.format()
+                    new_format.setIndent(indent - 1)
+                    list_.setFormat(new_format)
+                    cursor.endEditBlock()
+                return
+        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
+            level = cursor.blockFormat().headingLevel()
+            if level > 0:  # heading
+                cursor.insertBlock()
+                self.cbHeading.setCurrentIndex(0)
+                self._setHeading()
+                return
+        super(_TextEditor, self).keyPressEvent(event)
+
+    @overrides
     def insertFromMimeData(self, source: QMimeData) -> None:
         if self._pasteAsPlain:
             self.insertPlainText(source.text())
@@ -284,6 +319,34 @@ class _TextEditor(QTextEdit):
         QApplication.restoreOverrideCursor()
 
 
+class CapitalizationEventFilter(QObject):
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(event, QKeyEvent) and event.type() == QEvent.KeyPress:
+            if event.text().isalpha() and self._empty(watched) and 'filter' not in watched.objectName().lower():
+                inserted = self._insert(watched, event.text().upper())
+                if inserted:
+                    return True
+        return super(CapitalizationEventFilter, self).eventFilter(watched, event)
+
+    def _empty(self, widget) -> bool:
+        if isinstance(widget, QLineEdit):
+            return not widget.text()
+        elif isinstance(widget, QTextEdit):
+            return not widget.toPlainText()
+        return False
+
+    def _insert(self, widget, text: str) -> bool:
+        if isinstance(widget, QLineEdit):
+            widget.insert(text)
+            return True
+        elif isinstance(widget, QTextEdit):
+            widget.insertPlainText(text)
+            return True
+        return False
+
+
 class RichTextEditor(QFrame):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
@@ -293,6 +356,10 @@ class RichTextEditor(QFrame):
         self.layout().setContentsMargins(2, 2, 2, 2)
 
         self.toolbar = QToolBar()
+        if platform.is_mac():
+            self.toolbar.setIconSize(QSize(15, 15))
+        else:
+            self.toolbar.setIconSize(QSize(17, 17))
         self.toolbar.setStyleSheet('.QToolBar {background-color: rgb(255, 255, 255);}')
         self.toolbar.layout().setSpacing(5)
         self.textTitle = AutoAdjustableTextEdit(height=50)
@@ -300,14 +367,15 @@ class RichTextEditor(QFrame):
 
         self.textEditor = _TextEditor()
         self.textEditor.setMouseTracking(True)
+        self.textEditor.setAutoFormatting(QTextEdit.AutoAll)
 
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
         self.textEditor.setViewportMargins(5, 5, 5, 5)
 
-        if fbs_runtime.platform.is_linux():
+        if platform.is_linux():
             family = 'Noto Sans Mono'
-        elif fbs_runtime.platform.is_mac():
-            family = 'Palatino'
+        elif platform.is_mac():
+            family = 'Helvetica Neue'
         else:
             family = 'Helvetica'
         self.textEditor.setStyleSheet(f'QTextEdit {{background: white; border: 0px; font: {family}}}')
@@ -319,7 +387,7 @@ class RichTextEditor(QFrame):
         self._lblPlaceholder.setFont(font)
         self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
-        self.setFontPointSize(13)
+        self.setFontPointSize(16)
 
         self.setMouseTracking(True)
         self.textEditor.installEventFilter(self)
@@ -333,12 +401,13 @@ class RichTextEditor(QFrame):
         self.layout().addWidget(self.textEditor)
 
         self.cbHeading = QComboBox()
-        self.cbHeading.setStyleSheet('''
-        QComboBox {
-            border: 0px;
-            padding: 1px 1px 1px 3px;
-        }
-        ''')
+        if platform.is_linux() or platform.is_windows():
+            self.cbHeading.setStyleSheet('''
+                QComboBox {
+                    border: 0px;
+                    padding: 1px 1px 1px 3px;
+                }
+            ''')
 
         self.cbHeading.addItem('Normal')
         self.cbHeading.addItem(IconRegistry.heading_1_icon(), '')
@@ -419,6 +488,9 @@ class RichTextEditor(QFrame):
                             <h1>{title}</h1>''')
         self.textTitle.setReadOnly(title_read_only)
 
+    def setPlaceholderText(self, text: str):
+        self.textEditor.setPlaceholderText(text)
+
     def setTitleVisible(self, visible: bool):
         self.textTitle.setVisible(visible)
 
@@ -474,24 +546,6 @@ class RichTextEditor(QFrame):
                         QFont.Bold if self.textEditor.fontWeight() == QFont.Normal else QFont.Normal)
 
             cursor = self.textEditor.textCursor()
-            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
-                _list = cursor.block().textList()
-                if _list and _list.count() > 1:
-                    cursor.beginEditBlock()
-                    block = cursor.block()
-                    _list.remove(block)
-                    _list.format().setIndent(_list.format().indent() + 1)
-                    cursor.insertList(_list.format())
-
-                    cursor.endEditBlock()
-                    return True
-            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-                level = cursor.blockFormat().headingLevel()
-                if level > 0:  # heading
-                    cursor.insertBlock()
-                    self.cbHeading.setCurrentIndex(0)
-                    self._setHeading()
-                    return True
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
                 if self.textEditor.textCursor().atBlockStart():
                     self._showCommands()
@@ -501,9 +555,6 @@ class RichTextEditor(QFrame):
                 if cursor.selectedText() == ' ':
                     self.textEditor.textCursor().deletePreviousChar()
                     self.textEditor.textCursor().insertText('.')
-            elif event.type() == QEvent.KeyPress and event.text().isalpha() and self._atSentenceStart(cursor):
-                self.textEditor.textCursor().insertText(event.text().upper())
-                return True
             elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_QuoteDbl:
                 self.textEditor.textCursor().insertText(event.text())
                 cursor.movePosition(QTextCursor.PreviousCharacter)
@@ -672,6 +723,8 @@ class _PowerBar(QFrame):
 
         painter.fillRect(0, 0, self.value * 10, self.height(), brush)
 
+        painter.end()
+
     def increase(self):
         if self.value < self.steps:
             self.value += 1
@@ -738,3 +791,16 @@ class PowerBar(QFrame):
         self.btnPlus.setIcon(IconRegistry.plus_circle_icon(self.PLUS_COLOR_ACTIVE))
         QTimer.singleShot(100, lambda: self.btnPlus.setIcon(IconRegistry.plus_circle_icon(self.PLUS_COLOR_IDLE)))
         self._bar.increase()
+
+
+class RemovalButton(QToolButton):
+    def __init__(self, parent=None):
+        super(RemovalButton, self).__init__(parent)
+        self.setIcon(IconRegistry.close_icon())
+        self.setCursor(Qt.PointingHandCursor)
+        self.installEventFilter(OpacityEventFilter(parent=self))
+        self.setIconSize(QSize(14, 14))
+        transparent(self)
+
+        self.pressed.connect(lambda: self.setIcon(IconRegistry.close_icon('red')))
+        self.released.connect(lambda: self.setIcon(IconRegistry.close_icon()))

@@ -134,4 +134,38 @@ QToolBar {
     spacing: 1px;
 }
 
+QTreeView {
+    background-color: rgb(244, 244, 244);
+}
+
+QTreeView::branch {
+    background-color: rgb(244, 244, 244);
+    border: 0px;
+}
+
+QTreeView::branch:selected {
+    background-color: #D8D5D5;
+    border: 0px;
+}
+
+QTreeView::branch:hover:!selected {
+    background-color: #D8D5D5;
+    border: 0px;
+}
+
+QTreeView::item:hover:!selected {
+    background-color: #D8D5D5;
+    border: 0px;
+}
+
+QTreeView::item:selected:active {
+    background-color: #D8D5D5;
+    color: black;
+}
+
+QTreeView::item:selected:!active {
+    background-color: #D8D5D5;
+    color: black;
+}
+
 '''

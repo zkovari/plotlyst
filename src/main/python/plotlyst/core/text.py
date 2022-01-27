@@ -84,3 +84,7 @@ def parse_structure_to_richtext(structure: StoryStructure):
         text += f'<h1>{beat.text}</h1><br>'
 
     return text
+
+
+def wc(text: str) -> int:
+    return len([x for x in text.split(' ') if x])

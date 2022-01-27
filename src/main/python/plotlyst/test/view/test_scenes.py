@@ -104,7 +104,7 @@ def test_insert_new_scene_after(qtbot, filled_window: MainWindow):
 
     assert len(view.novel.scenes) == 3
     assert_data(view.tblModel, 'Scene 1', 0, ScenesTableModel.ColTitle)
-    assert_data(view.tblModel, 'Untitled', 1, ScenesTableModel.ColTitle)
+    assert_data(view.tblModel, 'Scene 2', 1, ScenesTableModel.ColTitle)
     assert_data(view.tblModel, 'Scene 2', 2, ScenesTableModel.ColTitle)
 
 
@@ -112,12 +112,6 @@ def test_switch_views(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
 
     view.ui.btnTableView.click()
-    assert view.ui.tblScenes.verticalHeader().isVisible()
-
-    view.ui.btnActionsView.click()
-    assert_data(view.tblModel, 'Beginning', 0, ScenesTableModel.ColBeginning)
-    assert_data(view.tblModel, 'Middle', 0, ScenesTableModel.ColMiddle)
-    assert_data(view.tblModel, 'End', 0, ScenesTableModel.ColEnd)
     assert view.ui.tblScenes.verticalHeader().isVisible()
 
     view.ui.btnStatusView.click()

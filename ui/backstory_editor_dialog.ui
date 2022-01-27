@@ -342,10 +342,43 @@ QToolButton:hover {
         <x>0</x>
         <y>0</y>
         <width>461</width>
-        <height>78</height>
+        <height>68</height>
        </rect>
       </property>
      </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="wdgRelation" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QLabel" name="lblRelation">
+        <property name="text">
+         <string>Follow-up of previous event</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Toggle" name="cbRelated">
+        <property name="text">
+         <string>CheckBox</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
@@ -429,6 +462,11 @@ QToolButton:hover {
  </widget>
  <customwidgets>
   <customwidget>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
    <class>Subtitle</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
@@ -438,7 +476,6 @@ QToolButton:hover {
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupAge"/>
   <buttongroup name="btnGroupEmotion"/>
  </buttongroups>
 </ui>

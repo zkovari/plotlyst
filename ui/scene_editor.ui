@@ -33,7 +33,7 @@
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_8">
-       <item>
+       <item alignment="Qt::AlignLeft">
         <widget class="QPushButton" name="btnClose">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -43,7 +43,7 @@
          </property>
          <property name="maximumSize">
           <size>
-           <width>150</width>
+           <width>100</width>
            <height>16777215</height>
           </size>
          </property>
@@ -52,6 +52,9 @@
          </property>
          <property name="focusPolicy">
           <enum>Qt::ClickFocus</enum>
+         </property>
+         <property name="toolTip">
+          <string>Go back</string>
          </property>
          <property name="text">
           <string>Back</string>
@@ -87,8 +90,8 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>32</width>
-           <height>32</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
@@ -102,6 +105,9 @@
          </property>
          <property name="focusPolicy">
           <enum>Qt::ClickFocus</enum>
+         </property>
+         <property name="toolTip">
+          <string>Previous scene</string>
          </property>
          <property name="text">
           <string/>
@@ -115,8 +121,8 @@
         <widget class="QToolButton" name="btnNext">
          <property name="minimumSize">
           <size>
-           <width>32</width>
-           <height>32</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
@@ -130,6 +136,9 @@
          </property>
          <property name="focusPolicy">
           <enum>Qt::ClickFocus</enum>
+         </property>
+         <property name="toolTip">
+          <string>Next scene</string>
          </property>
          <property name="text">
           <string/>
@@ -563,6 +572,12 @@ border-radius: 15px;
           </property>
           <item>
            <widget class="RotatedButton" name="btnAttributes">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -585,6 +600,12 @@ border-radius: 15px;
           </item>
           <item>
            <widget class="RotatedButton" name="btnNotes">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -607,6 +628,12 @@ border-radius: 15px;
           </item>
           <item>
            <widget class="RotatedButton" name="btnBuilder">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -649,7 +676,7 @@ border-radius: 15px;
           <enum>Qt::NoFocus</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="pageStructure">
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -723,8 +750,8 @@ border-radius: 15px;
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>628</width>
-                     <height>541</height>
+                     <width>631</width>
+                     <height>547</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -755,13 +782,6 @@ border-radius: 15px;
                     </item>
                    </layout>
                   </widget>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="Line" name="line">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
                  </widget>
                 </item>
                 <item>
@@ -868,13 +888,6 @@ border-radius: 15px;
               </widget>
              </item>
              <item>
-              <widget class="Line" name="line_2">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-              </widget>
-             </item>
-             <item>
               <spacer name="horizontalSpacer_19">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -945,7 +958,11 @@ border-radius: 15px;
             <number>2</number>
            </property>
            <item>
-            <widget class="RichTextEditor" name="textNotes"/>
+            <widget class="RichTextEditor" name="textNotes">
+             <property name="placeholderText">
+              <string>Scene notes or type '/' for commands</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -1106,15 +1123,16 @@ border-radius: 15px;
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
+   <class>RichTextEditor</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>LabelsWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.labels</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>SceneStructureWidget</class>

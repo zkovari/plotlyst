@@ -94,6 +94,7 @@ class BackstoryEvent(Event):
     type: BackstoryEventType = BackstoryEventType.Event
     type_icon: str = 'ri.calendar-event-fill'
     type_color: str = 'darkBlue'
+    follow_up: bool = False
 
 
 @dataclass
@@ -137,6 +138,9 @@ class Character:
             if value.id == gender_field.id:
                 return value.value[0] if value.value else -1
         return -1
+
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 class NpcCharacter(Character):
@@ -367,6 +371,8 @@ class SceneStructureItemType(Enum):
     RISING_ACTION = 8
     CRISIS = 9
     TICKING_CLOCK = 10
+    HOOK = 11
+    EXPOSITION = 12
 
 
 class SceneOutcome(Enum):
@@ -380,20 +386,43 @@ class SceneStructureItem:
     type: SceneStructureItemType
     part: int = 1
     text: str = ''
-    conflicts: List[Conflict] = field(default_factory=list)
-    goals: List[SceneGoal] = field(default_factory=list)
     outcome: Optional[SceneOutcome] = None
+
+
+@dataclass
+class ConflictReference:
+    conflict_id: uuid.UUID
+    message: str = ''
+    intensity: int = 1
 
 
 @dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     items: List[SceneStructureItem] = field(default_factory=list)
+    conflict_references: List[ConflictReference] = field(default_factory=list)
+    goal_ids: List[uuid.UUID] = field(default_factory=list)
+    outcome: Optional[SceneOutcome] = None
     beginning_emotion: int = NEUTRAL
     ending_emotion: int = NEUTRAL
 
     def __post_init__(self):
         self._character: Optional[Character] = None
+
+    def conflicts(self, novel: 'Novel') -> List[Conflict]:
+        conflicts_ = []
+        for id_ in [x.conflict_id for x in self.conflict_references]:
+            for conflict in novel.conflicts:
+                if conflict.id == id_:
+                    conflicts_.append(conflict)
+
+        return conflicts_
+
+    def remove_conflict(self, conflict: Conflict):
+        self.conflict_references = [x for x in self.conflict_references if x.conflict_id != conflict.id]
+
+    def goals(self, novel: 'Novel') -> List[SceneGoal]:
+        return []
 
 
 @dataclass
@@ -440,8 +469,6 @@ class Scene:
     builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
     beats: List[SceneStoryBeat] = field(default_factory=list)
-    conflicts: List[Conflict] = field(default_factory=list)
-    goals: List[SceneGoal] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
     document: Optional['Document'] = None
@@ -927,6 +954,9 @@ fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fa
 desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='Desire (select Enneagram to autofill)',
                              id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'), show_label=False)
+
+henchmen_role = SelectionItem('Henchmen', icon='mdi.shuriken', icon_color='#596475')
+tertiary_role = SelectionItem('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68')
 role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION, emoji=':chess_pawn:',
                            id=uuid.UUID('131b9de6-ac95-4db5-b9a1-33200100b676'),
                            selections=[SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c'),
@@ -936,7 +966,7 @@ role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION, emoji=
                                        SelectionItem('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b'),
                                        SelectionItem('Contagonist', icon='mdi.biohazard', icon_color='#ea9010'),
                                        SelectionItem('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946'),
-                                       SelectionItem('Henchmen', icon='mdi.shuriken', icon_color='#596475'),
+                                       henchmen_role,
                                        SelectionItem('', type=SelectionItemType.SEPARATOR),
                                        SelectionItem('Guide', icon='mdi.compass-rose', icon_color='#80ced7'),
                                        SelectionItem('Confidant', icon='fa5s.user-friends', icon_color='#304d6d'),
@@ -948,7 +978,7 @@ role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION, emoji=
                                        SelectionItem('', type=SelectionItemType.SEPARATOR),
                                        SelectionItem('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a'),
                                        SelectionItem('', type=SelectionItemType.SEPARATOR),
-                                       SelectionItem('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68'),
+                                       tertiary_role,
                                        ], compact=True)
 
 _role_choices = {}
@@ -1178,6 +1208,13 @@ class Novel(NovelDescriptor):
                 pov_ids.add(str(scene.pov.id))
 
         return povs
+
+    def major_characters(self) -> List[Character]:
+        return [x for x in self.characters if
+                x.role() and x.role().text not in [tertiary_role.text, henchmen_role.text]]
+
+    def minor_characters(self) -> List[Character]:
+        return [x for x in self.characters if x.role() and x.role().text in [tertiary_role.text, henchmen_role.text]]
 
     @property
     def active_story_structure(self) -> StoryStructure:

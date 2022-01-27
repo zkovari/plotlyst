@@ -34,7 +34,7 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
     emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
-    SceneChangedEvent, NovelUpdatedEvent, OpenDistractionFreeMode
+    SceneChangedEvent, NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -51,9 +51,9 @@ from src.main.python.plotlyst.view.manuscript_view import ManuscriptView, Senten
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.widget.input import RichTextEditor
+from src.main.python.plotlyst.view.widget.input import RichTextEditor, CapitalizationEventFilter
 from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker
+from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 
@@ -82,6 +82,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.novel:
             acts_registry.set_novel(self.novel)
+            dictionary.set_novel(self.novel)
 
         self.home_view = HomeView()
         self.pageHome.layout().addWidget(self.home_view.widget)
@@ -106,7 +107,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
         self.btnReturn.clicked.connect(lambda: self._toggle_fullscreen(on=False))
         self._sentenceHighlighter: Optional[SentenceHighlighter] = None
-        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkblue'))
+        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkBlue'))
         self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -116,6 +117,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not app_env.test_env():
             emit_info('Start initializing grammar checker...')
             self._threadpool.start(self._language_tool_setup_worker)
+
+            QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
 
     @overrides
     def event_received(self, event: Event):
@@ -148,6 +151,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
+        elif isinstance(event, ToggleOutlineViewTitle):
+            self.wdgTitle.setVisible(event.visible)
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -237,22 +242,37 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         else:
             self.btnNovel.setChecked(True)
 
-    def _on_view_changed(self):
+    def _on_view_changed(self, btn=None, checked: bool = True):
+        if not checked:
+            return
+
+        title = None
         if self.btnNovel.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNovel)
             self.novel_view.activate()
         elif self.btnCharacters.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageCharacters)
+            title = self.characters_view.title
             self.characters_view.activate()
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
+            title = self.scenes_outline_view.title
             self.scenes_outline_view.activate()
         elif self.btnLocations.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageLocations)
+            title = self.locations_view.title
             self.locations_view.activate()
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
+            title = self.notes_view.title
             self.notes_view.activate()
+
+        if title:
+            clear_layout(self.wdgTitle.layout(), autoDelete=False)
+            self.wdgTitle.layout().addWidget(title)
+            self.wdgTitle.setVisible(True)
+        else:
+            self.wdgTitle.setHidden(True)
 
     def _init_menubar(self):
         self.menubar.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -279,6 +299,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     def _init_toolbar(self):
         self.toolBar.setContextMenuPolicy(Qt.PreventContextMenu)
+        if platform.is_mac():
+            self.toolBar.setStyleSheet('font: 14px;')
         self.home_mode = QToolButton(self.toolBar)
         self.home_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.home_mode.setText('Home')
@@ -398,6 +420,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.novel = client.fetch_novel(novel.id)
         acts_registry.set_novel(self.novel)
+        dictionary.set_novel(self.novel)
         self._init_views()
         settings.set_last_novel_id(self.novel.id)
         self._register_events()
@@ -409,6 +432,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, NovelDeletedEvent)
         event_dispatcher.register(self, NovelUpdatedEvent)
         event_dispatcher.register(self, OpenDistractionFreeMode)
+        event_dispatcher.register(self, ToggleOutlineViewTitle)
         if self.novel and not self.novel.scenes:
             event_dispatcher.register(self, SceneChangedEvent)
 

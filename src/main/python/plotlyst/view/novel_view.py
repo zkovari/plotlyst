@@ -19,20 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
+from PyQt5.QtCore import QObject, QEvent
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Plot, Document
+from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel, NovelConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages, OpacityEventFilter
+from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages, OpacityEventFilter, \
+    retain_size_when_hidden
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
-from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult
+from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult, NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -52,8 +55,16 @@ class NovelView(AbstractNovelView):
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('white'))
         self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
 
+        self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
+        self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))
+        self.ui.btnEditNovel.clicked.connect(self._edit_novel)
+        retain_size_when_hidden(self.ui.btnEditNovel)
+        self.ui.wdgTitle.installEventFilter(self)
+        self.ui.btnEditNovel.setHidden(True)
+
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textLogline.setPlainText(self.novel.logline)
+        self.ui.lblLoglineWords.calculateWordCount(self.novel.logline)
         self.ui.textLogline.textChanged.connect(self._logline_changed)
 
         self.ui.textSynopsis.setToolbarVisible(False)
@@ -61,6 +72,7 @@ class NovelView(AbstractNovelView):
         if self.novel.synopsis:
             json_client.load_document(self.novel, self.novel.synopsis)
             self.ui.textSynopsis.setText(self.novel.synopsis.content)
+            self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEditor.statistics().word_count)
         self.ui.textSynopsis.textEditor.textChanged.connect(self._synopsis_changed)
 
         self.ui.btnGoalIcon.setIcon(IconRegistry.goal_icon())
@@ -141,6 +153,23 @@ class NovelView(AbstractNovelView):
         self.conflict_model.modelReset.emit()
         self._conflict_selected()
 
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Enter:
+            self.ui.btnEditNovel.setVisible(True)
+        elif event.type() == QEvent.Leave:
+            self.ui.btnEditNovel.setHidden(True)
+
+        return super(NovelView, self).eventFilter(watched, event)
+
+    def _edit_novel(self):
+        title = NovelEditionDialog().display(self.novel)
+        if title:
+            self.novel.title = title
+            self.repo.update_project_novel(self.novel)
+            self.ui.lblTitle.setText(self.novel.title)
+            emit_event(NovelUpdatedEvent(self, self.novel))
+
     def _edit_plot(self, plot: Plot):
         edited_plot: Optional[PlotEditionResult] = PlotEditorDialog(self.novel, plot).display()
         if edited_plot is None:
@@ -172,14 +201,15 @@ class NovelView(AbstractNovelView):
         conflict = indexes[0].data(NovelConflictsModel.ConflictRole)
         if ask_confirmation(f'Delete conflict "{conflict.text}"'):
             for scene in self.novel.scenes:
-                if conflict in scene.conflicts:
-                    scene.conflicts.remove(conflict)
+                if scene.agendas and conflict.id in [x.conflict_id for x in scene.agendas[0].conflict_references]:
+                    scene.agendas[0].remove_conflict(conflict)
                     self.repo.update_scene(scene)
             self.novel.conflicts.remove(conflict)
             self.repo.update_novel(self.novel)
 
     def _logline_changed(self):
         self.novel.logline = self.ui.textLogline.toPlainText()
+        self.ui.lblLoglineWords.calculateWordCount(self.novel.logline)
         self.repo.update_novel(self.novel)
 
     def _synopsis_changed(self):
@@ -188,6 +218,7 @@ class NovelView(AbstractNovelView):
             self.novel.synopsis.loaded = True
             self.repo.update_novel(self.novel)
         self.novel.synopsis.content = self.ui.textSynopsis.textEditor.toHtml()
+        self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEditor.statistics().word_count)
         json_client.save_document(self.novel, self.novel.synopsis)
 
 

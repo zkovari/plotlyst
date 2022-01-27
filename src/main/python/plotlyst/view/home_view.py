@@ -24,16 +24,17 @@ from PyQt5.QtWidgets import QFileDialog
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, NovelDescriptor
+from src.main.python.plotlyst.core.domain import Novel, NovelDescriptor, Event
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.view.layout import FlowLayout, clear_layout
 from src.main.python.plotlyst.view.widget.cards import NovelCard
 from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
@@ -63,12 +64,21 @@ class HomeView(AbstractView):
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnActivate.setDisabled(True)
 
+        event_dispatcher.register(self, NovelUpdatedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelUpdatedEvent):
+            for card in self.novel_cards:
+                if card.novel.id == event.novel.id:
+                    card.novel.title = event.novel.title
+                    card.refresh()
+        else:
+            super(HomeView, self).event_received(event)
+
     @overrides
     def refresh(self):
-        while self._layout.count():
-            item = self._layout.takeAt(0)
-            if item:
-                item.widget().deleteLater()
+        clear_layout(self._layout)
         self.novel_cards.clear()
         self.ui.btnDelete.setDisabled(True)
         self.ui.btnEdit.setDisabled(True)

@@ -20,21 +20,48 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QItemSelection
+from PyQt5.QtWidgets import QWidget
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Character
-from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent, CharacterChangedEvent
+from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent, CharacterChangedEvent, ToggleOutlineViewTitle
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
-from src.main.python.plotlyst.view.common import ask_confirmation, busy, link_buttons_to_pages, gc
+from src.main.python.plotlyst.view.common import ask_confirmation, busy, link_buttons_to_pages, gc, increase_font
+from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.cards import CharacterCard
 from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
+
+
+class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
+
+    def __init__(self, novel: Novel, parent=None):
+        super(CharactersTitle, self).__init__(parent)
+        self.novel = novel
+        self.setupUi(self)
+        self.btnCharacter.setIcon(IconRegistry.character_icon())
+        increase_font(self.lblTitle)
+        self.btnMajor.setIcon(IconRegistry.from_name('fa5s.chess-knight', '#619b8a'))
+        self.btnMinor.setIcon(IconRegistry.from_name('mdi.chess-pawn', '#886f68'))
+
+        self.refresh()
+
+        event_dispatcher.register(self, CharacterChangedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        self.refresh()
+
+    def refresh(self):
+        self.btnMajor.setText(str(len(self.novel.major_characters())))
+        self.btnMinor.setText(str(len(self.novel.minor_characters())))
 
 
 class CharactersView(AbstractNovelView):
@@ -44,6 +71,7 @@ class CharactersView(AbstractNovelView):
         self.ui = Ui_CharactersView()
         self.ui.setupUi(self.widget)
         self.editor: Optional[CharacterEditor] = None
+        self.title = CharactersTitle(self.novel)
 
         self.model = CharactersTableModel(novel)
         self._proxy = proxy(self.model)
@@ -75,6 +103,7 @@ class CharactersView(AbstractNovelView):
                                        ''')
 
         self.selected_card: Optional[CharacterCard] = None
+        self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
         self._update_cards()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
@@ -134,7 +163,7 @@ class CharactersView(AbstractNovelView):
             self.ui.wdgToolbar.setVisible(True)
         else:
             self.ui.wdgToolbar.setVisible(False)
-            self.ui.wdgCharacterSelector.setCharacters(self.novel.characters, checkAll=False)
+            self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
 
     def _on_edit(self):
         character = None
@@ -150,6 +179,7 @@ class CharactersView(AbstractNovelView):
             self._switch_to_editor()
 
     def _switch_to_editor(self):
+        emit_event(ToggleOutlineViewTitle(self, visible=False))
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
@@ -165,6 +195,7 @@ class CharactersView(AbstractNovelView):
         self.editor = None
         if character.name:
             emit_event(CharacterChangedEvent(self, character))
+        emit_event(ToggleOutlineViewTitle(self, visible=True))
         self.refresh()
 
     def _on_new(self):
@@ -184,10 +215,12 @@ class CharactersView(AbstractNovelView):
         if not ask_confirmation(f'Are you sure you want to delete character {character.name}?'):
             return
         self.novel.characters.remove(character)
+        self.ui.wdgCharacterSelector.removeCharacter(character)
         self.repo.delete_character(self.novel, character)
         emit_event(NovelReloadRequestedEvent(self))
         self.refresh()
 
+    @busy
     def _backstory_character_toggled(self, character: Character, toggled: bool):
         if toggled:
             wdg = CharacterTimelineWidget(self.ui.scrollAreaBackstoryContent)

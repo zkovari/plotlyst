@@ -18,34 +18,38 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Dict
 
 import emoji
+import qtanim
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor
-from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
+    QHeaderView
 from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
-    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, SceneStructureItem, Scene, NEUTRAL, Document
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
+from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter, increase_font
+    OpacityEventFilter, increase_font, gc, popup
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
-from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox
+from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox, flow
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import RichTextEditor
+from src.main.python.plotlyst.view.widget.labels import ConflictLabel
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -182,20 +186,29 @@ class CharacterToolButton(QToolButton):
         self.setCursor(Qt.PointingHandCursor)
 
 
-class CharacterSelectorWidget(QWidget):
+class CharacterSelectorButtons(QWidget):
     characterToggled = pyqtSignal(Character, bool)
 
-    def __init__(self, parent=None):
-        super(CharacterSelectorWidget, self).__init__(parent)
-        self._layout = hbox(self)
+    def __init__(self, parent=None, exclusive: bool = True):
+        super(CharacterSelectorButtons, self).__init__(parent)
+        hbox(self)
+        self.container = QWidget()
+        self.container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+
+        self._layout = flow(self.container)
+
+        self.layout().addWidget(self.container)
+
         self._btn_group = QButtonGroup()
         self._buttons: List[QToolButton] = []
-        self.exclusive: bool = True
-        self.setExclusive(self.exclusive)
+        self._buttonsPerCharacters: Dict[Character, QToolButton] = {}
+        self.setExclusive(exclusive)
+
+    def exclusive(self) -> bool:
+        return self._btn_group.exclusive()
 
     def setExclusive(self, exclusive: bool):
-        self.exclusive = exclusive
-        self._btn_group.setExclusive(self.exclusive)
+        self._btn_group.setExclusive(exclusive)
 
     def characters(self, all: bool = True) -> Iterable[Character]:
         return [x.character for x in self._buttons if all or x.isChecked()]
@@ -203,30 +216,27 @@ class CharacterSelectorWidget(QWidget):
     def setCharacters(self, characters: Iterable[Character], checkAll: bool = True):
         self.clear()
 
-        self._layout.addWidget(spacer_widget())
         for char in characters:
             self.addCharacter(char, checked=checkAll)
-        self._layout.addWidget(spacer_widget())
 
         if not self._buttons:
             return
-        if self.exclusive:
+        if self._btn_group.exclusive():
             self._buttons[0].setChecked(True)
 
-    def clear(self):
-        item = self._layout.itemAt(0)
-        while item:
-            self._layout.removeItem(item)
-            item = self._layout.itemAt(0)
-        for btn in self._buttons:
-            self._btn_group.removeButton(btn)
-            btn.deleteLater()
-        self._buttons.clear()
+    def updateCharacters(self, characters: Iterable[Character], checkAll: bool = True):
+        if not self._buttons:
+            return self.setCharacters(characters, checkAll)
+
+        for c in characters:
+            if c not in self._buttonsPerCharacters.keys():
+                self.addCharacter(c, checkAll)
 
     def addCharacter(self, character: Character, checked: bool = True):
         tool_btn = CharacterToolButton(character)
 
         self._buttons.append(tool_btn)
+        self._buttonsPerCharacters[character] = tool_btn
         self._btn_group.addButton(tool_btn)
         self._layout.addWidget(tool_btn)
 
@@ -235,16 +245,34 @@ class CharacterSelectorWidget(QWidget):
         tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
         tool_btn.installEventFilter(OpacityEventFilter(parent=tool_btn, ignoreCheckedButton=True))
 
+    def removeCharacter(self, character: Character):
+        if character not in self._buttonsPerCharacters:
+            return
+
+        btn = self._buttonsPerCharacters.pop(character)
+        self._layout.removeWidget(btn)
+        self._btn_group.removeButton(btn)
+        gc(btn)
+
+    def clear(self):
+        clear_layout(self._layout)
+
+        for btn in self._buttons:
+            self._btn_group.removeButton(btn)
+            gc(btn)
+
+        self._buttons.clear()
+        self._buttonsPerCharacters.clear()
+
 
 class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
-    new_conflict_added = pyqtSignal(Conflict)
-    conflict_selection_changed = pyqtSignal()
+    conflictSelectionChanged = pyqtSignal()
 
-    def __init__(self, novel: Novel, scene: Scene, scene_structure_item: SceneStructureItem, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
         super(CharacterConflictWidget, self).__init__(parent)
         self.novel = novel
         self.scene = scene
-        self.scene_structure_item = scene_structure_item
+        self.agenda = agenda
         self.setupUi(self)
         self.setMaximumWidth(270)
 
@@ -257,9 +285,18 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.btnSupernatural.setIcon(IconRegistry.conflict_supernatural_icon())
         self.btnSelf.setIcon(IconRegistry.conflict_self_icon())
 
+        self._model = SceneConflictsModel(self.novel, self.scene, self.agenda)
+        self._model.setCheckable(True, SceneConflictsModel.ColName)
+        self._model.selection_changed.connect(self._previousConflictSelected)
+        self.tblConflicts.setModel(self._model)
+        self.tblConflicts.horizontalHeader().hideSection(SceneConflictsModel.ColBgColor)
+        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColIcon,
+                                                                  QHeaderView.ResizeToContents)
+        self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColName,
+                                                                  QHeaderView.Stretch)
         self._update_characters()
-
         self.btnAddNew.setIcon(IconRegistry.ok_icon())
+        self.btnAddNew.installEventFilter(self)
         self.btnAddNew.setDisabled(True)
 
         self.lineKey.textChanged.connect(self._keyphrase_edited)
@@ -275,6 +312,13 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self._update_characters()
         self.tblConflicts.model().update()
         self.tblConflicts.model().modelReset.emit()
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.MouseButtonRelease and not watched.isEnabled():
+            qtanim.shake(self.lineKey)
+
+        return super().eventFilter(watched, event)
 
     def _update_characters(self):
         for char in self.novel.characters:
@@ -314,21 +358,95 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
             conflict.conflicting_character_id = self.cbCharacter.currentData().id
 
         self.novel.conflicts.append(conflict)
+        self.agenda.conflict_references.append(ConflictReference(conflict.id))
         self.repo.update_novel(self.novel)
-        self.new_conflict_added.emit(conflict)
+        self.conflictSelectionChanged.emit()
         self.refresh()
-        self.tblConflicts.model().checkItem(conflict)
         self.lineKey.clear()
+
+    def _previousConflictSelected(self):
+        conflicts = self._model.selections()
+        conflict: Conflict = conflicts.pop()
+        self.agenda.conflict_references.append(ConflictReference(conflict.id))
+        self.conflictSelectionChanged.emit()
+
+
+class CharacterConflictSelector(QWidget):
+    conflictSelected = pyqtSignal()
+
+    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
+        super(CharacterConflictSelector, self).__init__(parent)
+        self.novel = novel
+        self.scene = scene
+        self.conflict: Optional[Conflict] = None
+        hbox(self)
+
+        self.label: Optional[ConflictLabel] = None
+
+        self.btnLinkConflict = QPushButton(self)
+        if not simplified:
+            self.btnLinkConflict.setText('Track conflict')
+        self.layout().addWidget(self.btnLinkConflict)
+        self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
+        self.btnLinkConflict.setCursor(Qt.PointingHandCursor)
+        self.btnLinkConflict.setStyleSheet('''
+                        QPushButton {
+                            border: 2px dotted grey;
+                            border-radius: 6px;
+                            font: italic;
+                        }
+                        QPushButton:hover {
+                            border: 2px dotted orange;
+                            color: orange;
+                            font: normal;
+                        }
+                        QPushButton:pressed {
+                            border: 2px solid white;
+                        }
+                    ''')
+
+        self.btnLinkConflict.installEventFilter(OpacityEventFilter(parent=self.btnLinkConflict))
+        self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.scene.agendas[0],
+                                                      self.btnLinkConflict)
+        popup(self.btnLinkConflict, self.selectorWidget)
+
+        self.selectorWidget.conflictSelectionChanged.connect(self._conflictSelected)
+
+    def setConflict(self, conflict: Conflict):
+        self.conflict = conflict
+        self.label = ConflictLabel(self.novel, self.conflict)
+        self.label.removalRequested.connect(self._remove)
+        self.layout().addWidget(self.label)
+        self.btnLinkConflict.setHidden(True)
+
+    def _conflictSelected(self):
+        new_conflict = self.scene.agendas[0].conflicts(self.novel)[-1]
+        self.btnLinkConflict.menu().hide()
+        self.setConflict(new_conflict)
+
+        self.conflictSelected.emit()
+
+    def _remove(self):
+        if self.parent():
+            anim = qtanim.fade_out(self, duration=150)
+            anim.finished.connect(self.__destroy)
+
+    def __destroy(self):
+        self.scene.agendas[0].remove_conflict(self.conflict)
+        self.parent().layout().removeWidget(self)
+        gc(self)
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
+    relationChanged = pyqtSignal()
 
-    def __init__(self, backstory: BackstoryEvent, parent=None):
+    def __init__(self, backstory: BackstoryEvent, first: bool = False, parent=None):
         super(CharacterBackstoryCard, self).__init__(parent)
         self.setupUi(self)
         self.backstory = backstory
+        self.first = first
 
         self.btnEdit.setVisible(False)
         self.btnEdit.setIcon(IconRegistry.edit_icon())
@@ -397,48 +515,57 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.edited.emit()
 
     def _edit(self):
-        backstory = BackstoryEditorDialog(self.backstory).display()
+        backstory = BackstoryEditorDialog(self.backstory, showRelationOption=not self.first).display()
         if backstory:
+            relation_changed = False
+            if self.backstory.follow_up != backstory.follow_up:
+                relation_changed = True
             self.backstory.keyphrase = backstory.keyphrase
             self.backstory.emotion = backstory.emotion
             self.backstory.type = backstory.type
             self.backstory.type_icon = backstory.type_icon
             self.backstory.type_color = backstory.type_color
+            self.backstory.follow_up = backstory.follow_up
             self.refresh()
             self.edited.emit()
+            if relation_changed:
+                self.relationChanged.emit()
 
     def _remove(self):
-        if ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
-            self.deleteRequested.emit(self)
+        if self.backstory.synopsis and not ask_confirmation(f'Remove event "{self.backstory.keyphrase}"?'):
+            return
+        self.deleteRequested.emit(self)
 
 
 class CharacterBackstoryEvent(QWidget):
-    def __init__(self, backstory: BackstoryEvent, aligment: int = Qt.AlignRight, parent=None):
+    def __init__(self, backstory: BackstoryEvent, alignment: int = Qt.AlignRight, first: bool = False, parent=None):
         super(CharacterBackstoryEvent, self).__init__(parent)
-        self.aligment = aligment
-        self.card = CharacterBackstoryCard(backstory)
+        self.alignment = alignment
+        self.card = CharacterBackstoryCard(backstory, first)
 
         self._layout = hbox(self, 0, 3)
         self.spacer = spacer_widget()
         self.spacer.setFixedWidth(self.width() // 2 + 3)
-        if aligment == Qt.AlignRight:
+        if self.alignment == Qt.AlignRight:
             self.layout().addWidget(self.spacer)
-            self.layout().addWidget(self.card)
-        elif aligment == Qt.AlignLeft:
-            self.layout().addWidget(self.card)
+            self._layout.addWidget(self.card, alignment=Qt.AlignLeft)
+        elif self.alignment == Qt.AlignLeft:
+            self._layout.addWidget(self.card, alignment=Qt.AlignRight)
             self.layout().addWidget(self.spacer)
         else:
             self.layout().addWidget(self.card)
 
     def toggleAlignment(self):
-        if self.aligment == Qt.AlignLeft:
-            self.aligment = Qt.AlignRight
+        if self.alignment == Qt.AlignLeft:
+            self.alignment = Qt.AlignRight
             self._layout.takeAt(0)
             self._layout.addWidget(self.spacer)
+            self._layout.setAlignment(self.card, Qt.AlignRight)
         else:
-            self.aligment = Qt.AlignLeft
+            self.alignment = Qt.AlignLeft
             self._layout.takeAt(1)
             self._layout.insertWidget(0, self.spacer)
+            self._layout.setAlignment(self.card, Qt.AlignLeft)
 
 
 class _ControlButtons(QWidget):
@@ -519,9 +646,16 @@ class CharacterTimelineWidget(QWidget):
 
         self._layout.addWidget(lblCharacter, alignment=Qt.AlignHCenter | Qt.AlignTop)
 
+        prev_alignment = None
         for i, backstory in enumerate(self.character.backstory):
-            orientation = Qt.AlignRight if i % 2 == 0 else Qt.AlignLeft
-            event = CharacterBackstoryEvent(backstory, orientation, self)
+            if prev_alignment is None:
+                alignment = Qt.AlignRight
+            elif backstory.follow_up and prev_alignment:
+                alignment = prev_alignment
+            else:
+                alignment = Qt.AlignRight if prev_alignment == Qt.AlignLeft else Qt.AlignLeft
+            prev_alignment = alignment
+            event = CharacterBackstoryEvent(backstory, alignment, first=i == 0, parent=self)
             event.card.deleteRequested.connect(self._remove)
 
             self._spacers.append(event.spacer)
@@ -531,6 +665,8 @@ class CharacterTimelineWidget(QWidget):
             self._layout.addWidget(event)
 
             event.card.edited.connect(self.changed.emit)
+            event.card.relationChanged.connect(self.changed.emit)
+            event.card.relationChanged.connect(self.refresh)
 
         self._addControlButtons(-1)
         self.layout().addWidget(spacer_widget(vertical=True))
@@ -550,7 +686,7 @@ class CharacterTimelineWidget(QWidget):
             card = CharacterBackstoryCard(backstory)
             card.deleteRequested.connect(self._remove)
 
-            if pos > 0:
+            if pos >= 0:
                 self.character.backstory.insert(pos, backstory)
             else:
                 self.character.backstory.append(backstory)
@@ -618,10 +754,13 @@ class CharacterEmotionButton(QToolButton):
             self._color = 'rgb(0, 202, 148)'
 
         self._value = value
-        self.setStyleSheet(f'''QToolButton {{
+        self.setStyleSheet(f'''
+        QToolButton {{
             background-color: {self._color};
             border-radius: 10px;
-        }}''')
+        }}
+        QToolButton::menu-indicator {{width:0px;}}
+        ''')
         self.emotionChanged.emit()
 
     def color(self) -> str:

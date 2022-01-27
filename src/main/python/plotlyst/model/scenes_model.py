@@ -28,7 +28,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
-    SelectionItem, SceneGoal, SceneStage, SceneType, SceneStructureItem
+    SelectionItem, SceneGoal, SceneStage, SceneType, SceneStructureItem, SceneStructureAgenda
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -401,11 +401,11 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
 
 class SceneConflictsModel(SelectionItemsModel):
 
-    def __init__(self, novel: Novel, scene: Scene, scene_structure_item: SceneStructureItem, parent=None):
+    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
         super().__init__(parent)
         self.novel = novel
         self.scene = scene
-        self.scene_structure_item = scene_structure_item
+        self.agenda = agenda
         self._conflicts = []
         self.update()
 

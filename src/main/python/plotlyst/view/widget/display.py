@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePoli
 from fbs_runtime import platform
 from overrides import overrides
 
+from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.view.common import bold, increase_font, transparent, spacer_widget, emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import vbox, group
@@ -138,3 +139,18 @@ class Emoji(QLabel):
             self.setText(emoji.emojize(emoji_name))
         else:
             self.setText(emoji.emojize(f':{emoji_name}:'))
+
+
+class WordsDisplay(QLabel):
+    def __init__(self, parent=None):
+        super(WordsDisplay, self).__init__(parent)
+
+    def calculateWordCount(self, text: str):
+        count = wc(text)
+        self.setWordCount(count)
+
+    def setWordCount(self, count: int):
+        if count:
+            self.setText(f'{count} word{"s" if count > 1 else ""}')
+        else:
+            self.clear()

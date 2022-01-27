@@ -178,6 +178,9 @@ class PopupMenuBuilder:
         self.menu.addAction(_action)
         return _action
 
+    def add_separator(self):
+        self.menu.addSeparator()
+
     def add_submenu(self, text: str, icon: Optional[QIcon] = None) -> QMenu:
         submenu = QMenu(text, self.menu)
         if icon:
@@ -250,6 +253,23 @@ class OpacityEventFilter(QObject):
         return isinstance(obj, QAbstractButton) and obj.isChecked()
 
 
+class VisibilityToggleEventFilter(QObject):
+
+    def __init__(self, target: QWidget, parent: QWidget = None):
+        super(VisibilityToggleEventFilter, self).__init__(parent)
+        self.target = target
+        self.target.setHidden(True)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Enter:
+            self.target.setVisible(True)
+        elif event.type() == QEvent.Leave:
+            self.target.setHidden(True)
+
+        return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
+
+
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
     def _open(widget: QWidget, toggled: bool):
         if toggled:
@@ -269,6 +289,12 @@ def transparent(widget: QWidget):
 def bold(widget: QWidget, enabled: bool = True):
     font = widget.font()
     font.setBold(enabled)
+    widget.setFont(font)
+
+
+def italic(widget: QWidget, enabled: bool = True):
+    font = widget.font()
+    font.setItalic(enabled)
     widget.setFont(font)
 
 

@@ -85,7 +85,7 @@ class ManuscriptView(AbstractNovelView):
 
     def _edit(self, index: QModelIndex):
         def set_wc():
-            self.ui.lblWordCount.setText(f'<html><b>{self.ui.textEdit.statistics().word_count}</b> words')
+            self.ui.lblWordCount.setWordCount(self.ui.textEdit.statistics().word_count)
 
         node = index.data(ChaptersTreeModel.NodeRole)
         if isinstance(node, SceneNode):

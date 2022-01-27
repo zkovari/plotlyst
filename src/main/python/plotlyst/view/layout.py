@@ -123,10 +123,11 @@ class FlowLayout(QLayout):
         return y + lineHeight - rect.y() + bottom
 
 
-def clear_layout(layout: QLayout):
+def clear_layout(layout: QLayout, autoDelete: bool = True):
     while layout.count():
         item = layout.takeAt(0)
-        gc(item.widget())
+        if autoDelete:
+            gc(item.widget())
 
 
 def hbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QHBoxLayout:
@@ -140,6 +141,15 @@ def hbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QHBoxLayout:
 
 def vbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QVBoxLayout:
     _layout = QVBoxLayout()
+    widget.setLayout(_layout)
+    widget.layout().setContentsMargins(margin, margin, margin, margin)
+    widget.layout().setSpacing(spacing)
+
+    return _layout
+
+
+def flow(widget: QWidget, margin: int = 2, spacing: int = 3) -> FlowLayout:
+    _layout = FlowLayout()
     widget.setLayout(_layout)
     widget.layout().setContentsMargins(margin, margin, margin, margin)
     widget.layout().setSpacing(spacing)
