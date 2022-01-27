@@ -85,22 +85,6 @@
            </property>
           </spacer>
          </item>
-         <item alignment="Qt::AlignRight">
-          <widget class="QToolButton" name="btnRemove">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="autoRaise">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
        <item>
