@@ -43,7 +43,7 @@ from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_Sc
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import flow, clear_layout
+from src.main.python.plotlyst.view.layout import flow, clear_layout, hbox
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
@@ -797,9 +797,7 @@ class SceneStoryStructureWidget(QWidget):
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
         self._wdgLine = QWidget(self)
-        self._wdgLine.setLayout(QHBoxLayout())
-        self._wdgLine.layout().setSpacing(0)
-        self._wdgLine.layout().setContentsMargins(0, 0, 0, 0)
+        hbox(self._wdgLine, 0, 0)
         self._lineHeight: int = 22
         self._beatHeight: int = 20
         self._margin = 5

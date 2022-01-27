@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
+from PyQt5.QtWidgets import QWidget
 from fbs_runtime import platform
 
 from src.main.python.plotlyst.core.client import json_client
@@ -29,6 +29,7 @@ from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import hbox, vbox
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -81,17 +82,14 @@ class CharacterEditor:
     def _init_profile_view(self):
         self._profile_with_toolbar = QWidget()
         self._toolbar = QWidget()
-        self._toolbar.setLayout(QHBoxLayout())
-        self._toolbar.layout().setContentsMargins(0, 0, 0, 0)
+        hbox(self._toolbar, 0)
         self._toolbar.layout().addWidget(spacer_widget())
         self._toolbar.layout().addWidget(self.ui.btnCustomize)
-        self._profile_with_toolbar.setLayout(QVBoxLayout())
-        self._profile_with_toolbar.layout().setContentsMargins(0, 0, 0, 0)
+        vbox(self._profile_with_toolbar, 0)
         self._profile_with_toolbar.layout().addWidget(self._toolbar)
         self._profile_with_toolbar.layout().addWidget(self.profile)
         self._profile_container = QWidget()
-        self._profile_container.setLayout(QHBoxLayout())
-        self._profile_container.layout().setContentsMargins(0, 0, 0, 0)
+        hbox(self._profile_container, 0)
         self._profile_container.layout().addWidget(self._profile_with_toolbar)
         self.ui.wdgProfile.layout().insertWidget(0, self._profile_container)
 

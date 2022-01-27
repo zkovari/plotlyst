@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt5.QtCore import QObject, QEvent
-from PyQt5.QtWidgets import QHBoxLayout, QWidget, QHeaderView
+from PyQt5.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
@@ -38,6 +38,7 @@ from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult, NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import hbox
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 
@@ -114,10 +115,7 @@ class NovelView(AbstractNovelView):
         self.ui.btnRemove.clicked.connect(self._delete_conflict)
 
         tags_editor = NovelTagsEditor(self.novel)
-        _layout = QHBoxLayout()
-        _layout.setSpacing(0)
-        _layout.setContentsMargins(0, 0, 0, 0)
-        self.ui.wdgTagsContainer.setLayout(_layout)
+        hbox(self.ui.wdgTagsContainer, 0, 0)
         self.ui.wdgTagsContainer.layout().addWidget(tags_editor)
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnStructure, self.ui.pageStructure),
