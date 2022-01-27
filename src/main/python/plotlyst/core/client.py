@@ -376,6 +376,9 @@ class JsonClient:
         conflicts = []
         conflict_ids = {}
         for conflict in novel_info.conflicts:
+            if conflict.character_id not in characters_ids.keys() or (
+                    conflict.conflicting_character_id and conflict.conflicting_character_id not in characters_ids.keys()):
+                continue
             conflicts.append(conflict)
             conflict_ids[str(conflict.id)] = conflict
 
