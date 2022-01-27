@@ -378,6 +378,7 @@ class CharacterConflictSelector(QWidget):
         super(CharacterConflictSelector, self).__init__(parent)
         self.novel = novel
         self.scene = scene
+        self.conflict: Optional[Conflict] = None
         hbox(self)
 
         self.label: Optional[ConflictLabel] = None
@@ -412,7 +413,9 @@ class CharacterConflictSelector(QWidget):
         self.selectorWidget.conflictSelectionChanged.connect(self._conflictSelected)
 
     def setConflict(self, conflict: Conflict):
-        self.label = ConflictLabel(self.novel, conflict)
+        self.conflict = conflict
+        self.label = ConflictLabel(self.novel, self.conflict)
+        self.label.removalRequested.connect(self._remove)
         self.layout().addWidget(self.label)
         self.btnLinkConflict.setHidden(True)
 
@@ -422,6 +425,16 @@ class CharacterConflictSelector(QWidget):
         self.setConflict(new_conflict)
 
         self.conflictSelected.emit()
+
+    def _remove(self):
+        if self.parent():
+            anim = qtanim.fade_out(self, duration=150)
+            anim.finished.connect(self.__destroy)
+
+    def __destroy(self):
+        self.scene.agendas[0].remove_conflict(self.conflict)
+        self.parent().layout().removeWidget(self)
+        gc(self)
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):

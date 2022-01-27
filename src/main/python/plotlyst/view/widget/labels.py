@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from abc import abstractmethod
 from typing import Union, List, Iterable, Set
 
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, QVBoxLayout, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
@@ -29,9 +29,10 @@ from overrides import overrides
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem, Novel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import line, text_color_with_bg_color
+from src.main.python.plotlyst.view.common import line, text_color_with_bg_color, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 
 
@@ -104,6 +105,8 @@ class CharacterAvatarLabel(QToolButton):
 
 
 class ConflictLabel(Label):
+    removalRequested = pyqtSignal()
+
     def __init__(self, novel: Novel, conflict: Conflict, parent=None):
         super(ConflictLabel, self).__init__(parent)
         self.novel = novel
@@ -135,11 +138,16 @@ class ConflictLabel(Label):
         self.layout().addWidget(self.lblAvatar)
         self.layout().addWidget(QLabel(self.conflict.text))
 
+        self.btnRemoval = RemovalButton()
+        self.layout().addWidget(self.btnRemoval)
+        self.btnRemoval.clicked.connect(self.removalRequested.emit)
+
         self.setStyleSheet('''
                 ConflictLabel {
                     border: 2px solid #f3a712;
                     border-radius: 8px; padding-left: 3px; padding-right: 3px;}
                 ''')
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnRemoval, self))
 
 
 class TraitLabel(QLabel):
