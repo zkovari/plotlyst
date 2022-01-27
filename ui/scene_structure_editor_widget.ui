@@ -88,9 +88,15 @@
          </item>
          <item>
           <widget class="QFrame" name="wdgInventory">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="maximumSize">
             <size>
-             <width>170</width>
+             <width>16777215</width>
              <height>16777215</height>
             </size>
            </property>
@@ -117,6 +123,21 @@ QToolButton {
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout_3">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <property name="spacing">
+             <number>3</number>
+            </property>
             <item row="0" column="2">
              <widget class="QToolButton" name="btnOutcome">
               <property name="cursor">
@@ -863,5 +884,22 @@ incident</string>
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>btnInventory</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>wdgInventory</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>30</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>13</x>
+     <y>52</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
