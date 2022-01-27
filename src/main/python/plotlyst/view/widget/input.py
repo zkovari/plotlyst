@@ -272,13 +272,6 @@ class _TextEditor(QTextEdit):
                     list_.setFormat(new_format)
                     cursor.endEditBlock()
                 return
-        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-            level = cursor.blockFormat().headingLevel()
-            if level > 0:  # heading
-                cursor.insertBlock()
-                self.cbHeading.setCurrentIndex(0)
-                self._setHeading()
-                return
         super(_TextEditor, self).keyPressEvent(event)
 
     @overrides
@@ -549,6 +542,13 @@ class RichTextEditor(QFrame):
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
                 if self.textEditor.textCursor().atBlockStart():
                     self._showCommands()
+
+            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
+                level = cursor.blockFormat().headingLevel()
+                if level > 0:  # heading
+                    cursor.insertBlock()
+                    self.cbHeading.setCurrentIndex(0)
+                    self._setHeading()
 
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
                 cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
