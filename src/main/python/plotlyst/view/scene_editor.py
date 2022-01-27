@@ -31,7 +31,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue, StoryBeat, \
-    SceneStoryBeat
+    SceneStoryBeat, SceneStructureAgenda
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
@@ -159,8 +159,11 @@ class SceneEditor(QObject):
 
         if self.scene.pov:
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
+            if not self.scene.agendas:
+                self.scene.agendas.append(SceneStructureAgenda(character_id=self.scene.pov.id))
         else:
             self.ui.cbPov.setCurrentIndex(0)
+            self.scene.agendas.clear()
         self._update_pov_avatar()
         self.ui.sbDay.setValue(self.scene.day)
 
@@ -251,8 +254,15 @@ class SceneEditor(QObject):
         pov = self.ui.cbPov.currentData()
         if pov:
             self.scene.pov = pov
+            if self.scene.agendas:
+                self.scene.agendas[0].character_id = self.scene.pov.id
+                self.scene.agendas[0].conflict_references.clear()
+            else:
+                self.scene.agendas.append(SceneStructureAgenda(character_id=self.scene.pov.id))
         else:
             self.scene.pov = None
+            self.scene.agendas.clear()
+
         self._update_pov_avatar()
         self._characters_model.update()
         self.ui.cbPov.setStyleSheet('''
@@ -260,7 +270,7 @@ class SceneEditor(QObject):
                         ''')
         self._character_changed()
         if self._save_enabled:
-            self.ui.wdgSceneStructure.updatePov()
+            self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
 
     def _update_pov_avatar(self):
         if self.scene.pov:
@@ -289,8 +299,7 @@ class SceneEditor(QObject):
 
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
-        self.scene.agendas.clear()
-        self.scene.agendas.extend(self.ui.wdgSceneStructure.agendas())
+        self.ui.wdgSceneStructure.updateAgendas()
         self.scene.day = self.ui.sbDay.value()
 
         self.scene.plot_values.clear()

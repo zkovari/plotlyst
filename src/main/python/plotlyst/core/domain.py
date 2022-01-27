@@ -390,10 +390,17 @@ class SceneStructureItem:
 
 
 @dataclass
+class ConflictReference:
+    conflict_id: uuid.UUID
+    message: str = ''
+    intensity: int = 1
+
+
+@dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     items: List[SceneStructureItem] = field(default_factory=list)
-    conflict_ids: List[uuid.UUID] = field(default_factory=list)
+    conflict_references: List[ConflictReference] = field(default_factory=list)
     goal_ids: List[uuid.UUID] = field(default_factory=list)
     outcome: Optional[SceneOutcome] = None
     beginning_emotion: int = NEUTRAL
@@ -404,7 +411,7 @@ class SceneStructureAgenda(CharacterBased):
 
     def conflicts(self, novel: 'Novel') -> List[Conflict]:
         conflicts_ = []
-        for id_ in self.conflict_ids:
+        for id_ in [x.conflict_id for x in self.conflict_references]:
             for conflict in novel.conflicts:
                 if conflict.id == id_:
                     conflicts_.append(conflict)

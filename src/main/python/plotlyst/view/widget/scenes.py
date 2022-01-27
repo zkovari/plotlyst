@@ -20,23 +20,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from abc import abstractmethod
 from functools import partial
-from typing import List, Set, Optional, Union, Dict
+from typing import List, Optional, Union, Dict
 
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
     QResizeEvent, QCursor
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QHeaderView, QSplitter, \
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QSplitter, \
     QPushButton
 from overrides import overrides
 from qtanim import fade_out
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
-from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneGoal, SceneType, \
-    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, Conflict, SceneOutcome, NEUTRAL, StoryBeat
+from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
+    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
-from src.main.python.plotlyst.model.scenes_model import SceneGoalsModel, SceneConflictsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
     set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
@@ -44,84 +43,43 @@ from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_Sc
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import flow
-from src.main.python.plotlyst.view.widget.characters import CharacterConflictWidget, CharacterConflictSelector
+from src.main.python.plotlyst.view.layout import flow, clear_layout
+from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
-class SceneGoalsWidget(LabelsEditorWidget):
-
-    def __init__(self, novel: Novel, agenda: SceneStructureAgenda, parent=None):
-        self.novel = novel
-        self.agenda = agenda
-        super(SceneGoalsWidget, self).__init__(parent=parent)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
-        self.setValue([x.text for x in self.agenda.goals(self.novel)])
-        self.btnEdit.setIcon(IconRegistry.goal_icon())
-        self.btnEdit.setText('Track goals')
-        self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.setStyleSheet('SceneGoalsWidget {border: 0px;}')
-
-    @overrides
-    def _initModel(self) -> SelectionItemsModel:
-        model = SceneGoalsModel(self.novel, self.scene_structure_item)
-        model.setCheckable(True, SceneGoalsModel.ColName)
-        return model
-
-    @overrides
-    def items(self) -> List[SelectionItem]:
-        return self.novel.scene_goals
-
-    @overrides
-    def _addItems(self, items: Set[SceneGoal]):
-        pass
-        # for item in items:
-        #     self._wdgLabels.addLabel(GoalLabel(item))
-        # self.agenda.goal_ids.clear()
-        # self.agenda.goal_ids.extend(items)
-
-
-class SceneConflictsWidget(LabelsEditorWidget):
-    def __init__(self, novel: Novel, scene: Scene, agenda: SceneStructureAgenda, parent=None):
-        self.novel = novel
-        self.scene = scene
-        self.agenda = agenda
-        super(SceneConflictsWidget, self).__init__(parent=parent)
-        self.setValue([x.text for x in self.agenda.conflicts(self.novel)])
-        self.btnEdit.setIcon(IconRegistry.conflict_icon())
-        self.btnEdit.setText('Track conflicts')
-        self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.setStyleSheet('SceneConflictsWidget {border: 0px;}')
-        self._popup.new_conflict_added.connect(self.btnEdit.menu().hide)
-
-    @overrides
-    def _initModel(self) -> SelectionItemsModel:
-        return SceneConflictsModel(self.novel, self.scene, self.scene_structure_item)
-
-    @overrides
-    def _initPopupWidget(self) -> QWidget:
-        widget = CharacterConflictWidget(self.novel, self.scene, self.scene_structure_item)
-        widget.tblConflicts.setModel(self._model)
-        widget.tblConflicts.horizontalHeader().hideSection(SceneConflictsModel.ColBgColor)
-        widget.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColIcon,
-                                                                    QHeaderView.ResizeToContents)
-        widget.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColName,
-                                                                    QHeaderView.Stretch)
-        return widget
-
-    @overrides
-    def items(self) -> List[SelectionItem]:
-        return [x for x in self.novel.conflicts if self.scene.pov and x.character_id == self.scene.pov.id]
-
-    @overrides
-    def _addItems(self, items: Set[Conflict]):
-        pass
-        # for item in items:
-        #     self._wdgLabels.addLabel(ConflictLabel(self.novel, item))
-        # self.scene_structure_item.conflicts.clear()
-        # self.scene_structure_item.conflicts.extend(items)
+# class SceneGoalsWidget(LabelsEditorWidget):
+#
+#     def __init__(self, novel: Novel, agenda: SceneStructureAgenda, parent=None):
+#         self.novel = novel
+#         self.agenda = agenda
+#         super(SceneGoalsWidget, self).__init__(parent=parent)
+#         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+#         self.setValue([x.text for x in self.agenda.goals(self.novel)])
+#         self.btnEdit.setIcon(IconRegistry.goal_icon())
+#         self.btnEdit.setText('Track goals')
+#         self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+#         self.setStyleSheet('SceneGoalsWidget {border: 0px;}')
+#
+#     @overrides
+#     def _initModel(self) -> SelectionItemsModel:
+#         model = SceneGoalsModel(self.novel, self.scene_structure_item)
+#         model.setCheckable(True, SceneGoalsModel.ColName)
+#         return model
+#
+#     @overrides
+#     def items(self) -> List[SelectionItem]:
+#         return self.novel.scene_goals
+#
+#     @overrides
+#     def _addItems(self, items: Set[SceneGoal]):
+#         pass
+# for item in items:
+#     self._wdgLabels.addLabel(GoalLabel(item))
+# self.agenda.goal_ids.clear()
+# self.agenda.goal_ids.extend(items)
 
 
 class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
@@ -451,8 +409,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.wdgTypes.layout().addWidget(self.btnSequel)
 
         flow(self.wdgGoalConflictContainer)
-        self.wdgGoalConflictContainer.layout().addWidget(
-            CharacterConflictSelector(self.novel, self.wdgGoalConflictContainer))
 
         self.btnBeginningIcon.setIcon(IconRegistry.cause_icon())
         self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex'))
@@ -499,11 +455,19 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
+        self.stackedWidget.setCurrentWidget(self.pageEmpty)
+
     def setScene(self, novel: Novel, scene: Scene):
         self.novel = novel
         self.scene = scene
 
-        self.clear()
+        if scene.agendas:
+            self.stackedWidget.setCurrentWidget(self.pageEditor)
+        else:
+            self.stackedWidget.setCurrentWidget(self.pageEmpty)
+            return
+
+        self.reset()
         self.btnInventory.setChecked(False)
 
         self._checkSceneType()
@@ -566,41 +530,24 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if not self.wdgEnd.layout().count():
             self._addPlaceholder(self.wdgEnd)
 
-        if not self.agendas()[0].items:
+        if not self.scene.agendas[0].items:
             self._typeClicked(SceneType.ACTION, True, lazy=False)
 
-    def _checkSceneType(self):
-        if self.scene.type == SceneType.ACTION:
-            self.btnScene.setChecked(True)
-            self.btnSequel.setChecked(False)
-        elif self.scene.type == SceneType.REACTION:
-            self.btnSequel.setChecked(True)
-            self.btnScene.setChecked(False)
-        else:
-            self.btnInventory.setChecked(True)
-
-    def _setEmotionColorChange(self):
-        color_start = self.btnEmotionStart.color()
-        color_end = self.btnEmotionEnd.color()
-        self.btnEmotionRangeDisplay.setStyleSheet(f'''
-        background-color: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0,
-                                      stop: 0 {color_start}, stop: 1 {color_end});
-        color: white;
-        ''')
-
-    def updatePov(self):
-        self.clear(addPlaceholders=True)
-
-    def clear(self, addPlaceholders: bool = False):
+    def reset(self, addPlaceholders: bool = False):
         for widget in [self.wdgBeginning, self.wdgMiddle, self.wdgEnd]:
-            while widget.layout().count():
-                item = widget.layout().takeAt(0)
-                if item:
-                    item.widget().deleteLater()
+            clear_layout(widget.layout())
         if addPlaceholders:
             self._addPlaceholder(self.wdgBeginning)
             self._addPlaceholder(self.wdgMiddle)
             self._addPlaceholder(self.wdgEnd)
+
+        clear_layout(self.wdgGoalConflictContainer.layout())
+        if self.scene.agendas and self.scene.agendas[0].conflict_references:
+            for conflict in self.scene.agendas[0].conflicts(self.novel):
+                self._addConfictSelector(simplified=False, conflict=conflict)
+            self._addConfictSelector()
+        else:
+            self._addConfictSelector(simplified=False)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -636,50 +583,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             drag.destroyed.connect(self._dragDestroyed)
             drag.exec_()
 
-    def agendas(self) -> List[SceneStructureAgenda]:
-        agenda = SceneStructureAgenda()
-        self._collect_agenda_items(agenda, self.wdgBeginning, 1)
-        self._collect_agenda_items(agenda, self.wdgMiddle, 2)
-        self._collect_agenda_items(agenda, self.wdgEnd, 3)
-        agenda.beginning_emotion = self.btnEmotionStart.value()
-        agenda.ending_emotion = self.btnEmotionEnd.value()
-        return [agenda]
-
-    def _collect_agenda_items(self, agenda: SceneStructureAgenda, widget: QWidget, part: int):
-        for i in range(widget.layout().count()):
-            item = widget.layout().itemAt(i)
-            if isinstance(item.widget(), SceneStructureItemWidget):
-                structure_item: SceneStructureItem = item.widget().sceneStructureItem()
-                structure_item.part = part
-                agenda.items.append(structure_item)
-
-    def _buttonType(self, dragged: QToolButton) -> SceneStructureItemType:
-        if dragged is self.btnGoal:
-            return SceneStructureItemType.GOAL
-        if dragged is self.btnConflict:
-            return SceneStructureItemType.CONFLICT
-        if dragged is self.btnOutcome:
-            return SceneStructureItemType.OUTCOME
-        if dragged is self.btnReaction:
-            return SceneStructureItemType.REACTION
-        if dragged is self.btnDilemma:
-            return SceneStructureItemType.DILEMMA
-        if dragged is self.btnDecision:
-            return SceneStructureItemType.DECISION
-        if dragged is self.btnHook:
-            return SceneStructureItemType.HOOK
-        if dragged is self.btnIncitingIncident:
-            return SceneStructureItemType.INCITING_INCIDENT
-        if dragged is self.btnRisingAction:
-            return SceneStructureItemType.RISING_ACTION
-        if dragged is self.btnCrisis:
-            return SceneStructureItemType.CRISIS
-        if dragged is self.btnTickingClock:
-            return SceneStructureItemType.TICKING_CLOCK
-        if dragged is self.btnExposition:
-            return SceneStructureItemType.EXPOSITION
-        if dragged is self.btnBeat:
-            return SceneStructureItemType.BEAT
+    def updateAgendas(self):
+        if not self.scene.agendas:
+            return
+        self.scene.agendas[0].items.clear()
+        self._collect_agenda_items(self.scene.agendas[0], self.wdgBeginning, 1)
+        self._collect_agenda_items(self.scene.agendas[0], self.wdgMiddle, 2)
+        self._collect_agenda_items(self.scene.agendas[0], self.wdgEnd, 3)
+        self.scene.agendas[0].beginning_emotion = self.btnEmotionStart.value()
+        self.scene.agendas[0].ending_emotion = self.btnEmotionEnd.value()
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent):
@@ -746,6 +658,61 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         QTimer.singleShot(50, widget.activate)
 
+    def _collect_agenda_items(self, agenda: SceneStructureAgenda, widget: QWidget, part: int):
+        for i in range(widget.layout().count()):
+            item = widget.layout().itemAt(i)
+            if isinstance(item.widget(), SceneStructureItemWidget):
+                structure_item: SceneStructureItem = item.widget().sceneStructureItem()
+                structure_item.part = part
+                agenda.items.append(structure_item)
+
+    def _checkSceneType(self):
+        if self.scene.type == SceneType.ACTION:
+            self.btnScene.setChecked(True)
+            self.btnSequel.setChecked(False)
+        elif self.scene.type == SceneType.REACTION:
+            self.btnSequel.setChecked(True)
+            self.btnScene.setChecked(False)
+        else:
+            self.btnInventory.setChecked(True)
+
+    def _setEmotionColorChange(self):
+        color_start = self.btnEmotionStart.color()
+        color_end = self.btnEmotionEnd.color()
+        self.btnEmotionRangeDisplay.setStyleSheet(f'''
+           background-color: qlineargradient(x1: 1, y1: 0, x2: 0, y2: 0,
+                                         stop: 0 {color_start}, stop: 1 {color_end});
+           color: white;
+           ''')
+
+    def _buttonType(self, dragged: QToolButton) -> SceneStructureItemType:
+        if dragged is self.btnGoal:
+            return SceneStructureItemType.GOAL
+        if dragged is self.btnConflict:
+            return SceneStructureItemType.CONFLICT
+        if dragged is self.btnOutcome:
+            return SceneStructureItemType.OUTCOME
+        if dragged is self.btnReaction:
+            return SceneStructureItemType.REACTION
+        if dragged is self.btnDilemma:
+            return SceneStructureItemType.DILEMMA
+        if dragged is self.btnDecision:
+            return SceneStructureItemType.DECISION
+        if dragged is self.btnHook:
+            return SceneStructureItemType.HOOK
+        if dragged is self.btnIncitingIncident:
+            return SceneStructureItemType.INCITING_INCIDENT
+        if dragged is self.btnRisingAction:
+            return SceneStructureItemType.RISING_ACTION
+        if dragged is self.btnCrisis:
+            return SceneStructureItemType.CRISIS
+        if dragged is self.btnTickingClock:
+            return SceneStructureItemType.TICKING_CLOCK
+        if dragged is self.btnExposition:
+            return SceneStructureItemType.EXPOSITION
+        if dragged is self.btnBeat:
+            return SceneStructureItemType.BEAT
+
     def _addWidget(self, placeholder: _PlaceHolder, widget: SceneStructureItemWidget):
         parent = placeholder.parent()
         layout: QHBoxLayout = parent.layout()
@@ -770,8 +737,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if lazy and type == self.scene.type and checked:
             return
 
-        for item in self.agendas()[0].items:
-            if item.text or self.agendas()[0].goals(self.novel) or self.agendas()[0].conflicts(self.novel):
+        for item in self.scene.agendas[0].items:
+            if item.text or self.scene.agendas[0].goals(self.novel) or self.scene.agendas[0].conflicts(self.novel):
                 if not ask_confirmation(
                         "Some beats are filled up. Are you sure you want to change the scene's structure?"):
                     self._checkSceneType()  # revert
@@ -801,13 +768,21 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                                               placeholder='Describe the ending of this scene')
             self.btnInventory.setChecked(True)
 
-        self.clear(addPlaceholders=True)
+        self.reset(addPlaceholders=True)
         self._addWidget(self.wdgBeginning.layout().itemAt(0).widget(), top)
         self._addWidget(self.wdgMiddle.layout().itemAt(0).widget(), middle)
         self._addWidget(self.wdgEnd.layout().itemAt(0).widget(), bottom)
 
     def _dragDestroyed(self):
         self._dragged = None
+
+    def _addConfictSelector(self, simplified: bool = True, conflict: Optional[Conflict] = None):
+        conflict_selector = CharacterConflictSelector(self.novel, self.scene, simplified=simplified,
+                                                      parent=self.wdgGoalConflictContainer)
+        if conflict:
+            conflict_selector.setConflict(conflict)
+        self.wdgGoalConflictContainer.layout().addWidget(conflict_selector)
+        conflict_selector.conflictSelected.connect(self._addConfictSelector)
 
 
 class SceneStoryStructureWidget(QWidget):
