@@ -202,7 +202,13 @@
             <number>2</number>
            </property>
            <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-            <widget class="QLabel" name="lblWordCount">
+            <widget class="WordsDisplay" name="lblWordCount">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
              <property name="text">
               <string>wc</string>
              </property>
@@ -225,6 +231,11 @@
    <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>WordsDisplay</class>
+   <extends>QLabel</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>SprintWidget</class>

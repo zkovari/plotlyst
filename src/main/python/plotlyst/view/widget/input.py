@@ -36,6 +36,7 @@ from overrides import overrides
 from slugify import slugify
 
 from src.main.python.plotlyst.core.domain import TextStatistics
+from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
@@ -186,8 +187,7 @@ class BlockStatistics(AbstractTextBlockHighlighter):
     @overrides
     def highlightBlock(self, text: str) -> None:
         data = self._currentblockData()
-        wc = len([x for x in text.split(' ') if x])
-        data.wordCount = wc
+        data.wordCount = wc(text)
 
 
 class _TextEditor(QTextEdit):

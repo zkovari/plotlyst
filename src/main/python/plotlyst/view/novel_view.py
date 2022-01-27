@@ -64,6 +64,7 @@ class NovelView(AbstractNovelView):
 
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textLogline.setPlainText(self.novel.logline)
+        self.ui.lblLoglineWords.calculateWordCount(self.novel.logline)
         self.ui.textLogline.textChanged.connect(self._logline_changed)
 
         self.ui.textSynopsis.setToolbarVisible(False)
@@ -71,6 +72,7 @@ class NovelView(AbstractNovelView):
         if self.novel.synopsis:
             json_client.load_document(self.novel, self.novel.synopsis)
             self.ui.textSynopsis.setText(self.novel.synopsis.content)
+            self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEditor.statistics().word_count)
         self.ui.textSynopsis.textEditor.textChanged.connect(self._synopsis_changed)
 
         self.ui.btnGoalIcon.setIcon(IconRegistry.goal_icon())
@@ -207,6 +209,7 @@ class NovelView(AbstractNovelView):
 
     def _logline_changed(self):
         self.novel.logline = self.ui.textLogline.toPlainText()
+        self.ui.lblLoglineWords.calculateWordCount(self.novel.logline)
         self.repo.update_novel(self.novel)
 
     def _synopsis_changed(self):
@@ -215,6 +218,7 @@ class NovelView(AbstractNovelView):
             self.novel.synopsis.loaded = True
             self.repo.update_novel(self.novel)
         self.novel.synopsis.content = self.ui.textSynopsis.textEditor.toHtml()
+        self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEditor.statistics().word_count)
         json_client.save_document(self.novel, self.novel.synopsis)
 
 
