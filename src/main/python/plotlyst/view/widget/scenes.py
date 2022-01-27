@@ -208,7 +208,8 @@ def is_placeholder(widget: QWidget) -> bool:
 
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
-    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, placeholder: str = 'Beat',
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem,
+                 placeholder: str = 'General beat in this scene',
                  topVisible: bool = False, parent=None):
         super(SceneStructureItemWidget, self).__init__(parent)
         self.novel = novel
@@ -253,14 +254,16 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
 class SceneGoalItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneGoalItemWidget, self).__init__(novel, scene_structure_item, placeholder='Goal',
+        super(SceneGoalItemWidget, self).__init__(novel, scene_structure_item,
+                                                  placeholder='Goal of the character is clearly stated to the reader',
                                                   parent=parent)
         self.btnIcon.setIcon(IconRegistry.goal_icon())
 
 
 class SceneConflictItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneConflictItemWidget, self).__init__(novel, scene_structure_item, placeholder='Conflict',
+        super(SceneConflictItemWidget, self).__init__(novel, scene_structure_item,
+                                                      placeholder="Conflict arises that hinders the character's goals",
                                                       parent=parent)
         self.btnIcon.setIcon(IconRegistry.conflict_icon())
 
@@ -271,28 +274,32 @@ class SceneOutcomeItemWidget(SceneStructureItemWidget):
 
         self.layoutTop.addWidget(SceneOutcomeSelector(self.scene_structure_item))
         self.layoutTop.addWidget(spacer_widget())
-        self.text.setPlaceholderText('Outcome')
+        self.text.setPlaceholderText(
+            "Outcome of the scene, typically ending with disaster")
         self.btnIcon.setIcon(IconRegistry.action_scene_icon())
 
 
 class ReactionSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(ReactionSceneItemWidget, self).__init__(novel, scene_structure_item, placeholder='Initial reaction',
+        super(ReactionSceneItemWidget, self).__init__(novel, scene_structure_item,
+                                                      placeholder='Initial reaction to a previous conflict',
                                                       parent=parent)
         self.btnIcon.setIcon(IconRegistry.reaction_icon())
 
 
 class DilemmaSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(DilemmaSceneItemWidget, self).__init__(novel, scene_structure_item,
-                                                     placeholder='Dilemma throughout the scene', parent=parent)
+        super().__init__(novel, scene_structure_item,
+                         placeholder='Dilemma throughout the scene. What to do next?',
+                         parent=parent)
         self.btnIcon.setIcon(IconRegistry.dilemma_icon())
 
 
 class DecisionSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(DecisionSceneItemWidget, self).__init__(novel, scene_structure_item, placeholder='New goal and action',
-                                                      parent=parent)
+        super().__init__(novel, scene_structure_item,
+                         placeholder='The character comes up with a new goal and might act right away',
+                         parent=parent)
         self.btnIcon.setIcon(IconRegistry.decision_icon())
 
 
@@ -304,13 +311,15 @@ class HookSceneItemWidget(SceneStructureItemWidget):
 
 class IncitingIncidentSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super().__init__(novel, scene_structure_item, placeholder='Inciting incident of the scene', parent=parent)
+        super().__init__(novel, scene_structure_item,
+                         placeholder='Is there a surprising, unforeseen incident in this scene?',
+                         parent=parent)
         self.btnIcon.setIcon(IconRegistry.inciting_incident_icon())
 
 
 class RisingActionSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super().__init__(novel, scene_structure_item, placeholder='Increasing tension throughout the scene',
+        super().__init__(novel, scene_structure_item, placeholder='Increasing tension or suspense throughout the scene',
                          parent=parent)
         self.btnIcon.setIcon(IconRegistry.rising_action_icon())
 
@@ -318,7 +327,7 @@ class RisingActionSceneItemWidget(SceneStructureItemWidget):
 class CrisisSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super().__init__(novel, scene_structure_item,
-                         placeholder='The impossible decision of two good or two equally bad outcomes', parent=parent)
+                         placeholder='The impossible decision between two equally good or bad outcomes', parent=parent)
         self.btnIcon.setIcon(IconRegistry.crisis_icon())
 
 
