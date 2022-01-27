@@ -531,7 +531,7 @@ QToolButton:pressed {
          <item alignment="Qt::AlignRight|Qt::AlignBottom">
           <widget class="WordsDisplay" name="lblSynopsisWords">
            <property name="text">
-            <string>TextLabel</string>
+            <string/>
            </property>
           </widget>
          </item>
