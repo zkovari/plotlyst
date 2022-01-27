@@ -40,7 +40,7 @@ from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
-from src.main.python.plotlyst.view.common import line, spacer_widget
+from src.main.python.plotlyst.view.common import line, spacer_widget, OpacityEventFilter, transparent
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
@@ -791,3 +791,16 @@ class PowerBar(QFrame):
         self.btnPlus.setIcon(IconRegistry.plus_circle_icon(self.PLUS_COLOR_ACTIVE))
         QTimer.singleShot(100, lambda: self.btnPlus.setIcon(IconRegistry.plus_circle_icon(self.PLUS_COLOR_IDLE)))
         self._bar.increase()
+
+
+class RemovalButton(QToolButton):
+    def __init__(self, parent=None):
+        super(RemovalButton, self).__init__(parent)
+        self.setIcon(IconRegistry.close_icon())
+        self.setCursor(Qt.PointingHandCursor)
+        self.installEventFilter(OpacityEventFilter(parent=self))
+        self.setIconSize(QSize(14, 14))
+        transparent(self)
+
+        self.pressed.connect(lambda: self.setIcon(IconRegistry.close_icon('red')))
+        self.released.connect(lambda: self.setIcon(IconRegistry.close_icon()))

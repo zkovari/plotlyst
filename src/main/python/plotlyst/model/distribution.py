@@ -76,9 +76,8 @@ class GoalScenesDistributionTableModel(DistributionModel):
     @overrides
     def _match_by_row_col(self, row: int, column: int):
         for agenda in self.novel.scenes[column - 2].agendas:
-            for item in agenda.items:
-                if self.novel.scene_goals[row] in item.goals:
-                    return True
+            if self.novel.scene_goals[row] in agenda.goals(self.novel):
+                return True
         return False
 
 
@@ -119,9 +118,8 @@ class ConflictScenesDistributionTableModel(DistributionModel):
     @overrides
     def _match_by_row_col(self, row: int, column: int):
         for agenda in self.novel.scenes[column - 2].agendas:
-            for item in agenda.items:
-                if self.novel.conflicts[row] in item.conflicts:
-                    return True
+            if self.novel.conflicts[row] in agenda.conflicts(self.novel):
+                return True
         return False
 
 

@@ -486,7 +486,7 @@ class ScenesOutlineView(AbstractNovelView):
         i = self.novel.scenes.index(scene)
         day = scene.day
 
-        new_scene = Scene('Untitled', day=day)
+        new_scene = Scene('', day=day)
         if inherit_chapter:
             new_scene.chapter = scene.chapter
         self.novel.scenes.insert(i + 1, new_scene)

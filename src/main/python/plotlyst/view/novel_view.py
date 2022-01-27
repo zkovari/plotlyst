@@ -201,8 +201,8 @@ class NovelView(AbstractNovelView):
         conflict = indexes[0].data(NovelConflictsModel.ConflictRole)
         if ask_confirmation(f'Delete conflict "{conflict.text}"'):
             for scene in self.novel.scenes:
-                if conflict in scene.conflicts:
-                    scene.conflicts.remove(conflict)
+                if scene.agendas and conflict.id in [x.conflict_id for x in scene.agendas[0].conflict_references]:
+                    scene.agendas[0].remove_conflict(conflict)
                     self.repo.update_scene(scene)
             self.novel.conflicts.remove(conflict)
             self.repo.update_novel(self.novel)
