@@ -369,15 +369,16 @@ class JsonClient:
                     if bytes:
                         character.avatar = bytes
                 characters.append(character)
-        characters_ids = {}
+        characters_ids: Dict[str, Character] = {}
         for char in characters:
             characters_ids[str(char.id)] = char
 
         conflicts = []
         conflict_ids = {}
         for conflict in novel_info.conflicts:
-            if conflict.character_id not in characters_ids.keys() or (
-                    conflict.conflicting_character_id and conflict.conflicting_character_id not in characters_ids.keys()):
+            if str(conflict.character_id) not in characters_ids.keys() or (
+                    conflict.conflicting_character_id and str(
+                conflict.conflicting_character_id) not in characters_ids.keys()):
                 continue
             conflicts.append(conflict)
             conflict_ids[str(conflict.id)] = conflict
