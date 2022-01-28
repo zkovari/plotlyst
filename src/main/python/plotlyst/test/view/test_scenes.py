@@ -128,6 +128,20 @@ def test_switch_views(qtbot, filled_window: MainWindow):
     view.storymap_view.grab().toImage()
 
 
+def test_toggle_story_structure(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+
+    view.ui.btnStoryStructure.click()
+
+    assert view.ui.wdgStoryStructureParent.isVisible()
+    assert view.ui.wdgStoryStructure.isVisible()
+    assert view.ui.wdgStoryStructure.novel is view.novel
+
+    view.ui.btnStoryStructure.click()
+    assert not view.ui.wdgStoryStructureParent.isVisible()
+    assert not view.ui.wdgStoryStructure.isVisible()
+
+
 def test_change_stage(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
 

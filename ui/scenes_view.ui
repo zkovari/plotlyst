@@ -304,6 +304,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Toggle chapters display</string>
+            </property>
             <property name="text">
              <string>Chapters</string>
             </property>
@@ -333,6 +336,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Add new scene</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -360,6 +366,9 @@
             </property>
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Edit selected scene</string>
             </property>
             <property name="text">
              <string/>
@@ -400,6 +409,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Apply additional filters</string>
+            </property>
             <property name="styleSheet">
              <string notr="true">QToolButton::menu-indicator{width:0px;}</string>
             </property>
@@ -426,6 +438,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Filter scenes by act 1</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -444,6 +459,9 @@
            <widget class="QToolButton" name="btnAct2">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Filter scenes by act 2</string>
             </property>
             <property name="text">
              <string/>
@@ -464,6 +482,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Filter scenes by act 3</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -472,6 +493,35 @@
             </property>
             <property name="checked">
              <bool>true</bool>
+            </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_6">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnStoryStructure">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Toggle story structure display</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
             </property>
             <property name="base" stdset="0">
              <bool>true</bool>
@@ -504,6 +554,9 @@
             </property>
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Delete scene</string>
             </property>
             <property name="text">
              <string/>
@@ -590,22 +643,45 @@
           </layout>
          </widget>
          <widget class="QWidget" name="layoutWidget">
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <layout class="QVBoxLayout" name="scenesViewLayout">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>2</number>
+           </property>
+           <property name="topMargin">
+            <number>2</number>
+           </property>
+           <property name="rightMargin">
+            <number>2</number>
+           </property>
+           <property name="bottomMargin">
+            <number>2</number>
+           </property>
            <item>
-            <spacer name="horizontalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Preferred</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>10</width>
-               <height>10</height>
-              </size>
-             </property>
-            </spacer>
+            <widget class="QWidget" name="wdgStoryStructureParent" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout_10">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="SceneStoryStructureWidget" name="wdgStoryStructure" native="true"/>
+              </item>
+             </layout>
+            </widget>
            </item>
            <item>
             <widget class="QStackedWidget" name="stackScenes">
@@ -922,22 +998,6 @@
              </widget>
             </widget>
            </item>
-           <item>
-            <spacer name="horizontalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Preferred</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>10</width>
-               <height>10</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
           </layout>
          </widget>
         </widget>
@@ -984,9 +1044,32 @@
    <header>src.main.python.plotlyst.view.widget.cards</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>SceneStoryStructureWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>btnStoryStructure</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>wdgStoryStructureParent</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>382</x>
+     <y>51</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>595</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <buttongroups>
   <buttongroup name="btnGroupViews"/>
  </buttongroups>

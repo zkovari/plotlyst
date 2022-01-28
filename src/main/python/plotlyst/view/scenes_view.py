@@ -44,13 +44,14 @@ from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
-from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget
+from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget
 from src.main.python.plotlyst.view.widget.story_map import StoryLinesMapWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 
@@ -153,6 +154,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
+        self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on='darkBlue'))
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.passport-biometric', color_on='darkBlue'))
@@ -170,6 +172,10 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
+
+        self.ui.wdgStoryStructureParent.setHidden(True)
+        self.ui.wdgStoryStructure.setNovel(self.novel)
+        self.ui.wdgStoryStructure.setActsClickable(False)
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
         action = QWidgetAction(self.ui.btnFilter)
@@ -203,6 +209,13 @@ class ScenesOutlineView(AbstractNovelView):
         self.chaptersModel.modelReset.emit()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
+
+        if self.ui.wdgStoryStructure.novel is not None:
+            clear_layout(self.ui.wdgStoryStructureParent.layout())
+            self.ui.wdgStoryStructure = SceneStoryStructureWidget(self.ui.wdgStoryStructureParent)
+            self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
+        self.ui.wdgStoryStructure.setNovel(self.novel)
+        self.ui.wdgStoryStructure.setActsClickable(False)
 
         if self.stagesModel:
             self.stagesModel.modelReset.emit()

@@ -362,7 +362,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
         if self.wdgPreview.novel is not None:
             item = self.layout().takeAt(1)
-            item.widget().deleteLater()
+            gc(item.widget())
             self.wdgPreview = SceneStoryStructureWidget(self)
             self.layout().insertWidget(1, self.wdgPreview)
         self.wdgPreview.setNovel(self.novel, checkOccupiedBeats=False)
