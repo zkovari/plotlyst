@@ -410,8 +410,8 @@ class IconRegistry:
         return IconRegistry.from_name('ei.magic', color='#35a7ff')
 
     @staticmethod
-    def circle_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.circle-medium')
+    def circle_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('mdi.circle-medium', **kwargs)
 
     @staticmethod
     def inciting_incident_icon() -> QIcon:

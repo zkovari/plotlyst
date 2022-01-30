@@ -173,8 +173,8 @@ class SceneEditor(QObject):
         self.ui.textSynopsis.setText(self.scene.synopsis)
 
         self.ui.wdgStructure.unhighlightBeats()
-        if self.scene.beat(self.novel):
-            self.ui.wdgStructure.highlightBeat(self.scene.beat(self.novel))
+        if not self._new_scene:
+            self.ui.wdgStructure.highlightScene(self.scene)
         self.ui.wdgStructure.uncheckActs()
         self.ui.wdgStructure.setActChecked(acts_registry.act(self.scene))
 
@@ -234,13 +234,14 @@ class SceneEditor(QObject):
             self.ui.wdgStructure.toggleBeat(self.scene.beat(self.novel), False)
             self.scene.remove_beat(self.novel)
         self.scene.beats.append(SceneStoryBeat.of(self.novel.active_story_structure, beat))
-        self.ui.wdgStructure.highlightBeat(beat)
+        self.ui.wdgStructure.highlightScene(self.scene)
 
     def _beat_removed(self, beat: StoryBeat):
         if self.scene.beat(self.novel) == beat:
             self.scene.remove_beat(self.novel)
             self.ui.wdgStructure.unhighlightBeats()
             self.ui.wdgStructure.toggleBeat(beat, False)
+            self.ui.wdgStructure.highlightScene(self.scene)
 
     def _update_notes(self):
         if self.scene.document:

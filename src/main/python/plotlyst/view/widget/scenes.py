@@ -37,7 +37,7 @@ from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
-    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc
+    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc, transparent
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -805,6 +805,11 @@ class SceneStoryStructureWidget(QWidget):
         self.novel: Optional[Novel] = None
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
+        self.btnCurrentScene = QToolButton(self)
+        self._currentScenePercentage = 1
+        self.btnCurrentScene.setIcon(IconRegistry.circle_icon(color='red'))
+        self.btnCurrentScene.setHidden(True)
+        transparent(self.btnCurrentScene)
         self._wdgLine = QWidget(self)
         hbox(self._wdgLine, 0, 0)
         self._lineHeight: int = 22
@@ -883,6 +888,11 @@ class SceneStoryStructureWidget(QWidget):
                             self._beatHeight,
                             self._beatHeight)
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
+        if self.btnCurrentScene:
+            self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
+                                             self._lineHeight,
+                                             self._beatHeight,
+                                             self._beatHeight)
 
     def uncheckActs(self):
         for act in self._acts:
@@ -895,14 +905,51 @@ class SceneStoryStructureWidget(QWidget):
         for act in self._acts:
             act.setEnabled(clickable)
 
-    def highlightBeat(self, beat: StoryBeat, single: bool = True):
-        if single:
-            self.unhighlightBeats()
+    def highlightBeat(self, beat: StoryBeat):
+        self.unhighlightBeats()
         btn = self._beats.get(beat)
         if btn is None:
             return
         btn.setStyleSheet('QToolButton {border: 4px dotted #9b2226; border-radius: 6;} QToolTip {border: 0px;}')
         btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
+
+    def highlightScene(self, scene: Scene):
+        beat = scene.beat(self.novel)
+        if beat:
+            self.btnCurrentScene.setHidden(True)
+            self.highlightBeat(beat)
+        else:
+            index = self.novel.scenes.index(scene)
+            previous_beat_scene = None
+            previous_beat = None
+            next_beat_scene = None
+            next_beat = None
+            for _scene in self.novel.scenes[0: index]:
+                previous_beat = _scene.beat(self.novel)
+                if previous_beat:
+                    previous_beat_scene = _scene
+                    break
+            for _scene in self.novel.scenes[index: len(self.novel.scenes)]:
+                next_beat = _scene.beat(self.novel)
+                if next_beat:
+                    next_beat_scene = _scene
+                    break
+
+            min_percentage = previous_beat.percentage if previous_beat else 1
+            if not next_beat:
+                return
+            max_percentage = next_beat.percentage
+            min_index = self.novel.scenes.index(previous_beat_scene) if previous_beat_scene else 0
+            max_index = self.novel.scenes.index(next_beat_scene) if next_beat_scene else len(self.novel.scenes) - 1
+
+            self._currentScenePercentage = (max_percentage - min_percentage) / (max_index - min_index) * (
+                    index - min_index)
+
+            self.btnCurrentScene.setVisible(True)
+            self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
+                                             self._lineHeight,
+                                             self._beatHeight,
+                                             self._beatHeight)
 
     def unhighlightBeats(self):
         for btn in self._beats.values():
