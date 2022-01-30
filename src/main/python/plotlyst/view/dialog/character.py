@@ -22,7 +22,7 @@ from typing import Optional, Dict, Tuple
 import emoji
 import qtanim
 from PyQt5.QtCore import Qt, QSize, QObject, QEvent
-from PyQt5.QtWidgets import QDialog, QToolButton, QButtonGroup
+from PyQt5.QtWidgets import QDialog, QToolButton, QButtonGroup, QDialogButtonBox
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -115,10 +115,10 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
 
         self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
 
+        self.btnSave = self.buttonBox.button(QDialogButtonBox.Ok)
+
         self.btnSave.installEventFilter(self)
         self.btnSave.setDisabled(True)
-        self.btnSave.clicked.connect(self.accept)
-        self.btnClose.clicked.connect(self.reject)
 
         self._typeButtons[BackstoryEventType.Event].setChecked(True)
 

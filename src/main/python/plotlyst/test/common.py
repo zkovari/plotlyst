@@ -159,7 +159,7 @@ def edit_novel_dialog(new_title: str):
         assert isinstance(dialog, NovelEditionDialog)
         edition_dialog: NovelEditionDialog = dialog
         edition_dialog.lineTitle.setText(new_title)
-        edition_dialog.btnConfirm.click()
+        edition_dialog.accept()
     finally:
         dialog.close()
 
