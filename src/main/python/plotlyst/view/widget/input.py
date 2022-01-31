@@ -363,6 +363,8 @@ class RichTextEditor(QFrame):
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
         self.textEditor.setViewportMargins(5, 5, 5, 5)
 
+        self.highlighter = GrammarHighlighter(self.textEditor.document(), checkEnabled=False)
+
         if platform.is_linux():
             family = 'Noto Sans Mono'
         elif platform.is_mac():
@@ -511,6 +513,15 @@ class RichTextEditor(QFrame):
         font.setPointSize(size)
         self._lblPlaceholder.setFont(font)
         self.textEditor.textCursor().clearSelection()
+
+    def setGrammarCheckEnabled(self, enabled: bool):
+        self.highlighter.setCheckEnabled(enabled)
+
+    def checkGrammar(self):
+        self.highlighter.rehighlight()
+
+    def asyncCheckGrammer(self):
+        self.highlighter.asyncRehighlight()
 
     def clear(self):
         self.textEditor.clear()

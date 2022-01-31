@@ -34,7 +34,6 @@ from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import set_opacity
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.input import GrammarHighlighter
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 
 
@@ -45,7 +44,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self._current_doc: Optional[Document] = None
-        self.highlighter = GrammarHighlighter(self.ui.textEdit.textEditor.document(), checkEnabled=False)
         self.ui.splitter.setSizes([100, 500])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
@@ -93,7 +91,7 @@ class ManuscriptView(AbstractNovelView):
                 json_client.load_document(self.novel, self._current_doc)
 
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
-            self.highlighter.setCheckEnabled(False)
+            self.ui.textEdit.setGrammarCheckEnabled(False)
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
 
             self.ui.textEdit.setMargins(30, 30, 30, 30)
@@ -103,8 +101,8 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.textEditor.textChanged.connect(set_wc)
 
             if self.ui.cbSpellCheck.isChecked():
-                self.highlighter.setCheckEnabled(True)
-                self.highlighter.asyncRehighlight()
+                self.ui.textEdit.setGrammarCheckEnabled(True)
+                self.ui.textEdit.asyncCheckGrammer()
 
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
@@ -124,11 +122,11 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.cbSpellCheck.setChecked(False)
                 emit_critical(language_tool_proxy.error)
             else:
-                self.highlighter.setCheckEnabled(True)
-                self.highlighter.asyncRehighlight()
-        elif self.highlighter:
-            self.highlighter.setCheckEnabled(False)
-            self.highlighter.rehighlight()
+                self.ui.textEdit.setGrammarCheckEnabled(True)
+                self.ui.textEdit.asyncCheckGrammer()
+        else:
+            self.ui.textEdit.setGrammarCheckEnabled(False)
+            self.ui.textEdit.checkGrammar()
 
 
 class SentenceHighlighter(QSyntaxHighlighter):
