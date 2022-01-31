@@ -449,6 +449,8 @@ class TagTypeDisplay(QWidget):
         self.subtitle = Subtitle(self)
         self.subtitle.lblTitle.setText(tagType.text)
         self.subtitle.lblDescription.setText(tagType.description)
+        if tagType.icon:
+            self.subtitle.setIconName(tagType.icon, tagType.icon_color)
         self.labelsEditor = TagLabelsEditor(self.novel, tagType, self.novel.tags[tagType])
         self.layout().addWidget(self.subtitle)
         self.layout().addWidget(group(spacer_widget(20), self.labelsEditor))
