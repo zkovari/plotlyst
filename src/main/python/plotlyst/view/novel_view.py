@@ -39,6 +39,7 @@ from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEdi
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import hbox
+from src.main.python.plotlyst.view.widget.input import GrammarHighlighter
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 
@@ -67,6 +68,8 @@ class NovelView(AbstractNovelView):
         self.ui.textLogline.setPlainText(self.novel.logline)
         self.ui.lblLoglineWords.calculateWordCount(self.novel.logline)
         self.ui.textLogline.textChanged.connect(self._logline_changed)
+        self.ui.textSynopsis.setGrammarCheckEnabled(True)
+        self.loglineHighlighter = GrammarHighlighter(self.ui.textLogline.document())
 
         self.ui.textSynopsis.setToolbarVisible(False)
         self.ui.textSynopsis.setTitleVisible(False)
