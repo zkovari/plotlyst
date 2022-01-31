@@ -24,10 +24,10 @@ from PyQt5.QtCore import QRunnable
 from language_tool_python import LanguageTool
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, Event
+from src.main.python.plotlyst.core.domain import Novel, Event, Location
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEvent
+from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEvent, LocationChangedEvent
 
 
 class LanguageToolServerSetupWorker(QRunnable):
@@ -83,6 +83,7 @@ class Dictionary(EventListener):
         self.novel: Optional[Novel] = None
         self.words: Set[str] = set()
         event_dispatcher.register(self, CharacterChangedEvent)
+        event_dispatcher.register(self, LocationChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -97,7 +98,12 @@ class Dictionary(EventListener):
         for character in self.novel.characters:
             self.words.add(character.name)
         for location in self.novel.locations:
-            self.words.add(location.name)
+            self._add_locations(location)
+
+    def _add_locations(self, location: Location):
+        self.words.add(location.name)
+        for child in location.children:
+            self._add_locations(child)
 
     def is_known_word(self, word: str) -> bool:
         return word in self.words

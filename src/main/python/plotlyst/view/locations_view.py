@@ -24,6 +24,8 @@ from PyQt5.QtWidgets import QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Location
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import LocationChangedEvent
 from src.main.python.plotlyst.model.locations_model import LocationsTreeModel, LocationNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.locations_view_ui import Ui_LocationsView
@@ -83,3 +85,4 @@ class LocationsView(AbstractNovelView):
             node: LocationNode = index.data(LocationsTreeModel.NodeRole)
             profile = LocationProfileTemplateView(self.novel, node.location, self.novel.location_profiles[0])
             self.ui.wdgEditor.layout().addWidget(profile)
+            emit_event(LocationChangedEvent(self, node.location))
