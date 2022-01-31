@@ -18,13 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
-from typing import Any
+from typing import Any, List
 
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel
 from PyQt5.QtGui import QIcon
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict, SceneStage, Plot, PlotType
+from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict, SceneStage, Plot, PlotType, TagType, \
+    Tag
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import PlotCreatedEvent, NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel, DefaultSelectionItemsModel
@@ -163,18 +164,23 @@ class NovelPlotsModel(_NovelSelectionItemsModel):
 
 class NovelTagsModel(_NovelSelectionItemsModel):
 
+    def __init__(self, novel: Novel, tagType: TagType, tags: List[Tag]):
+        super(NovelTagsModel, self).__init__(novel)
+        self.tagType = tagType
+        self.tags = tags
+
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
-        return len(self.novel.tags)
+        return len(self.tags)
 
     @overrides
     def item(self, index: QModelIndex) -> SelectionItem:
-        return self.novel.tags[index.row()]
+        return self.tags[index.row()]
 
     @overrides
     def _newItem(self) -> QModelIndex:
-        tag = SelectionItem(text='')
-        self.novel.tags.append(tag)
+        tag = Tag(text='', tag_type=self.tagType.text)
+        self.novel.tags[self.tagType].append(tag)
         self.repo.update_novel(self.novel)
 
         return self.index(self.rowCount() - 1, 0)
@@ -182,7 +188,7 @@ class NovelTagsModel(_NovelSelectionItemsModel):
     @overrides
     def remove(self, index: QModelIndex):
         super().remove(index)
-        self.novel.tags.pop(index.row())
+        self.novel.tags[self.tagType].pop(index.row())
 
         self.repo.update_novel(self.novel)
         emit_event(NovelReloadRequestedEvent(self))

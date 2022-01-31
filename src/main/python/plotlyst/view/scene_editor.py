@@ -42,7 +42,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.scenes import SceneDramaticQuestionsWidget, SceneTagsWidget
+from src.main.python.plotlyst.view.widget.scenes import SceneDramaticQuestionsWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -132,9 +132,9 @@ class SceneEditor(QObject):
         self.questionsEditor = SceneDramaticQuestionsWidget(self.novel)
         self.ui.wdgDramaticQuestions.layout().addWidget(self.questionsEditor)
 
-        self.tagsEditor = SceneTagsWidget(self.novel)
-        self.tagsEditor.setMinimumHeight(50)
-        self.ui.wdgTagsContainer.layout().addWidget(self.tagsEditor)
+        # self.tagsEditor = SceneTagsWidget(self.novel)
+        # self.tagsEditor.setMinimumHeight(50)
+        # self.ui.wdgTagsContainer.layout().addWidget(self.tagsEditor)
 
         self._save_enabled = False
         self._update_view(scene)
@@ -189,8 +189,8 @@ class SceneEditor(QObject):
         self.questionsEditor.clear()
         self.questionsEditor.setValue([x.plot.text for x in self.scene.plot_values])
 
-        self.tagsEditor.clear()
-        self.tagsEditor.setValue(self.scene.tags)
+        # self.tagsEditor.clear()
+        # self.tagsEditor.setValue(self.scene.tags)
 
         if self._new_scene:
             self.ui.btnPrevious.setDisabled(True)
@@ -307,8 +307,8 @@ class SceneEditor(QObject):
         scene_plots = [ScenePlotValue(x) for x in self.questionsEditor.selectedItems()]
         self.scene.plot_values.extend(scene_plots)
 
-        self.scene.tags.clear()
-        self.scene.tags.extend(self.tagsEditor.value())
+        # self.scene.tags.clear()
+        # self.scene.tags.extend(self.tagsEditor.value())
 
         if self._new_scene:
             self.novel.scenes.append(self.scene)

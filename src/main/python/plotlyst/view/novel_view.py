@@ -17,19 +17,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Optional
+from typing import Optional
 
 from PyQt5.QtCore import QObject, QEvent
-from PyQt5.QtWidgets import QWidget, QHeaderView
+from PyQt5.QtWidgets import QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Plot, Document
+from src.main.python.plotlyst.core.domain import Novel, Plot, Document
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
-from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel, NovelConflictsModel
+from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages, OpacityEventFilter, \
@@ -38,10 +37,7 @@ from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult, NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import hbox
 from src.main.python.plotlyst.view.widget.input import GrammarHighlighter
-from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 
 
 class NovelView(AbstractNovelView):
@@ -117,9 +113,7 @@ class NovelView(AbstractNovelView):
         self.ui.btnEdit.clicked.connect(self._edit_conflict)
         self.ui.btnRemove.clicked.connect(self._delete_conflict)
 
-        tags_editor = NovelTagsEditor(self.novel)
-        hbox(self.ui.wdgTagsContainer, 0, 0)
-        self.ui.wdgTagsContainer.layout().addWidget(tags_editor)
+        self.ui.wdgTagsContainer.setNovel(self.novel)
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnStructure, self.ui.pageStructure),
                                                       (self.ui.btnPlot, self.ui.pagePlot),
@@ -221,31 +215,3 @@ class NovelView(AbstractNovelView):
         self.novel.synopsis.content = self.ui.textSynopsis.textEditor.toHtml()
         self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEditor.statistics().word_count)
         json_client.save_document(self.novel, self.novel.synopsis)
-
-
-class NovelTagsEditor(LabelsEditorWidget):
-
-    def __init__(self, novel: Novel, parent=None):
-        self.novel = novel
-        super(NovelTagsEditor, self).__init__(checkable=False, parent=parent)
-        self.btnEdit.setIcon(IconRegistry.tag_plus_icon())
-        self.editor.model.item_edited.connect(self._updateTags)
-        self._updateTags()
-
-    @overrides
-    def _initPopupWidget(self) -> QWidget:
-        self.editor: ItemsEditorWidget = super(NovelTagsEditor, self)._initPopupWidget()
-        self.editor.setBgColorFieldEnabled(True)
-        return self.editor
-
-    @overrides
-    def _initModel(self) -> SelectionItemsModel:
-        return NovelTagsModel(self.novel)
-
-    @overrides
-    def items(self) -> List[SelectionItem]:
-        return self.novel.tags
-
-    def _updateTags(self):
-        self._wdgLabels.clear()
-        self._addItems(self.novel.tags)

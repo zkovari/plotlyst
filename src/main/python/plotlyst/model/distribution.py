@@ -21,7 +21,7 @@ from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtGui import QIcon, QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Conflict, ConflictType, SceneGoal
+from src.main.python.plotlyst.core.domain import Conflict, ConflictType, SceneGoal, Tag
 from src.main.python.plotlyst.model.common import DistributionModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
@@ -127,11 +127,11 @@ class TagScenesDistributionTableModel(DistributionModel):
 
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
-        return len(self.novel.tags)
+        return len([item for sublist in self.novel.tags.values() for item in sublist])
 
     @overrides
     def _dataForTag(self, index: QModelIndex, role: int = Qt.DisplayRole):
-        tag = self.novel.tags[index.row()]
+        tag = self._tag(index.row())
         if role == Qt.DisplayRole or role == Qt.ToolTipRole:
             return tag.text
         if role == Qt.DecorationRole:
@@ -147,4 +147,7 @@ class TagScenesDistributionTableModel(DistributionModel):
 
     @overrides
     def _match_by_row_col(self, row: int, column: int):
-        return self.novel.tags[row].text in self.novel.scenes[column - 2].tags
+        return self._tag(row).text in self.novel.scenes[column - 2].tags
+
+    def _tag(self, row: int) -> Tag:
+        return [item for sublist in self.novel.tags.values() for item in sublist][row]
