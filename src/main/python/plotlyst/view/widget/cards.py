@@ -243,6 +243,8 @@ class JournalCard(Card, Ui_JournalCard):
 
 
 class SceneCard(Ui_SceneCard, Card):
+    cursorEntered = pyqtSignal()
+
     def __init__(self, scene: Scene, novel: Novel, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -304,6 +306,7 @@ class SceneCard(Ui_SceneCard, Card):
     def enterEvent(self, event: QEvent) -> None:
         super(SceneCard, self).enterEvent(event)
         self.wdgCharacters.setEnabled(True)
+        self.cursorEntered.emit()
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:

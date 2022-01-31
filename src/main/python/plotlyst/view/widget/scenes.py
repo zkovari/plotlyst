@@ -906,7 +906,6 @@ class SceneStoryStructureWidget(QWidget):
             act.setEnabled(clickable)
 
     def highlightBeat(self, beat: StoryBeat):
-        self.unhighlightBeats()
         btn = self._beats.get(beat)
         if btn is None:
             return
@@ -914,6 +913,7 @@ class SceneStoryStructureWidget(QWidget):
         btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
 
     def highlightScene(self, scene: Scene):
+        self.unhighlightBeats()
         beat = scene.beat(self.novel)
         if beat:
             self.btnCurrentScene.setHidden(True)

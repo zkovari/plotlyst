@@ -343,6 +343,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.repo.update_novel(self.novel)
 
     def _update_cards(self):
+        def cursorEnter(scene: Scene):
+            if self.ui.wdgStoryStructure.isVisible():
+                self.ui.wdgStoryStructure.highlightScene(scene)
+
         self.scene_cards.clear()
         self.selected_card = None
         self.ui.cards.clear()
@@ -359,6 +363,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
+            card.cursorEntered.connect(partial(cursorEnter, card.scene))
 
             card.setPopupMenuActions(
                 [action('Insert new scene', IconRegistry.plus_icon(), partial(self._insert_scene_after, scene)),
