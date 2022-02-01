@@ -678,11 +678,11 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self.btnEmotionStart.setToolTip('')
             self.btnEmotionEnd.setToolTip('')
         else:
-            if not isinstance(self.btnEmotionStart.style(), InstantTooltipStyle):
-                self.btnEmotionStart.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
-                self.btnEmotionStart.setStyle(InstantTooltipStyle(self.btnEmotionStart.style()))
-                self.btnEmotionEnd.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
-                self.btnEmotionEnd.setStyle(InstantTooltipStyle(self.btnEmotionEnd.style()))
+            # if not isinstance(self.btnEmotionStart.style(), InstantTooltipStyle):
+            self.btnEmotionStart.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
+            #     self.btnEmotionStart.setStyle(InstantTooltipStyle(self.btnEmotionStart.style()))
+            self.btnEmotionEnd.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
+            #     self.btnEmotionEnd.setStyle(InstantTooltipStyle(self.btnEmotionEnd.style()))
 
             self.btnEmotionStart.setDisabled(True)
             self.btnEmotionEnd.setDisabled(True)
