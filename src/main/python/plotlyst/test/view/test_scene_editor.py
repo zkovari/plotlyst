@@ -24,15 +24,6 @@ def test_editor_with_new_scene(qtbot):
     assert view.ui.cbPov.currentText() == 'Select POV ...'
 
 
-def test_editor_with_none_values(qtbot):
-    novel = Novel('Test-novel', story_structures=default_story_structures)
-    novel.story_structures[0].active = True
-    scene = novel.new_scene()
-    novel.scenes.append(scene)
-
-    view: SceneEditor = editor(qtbot, novel, scene)
-
-
 def _test_display_scene_builder(qtbot):
     novel = Novel('Test-novel')
     view: SceneEditor = editor(qtbot, novel)
