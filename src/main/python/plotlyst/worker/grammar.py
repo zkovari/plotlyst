@@ -27,7 +27,8 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Novel, Event, Location
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEvent, LocationChangedEvent, ManuscriptLanguageChanged
+from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEvent, LocationChangedEvent, \
+    ManuscriptLanguageChanged
 
 
 class LanguageToolServerSetupWorker(QRunnable):

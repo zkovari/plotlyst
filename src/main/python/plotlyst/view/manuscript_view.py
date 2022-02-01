@@ -34,7 +34,6 @@ from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, popup
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.input import GrammarHighlighter
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 
