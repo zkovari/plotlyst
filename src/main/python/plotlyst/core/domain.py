@@ -25,10 +25,14 @@ from enum import Enum
 from typing import List, Optional, Any, Dict
 
 from PyQt5.QtCore import Qt
-from dataclasses_json import dataclass_json, Undefined
+from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
+
+
+def exclude_if_empty(value):
+    return not value
 
 
 @dataclass
@@ -139,6 +143,7 @@ class Character:
                 return value.value[0] if value.value else -1
         return -1
 
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -224,14 +229,22 @@ class SelectionItemType(Enum):
     SEPARATOR = 1
 
 
+def exclude_if_choice(value):
+    return value == SelectionItemType.CHOICE
+
+
+def exclude_if_black(value):
+    return value == 'black'
+
+
 @dataclass
 class SelectionItem:
     text: str
-    type: SelectionItemType = SelectionItemType.CHOICE
-    icon: str = ''
-    icon_color: str = 'black'
-    color_hexa: str = ''
-    meta: Dict[str, Any] = field(default_factory=dict)
+    type: SelectionItemType = field(default=SelectionItemType.CHOICE, metadata=config(exclude=exclude_if_choice))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    color_hexa: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    meta: Dict[str, Any] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __hash__(self):
@@ -397,6 +410,12 @@ class ConflictReference:
 
 
 @dataclass
+class TagReference:
+    tag_id: uuid.UUID
+    message: str = ''
+
+
+@dataclass
 class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     items: List[SceneStructureItem] = field(default_factory=list)
@@ -471,6 +490,7 @@ class Scene:
     beats: List[SceneStoryBeat] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
+    tag_references: List[TagReference] = field(default_factory=list)
     document: Optional['Document'] = None
     manuscript: Optional['Document'] = None
 
@@ -1150,14 +1170,72 @@ def default_documents() -> List[Document]:
             Document('Brainstorming', id=uuid.UUID('f6df3a87-7054-40d6-a4b0-ad9917003136'))]
 
 
-def default_tags() -> List[SelectionItem]:
-    return [SelectionItem('Flashback', icon='fa5s.backward', icon_color='white', color_hexa='#1b263b'),
-            SelectionItem('Flashforward', icon='fa5s.forward', icon_color='white', color_hexa='#1b998b'),
-            SelectionItem('Ticking clock', icon='mdi.clock-alert-outline', icon_color='#f7cb15'),
-            SelectionItem('Foreshadowing', icon='mdi.crystal-ball', icon_color='#76bed0'),
-            SelectionItem('Cliffhanger', icon='mdi.target-account', icon_color='#f7cb15'),
-            SelectionItem('Backstory', icon='mdi.archive', icon_color='#9a6d38'),
-            SelectionItem('Red herring', icon='fa5s.fish', icon_color='#d33f49')]
+@dataclass
+class TagType(SelectionItem):
+    description: str = ''
+
+    @overrides
+    def __hash__(self):
+        return hash(self.text)
+
+
+@dataclass
+class Tag(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    tag_type: str = 'General'
+    builtin: bool = False
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+def default_general_tags() -> List[Tag]:
+    return [
+        Tag('Flashback', id=uuid.UUID('1daadfcf-dc6a-4b9d-b708-f9577cbb9e83'), icon='fa5s.backward', icon_color='white',
+            color_hexa='#1b263b', builtin=True),
+        Tag('Flashforward', id=uuid.UUID('a5db2d5f-099d-4d01-83e8-31c726f04100'), icon='fa5s.forward',
+            icon_color='white',
+            color_hexa='#1b998b', builtin=True),
+        Tag('Ticking clock', id=uuid.UUID('88ab7b73-6934-4f63-8022-0b8732caa8bd'), icon='mdi.clock-alert-outline',
+            icon_color='#f7cb15', builtin=True),
+        Tag('Foreshadowing', id=uuid.UUID('2ba0c868-da0f-44fc-9142-fef0bfa6e1c6'), icon='mdi.crystal-ball',
+            icon_color='#76bed0', builtin=True),
+        Tag('Cliffhanger', id=uuid.UUID('51e0bcc5-396e-4602-b195-fc8efe985f13'), icon='mdi.target-account',
+            icon_color='#f7cb15', builtin=True),
+        Tag('Backstory', id=uuid.UUID('72d155da-df20-4b64-84d3-acfbbc7f87c7'), icon='mdi.archive', icon_color='#9a6d38',
+            builtin=True),
+        Tag('Red herring', id=uuid.UUID('96ff9491-cdd3-4c85-8086-ee47144828cb'), icon='fa5s.fish', icon_color='#d33f49',
+            builtin=True)]
+
+
+def default_tag_types() -> List[TagType]:
+    return [
+        TagType('General', icon='ei.tags', icon_color='#2a2a72',
+                description='General tags that can be tracked for each scenes.'),
+        TagType('Symbols', icon='fa5s.dove', icon_color='#5995ed',
+                description='A symbol can be anything that represents something beyond their literal meaning.'),
+        TagType('Motifs', icon='mdi6.glass-fragile', icon_color='#8ac6d0',
+                description='A motif is a recurring object, sound, situation, phrase, or idea throughout the story.'
+                            + ' A motif might remind the reader to the theme.'),
+        TagType('Items', icon='mdi.ring', icon_color='#b6a6ca',
+                description='Relevant items that reappear throughout the story.'
+                            + ' They do not have symbolic meaning unlike Symbols or Motifs.'),
+        TagType('Themes', icon='ei.idea-alt', icon_color='#f72585',
+                description='The main ideas or lessons that the story explores.')
+    ]
+
+
+def default_tags() -> Dict[TagType, List[Tag]]:
+    tags = {}
+    types = default_tag_types()
+    for t in types:
+        if t.text == 'General':
+            tags[t] = default_general_tags()
+        else:
+            tags[t] = []
+
+    return tags
 
 
 @dataclass
@@ -1174,7 +1252,7 @@ class Novel(NovelDescriptor):
     conflicts: List[Conflict] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)
-    tags: List[SelectionItem] = field(default_factory=default_tags)
+    tags: Dict[TagType, List[Tag]] = field(default_factory=default_tags)
     logline: str = ''
     synopsis: Optional['Document'] = None
 
@@ -1197,7 +1275,8 @@ class Novel(NovelDescriptor):
         self.scene_goals.clear()
         self.scene_goals.extend(updated_novel.scene_goals)
         self.tags.clear()
-        self.tags.extend(updated_novel.tags)
+        for k in updated_novel.tags:
+            self.tags[k] = updated_novel.tags[k]
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
@@ -1222,6 +1301,9 @@ class Novel(NovelDescriptor):
             if structure.active:
                 return structure
         return self.story_structures[0]
+
+    def new_scene(self) -> Scene:
+        return Scene('', agendas=[SceneStructureAgenda()])
 
 
 @dataclass

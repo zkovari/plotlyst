@@ -128,6 +128,8 @@ def clear_layout(layout: QLayout, autoDelete: bool = True):
         item = layout.takeAt(0)
         if autoDelete:
             gc(item.widget())
+        elif item.widget():
+            item.widget().setParent(None)
 
 
 def hbox(widget: QWidget, margin: int = 2, spacing: int = 3) -> QHBoxLayout:

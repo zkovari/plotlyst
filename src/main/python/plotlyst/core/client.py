@@ -28,14 +28,15 @@ from typing import List, Optional, Any, Dict
 from PyQt5.QtCore import QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
-from dataclasses_json import dataclass_json, Undefined
+from dataclasses_json import dataclass_json, Undefined, config
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    Conflict, BackstoryEvent, Comment, SceneGoal, Document, SelectionItem, \
-    default_tags, default_documents, DocumentType, Causality, Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
-    Location, default_location_profiles, three_act_structure, SceneStoryBeat
+    Conflict, BackstoryEvent, Comment, SceneGoal, Document, default_documents, DocumentType, Causality, \
+    Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
+    Location, default_location_profiles, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
+    default_tag_types, exclude_if_empty
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -173,7 +174,8 @@ class NovelInfo:
     location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     scene_goals: List[SceneGoal] = field(default_factory=list)
-    tags: List[SelectionItem] = field(default_factory=default_tags)
+    tags: List[Tag] = field(default_factory=default_general_tags)
+    tag_types: List[TagType] = field(default_factory=default_tag_types, metadata=config(exclude=exclude_if_empty))
     documents: List[Document] = field(default_factory=default_documents)
     logline: str = ''
     synopsis: Optional['Document'] = None
@@ -369,13 +371,18 @@ class JsonClient:
                     if bytes:
                         character.avatar = bytes
                 characters.append(character)
-        characters_ids = {}
+        characters_ids: Dict[str, Character] = {}
         for char in characters:
             characters_ids[str(char.id)] = char
 
         conflicts = []
         conflict_ids = {}
         for conflict in novel_info.conflicts:
+            if str(conflict.character_id) not in characters_ids.keys():
+                continue
+            if conflict.conflicting_character_id and str(
+                    conflict.conflicting_character_id) not in characters_ids.keys():
+                continue
             conflicts.append(conflict)
             conflict_ids[str(conflict.id)] = conflict
 
@@ -452,12 +459,25 @@ class JsonClient:
                               document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
 
+        tag_types = novel_info.tag_types
+        tags = novel_info.tags
+
+        tags_dict: Dict[TagType, List[Tag]] = {}
+        for tt in tag_types:
+            tags_dict[tt] = []
+            for t in tags:
+                if t.tag_type == tt.text:
+                    tags_dict[tt].append(t)
+        for t in default_general_tags():
+            if t not in tags_dict[tag_types[0]]:
+                tags_dict[tag_types[0]].append(t)
+
         return Novel(title=project_novel_info.title, id=novel_info.id,
                      plots=novel_info.plots, characters=characters,
                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                      location_profiles=novel_info.location_profiles,
-                     conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=novel_info.tags,
+                     conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=tags_dict,
                      documents=novel_info.documents, logline=novel_info.logline, synopsis=novel_info.synopsis)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
@@ -482,7 +502,10 @@ class JsonClient:
                                character_profiles=novel.character_profiles,
                                location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,
-                               scene_goals=novel.scene_goals, tags=novel.tags, documents=novel.documents,
+                               scene_goals=novel.scene_goals,
+                               tags=[item for sublist in novel.tags.values() for item in sublist if not item.builtin],
+                               tag_types=list(novel.tags.keys()),
+                               documents=novel.documents,
                                logline=novel.logline, synopsis=novel.synopsis,
                                version=LATEST_VERSION)
 

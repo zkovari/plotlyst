@@ -40,7 +40,7 @@ from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
-from src.main.python.plotlyst.view.widget.input import RotatedButton, RichTextEditor, GrammarHighlighter
+from src.main.python.plotlyst.view.widget.input import RotatedButton, RichTextEditor
 
 
 class DocumentsView(AbstractNovelView):
@@ -66,7 +66,6 @@ class DocumentsView(AbstractNovelView):
             self.ui.btnAdd.setIconSize(QSize(15, 15))
 
         self.textEditor: Optional[RichTextEditor] = None
-        self.highlighter: Optional[GrammarHighlighter] = None
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
         self.ui.btnAdd.clicked.connect(self._add_doc)
@@ -120,7 +119,6 @@ class DocumentsView(AbstractNovelView):
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
         self.textEditor.textEditor.textChanged.connect(self._save)
         self.textEditor.textTitle.textChanged.connect(self._title_changed)
-        self.highlighter = GrammarHighlighter(self.textEditor.textEditor.document(), checkEnabled=False)
 
     def _clear_text_editor(self):
         clear_layout(self.ui.docEditorPage.layout())
@@ -177,13 +175,13 @@ class DocumentsView(AbstractNovelView):
 
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
-            self.highlighter.setCheckEnabled(False)
+            self.textEditor.setGrammarCheckEnabled(False)
             if char:
                 self.textEditor.setText(self._current_doc.content, char.name, title_read_only=True)
             else:
                 self.textEditor.setText(self._current_doc.content, self._current_doc.title)
-            self.highlighter.setCheckEnabled(True)
-            self.highlighter.asyncRehighlight()
+            self.textEditor.setGrammarCheckEnabled(True)
+            self.textEditor.asyncCheckGrammer()
         else:
             self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
             while self.ui.customEditorPage.layout().count():

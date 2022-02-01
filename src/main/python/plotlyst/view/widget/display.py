@@ -85,6 +85,7 @@ class Subtitle(QWidget):
         increase_font(self.lblTitle)
 
         self._iconName: str = ''
+        self._iconColor: str = 'black'
         self._descSpacer = spacer_widget(20)
 
         self.lblDescription.setStyleSheet('color: #8d99ae;')
@@ -93,8 +94,9 @@ class Subtitle(QWidget):
         self.layout().addWidget(group(self.icon, self.lblTitle, parent=self))
         self.layout().addWidget(group(self._descSpacer, self.lblDescription, parent=self))
 
-    def setIconName(self, icon: str):
+    def setIconName(self, icon: str, color: str = 'black'):
         self._iconName = icon
+        self._iconColor = color
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
@@ -110,7 +112,7 @@ class Subtitle(QWidget):
             self._iconName = self.property('icon')
 
         if self._iconName:
-            self.icon.setIcon(IconRegistry.from_name(self._iconName))
+            self.icon.setIcon(IconRegistry.from_name(self._iconName, self._iconColor))
             self._descSpacer.setMaximumWidth(20)
         else:
             self.icon.setHidden(True)

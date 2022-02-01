@@ -20,6 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import os
 from enum import Enum
 
+from fbs_runtime import platform
+
 
 class AppMode(Enum):
     DEV = 0
@@ -48,6 +50,15 @@ class AppEnvironment:
         if os.getenv('PLOTLYST_TEST_ENV'):
             return True
         return False
+
+    def is_mac(self) -> bool:
+        return platform.is_mac()
+
+    def is_linux(self) -> bool:
+        return platform.is_linux()
+
+    def is_windows(self) -> bool:
+        return platform.is_windows()
 
 
 app_env = AppEnvironment()

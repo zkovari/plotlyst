@@ -28,7 +28,7 @@ from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTex
     QTextDocument, QTextBlockUserData
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox, QMenu, QVBoxLayout, QApplication, QToolButton, QHBoxLayout, QLabel, QFileDialog, \
+    QAction, QActionGroup, QComboBox, QMenu, QApplication, QToolButton, QLabel, QFileDialog, \
     QLineEdit
 from fbs_runtime import platform
 from language_tool_python import LanguageTool
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
 from src.main.python.plotlyst.view.common import line, spacer_widget, OpacityEventFilter, transparent
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import vbox, hbox
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy, dictionary
@@ -272,13 +273,6 @@ class _TextEditor(QTextEdit):
                     list_.setFormat(new_format)
                     cursor.endEditBlock()
                 return
-        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-            level = cursor.blockFormat().headingLevel()
-            if level > 0:  # heading
-                cursor.insertBlock()
-                self.cbHeading.setCurrentIndex(0)
-                self._setHeading()
-                return
         super(_TextEditor, self).keyPressEvent(event)
 
     @overrides
@@ -350,10 +344,7 @@ class CapitalizationEventFilter(QObject):
 class RichTextEditor(QFrame):
     def __init__(self, parent=None):
         super(RichTextEditor, self).__init__(parent)
-
-        self.setLayout(QVBoxLayout())
-        self.layout().setSpacing(0)
-        self.layout().setContentsMargins(2, 2, 2, 2)
+        vbox(self, spacing=0)
 
         self.toolbar = QToolBar()
         if platform.is_mac():
@@ -371,6 +362,8 @@ class RichTextEditor(QFrame):
 
         self.textEditor.cursorPositionChanged.connect(self._updateFormat)
         self.textEditor.setViewportMargins(5, 5, 5, 5)
+
+        self.highlighter = GrammarHighlighter(self.textEditor.document(), checkEnabled=False)
 
         if platform.is_linux():
             family = 'Noto Sans Mono'
@@ -521,6 +514,15 @@ class RichTextEditor(QFrame):
         self._lblPlaceholder.setFont(font)
         self.textEditor.textCursor().clearSelection()
 
+    def setGrammarCheckEnabled(self, enabled: bool):
+        self.highlighter.setCheckEnabled(enabled)
+
+    def checkGrammar(self):
+        self.highlighter.rehighlight()
+
+    def asyncCheckGrammer(self):
+        self.highlighter.asyncRehighlight()
+
     def clear(self):
         self.textEditor.clear()
         self.textTitle.clear()
@@ -549,6 +551,13 @@ class RichTextEditor(QFrame):
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
                 if self.textEditor.textCursor().atBlockStart():
                     self._showCommands()
+
+            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
+                level = cursor.blockFormat().headingLevel()
+                if level > 0:  # heading
+                    cursor.insertBlock()
+                    self.cbHeading.setCurrentIndex(0)
+                    self._setHeading()
 
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
                 cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
@@ -746,9 +755,7 @@ class PowerBar(QFrame):
         super(PowerBar, self).__init__(parent)
 
         self.setFrameStyle(QFrame.Box)
-        self.setLayout(QHBoxLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(3)
+        hbox(self, 0)
         self.btnMinus = QToolButton()
         self.btnMinus.setIcon(IconRegistry.minus_icon(self.MINUS_COLOR_IDLE))
         self.btnPlus = QToolButton()

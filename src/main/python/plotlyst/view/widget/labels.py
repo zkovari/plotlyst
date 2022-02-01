@@ -22,7 +22,7 @@ from typing import Union, List, Iterable, Set
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QFrame, QToolButton, QVBoxLayout, QMenu, QWidgetAction, \
+from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
 from overrides import overrides
 
@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictTy
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import line, text_color_with_bg_color, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
-from src.main.python.plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.view.layout import FlowLayout, hbox, vbox
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 
@@ -39,10 +39,7 @@ from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 class Label(QFrame):
     def __init__(self, parent=None):
         super(Label, self).__init__(parent)
-        _layout = QHBoxLayout()
-        _layout.setSpacing(2)
-        _layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(_layout)
+        hbox(self, 0, 2)
 
 
 class LabelsWidget(QWidget):
@@ -228,11 +225,9 @@ class LabelsEditorWidget(QFrame):
         self.setFrameShape(QFrame.Box)
         self.setStyleSheet('LabelsEditorWidget {background: white;}')
         if alignment == Qt.Horizontal:
-            self.setLayout(QHBoxLayout())
+            hbox(self, 0, 1)
         else:
-            self.setLayout(QVBoxLayout())
-        self.layout().setSpacing(1)
-        self.layout().setContentsMargins(0, 0, 0, 0)
+            vbox(self, 0, 1)
         self._labels_index = {}
         self.clear()
 

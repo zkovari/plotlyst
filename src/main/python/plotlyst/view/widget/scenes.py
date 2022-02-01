@@ -37,13 +37,13 @@ from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
-    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc
+    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc, transparent, DisabledClickEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import flow, clear_layout
+from src.main.python.plotlyst.view.layout import flow, clear_layout, hbox
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
@@ -208,7 +208,8 @@ def is_placeholder(widget: QWidget) -> bool:
 
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
-    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, placeholder: str = 'Beat',
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem,
+                 placeholder: str = 'General beat in this scene',
                  topVisible: bool = False, parent=None):
         super(SceneStructureItemWidget, self).__init__(parent)
         self.novel = novel
@@ -253,14 +254,16 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
 class SceneGoalItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneGoalItemWidget, self).__init__(novel, scene_structure_item, placeholder='Goal',
+        super(SceneGoalItemWidget, self).__init__(novel, scene_structure_item,
+                                                  placeholder='Goal of the character is clearly stated to the reader',
                                                   parent=parent)
         self.btnIcon.setIcon(IconRegistry.goal_icon())
 
 
 class SceneConflictItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneConflictItemWidget, self).__init__(novel, scene_structure_item, placeholder='Conflict',
+        super(SceneConflictItemWidget, self).__init__(novel, scene_structure_item,
+                                                      placeholder="Conflict arises that hinders the character's goals",
                                                       parent=parent)
         self.btnIcon.setIcon(IconRegistry.conflict_icon())
 
@@ -271,28 +274,32 @@ class SceneOutcomeItemWidget(SceneStructureItemWidget):
 
         self.layoutTop.addWidget(SceneOutcomeSelector(self.scene_structure_item))
         self.layoutTop.addWidget(spacer_widget())
-        self.text.setPlaceholderText('Outcome')
+        self.text.setPlaceholderText(
+            "Outcome of the scene, typically ending with disaster")
         self.btnIcon.setIcon(IconRegistry.action_scene_icon())
 
 
 class ReactionSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(ReactionSceneItemWidget, self).__init__(novel, scene_structure_item, placeholder='Initial reaction',
+        super(ReactionSceneItemWidget, self).__init__(novel, scene_structure_item,
+                                                      placeholder='Initial reaction to a previous conflict',
                                                       parent=parent)
         self.btnIcon.setIcon(IconRegistry.reaction_icon())
 
 
 class DilemmaSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(DilemmaSceneItemWidget, self).__init__(novel, scene_structure_item,
-                                                     placeholder='Dilemma throughout the scene', parent=parent)
+        super().__init__(novel, scene_structure_item,
+                         placeholder='Dilemma throughout the scene. What to do next?',
+                         parent=parent)
         self.btnIcon.setIcon(IconRegistry.dilemma_icon())
 
 
 class DecisionSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(DecisionSceneItemWidget, self).__init__(novel, scene_structure_item, placeholder='New goal and action',
-                                                      parent=parent)
+        super().__init__(novel, scene_structure_item,
+                         placeholder='The character comes up with a new goal and might act right away',
+                         parent=parent)
         self.btnIcon.setIcon(IconRegistry.decision_icon())
 
 
@@ -304,13 +311,15 @@ class HookSceneItemWidget(SceneStructureItemWidget):
 
 class IncitingIncidentSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super().__init__(novel, scene_structure_item, placeholder='Inciting incident of the scene', parent=parent)
+        super().__init__(novel, scene_structure_item,
+                         placeholder='Is there a surprising, unforeseen incident in this scene?',
+                         parent=parent)
         self.btnIcon.setIcon(IconRegistry.inciting_incident_icon())
 
 
 class RisingActionSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super().__init__(novel, scene_structure_item, placeholder='Increasing tension throughout the scene',
+        super().__init__(novel, scene_structure_item, placeholder='Increasing tension or suspense throughout the scene',
                          parent=parent)
         self.btnIcon.setIcon(IconRegistry.rising_action_icon())
 
@@ -318,7 +327,7 @@ class RisingActionSceneItemWidget(SceneStructureItemWidget):
 class CrisisSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super().__init__(novel, scene_structure_item,
-                         placeholder='The impossible decision of two good or two equally bad outcomes', parent=parent)
+                         placeholder='The impossible decision between two equally good or bad outcomes', parent=parent)
         self.btnIcon.setIcon(IconRegistry.crisis_icon())
 
 
@@ -455,17 +464,16 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
-        self.stackedWidget.setCurrentWidget(self.pageEmpty)
+        self.unsetCharacterSlot = None
+
+    def setUnsetCharacterSlot(self, unsetCharacterSlot):
+        self.unsetCharacterSlot = unsetCharacterSlot
 
     def setScene(self, novel: Novel, scene: Scene):
         self.novel = novel
         self.scene = scene
 
-        if scene.agendas:
-            self.stackedWidget.setCurrentWidget(self.pageEditor)
-        else:
-            self.stackedWidget.setCurrentWidget(self.pageEmpty)
-            return
+        self._toggleCharacterStatus()
 
         self.reset()
         self.btnInventory.setChecked(False)
@@ -533,10 +541,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if not self.scene.agendas[0].items:
             self._typeClicked(SceneType.ACTION, True, lazy=False)
 
-    def reset(self, addPlaceholders: bool = False):
-        for widget in [self.wdgBeginning, self.wdgMiddle, self.wdgEnd]:
-            clear_layout(widget.layout())
-        if addPlaceholders:
+    def updateAgendaCharacter(self):
+        self._toggleCharacterStatus()
+        self.reset(clearBeats=False)
+
+    def reset(self, clearBeats: bool = True, addPlaceholders: bool = False):
+        if clearBeats:
+            for widget in [self.wdgBeginning, self.wdgMiddle, self.wdgEnd]:
+                clear_layout(widget.layout())
+        if clearBeats and addPlaceholders:
             self._addPlaceholder(self.wdgBeginning)
             self._addPlaceholder(self.wdgMiddle)
             self._addPlaceholder(self.wdgEnd)
@@ -657,6 +670,24 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         event.accept()
 
         QTimer.singleShot(50, widget.activate)
+
+    def _toggleCharacterStatus(self):
+        if self.scene.agendas[0].character_id:
+            self.btnEmotionStart.setEnabled(True)
+            self.btnEmotionEnd.setEnabled(True)
+            self.btnEmotionStart.setToolTip('')
+            self.btnEmotionEnd.setToolTip('')
+        else:
+            # if not isinstance(self.btnEmotionStart.style(), InstantTooltipStyle):
+            self.btnEmotionStart.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
+            #     self.btnEmotionStart.setStyle(InstantTooltipStyle(self.btnEmotionStart.style()))
+            self.btnEmotionEnd.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
+            #     self.btnEmotionEnd.setStyle(InstantTooltipStyle(self.btnEmotionEnd.style()))
+
+            self.btnEmotionStart.setDisabled(True)
+            self.btnEmotionEnd.setDisabled(True)
+            self.btnEmotionStart.setToolTip('Select POV character first')
+            self.btnEmotionEnd.setToolTip('Select POV character first')
 
     def _collect_agenda_items(self, agenda: SceneStructureAgenda, widget: QWidget, part: int):
         for i in range(widget.layout().count()):
@@ -796,10 +827,13 @@ class SceneStoryStructureWidget(QWidget):
         self.novel: Optional[Novel] = None
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
+        self.btnCurrentScene = QToolButton(self)
+        self._currentScenePercentage = 1
+        self.btnCurrentScene.setIcon(IconRegistry.circle_icon(color='red'))
+        self.btnCurrentScene.setHidden(True)
+        transparent(self.btnCurrentScene)
         self._wdgLine = QWidget(self)
-        self._wdgLine.setLayout(QHBoxLayout())
-        self._wdgLine.layout().setSpacing(0)
-        self._wdgLine.layout().setContentsMargins(0, 0, 0, 0)
+        hbox(self._wdgLine, 0, 0)
         self._lineHeight: int = 22
         self._beatHeight: int = 20
         self._margin = 5
@@ -876,6 +910,11 @@ class SceneStoryStructureWidget(QWidget):
                             self._beatHeight,
                             self._beatHeight)
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
+        if self.btnCurrentScene:
+            self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
+                                             self._lineHeight,
+                                             self._beatHeight,
+                                             self._beatHeight)
 
     def uncheckActs(self):
         for act in self._acts:
@@ -888,14 +927,52 @@ class SceneStoryStructureWidget(QWidget):
         for act in self._acts:
             act.setEnabled(clickable)
 
-    def highlightBeat(self, beat: StoryBeat, single: bool = True):
-        if single:
-            self.unhighlightBeats()
+    def highlightBeat(self, beat: StoryBeat):
         btn = self._beats.get(beat)
         if btn is None:
             return
         btn.setStyleSheet('QToolButton {border: 4px dotted #9b2226; border-radius: 6;} QToolTip {border: 0px;}')
         btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
+
+    def highlightScene(self, scene: Scene):
+        self.unhighlightBeats()
+        self.btnCurrentScene.setHidden(True)
+
+        beat = scene.beat(self.novel)
+        if beat:
+            self.highlightBeat(beat)
+        else:
+            index = self.novel.scenes.index(scene)
+            previous_beat_scene = None
+            previous_beat = None
+            next_beat_scene = None
+            next_beat = None
+            for _scene in self.novel.scenes[0: index]:
+                previous_beat = _scene.beat(self.novel)
+                if previous_beat:
+                    previous_beat_scene = _scene
+                    break
+            for _scene in self.novel.scenes[index: len(self.novel.scenes)]:
+                next_beat = _scene.beat(self.novel)
+                if next_beat:
+                    next_beat_scene = _scene
+                    break
+
+            min_percentage = previous_beat.percentage if previous_beat else 1
+            if not next_beat:
+                return
+            max_percentage = next_beat.percentage
+            min_index = self.novel.scenes.index(previous_beat_scene) if previous_beat_scene else 0
+            max_index = self.novel.scenes.index(next_beat_scene) if next_beat_scene else len(self.novel.scenes) - 1
+
+            self._currentScenePercentage = (max_percentage - min_percentage) / (max_index - min_index) * (
+                    index - min_index)
+
+            self.btnCurrentScene.setVisible(True)
+            self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
+                                             self._lineHeight,
+                                             self._beatHeight,
+                                             self._beatHeight)
 
     def unhighlightBeats(self):
         for btn in self._beats.values():

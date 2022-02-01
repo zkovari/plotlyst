@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QIcon
@@ -27,10 +27,12 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGr
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene
+    three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget, bold, \
     popup, gc
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
@@ -39,7 +41,10 @@ from src.main.python.plotlyst.view.generated.story_structure_character_link_widg
 from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.layout import clear_layout, flow
+from src.main.python.plotlyst.view.layout import clear_layout, flow, vbox, group
+from src.main.python.plotlyst.view.widget.display import Subtitle
+from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -362,7 +367,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
         if self.wdgPreview.novel is not None:
             item = self.layout().takeAt(1)
-            item.widget().deleteLater()
+            gc(item.widget())
             self.wdgPreview = SceneStoryStructureWidget(self)
             self.layout().insertWidget(1, self.wdgPreview)
         self.wdgPreview.setNovel(self.novel, checkOccupiedBeats=False)
@@ -402,3 +407,63 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             self._removeStructure(structure)
 
         self.repo.update_novel(self.novel)
+
+
+class TagLabelsEditor(LabelsEditorWidget):
+
+    def __init__(self, novel: Novel, tagType: TagType, tags: List[Tag], parent=None):
+        self.novel = novel
+        self.tagType = tagType
+        self.tags = tags
+        super(TagLabelsEditor, self).__init__(checkable=False, parent=parent)
+        self.btnEdit.setIcon(IconRegistry.tag_plus_icon())
+        self.editor.model.item_edited.connect(self._updateTags)
+        self._updateTags()
+
+    @overrides
+    def _initPopupWidget(self) -> QWidget:
+        self.editor: ItemsEditorWidget = super(TagLabelsEditor, self)._initPopupWidget()
+        self.editor.setBgColorFieldEnabled(True)
+        return self.editor
+
+    @overrides
+    def _initModel(self) -> SelectionItemsModel:
+        return NovelTagsModel(self.novel, self.tagType, self.tags)
+
+    @overrides
+    def items(self) -> List[SelectionItem]:
+        return self.tags
+
+    def _updateTags(self):
+        self._wdgLabels.clear()
+        self._addItems(self.tags)
+
+
+class TagTypeDisplay(QWidget):
+    def __init__(self, novel: Novel, tagType: TagType, parent=None):
+        super(TagTypeDisplay, self).__init__(parent)
+        self.tagType = tagType
+        self.novel = novel
+
+        vbox(self)
+        self.subtitle = Subtitle(self)
+        self.subtitle.lblTitle.setText(tagType.text)
+        self.subtitle.lblDescription.setText(tagType.description)
+        if tagType.icon:
+            self.subtitle.setIconName(tagType.icon, tagType.icon_color)
+        self.labelsEditor = TagLabelsEditor(self.novel, tagType, self.novel.tags[tagType])
+        self.layout().addWidget(self.subtitle)
+        self.layout().addWidget(group(spacer_widget(20), self.labelsEditor))
+
+
+class TagsEditor(QWidget):
+    def __init__(self, parent=None):
+        super(TagsEditor, self).__init__(parent)
+        self.novel: Optional[Novel] = None
+        vbox(self)
+
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+
+        for tag_type in self.novel.tags.keys():
+            self.layout().addWidget(TagTypeDisplay(self.novel, tag_type, self))

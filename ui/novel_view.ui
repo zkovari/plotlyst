@@ -322,9 +322,22 @@ QToolButton:pressed {
     </layout>
    </item>
    <item>
+    <spacer name="horizontalSpacer_5">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -350,52 +363,79 @@ QToolButton:pressed {
      </widget>
      <widget class="QWidget" name="pagePlot">
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="Subtitle" name="widget_6" native="true">
+         <property name="title" stdset="0">
+          <string>Plots</string>
+         </property>
+         <property name="description" stdset="0">
+          <string>Define your story's plots (main, internal, or subplots)</string>
+         </property>
+         <property name="icon" stdset="0">
+          <string>mdi.chart-bell-curve-cumulative</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_6">
-         <item alignment="Qt::AlignLeft">
-          <widget class="QLabel" name="lblDramaticQuestionEmoji">
-           <property name="text">
-            <string>emoji</string>
-           </property>
-          </widget>
-         </item>
+         <property name="spacing">
+          <number>0</number>
+         </property>
          <item>
-          <widget class="QLabel" name="lblStorylinesDescription_2">
-           <property name="text">
-            <string>Define your story's plots (main, internal, or subplots)</string>
-           </property>
-           <property name="wordWrap">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_8">
+          <spacer name="horizontalSpacer_6">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::MinimumExpanding</enum>
+            <enum>QSizePolicy::Fixed</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>40</width>
+             <width>20</width>
              <height>20</height>
             </size>
            </property>
           </spacer>
          </item>
+         <item>
+          <widget class="ItemsEditorWidget" name="wdgDramaticQuestions" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
-        <widget class="ItemsEditorWidget" name="wdgDramaticQuestions" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-        </widget>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -518,7 +558,7 @@ QToolButton:pressed {
          <item alignment="Qt::AlignRight|Qt::AlignBottom">
           <widget class="WordsDisplay" name="lblSynopsisWords">
            <property name="text">
-            <string>TextLabel</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -727,50 +767,26 @@ QToolButton:pressed {
         <number>2</number>
        </property>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_7">
-         <item alignment="Qt::AlignLeft">
-          <widget class="QLabel" name="lblTagEmoji">
-           <property name="text">
-            <string>emoji</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="lblTagsDescription">
-           <property name="text">
-            <string>Specify further tags that you can associate to your scenes:</string>
-           </property>
-           <property name="wordWrap">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_9">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::MinimumExpanding</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QWidget" name="wdgTagsContainer" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="widgetResizable">
+          <bool>true</bool>
          </property>
+         <widget class="TagsEditor" name="wdgTagsContainer">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>640</width>
+            <height>419</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -808,6 +824,12 @@ QToolButton:pressed {
    <class>WordsDisplay</class>
    <extends>QLabel</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
+  <customwidget>
+   <class>TagsEditor</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.novel</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

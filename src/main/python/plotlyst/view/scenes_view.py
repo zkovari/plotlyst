@@ -27,30 +27,61 @@ from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
 from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu, QWidgetAction
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage
-from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
+from src.main.python.plotlyst.event.core import emit_event, EventListener
+from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
-    SceneSelectedEvent, SceneSelectionClearedEvent
+    SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType, PopupMenuBuilder, \
-    action
+    action, increase_font, set_opacity
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
+from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
-from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget
+from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget
 from src.main.python.plotlyst.view.widget.story_map import StoryLinesMapWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
+
+
+class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
+
+    def __init__(self, novel: Novel, parent=None):
+        super(ScenesTitle, self).__init__(parent)
+        self.novel = novel
+        self.setupUi(self)
+        self.btnScenes.setIcon(IconRegistry.scene_icon())
+        increase_font(self.lblTitle)
+        self.btnScene.setIcon(IconRegistry.action_scene_icon())
+        self.btnSequel.setIcon(IconRegistry.reaction_scene_icon())
+        set_opacity(self.btnScene, 0.6)
+        set_opacity(self.btnSequel, 0.6)
+
+        self.refresh()
+
+        event_dispatcher.register(self, SceneChangedEvent)
+        event_dispatcher.register(self, SceneDeletedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        self.refresh()
+
+    def refresh(self):
+        self.lblCount.setText(f'#{len(self.novel.scenes)}')
+        self.btnScene.setText(f'{len([x for x in self.novel.scenes if x.type == SceneType.ACTION])}')
+        self.btnSequel.setText(f'{len([x for x in self.novel.scenes if x.type == SceneType.REACTION])}')
 
 
 class ScenesOutlineView(AbstractNovelView):
@@ -60,6 +91,8 @@ class ScenesOutlineView(AbstractNovelView):
         super().__init__(novel, [NovelStoryStructureUpdated])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
+
+        self.title = ScenesTitle(self.novel)
 
         self.editor: Optional[SceneEditor] = None
         self.storymap_view: Optional[StoryLinesMapWidget] = None
@@ -121,6 +154,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
+        self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on='darkBlue'))
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.passport-biometric', color_on='darkBlue'))
@@ -138,6 +172,10 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
+
+        self.ui.wdgStoryStructureParent.setHidden(True)
+        self.ui.wdgStoryStructure.setNovel(self.novel)
+        self.ui.wdgStoryStructure.setActsClickable(False)
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
         action = QWidgetAction(self.ui.btnFilter)
@@ -171,6 +209,13 @@ class ScenesOutlineView(AbstractNovelView):
         self.chaptersModel.modelReset.emit()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
+
+        if self.ui.wdgStoryStructure.novel is not None:
+            clear_layout(self.ui.wdgStoryStructureParent.layout())
+            self.ui.wdgStoryStructure = SceneStoryStructureWidget(self.ui.wdgStoryStructureParent)
+            self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
+        self.ui.wdgStoryStructure.setNovel(self.novel)
+        self.ui.wdgStoryStructure.setActsClickable(False)
 
         if self.stagesModel:
             self.stagesModel.modelReset.emit()
@@ -271,6 +316,7 @@ class ScenesOutlineView(AbstractNovelView):
                 return node.chapter
 
     def _switch_to_editor(self):
+        emit_event(ToggleOutlineViewTitle(self, visible=False))
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
@@ -285,6 +331,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor = None
 
         emit_event(SceneChangedEvent(self))
+        emit_event(ToggleOutlineViewTitle(self, visible=True))
         self.refresh()
 
     def _new_scene(self):
@@ -296,6 +343,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.repo.update_novel(self.novel)
 
     def _update_cards(self):
+        def cursorEnter(scene: Scene):
+            if self.ui.wdgStoryStructure.isVisible():
+                self.ui.wdgStoryStructure.highlightScene(scene)
+
         self.scene_cards.clear()
         self.selected_card = None
         self.ui.cards.clear()
@@ -312,9 +363,10 @@ class ScenesOutlineView(AbstractNovelView):
             self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
+            card.cursorEntered.connect(partial(cursorEnter, card.scene))
 
             card.setPopupMenuActions(
-                [action('Insert new scene', IconRegistry.plus_icon(), partial(self._insert_scene_after, scene)),
+                [action('Insert new scene', IconRegistry.plus_icon('black'), partial(self._insert_scene_after, scene)),
                  action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)])
 
     def _card_selected(self, card: SceneCard):
@@ -486,7 +538,8 @@ class ScenesOutlineView(AbstractNovelView):
         i = self.novel.scenes.index(scene)
         day = scene.day
 
-        new_scene = Scene('', day=day)
+        new_scene = self.novel.new_scene()
+        new_scene.day = day
         if inherit_chapter:
             new_scene.chapter = scene.chapter
         self.novel.scenes.insert(i + 1, new_scene)

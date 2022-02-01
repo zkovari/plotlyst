@@ -270,6 +270,20 @@ class VisibilityToggleEventFilter(QObject):
         return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
 
 
+class DisabledClickEventFilter(QObject):
+
+    def __init__(self, slot, parent: QWidget = None):
+        super(DisabledClickEventFilter, self).__init__(parent)
+        self._slot = slot
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.MouseButtonRelease and not watched.isEnabled():
+            self._slot()
+
+        return super(DisabledClickEventFilter, self).eventFilter(watched, event)
+
+
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
     def _open(widget: QWidget, toggled: bool):
         if toggled:

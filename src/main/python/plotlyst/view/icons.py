@@ -410,8 +410,8 @@ class IconRegistry:
         return IconRegistry.from_name('ei.magic', color='#35a7ff')
 
     @staticmethod
-    def circle_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.circle-medium')
+    def circle_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('mdi.circle-medium', **kwargs)
 
     @staticmethod
     def inciting_incident_icon() -> QIcon:
@@ -452,6 +452,10 @@ class IconRegistry:
     @staticmethod
     def context_icon() -> QIcon:
         return IconRegistry.from_name('mdi.menu')
+    
+    @staticmethod
+    def story_structure_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:

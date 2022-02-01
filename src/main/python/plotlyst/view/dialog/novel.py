@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Novel, Plot, PlotType, Character
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
@@ -33,11 +33,6 @@ class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-
-        self.btnCancel.setIcon(IconRegistry.cancel_icon())
-        self.btnConfirm.setIcon(IconRegistry.ok_icon())
-        self.btnCancel.clicked.connect(self.reject)
-        self.btnConfirm.clicked.connect(self.accept)
 
     def display(self, novel: Optional[NovelDescriptor] = None) -> Optional[str]:
         if novel:
@@ -65,6 +60,9 @@ class PlotEditorDialog(QDialog, Ui_PlotEditorDialog):
         self.rbInternalPlot.setIcon(IconRegistry.conflict_self_icon())
         self.rbSubplot.setIcon(IconRegistry.from_name('mdi.source-branch'))
 
+        self.btnSave = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.btnSave.setDisabled(True)
+
         self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
 
         for char in self.novel.characters:
@@ -86,9 +84,6 @@ class PlotEditorDialog(QDialog, Ui_PlotEditorDialog):
             char = plot.character(self.novel)
             if char:
                 self.cbCharacter.setCurrentText(char.name)
-
-        self.btnSave.clicked.connect(self.accept)
-        self.btnClose.clicked.connect(self.reject)
 
     def display(self) -> Optional[PlotEditionResult]:
         result = self.exec()

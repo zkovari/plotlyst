@@ -28,14 +28,14 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, Qt, QSize, QObject, QEvent
 from PyQt5.QtGui import QColor, QPixmap, QIcon, QDesktopServices
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-from PyQt5.QtWidgets import QDialog, QHBoxLayout, QToolButton
+from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import InstantTooltipStyle
 from src.main.python.plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import FlowLayout
+from src.main.python.plotlyst.view.layout import FlowLayout, hbox
 from src.main.python.plotlyst.view.widget.utility import IconSelectorWidget
 
 
@@ -46,9 +46,7 @@ class IconSelectorDialog(QDialog):
         self.setWindowTitle('Select icon')
 
         self.resize(500, 500)
-        self.setLayout(QHBoxLayout())
-        self.layout().setSpacing(0)
-        self.layout().setContentsMargins(1, 1, 1, 1)
+        hbox(self, 1, 0)
 
         self._icon = ''
         self._color = None
