@@ -39,7 +39,7 @@ from src.main.python.plotlyst.model.distribution import CharactersScenesDistribu
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter, increase_font, gc, popup
+    OpacityEventFilter, increase_font, gc, popup, DisabledClickEventFilter
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
@@ -296,7 +296,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
                                                                   QHeaderView.Stretch)
         self._update_characters()
         self.btnAddNew.setIcon(IconRegistry.ok_icon())
-        self.btnAddNew.installEventFilter(self)
+        self.btnAddNew.installEventFilter(DisabledClickEventFilter(lambda: qtanim.shake(self.lineKey), self))
         self.btnAddNew.setDisabled(True)
 
         self.lineKey.textChanged.connect(self._keyphrase_edited)
@@ -312,13 +312,6 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self._update_characters()
         self.tblConflicts.model().update()
         self.tblConflicts.model().modelReset.emit()
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.MouseButtonRelease and not watched.isEnabled():
-            qtanim.shake(self.lineKey)
-
-        return super().eventFilter(watched, event)
 
     def _update_characters(self):
         for char in self.novel.characters:
