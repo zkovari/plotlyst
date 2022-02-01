@@ -366,7 +366,7 @@ class ScenesOutlineView(AbstractNovelView):
             card.cursorEntered.connect(partial(cursorEnter, card.scene))
 
             card.setPopupMenuActions(
-                [action('Insert new scene', IconRegistry.plus_icon(), partial(self._insert_scene_after, scene)),
+                [action('Insert new scene', IconRegistry.plus_icon('black'), partial(self._insert_scene_after, scene)),
                  action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)])
 
     def _card_selected(self, card: SceneCard):
@@ -538,7 +538,8 @@ class ScenesOutlineView(AbstractNovelView):
         i = self.novel.scenes.index(scene)
         day = scene.day
 
-        new_scene = Scene('', day=day)
+        new_scene = self.novel.new_scene()
+        new_scene.day = day
         if inherit_chapter:
             new_scene.chapter = scene.chapter
         self.novel.scenes.insert(i + 1, new_scene)

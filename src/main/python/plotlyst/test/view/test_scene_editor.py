@@ -20,7 +20,6 @@ def test_editor_with_new_scene(qtbot):
     novel.story_structures[0].active = True
     view: SceneEditor = editor(qtbot, novel)
 
-    assert view.ui.wdgSceneStructure.stackedWidget.currentWidget() == view.ui.wdgSceneStructure.pageEmpty
     assert view.ui.cbPov.currentIndex() == 0
     assert view.ui.cbPov.currentText() == 'Select POV ...'
 
@@ -28,12 +27,10 @@ def test_editor_with_new_scene(qtbot):
 def test_editor_with_none_values(qtbot):
     novel = Novel('Test-novel', story_structures=default_story_structures)
     novel.story_structures[0].active = True
-    scene = Scene(title='')
+    scene = novel.new_scene()
     novel.scenes.append(scene)
 
     view: SceneEditor = editor(qtbot, novel, scene)
-
-    assert view.ui.wdgSceneStructure.stackedWidget.currentWidget() == view.ui.wdgSceneStructure.pageEmpty
 
 
 def _test_display_scene_builder(qtbot):
