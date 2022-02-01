@@ -31,17 +31,6 @@
    </property>
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
-     <widget class="QWidget" name="pageEmpty">
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Select POV character first</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
      <widget class="QWidget" name="pageEditor">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <property name="spacing">

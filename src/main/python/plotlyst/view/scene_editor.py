@@ -21,6 +21,7 @@ from functools import partial
 from typing import Optional, List
 
 import emoji
+import qtanim
 from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
     QAbstractItemModel, Qt, QSize
 from PyQt5.QtGui import QIcon
@@ -32,6 +33,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue, StoryBeat, \
     SceneStoryBeat, SceneStructureAgenda
+from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
@@ -83,7 +85,6 @@ class SceneEditor(QObject):
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
         self.ui.cbPov.addItem('Select POV ...', None)
-        self.ui.cbPov.addItem('', None)
         for char in self.novel.characters:
             self.ui.cbPov.addItem(QIcon(avatars.pixmap(char)), char.name, char)
         self.ui.cbPov.view().setRowHidden(0, True)
@@ -132,11 +133,12 @@ class SceneEditor(QObject):
         self.questionsEditor = SceneDramaticQuestionsWidget(self.novel)
         self.ui.wdgDramaticQuestions.layout().addWidget(self.questionsEditor)
 
+        self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
+
         # self.tagsEditor = SceneTagsWidget(self.novel)
         # self.tagsEditor.setMinimumHeight(50)
         # self.ui.wdgTagsContainer.layout().addWidget(self.tagsEditor)
 
-        self._save_enabled = False
         self._update_view(scene)
 
         self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
@@ -155,15 +157,16 @@ class SceneEditor(QObject):
             self.scene = Scene('')
             if len(self.novel.scenes) > 1:
                 self.scene.day = self.novel.scenes[-1].day
+            self.scene.agendas.append(SceneStructureAgenda())
             self._new_scene = True
 
         if self.scene.pov:
             self.ui.cbPov.setCurrentText(self.scene.pov.name)
-            if not self.scene.agendas:
-                self.scene.agendas.append(SceneStructureAgenda(character_id=self.scene.pov.id))
+            for agenda in self.scene.agendas:
+                if not agenda.character_id:
+                    agenda.character_id = self.scene.pov.id
         else:
             self.ui.cbPov.setCurrentIndex(0)
-            self.scene.agendas.clear()
         self._update_pov_avatar()
         self.ui.sbDay.setValue(self.scene.day)
 
@@ -218,8 +221,6 @@ class SceneEditor(QObject):
         self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self, self.scene))
         self._scene_builder_palette_model.setElements(self.scene.builder_elements)
 
-        self._save_enabled = True
-
     def _page_toggled(self):
         if self.ui.btnAttributes.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageStructure)
@@ -251,18 +252,15 @@ class SceneEditor(QObject):
         else:
             self.ui.textNotes.clear()
 
+    def _pov_not_selected_notification(self):
+        emit_info('POV character must be selected first')
+        qtanim.shake(self.ui.wdgPov)
+
     def _on_pov_changed(self):
-        pov = self.ui.cbPov.currentData()
-        if pov:
-            self.scene.pov = pov
-            if self.scene.agendas:
-                self.scene.agendas[0].character_id = self.scene.pov.id
-                self.scene.agendas[0].conflict_references.clear()
-            else:
-                self.scene.agendas.append(SceneStructureAgenda(character_id=self.scene.pov.id))
-        else:
-            self.scene.pov = None
-            self.scene.agendas.clear()
+        self.scene.pov = self.ui.cbPov.currentData()
+
+        self.scene.agendas[0].character_id = self.scene.pov.id
+        self.scene.agendas[0].conflict_references.clear()
 
         self._update_pov_avatar()
         self._characters_model.update()
@@ -270,8 +268,7 @@ class SceneEditor(QObject):
                         QComboBox {border: 0px black solid;}
                         ''')
         self._character_changed()
-        if self._save_enabled:
-            self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
+        self.ui.wdgSceneStructure.updateAgendaCharacter()
 
     def _update_pov_avatar(self):
         if self.scene.pov:
@@ -287,17 +284,10 @@ class SceneEditor(QObject):
     def _character_changed(self):
         self.ui.wdgCharacters.clear()
 
-        if self.scene.pov:
-            self.ui.wdgCharacters.addLabel(CharacterLabel(self.scene.pov, pov=True))
         for character in self.scene.characters:
             self.ui.wdgCharacters.addLabel(CharacterLabel(character))
 
-        self._save_scene()
-
     def _save_scene(self):
-        if not self._save_enabled:
-            return
-
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.ui.wdgSceneStructure.updateAgendas()
@@ -359,7 +349,6 @@ class SceneEditor(QObject):
         self._save_scene()
 
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
-        self._save_enabled = False
         self._update_view(scene)
 
     def _scene_builder_elements(self) -> List[SceneBuilderElement]:

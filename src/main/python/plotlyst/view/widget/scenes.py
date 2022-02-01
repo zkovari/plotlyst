@@ -37,7 +37,7 @@ from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
-    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc, transparent
+    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc, transparent, DisabledClickEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -464,17 +464,16 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
-        self.stackedWidget.setCurrentWidget(self.pageEmpty)
+        self.unsetCharacterSlot = None
+
+    def setUnsetCharacterSlot(self, unsetCharacterSlot):
+        self.unsetCharacterSlot = unsetCharacterSlot
 
     def setScene(self, novel: Novel, scene: Scene):
         self.novel = novel
         self.scene = scene
 
-        if scene.agendas:
-            self.stackedWidget.setCurrentWidget(self.pageEditor)
-        else:
-            self.stackedWidget.setCurrentWidget(self.pageEmpty)
-            return
+        self._toggleCharacterStatus()
 
         self.reset()
         self.btnInventory.setChecked(False)
@@ -542,10 +541,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if not self.scene.agendas[0].items:
             self._typeClicked(SceneType.ACTION, True, lazy=False)
 
-    def reset(self, addPlaceholders: bool = False):
-        for widget in [self.wdgBeginning, self.wdgMiddle, self.wdgEnd]:
-            clear_layout(widget.layout())
-        if addPlaceholders:
+    def updateAgendaCharacter(self):
+        self._toggleCharacterStatus()
+        self.reset(clearBeats=False)
+
+    def reset(self, clearBeats: bool = True, addPlaceholders: bool = False):
+        if clearBeats:
+            for widget in [self.wdgBeginning, self.wdgMiddle, self.wdgEnd]:
+                clear_layout(widget.layout())
+        if clearBeats and addPlaceholders:
             self._addPlaceholder(self.wdgBeginning)
             self._addPlaceholder(self.wdgMiddle)
             self._addPlaceholder(self.wdgEnd)
@@ -666,6 +670,24 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         event.accept()
 
         QTimer.singleShot(50, widget.activate)
+
+    def _toggleCharacterStatus(self):
+        if self.scene.agendas[0].character_id:
+            self.btnEmotionStart.setEnabled(True)
+            self.btnEmotionEnd.setEnabled(True)
+            self.btnEmotionStart.setToolTip('')
+            self.btnEmotionEnd.setToolTip('')
+        else:
+            # if not isinstance(self.btnEmotionStart.style(), InstantTooltipStyle):
+            self.btnEmotionStart.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
+            #     self.btnEmotionStart.setStyle(InstantTooltipStyle(self.btnEmotionStart.style()))
+            self.btnEmotionEnd.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
+            #     self.btnEmotionEnd.setStyle(InstantTooltipStyle(self.btnEmotionEnd.style()))
+
+            self.btnEmotionStart.setDisabled(True)
+            self.btnEmotionEnd.setDisabled(True)
+            self.btnEmotionStart.setToolTip('Select POV character first')
+            self.btnEmotionEnd.setToolTip('Select POV character first')
 
     def _collect_agenda_items(self, agenda: SceneStructureAgenda, widget: QWidget, part: int):
         for i in range(widget.layout().count()):
@@ -914,9 +936,10 @@ class SceneStoryStructureWidget(QWidget):
 
     def highlightScene(self, scene: Scene):
         self.unhighlightBeats()
+        self.btnCurrentScene.setHidden(True)
+
         beat = scene.beat(self.novel)
         if beat:
-            self.btnCurrentScene.setHidden(True)
             self.highlightBeat(beat)
         else:
             index = self.novel.scenes.index(scene)
