@@ -390,15 +390,12 @@ class RichTextEditor(QFrame):
         self.actionAlignLeft.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignLeft))
         self.actionAlignLeft.setCheckable(True)
         self.actionAlignLeft.setChecked(True)
-        self.actionAlignLeft.setShortcut(QKeySequence.Underline)
         self.actionAlignCenter = QAction(IconRegistry.from_name('fa5s.align-center'), '')
         self.actionAlignCenter.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignCenter))
         self.actionAlignCenter.setCheckable(True)
-        self.actionAlignCenter.setShortcut(QKeySequence.Underline)
         self.actionAlignRight = QAction(IconRegistry.from_name('fa5s.align-right'), '')
         self.actionAlignRight.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignRight))
         self.actionAlignRight.setCheckable(True)
-        self.actionAlignRight.setShortcut(QKeySequence.Underline)
 
         self.actionInsertList = QAction(IconRegistry.from_name('fa5s.list'), '')
         self.actionInsertList.triggered.connect(
