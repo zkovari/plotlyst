@@ -46,6 +46,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[dev]
           pip install git+https://github.com/plotlyst/qt-anim.git
+          pip install git+https://github.com/plotlyst/qt-textedit.git
+          pip install git+https://github.com/plotlyst/qt-handy.git
       - name: Test with pytest
         run: |
           pyqt5ac --config .pyqt5ac.yml
