@@ -24,7 +24,6 @@ from PyQt5.QtGui import QIcon
 from anytree import Node
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree, ActionBasedTreeModel
 from src.main.python.plotlyst.model.tree_model import TreeItemModel, NodeMimeData
@@ -166,4 +165,4 @@ class DocumentsTreeModel(TreeItemModel, ActionBasedTreeModel):
     def _removeDoc(self, doc: Document):
         for child in doc.children:
             self._removeDoc(child)
-        json_client.delete_document(self.novel, doc)
+        self.repo.delete_doc(self.novel, doc)

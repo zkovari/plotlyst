@@ -838,7 +838,7 @@ class JournalWidget(QWidget, Ui_JournalWidget):
 
     def _textChanged(self, journal: Document):
         journal.content = self.textEditor.textEditor.toHtml()
-        json_client.save_document(self.novel, journal)
+        self.repo.update_doc(self.novel, journal)
 
     def _titleChanged(self, journal: Document):
         journal.title = self.textEditor.textTitle.toPlainText()

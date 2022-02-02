@@ -118,7 +118,7 @@ class ManuscriptView(AbstractNovelView):
         if not self._current_doc:
             return
         self._current_doc.content = self.ui.textEdit.textEditor.toHtml()
-        json_client.save_document(self.novel, self._current_doc)
+        self.repo.update_doc(self.novel, self._current_doc)
 
     def _spellcheck_toggled(self, toggled: bool):
         set_opacity(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)

@@ -22,13 +22,13 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from PyQt5.QtCore import QTimer, QRunnable, QThreadPool, QObject
 from overrides import overrides
 
-from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor
+from src.main.python.plotlyst.core.client import client, json_client
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document
 from src.main.python.plotlyst.env import app_env
 
 
@@ -46,6 +46,7 @@ class Operation:
     character: Optional[Character] = None
     scene: Optional[Scene] = None
     update_image: bool = False
+    doc: Optional[Document] = None
 
 
 class RepositoryPersistenceManager(QObject):
@@ -126,6 +127,14 @@ class RepositoryPersistenceManager(QObject):
         self._operations.append(Operation(OperationType.DELETE, novel=novel, scene=scene))
         self._persist_if_test_env()
 
+    def update_doc(self, novel: Novel, document: Document):
+        self._operations.append(Operation(OperationType.UPDATE, novel=novel, doc=document))
+        self._persist_if_test_env()
+
+    def delete_doc(self, novel: Novel, document: Document):
+        self._operations.append(Operation(OperationType.DELETE, novel=novel, doc=document))
+        self._persist_if_test_env()
+
     def _persist_if_test_env(self):
         if app_env.test_env():
             _persist_operations(self._operations)
@@ -157,6 +166,8 @@ def flush_or_fail():
 
 
 def _persist_operations(operations: List[Operation]):
+    updated_doc_cache: Set[Document] = set()
+
     for op in operations:
         if op.scene and op.type == OperationType.UPDATE:
             client.update_scene(op.scene)
@@ -172,6 +183,11 @@ def _persist_operations(operations: List[Operation]):
         elif op.character and op.novel and op.type == OperationType.DELETE:
             client.delete_character(op.novel, op.character)
 
+        elif op.doc and op.type == OperationType.UPDATE and op.doc not in updated_doc_cache:
+            json_client.save_document(op.novel, op.doc)
+            updated_doc_cache.add(op.doc)
+        elif op.doc and op.type == OperationType.DELETE:
+            json_client.delete_document(op.novel, op.doc)
         elif op.novel and op.type == OperationType.UPDATE:
             client.update_novel(op.novel)
         elif op.novel and op.type == OperationType.INSERT:

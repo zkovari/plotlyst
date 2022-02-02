@@ -313,7 +313,7 @@ class SceneEditor(QObject):
 
         if self.scene.document.loaded:
             self.scene.document.content = self.ui.textNotes.textEditor.toHtml()
-            json_client.save_document(self.novel, self.scene.document)
+            self.repo.update_doc(self.novel, self.scene.document)
         self._new_scene = False
 
     def _on_close(self):

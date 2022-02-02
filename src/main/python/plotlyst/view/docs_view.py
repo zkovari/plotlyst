@@ -84,7 +84,7 @@ class DocumentsView(AbstractNovelView):
             casuality = Causality(items=[CausalityItem('Story ending')])
             doc.data = casuality
             doc.data_id = casuality.id
-            json_client.save_document(self.novel, doc)
+            self.repo.update_doc(self.novel, doc)
         if doc_type == DocumentType.STORY_STRUCTURE:
             print(self.novel.active_story_structure)
             doc.title = self.novel.active_story_structure.title
@@ -205,7 +205,7 @@ class DocumentsView(AbstractNovelView):
             return
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self._current_doc.content = self.textEditor.textEditor.toHtml()
-        json_client.save_document(self.novel, self._current_doc)
+        self.repo.update_doc(self.novel, self._current_doc)
 
     def _title_changed(self):
         if self._current_doc:

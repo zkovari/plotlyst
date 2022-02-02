@@ -214,4 +214,4 @@ class NovelView(AbstractNovelView):
             self.repo.update_novel(self.novel)
         self.novel.synopsis.content = self.ui.textSynopsis.textEditor.toHtml()
         self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEditor.statistics().word_count)
-        json_client.save_document(self.novel, self.novel.synopsis)
+        self.repo.update_doc(self.novel, self.novel.synopsis)

@@ -130,6 +130,6 @@ class CharacterEditor:
 
         if self.character.document.loaded:
             self.character.document.content = self.ui.textEdit.textEditor.toHtml()
-            json_client.save_document(self.novel, self.character.document)
+            self.repo.update_doc(self.novel, self.character.document)
 
         self._new_character = False

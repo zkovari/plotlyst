@@ -1149,6 +1149,10 @@ class Document(CharacterBased):
     icon: str = ''
     icon_color: str = 'black'
 
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
     def __post_init__(self):
         self.loaded: bool = False
         self.content: str = ''
