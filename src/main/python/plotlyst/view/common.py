@@ -28,7 +28,7 @@ from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QGraphicsOpacityEffect, QProxyStyle, QStyle, QStyleOption, QStyleHintReturn, QAbstractButton, \
-    QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton
+    QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton, QAbstractScrollArea
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -327,3 +327,7 @@ def popup(btn: Union[QPushButton, QToolButton], popup: QWidget, hideMenuIcon: bo
     if hideMenuIcon:
         btn.setStyleSheet(f'{btn.styleSheet()}\n{btn.__class__.__name__}::menu-indicator {{width:0px;}}')
     btn.setMenu(menu)
+
+
+def scroll_to_top(scroll_area: QAbstractScrollArea):
+    scroll_area.verticalScrollBar().setValue(0)

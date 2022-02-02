@@ -32,10 +32,14 @@ from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEve
 
 class LanguageToolServerSetupWorker(QRunnable):
 
+    def __init__(self, lang: str = 'en-US'):
+        super(LanguageToolServerSetupWorker, self).__init__()
+        self.lang = lang
+
     @overrides
     def run(self) -> None:
         try:
-            tool = language_tool_python.LanguageTool('en-US')
+            tool = language_tool_python.LanguageTool(self.lang)
             tool.check('Test sentence.')
             language_tool_proxy.set(tool)
         except Exception as e:

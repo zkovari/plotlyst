@@ -114,6 +114,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._threadpool = QThreadPool()
         self._language_tool_setup_worker = LanguageToolServerSetupWorker()
+        if self.novel:
+            self._language_tool_setup_worker.lang = self.novel.lang_settings.lang
         if not app_env.test_env():
             emit_info('Start initializing grammar checker...')
             self._threadpool.start(self._language_tool_setup_worker)

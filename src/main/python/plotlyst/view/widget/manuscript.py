@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import retain_size_when_hidden
+from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
@@ -141,7 +141,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         self.wdgShutDown.setHidden(True)
 
         self.cbSpanish.clicked.connect(partial(self._changed, 'es'))
-        self.cbEnglish.clicked.connect(partial(self._changed, 'en'))
+        self.cbEnglish.clicked.connect(partial(self._changed, 'en-US'))
         self.cbEnglishBritish.clicked.connect(partial(self._changed, 'en-GB'))
         self.cbEnglishCanadian.clicked.connect(partial(self._changed, 'en-CA'))
         self.cbEnglishAustralian.clicked.connect(partial(self._changed, 'en-AU'))
@@ -149,14 +149,32 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         self.cbFrench.clicked.connect(partial(self._changed, 'fr'))
         self.cbGerman.clicked.connect(partial(self._changed, 'de-DE'))
 
-        self.lang: str = ''
+        self.lang: str = self.novel.lang_settings.lang
+
+        if self.lang == 'es':
+            self.cbSpanish.setChecked(True)
+        elif self.lang == 'en-US':
+            self.cbEnglish.setChecked(True)
+        elif self.lang == 'en-GB':
+            self.cbEnglishBritish.setChecked(True)
+        elif self.lang == 'en-CA':
+            self.cbEnglishCanadian.setChecked(True)
+        elif self.lang == 'en-AU':
+            self.cbEnglishAustralian.setChecked(True)
+        elif self.lang == 'en-NZ':
+            self.cbEnglishNewZealand.setChecked(True)
+        elif self.lang == 'fr':
+            self.cbFrench.setChecked(True)
+        elif self.lang == 'de-DE':
+            self.cbGerman.setChecked(True)
+
         self.btnShutDown.clicked.connect(self._languageChanged)
 
     def _changed(self, lang: str, checked: bool):
         if not checked:
             return
         self.lang = lang
-        self.scrollArea.verticalScrollBar().setValue(0)
+        scroll_to_top(self.scrollArea)
         if self.wdgShutDown.isHidden():
             self.wdgShutDown.setVisible(True)
             qtanim.fade_in(self.lblShutdownHint, duration=150)

@@ -136,8 +136,9 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.checkGrammar()
 
     def _language_changed(self, lang: str):
-        print(f'new lang {lang}')
         emit_info('Application is shutting down. Persist workspace...')
+        self.novel.lang_settings.lang = lang
+        self.repo.update_project_novel(self.novel)
         flush_or_fail()
         QTimer.singleShot(1000, QApplication.exit)
 

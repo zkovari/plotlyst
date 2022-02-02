@@ -781,9 +781,15 @@ default_story_structures = [three_act_structure,
 
 
 @dataclass
+class LanguageSettings:
+    lang: str = 'en-US'
+
+
+@dataclass
 class NovelDescriptor:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    lang_settings: LanguageSettings = LanguageSettings()
 
 
 class TemplateFieldType(Enum):

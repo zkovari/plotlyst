@@ -36,7 +36,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Conflict, BackstoryEvent, Comment, SceneGoal, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
     Location, default_location_profiles, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
-    default_tag_types, exclude_if_empty
+    default_tag_types, exclude_if_empty, LanguageSettings
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -186,6 +186,7 @@ class NovelInfo:
 class ProjectNovelInfo:
     title: str
     id: uuid.UUID
+    lang_settings: LanguageSettings = LanguageSettings()
 
 
 def _default_story_structures():
@@ -253,9 +254,9 @@ class JsonClient:
 
     def update_project_novel(self, novel: Novel):
         novel_info = self._find_project_novel_info_or_fail(novel.id)
-        if novel_info.title != novel.title:
-            novel_info.title = novel.title
-            self._persist_project()
+        novel_info.title = novel.title
+        novel_info.lang_settings = novel.lang_settings
+        self._persist_project()
 
     def insert_novel(self, novel: Novel):
         project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id)
@@ -472,7 +473,7 @@ class JsonClient:
             if t not in tags_dict[tag_types[0]]:
                 tags_dict[tag_types[0]].append(t)
 
-        return Novel(title=project_novel_info.title, id=novel_info.id,
+        return Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
                      plots=novel_info.plots, characters=characters,
                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
