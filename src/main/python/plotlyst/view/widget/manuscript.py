@@ -21,14 +21,14 @@ import datetime
 from functools import partial
 from typing import Optional
 
-from PyQt5.QtCore import QUrl
+import qtanim
+import qtawesome
+from PyQt5.QtCore import QUrl, pyqtSignal
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
-from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import ManuscriptLanguageChanged
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import retain_size_when_hidden
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -131,15 +131,43 @@ class SprintWidget(QWidget, Ui_SprintWidget):
 
 
 class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
+    languageChanged = pyqtSignal(str)
 
     def __init__(self, novel: Novel, parent=None):
         super(ManuscriptContextMenuWidget, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
 
+        self.wdgShutDown.setHidden(True)
+
         self.cbSpanish.clicked.connect(partial(self._changed, 'es'))
+        self.cbEnglish.clicked.connect(partial(self._changed, 'en'))
+        self.cbEnglishBritish.clicked.connect(partial(self._changed, 'en-GB'))
+        self.cbEnglishCanadian.clicked.connect(partial(self._changed, 'en-CA'))
+        self.cbEnglishAustralian.clicked.connect(partial(self._changed, 'en-AU'))
+        self.cbEnglishNewZealand.clicked.connect(partial(self._changed, 'en-NZ'))
+        self.cbFrench.clicked.connect(partial(self._changed, 'fr'))
+        self.cbGerman.clicked.connect(partial(self._changed, 'de-DE'))
+
+        self.lang: str = ''
+        self.btnShutDown.clicked.connect(self._languageChanged)
 
     def _changed(self, lang: str, checked: bool):
         if not checked:
             return
-        emit_event(ManuscriptLanguageChanged(self, lang))
+        self.lang = lang
+        self.scrollArea.verticalScrollBar().setValue(0)
+        if self.wdgShutDown.isHidden():
+            self.wdgShutDown.setVisible(True)
+            qtanim.fade_in(self.lblShutdownHint, duration=150)
+        qtanim.glow(self.btnShutDown, loop=3)
+
+    def _languageChanged(self):
+        self.btnShutDown.setText('Shutting down ...')
+        self.lblShutdownHint.setHidden(True)
+        spin_icon = qtawesome.icon('fa5s.spinner', color='white',
+                                   animation=qtawesome.Spin(self.btnShutDown))
+        self.btnShutDown.setIcon(spin_icon)
+        qtanim.glow(self.btnShutDown, loop=15)
+
+        self.languageChanged.emit(self.lang)

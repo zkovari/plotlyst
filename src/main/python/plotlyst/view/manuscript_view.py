@@ -20,14 +20,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt
+from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt, QTimer
 from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor
-from PyQt5.QtWidgets import QHeaderView, QTextEdit
+from PyQt5.QtWidgets import QHeaderView, QTextEdit, QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
-from src.main.python.plotlyst.event.core import emit_event, emit_critical
+from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -36,6 +36,7 @@ from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_Manusc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
+from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
 
 class ManuscriptView(AbstractNovelView):
@@ -57,6 +58,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnContext.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self.ui.btnContext))
         self._contextMenuWidget = ManuscriptContextMenuWidget(novel, self.widget)
         popup(self.ui.btnContext, self._contextMenuWidget)
+        self._contextMenuWidget.languageChanged.connect(self._language_changed)
         self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
         self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
@@ -132,6 +134,12 @@ class ManuscriptView(AbstractNovelView):
         else:
             self.ui.textEdit.setGrammarCheckEnabled(False)
             self.ui.textEdit.checkGrammar()
+
+    def _language_changed(self, lang: str):
+        print(f'new lang {lang}')
+        emit_info('Application is shutting down. Persist workspace...')
+        flush_or_fail()
+        QTimer.singleShot(1000, QApplication.exit)
 
 
 class SentenceHighlighter(QSyntaxHighlighter):

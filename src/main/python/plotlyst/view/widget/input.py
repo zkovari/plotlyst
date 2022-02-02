@@ -371,8 +371,9 @@ class RichTextEditor(QFrame):
             family = 'Helvetica Neue'
         else:
             family = 'Helvetica'
-        self.textEditor.setStyleSheet(f'QTextEdit {{background: white; border: 0px; font: {family}}}')
+        self.textEditor.setStyleSheet('QTextEdit {background: white; border: 0px;}')
         self.textEditor.setFontFamily(family)
+        self.textEditor.setFontPointSize(16)
 
         self._lblPlaceholder = QLabel(self.textEditor)
         font = QFont(family)

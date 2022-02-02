@@ -100,10 +100,5 @@ class LanguageToolSet(Event):
 
 
 @dataclass
-class ManuscriptLanguageChanged(Event):
-    lang: str
-
-
-@dataclass
 class ToggleOutlineViewTitle(Event):
     visible: bool

@@ -153,7 +153,7 @@ def flush_or_fail():
         time.sleep(1)
         attempts += 1
     if attempts >= 30:
-        raise IOError('Could not save novel')
+        raise IOError('Could not save Plotlyst workspace')
 
 
 def _persist_operations(operations: List[Operation]):
