@@ -178,7 +178,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         if self.wdgShutDown.isHidden():
             self.wdgShutDown.setVisible(True)
             qtanim.fade_in(self.lblShutdownHint, duration=150)
-        qtanim.glow(self.btnShutDown, loop=3)
+        qtanim.glow(self.btnShutDown, loop=2)
 
     def _languageChanged(self):
         self.btnShutDown.setText('Shutting down ...')

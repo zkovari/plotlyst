@@ -38,7 +38,7 @@ from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelRelo
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
-from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy
+from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy, gc
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSidebar
@@ -53,7 +53,7 @@ from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.input import RichTextEditor, CapitalizationEventFilter
 from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary
+from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 
@@ -212,6 +212,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         for btn in self.buttonGroup.buttons():
             btn.setVisible(True)
+
+        self.outline_mode.setEnabled(True)
+        self.manuscript_mode.setEnabled(True)
+        self.reports_mode.setEnabled(True)
 
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel)
@@ -423,6 +427,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.novel = client.fetch_novel(novel.id)
         acts_registry.set_novel(self.novel)
         dictionary.set_novel(self.novel)
+
+        if language_tool_proxy.is_set():
+            language_tool_proxy.tool.language = self.novel.lang_settings.lang
+
         self._init_views()
         settings.set_last_novel_id(self.novel.id)
         self._register_events()
@@ -440,15 +448,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)
-        self.novel_view.widget.deleteLater()
+        gc(self.novel_view.widget)
         self.pageCharacters.layout().removeWidget(self.characters_view.widget)
-        self.characters_view.widget.deleteLater()
+        gc(self.characters_view.widget)
         self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
-        self.scenes_outline_view.widget.deleteLater()
+        gc(self.scenes_outline_view.widget)
         self.pageNotes.layout().removeWidget(self.notes_view.widget)
-        self.notes_view.widget.deleteLater()
+        gc(self.notes_view.widget)
         self.pageComments.layout().removeWidget(self.comments_view.widget)
-        self.comments_view.widget.deleteLater()
+        gc(self.comments_view.widget)
+        self.pageLocations.layout().removeWidget(self.locations_view.widget)
+        gc(self.locations_view.widget)
 
         if self.pageManuscript.layout().count():
             self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
