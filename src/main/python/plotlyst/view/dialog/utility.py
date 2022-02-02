@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import InstantTooltipStyle
+from src.main.python.plotlyst.view.common import InstantTooltipEventFilter
 from src.main.python.plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout, hbox
@@ -89,7 +89,7 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
         self.setupUi(self)
         self.wdgPictures.setLayout(FlowLayout(spacing=4))
         self.btnLicense.setIcon(IconRegistry.from_name('fa5b.creative-commons'))
-        self.btnLicense.setStyle(InstantTooltipStyle(self.btnLicense.style()))
+        self.btnLicense.installEventFilter(InstantTooltipEventFilter(self.btnLicense))
         self._pixmap: Optional[QPixmap] = None
         self._step = 0
         self._step_size: int = 10 if app_env.test_env() else 50

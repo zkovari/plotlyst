@@ -37,7 +37,8 @@ from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
-    set_opacity, InstantTooltipStyle, PopupMenuBuilder, OpacityEventFilter, gc, transparent, DisabledClickEventFilter
+    set_opacity, PopupMenuBuilder, OpacityEventFilter, gc, transparent, DisabledClickEventFilter, \
+    InstantTooltipEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -678,11 +679,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self.btnEmotionStart.setToolTip('')
             self.btnEmotionEnd.setToolTip('')
         else:
-            # if not isinstance(self.btnEmotionStart.style(), InstantTooltipStyle):
             self.btnEmotionStart.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
-            #     self.btnEmotionStart.setStyle(InstantTooltipStyle(self.btnEmotionStart.style()))
             self.btnEmotionEnd.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
-            #     self.btnEmotionEnd.setStyle(InstantTooltipStyle(self.btnEmotionEnd.style()))
 
             self.btnEmotionStart.setDisabled(True)
             self.btnEmotionEnd.setDisabled(True)
@@ -849,8 +847,8 @@ class SceneStoryStructureWidget(QWidget):
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
             btn.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
-            btn.setStyle(InstantTooltipStyle(btn.style()))
             btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
+            btn.installEventFilter(InstantTooltipEventFilter(btn))
             btn.toggled.connect(partial(self._beatToggled, btn))
             btn.clicked.connect(partial(self._beatClicked, beat, btn))
             btn.installEventFilter(self)

@@ -27,8 +27,8 @@ from typing import Optional, Any, Tuple, List, Union
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
-    QMenu, QAction, QGraphicsOpacityEffect, QProxyStyle, QStyle, QStyleOption, QStyleHintReturn, QAbstractButton, \
-    QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton, QAbstractScrollArea
+    QMenu, QAction, QGraphicsOpacityEffect, QAbstractButton, \
+    QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton, QAbstractScrollArea, QToolTip
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -205,16 +205,6 @@ def set_opacity(wdg: QWidget, opacity: float):
     wdg.setGraphicsEffect(op)
 
 
-class InstantTooltipStyle(QProxyStyle):
-    @overrides
-    def styleHint(self, hint: QStyle.StyleHint, option: Optional[QStyleOption] = None, widget: Optional[QWidget] = None,
-                  returnData: Optional[QStyleHintReturn] = None) -> int:
-        if hint == QStyle.SH_ToolTip_WakeUpDelay or hint == QStyle.SH_ToolTip_FallAsleepDelay:
-            return 0
-
-        return super(InstantTooltipStyle, self).styleHint(hint, option, widget, returnData)
-
-
 def increase_font(widget: QWidget, step: int = 1):
     font = widget.font()
     font.setPointSize(font.pointSize() + 1 * step)
@@ -282,6 +272,20 @@ class DisabledClickEventFilter(QObject):
             self._slot()
 
         return super(DisabledClickEventFilter, self).eventFilter(watched, event)
+
+
+class InstantTooltipEventFilter(QObject):
+    def __init__(self, parent=None):
+        super(InstantTooltipEventFilter, self).__init__(parent)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(watched, QWidget) and event.type() == QEvent.Enter:
+            QToolTip.showText(QCursor.pos(), watched.toolTip())
+        elif event.type() == QEvent.Leave:
+            QToolTip.hideText()
+
+        return super(InstantTooltipEventFilter, self).eventFilter(watched, event)
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):

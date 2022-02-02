@@ -121,7 +121,6 @@ class AvatarWidget(QWidget, Ui_AvatarWidget):
         self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
         self.btnAi.setIcon(IconRegistry.from_name('mdi.robot-happy-outline', 'white'))
-        # self.btnAi.setStyle(InstantTooltipStyle(self.btnAi.style()))
         self.btnAi.clicked.connect(self._select_ai)
         self.avatarUpdated: bool = False
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)

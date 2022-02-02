@@ -27,7 +27,8 @@ from fbs_runtime import platform
 
 from src.main.python.plotlyst.core.domain import BackstoryEvent, NEUTRAL, VERY_HAPPY, VERY_UNHAPPY, UNHAPPY, HAPPY, \
     BackstoryEventType
-from src.main.python.plotlyst.view.common import emoji_font, InstantTooltipStyle, DisabledClickEventFilter
+from src.main.python.plotlyst.view.common import emoji_font, DisabledClickEventFilter, \
+    InstantTooltipEventFilter
 from src.main.python.plotlyst.view.generated.backstory_editor_dialog_ui import Ui_BackstoryEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import FlowLayout
@@ -70,14 +71,13 @@ class _BackstoryEventTypeButton(QToolButton):
         self.iconName: str = self._icons[type][0]
         self.setIcon(IconRegistry.from_name(self.iconName, self.color))
 
-        self.setToolTip(f'<html><b>{type.name}</b></html>')
-        self.setStyleSheet(f'QToolTip {{color: {self.color}}}')
+        self.setToolTip(f'<html><b style="color: {self.color}">{type.name}</b></html>')
 
         self.setCheckable(True)
         self.setCursor(Qt.PointingHandCursor)
         self.setIconSize(QSize(24, 24))
 
-        self.setStyle(InstantTooltipStyle(self.style()))
+        self.installEventFilter(InstantTooltipEventFilter(self))
 
 
 class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
