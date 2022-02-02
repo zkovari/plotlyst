@@ -24,6 +24,7 @@ jobs:
           pip install -e .[dev]
           pip install git+https://github.com/plotlyst/qt-anim.git
           pip install git+https://github.com/plotlyst/qt-textedit.git
+          pip install git+https://github.com/plotlyst/qt-handy.git
       - name: Test with pytest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
