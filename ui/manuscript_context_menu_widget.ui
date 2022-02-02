@@ -67,7 +67,7 @@
         <x>0</x>
         <y>0</y>
         <width>325</width>
-        <height>812</height>
+        <height>838</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -794,7 +794,7 @@
             <string/>
            </property>
            <property name="emoji" stdset="0">
-            <string>Belgium</string>
+            <string>Netherlands</string>
            </property>
           </widget>
          </item>
@@ -817,6 +817,59 @@
          </item>
          <item>
           <spacer name="horizontalSpacer_11">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <property name="spacing">
+          <number>1</number>
+         </property>
+         <item row="0" column="2">
+          <widget class="Toggle" name="cbDutchBelgian">
+           <property name="text">
+            <string>CheckBox</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer_28">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="1">
+          <widget class="Emoji" name="label_56">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="emoji" stdset="0">
+            <string>Belgium</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <spacer name="horizontalSpacer_29">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>

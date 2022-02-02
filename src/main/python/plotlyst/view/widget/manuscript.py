@@ -159,11 +159,11 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         self.cbGerman.clicked.connect(partial(self._changed, 'de-DE'))
         self.cbGermanAustrian.clicked.connect(partial(self._changed, 'de-AT'))
         self.cbGermanSwiss.clicked.connect(partial(self._changed, 'de-CH'))
-
         self.cbChinese.clicked.connect(partial(self._changed, 'zh-CN'))
         self.cbArabic.clicked.connect(partial(self._changed, 'ar'))
         self.cbDanish.clicked.connect(partial(self._changed, 'da-DK'))
-        self.cbDutch.clicked.connect(partial(self._changed, 'nl-BE'))
+        self.cbDutch.clicked.connect(partial(self._changed, 'nl'))
+        self.cbDutchBelgian.clicked.connect(partial(self._changed, 'nl-BE'))
         self.cbGreek.clicked.connect(partial(self._changed, 'el-GR'))
         self.cbIrish.clicked.connect(partial(self._changed, 'ga-IE'))
         self.cbItalian.clicked.connect(partial(self._changed, 'it'))
@@ -217,8 +217,10 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
             self.cbArabic.setChecked(True)
         elif self.lang == 'da-DK':
             self.cbDanish.setChecked(True)
-        elif self.lang == 'nl-BE':
+        elif self.lang == 'nl':
             self.cbDutch.setChecked(True)
+        elif self.lang == 'nl-BE':
+            self.cbDutchBelgian.setChecked(True)
         elif self.lang == 'el-GR':
             self.cbGreek.setChecked(True)
         elif self.lang == 'ga-IE':
