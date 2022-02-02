@@ -149,12 +149,18 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         self.cbEnglishCanadian.clicked.connect(partial(self._changed, 'en-CA'))
         self.cbEnglishAustralian.clicked.connect(partial(self._changed, 'en-AU'))
         self.cbEnglishNewZealand.clicked.connect(partial(self._changed, 'en-NZ'))
+        self.cbEnglishSouthAfrican.clicked.connect(partial(self._changed, 'en-ZA'))
         self.cbSpanish.clicked.connect(partial(self._changed, 'es'))
         self.cbPortugese.clicked.connect(partial(self._changed, 'pt-PT'))
+        self.cbPortugeseBrazil.clicked.connect(partial(self._changed, 'pt-BR'))
+        self.cbPortugeseAngola.clicked.connect(partial(self._changed, 'pt-AO'))
+        self.cbPortugeseMozambique.clicked.connect(partial(self._changed, 'pt-MZ'))
         self.cbFrench.clicked.connect(partial(self._changed, 'fr'))
         self.cbGerman.clicked.connect(partial(self._changed, 'de-DE'))
-        self.cbChinese.clicked.connect(partial(self._changed, 'zh-CN'))
+        self.cbGermanAustrian.clicked.connect(partial(self._changed, 'de-AT'))
+        self.cbGermanSwiss.clicked.connect(partial(self._changed, 'de-CH'))
 
+        self.cbChinese.clicked.connect(partial(self._changed, 'zh-CN'))
         self.cbArabic.clicked.connect(partial(self._changed, 'ar'))
         self.cbDanish.clicked.connect(partial(self._changed, 'da-DK'))
         self.cbDutch.clicked.connect(partial(self._changed, 'nl-BE'))
@@ -187,12 +193,24 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
             self.cbEnglishAustralian.setChecked(True)
         elif self.lang == 'en-NZ':
             self.cbEnglishNewZealand.setChecked(True)
+        elif self.lang == 'en-ZA':
+            self.cbEnglishSouthAfrican.setChecked(True)
         elif self.lang == 'fr':
             self.cbFrench.setChecked(True)
         elif self.lang == 'de-DE':
             self.cbGerman.setChecked(True)
+        elif self.lang == 'de-AT':
+            self.cbGermanAustrian.setChecked(True)
+        elif self.lang == 'de-CH':
+            self.cbGermanSwiss.setChecked(True)
         elif self.lang == 'pt-PT':
             self.cbPortugese.setChecked(True)
+        elif self.lang == 'pt-BR':
+            self.cbPortugeseBrazil.setChecked(True)
+        elif self.lang == 'pt-AO':
+            self.cbPortugeseAngola.setChecked(True)
+        elif self.lang == 'pt-MZ':
+            self.cbPortugeseMozambique.setChecked(True)
         elif self.lang == 'zh-CN':
             self.cbChinese.setChecked(True)
         elif self.lang == 'ar':
