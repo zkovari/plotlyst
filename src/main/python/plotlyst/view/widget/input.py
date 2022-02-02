@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, QMimeData
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
 from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData
@@ -33,6 +33,7 @@ from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
 from fbs_runtime import platform
 from language_tool_python import LanguageTool
 from overrides import overrides
+from qttextedit import EnhancedTextEdit
 from slugify import slugify
 
 from src.main.python.plotlyst.core.domain import TextStatistics
@@ -191,15 +192,11 @@ class BlockStatistics(AbstractTextBlockHighlighter):
         data.wordCount = wc(text)
 
 
-class _TextEditor(QTextEdit):
+class _TextEditor(EnhancedTextEdit):
 
     def __init__(self, parent=None):
         super(_TextEditor, self).__init__(parent)
-        self._pasteAsPlain: bool = False
         self._blockStatistics = BlockStatistics(self.document())
-
-    def setPasteAsPlainText(self, plain: bool):
-        self._pasteAsPlain = plain
 
     def statistics(self) -> TextStatistics:
         wc = 0
@@ -244,43 +241,6 @@ class _TextEditor(QTextEdit):
                 pos.setX(pos.x() + self.viewportMargins().left())
                 menu.popupWidget().replacementRequested.connect(partial(self._replaceWord, cursor, start, length))
                 menu.popup(pos)
-
-    @overrides
-    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        cursor = self.textCursor()
-        if event.key() == Qt.Key_Tab:
-            list_ = cursor.block().textList()
-            if list_:
-                cursor.beginEditBlock()
-                block = cursor.block()
-
-                new_format = list_.format()
-                new_format.setIndent(list_.format().indent() + 1)
-                cursor.insertList(new_format)
-                list_.removeItem(list_.itemNumber(block))
-                cursor.deletePreviousChar()
-
-                cursor.endEditBlock()
-                return
-        if event.key() == Qt.Key_Backtab:
-            list_ = cursor.block().textList()
-            if list_:
-                indent = list_.format().indent()
-                if indent > 1:
-                    cursor.beginEditBlock()
-                    new_format = list_.format()
-                    new_format.setIndent(indent - 1)
-                    list_.setFormat(new_format)
-                    cursor.endEditBlock()
-                return
-        super(_TextEditor, self).keyPressEvent(event)
-
-    @overrides
-    def insertFromMimeData(self, source: QMimeData) -> None:
-        if self._pasteAsPlain:
-            self.insertPlainText(source.text())
-        else:
-            super(_TextEditor, self).insertFromMimeData(source)
 
     def _errors(self, cursor: QTextCursor):
         data = cursor.block().userData()
@@ -373,6 +333,7 @@ class RichTextEditor(QFrame):
             family = 'Helvetica'
         self.textEditor.setStyleSheet('QTextEdit {background: white; border: 0px;}')
         self.textEditor.setFontFamily(family)
+        self.textEditor.document().setDefaultFont(QFont(family, 16))
         self.textEditor.setFontPointSize(16)
 
         self._lblPlaceholder = QLabel(self.textEditor)
@@ -381,7 +342,7 @@ class RichTextEditor(QFrame):
         self._lblPlaceholder.setFont(font)
         self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
-        self.setFontPointSize(16)
+        self.textEditor.setFontPointSize(16)
 
         self.setMouseTracking(True)
         self.textEditor.installEventFilter(self)
@@ -491,29 +452,8 @@ class RichTextEditor(QFrame):
     def setToolbarVisible(self, visible: bool):
         self.toolbar.setVisible(visible)
 
-    def setPasteAsPlainText(self, plain: bool):
-        self.textEditor.setPasteAsPlainText(plain)
-
     def setMargins(self, left: int, top: int, right: int, bottom: int):
         self.textEditor.setViewportMargins(left, top, right, bottom)
-
-    def setFormat(self, lineSpacing: int = 100, textIndent: int = 20):
-        blockFmt = QTextBlockFormat()
-        blockFmt.setTextIndent(textIndent)
-        blockFmt.setLineHeight(lineSpacing, QTextBlockFormat.ProportionalHeight)
-
-        cursor = self.textEditor.textCursor()
-        cursor.clearSelection()
-        cursor.select(QTextCursor.Document)
-        cursor.mergeBlockFormat(blockFmt)
-
-    def setFontPointSize(self, size: int):
-        self.textEditor.textCursor().select(QTextCursor.Document)
-        self.textEditor.setFontPointSize(size)
-        font = self._lblPlaceholder.font()
-        font.setPointSize(size)
-        self._lblPlaceholder.setFont(font)
-        self.textEditor.textCursor().clearSelection()
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.highlighter.setCheckEnabled(enabled)

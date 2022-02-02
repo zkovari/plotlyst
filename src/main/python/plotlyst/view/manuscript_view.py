@@ -71,7 +71,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.clicked.connect(self._edit)
 
-        self.ui.textEdit.setPasteAsPlainText(True)
         self.ui.textEdit.textEditor.textChanged.connect(self._save)
         self.ui.btnDistractionFree.clicked.connect(
             lambda: emit_event(OpenDistractionFreeMode(self, self.ui.textEdit, self.ui.wdgSprint.model())))
@@ -102,8 +101,8 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
 
             self.ui.textEdit.setMargins(30, 30, 30, 30)
-            self.ui.textEdit.setFormat(130)
-            self.ui.textEdit.setFontPointSize(16)
+            self.ui.textEdit.textEditor.setFormat(130, textIndent=20)
+            self.ui.textEdit.textEditor.setFontPointSize(16)
             set_wc()
             self.ui.textEdit.textEditor.textChanged.connect(set_wc)
 
