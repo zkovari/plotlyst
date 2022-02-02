@@ -450,6 +450,10 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.play', '#2a9d8f')
 
     @staticmethod
+    def context_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.menu')
+    
+    @staticmethod
     def story_structure_icon(**kwargs) -> QIcon:
         return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
 
