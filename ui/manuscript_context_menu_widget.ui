@@ -840,6 +840,9 @@
            <property name="text">
             <string>CheckBox</string>
            </property>
+           <attribute name="buttonGroup">
+            <string notr="true">btnGroup</string>
+           </attribute>
           </widget>
          </item>
          <item row="0" column="0">

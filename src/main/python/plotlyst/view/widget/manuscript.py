@@ -24,7 +24,7 @@ from typing import Optional
 import qtanim
 import qtawesome
 from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, pyqtSignal
+from PyQt5.QtCore import QUrl, pyqtSignal, QTimer
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
 from overrides import overrides
@@ -261,10 +261,15 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
             return
         self.lang = lang
         if self.wdgShutDown.isHidden():
-            scroll_to_top(self.scrollArea)
-            self.wdgShutDown.setVisible(True)
-            qtanim.fade_in(self.lblShutdownHint, duration=150)
-        qtanim.glow(self.btnShutDown, loop=2)
+            QTimer.singleShot(200, self._showShutdownOption)
+        else:
+            qtanim.glow(self.btnShutDown, loop=2)
+
+    def _showShutdownOption(self):
+        scroll_to_top(self.scrollArea)
+        self.wdgShutDown.setVisible(True)
+        qtanim.fade_in(self.lblShutdownHint, duration=150)
+        qtanim.glow(self.btnShutDown, loop=3)
 
     def _languageChanged(self):
         self.btnShutDown.setText('Shutting down ...')
