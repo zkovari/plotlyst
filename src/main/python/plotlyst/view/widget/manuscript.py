@@ -23,9 +23,11 @@ from typing import Optional
 
 import qtanim
 import qtawesome
+from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSignal
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
+from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
@@ -140,14 +142,36 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
 
         self.wdgShutDown.setHidden(True)
 
-        self.cbSpanish.clicked.connect(partial(self._changed, 'es'))
+        self.btnArabicIcon.setIcon(IconRegistry.from_name('mdi.abjad-arabic'))
+
         self.cbEnglish.clicked.connect(partial(self._changed, 'en-US'))
         self.cbEnglishBritish.clicked.connect(partial(self._changed, 'en-GB'))
         self.cbEnglishCanadian.clicked.connect(partial(self._changed, 'en-CA'))
         self.cbEnglishAustralian.clicked.connect(partial(self._changed, 'en-AU'))
         self.cbEnglishNewZealand.clicked.connect(partial(self._changed, 'en-NZ'))
+        self.cbSpanish.clicked.connect(partial(self._changed, 'es'))
+        self.cbPortugese.clicked.connect(partial(self._changed, 'pt-PT'))
         self.cbFrench.clicked.connect(partial(self._changed, 'fr'))
         self.cbGerman.clicked.connect(partial(self._changed, 'de-DE'))
+        self.cbChinese.clicked.connect(partial(self._changed, 'zh-CN'))
+
+        self.cbArabic.clicked.connect(partial(self._changed, 'ar'))
+        self.cbDanish.clicked.connect(partial(self._changed, 'da-DK'))
+        self.cbDutch.clicked.connect(partial(self._changed, 'nl-BE'))
+        self.cbGreek.clicked.connect(partial(self._changed, 'el-GR'))
+        self.cbIrish.clicked.connect(partial(self._changed, 'ga-IE'))
+        self.cbItalian.clicked.connect(partial(self._changed, 'it'))
+        self.cbJapanese.clicked.connect(partial(self._changed, 'ja-JP'))
+        self.cbNorwegian.clicked.connect(partial(self._changed, 'no'))
+        self.cbPersian.clicked.connect(partial(self._changed, 'fa'))
+        self.cbPolish.clicked.connect(partial(self._changed, 'pl-PL'))
+        self.cbRomanian.clicked.connect(partial(self._changed, 'ro-RO'))
+        self.cbRussian.clicked.connect(partial(self._changed, 'ru-RU'))
+        self.cbSlovak.clicked.connect(partial(self._changed, 'sk-SK'))
+        self.cbSlovenian.clicked.connect(partial(self._changed, 'sl-SI'))
+        self.cbSwedish.clicked.connect(partial(self._changed, 'sv'))
+        self.cbTagalog.clicked.connect(partial(self._changed, 'tl-PH'))
+        self.cbUkrainian.clicked.connect(partial(self._changed, 'uk-UA'))
 
         self.lang: str = self.novel.lang_settings.lang
 
@@ -167,15 +191,57 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
             self.cbFrench.setChecked(True)
         elif self.lang == 'de-DE':
             self.cbGerman.setChecked(True)
+        elif self.lang == 'pt-PT':
+            self.cbPortugese.setChecked(True)
+        elif self.lang == 'zh-CN':
+            self.cbChinese.setChecked(True)
+        elif self.lang == 'ar':
+            self.cbArabic.setChecked(True)
+        elif self.lang == 'da-DK':
+            self.cbDanish.setChecked(True)
+        elif self.lang == 'nl-BE':
+            self.cbDutch.setChecked(True)
+        elif self.lang == 'el-GR':
+            self.cbGreek.setChecked(True)
+        elif self.lang == 'ga-IE':
+            self.cbIrish.setChecked(True)
+        elif self.lang == 'it':
+            self.cbItalian.setChecked(True)
+        elif self.lang == 'ja-JP':
+            self.cbJapanese.setChecked(True)
+        elif self.lang == 'no':
+            self.cbNorwegian.setChecked(True)
+        elif self.lang == 'fa':
+            self.cbPersian.setChecked(True)
+        elif self.lang == 'pl-PL':
+            self.cbPolish.setChecked(True)
+        elif self.lang == 'ro-RO':
+            self.cbRomanian.setChecked(True)
+        elif self.lang == 'ru-RU':
+            self.cbRussian.setChecked(True)
+        elif self.lang == 'sk-SK':
+            self.cbSlovak.setChecked(True)
+        elif self.lang == 'sl-SI':
+            self.cbSlovenian.setChecked(True)
+        elif self.lang == 'sv':
+            self.cbSwedish.setChecked(True)
+        elif self.lang == 'tl-PH':
+            self.cbTagalog.setChecked(True)
+        elif self.lang == 'uk-UA':
+            self.cbUkrainian.setChecked(True)
 
         self.btnShutDown.clicked.connect(self._languageChanged)
+
+    @overrides
+    def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        pass
 
     def _changed(self, lang: str, checked: bool):
         if not checked:
             return
         self.lang = lang
-        scroll_to_top(self.scrollArea)
         if self.wdgShutDown.isHidden():
+            scroll_to_top(self.scrollArea)
             self.wdgShutDown.setVisible(True)
             qtanim.fade_in(self.lblShutdownHint, duration=150)
         qtanim.glow(self.btnShutDown, loop=2)
