@@ -120,6 +120,3 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         self.wdgScrivenerImportDetails.setNovel(novel)
         self.btnSaveScrivener.setEnabled(True)
         self._scrivenerNovel = novel
-        # self.repo.insert_novel(novel)
-        # for scene in novel.scenes:
-        #     self.repo.insert_scene(novel, scene)

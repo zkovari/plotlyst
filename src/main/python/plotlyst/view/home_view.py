@@ -89,22 +89,6 @@ class HomeView(AbstractView):
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self.ui.btnActivate.click)
 
-    # def import_from_scrivener(self):
-    # if app_env.is_dev():
-    #     default_path = os.getcwd() + '/resources/scrivener/v3/'
-    #     # default_path = 'resources/scrivener/v3/'
-    # else:
-    #     default_path = None
-    # project = QFileDialog.getExistingDirectory(self., 'Choose a Scrivener project directory', default_path)
-    # if not project:
-    #     return
-    # importer = ScrivenerImporter()
-    # novel: Novel = importer.import_project(project)
-    # self.repo.insert_novel(novel)
-    # for scene in novel.scenes:
-    #     self.repo.insert_scene(novel, scene)
-    # self.refresh()
-
     def _add_new_novel(self):
         if self.selected_card:
             self.selected_card.clearSelection()
