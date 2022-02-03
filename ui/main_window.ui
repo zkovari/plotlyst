@@ -92,12 +92,12 @@ background-color: rgb(39, 39, 39);
               <enum>Qt::Vertical</enum>
              </property>
              <property name="sizeType">
-              <enum>QSizePolicy::Preferred</enum>
+              <enum>QSizePolicy::Fixed</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
                <width>10</width>
-               <height>10</height>
+               <height>20</height>
               </size>
              </property>
             </spacer>
@@ -764,7 +764,6 @@ background-color: rgb(39, 39, 39);
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionImportScrivener"/>
     <addaction name="actionRestart"/>
    </widget>
    <widget class="QMenu" name="menuView">

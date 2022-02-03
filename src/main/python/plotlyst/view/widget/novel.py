@@ -36,6 +36,7 @@ from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget, bold, \
     popup, gc
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
+from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.story_structure_character_link_widget_ui import \
     Ui_StoryStructureCharacterLink
 from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
@@ -467,3 +468,29 @@ class TagsEditor(QWidget):
 
         for tag_type in self.novel.tags.keys():
             self.layout().addWidget(TagTypeDisplay(self.novel, tag_type, self))
+
+
+class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
+    def __init__(self, parent=None):
+        super(ImportedNovelOverview, self).__init__(parent)
+        self.setupUi(self)
+        self.toolBox.setItemIcon(self._charactersIndex(), IconRegistry.character_icon())
+        self.toolBox.setItemIcon(self._locationsIndex(), IconRegistry.location_icon())
+        self.toolBox.setItemIcon(self._scenesIndex(), IconRegistry.scene_icon())
+
+    def setNovel(self, novel: Novel):
+        self.lblTitle.setText(novel.title)
+
+        if not novel.characters:
+            self.toolBox.setItemEnabled(self._charactersIndex(), False)
+        if not novel.locations:
+            self.toolBox.setItemEnabled(self._locationsIndex(), False)
+
+    def _charactersIndex(self) -> int:
+        return self.toolBox.indexOf(self.pageCharacters)
+
+    def _locationsIndex(self) -> int:
+        return self.toolBox.indexOf(self.pageLocations)
+
+    def _scenesIndex(self) -> int:
+        return self.toolBox.indexOf(self.pageScenes)

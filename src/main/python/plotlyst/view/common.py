@@ -28,7 +28,7 @@ from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QGraphicsOpacityEffect, QAbstractButton, \
-    QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton, QAbstractScrollArea, QToolTip
+    QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton, QAbstractScrollArea, QToolTip, QLineEdit
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -220,13 +220,16 @@ def decrease_font(widget: QWidget, step: int = 1):
 class OpacityEventFilter(QObject):
 
     def __init__(self, enterOpacity: float = 1.0, leaveOpacity: float = 0.4,
-                 parent: QWidget = None, ignoreCheckedButton: bool = False):
+                 parent: QAbstractButton = None, ignoreCheckedButton: bool = False):
         super(OpacityEventFilter, self).__init__(parent)
         self.enterOpacity = enterOpacity
         self.leaveOpacity = leaveOpacity
         self.ignoreCheckedButton = ignoreCheckedButton
+        self._parent = parent
         if not ignoreCheckedButton or not self._checkedButton(parent):
             set_opacity(parent, leaveOpacity)
+        if parent:
+            parent.toggled.connect(self._btnToggled)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -241,6 +244,11 @@ class OpacityEventFilter(QObject):
 
     def _checkedButton(self, obj: QObject) -> bool:
         return isinstance(obj, QAbstractButton) and obj.isChecked()
+
+    def _btnToggled(self, toggled: bool):
+        if toggled:
+            return
+        set_opacity(self._parent, self.leaveOpacity)
 
 
 class VisibilityToggleEventFilter(QObject):
@@ -295,6 +303,11 @@ def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractBu
 
     for btn, wdg in buttons:
         btn.toggled.connect(partial(_open, wdg))
+
+
+def link_editor_to_btn(editor: QWidget, btn: QAbstractButton):
+    if isinstance(editor, QLineEdit):
+        editor.textChanged.connect(lambda: btn.setEnabled((len(editor.text()) > 0)))
 
 
 def transparent(widget: QWidget):

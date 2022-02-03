@@ -1312,8 +1312,9 @@ class Novel(NovelDescriptor):
                 return structure
         return self.story_structures[0]
 
-    def new_scene(self) -> Scene:
-        return Scene('', agendas=[SceneStructureAgenda()])
+    @staticmethod
+    def new_scene(title: str = '') -> Scene:
+        return Scene(title, agendas=[SceneStructureAgenda()])
 
 
 @dataclass
