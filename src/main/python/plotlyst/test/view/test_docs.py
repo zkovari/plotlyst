@@ -10,7 +10,7 @@ def test_docs_display(qtbot, filled_window: MainWindow):
     view: DocumentsView = go_to_docs(filled_window)
 
     click_on_item(qtbot, view.ui.treeDocuments, 0, 0, QModelIndex())
-    qtbot.keyClicks(view.textEditor.textEditor, 'Test content')
+    qtbot.keyClicks(view.textEditor.textEdit, 'Test content')
 
     json_client.load_document(view.novel, view.novel.documents[0])
     assert 'Test content' in view.novel.documents[0].content

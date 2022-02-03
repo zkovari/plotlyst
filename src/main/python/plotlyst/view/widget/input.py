@@ -23,17 +23,17 @@ from typing import Optional
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
-from PyQt5.QtGui import QKeySequence, QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
-    QKeyEvent, QPaintEvent, QTextListFormat, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
+from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
+    QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QToolBar, \
-    QAction, QActionGroup, QComboBox, QMenu, QApplication, QToolButton, QLabel, QFileDialog, \
+from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
+    QApplication, QToolButton, QFileDialog, \
     QLineEdit
 from fbs_runtime import platform
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qttextedit import EnhancedTextEdit
+from qttextedit import EnhancedTextEdit, RichTextEditor
 from slugify import slugify
 
 from src.main.python.plotlyst.core.domain import TextStatistics
@@ -41,9 +41,9 @@ from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
-from src.main.python.plotlyst.view.common import line, spacer_widget, OpacityEventFilter, transparent
+from src.main.python.plotlyst.view.common import OpacityEventFilter, transparent
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import vbox, hbox
+from src.main.python.plotlyst.view.layout import hbox
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy, dictionary
@@ -301,29 +301,15 @@ class CapitalizationEventFilter(QObject):
         return False
 
 
-class RichTextEditor(QFrame):
+class DocumentTextEditor(RichTextEditor):
     def __init__(self, parent=None):
-        super(RichTextEditor, self).__init__(parent)
-        vbox(self, spacing=0)
-
-        self.toolbar = QToolBar()
-        if platform.is_mac():
-            self.toolbar.setIconSize(QSize(15, 15))
-        else:
-            self.toolbar.setIconSize(QSize(17, 17))
-        self.toolbar.setStyleSheet('.QToolBar {background-color: rgb(255, 255, 255);}')
-        self.toolbar.layout().setSpacing(5)
+        super(DocumentTextEditor, self).__init__(parent)
         self.textTitle = AutoAdjustableTextEdit(height=50)
         self.textTitle.setStyleSheet('border: 0px;')
 
-        self.textEditor = _TextEditor()
-        self.textEditor.setMouseTracking(True)
-        self.textEditor.setAutoFormatting(QTextEdit.AutoAll)
+        self.textEdit.setViewportMargins(5, 5, 5, 5)
 
-        self.textEditor.cursorPositionChanged.connect(self._updateFormat)
-        self.textEditor.setViewportMargins(5, 5, 5, 5)
-
-        self.highlighter = GrammarHighlighter(self.textEditor.document(), checkEnabled=False)
+        self.highlighter = GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
 
         if platform.is_linux():
             family = 'Noto Sans Mono'
@@ -331,108 +317,58 @@ class RichTextEditor(QFrame):
             family = 'Helvetica Neue'
         else:
             family = 'Helvetica'
-        self.textEditor.setStyleSheet('QTextEdit {background: white; border: 0px;}')
-        self.textEditor.setFontFamily(family)
-        self.textEditor.document().setDefaultFont(QFont(family, 16))
-        self.textEditor.setFontPointSize(16)
+        self.textEdit.setStyleSheet('QTextEdit {background: white; border: 0px;}')
+        self.textEdit.setFontFamily(family)
+        self.textEdit.document().setDefaultFont(QFont(family, 16))
+        self.textEdit.setFontPointSize(16)
 
-        self._lblPlaceholder = QLabel(self.textEditor)
-        font = QFont(family)
-        font.setItalic(True)
-        self._lblPlaceholder.setFont(font)
-        self._lblPlaceholder.setStyleSheet('color: #118ab2;')
-
-        self.textEditor.setFontPointSize(16)
+        # self._lblPlaceholder = QLabel(self.textEdit)
+        # font = QFont(family)
+        # font.setItalic(True)
+        # self._lblPlaceholder.setFont(font)
+        # self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
         self.setMouseTracking(True)
-        self.textEditor.installEventFilter(self)
-        self.textEditor.setMouseTracking(True)
-        self.textEditor.setTabStopDistance(
-            QtGui.QFontMetricsF(self.textEditor.font()).horizontalAdvance(' ') * 4)
+        self.textEdit.installEventFilter(self)
+        self.textEdit.setMouseTracking(True)
         self.setMargins(3, 3, 3, 3)
 
-        self.layout().addWidget(self.toolbar)
-        self.layout().addWidget(self.textTitle)
-        self.layout().addWidget(self.textEditor)
+        self.layout().insertWidget(1, self.textTitle)
 
-        self.cbHeading = QComboBox()
-        if platform.is_linux() or platform.is_windows():
-            self.cbHeading.setStyleSheet('''
-                QComboBox {
-                    border: 0px;
-                    padding: 1px 1px 1px 3px;
-                }
-            ''')
+        # self.cbHeading = QComboBox()
+        # if platform.is_linux() or platform.is_windows():
+        #     self.cbHeading.setStyleSheet('''
+        #         QComboBox {
+        #             border: 0px;
+        #             padding: 1px 1px 1px 3px;
+        #         }
+        #     ''')
+        #
+        # self.cbHeading.addItem('Normal')
+        # self.cbHeading.addItem(IconRegistry.heading_1_icon(), '')
+        # self.cbHeading.addItem(IconRegistry.heading_2_icon(), '')
+        # self.cbHeading.addItem(IconRegistry.heading_3_icon(), '')
+        # self.cbHeading.setCurrentText('Normal')
+        # self.cbHeading.currentIndexChanged.connect(self._setHeading)
+        #
+        # self.actionExportToPdf = QAction(IconRegistry.from_name('mdi.file-export-outline'), '')
+        # self.actionExportToPdf.triggered.connect(self._exportPdf)
+        #
+        # self.actionPrint = QAction(IconRegistry.from_name('mdi.printer'), '')
+        # self.actionPrint.triggered.connect(self._print)
+        #
+        # self.toolbar.addWidget(self.cbHeading)
+        # self.toolbar.addWidget(spacer_widget())
+        # self.toolbar.addAction(self.actionExportToPdf)
+        # self.toolbar.addAction(self.actionPrint)
 
-        self.cbHeading.addItem('Normal')
-        self.cbHeading.addItem(IconRegistry.heading_1_icon(), '')
-        self.cbHeading.addItem(IconRegistry.heading_2_icon(), '')
-        self.cbHeading.addItem(IconRegistry.heading_3_icon(), '')
-        self.cbHeading.setCurrentText('Normal')
-        self.cbHeading.currentIndexChanged.connect(self._setHeading)
-
-        self.actionBold = QAction(IconRegistry.from_name('fa5s.bold'), '')
-        self.actionBold.triggered.connect(lambda x: self.textEditor.setFontWeight(QFont.Bold if x else QFont.Normal))
-        self.actionBold.setCheckable(True)
-        self.actionBold.setShortcut(QKeySequence.Bold)
-
-        self.actionItalic = QAction(IconRegistry.from_name('fa5s.italic'), '')
-        self.actionItalic.triggered.connect(self.textEditor.setFontItalic)
-        self.actionItalic.setCheckable(True)
-        self.actionItalic.setShortcut(QKeySequence.Italic)
-
-        self.actionUnderline = QAction(IconRegistry.from_name('fa5s.underline'), '')
-        self.actionUnderline.triggered.connect(self.textEditor.setFontUnderline)
-        self.actionUnderline.setCheckable(True)
-        self.actionUnderline.setShortcut(QKeySequence.Underline)
-
-        self.actionAlignLeft = QAction(IconRegistry.from_name('fa5s.align-left'), '')
-        self.actionAlignLeft.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignLeft))
-        self.actionAlignLeft.setCheckable(True)
-        self.actionAlignLeft.setChecked(True)
-        self.actionAlignCenter = QAction(IconRegistry.from_name('fa5s.align-center'), '')
-        self.actionAlignCenter.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignCenter))
-        self.actionAlignCenter.setCheckable(True)
-        self.actionAlignRight = QAction(IconRegistry.from_name('fa5s.align-right'), '')
-        self.actionAlignRight.triggered.connect(lambda: self.textEditor.setAlignment(Qt.AlignRight))
-        self.actionAlignRight.setCheckable(True)
-
-        self.actionInsertList = QAction(IconRegistry.from_name('fa5s.list'), '')
-        self.actionInsertList.triggered.connect(
-            lambda: self.textEditor.textCursor().insertList(QTextListFormat.ListDisc))
-        self.actionInsertNumberedList = QAction(IconRegistry.from_name('fa5s.list-ol'), '')
-        self.actionInsertNumberedList.triggered.connect(
-            lambda: self.textEditor.textCursor().insertList(QTextListFormat.ListDecimal))
-
-        self.actionExportToPdf = QAction(IconRegistry.from_name('mdi.file-export-outline'), '')
-        self.actionExportToPdf.triggered.connect(self._exportPdf)
-
-        self.actionPrint = QAction(IconRegistry.from_name('mdi.printer'), '')
-        self.actionPrint.triggered.connect(self._print)
-
-        self.actionGroupAlignment = QActionGroup(self.toolbar)
-        self.actionGroupAlignment.addAction(self.actionAlignLeft)
-        self.actionGroupAlignment.addAction(self.actionAlignCenter)
-        self.actionGroupAlignment.addAction(self.actionAlignRight)
-
-        self.toolbar.addWidget(self.cbHeading)
-        self.toolbar.addAction(self.actionBold)
-        self.toolbar.addAction(self.actionItalic)
-        self.toolbar.addAction(self.actionUnderline)
-        self.toolbar.addWidget(line(vertical=True))
-        self.toolbar.addAction(self.actionAlignLeft)
-        self.toolbar.addAction(self.actionAlignCenter)
-        self.toolbar.addAction(self.actionAlignRight)
-        self.toolbar.addWidget(line(vertical=True))
-        self.toolbar.addAction(self.actionInsertList)
-        self.toolbar.addAction(self.actionInsertNumberedList)
-        self.toolbar.addWidget(spacer_widget())
-        self.toolbar.addAction(self.actionExportToPdf)
-        self.toolbar.addAction(self.actionPrint)
+    @overrides
+    def _initTextEdit(self) -> EnhancedTextEdit:
+        return _TextEditor(self)
 
     def setText(self, content: str, title: str = '', title_read_only: bool = False):
-        self.textEditor.setHtml(content)
-        self.textEditor.setFocus()
+        self.textEdit.setHtml(content)
+        self.textEdit.setFocus()
         self.textTitle.setHtml(f'''
                             <style>
                                 h1 {{text-align: center;}}
@@ -441,7 +377,7 @@ class RichTextEditor(QFrame):
         self.textTitle.setReadOnly(title_read_only)
 
     def setPlaceholderText(self, text: str):
-        self.textEditor.setPlaceholderText(text)
+        self.textEdit.setPlaceholderText(text)
 
     def setTitleVisible(self, visible: bool):
         self.textTitle.setVisible(visible)
@@ -450,7 +386,7 @@ class RichTextEditor(QFrame):
         self.toolbar.setVisible(visible)
 
     def setMargins(self, left: int, top: int, right: int, bottom: int):
-        self.textEditor.setViewportMargins(left, top, right, bottom)
+        self.textEdit.setViewportMargins(left, top, right, bottom)
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.highlighter.setCheckEnabled(enabled)
@@ -462,32 +398,18 @@ class RichTextEditor(QFrame):
         self.highlighter.asyncRehighlight()
 
     def clear(self):
-        self.textEditor.clear()
+        self.textEdit.clear()
         self.textTitle.clear()
 
     def statistics(self) -> TextStatistics:
-        return self.textEditor.statistics()
+        return self.textEdit.statistics()
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent):
-            # if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-            #     if self._lblPlaceholder.isVisible():
-            #         self.textEditor.textCursor().insertText(self._lblPlaceholder.text())
-            #         self._lblPlaceholder.hide()
-            #         return True
-            # elif event.type() == QEvent.KeyPress and self._lblPlaceholder.isVisible():
-            #     self._lblPlaceholder.hide()
-            if self.toolbar.isHidden() and event.type() == QEvent.KeyPress:
-                if event.key() == Qt.Key_I and event.modifiers() & Qt.ControlModifier:
-                    self.textEditor.setFontItalic(not self.textEditor.fontItalic())
-                if event.key() == Qt.Key_B and event.modifiers() & Qt.ControlModifier:
-                    self.textEditor.setFontWeight(
-                        QFont.Bold if self.textEditor.fontWeight() == QFont.Normal else QFont.Normal)
-
-            cursor = self.textEditor.textCursor()
+            cursor = self.textEdit.textCursor()
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
-                if self.textEditor.textCursor().atBlockStart():
+                if self.textEdit.textCursor().atBlockStart():
                     self._showCommands()
 
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
@@ -500,56 +422,30 @@ class RichTextEditor(QFrame):
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
                 cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
                 if cursor.selectedText() == ' ':
-                    self.textEditor.textCursor().deletePreviousChar()
-                    self.textEditor.textCursor().insertText('.')
+                    self.textEdit.textCursor().deletePreviousChar()
+                    self.textEdit.textCursor().insertText('.')
             elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_QuoteDbl:
-                self.textEditor.textCursor().insertText(event.text())
+                self.textEdit.textCursor().insertText(event.text())
                 cursor.movePosition(QTextCursor.PreviousCharacter)
-                self.textEditor.setTextCursor(cursor)
+                self.textEdit.setTextCursor(cursor)
             # elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
             #     self._lblPlaceholder.setText(' said ')
             #     self._lblPlaceholder.show()
-            #     rect = self.textEditor.cursorRect(cursor)
-            #     self._lblPlaceholder.move(rect.x() + self.textEditor.viewportMargins().left(),
-            #                               rect.y() + self.textEditor.viewportMargins().top())
+            #     rect = self.textEdit.cursorRect(cursor)
+            #     self._lblPlaceholder.move(rect.x() + self.textEdit.viewportMargins().left(),
+            #                               rect.y() + self.textEdit.viewportMargins().top())
 
-        return super(RichTextEditor, self).eventFilter(watched, event)
+        return super(DocumentTextEditor, self).eventFilter(watched, event)
 
-    def _atSentenceStart(self, cursor: QTextCursor) -> bool:
-        if cursor.atBlockStart():
-            return True
-
-        cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-        if cursor.selectedText() == '.':
-            return True
-        if cursor.atBlockStart() and cursor.selectedText() == '"':
-            return True
-        if cursor.positionInBlock() == 1:
-            return False
-        elif cursor.selectedText() == ' ' or cursor.selectedText() == '"':
-            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-            if cursor.selectedText().startswith('.'):
-                return True
-
-        return False
-
-    def _updateFormat(self):
-        self.actionBold.setChecked(self.textEditor.fontWeight() == QFont.Bold)
-        self.actionItalic.setChecked(self.textEditor.fontItalic())
-        self.actionUnderline.setChecked(self.textEditor.fontUnderline())
-
-        self.actionAlignLeft.setChecked(self.textEditor.alignment() == Qt.AlignLeft)
-        self.actionAlignCenter.setChecked(self.textEditor.alignment() == Qt.AlignCenter)
-        self.actionAlignRight.setChecked(self.textEditor.alignment() == Qt.AlignRight)
-
-        self.cbHeading.blockSignals(True)
-        cursor = self.textEditor.textCursor()
-        level = cursor.blockFormat().headingLevel()
-        self.cbHeading.setCurrentIndex(level)
-        self.cbHeading.blockSignals(False)
+    # def _updateFormat(self):
+    #     self.cbHeading.blockSignals(True)
+    #     cursor = self.textEdit.textCursor()
+    #     level = cursor.blockFormat().headingLevel()
+    #     self.cbHeading.setCurrentIndex(level)
+    #     self.cbHeading.blockSignals(False)
 
     def _setHeading(self):
-        cursor: QTextCursor = self.textEditor.textCursor()
+        cursor: QTextCursor = self.textEdit.textCursor()
         cursor.beginEditBlock()
 
         blockFormat: QTextBlockFormat = cursor.blockFormat()
@@ -564,22 +460,22 @@ class RichTextEditor(QFrame):
         charFormat.setProperty(QTextFormat.FontSizeAdjustment, sizeAdjustment)
         cursor.select(QTextCursor.LineUnderCursor)
         cursor.mergeCharFormat(charFormat)
-        self.textEditor.mergeCurrentCharFormat(charFormat)
+        self.textEdit.mergeCurrentCharFormat(charFormat)
 
         cursor.endEditBlock()
 
     def _showCommands(self):
         def trigger(func):
-            self.textEditor.textCursor().deletePreviousChar()
+            self.textEdit.textCursor().deletePreviousChar()
             func()
 
-        rect = self.textEditor.cursorRect(self.textEditor.textCursor())
+        rect = self.textEdit.cursorRect(self.textEdit.textCursor())
 
-        menu = QMenu(self.textEditor)
+        menu = QMenu(self.textEdit)
         menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
         menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
 
-        menu.popup(self.textEditor.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
+        menu.popup(self.textEdit.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
     def _exportPdf(self):
         title = slugify(self.textTitle.toPlainText(), separator='_')
@@ -599,8 +495,8 @@ class RichTextEditor(QFrame):
             self.__printHtml(printer)
 
     def __printHtml(self, printer: QPrinter):
-        richtext = RichTextEditor()  # create a new instance without the highlighters associated to it
-        richtext.setText(self.textEditor.toHtml())
+        richtext = DocumentTextEditor()  # create a new instance without the highlighters associated to it
+        richtext.setText(self.textEdit.toHtml())
         richtext.textEditor.print(printer)
 
 

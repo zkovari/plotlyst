@@ -51,7 +51,7 @@ from src.main.python.plotlyst.view.manuscript_view import ManuscriptView, Senten
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.widget.input import RichTextEditor, CapitalizationEventFilter
+from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, CapitalizationEventFilter
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
@@ -189,7 +189,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     def _toggle_manuscript_focus(self, toggled: bool):
         if toggled:
-            editor: RichTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
+            editor: DocumentTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
             self._sentenceHighlighter = SentenceHighlighter(editor.textEditor)
         elif self._sentenceHighlighter is not None:
             self._sentenceHighlighter.deleteLater()

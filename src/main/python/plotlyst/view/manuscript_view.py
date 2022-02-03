@@ -71,7 +71,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.clicked.connect(self._edit)
 
-        self.ui.textEdit.textEditor.textChanged.connect(self._save)
+        self.ui.textEdit.textEdit.textChanged.connect(self._save)
         self.ui.btnDistractionFree.clicked.connect(
             lambda: emit_event(OpenDistractionFreeMode(self, self.ui.textEdit, self.ui.wdgSprint.model())))
 
@@ -101,10 +101,10 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setText(self._current_doc.content, self._current_doc.title)
 
             self.ui.textEdit.setMargins(30, 30, 30, 30)
-            self.ui.textEdit.textEditor.setFormat(130, textIndent=20)
-            self.ui.textEdit.textEditor.setFontPointSize(16)
+            self.ui.textEdit.textEdit.setFormat(130, textIndent=20)
+            self.ui.textEdit.textEdit.setFontPointSize(16)
             set_wc()
-            self.ui.textEdit.textEditor.textChanged.connect(set_wc)
+            self.ui.textEdit.textEdit.textChanged.connect(set_wc)
 
             if self.ui.cbSpellCheck.isChecked():
                 self.ui.textEdit.setGrammarCheckEnabled(True)
@@ -116,7 +116,7 @@ class ManuscriptView(AbstractNovelView):
     def _save(self):
         if not self._current_doc:
             return
-        self._current_doc.content = self.ui.textEdit.textEditor.toHtml()
+        self._current_doc.content = self.ui.textEdit.textEdit.toHtml()
         self.repo.update_doc(self.novel, self._current_doc)
 
     def _spellcheck_toggled(self, toggled: bool):

@@ -1,18 +1,7 @@
 from PyQt5.QtCore import Qt
 
 from src.main.python.plotlyst.test.common import show_widget
-from src.main.python.plotlyst.view.widget.input import RichTextEditor, PowerBar, Toggle
-
-
-def test_rich_text_editor(qtbot):
-    editor = RichTextEditor()
-    show_widget(qtbot, editor)
-
-    editor.actionBold.setChecked(True)
-
-    editor.cbHeading.setCurrentIndex(1)
-
-    qtbot.keyClicks(editor.textEditor, 'Test text')
+from src.main.python.plotlyst.view.widget.input import PowerBar, Toggle
 
 
 def test_powerbar(qtbot):

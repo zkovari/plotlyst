@@ -48,7 +48,7 @@ from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import 
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox, flow
 from src.main.python.plotlyst.view.widget.cards import JournalCard
-from src.main.python.plotlyst.view.widget.input import RichTextEditor
+from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -760,7 +760,7 @@ class CharacterEmotionButton(QToolButton):
         return self._color
 
 
-class JournalTextEdit(RichTextEditor):
+class JournalTextEdit(DocumentTextEditor):
     def __init__(self, parent=None):
         super(JournalTextEdit, self).__init__(parent)
 
@@ -829,7 +829,7 @@ class JournalWidget(QWidget, Ui_JournalWidget):
         self.textEditor = JournalTextEdit(self.wdgEditor)
         self.textEditor.setText(card.journal.content, card.journal.title)
         self.wdgEditor.layout().addWidget(self.textEditor)
-        self.textEditor.textEditor.textChanged.connect(partial(self._textChanged, card.journal))
+        self.textEditor.textEdit.textChanged.connect(partial(self._textChanged, card.journal))
         self.textEditor.textTitle.textChanged.connect(partial(self._titleChanged, card.journal))
 
     def _closeEditor(self):
@@ -837,7 +837,7 @@ class JournalWidget(QWidget, Ui_JournalWidget):
         self.selected_card.refresh()
 
     def _textChanged(self, journal: Document):
-        journal.content = self.textEditor.textEditor.toHtml()
+        journal.content = self.textEditor.textEdit.toHtml()
         self.repo.update_doc(self.novel, journal)
 
     def _titleChanged(self, journal: Document):

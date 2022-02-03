@@ -72,8 +72,8 @@ class NovelView(AbstractNovelView):
         if self.novel.synopsis:
             json_client.load_document(self.novel, self.novel.synopsis)
             self.ui.textSynopsis.setText(self.novel.synopsis.content)
-            self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEditor.statistics().word_count)
-        self.ui.textSynopsis.textEditor.textChanged.connect(self._synopsis_changed)
+            self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEdit.statistics().word_count)
+        self.ui.textSynopsis.textEdit.textChanged.connect(self._synopsis_changed)
 
         self.ui.btnGoalIcon.setIcon(IconRegistry.goal_icon())
         self.ui.btnConflictIcon.setIcon(IconRegistry.conflict_icon())
@@ -212,6 +212,6 @@ class NovelView(AbstractNovelView):
             self.novel.synopsis = Document('Synopsis')
             self.novel.synopsis.loaded = True
             self.repo.update_novel(self.novel)
-        self.novel.synopsis.content = self.ui.textSynopsis.textEditor.toHtml()
-        self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEditor.statistics().word_count)
+        self.novel.synopsis.content = self.ui.textSynopsis.textEdit.toHtml()
+        self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEdit.statistics().word_count)
         self.repo.update_doc(self.novel, self.novel.synopsis)

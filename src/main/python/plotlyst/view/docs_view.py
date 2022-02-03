@@ -40,7 +40,7 @@ from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
-from src.main.python.plotlyst.view.widget.input import RotatedButton, RichTextEditor
+from src.main.python.plotlyst.view.widget.input import RotatedButton, DocumentTextEditor
 
 
 class DocumentsView(AbstractNovelView):
@@ -65,7 +65,7 @@ class DocumentsView(AbstractNovelView):
         if platform.is_mac():
             self.ui.btnAdd.setIconSize(QSize(15, 15))
 
-        self.textEditor: Optional[RichTextEditor] = None
+        self.textEditor: Optional[DocumentTextEditor] = None
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
         self.ui.btnAdd.clicked.connect(self._add_doc)
@@ -101,7 +101,7 @@ class DocumentsView(AbstractNovelView):
         self._edit(index)
 
         if doc_type == DocumentType.STORY_STRUCTURE:
-            self.textEditor.textEditor.insertHtml(parse_structure_to_richtext(self.novel.active_story_structure))
+            self.textEditor.textEdit.insertHtml(parse_structure_to_richtext(self.novel.active_story_structure))
             self._save()
 
     def _doc_clicked(self, index: QModelIndex):
@@ -115,9 +115,9 @@ class DocumentsView(AbstractNovelView):
     def _init_text_editor(self):
         self._clear_text_editor()
 
-        self.textEditor = RichTextEditor(self.ui.docEditorPage)
+        self.textEditor = DocumentTextEditor(self.ui.docEditorPage)
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
-        self.textEditor.textEditor.textChanged.connect(self._save)
+        self.textEditor.textEdit.textChanged.connect(self._save)
         self.textEditor.textTitle.textChanged.connect(self._title_changed)
 
     def _clear_text_editor(self):
@@ -204,7 +204,7 @@ class DocumentsView(AbstractNovelView):
         if not self._current_doc:
             return
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
-            self._current_doc.content = self.textEditor.textEditor.toHtml()
+            self._current_doc.content = self.textEditor.textEdit.toHtml()
         self.repo.update_doc(self.novel, self._current_doc)
 
     def _title_changed(self):
