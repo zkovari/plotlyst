@@ -27,6 +27,7 @@ from qthandy import incr_font
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, DisabledClickEventFilter, link_editor_to_btn, \
@@ -39,6 +40,9 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
     def __init__(self, parent=None):
         super(StoryCreationDialog, self).__init__(parent)
         self.setupUi(self)
+
+        self._scrivenerNovel: Optional[Novel] = None
+
         link_buttons_to_pages(self.stackedWidget,
                               [(self.btnNewStory, self.pageNewStory), (self.btnScrivener, self.pageScrivener)])
         self.lineTitle.setFocus()
@@ -55,6 +59,10 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
             DisabledClickEventFilter(lambda: qtanim.shake(self.lineTitle), self.btnSaveNewStory))
         link_editor_to_btn(self.lineTitle, self.btnSaveNewStory)
 
+        self.btnSaveScrivener = self.btnBoxScrivener.button(QDialogButtonBox.Ok)
+        self.btnSaveScrivener.setDisabled(True)
+        self.btnSaveScrivener.installEventFilter(
+            DisabledClickEventFilter(lambda: qtanim.shake(self.btnLoadScrivener), self.btnSaveScrivener))
         for btn in [self.btnNewStory, self.btnScrivener]:
             btn.setStyleSheet('''
             QPushButton {
@@ -83,6 +91,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
 
         if self.stackedWidget.currentWidget() == self.pageNewStory:
             return Novel(title=self.lineTitle.text())
+        elif self.stackedWidget.currentWidget() == self.pageScrivener:
+            return self._scrivenerNovel
 
         return None
 
@@ -91,7 +101,14 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
             self.lineTitle.setFocus()
 
     def _loadFromScrivener(self):
-        project = QFileDialog.getExistingDirectory(None, 'Choose a Scrivener project directory')
+        if app_env.is_dev():
+            default_path = 'resources/scrivener/v3/'
+        else:
+            default_path = None
+        if app_env.is_mac():
+            project = QFileDialog.getOpenFileName(self, 'Choose a Scrivener project directory', default_path)
+        else:
+            project = QFileDialog.getExistingDirectory(self, 'Choose a Scrivener project directory', default_path)
         if not project:
             return
         importer = ScrivenerImporter()
@@ -101,6 +118,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
 
         self.wdgScrivenerImportDetails.setVisible(True)
         self.wdgScrivenerImportDetails.setNovel(novel)
+        self.btnSaveScrivener.setEnabled(True)
+        self._scrivenerNovel = novel
         # self.repo.insert_novel(novel)
         # for scene in novel.scenes:
         #     self.repo.insert_scene(novel, scene)

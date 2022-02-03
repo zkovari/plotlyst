@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>507</width>
-    <height>300</height>
+    <height>436</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -258,25 +258,35 @@
           </widget>
          </item>
          <item>
-          <widget class="ImportedNovelOverview" name="wdgScrivenerImportDetails" native="true"/>
+          <widget class="ImportedNovelOverview" name="wdgScrivenerImportDetails" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="verticalSpacer_3">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::MinimumExpanding</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
-             <height>172</height>
+             <height>5</height>
             </size>
            </property>
           </spacer>
          </item>
          <item>
-          <widget class="QDialogButtonBox" name="buttonBox">
+          <widget class="QDialogButtonBox" name="btnBoxScrivener">
            <property name="standardButtons">
-            <set>QDialogButtonBox::Cancel</set>
+            <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
            </property>
           </widget>
          </item>
@@ -342,7 +352,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>btnBoxScrivener</sender>
    <signal>rejected()</signal>
    <receiver>StoryCreationDialog</receiver>
    <slot>reject()</slot>
@@ -354,6 +364,22 @@
     <hint type="destinationlabel">
      <x>253</x>
      <y>149</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnBoxScrivener</sender>
+   <signal>accepted()</signal>
+   <receiver>StoryCreationDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>326</x>
+     <y>418</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>253</x>
+     <y>217</y>
     </hint>
    </hints>
   </connection>

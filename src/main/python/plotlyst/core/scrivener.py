@@ -19,12 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
-from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter
+from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Location
 
 
 class ScrivenerParsingError(Exception):
@@ -74,7 +74,10 @@ class ScrivenerImporter:
             for chapter_item in chapters_el:
                 chapter: Chapter = self._parse_chapter(chapter_item)
                 chapters.append(chapter)
-                for scene_item in chapter_item.find('Children').findall('BinderItem'):
+                children_item = chapter_item.find('Children')
+                if not children_item:
+                    continue
+                for scene_item in children_item.findall('BinderItem'):
                     scene = self._parse_scene(scene_item)
                     scene.chapter = chapter
                     scenes.append(scene)
@@ -82,7 +85,31 @@ class ScrivenerImporter:
             for scene_item in draft_binder.findall('.//BinderItem[@Type="Text"]'):
                 scenes.append(self._parse_scene(scene_item))
 
-        return Novel(title='Importer project', id=UUID(novel_id), scenes=scenes, chapters=chapters)
+        characters: List[Character] = []
+        locations: List[Location] = []
+        for item in binder.findall('BinderItem'):
+            if item.attrib.get('Type') == 'Folder':
+                title_item = item.find('Title')
+                if title_item is not None and title_item.text.lower().startswith('character'):
+                    children_item = item.find('Children')
+                    if not children_item:
+                        continue
+                    for character_item in children_item.findall('BinderItem'):
+                        character = self._parse_character(character_item)
+                        if character:
+                            characters.append(character)
+                if title_item is not None and (
+                        title_item.text.lower().startswith('places') or title_item.text.lower().startswith('settings')):
+                    children_item = item.find('Children')
+                    if not children_item:
+                        continue
+                    for location_item in children_item.findall('BinderItem'):
+                        location = self._parse_location(location_item)
+                        if location:
+                            locations.append(location)
+
+        return Novel(title='Importer project', id=UUID(novel_id), characters=characters, scenes=scenes,
+                     chapters=chapters, locations=locations)
 
     def _parse_chapter(self, element: Element) -> Chapter:
         uuid = element.attrib.get('UUID')
@@ -101,6 +128,20 @@ class ScrivenerImporter:
         scene = Novel.new_scene(title)
         scene.id = UUID(uuid)
         return scene
+
+    def _parse_character(self, element: Element) -> Optional[Character]:
+        uuid = element.attrib.get('UUID')
+        if not uuid:
+            return None
+        name = self._find_title(element)
+        return Character(name, id=UUID(uuid))
+
+    def _parse_location(self, element: Element) -> Optional[Location]:
+        uuid = element.attrib.get('UUID')
+        if not uuid:
+            return None
+        name = self._find_title(element)
+        return Location(name, id=UUID(uuid))
 
     def _find_title(self, element):
         title_el = element.find('Title')

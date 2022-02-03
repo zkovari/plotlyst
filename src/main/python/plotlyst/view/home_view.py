@@ -20,12 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QFileDialog
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, NovelDescriptor, Event
-from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Event
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
@@ -91,16 +89,21 @@ class HomeView(AbstractView):
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self.ui.btnActivate.click)
 
-    def import_from_scrivener(self):
-        project = QFileDialog.getExistingDirectory(None, 'Choose a Scrivener project directory')
-        if not project:
-            return
-        importer = ScrivenerImporter()
-        novel: Novel = importer.import_project(project)
-        self.repo.insert_novel(novel)
-        for scene in novel.scenes:
-            self.repo.insert_scene(novel, scene)
-        self.refresh()
+    # def import_from_scrivener(self):
+    # if app_env.is_dev():
+    #     default_path = os.getcwd() + '/resources/scrivener/v3/'
+    #     # default_path = 'resources/scrivener/v3/'
+    # else:
+    #     default_path = None
+    # project = QFileDialog.getExistingDirectory(self., 'Choose a Scrivener project directory', default_path)
+    # if not project:
+    #     return
+    # importer = ScrivenerImporter()
+    # novel: Novel = importer.import_project(project)
+    # self.repo.insert_novel(novel)
+    # for scene in novel.scenes:
+    #     self.repo.insert_scene(novel, scene)
+    # self.refresh()
 
     def _add_new_novel(self):
         if self.selected_card:
@@ -109,6 +112,10 @@ class HomeView(AbstractView):
         novel = StoryCreationDialog(self.widget).display()
         if novel:
             self.repo.insert_novel(novel)
+            for character in novel.characters:
+                self.repo.insert_character(novel, character)
+            for scene in novel.scenes:
+                self.repo.insert_scene(novel, scene)
             self.refresh()
 
     def _on_edit(self):
