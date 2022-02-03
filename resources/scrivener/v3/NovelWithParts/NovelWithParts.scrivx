@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ScrivenerProject Identifier="C4B3D990-B9C2-4FE6-861E-B06B498283A4" Version="2.0" Creator="SCRMAC-3.2.2-14632" Device="Zsolts-MacBook-Air" Author="" Modified="2021-08-06 10:41:02 +0200" ModID="F7C30A09-5C83-4FF5-9DF3-BD3A2DD07D36">
+<ScrivenerProject Identifier="C4B3D990-B9C2-4FE6-861E-B06B498283A4" Version="2.0" Creator="SCRMAC-3.2.2-14632" Device="Zsolts-MacBook-Air" Author="" Modified="2022-02-03 12:25:03 +0100" ModID="F1798B7D-4BA0-4133-A827-E2F96142C2BF">
     <Binder>
         <BinderItem UUID="F8F9FDEF-FD9F-4A8C-B33D-3434A1220ADC" Type="Text" Created="2021-08-06 10:24:35 +0200" Modified="2021-08-06 10:24:35 +0200">
             <Title>Novel Format</Title>
@@ -31,6 +31,9 @@
                             <TextSettings>
                                 <TextSelection>0,0</TextSelection>
                             </TextSettings>
+                            <CorkboardAndOutliner>
+                                <SelectedSubdocumentUUIDs>E6BBAC10-E639-4E86-A784-EDEEE7DF0206</SelectedSubdocumentUUIDs>
+                            </CorkboardAndOutliner>
                             <Children>
                                 <BinderItem UUID="A9C97B44-46C8-4CA8-8F28-B8C0606A58EF" Type="Text" Created="2021-08-06 10:24:35 +0200" Modified="2021-08-06 10:38:43 +0200">
                                     <Title>Scene 1</Title>
@@ -128,7 +131,39 @@
             <TextSettings>
                 <TextSelection>0,0</TextSelection>
             </TextSettings>
+            <CorkboardAndOutliner>
+                <SelectedSubdocumentUUIDs></SelectedSubdocumentUUIDs>
+                <CorkboardSettings>
+                    <Arrangement>ByThread</Arrangement>
+                </CorkboardSettings>
+            </CorkboardAndOutliner>
             <DefaultChildTemplateUUID>BE948F87-BDA3-4551-8E08-AC248FE89301</DefaultChildTemplateUUID>
+            <Children>
+                <BinderItem UUID="C33E84AA-CC86-4112-A2B4-713917EDB7EF" Type="Text" Created="2022-02-03 12:16:15 +0100" Modified="2022-02-03 12:18:27 +0100">
+                    <Title>John</Title>
+                    <MetaData>
+                        <IncludeInCompile>Yes</IncludeInCompile>
+                        <ShowSynopsisImage>Yes</ShowSynopsisImage>
+                        <IndexCardImageFileExtension>jpeg</IndexCardImageFileExtension>
+                        <IconFileName>Characters (Character Sheet)</IconFileName>
+                    </MetaData>
+                    <TextSettings>
+                        <TextSelection>24,0</TextSelection>
+                    </TextSettings>
+                </BinderItem>
+                <BinderItem UUID="CA105A6C-E2E7-4A27-9EF3-CB9D6D6B9CD9" Type="Text" Created="2022-02-03 12:16:41 +0100" Modified="2022-02-03 12:16:52 +0100">
+                    <Title>Luna</Title>
+                    <MetaData>
+                        <IncludeInCompile>Yes</IncludeInCompile>
+                        <ShowSynopsisImage>Yes</ShowSynopsisImage>
+                        <IndexCardImageFileExtension>jpeg</IndexCardImageFileExtension>
+                        <IconFileName>Characters (Character Sheet)</IconFileName>
+                    </MetaData>
+                    <TextSettings>
+                        <TextSelection>31,0</TextSelection>
+                    </TextSettings>
+                </BinderItem>
+            </Children>
         </BinderItem>
         <BinderItem UUID="6830B6AC-686B-4370-A979-2FD1D7288BDA" Type="Folder" Created="2021-08-06 10:24:35 +0200" Modified="2021-08-06 10:24:35 +0200">
             <Title>Places</Title>
@@ -140,6 +175,18 @@
                 <TextSelection>0,0</TextSelection>
             </TextSettings>
             <DefaultChildTemplateUUID>87D59B4E-F1D6-4025-9FBA-33F60ED8F985</DefaultChildTemplateUUID>
+            <Children>
+                <BinderItem UUID="BEF3ADD7-99D3-46B6-829F-D4B7CF08D4D0" Type="Text" Created="2022-02-03 12:18:57 +0100" Modified="2022-02-03 12:19:13 +0100">
+                    <Title>Place one</Title>
+                    <MetaData>
+                        <IncludeInCompile>Yes</IncludeInCompile>
+                        <IconFileName>Locations (Location Sheet)</IconFileName>
+                    </MetaData>
+                    <TextSettings>
+                        <TextSelection>9,0</TextSelection>
+                    </TextSettings>
+                </BinderItem>
+            </Children>
         </BinderItem>
         <BinderItem UUID="57ECC98D-8199-4935-B5F1-D1F7A2D60646" Type="Folder" Created="2021-08-06 10:24:35 +0200" Modified="2021-08-06 10:24:35 +0200">
             <Title>Front Matter</Title>
@@ -338,6 +385,17 @@
         </BinderItem>
         <BinderItem UUID="F2DF7FDE-46C4-4962-97F3-128A46433573" Type="TrashFolder" Created="2021-08-06 10:24:35 +0200" Modified="2021-08-06 10:24:35 +0200">
             <Title>Trash</Title>
+            <Children>
+                <BinderItem UUID="51DE93F3-618D-49F3-972C-020471355635" Type="Text" Created="2022-02-03 12:15:11 +0100" Modified="2022-02-03 12:16:11 +0100">
+                    <Title>John</Title>
+                    <MetaData>
+                        <IncludeInCompile>Yes</IncludeInCompile>
+                    </MetaData>
+                    <TextSettings>
+                        <TextSelection>0,0</TextSelection>
+                    </TextSettings>
+                </BinderItem>
+            </Children>
         </BinderItem>
     </Binder>
     <Collections>
@@ -412,16 +470,16 @@
     </ProjectBookmarks>
     <ProjectTargets Notify="No">
         <DraftTarget Type="Words" CountIncludedOnly="Yes" CurrentCompileGroupOnly="Yes" Deadline="2011-04-12 14:24:39 +0200" IgnoreDeadline="Yes">0</DraftTarget>
-        <SessionTarget Type="Words" CountDraftOnly="Yes" AllowNegatives="No" NextResetDate="2021-08-07 01:00:00 +0200" ResetType="Time" ResetTime="00:00" DeterminedFromDeadline="No" WritingDays="" CanWriteOnDeadlineDate="No">0</SessionTarget>
-        <PreviousSession Words="6" Characters="24" Date="2021-08-06 10:24:34 +0200"/>
+        <SessionTarget Type="Words" CountDraftOnly="Yes" AllowNegatives="No" NextResetDate="2022-02-04 00:00:00 +0100" ResetType="Time" ResetTime="00:00" DeterminedFromDeadline="No" WritingDays="" CanWriteOnDeadlineDate="No">0</SessionTarget>
+        <PreviousSession Words="0" Characters="0" Date="2022-02-03 12:14:43 +0100"/>
     </ProjectTargets>
-    <RecentWritingHistory Date="2021-08-06 10:24:35 +0200">
-        <DraftWordCount>6</DraftWordCount>
-        <DraftCharCount>24</DraftCharCount>
-        <OtherWordCount>0</OtherWordCount>
-        <OtherCharCount>0</OtherCharCount>
+    <RecentWritingHistory Date="2022-02-03 00:00:00 +0100">
+        <DraftWordCount>0</DraftWordCount>
+        <DraftCharCount>0</DraftCharCount>
+        <OtherWordCount>-2</OtherWordCount>
+        <OtherCharCount>-16</OtherCharCount>
     </RecentWritingHistory>
     <TemplateFolderUUID>5C03DE09-C285-48ED-827F-78E62B7D0F72</TemplateFolderUUID>
     <BookmarksFolderUUID>69822417-D015-4BDD-90BD-18AAA6198D15</BookmarksFolderUUID>
-    <PrintSettings PaperSize="595.0,842.0" LeftMargin="72.0" RightMargin="72.0" TopMargin="90.0" BottomMargin="90.0" PaperType="iso-a4" Orientation="Portrait" HorizontalPagination="Clip" VerticalPagination="Auto" ScaleFactor="1.0" HorizontallyCentered="Yes" VerticallyCentered="Yes" Collates="Yes" PagesAcross="1" PagesDown="1"/>
+    <PrintSettings PaperSize="595.275549,841.889771" LeftMargin="72.0" RightMargin="72.0" TopMargin="90.0" BottomMargin="90.0" PaperType="iso-a4" Orientation="Portrait" HorizontalPagination="Clip" VerticalPagination="Auto" ScaleFactor="1.0" HorizontallyCentered="Yes" VerticallyCentered="Yes" Collates="Yes" PagesAcross="1" PagesDown="1"/>
 </ScrivenerProject>
