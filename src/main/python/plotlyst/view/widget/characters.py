@@ -611,11 +611,11 @@ class CharacterTimelineWidget(QWidget):
     changed = pyqtSignal()
 
     def __init__(self, parent=None):
+        self._spacers: List[QWidget] = []
         super(CharacterTimelineWidget, self).__init__(parent)
         self.character: Optional[Character] = None
         self._layout = vbox(self, spacing=0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self._spacers: List[QWidget] = []
 
     def setCharacter(self, character: Character):
         self.character = character
