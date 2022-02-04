@@ -190,7 +190,7 @@ border: 0px;
         <item>
          <widget class="QTabWidget" name="tabAttributes">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tabBackstory">
            <attribute name="title">
@@ -345,7 +345,7 @@ border: 0px;
              <number>3</number>
             </property>
             <item>
-             <widget class="RichTextEditor" name="textEdit"/>
+             <widget class="DocumentTextEditor" name="textEdit"/>
             </item>
            </layout>
           </widget>
@@ -385,10 +385,9 @@ border: 0px;
  </widget>
  <customwidgets>
   <customwidget>
-   <class>RichTextEditor</class>
+   <class>DocumentTextEditor</class>
    <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>JournalWidget</class>

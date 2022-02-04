@@ -185,7 +185,7 @@
          </widget>
         </item>
         <item>
-         <widget class="RichTextEditor" name="textEdit"/>
+         <widget class="DocumentTextEditor" name="textEdit"/>
         </item>
         <item>
          <widget class="QWidget" name="wdgBottom" native="true">
@@ -247,15 +247,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>WordsDisplay</class>
    <extends>QLabel</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
+  <customwidget>
+   <class>DocumentTextEditor</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>SprintWidget</class>

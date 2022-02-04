@@ -337,7 +337,7 @@ QToolButton:pressed {
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>4</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -583,7 +583,7 @@ QToolButton:pressed {
            <number>0</number>
           </property>
           <item>
-           <widget class="RichTextEditor" name="textSynopsis">
+           <widget class="DocumentTextEditor" name="textSynopsis">
             <property name="placeholderText">
              <string>Write down your novel's main events</string>
             </property>
@@ -797,9 +797,9 @@ QToolButton:pressed {
  </widget>
  <customwidgets>
   <customwidget>
-   <class>RichTextEditor</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
+   <class>Subtitle</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
    <container>1</container>
   </customwidget>
   <customwidget>
@@ -815,12 +815,6 @@ QToolButton:pressed {
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>Subtitle</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>WordsDisplay</class>
    <extends>QLabel</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
@@ -830,6 +824,11 @@ QToolButton:pressed {
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.novel</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DocumentTextEditor</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>
