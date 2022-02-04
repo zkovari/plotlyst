@@ -57,4 +57,8 @@ def test_import_with_acts(test_client):
     assert novel.id == expected_novel.id
     assert novel.scenes == expected_novel.scenes
     assert novel.locations == expected_novel.locations
+
+    for c in novel.characters:
+        assert c.avatar, 'Character avatar should have been loaded'
+        c.avatar = None
     assert novel.characters == expected_novel.characters

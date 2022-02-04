@@ -91,6 +91,21 @@ class SqlClient:
 client = SqlClient()
 
 
+def load_image(path: pathlib.Path):
+    if not os.path.exists(path):
+        return None
+    reader = QImageReader(str(path))
+    reader.setAutoTransform(True)
+    image: QImage = reader.read()
+    if image is None:
+        return None
+    array = QByteArray()
+    buffer = QBuffer(array)
+    buffer.open(QIODevice.WriteOnly)
+    image.save(buffer, 'PNG')
+    return array
+
+
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class CharacterInfo:
@@ -574,18 +589,7 @@ class JsonClient:
 
     def _load_image(self, filename) -> Optional[Any]:
         path = self.images_dir.joinpath(filename)
-        if not os.path.exists(path):
-            return None
-        reader = QImageReader(str(path))
-        reader.setAutoTransform(True)
-        image: QImage = reader.read()
-        if image is None:
-            return None
-        array = QByteArray()
-        buffer = QBuffer(array)
-        buffer.open(QIODevice.WriteOnly)
-        image.save(buffer, 'PNG')
-        return array
+        return load_image(path)
 
     def __load_doc(self, novel: Novel, doc_uuid: uuid.UUID) -> str:
         novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
