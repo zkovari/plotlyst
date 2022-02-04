@@ -27,12 +27,14 @@ class ResourceRegistry:
         self._frame1 = None
         self._cover1 = None
         self._banner = None
+        self._circular_frame1 = None
 
     def set_up(self, app_context: ApplicationContext):
         self._cork = app_context.get_resource('cork.wav')
         self._frame1 = app_context.get_resource('frame_1.png')
         self._cover1 = app_context.get_resource('cover_1.jpg')
         self._banner = app_context.get_resource('plotlyst_banner.jpg')
+        self._circular_frame1 = app_context.get_resource('circular_frame1.png')
 
     @property
     def cork(self):
@@ -49,6 +51,10 @@ class ResourceRegistry:
     @property
     def banner(self):
         return self._banner
+
+    @property
+    def circular_frame1(self):
+        return self._circular_frame1
 
 
 resource_registry = ResourceRegistry()

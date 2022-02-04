@@ -203,7 +203,7 @@
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
-         <height>10</height>
+         <height>5</height>
         </size>
        </property>
       </spacer>
@@ -336,7 +336,7 @@
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>40</width>
+                <width>20</width>
                 <height>20</height>
                </size>
               </property>
@@ -423,113 +423,119 @@
           </item>
          </layout>
         </item>
-        <item>
-         <widget class="QFrame" name="wdgPov">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>190</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>190</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">#wdgPov {border: 1px solid black;
-border-radius: 15px;
-}</string>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::Box</enum>
-          </property>
-          <property name="lineWidth">
-           <number>1</number>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_18">
-           <property name="spacing">
-            <number>5</number>
-           </property>
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayout_11">
-             <property name="spacing">
-              <number>3</number>
-             </property>
-             <item alignment="Qt::AlignBottom">
-              <widget class="QLabel" name="lblAvatar">
-               <property name="text">
-                <string>placeholder</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="cbPov">
-               <property name="maximumSize">
-                <size>
-                 <width>141</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QWidget" name="widget" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>230</height>
-           </size>
-          </property>
+        <item alignment="Qt::AlignTop">
+         <widget class="QWidget" name="wdgPovParent" native="true">
           <layout class="QVBoxLayout" name="verticalLayout_15">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout">
-             <item>
-              <widget class="QLabel" name="lblCharacters_2">
-               <property name="text">
-                <string>Characters</string>
-               </property>
-              </widget>
-             </item>
-             <item alignment="Qt::AlignLeft">
-              <widget class="QToolButton" name="btnEditCharacters">
-               <property name="text">
-                <string/>
-               </property>
-               <property name="popupMode">
-                <enum>QToolButton::InstantPopup</enum>
-               </property>
-               <property name="autoRaise">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="LabelsWidget" name="wdgCharacters" native="true">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>1</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+            <widget class="QToolButton" name="btnPov">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
+             <property name="toolTip">
+              <string>Select point of view character</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QToolButton {
+	border: 0px;
+}
+QToolButton::menu-indicator {width:0px;}</string>
+             </property>
+             <property name="text">
+              <string>Select POV</string>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>118</width>
+               <height>118</height>
+              </size>
+             </property>
+             <property name="popupMode">
+              <enum>QToolButton::InstantPopup</enum>
+             </property>
+             <property name="toolButtonStyle">
+              <enum>Qt::ToolButtonTextUnderIcon</enum>
              </property>
             </widget>
            </item>
           </layout>
          </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_12">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item alignment="Qt::AlignTop">
+             <widget class="QPushButton" name="btnStageCharacterLabel">
+              <property name="font">
+               <font>
+                <underline>true</underline>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border: 0px;</string>
+              </property>
+              <property name="text">
+               <string>On-stage characters</string>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignLeft|Qt::AlignTop">
+             <widget class="QToolButton" name="btnEditCharacters">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="popupMode">
+               <enum>QToolButton::InstantPopup</enum>
+              </property>
+              <property name="autoRaise">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_6">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="LabelsWidget" name="wdgCharacters" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <spacer name="horizontalSpacer_9">
@@ -750,8 +756,8 @@ border-radius: 15px;
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>98</width>
-                     <height>28</height>
+                     <width>72</width>
+                     <height>16</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_16">

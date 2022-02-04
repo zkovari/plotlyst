@@ -1,5 +1,7 @@
 from typing import Optional
 
+from PyQt5.QtCore import Qt
+
 from src.main.python.plotlyst.core.domain import Novel, Scene, default_story_structures
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
@@ -20,8 +22,8 @@ def test_editor_with_new_scene(qtbot):
     novel.story_structures[0].active = True
     view: SceneEditor = editor(qtbot, novel)
 
-    assert view.ui.cbPov.currentIndex() == 0
-    assert view.ui.cbPov.currentText() == 'Select POV ...'
+    assert view.ui.btnPov.text() == 'Select POV'
+    assert view.ui.btnPov.toolButtonStyle() == Qt.ToolButtonTextUnderIcon
 
 
 def _test_display_scene_builder(qtbot):

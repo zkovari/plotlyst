@@ -35,15 +35,19 @@ def test_scene_characters(qtbot, filled_window: MainWindow):
     create_character(qtbot, filled_window, 'Tom')
     create_character(qtbot, filled_window, 'Bob')
 
-    scenes: ScenesOutlineView = start_new_scene_editor(filled_window)
-    qtbot.keyClicks(scenes.editor.ui.lineTitle, 'Scene 1')
-    scenes.editor.ui.cbPov.setCurrentText('Tom')
-    scenes.editor.ui.btnClose.click()
+    view: ScenesOutlineView = start_new_scene_editor(filled_window)
+    qtbot.keyClicks(view.editor.ui.lineTitle, 'Scene 3')
+    actions = view.editor.ui.btnPov.menu().actions()
+    actions[5].trigger()
+    view.editor.ui.btnClose.click()
+    assert view.novel.scenes[2].pov == view.novel.characters[5]
 
-    scenes: ScenesOutlineView = start_new_scene_editor(filled_window)
-    qtbot.keyClicks(scenes.editor.ui.lineTitle, 'Scene 2')
-    scenes.editor.ui.cbPov.setCurrentText('Bob')
-    scenes.editor.ui.btnClose.click()
+    view: ScenesOutlineView = start_new_scene_editor(filled_window)
+    qtbot.keyClicks(view.editor.ui.lineTitle, 'Scene 4')
+    actions = view.editor.ui.btnPov.menu().actions()
+    actions[6].trigger()
+    view.editor.ui.btnClose.click()
+    assert view.novel.scenes[3].pov == view.novel.characters[6]
 
 
 def test_scene_deletion(qtbot, filled_window: MainWindow, monkeypatch):

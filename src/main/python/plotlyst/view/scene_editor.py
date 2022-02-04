@@ -26,19 +26,20 @@ from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, 
     QAbstractItemModel, Qt, QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
-    QWidgetAction, QTableView
+    QWidgetAction, QTableView, QMenu
 from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue, StoryBeat, \
-    SceneStoryBeat, SceneStructureAgenda
+    SceneStoryBeat, SceneStructureAgenda, Character
 from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuilderPreviewDialog
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -70,6 +71,7 @@ class SceneEditor(QObject):
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
         self.ui.btnBuilder.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
 
+        self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
@@ -84,12 +86,18 @@ class SceneEditor(QObject):
         self.ui.wdgStructure.beatSelected.connect(self._beat_selected)
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
-        self.ui.cbPov.addItem('Select POV ...', None)
+        self._povMenu = QMenu(self.ui.btnPov)
         for char in self.novel.characters:
-            self.ui.cbPov.addItem(QIcon(avatars.pixmap(char)), char.name, char)
-        self.ui.cbPov.view().setRowHidden(0, True)
+            self._povMenu.addAction(QIcon(avatars.pixmap(char)), char.name, partial(self._on_pov_changed, char))
+        self.ui.btnPov.setMenu(self._povMenu)
 
         self.ui.textNotes.setTitleVisible(False)
+
+        self.ui.wdgPovParent.setFixedSize(190, 190)
+        self.ui.btnPov.installEventFilter(OpacityEventFilter(enterOpacity=0.7, leaveOpacity=1.0, parent=self.ui.btnPov))
+        self.widget.setStyleSheet(
+            f'''#wdgPovParent {{background-image: url({resource_registry.circular_frame1});}}
+                                               ''')
 
         self.tblCharacters = QTableView()
         self.tblCharacters.setShowGrid(False)
@@ -141,7 +149,6 @@ class SceneEditor(QObject):
 
         self._update_view(scene)
 
-        self.ui.cbPov.currentIndexChanged.connect(self._on_pov_changed)
         self.ui.btnGroupPages.buttonToggled.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -161,12 +168,9 @@ class SceneEditor(QObject):
             self._new_scene = True
 
         if self.scene.pov:
-            self.ui.cbPov.setCurrentText(self.scene.pov.name)
             for agenda in self.scene.agendas:
                 if not agenda.character_id:
                     agenda.character_id = self.scene.pov.id
-        else:
-            self.ui.cbPov.setCurrentIndex(0)
         self._update_pov_avatar()
         self.ui.sbDay.setValue(self.scene.day)
 
@@ -254,32 +258,33 @@ class SceneEditor(QObject):
 
     def _pov_not_selected_notification(self):
         emit_info('POV character must be selected first')
-        qtanim.shake(self.ui.wdgPov)
+        qtanim.shake(self.ui.wdgPovParent)
 
-    def _on_pov_changed(self):
-        self.scene.pov = self.ui.cbPov.currentData()
+    def _on_pov_changed(self, pov: Character):
+        self.scene.pov = pov
 
         self.scene.agendas[0].character_id = self.scene.pov.id
         self.scene.agendas[0].conflict_references.clear()
 
         self._update_pov_avatar()
         self._characters_model.update()
-        self.ui.cbPov.setStyleSheet('''
-                        QComboBox {border: 0px black solid;}
-                        ''')
         self._character_changed()
         self.ui.wdgSceneStructure.updateAgendaCharacter()
 
     def _update_pov_avatar(self):
         if self.scene.pov:
+            self.ui.btnPov.setToolTip(f'<html>Point of view character: <b>{self.scene.pov.name}</b>')
+            self.ui.btnPov.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            self.ui.btnPov.setIconSize(QSize(168, 168))
             if self.scene.pov.avatar:
-                pixmap = avatars.pixmap(self.scene.pov)
-                self.ui.lblAvatar.setPixmap(pixmap.scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                self.ui.btnPov.setIcon(QIcon(avatars.pixmap(self.scene.pov)))
             else:
-                pixmap = avatars.name_initial_icon(self.scene.pov).pixmap(128, 128)
-                self.ui.lblAvatar.setPixmap(pixmap)
+                self.ui.btnPov.setToolTip('Select point of view character')
+                self.ui.btnPov.setIcon(avatars.name_initial_icon(self.scene.pov))
         else:
-            self.ui.lblAvatar.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(128, 128)))
+            self.ui.btnPov.setIconSize(QSize(118, 118))
+            self.ui.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
+            self.ui.btnPov.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
 
     def _character_changed(self):
         self.ui.wdgCharacters.clear()
