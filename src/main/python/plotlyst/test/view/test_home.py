@@ -57,9 +57,6 @@ def test_create_new_novel(qtbot, filled_window: MainWindow):
 
 
 def test_import_from_scrivener(qtbot, window: MainWindow, monkeypatch):
-    # folder = Path(sys.path[0]).joinpath('resources/scrivener/v3/NovelWithParts')
-    # monkeypatch.setattr(QFileDialog, "getExistingDirectory", lambda *args: folder)
-
     view: HomeView = go_to_home(window)
     assert len(view.novel_cards) == 0
 

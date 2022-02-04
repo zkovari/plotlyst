@@ -186,7 +186,7 @@ def _import_from_scrivener_dialog(monkeypatch):
         creation_dialog: StoryCreationDialog = dialog
 
         folder = Path(sys.path[0]).joinpath('resources/scrivener/v3/NovelWithParts')
-        monkeypatch.setattr(QFileDialog, "getExistingDirectory", lambda *args: folder)
+        monkeypatch.setattr(QFileDialog, "getExistingDirectory", lambda *args: str(folder))
 
         creation_dialog.btnScrivener.click()
         creation_dialog.btnLoadScrivener.click()
