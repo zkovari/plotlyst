@@ -68,6 +68,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
             QPushButton {
                 border: 0px;
                 padding: 3px;
+                padding-top: 6px;
+                padding-bottom: 6px;
             }
             QPushButton:hover {
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
@@ -107,6 +109,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
             default_path = None
         if app_env.is_mac():
             project = QFileDialog.getOpenFileName(self, 'Choose a Scrivener project directory', default_path)
+            if project:
+                project = project[0]
         else:
             project = QFileDialog.getExistingDirectory(self, 'Choose a Scrivener project directory', default_path)
         if not project:
