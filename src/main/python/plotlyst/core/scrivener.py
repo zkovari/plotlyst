@@ -47,9 +47,9 @@ class ScrivenerImporter:
         if not scrivener_file:
             raise ValueError(f'Could not find main Scrivener file with .scrivx extension under given folder: {folder}')
 
-        return self._parse_scrivx(Path(folder).joinpath(scrivener_file))
+        return self._parse_scrivx(Path(folder).joinpath(scrivener_file), Path(folder).joinpath('Files/Data'))
 
-    def _parse_scrivx(self, scrivener_path: Path) -> Novel:
+    def _parse_scrivx(self, scrivener_path: Path, data_folder: Path) -> Novel:
         tree = ElementTree.parse(scrivener_path)
         root = tree.getroot()
         novel_id = root.attrib.get('Identifier')
@@ -78,12 +78,12 @@ class ScrivenerImporter:
                 if not children_item:
                     continue
                 for scene_item in children_item.findall('BinderItem'):
-                    scene = self._parse_scene(scene_item)
+                    scene = self._parse_scene(scene_item, data_folder)
                     scene.chapter = chapter
                     scenes.append(scene)
         else:
             for scene_item in draft_binder.findall('.//BinderItem[@Type="Text"]'):
-                scenes.append(self._parse_scene(scene_item))
+                scenes.append(self._parse_scene(scene_item, data_folder))
 
         characters: List[Character] = []
         locations: List[Location] = []
@@ -118,7 +118,7 @@ class ScrivenerImporter:
         title = self._find_title(element)
         return Chapter(title, id=UUID(uuid))
 
-    def _parse_scene(self, element: Element) -> Scene:
+    def _parse_scene(self, element: Element, data_folder: Path) -> Scene:
         uuid = element.attrib.get('UUID')
         if not uuid:
             raise ScrivenerParsingError('Could not extract scene id as UUID attribute was not found')
@@ -127,6 +127,7 @@ class ScrivenerImporter:
 
         scene = Novel.new_scene(title)
         scene.id = UUID(uuid)
+        scene.synopsis = self._find_synopsis(scene.id, data_folder)
         return scene
 
     def _parse_character(self, element: Element) -> Optional[Character]:
@@ -150,3 +151,13 @@ class ScrivenerImporter:
         else:
             title = title_el.text
         return title
+
+    def _find_synopsis(self, id: UUID, data_folder: Path) -> str:
+        id_folder = data_folder.joinpath(str(id).upper())
+        if id_folder.exists():
+            synopsis_path = id_folder.joinpath('synopsis.txt')
+            if synopsis_path.exists():
+                with open(synopsis_path, encoding='utf8') as synopsis_file:
+                    return synopsis_file.read()
+
+        return ''
