@@ -4,7 +4,7 @@ from uuid import UUID
 
 import pytest
 
-from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene
+from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Location, Character
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 
 
@@ -37,11 +37,24 @@ def test_import_with_acts(test_client):
     chapters = [Chapter(title='Chapter', id=UUID('58D0189B-0507-4669-B129-4A392CF07F36')),
                 Chapter(title='Chapter', id=UUID('567B89D4-21E4-44DF-BD5C-3F32EEC78ADD')),
                 Chapter(title='Chapter', id=UUID('245C2ABD-E9C1-4091-B1B7-DA32402644E7'))]
-    scenes = [Scene(title='Scene 1', id=UUID('A9C97B44-46C8-4CA8-8F28-B8C0606A58EF'), chapter=chapters[0]),
-              Scene(title='Scene 2', id=UUID('E6BBAC10-E639-4E86-A784-EDEEE7DF0206'), chapter=chapters[0]),
-              Scene(title='Scene 3', id=UUID('2B5EF0AA-74AE-435D-98A6-096CEAF8F721'), chapter=chapters[0]),
-              Scene(title='Scene', id=UUID('F5604565-3F9E-451B-98E0-142BE1BDE83D'), chapter=chapters[1]),
-              Scene(title='Scene', id=UUID('156AAE33-5D68-4ACA-8469-6440CDFED4EA'), chapter=chapters[2])]
+    scenes = [Scene(title='Scene 1', id=UUID('A9C97B44-46C8-4CA8-8F28-B8C0606A58EF'), chapter=chapters[0],
+                    synopsis='Scene 1 synopsis', agendas=[SceneStructureAgenda()]),
+              Scene(title='Scene 2', id=UUID('E6BBAC10-E639-4E86-A784-EDEEE7DF0206'), chapter=chapters[0],
+                    synopsis='Scene 2 synopsis', agendas=[SceneStructureAgenda()]),
+              Scene(title='Scene 3', id=UUID('2B5EF0AA-74AE-435D-98A6-096CEAF8F721'), chapter=chapters[0],
+                    agendas=[SceneStructureAgenda()]),
+              Scene(title='Scene', id=UUID('F5604565-3F9E-451B-98E0-142BE1BDE83D'), chapter=chapters[1],
+                    agendas=[SceneStructureAgenda()]),
+              Scene(title='Scene', id=UUID('156AAE33-5D68-4ACA-8469-6440CDFED4EA'), chapter=chapters[2],
+                    agendas=[SceneStructureAgenda()])]
+    characters = [Character('John', id=UUID('C33E84AA-CC86-4112-A2B4-713917EDB7EF')),
+                  Character('Luna', id=UUID('CA105A6C-E2E7-4A27-9EF3-CB9D6D6B9CD9'))]
+    locations = [Location('Place one', id=UUID('BEF3ADD7-99D3-46B6-829F-D4B7CF08D4D0'))]
     expected_novel = Novel(title='Importer project', id=UUID('C4B3D990-B9C2-4FE6-861E-B06B498283A4'), chapters=chapters,
-                           scenes=scenes, stages=novel.stages, story_structures=novel.story_structures)
-    assert novel == expected_novel
+                           scenes=scenes, characters=characters, locations=locations, stages=novel.stages,
+                           story_structures=novel.story_structures)
+    assert novel.title == expected_novel.title
+    assert novel.id == expected_novel.id
+    assert novel.scenes == expected_novel.scenes
+    assert novel.locations == expected_novel.locations
+    assert novel.characters == expected_novel.characters
