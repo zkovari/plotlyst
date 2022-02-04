@@ -20,17 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QFileDialog
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel, NovelDescriptor, Event
-from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Event
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.common import ask_confirmation
+from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -80,9 +79,7 @@ class HomeView(AbstractView):
     def refresh(self):
         clear_layout(self._layout)
         self.novel_cards.clear()
-        self.ui.btnDelete.setDisabled(True)
-        self.ui.btnEdit.setDisabled(True)
-        self.ui.btnActivate.setDisabled(True)
+        self._toggle_novel_buttons(False)
         self.selected_card = None
         flush_or_fail()
         for novel in client.novels():
@@ -92,25 +89,19 @@ class HomeView(AbstractView):
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self.ui.btnActivate.click)
 
-    def import_from_scrivener(self):
-        project = QFileDialog.getExistingDirectory(None, 'Choose a Scrivener project directory')
-        if not project:
-            return
-        importer = ScrivenerImporter()
-        novel: Novel = importer.import_project(project)
-        self.repo.insert_novel(novel)
-        for scene in novel.scenes:
-            self.repo.insert_scene(novel, scene)
-        self.refresh()
-
     def _add_new_novel(self):
         if self.selected_card:
             self.selected_card.clearSelection()
-            self.ui.btnDelete.setDisabled(True)
-            self.ui.btnEdit.setDisabled(True)
-        title = NovelEditionDialog().display()
-        if title:
-            self.repo.insert_novel(Novel(title))
+            self._toggle_novel_buttons(False)
+        novel = StoryCreationDialog(self.widget).display()
+        if novel:
+            self.repo.insert_novel(novel)
+            for character in novel.characters:
+                self.repo.insert_character(novel, character)
+            for scene in novel.scenes:
+                self.repo.insert_scene(novel, scene)
+                if scene.manuscript:
+                    self.repo.update_doc(novel, scene.manuscript)
             self.refresh()
 
     def _on_edit(self):
@@ -135,6 +126,9 @@ class HomeView(AbstractView):
         if self.selected_card and self.selected_card is not card:
             self.selected_card.clearSelection()
         self.selected_card = card
-        self.ui.btnDelete.setEnabled(True)
-        self.ui.btnEdit.setEnabled(True)
-        self.ui.btnActivate.setEnabled(True)
+        self._toggle_novel_buttons(True)
+
+    def _toggle_novel_buttons(self, toggled: bool):
+        self.ui.btnDelete.setEnabled(toggled)
+        self.ui.btnEdit.setEnabled(toggled)
+        self.ui.btnActivate.setEnabled(toggled)

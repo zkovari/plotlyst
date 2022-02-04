@@ -1,9 +1,5 @@
-import sys
-from pathlib import Path
-from uuid import UUID
-
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QFileDialog
+from PyQt5.QtWidgets import QApplication
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.test.common import go_to_home, create_novel
@@ -69,25 +65,6 @@ def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
     qtbot.mouseClick(first_card, Qt.LeftButton)
     view.ui.btnActivate.click()
     assert_views(filled_window)
-
-
-def test_import_from_scrivener(qtbot, window: MainWindow, monkeypatch):
-    folder = Path(sys.path[0]).joinpath('resources/scrivener/v3/NovelWithParts')
-    monkeypatch.setattr(QFileDialog, "getExistingDirectory", lambda *args: folder)
-
-    view: HomeView = go_to_home(window)
-    assert len(view.novel_cards) == 0
-    window.actionImportScrivener.trigger()
-
-    assert len(view.novel_cards) == 1
-
-    card = view.novel_cards[0]
-    assert card.novel.id == UUID('C4B3D990-B9C2-4FE6-861E-B06B498283A4')
-    assert card.novel.title == 'Importer project'
-    qtbot.mouseClick(card, Qt.LeftButton)
-
-    view.ui.btnActivate.click()
-    assert_views(window)
 
 
 def _test_sidebar_toggle(qtbot, filled_window: MainWindow):

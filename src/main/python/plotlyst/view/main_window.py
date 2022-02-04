@@ -288,7 +288,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
             self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
 
-        self.actionImportScrivener.triggered.connect(self._import_from_scrivener)
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
         self.actionIncreaseFontSize.setIcon(IconRegistry.increase_font_size_icon())
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)

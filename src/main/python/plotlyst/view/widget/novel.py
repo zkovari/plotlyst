@@ -23,7 +23,7 @@ from typing import Optional, List
 
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup
+from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
@@ -31,11 +31,15 @@ from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBea
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
+from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.model.locations_model import LocationsTreeModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget, bold, \
-    popup, gc
+    popup, gc, link_buttons_to_pages
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
+from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.story_structure_character_link_widget_ui import \
     Ui_StoryStructureCharacterLink
 from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
@@ -467,3 +471,46 @@ class TagsEditor(QWidget):
 
         for tag_type in self.novel.tags.keys():
             self.layout().addWidget(TagTypeDisplay(self.novel, tag_type, self))
+
+
+class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
+    def __init__(self, parent=None):
+        super(ImportedNovelOverview, self).__init__(parent)
+        self.setupUi(self)
+        self.btnCharacters.setIcon(IconRegistry.character_icon())
+        self.btnLocations.setIcon(IconRegistry.location_icon())
+        self.btnScenes.setIcon(IconRegistry.scene_icon())
+
+        link_buttons_to_pages(self.stackedWidget,
+                              [(self.btnCharacters, self.pageCharacters), (self.btnLocations, self.pageLocations),
+                               (self.btnScenes, self.pageScenes)])
+
+        self._charactersModel: Optional[CharactersTableModel] = None
+        self._chaptersModel: Optional[ChaptersTreeModel] = None
+        self._locationsModel: Optional[LocationsTreeModel] = None
+
+    def setNovel(self, novel: Novel):
+        self.lblTitle.setText(novel.title)
+
+        if novel.characters:
+            self._charactersModel = CharactersTableModel(novel)
+            self.lstCharacters.setModel(self._charactersModel)
+            self.btnCharacters.setChecked(True)
+        else:
+            self.btnCharacters.setDisabled(True)
+        if novel.locations:
+            self._locationsModel = LocationsTreeModel(novel)
+            self.treeLocations.setModel(self._locationsModel)
+            if not self.btnCharacters.isChecked():
+                self.btnLocations.setChecked(True)
+        else:
+            self.btnLocations.setDisabled(True)
+
+        if novel.scenes:
+            self._chaptersModel = ChaptersTreeModel(novel)
+            self.treeChapters.setModel(self._chaptersModel)
+            self.treeChapters.expandAll()
+            self.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.treeChapters.hideColumn(ChaptersTreeModel.ColPlus)
+            if not self.btnLocations.isChecked():
+                self.btnScenes.setChecked(True)
