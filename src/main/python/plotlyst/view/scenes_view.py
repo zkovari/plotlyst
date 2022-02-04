@@ -366,7 +366,8 @@ class ScenesOutlineView(AbstractNovelView):
             card.cursorEntered.connect(partial(cursorEnter, card.scene))
 
             card.setPopupMenuActions(
-                [action('Insert new scene', IconRegistry.plus_icon('black'), partial(self._insert_scene_after, scene)),
+                [action('Edit', IconRegistry.edit_icon(), self._on_edit),
+                 action('Insert new scene', IconRegistry.plus_icon('black'), partial(self._insert_scene_after, scene)),
                  action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)])
 
     def _card_selected(self, card: SceneCard):
