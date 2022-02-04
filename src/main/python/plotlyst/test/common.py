@@ -17,14 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import sys
-from pathlib import Path
 from typing import Any, List
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel, QCoreApplication, QTimer
 from PyQt5.QtWidgets import QAbstractItemView, QMenu, QAction, QMessageBox, QDialog, QApplication
-from PyQt5.QtWidgets import QFileDialog
 
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.characters_view import CharactersView
@@ -179,31 +176,9 @@ def create_story_dialog(new_title: str):
         dialog.close()
 
 
-def _import_from_scrivener_dialog(monkeypatch):
-    dialog: QDialog = QApplication.instance().activeModalWidget()
-    try:
-        assert isinstance(dialog, StoryCreationDialog)
-        creation_dialog: StoryCreationDialog = dialog
-
-        folder = Path(sys.path[0]).joinpath('resources/scrivener/v3/NovelWithParts')
-        monkeypatch.setattr(QFileDialog, "getExistingDirectory", lambda *args: str(folder))
-
-        creation_dialog.btnScrivener.click()
-        creation_dialog.btnLoadScrivener.click()
-        creation_dialog.btnSaveScrivener.click()
-    finally:
-        dialog.close()
-
-
 def create_novel(window: MainWindow, title: str):
     view: HomeView = go_to_home(window)
     QTimer.singleShot(40, lambda: create_story_dialog(title))
-    view.ui.btnAdd.click()
-
-
-def import_from_scrivener(window: MainWindow, monkeypatch):
-    view: HomeView = go_to_home(window)
-    QTimer.singleShot(40, lambda: _import_from_scrivener_dialog(monkeypatch))
     view.ui.btnAdd.click()
 
 
