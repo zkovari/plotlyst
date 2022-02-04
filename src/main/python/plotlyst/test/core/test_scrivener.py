@@ -55,6 +55,10 @@ def test_import_with_acts(test_client):
                            story_structures=novel.story_structures)
     assert novel.title == expected_novel.title
     assert novel.id == expected_novel.id
+    assert novel.scenes[0].manuscript
+    assert novel.scenes[1].manuscript
+    novel.scenes[0].manuscript = None
+    novel.scenes[1].manuscript = None
     assert novel.scenes == expected_novel.scenes
     assert novel.locations == expected_novel.locations
 
