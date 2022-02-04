@@ -36,7 +36,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Conflict, BackstoryEvent, Comment, SceneGoal, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
     Location, default_location_profiles, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
-    default_tag_types, exclude_if_empty, LanguageSettings
+    default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -202,6 +202,7 @@ class ProjectNovelInfo:
     title: str
     id: uuid.UUID
     lang_settings: LanguageSettings = LanguageSettings()
+    import_origin: Optional[ImportOrigin] = None
 
 
 def _default_story_structures():
@@ -271,10 +272,12 @@ class JsonClient:
         novel_info = self._find_project_novel_info_or_fail(novel.id)
         novel_info.title = novel.title
         novel_info.lang_settings = novel.lang_settings
+        novel_info.import_origin = novel.import_origin
         self._persist_project()
 
     def insert_novel(self, novel: Novel):
-        project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id)
+        project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id, lang_settings=novel.lang_settings,
+                                              import_origin=novel.import_origin)
         self.project.novels.append(project_novel_info)
         self._persist_project()
         self._persist_novel(novel)
@@ -489,6 +492,7 @@ class JsonClient:
                 tags_dict[tag_types[0]].append(t)
 
         return Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
+                     import_origin=project_novel_info.import_origin,
                      plots=novel_info.plots, characters=characters,
                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,

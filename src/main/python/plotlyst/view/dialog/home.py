@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from qthandy import incr_font
 
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, ImportOrigin, ImportOriginType
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
@@ -119,4 +119,6 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         self.wdgScrivenerImportDetails.setVisible(True)
         self.wdgScrivenerImportDetails.setNovel(novel)
         self.btnSaveScrivener.setEnabled(True)
+
+        novel.import_origin = ImportOrigin(ImportOriginType.SCRIVENER, source=project)
         self._scrivenerNovel = novel

@@ -785,11 +785,22 @@ class LanguageSettings:
     lang: str = 'en-US'
 
 
+class ImportOriginType(Enum):
+    SCRIVENER = 'scrivener'
+
+
+@dataclass
+class ImportOrigin:
+    type: ImportOriginType
+    source: str
+
+
 @dataclass
 class NovelDescriptor:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     lang_settings: LanguageSettings = LanguageSettings()
+    import_origin: Optional[ImportOrigin] = None
 
 
 class TemplateFieldType(Enum):
