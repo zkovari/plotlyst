@@ -190,7 +190,7 @@ border: 0px;
         <item>
          <widget class="QTabWidget" name="tabAttributes">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tabBackstory">
            <attribute name="title">
