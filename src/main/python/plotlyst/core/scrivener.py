@@ -24,8 +24,10 @@ from uuid import UUID
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
+from striprtf.striprtf import rtf_to_text
+
 from src.main.python.plotlyst.core.client import load_image
-from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Location
+from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Location, Document
 
 
 class ScrivenerParsingError(Exception):
@@ -129,6 +131,7 @@ class ScrivenerImporter:
         scene = Novel.new_scene(title)
         scene.id = UUID(uuid)
         scene.synopsis = self._find_synopsis(scene.id, data_folder)
+        scene.manuscript = self._find_content(scene.id, data_folder)
         return scene
 
     def _parse_character(self, element: Element, data_folder: Path) -> Optional[Character]:
@@ -171,3 +174,17 @@ class ScrivenerImporter:
                     return synopsis_file.read()
 
         return ''
+
+    def _find_content(self, id: UUID, data_folder: Path) -> Optional[Document]:
+        id_folder = data_folder.joinpath(str(id).upper())
+        if id_folder.exists():
+            content_path = id_folder.joinpath('content.rtf')
+            if content_path.exists():
+                with open(content_path, encoding='utf8') as content_file:
+                    rtf_str = content_file.read()
+                    text = rtf_to_text(rtf_str)
+
+                    doc = Document('')
+                    doc.content = text
+                    doc.loaded = True
+                    return doc

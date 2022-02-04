@@ -100,6 +100,8 @@ class HomeView(AbstractView):
                 self.repo.insert_character(novel, character)
             for scene in novel.scenes:
                 self.repo.insert_scene(novel, scene)
+                if scene.manuscript:
+                    self.repo.update_doc(novel, scene.manuscript)
             self.refresh()
 
     def _on_edit(self):
