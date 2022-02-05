@@ -42,7 +42,7 @@ class GrammarPopup(QWidget, Ui_GrammarPopup):
         if style in ['misspelling']:
             self.lblType.setStyleSheet('color: #d90429;')
         elif style == 'style':
-            self.lblType.setStyleSheet('color: #5e60ce;')
+            self.lblType.setStyleSheet('color: #5a189a;')
         else:
             self.lblType.setStyleSheet('color: #ffc300;')
         self.lblType.setText(style.capitalize())

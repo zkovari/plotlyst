@@ -114,15 +114,18 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
         self._misspelling_format = QTextCharFormat()
         self._misspelling_format.setUnderlineColor(QColor('#d90429'))
-        self._misspelling_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+        self._misspelling_format.setBackground(QBrush(QColor('#fbe0dd')))
+        self._misspelling_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
 
         self._style_format = QTextCharFormat()
-        self._style_format.setUnderlineColor(QColor('#5e60ce'))
-        self._style_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+        self._style_format.setUnderlineColor(QColor('#5a189a'))
+        self._style_format.setBackground(QBrush(QColor('#dec9e9')))
+        self._style_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
 
         self._grammar_format = QTextCharFormat()
         self._grammar_format.setUnderlineColor(QColor('#ffc300'))
-        self._grammar_format.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+        self._grammar_format.setBackground(QBrush(QColor('#fffae6')))
+        self._grammar_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
 
         self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
 
