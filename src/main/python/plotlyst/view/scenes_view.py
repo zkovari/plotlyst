@@ -260,7 +260,7 @@ class ScenesOutlineView(AbstractNovelView):
             return
         chapter = self._selected_chapter()
         if chapter:
-            builder = PopupMenuBuilder.from_index(self.ui.treeChapters, index)
+            builder = PopupMenuBuilder.from_item_view_position(self.ui.treeChapters, index)
             builder.add_action('Add scene', IconRegistry.scene_icon())
             builder.add_action('Insert chapter after', IconRegistry.chapter_icon(),
                                lambda: self._new_chapter(self.novel.chapters.index(chapter) + 1))
@@ -526,14 +526,14 @@ class ScenesOutlineView(AbstractNovelView):
         index: QModelIndex = self.ui.tblScenes.indexAt(pos)
         scene: Scene = index.data(ScenesTableModel.SceneRole)
 
-        menu = QMenu(self.ui.tblScenes)
-        menu.addAction(IconRegistry.wip_icon(), 'Toggle WIP status', lambda: toggle_wip(scene))
-        menu.addAction(IconRegistry.plus_icon(), 'Insert new scene',
-                       lambda: self._insert_scene_after(index.data(ScenesTableModel.SceneRole)))
-        menu.addSeparator()
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.ui.btnDelete.click)
+        builder = PopupMenuBuilder.from_widget_position(self.ui.tblScenes, pos)
+        builder.add_action('Toggle WIP status', IconRegistry.wip_icon(), lambda: toggle_wip(scene))
+        builder.add_action('Insert new scene', IconRegistry.plus_icon(),
+                           lambda: self._insert_scene_after(index.data(ScenesTableModel.SceneRole)))
+        builder.add_separator()
+        builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
 
-        menu.popup(self.ui.tblScenes.viewport().mapToGlobal(pos))
+        builder.popup()
 
     def _insert_scene_after(self, scene: Scene, inherit_chapter: bool = True):
         i = self.novel.scenes.index(scene)
