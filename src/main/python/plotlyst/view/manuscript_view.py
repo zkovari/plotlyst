@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt, QTimer
-from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor
+from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor, QIcon
 from PyQt5.QtWidgets import QHeaderView, QTextEdit, QApplication
 from overrides import overrides
 
@@ -31,9 +31,9 @@ from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, popup
+from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, popup, bold, increase_font
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 from src.main.python.plotlyst.worker.persistence import flush_or_fail
@@ -51,6 +51,9 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.textEdit.setTitleVisible(False)
         self.ui.textEdit.setToolbarVisible(False)
+
+        bold(self.ui.lblSceneTitle)
+        increase_font(self.ui.lblSceneTitle)
 
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
@@ -80,7 +83,7 @@ class ManuscriptView(AbstractNovelView):
         self.chaptersModel.modelReset.emit()
 
     def restore_editor(self, editor: QTextEdit):
-        self.ui.pageText.layout().insertWidget(1, editor)
+        self.ui.pageText.layout().insertWidget(2, editor)
 
     def _edit(self, index: QModelIndex):
         def set_wc():
@@ -109,6 +112,20 @@ class ManuscriptView(AbstractNovelView):
             if self.ui.cbSpellCheck.isChecked():
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 self.ui.textEdit.asyncCheckGrammer()
+
+            title = node.scene.title if node.scene.title else f'Scene {self.novel.scenes.index(node.scene) + 1}'
+            self.ui.lblSceneTitle.setText(title)
+            if node.scene.pov:
+                self.ui.btnPov.setIcon(QIcon(avatars.pixmap(node.scene.pov)))
+                self.ui.btnPov.setVisible(True)
+            else:
+                self.ui.btnPov.setHidden(True)
+            scene_type_icon = IconRegistry.scene_type_icon(node.scene)
+            if scene_type_icon:
+                self.ui.btnSceneType.setIcon(scene_type_icon)
+                self.ui.btnSceneType.setVisible(True)
+            else:
+                self.ui.btnSceneType.setHidden(True)
 
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)

@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Dict
+from typing import Dict, Optional
 
 import qtawesome
 from PyQt5.QtCore import QSize, Qt
@@ -25,7 +25,8 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QLabel
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
-from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType
+from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
+    Scene, SceneType
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
 
@@ -148,6 +149,13 @@ class IconRegistry:
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1}, {'color': color}])
 
+    @staticmethod
+    def scene_type_icon(scene: Scene) -> Optional[QIcon]:
+        if scene.type == SceneType.ACTION:
+            return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
+        elif scene.type == SceneType.REACTION:
+            return IconRegistry.reaction_scene_icon()
+        
     @staticmethod
     def reaction_scene_icon() -> QIcon:
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
@@ -452,7 +460,7 @@ class IconRegistry:
     @staticmethod
     def context_icon() -> QIcon:
         return IconRegistry.from_name('mdi.menu')
-    
+
     @staticmethod
     def story_structure_icon(**kwargs) -> QIcon:
         return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
