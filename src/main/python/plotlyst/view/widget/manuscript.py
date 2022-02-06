@@ -25,18 +25,21 @@ import qtanim
 import qtawesome
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSignal, QTimer
+from PyQt5.QtGui import QFont
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -280,3 +283,13 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         qtanim.glow(self.btnShutDown, loop=15)
 
         self.languageChanged.emit(self.lang)
+
+
+class ManuscriptTextEditor(DocumentTextEditor):
+    def __init__(self, parent=None):
+        super(ManuscriptTextEditor, self).__init__(parent)
+
+        if app_env.is_mac():
+            family = 'Palatino'
+            self.textEdit.setFontFamily(family)
+            self.textEdit.document().setDefaultFont(QFont(family, 16))

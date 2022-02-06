@@ -185,7 +185,7 @@
          </widget>
         </item>
         <item>
-         <widget class="DocumentTextEditor" name="textEdit"/>
+         <widget class="ManuscriptTextEditor" name="textEdit"/>
         </item>
         <item>
          <widget class="QWidget" name="wdgBottom" native="true">
@@ -252,11 +252,6 @@
    <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
-   <class>DocumentTextEditor</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
    <class>SprintWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.manuscript</header>
@@ -266,6 +261,11 @@
    <class>Toggle</class>
    <extends>QCheckBox</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
+   <class>ManuscriptTextEditor</class>
+   <extends>QTextEdit</extends>
+   <header>src.main.python.plotlyst.view.widget.manuscript</header>
   </customwidget>
  </customwidgets>
  <resources/>

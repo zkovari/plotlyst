@@ -30,7 +30,6 @@ from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
     QApplication, QToolButton, QFileDialog, \
     QLineEdit
-from fbs_runtime import platform
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qttextedit import EnhancedTextEdit, RichTextEditor
@@ -38,6 +37,7 @@ from slugify import slugify
 
 from src.main.python.plotlyst.core.domain import TextStatistics
 from src.main.python.plotlyst.core.text import wc
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
@@ -314,9 +314,9 @@ class DocumentTextEditor(RichTextEditor):
 
         self.highlighter = GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
 
-        if platform.is_linux():
+        if app_env.is_linux():
             family = 'Noto Sans Mono'
-        elif platform.is_mac():
+        elif app_env.is_mac():
             family = 'Helvetica Neue'
         else:
             family = 'Helvetica'
