@@ -926,6 +926,7 @@ class SceneStoryStructureWidget(QWidget):
             act.setEnabled(clickable)
 
     def highlightBeat(self, beat: StoryBeat):
+        self.clearHighlights()
         btn = self._beats.get(beat)
         if btn is None:
             return
@@ -933,13 +934,11 @@ class SceneStoryStructureWidget(QWidget):
         btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
 
     def highlightScene(self, scene: Scene):
-        self.unhighlightBeats()
-        self.btnCurrentScene.setHidden(True)
-
         beat = scene.beat(self.novel)
         if beat:
             self.highlightBeat(beat)
         else:
+            self.clearHighlights()
             index = self.novel.scenes.index(scene)
             previous_beat_scene = None
             previous_beat = None
@@ -976,6 +975,10 @@ class SceneStoryStructureWidget(QWidget):
         for btn in self._beats.values():
             btn.setStyleSheet('border: 0px;')
             btn.setFixedSize(self._beatHeight, self._beatHeight)
+
+    def clearHighlights(self):
+        self.unhighlightBeats()
+        self.btnCurrentScene.setHidden(True)
 
     def toggleBeat(self, beat: StoryBeat, toggled: bool):
         btn = self._beats.get(beat)
