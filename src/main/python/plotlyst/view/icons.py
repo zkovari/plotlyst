@@ -87,6 +87,10 @@ class IconRegistry:
         return qtawesome.icon('fa5s.filter')
 
     @staticmethod
+    def preferences_icon() -> QIcon:
+        return qtawesome.icon('fa5s.sliders-h')
+
+    @staticmethod
     def edit_icon(color_on: str = 'black') -> QIcon:
         return IconRegistry.from_name('mdi.pencil', color_on=color_on)
 
@@ -155,7 +159,7 @@ class IconRegistry:
             return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
         elif scene.type == SceneType.REACTION:
             return IconRegistry.reaction_scene_icon()
-        
+
     @staticmethod
     def reaction_scene_icon() -> QIcon:
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',

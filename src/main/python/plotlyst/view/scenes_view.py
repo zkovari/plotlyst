@@ -38,7 +38,7 @@ from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType, PopupMenuBuilder, \
-    action, increase_font, set_opacity
+    action, increase_font, set_opacity, popup
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
@@ -51,7 +51,8 @@ from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
-from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget
+from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
+    ScenesPreferencesWidget
 from src.main.python.plotlyst.view.widget.story_map import StoryLinesMapWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 
@@ -178,6 +179,11 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.wdgStoryStructure.setActsClickable(False)
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
+        self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
+        self.prefs_widget = ScenesPreferencesWidget()
+        popup(self.ui.btnPreferences, self.prefs_widget)
+        self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
+
         action = QWidgetAction(self.ui.btnFilter)
         self._scene_filter = SceneFilterWidget(self.novel)
         action.setDefaultWidget(self._scene_filter)

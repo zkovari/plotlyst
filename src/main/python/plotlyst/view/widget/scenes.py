@@ -45,6 +45,7 @@ from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
+from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import flow, clear_layout, hbox
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector
@@ -1072,3 +1073,13 @@ class SceneStoryStructureWidget(QWidget):
             builder = PopupMenuBuilder.from_widget_position(self, self.mapFromGlobal(QCursor.pos()))
             builder.add_action('Remove', IconRegistry.trash_can_icon(), lambda: self.beatRemovalRequested.emit(beat))
             builder.popup()
+
+
+class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
+    def __init__(self, parent=None):
+        super(ScenesPreferencesWidget, self).__init__(parent)
+        self.setupUi(self)
+
+        self.btnCardsWidth.setIcon(IconRegistry.from_name('ei.resize-horizontal'))
+
+        self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())

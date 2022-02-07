@@ -261,6 +261,9 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
             self.scene.title if self.scene.title else f'Scene {self.novel.scenes.index(self.scene) + 1}')
         self.textTitle.setAlignment(Qt.AlignCenter)
 
+        self.textSynopsis.setAlignment(Qt.AlignCenter)
+        self.textSynopsis.setText(scene.synopsis)
+
         self.btnPov.clicked.connect(self.select)
         self.btnStage.clicked.connect(self.select)
 
@@ -326,6 +329,21 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
         #     self.btnStage.setHidden(True)
 
     @overrides
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        w = event.size().width()
+        self._adjustToWidth(w)
+
+    @overrides
+    def setFixedSize(self, w: int, h: int) -> None:
+        super(SceneCard, self).setFixedSize(w, h)
+        self._adjustToWidth(w)
+
+    def _adjustToWidth(self, w):
+        self.textSynopsis.setVisible(w > 170)
+        self.lineAfterTitle.setVisible(w > 170)
+        self.lineAfterTitle.setFixedWidth(w - 30)
+
+    @overrides
     def _borderSize(self, selected: bool = False) -> int:
         if self.scene.beat(self.novel):
             return 7 if selected else 5
@@ -362,9 +380,11 @@ class CardsView(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._layout = FlowLayout(spacing=9)
+        self._cards: List[Card] = []
         self.setLayout(self._layout)
         self.setAcceptDrops(True)
         self._selected: Optional[Card] = None
+        self._cardsWidth: int = 125
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
@@ -384,18 +404,30 @@ class CardsView(QFrame):
 
     def clear(self):
         self._selected = None
+        self._cards.clear()
         self._layout.clear()
 
     def addCard(self, card: Card):
         card.setAcceptDrops(True)
         card.selected.connect(self._cardSelected)
         card.dropped.connect(self.swapped.emit)
+
         self._layout.addWidget(card)
+        self._cards.append(card)
+        self._resizeCard(card)
 
     def cardAt(self, pos: int) -> Optional[Card]:
         item = self._layout.itemAt(pos)
         if item and item.widget():
             return item.widget()
+
+    def setCardsWidth(self, value: int):
+        self._cardsWidth = value
+        for card in self._cards:
+            self._resizeCard(card)
+
+    def _resizeCard(self, card: Card):
+        card.setFixedSize(self._cardsWidth, int(self._cardsWidth * 1.3))
 
     def _cardSelected(self, card: Card):
         self._selected = card

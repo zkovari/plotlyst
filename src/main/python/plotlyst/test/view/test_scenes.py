@@ -293,3 +293,13 @@ def test_add_scene_comment(qtbot, filled_window: MainWindow):
     persisted_novel = client.fetch_novel(view.novel.id)
     assert len(persisted_novel.scenes[0].comments) == 1
     assert persisted_novel.scenes[0].comments[0].text == 'Comment content'
+
+
+def test_scene_cards_resize(qtbot, filled_window: MainWindow):
+    view: ScenesOutlineView = go_to_scenes(filled_window)
+
+    assert view.prefs_widget.sliderCards.value() == 125
+    view.prefs_widget.sliderCards.setValue(200)
+    card = view.scene_cards[0]
+    assert card.textSynopsis.isVisible()
+    assert card.lineAfterTitle.isVisible()
