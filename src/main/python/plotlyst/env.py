@@ -19,8 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
 from enum import Enum
+from typing import Optional
 
 from fbs_runtime import platform
+
+from src.main.python.plotlyst.core.domain import Novel
 
 
 class AppMode(Enum):
@@ -31,6 +34,7 @@ class AppMode(Enum):
 class AppEnvironment:
     def __init__(self):
         self._mode: AppMode = AppMode.PROD
+        self._novel: Optional[Novel] = None
 
     @property
     def mode(self) -> AppMode:
@@ -39,6 +43,14 @@ class AppEnvironment:
     @mode.setter
     def mode(self, value: AppMode):
         self._mode = value
+
+    @property
+    def novel(self):
+        return self._novel
+
+    @novel.setter
+    def novel(self, novel: Novel):
+        self._novel = novel
 
     def is_dev(self) -> bool:
         return self._mode == AppMode.DEV
