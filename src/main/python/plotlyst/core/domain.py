@@ -255,6 +255,7 @@ class SelectionItem:
 class SceneStage(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
+    @overrides
     def __hash__(self):
         return hash(str(id))
 
@@ -263,6 +264,7 @@ class SceneStage(SelectionItem):
 class DramaticQuestion(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
+    @overrides
     def __hash__(self):
         return hash(str(id))
 
@@ -277,6 +279,7 @@ class PlotValue(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     description: str = ''
 
+    @overrides
     def __hash__(self):
         return hash(str(id))
 
@@ -348,6 +351,7 @@ class Conflict(SelectionItem, CharacterBased):
 
         return self._conflicting_character
 
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -356,6 +360,7 @@ class Conflict(SelectionItem, CharacterBased):
 class SceneGoal(SelectionItem):
     story_goal: Optional[SelectionItem] = None
 
+    @overrides
     def __hash__(self):
         return hash(self.text)
 
@@ -1122,6 +1127,7 @@ def default_location_profiles() -> List[ProfileTemplate]:
 class CausalityItem(SelectionItem):
     links: List['CausalityItem'] = field(default_factory=list)
 
+    @overrides
     def __hash__(self):
         return hash(self.text)
 
@@ -1260,6 +1266,11 @@ def default_tags() -> Dict[TagType, List[Tag]]:
 
 
 @dataclass
+class NovelPreferences:
+    active_stage_id: Optional[uuid.UUID] = None
+
+
+@dataclass
 class Novel(NovelDescriptor):
     story_structures: List[StoryStructure] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
@@ -1276,6 +1287,7 @@ class Novel(NovelDescriptor):
     tags: Dict[TagType, List[Tag]] = field(default_factory=default_tags)
     logline: str = ''
     synopsis: Optional['Document'] = None
+    prefs: NovelPreferences = NovelPreferences()
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title
@@ -1322,6 +1334,13 @@ class Novel(NovelDescriptor):
             if structure.active:
                 return structure
         return self.story_structures[0]
+
+    @property
+    def active_stage(self) -> Optional[SceneStage]:
+        if self.prefs.active_stage_id:
+            for stage in self.stages:
+                if stage.id == self.prefs.active_stage_id:
+                    return stage
 
     def scenes_in_chapter(self, chapter: Chapter) -> List[Scene]:
         return [x for x in self.scenes if x.chapter is chapter]

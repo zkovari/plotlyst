@@ -473,6 +473,8 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesProgress.setStage(stage)
             self.ui.btnStageSelector.setText(stage.text)
             self.stagesModel.setHighlightedStage(stage)
+            self.novel.prefs.active_stage_id = stage.id
+            self.repo.update_novel(self.novel)
 
         if self.stagesModel:
             self.stagesModel.modelReset.emit()

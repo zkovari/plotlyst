@@ -66,7 +66,13 @@ class SceneStageProgressCharts:
     def __init__(self, novel: Novel):
         self.novel = novel
         self._chartviews: List[ProgressChartView] = []
-        self._stage = self.novel.stages[1]  # first draft
+        active_stage = self.novel.active_stage
+        if active_stage:
+            self._stage = active_stage
+        elif self.novel.stages:
+            self._stage = self.novel.stages[0]
+        else:
+            self._stage = None
         self._stage_index = 1
         self._act_colors = {1: '#02bcd4', 2: '#1bbc9c', 3: '#ff7800'}
 

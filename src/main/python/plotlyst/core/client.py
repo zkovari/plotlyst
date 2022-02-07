@@ -36,7 +36,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Conflict, BackstoryEvent, Comment, SceneGoal, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
     Location, default_location_profiles, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
-    default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin
+    default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin, NovelPreferences
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -195,6 +195,7 @@ class NovelInfo:
     logline: str = ''
     synopsis: Optional['Document'] = None
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
+    prefs: NovelPreferences = NovelPreferences()
 
 
 @dataclass
@@ -498,7 +499,8 @@ class JsonClient:
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                      location_profiles=novel_info.location_profiles,
                      conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=tags_dict,
-                     documents=novel_info.documents, logline=novel_info.logline, synopsis=novel_info.synopsis)
+                     documents=novel_info.documents, logline=novel_info.logline, synopsis=novel_info.synopsis,
+                     prefs=novel_info.prefs)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -527,7 +529,7 @@ class JsonClient:
                                tag_types=list(novel.tags.keys()),
                                documents=novel.documents,
                                logline=novel.logline, synopsis=novel.synopsis,
-                               version=LATEST_VERSION)
+                               version=LATEST_VERSION, prefs=novel.prefs)
 
         self.__persist_info(self.novels_dir, novel_info)
 
