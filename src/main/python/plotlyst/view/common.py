@@ -181,6 +181,11 @@ class PopupMenuBuilder:
     def add_separator(self):
         self.menu.addSeparator()
 
+    def add_section(self, text: str, icon: Optional[QIcon] = None):
+        action = self.menu.addSection(text)
+        if icon:
+            action.setIcon(icon)
+
     def add_submenu(self, text: str, icon: Optional[QIcon] = None) -> QMenu:
         submenu = QMenu(text, self.menu)
         if icon:
