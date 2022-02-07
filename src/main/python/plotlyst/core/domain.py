@@ -1323,6 +1323,9 @@ class Novel(NovelDescriptor):
                 return structure
         return self.story_structures[0]
 
+    def scenes_in_chapter(self, chapter: Chapter) -> List[Scene]:
+        return [x for x in self.scenes if x.chapter is chapter]
+
     @staticmethod
     def new_scene(title: str = '') -> Scene:
         return Scene(title, agendas=[SceneStructureAgenda()])

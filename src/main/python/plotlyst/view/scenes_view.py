@@ -260,10 +260,17 @@ class ScenesOutlineView(AbstractNovelView):
             return
         chapter = self._selected_chapter()
         if chapter:
-            builder = PopupMenuBuilder.from_item_view_position(self.ui.treeChapters, index)
-            builder.add_action('Add scene', IconRegistry.scene_icon())
-            builder.add_action('Insert chapter after', IconRegistry.chapter_icon(),
-                               lambda: self._new_chapter(self.novel.chapters.index(chapter) + 1))
+            builder = PopupMenuBuilder.from_index(self.ui.treeChapters, index)
+
+            scenes = self.novel.scenes_in_chapter(chapter)
+            if scenes:
+                builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self._insert_scene_after(scenes[-1]))
+                builder.add_separator()
+
+            builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
+                               slot=lambda: self._new_chapter(self.novel.chapters.index(chapter)))
+            builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
+                               slot=lambda: self._new_chapter(self.novel.chapters.index(chapter) + 1))
             builder.popup()
         else:
             scene = self._selected_scene()
@@ -535,13 +542,15 @@ class ScenesOutlineView(AbstractNovelView):
 
         builder.popup()
 
-    def _insert_scene_after(self, scene: Scene, inherit_chapter: bool = True):
+    def _insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None):
         i = self.novel.scenes.index(scene)
         day = scene.day
 
         new_scene = self.novel.new_scene()
         new_scene.day = day
-        if inherit_chapter:
+        if chapter:
+            new_scene.chapter = chapter
+        else:
             new_scene.chapter = scene.chapter
         self.novel.scenes.insert(i + 1, new_scene)
         new_scene.sequence = i + 1
