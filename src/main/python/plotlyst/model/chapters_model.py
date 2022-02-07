@@ -52,7 +52,7 @@ class EmptyNode(Node):
 
 class UncategorizedChapterNode(Node):
     def __init__(self, parent):
-        super(UncategorizedChapterNode, self).__init__('<Uncategorized>', parent)
+        super(UncategorizedChapterNode, self).__init__('<Not included>', parent)
 
 
 class SceneMimeData(QMimeData):
@@ -123,11 +123,13 @@ class ChaptersTreeModel(TreeItemModel, ActionBasedTreeModel):
             if scene.chapter:
                 SceneNode(scene, chapters[scene.chapter.sid()])
 
-        EmptyNode('', self.root)  # to mimic empty space
+        empty = EmptyNode('', self.root)  # to mimic empty space
         dummy_parent = UncategorizedChapterNode(self.root)
         for scene in self.novel.scenes:
             if not scene.chapter:
                 SceneNode(scene, dummy_parent)
+        if not dummy_parent.children:
+            self.root.children = [x for x in self.root.children if x is not empty and x is not dummy_parent]
 
     def newChapter(self, index: int = -1) -> Chapter:
         if index < 0:
@@ -163,6 +165,8 @@ class ChaptersTreeModel(TreeItemModel, ActionBasedTreeModel):
         node = index.internalPointer()
         if isinstance(node, SceneNode):
             return flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+        elif isinstance(node, EmptyNode):
+            return Qt.ItemIsEnabled
         return flags | Qt.ItemIsDropEnabled
 
     @overrides
