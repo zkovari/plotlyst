@@ -324,6 +324,7 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setFontFamily(family)
         self.textEdit.document().setDefaultFont(QFont(family, 16))
         self.textEdit.setFontPointSize(16)
+        self.textEdit.setAutoFormatting(QTextEdit.AutoAll)
 
         # self._lblPlaceholder = QLabel(self.textEdit)
         # font = QFont(family)
