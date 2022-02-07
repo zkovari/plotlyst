@@ -33,6 +33,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
@@ -49,7 +50,7 @@ from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avata
 from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox, flow
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
-from src.main.python.plotlyst.view.widget.labels import ConflictLabel
+from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -188,6 +189,7 @@ class CharacterToolButton(QToolButton):
 
 class CharacterSelectorButtons(QWidget):
     characterToggled = pyqtSignal(Character, bool)
+    characterClicked = pyqtSignal(Character)
 
     def __init__(self, parent=None, exclusive: bool = True):
         super(CharacterSelectorButtons, self).__init__(parent)
@@ -243,6 +245,7 @@ class CharacterSelectorButtons(QWidget):
         tool_btn.setChecked(checked)
 
         tool_btn.toggled.connect(partial(self.characterToggled.emit, character))
+        tool_btn.clicked.connect(partial(self.characterClicked.emit, character))
         tool_btn.installEventFilter(OpacityEventFilter(parent=tool_btn, ignoreCheckedButton=True))
 
     def removeCharacter(self, character: Character):
@@ -315,7 +318,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
 
     def _update_characters(self):
         for char in self.novel.characters:
-            if self.scene.pov and char.id != self.scene.pov.id:
+            if self.agenda.character_id and char.id != self.agenda.character_id:
                 self.cbCharacter.addItem(QIcon(avatars.pixmap(char)), char.name, char)
 
     def _type_toggled(self):
@@ -428,6 +431,61 @@ class CharacterConflictSelector(QWidget):
         self.scene.agendas[0].remove_conflict(self.conflict)
         self.parent().layout().removeWidget(self)
         gc(self)
+
+
+class CharacterLinkWidget(QWidget):
+    characterSelected = pyqtSignal(Character)
+
+    def __init__(self, parent=None):
+        super(CharacterLinkWidget, self).__init__(parent)
+        hbox(self)
+        self.novel = app_env.novel
+        self.character: Optional[Character] = None
+        self.label: Optional[CharacterLabel] = None
+
+        self.btnLinkCharacter = QPushButton(self)
+        self.layout().addWidget(self.btnLinkCharacter)
+        self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
+        self.btnLinkCharacter.setCursor(Qt.PointingHandCursor)
+        self.btnLinkCharacter.setStyleSheet('''
+                QPushButton {
+                    border: 2px dotted grey;
+                    border-radius: 6px;
+                    font: italic;
+                }
+                QPushButton:hover {
+                    border: 2px dotted darkBlue;
+                }
+            ''')
+
+        self.selectorWidget = CharacterSelectorButtons(self.btnLinkCharacter)
+        self.selectorWidget.setMinimumWidth(100)
+        self.selectorWidget.characterClicked.connect(self._characterClicked)
+        popup(self.btnLinkCharacter, self.selectorWidget)
+
+    def setCharacter(self, character: Character):
+        if self.character and character.id == self.character.id:
+            return
+        self.character = character
+        if self.label is not None:
+            self.layout().removeWidget(self.label)
+            gc(self.label)
+            self.label = None
+        self.label = CharacterLabel(self.character, pov=True)
+        self.label.setToolTip(f'<html>Agenda character: <b>{character.name}</b>')
+        self.label.installEventFilter(OpacityEventFilter(enterOpacity=0.7, leaveOpacity=1.0, parent=self.label))
+        self.label.setCursor(Qt.PointingHandCursor)
+        self.label.clicked.connect(self.btnLinkCharacter.showMenu)
+        self.layout().addWidget(self.label)
+        self.btnLinkCharacter.setHidden(True)
+
+    def setAvailableCharacters(self, characters: List[Character]):
+        self.selectorWidget.setCharacters(characters)
+
+    def _characterClicked(self, character: Character):
+        self.btnLinkCharacter.menu().hide()
+        self.setCharacter(character)
+        self.characterSelected.emit(character)
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
@@ -700,7 +758,7 @@ class CharacterTimelineWidget(QWidget):
 
 
 class CharacterEmotionButton(QToolButton):
-    NEUTRAL_COLOR: str = 'rgb(171, 171, 171)'
+    NEUTRAL_COLOR: str = '#ababab'
     emotionChanged = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -709,6 +767,14 @@ class CharacterEmotionButton(QToolButton):
         self._color = self.NEUTRAL_COLOR
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setFixedSize(32, 32)
+
+        self.setStyleSheet('''
+                QToolButton {
+                    border: 0px;
+                }
+                QToolButton::menu-indicator {width:0px;}
+                ''')
+
         menu = QMenu(self)
         self.setMenu(menu)
         menu.setMaximumWidth(64)
@@ -725,17 +791,18 @@ class CharacterEmotionButton(QToolButton):
         menu.addAction(emoji.emojize(':worried_face:'), lambda: self.setValue(UNHAPPY))
         menu.addAction(emoji.emojize(':fearful_face:'), lambda: self.setValue(VERY_UNHAPPY))
 
+        self._setAlready: bool = False
+
     def value(self) -> int:
         return self._value
 
     def setValue(self, value: int):
         if value == VERY_UNHAPPY:
             self.setText(emoji.emojize(":fearful_face:"))
-            self._color = 'rgb(239, 0, 0)'
-
+            self._color = '#ef0000'
         elif value == UNHAPPY:
             self.setText(emoji.emojize(":worried_face:"))
-            self._color = 'rgb(255, 142, 43)'
+            self._color = '#ff8e2b'
         elif value == NEUTRAL:
             self.setText(emoji.emojize(":neutral_face:"))
             self._color = self.NEUTRAL_COLOR
@@ -744,16 +811,13 @@ class CharacterEmotionButton(QToolButton):
             self._color = '#93e5ab'
         elif value == VERY_HAPPY:
             self.setText(emoji.emojize(":smiling_face_with_smiling_eyes:"))
-            self._color = 'rgb(0, 202, 148)'
+            self._color = '#00ca94'
 
         self._value = value
-        self.setStyleSheet(f'''
-        QToolButton {{
-            background-color: {self._color};
-            border-radius: 10px;
-        }}
-        QToolButton::menu-indicator {{width:0px;}}
-        ''')
+        if self._setAlready:
+            qtanim.glow(self, duration=300, radius=100, color=QColor(self._color))
+        else:
+            self._setAlready = True
         self.emotionChanged.emit()
 
     def color(self) -> str:

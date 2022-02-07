@@ -29,16 +29,18 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton
     QPushButton
 from overrides import overrides
 from qtanim import fade_out
+from qthandy import decr_font
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
-    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict
+    SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
+    Character
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
     set_opacity, PopupMenuBuilder, OpacityEventFilter, gc, transparent, DisabledClickEventFilter, \
-    InstantTooltipEventFilter
+    InstantTooltipEventFilter, underlined
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -411,6 +413,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.scene: Optional[Scene] = None
 
         self.btnInventory.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
+        decr_font(self.lblBeatsInventory)
+        underlined(self.lblBeatsInventory)
 
         self.btnScene = _SceneTypeButton(SceneType.ACTION)
         self.btnSequel = _SceneTypeButton(SceneType.REACTION)
@@ -465,6 +469,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
+        self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
         self.unsetCharacterSlot = None
 
     def setUnsetCharacterSlot(self, unsetCharacterSlot):
@@ -474,6 +479,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.novel = novel
         self.scene = scene
 
+        self.updateAvailableAgendaCharacters()
         self._toggleCharacterStatus()
 
         self.reset()
@@ -541,6 +547,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         if not self.scene.agendas[0].items:
             self._typeClicked(SceneType.ACTION, True, lazy=False)
+
+    def updateAvailableAgendaCharacters(self):
+        chars = []
+        chars.extend(self.scene.characters)
+        if self.scene.pov:
+            chars.insert(0, self.scene.pov)
+        self.wdgAgendaCharacter.setAvailableCharacters(chars)
 
     def updateAgendaCharacter(self):
         self._toggleCharacterStatus()
@@ -676,16 +689,27 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if self.scene.agendas[0].character_id:
             self.btnEmotionStart.setEnabled(True)
             self.btnEmotionEnd.setEnabled(True)
+            self.wdgAgendaCharacter.setEnabled(True)
             self.btnEmotionStart.setToolTip('')
             self.btnEmotionEnd.setToolTip('')
+            self.wdgAgendaCharacter.setCharacter(self.scene.agendas[0].character(self.novel))
         else:
             self.btnEmotionStart.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
             self.btnEmotionEnd.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
+            self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(
+                DisabledClickEventFilter(self.unsetCharacterSlot, self))
 
             self.btnEmotionStart.setDisabled(True)
             self.btnEmotionEnd.setDisabled(True)
+            self.wdgAgendaCharacter.setDisabled(True)
+            self.wdgAgendaCharacter.setToolTip('Select POV character first')
             self.btnEmotionStart.setToolTip('Select POV character first')
             self.btnEmotionEnd.setToolTip('Select POV character first')
+
+    def _agendaCharacterSelected(self, character: Character):
+        self.scene.agendas[0].set_character(character)
+        self.scene.agendas[0].conflict_references.clear()
+        self.updateAgendaCharacter()
 
     def _collect_agenda_items(self, agenda: SceneStructureAgenda, widget: QWidget, part: int):
         for i in range(widget.layout().count()):

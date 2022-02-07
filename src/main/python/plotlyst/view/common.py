@@ -225,7 +225,7 @@ def decrease_font(widget: QWidget, step: int = 1):
 class OpacityEventFilter(QObject):
 
     def __init__(self, enterOpacity: float = 1.0, leaveOpacity: float = 0.4,
-                 parent: QAbstractButton = None, ignoreCheckedButton: bool = False):
+                 parent: QWidget = None, ignoreCheckedButton: bool = False):
         super(OpacityEventFilter, self).__init__(parent)
         self.enterOpacity = enterOpacity
         self.leaveOpacity = leaveOpacity
@@ -233,7 +233,7 @@ class OpacityEventFilter(QObject):
         self._parent = parent
         if not ignoreCheckedButton or not self._checkedButton(parent):
             set_opacity(parent, leaveOpacity)
-        if parent:
+        if parent and isinstance(parent, QAbstractButton):
             parent.toggled.connect(self._btnToggled)
 
     @overrides
@@ -331,6 +331,12 @@ def bold(widget: QWidget, enabled: bool = True):
 def italic(widget: QWidget, enabled: bool = True):
     font = widget.font()
     font.setItalic(enabled)
+    widget.setFont(font)
+
+
+def underlined(widget: QWidget, enabled: bool = True):
+    font = widget.font()
+    font.setUnderline(enabled)
     widget.setFont(font)
 
 

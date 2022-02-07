@@ -292,6 +292,8 @@ class SceneEditor(QObject):
         for character in self.scene.characters:
             self.ui.wdgCharacters.addLabel(CharacterLabel(character))
 
+        self.ui.wdgSceneStructure.updateAvailableAgendaCharacters()
+
     def _save_scene(self):
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()

@@ -410,8 +410,8 @@ class SceneConflictsModel(SelectionItemsModel):
         self.update()
 
     def update(self):
-        if self.scene.pov:
-            self._conflicts = [x for x in self.novel.conflicts if x.character_id == self.scene.pov.id]
+        if self.agenda.character_id:
+            self._conflicts = [x for x in self.novel.conflicts if x.character_id == self.agenda.character_id]
 
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
