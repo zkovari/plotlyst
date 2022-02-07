@@ -31,7 +31,10 @@ from fbs_runtime import platform
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, SceneType, Document, Novel
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import ActiveSceneStageChanged
 from src.main.python.plotlyst.view.common import emoji_font, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
@@ -242,7 +245,7 @@ class JournalCard(Card, Ui_JournalCard):
         self.textTitle.setText(self.journal.title)
 
 
-class SceneCard(Ui_SceneCard, Card):
+class SceneCard(Ui_SceneCard, Card, EventListener):
     cursorEntered = pyqtSignal()
 
     def __init__(self, scene: Scene, novel: Novel, parent=None):
@@ -259,7 +262,7 @@ class SceneCard(Ui_SceneCard, Card):
         self.textTitle.setAlignment(Qt.AlignCenter)
 
         self.btnPov.clicked.connect(self.select)
-        self.btnComments.clicked.connect(self.select)
+        self.btnStage.clicked.connect(self.select)
 
         if scene.pov:
             self.btnPov.setIcon(QIcon(avatars.pixmap(scene.pov)))
@@ -282,21 +285,27 @@ class SceneCard(Ui_SceneCard, Card):
             self.lblBeatEmoji.clear()
             self.lblBeatEmoji.setHidden(True)
 
-        if any([x.major for x in scene.comments]):
-            self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#fb8b24'))
-        else:
-            self.btnComments.setHidden(True)
+        # if any([x.major for x in scene.comments]):
+        #     self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#fb8b24'))
+        # else:
+        #     self.btnComments.setHidden(True)
 
-        if self.scene.type == SceneType.ACTION:
-            self.lblType.setPixmap(
-                IconRegistry.action_scene_icon(self.scene.outcome_resolution(), self.scene.outcome_trade_off()).pixmap(
-                    QSize(24, 24, )))
-        elif self.scene.type == SceneType.REACTION:
-            self.lblType.setPixmap(IconRegistry.reaction_scene_icon().pixmap(QSize(24, 24, )))
+        if self.scene.type:
+            self.lblType.setPixmap(IconRegistry.scene_type_icon(self.scene).pixmap(QSize(24, 24, )))
         else:
             self.lblType.clear()
 
+        self._stageOk: bool = False
+        self._updateStage()
+
         self._setStyleSheet()
+
+        event_dispatcher.register(self, ActiveSceneStageChanged)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, ActiveSceneStageChanged):
+            self._updateStage()
 
     @overrides
     def mimeType(self) -> str:
@@ -306,11 +315,15 @@ class SceneCard(Ui_SceneCard, Card):
     def enterEvent(self, event: QEvent) -> None:
         super(SceneCard, self).enterEvent(event)
         self.wdgCharacters.setEnabled(True)
+        # if not self._stageOk:
+        #     self.btnStage.setVisible(True)
         self.cursorEntered.emit()
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         self.wdgCharacters.setEnabled(False)
+        # if not self._stageOk:
+        #     self.btnStage.setHidden(True)
 
     @overrides
     def _borderSize(self, selected: bool = False) -> int:
@@ -323,6 +336,23 @@ class SceneCard(Ui_SceneCard, Card):
         if self.scene.beat(self.novel):
             return '#6b7d7d' if selected else PIVOTAL_COLOR
         return super(SceneCard, self)._borderColor(selected)
+
+    def _updateStage(self):
+        self._stageOk = False
+        active_stage = self.novel.active_stage
+        if self.scene.stage and active_stage:
+            active_stage_index = self.novel.stages.index(active_stage)
+            scene_stage_index = self.novel.stages.index(self.scene.stage)
+
+            if scene_stage_index >= active_stage_index:
+                self._stageOk = True
+                self.btnStage.setIcon(IconRegistry.ok_icon())
+            # else:
+            #     self.btnStage.setIcon(IconRegistry.progress_check_icon())
+        # else:
+        #     self.btnStage.setIcon(IconRegistry.progress_check_icon())
+
+        self.btnStage.setVisible(self._stageOk)
 
 
 class CardsView(QFrame):

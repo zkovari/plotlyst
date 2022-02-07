@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneSta
 from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
-    SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle
+    SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -475,6 +475,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesModel.setHighlightedStage(stage)
             self.novel.prefs.active_stage_id = stage.id
             self.repo.update_novel(self.novel)
+            emit_event(ActiveSceneStageChanged(self, stage))
 
         if self.stagesModel:
             self.stagesModel.modelReset.emit()
@@ -517,6 +518,9 @@ class ScenesOutlineView(AbstractNovelView):
         for stage in self.novel.stages:
             menu.addAction(stage.text, partial(change_stage, stage))
         self.ui.btnStageSelector.setMenu(menu)
+        if not self.novel.prefs.active_stage_id:
+            self.novel.prefs.active_stage_id = self.stagesProgress.stage().id
+            self.repo.update_novel(self.novel)
         self.ui.btnStageSelector.setText(self.stagesProgress.stage().text)
         self.stagesModel.setHighlightedStage(self.stagesProgress.stage())
 
