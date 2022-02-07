@@ -21,7 +21,7 @@ from abc import abstractmethod
 from typing import Union, List, Iterable, Set
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QMouseEvent
 from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
 from overrides import overrides
@@ -37,9 +37,15 @@ from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 
 
 class Label(QFrame):
+    clicked = pyqtSignal()
+
     def __init__(self, parent=None):
         super(Label, self).__init__(parent)
         hbox(self, 0, 2)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self.clicked.emit()
 
 
 class LabelsWidget(QWidget):
