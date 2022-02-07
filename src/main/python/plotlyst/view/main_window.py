@@ -190,7 +190,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _toggle_manuscript_focus(self, toggled: bool):
         if toggled:
             editor: DocumentTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
-            self._sentenceHighlighter = SentenceHighlighter(editor.textEditor)
+            self._sentenceHighlighter = SentenceHighlighter(editor.textEdit)
         elif self._sentenceHighlighter is not None:
             self._sentenceHighlighter.deleteLater()
             self._sentenceHighlighter = None

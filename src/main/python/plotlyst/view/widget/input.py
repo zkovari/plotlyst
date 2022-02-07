@@ -500,7 +500,7 @@ class DocumentTextEditor(RichTextEditor):
     def __printHtml(self, printer: QPrinter):
         richtext = DocumentTextEditor()  # create a new instance without the highlighters associated to it
         richtext.setText(self.textEdit.toHtml())
-        richtext.textEditor.print(printer)
+        richtext.textEdit.print(printer)
 
 
 class RotatedButtonOrientation(Enum):
