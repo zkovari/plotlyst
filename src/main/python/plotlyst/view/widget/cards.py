@@ -390,7 +390,7 @@ class CardsView(QFrame):
         self.setLayout(self._layout)
         self.setAcceptDrops(True)
         self._selected: Optional[Card] = None
-        self._cardsWidth: int = 125
+        self._cardsWidth: int = 135
         self._cardsRatio = CardSizeRatio.RATIO_3_4
 
     @overrides
