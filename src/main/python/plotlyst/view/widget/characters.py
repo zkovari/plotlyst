@@ -40,7 +40,7 @@ from src.main.python.plotlyst.model.distribution import CharactersScenesDistribu
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter, increase_font, gc, popup, DisabledClickEventFilter
+    OpacityEventFilter, increase_font, gc, popup, DisabledClickEventFilter, InstantTooltipEventFilter
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
@@ -282,11 +282,23 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.repo = RepositoryPersistenceManager.instance()
 
         self.btnCharacter.setIcon(IconRegistry.conflict_character_icon())
+        self.btnCharacter.setToolTip('<b style="color:#c1666b">Character</b>')
+        self.btnCharacter.installEventFilter(InstantTooltipEventFilter(parent=self.btnCharacter))
         self.btnSociety.setIcon(IconRegistry.conflict_society_icon())
+        self.btnSociety.setToolTip('<b style="color:#69306d">Society</b>')
+        self.btnSociety.installEventFilter(InstantTooltipEventFilter(parent=self.btnSociety))
         self.btnNature.setIcon(IconRegistry.conflict_nature_icon())
+        self.btnNature.setToolTip('<b style="color:#157a6e">Nature</b>')
+        self.btnNature.installEventFilter(InstantTooltipEventFilter(parent=self.btnNature))
         self.btnTechnology.setIcon(IconRegistry.conflict_technology_icon())
+        self.btnTechnology.setToolTip('<b style="color:#4a5859">Technology</b>')
+        self.btnTechnology.installEventFilter(InstantTooltipEventFilter(parent=self.btnTechnology))
         self.btnSupernatural.setIcon(IconRegistry.conflict_supernatural_icon())
+        self.btnSupernatural.setToolTip('<b style="color:#ac7b84">Supernatural</b>')
+        self.btnSupernatural.installEventFilter(InstantTooltipEventFilter(parent=self.btnSupernatural))
         self.btnSelf.setIcon(IconRegistry.conflict_self_icon())
+        self.btnSelf.setToolTip('<b style="color:#94b0da">Self</b>')
+        self.btnSelf.installEventFilter(InstantTooltipEventFilter(parent=self.btnSelf))
 
         self._model = SceneConflictsModel(self.novel, self.scene, self.agenda)
         self._model.setCheckable(True, SceneConflictsModel.ColName)
@@ -325,31 +337,31 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         lbl_prefix = 'Character vs.'
         self.cbCharacter.setVisible(self.btnCharacter.isChecked())
         if self.btnCharacter.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} Character')
+            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#c1666b">Character</b>')
             self._type = ConflictType.CHARACTER
         elif self.btnSociety.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} Society')
+            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#69306d">Society</b>')
             self._type = ConflictType.SOCIETY
         elif self.btnNature.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} Nature')
+            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#157a6e">Nature</b>')
             self._type = ConflictType.NATURE
         elif self.btnTechnology.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} Technology')
+            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#4a5859">Technology</b>')
             self._type = ConflictType.TECHNOLOGY
         elif self.btnSupernatural.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} Supernatural')
+            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#ac7b84">Supernatural</b>')
             self._type = ConflictType.SUPERNATURAL
         elif self.btnSelf.isChecked():
-            self.lblConflictType.setText(f'{lbl_prefix} Self')
+            self.lblConflictType.setText(f'{lbl_prefix} <b style="color:#94b0da">Self</b>')
             self._type = ConflictType.SELF
 
     def _keyphrase_edited(self, text: str):
         self.btnAddNew.setEnabled(len(text) > 0)
 
     def _add_new(self):
-        if not self.scene.pov:
-            return emit_critical('Select POV character first')
-        conflict = Conflict(self.lineKey.text(), self._type, character_id=self.scene.pov.id)
+        if not self.agenda.character_id:
+            return emit_critical('Select agenda or POV character first')
+        conflict = Conflict(self.lineKey.text(), self._type, character_id=self.agenda.character_id)
         if self._type == ConflictType.CHARACTER:
             conflict.conflicting_character_id = self.cbCharacter.currentData().id
 
