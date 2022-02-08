@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from abc import abstractmethod
+from enum import Enum
 from typing import Optional, List
 
 import emoji
@@ -373,6 +374,11 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
         self.btnStage.setVisible(self._stageOk)
 
 
+class CardSizeRatio(Enum):
+    RATIO_2_3 = 0
+    RATIO_3_4 = 1
+
+
 class CardsView(QFrame):
     swapped = pyqtSignal(object, object)
     selectionCleared = pyqtSignal()
@@ -385,6 +391,7 @@ class CardsView(QFrame):
         self.setAcceptDrops(True)
         self._selected: Optional[Card] = None
         self._cardsWidth: int = 125
+        self._cardsRatio = CardSizeRatio.RATIO_3_4
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
@@ -423,11 +430,22 @@ class CardsView(QFrame):
 
     def setCardsWidth(self, value: int):
         self._cardsWidth = value
+        self._resizeAllCards()
+
+    def setCardsSizeRatio(self, ratio: CardSizeRatio):
+        self._cardsRatio = ratio
+        self._resizeAllCards()
+
+    def _resizeAllCards(self):
         for card in self._cards:
             self._resizeCard(card)
 
     def _resizeCard(self, card: Card):
-        card.setFixedSize(self._cardsWidth, int(self._cardsWidth * 1.3))
+        if self._cardsRatio == CardSizeRatio.RATIO_3_4:
+            height = self._cardsWidth * 1.3
+        else:
+            height = self._cardsWidth / 2 * 3
+        card.setFixedSize(self._cardsWidth, int(height))
 
     def _cardSelected(self, card: Card):
         self._selected = card

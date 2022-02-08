@@ -36,7 +36,7 @@ from src.main.python.plotlyst.view.common import ask_confirmation, busy, link_bu
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.cards import CharacterCard
+from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
 from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
 
 
@@ -104,6 +104,8 @@ class CharactersView(AbstractNovelView):
 
         self.selected_card: Optional[CharacterCard] = None
         self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
+        self.ui.cards.setCardsSizeRatio(CardSizeRatio.RATIO_2_3)
+        self.ui.cards.setCardsWidth(140)
         self._update_cards()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
