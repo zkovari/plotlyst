@@ -488,6 +488,13 @@ class CharacterLinkWidget(QWidget):
         self.characterSelected.emit(character)
 
 
+class CharacterGoalsEditor(QWidget):
+    def __init__(self, novel: Novel, character: Character, parent=None):
+        super(CharacterGoalsEditor, self).__init__(parent)
+        self.novel = novel
+        self.character = character
+
+
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
     edited = pyqtSignal()
     deleteRequested = pyqtSignal(object)
