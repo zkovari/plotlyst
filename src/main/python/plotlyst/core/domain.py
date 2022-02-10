@@ -139,11 +139,11 @@ class Character:
                     return SelectionItem(item.text, item.type, 'fa5s.chess-queen', item.icon_color)
                 return item
 
-    def goals(self) -> List[str]:
-        for value in self.template_values:
-            if value.id == goal_field.id:
-                return value.value
-        return []
+    # def goals(self) -> List[str]:
+    #     for value in self.template_values:
+    #         if value.id == goal_field.id:
+    #             return value.value
+    #     return []
 
     def gender(self) -> int:
         for value in self.template_values:

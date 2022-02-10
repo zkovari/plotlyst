@@ -116,7 +116,7 @@ class CharacterInfo:
     backstory: List[BackstoryEvent] = field(default_factory=list)
     goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional[Document] = None
-    journals: List['Document'] = field(default_factory=list)
+    journals: List[Document] = field(default_factory=list)
 
 
 @dataclass
