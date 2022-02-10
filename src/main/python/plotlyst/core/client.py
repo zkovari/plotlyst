@@ -33,10 +33,10 @@ from dataclasses_json import dataclass_json, Undefined, config
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
     SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
-    Conflict, BackstoryEvent, Comment, SceneGoal, Document, default_documents, DocumentType, Causality, \
+    Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
     Location, default_location_profiles, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
-    default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin, NovelPreferences
+    default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -114,6 +114,7 @@ class CharacterInfo:
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
+    goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional[Document] = None
     journals: List['Document'] = field(default_factory=list)
 
@@ -188,7 +189,7 @@ class NovelInfo:
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
-    scene_goals: List[SceneGoal] = field(default_factory=list)
+    goals: List[Goal] = field(default_factory=list)
     tags: List[Tag] = field(default_factory=default_general_tags)
     tag_types: List[TagType] = field(default_factory=default_tag_types, metadata=config(exclude=exclude_if_empty))
     documents: List[Document] = field(default_factory=default_documents)
@@ -385,7 +386,8 @@ class JsonClient:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
                 character = Character(name=info.name, id=info.id, template_values=info.template_values,
-                                      backstory=info.backstory, document=info.document, journals=info.journals)
+                                      backstory=info.backstory, goals=info.goals, document=info.document,
+                                      journals=info.journals)
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -406,9 +408,9 @@ class JsonClient:
             conflicts.append(conflict)
             conflict_ids[str(conflict.id)] = conflict
 
-        goals_index = {}
-        for goal in novel_info.scene_goals:
-            goals_index[goal.text] = goal
+        # goals_index = {}
+        # for goal in novel_info.scene_goals:
+        #     goals_index[goal.text] = goal
 
         if not novel_info.story_structures:
             novel_info.story_structures = [three_act_structure]
@@ -498,7 +500,7 @@ class JsonClient:
                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                      location_profiles=novel_info.location_profiles,
-                     conflicts=conflicts, scene_goals=novel_info.scene_goals, tags=tags_dict,
+                     conflicts=conflicts, goals=novel_info.goals, tags=tags_dict,
                      documents=novel_info.documents, logline=novel_info.logline, synopsis=novel_info.synopsis,
                      prefs=novel_info.prefs)
 
@@ -524,7 +526,7 @@ class JsonClient:
                                character_profiles=novel.character_profiles,
                                location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,
-                               scene_goals=novel.scene_goals,
+                               goals=novel.goals,
                                tags=[item for sublist in novel.tags.values() for item in sublist if not item.builtin],
                                tag_types=list(novel.tags.keys()),
                                documents=novel.documents,
@@ -535,7 +537,8 @@ class JsonClient:
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id,
-                                  backstory=char.backstory, document=char.document, journals=char.journals)
+                                  backstory=char.backstory, goals=char.goals, document=char.document,
+                                  journals=char.journals)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
