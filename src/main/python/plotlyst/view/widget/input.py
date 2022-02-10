@@ -26,14 +26,11 @@ from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
 from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
     QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData
-from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
-    QApplication, QToolButton, QFileDialog, \
-    QLineEdit
+    QApplication, QToolButton, QLineEdit
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qttextedit import EnhancedTextEdit, RichTextEditor
-from slugify import slugify
 
 from src.main.python.plotlyst.core.domain import TextStatistics
 from src.main.python.plotlyst.core.text import wc
@@ -355,16 +352,7 @@ class DocumentTextEditor(RichTextEditor):
         # self.cbHeading.setCurrentText('Normal')
         # self.cbHeading.currentIndexChanged.connect(self._setHeading)
         #
-        # self.actionExportToPdf = QAction(IconRegistry.from_name('mdi.file-export-outline'), '')
-        # self.actionExportToPdf.triggered.connect(self._exportPdf)
-        #
-        # self.actionPrint = QAction(IconRegistry.from_name('mdi.printer'), '')
-        # self.actionPrint.triggered.connect(self._print)
-        #
         # self.toolbar.addWidget(self.cbHeading)
-        # self.toolbar.addWidget(spacer_widget())
-        # self.toolbar.addAction(self.actionExportToPdf)
-        # self.toolbar.addAction(self.actionPrint)
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
@@ -480,28 +468,6 @@ class DocumentTextEditor(RichTextEditor):
         menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
 
         menu.popup(self.textEdit.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
-
-    def _exportPdf(self):
-        title = slugify(self.textTitle.toPlainText(), separator='_')
-        fn, _ = QFileDialog.getSaveFileName(self, 'Export PDF', f'{title}.pdf',
-                                            'PDF files (*.pdf);;All Files()')
-        if fn:
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOutputFormat(QPrinter.PdfFormat)
-            printer.setOutputFileName(fn)
-            printer.setDocName(self.textTitle.toPlainText())
-            self.__printHtml(printer)
-
-    def _print(self):
-        printer = QPrinter(QPrinter.HighResolution)
-        dialog = QPrintDialog(printer, self)
-        if dialog.exec_() == QPrintDialog.Accepted:
-            self.__printHtml(printer)
-
-    def __printHtml(self, printer: QPrinter):
-        richtext = DocumentTextEditor()  # create a new instance without the highlighters associated to it
-        richtext.setText(self.textEdit.toHtml())
-        richtext.textEdit.print(printer)
 
 
 class RotatedButtonOrientation(Enum):
