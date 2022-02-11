@@ -34,6 +34,9 @@
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
      </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scene ends with a &lt;span style=&quot; font-weight:600; color:#f4442e;&quot;&gt;disaster&lt;/span&gt;&lt;span style=&quot; color:#000000;&quot;&gt;, so the agenda character's scene goal remains unachieved&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -56,6 +59,9 @@
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
      </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scene ends with a &lt;span style=&quot; font-weight:600; color:#6ba368;&quot;&gt;resolution&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;,&lt;/span&gt; so the agenda character's scene goal is achieved&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -77,6 +83,9 @@
     <widget class="QToolButton" name="btnTradeOff">
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scene ends with a bittersweet &lt;span style=&quot; font-weight:600; color:#832161;&quot;&gt;trade-off&lt;/span&gt;&lt;span style=&quot; color:#000000;&quot;&gt;, so the agenda character's scene goal is achieved but not without a price&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="text">
       <string/>
