@@ -159,6 +159,7 @@ class DocumentsTreeModel(TreeItemModel, ActionBasedTreeModel):
         node.parent = None
         self.repo.update_novel(self.novel)
         self._removeDoc(doc)
+        self._action_index = None
 
         self.modelReset.emit()
 
