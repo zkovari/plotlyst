@@ -43,8 +43,7 @@ from src.main.python.plotlyst.model.distribution import CharactersScenesDistribu
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
     OpacityEventFilter, increase_font, gc, popup, DisabledClickEventFilter, InstantTooltipEventFilter, \
-    VisibilityToggleEventFilter, hmax, line
-
+    VisibilityToggleEventFilter, hmax, line, popup_menu
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
@@ -507,35 +506,66 @@ class CharacterLinkWidget(QWidget):
 
 
 class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
-    goalAdded = pyqtSignal()
-
-    def __init__(self, novel: Novel, character: Character, goal: CharacterGoal, parent=None):
+    def __init__(self, novel: Novel, character: Character, goal: CharacterGoal,
+                 parent_goal: Optional[CharacterGoal] = None, parent=None):
         super(CharacterGoalWidget, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
         self.character = character
         self.char_goal = goal
+        self.parent_goal = parent_goal
         self.goal = self.char_goal.goal(self.novel)
+
+        self._filtersFrozen: bool = False
 
         self.lineName.setText(self.goal.text)
         self.lineName.textEdited.connect(self._textEdited)
         if self.goal.icon:
             self.btnGoalIcon.setIcon(IconRegistry.from_name(self.goal.icon, self.goal.icon_color))
+            self._styleIconButton()
         else:
             self.btnGoalIcon.setIcon(IconRegistry.icons_icon('grey'))
+            self._styleIconButton(border=True)
         self.btnGoalIcon.clicked.connect(self._selectIcon)
+        self.btnContext.setIcon(IconRegistry.dots_icon('grey', vertical=True))
+        menu = QMenu(self)
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self._delete)
+        menu.aboutToShow.connect(self._aboutToShowContextMenu)
+        menu.aboutToHide.connect(self._aboutToHideContextMenu)
+        popup_menu(self.btnContext, menu)
 
         self.btnAddChildGoal.setIcon(IconRegistry.plus_icon('grey'))
-        self.btnAddChildGoal.installEventFilter(OpacityEventFilter(parent=self.btnAddChildGoal))
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnAddChildGoal, self))
-        self.wdgChildren.installEventFilter(VisibilityToggleEventFilter(self.btnAddChildGoal, self, reverse=True))
+        self.btnAddChildGoal.installEventFilter(OpacityEventFilter(leaveOpacity=0.65, parent=self.btnAddChildGoal))
+        self.btnContext.installEventFilter(OpacityEventFilter(leaveOpacity=0.65, parent=self.btnContext))
+        filter = VisibilityToggleEventFilter(self.btnAddChildGoal, self)
+        menu.aboutToShow.connect(filter.freeze)
+        menu.aboutToHide.connect(filter.resume)
+        self.wdgTop.installEventFilter(filter)
+        filter = VisibilityToggleEventFilter(self.btnContext, self)
+        menu.aboutToShow.connect(filter.freeze)
+        menu.aboutToHide.connect(filter.resume)
+        self.wdgTop.installEventFilter(filter)
+        self.wdgTop.installEventFilter(self)
         self.btnAddChildGoal.clicked.connect(self._addChild)
 
         for child in self.char_goal.children:
-            wdg = CharacterGoalWidget(self.novel, self.character, child, parent=self)
+            wdg = CharacterGoalWidget(self.novel, self.character, child, self.char_goal, parent=self)
             self.wdgChildren.layout().addWidget(wdg)
 
+        self.repo = RepositoryPersistenceManager.instance()
+
         self.lineName.setFocus()
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if self._filtersFrozen:
+            return super().eventFilter(watched, event)
+        if event.type() == QEvent.Enter:
+            self.wdgTop.setStyleSheet('background-color: #D8D5D5;')
+        elif event.type() == QEvent.Leave:
+            self.wdgTop.setStyleSheet('background-color: rgba(0,0,0,0);')
+
+        return super().eventFilter(watched, event)
 
     def _textEdited(self, text: str):
         self.goal.text = text
@@ -546,6 +576,7 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
             self.goal.icon = result[0]
             self.goal.icon_color = result[1].name()
             self.btnGoalIcon.setIcon(IconRegistry.from_name(self.goal.icon, self.goal.icon_color))
+            self._styleIconButton()
 
     def _addChild(self):
         goal = Goal('')
@@ -554,10 +585,45 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         child_char_goal = CharacterGoal(goal.id)
         self.char_goal.children.append(child_char_goal)
 
-        wdg = CharacterGoalWidget(self.novel, self.character, child_char_goal, parent=self)
+        wdg = CharacterGoalWidget(self.novel, self.character, child_char_goal, parent_goal=self.char_goal, parent=self)
         self.wdgChildren.layout().addWidget(wdg)
+        wdg.lineName.setFocus()
 
-        self.goalAdded.emit()
+        self.repo.update_novel(self.novel)
+
+    def _aboutToShowContextMenu(self):
+        self._filtersFrozen = True
+
+    def _aboutToHideContextMenu(self):
+        self._filtersFrozen = False
+        self.wdgTop.setStyleSheet('background-color: rgba(0,0,0,0);')
+
+    def _delete(self):
+        if self.parent_goal:
+            self.parent_goal.children.remove(self.char_goal)
+        else:
+            self.character.goals.remove(self.char_goal)
+
+        anim = qtanim.fade_out(self)
+        anim.finished.connect(self.__destroy)
+
+    def __destroy(self):
+        self.parent().layout().removeWidget(self)
+        gc(self)
+
+    def _styleIconButton(self, border: bool = False):
+        border_str = '1px dashed gray' if border else '0px'
+        self.btnGoalIcon.setStyleSheet(f'''
+            QToolButton {{
+                border: {border_str};
+                border-radius: 4px;
+                color: grey;
+            }}
+
+            QToolButton:pressed {{
+                border: 1px solid grey;
+            }}
+        ''')
 
 
 class CharacterGoalsEditor(QWidget):
@@ -591,7 +657,6 @@ class CharacterGoalsEditor(QWidget):
         self.character.goals.append(char_goal)
 
         wdg = CharacterGoalWidget(self.novel, self.character, char_goal, parent=self)
-        wdg.goalAdded.connect(lambda: self.repo.update_novel(self.novel))
         self.layout().insertWidget(len(self.character.goals) - 1, wdg)
         self._styleAddButton()
 

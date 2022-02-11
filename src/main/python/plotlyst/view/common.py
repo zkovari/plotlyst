@@ -263,15 +263,25 @@ class VisibilityToggleEventFilter(QObject):
         self.target = target
         self.reverse = reverse
         self.target.setHidden(True)
+        self._frozen: bool = False
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if self._frozen:
+            return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
         if event.type() == QEvent.Enter:
             self.target.setVisible(True if not self.reverse else False)
         elif event.type() == QEvent.Leave:
             self.target.setHidden(True if not self.reverse else False)
 
         return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
+
+    def freeze(self):
+        self._frozen = True
+
+    def resume(self):
+        self._frozen = False
+        self.target.setHidden(True if not self.reverse else False)
 
 
 class DisabledClickEventFilter(QObject):
@@ -351,6 +361,10 @@ def popup(btn: Union[QPushButton, QToolButton], popup: QWidget, hideMenuIcon: bo
     action = QWidgetAction(menu)
     action.setDefaultWidget(popup)
     menu.addAction(action)
+    popup_menu(btn, menu, hideMenuIcon)
+
+
+def popup_menu(btn: Union[QPushButton, QToolButton], menu: QMenu, hideMenuIcon: bool = True):
     if isinstance(btn, QToolButton):
         btn.setPopupMode(QToolButton.InstantPopup)
     if hideMenuIcon:

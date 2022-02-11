@@ -109,6 +109,14 @@ QToolButton:disabled[base=true] {
     opacity: 0.65;
 }
 
+QToolButton[transparent=true] {
+    border: 0px;
+    border-radius: 4px;
+}
+
+QToolButton:pressed[transparent=true] {
+    border: 1px solid grey
+}
 
 QDockWidget::float-button {
     subcontrol-position: top left;
