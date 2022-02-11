@@ -258,11 +258,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.novel_view.activate()
         elif self.btnCharacters.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageCharacters)
-            title = self.characters_view.title
+            title = self.characters_view.title if self.characters_view.can_show_title() else None
             self.characters_view.activate()
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
-            title = self.scenes_outline_view.title
+            title = self.scenes_outline_view.title if self.scenes_outline_view.can_show_title() else None
             self.scenes_outline_view.activate()
         elif self.btnLocations.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageLocations)

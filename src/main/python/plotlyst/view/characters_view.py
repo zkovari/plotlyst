@@ -124,6 +124,10 @@ class CharactersView(AbstractNovelView):
 
         self._update_cards()
 
+    @overrides
+    def can_show_title(self) -> bool:
+        return self.ui.stackedWidget.currentWidget() is self.ui.pageView
+
     def _update_cards(self):
         self.selected_card = None
         self.ui.cards.clear()

@@ -227,6 +227,10 @@ class ScenesOutlineView(AbstractNovelView):
 
         self._update_cards()
 
+    @overrides
+    def can_show_title(self) -> bool:
+        return self.ui.stackedWidget.currentWidget() is self.ui.pageView
+
     def _on_scene_selected(self):
         if self.ui.btnTimelineView.isChecked():
             indexes = self.timeline_view.ui.tblScenes.selectedIndexes()
