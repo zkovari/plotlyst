@@ -43,9 +43,6 @@ class ScenesViewDelegate(QStyledItemDelegate):
         if index.column() == ScenesTableModel.ColCharacters:
             scene: Scene = index.data(ScenesTableModel.SceneRole)
             x = 3
-            if scene.pov:
-                self._drawAvatar(painter, option, x, scene.pov)
-            x += 27
             for char in scene.characters:
                 self._drawAvatar(painter, option, x, char)
                 x += 27
