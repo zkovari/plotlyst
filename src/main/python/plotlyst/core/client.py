@@ -23,7 +23,7 @@ import pathlib
 import uuid
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any, Dict, Set
 
 from PyQt5.QtCore import QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QImage, QImageReader
@@ -408,10 +408,6 @@ class JsonClient:
             conflicts.append(conflict)
             conflict_ids[str(conflict.id)] = conflict
 
-        # goals_index = {}
-        # for goal in novel_info.scene_goals:
-        #     goals_index[goal.text] = goal
-
         if not novel_info.story_structures:
             novel_info.story_structures = [three_act_structure]
 
@@ -439,11 +435,6 @@ class JsonClient:
                 for char_id in info.characters:
                     if str(char_id) in characters_ids.keys():
                         scene_characters.append(characters_ids[str(char_id)])
-
-                # scene_conflicts = []
-                # for conflict_id in info.conflicts:
-                #     if str(conflict_id) in conflict_ids.keys():
-                #         scene_conflicts.append(conflict_ids[str(conflict_id)])
 
                 # scene_goals = []
                 # for goal_text in info.goals:
@@ -494,13 +485,17 @@ class JsonClient:
             if t not in tags_dict[tag_types[0]]:
                 tags_dict[tag_types[0]].append(t)
 
+        goal_ids = set()
+        for char in characters:
+            self.__collect_goal_ids(goal_ids, char.goals)
+
         return Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
                      import_origin=project_novel_info.import_origin,
                      plots=novel_info.plots, characters=characters,
                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                      location_profiles=novel_info.location_profiles,
-                     conflicts=conflicts, goals=novel_info.goals, tags=tags_dict,
+                     conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
                      documents=novel_info.documents, logline=novel_info.logline, synopsis=novel_info.synopsis,
                      prefs=novel_info.prefs)
 
@@ -562,6 +557,11 @@ class JsonClient:
     @staticmethod
     def __id_or_none(item):
         return item.id if item else None
+
+    def __collect_goal_ids(self, goal_ids: Set[str], goals: List[CharacterGoal]):
+        for goal in goals:
+            goal_ids.add(str(goal.goal_id))
+            self.__collect_goal_ids(goal_ids, goal.children)
 
     def __get_scene_builder_element_info(self, el: SceneBuilderElement) -> SceneBuilderElementInfo:
         info = SceneBuilderElementInfo(type=el.type, text=el.text, character=el.character.id if el.character else None,
