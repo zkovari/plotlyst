@@ -258,17 +258,18 @@ class OpacityEventFilter(QObject):
 
 class VisibilityToggleEventFilter(QObject):
 
-    def __init__(self, target: QWidget, parent: QWidget = None):
+    def __init__(self, target: QWidget, parent: QWidget = None, reverse: bool = False):
         super(VisibilityToggleEventFilter, self).__init__(parent)
         self.target = target
+        self.reverse = reverse
         self.target.setHidden(True)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Enter:
-            self.target.setVisible(True)
+            self.target.setVisible(True if not self.reverse else False)
         elif event.type() == QEvent.Leave:
-            self.target.setHidden(True)
+            self.target.setHidden(True if not self.reverse else False)
 
         return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
 
@@ -359,3 +360,8 @@ def popup(btn: Union[QPushButton, QToolButton], popup: QWidget, hideMenuIcon: bo
 
 def scroll_to_top(scroll_area: QAbstractScrollArea):
     scroll_area.verticalScrollBar().setValue(0)
+
+
+def hmax(widget: QWidget):
+    vpol = widget.sizePolicy().verticalPolicy()
+    widget.setSizePolicy(QSizePolicy.Maximum, vpol)

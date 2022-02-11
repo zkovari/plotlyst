@@ -29,10 +29,12 @@ from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, Q
     QHeaderView
 from fbs_runtime import platform
 from overrides import overrides
+from qthandy import vspacer
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
-    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference
+    VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
+    CharacterGoal, Goal
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -40,10 +42,12 @@ from src.main.python.plotlyst.model.distribution import CharactersScenesDistribu
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter, increase_font, gc, popup, DisabledClickEventFilter
+    OpacityEventFilter, increase_font, gc, popup, DisabledClickEventFilter, VisibilityToggleEventFilter, hmax, line
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
+from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -488,11 +492,113 @@ class CharacterLinkWidget(QWidget):
         self.characterSelected.emit(character)
 
 
+class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
+    goalAdded = pyqtSignal()
+
+    def __init__(self, novel: Novel, character: Character, goal: CharacterGoal, parent=None):
+        super(CharacterGoalWidget, self).__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+        self.character = character
+        self.char_goal = goal
+        self.goal = self.char_goal.goal(self.novel)
+
+        self.lineName.setText(self.goal.text)
+        self.lineName.textEdited.connect(self._textEdited)
+        if self.goal.icon:
+            self.btnGoalIcon.setIcon(IconRegistry.from_name(self.goal.icon, self.goal.icon_color))
+        else:
+            self.btnGoalIcon.setIcon(IconRegistry.icons_icon('grey'))
+        self.btnGoalIcon.clicked.connect(self._selectIcon)
+
+        self.btnAddChildGoal.setIcon(IconRegistry.plus_icon('grey'))
+        self.btnAddChildGoal.installEventFilter(OpacityEventFilter(parent=self.btnAddChildGoal))
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAddChildGoal, self))
+        self.wdgChildren.installEventFilter(VisibilityToggleEventFilter(self.btnAddChildGoal, self, reverse=True))
+        self.btnAddChildGoal.clicked.connect(self._addChild)
+
+        for child in self.char_goal.children:
+            wdg = CharacterGoalWidget(self.novel, self.character, child, parent=self)
+            self.wdgChildren.layout().addWidget(wdg)
+
+        self.lineName.setFocus()
+
+    def _textEdited(self, text: str):
+        self.goal.text = text
+
+    def _selectIcon(self):
+        result = IconSelectorDialog(self).display()
+        if result:
+            self.goal.icon = result[0]
+            self.goal.icon_color = result[1].name()
+            self.btnGoalIcon.setIcon(IconRegistry.from_name(self.goal.icon, self.goal.icon_color))
+
+    def _addChild(self):
+        goal = Goal('')
+        self.novel.goals.append(goal)
+
+        child_char_goal = CharacterGoal(goal.id)
+        self.char_goal.children.append(child_char_goal)
+
+        wdg = CharacterGoalWidget(self.novel, self.character, child_char_goal, parent=self)
+        self.wdgChildren.layout().addWidget(wdg)
+
+        self.goalAdded.emit()
+
+
 class CharacterGoalsEditor(QWidget):
     def __init__(self, novel: Novel, character: Character, parent=None):
         super(CharacterGoalsEditor, self).__init__(parent)
         self.novel = novel
         self.character = character
+        self.repo = RepositoryPersistenceManager.instance()
+
+        vbox(self)
+
+        for goal in self.character.goals:
+            wdg = CharacterGoalWidget(self.novel, self.character, goal, parent=self)
+            self.layout().addWidget(wdg)
+        self.layout().addWidget(line())
+
+        self.btnAdd = QPushButton('Add new main story goal', self)
+        self.btnAdd.setCursor(Qt.PointingHandCursor)
+        self._styleAddButton()
+        self.btnAdd.clicked.connect(self._newGoal)
+        hmax(self.btnAdd)
+        self.layout().addWidget(self.btnAdd)
+        self.layout().addWidget(vspacer())
+
+    def _newGoal(self):
+        goal = Goal('')
+        self.novel.goals.append(goal)
+        self.repo.update_novel(self.novel)
+
+        char_goal = CharacterGoal(goal.id)
+        self.character.goals.append(char_goal)
+
+        wdg = CharacterGoalWidget(self.novel, self.character, char_goal, parent=self)
+        wdg.goalAdded.connect(lambda: self.repo.update_novel(self.novel))
+        self.layout().insertWidget(len(self.character.goals) - 1, wdg)
+        self._styleAddButton()
+
+    def _styleAddButton(self):
+        if self.character.goals:
+            self.btnAdd.setProperty('base', False)
+            self.btnAdd.setProperty('positive', False)
+            icon_color = 'grey'
+            self.btnAdd.setStyleSheet('''
+                QPushButton {
+                    border: 1px dashed grey;
+                    border-radius: 6px;
+                    color: grey;
+                    opacity: 0.7;
+                }
+            ''')
+        else:
+            self.btnAdd.setProperty('base', True)
+            self.btnAdd.setProperty('positive', True)
+            icon_color = 'white'
+        self.btnAdd.setIcon(IconRegistry.plus_icon(icon_color))
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):

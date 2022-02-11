@@ -36,8 +36,22 @@
      </property>
      <item>
       <widget class="QToolButton" name="btnGoalIcon">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="toolTip">
+        <string>Click to select a custom icon for this goal</string>
+       </property>
        <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
+        <string notr="true">QToolButton {
+	border: 1px dashed grey;
+	border-radius: 4px;
+	color: grey;
+}
+
+QToolButton:pressed {
+	border: 1px solid grey;
+}</string>
        </property>
        <property name="text">
         <string/>
@@ -45,26 +59,44 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="lblGoalName">
-       <property name="text">
-        <string>TextLabel</string>
+      <widget class="QLineEdit" name="lineName">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgba(0,0,0,0);
+border: 0px;</string>
+       </property>
+       <property name="placeholderText">
+        <string>Describe goal</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="btnAddChildGoal">
+      <widget class="QPushButton" name="btnAddChildGoal">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="toolTip">
+        <string>Add a child goal which must be resolved first by the character</string>
+       </property>
        <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
+        <string notr="true">QPushButton {
+	border: 1px dashed grey;
+	border-radius: 4px;
+	color: grey;
+}
+
+QPushButton:pressed {
+	border: 1px solid grey;
+}</string>
        </property>
        <property name="text">
-        <string/>
+        <string>Add child goal</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QWidget" name="widget" native="true">
+    <widget class="QWidget" name="wdgChildren" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="spacing">
        <number>3</number>

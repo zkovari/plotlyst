@@ -107,6 +107,11 @@ class CharacterGoal:
     support: bool = True
     children: List['CharacterGoal'] = field(default_factory=list)
 
+    def goal(self, novel: 'Novel') -> Optional['Goal']:
+        for goal_ in novel.goals:
+            if goal_.id == self.goal_id:
+                return goal_
+
 
 @dataclass
 class Character:
