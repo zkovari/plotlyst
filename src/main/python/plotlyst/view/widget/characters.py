@@ -911,7 +911,9 @@ class CharacterTimelineWidget(QWidget):
             event.card.relationChanged.connect(self.refresh)
 
         self._addControlButtons(-1)
-        self.layout().addWidget(spacer_widget(vertical=True))
+        spacer = spacer_widget(vertical=True)
+        spacer.setMinimumHeight(200)
+        self.layout().addWidget(spacer)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
