@@ -17,7 +17,7 @@ REQUIREMENTS: dict = {
         'fbs[sentry]',
         'atomicwrites==1.4.0',
         'dataclasses-json==0.5.2',
-        'language-tool-python==2.6.1',
+        # 'language-tool-python==2.7.0',
         'python-slugify==5.0.2',
         'striprtf==0.0.19',
     ],
