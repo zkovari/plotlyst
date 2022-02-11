@@ -406,8 +406,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.format-header-2')
 
     @staticmethod
-    def dots_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.dots-horizontal', color)
+    def dots_icon(color: str = 'black', vertical: bool = False) -> QIcon:
+        return IconRegistry.from_name('mdi.dots-vertical' if vertical else 'mdi.dots-horizontal', color)
 
     @staticmethod
     def icons_icon(color: str = 'black') -> QIcon:

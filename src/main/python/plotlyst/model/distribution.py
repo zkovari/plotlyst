@@ -21,7 +21,7 @@ from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtGui import QIcon, QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Conflict, ConflictType, SceneGoal, Tag
+from src.main.python.plotlyst.core.domain import Conflict, ConflictType, Tag, Goal
 from src.main.python.plotlyst.model.common import DistributionModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
@@ -53,11 +53,11 @@ class GoalScenesDistributionTableModel(DistributionModel):
 
     @overrides
     def rowCount(self, parent: QModelIndex = None) -> int:
-        return len(self.novel.scene_goals)
+        return len(self.novel.goals)
 
     @overrides
     def _dataForTag(self, index: QModelIndex, role: int = Qt.DisplayRole):
-        goal: SceneGoal = self.novel.scene_goals[index.row()]
+        goal: Goal = self.novel.goals[index.row()]
 
         if role == Qt.DecorationRole and goal.icon:
             return IconRegistry.from_name(goal.icon, goal.icon_color)
@@ -66,7 +66,7 @@ class GoalScenesDistributionTableModel(DistributionModel):
 
     @overrides
     def _dataForMeta(self, index: QModelIndex, role: int = Qt.DisplayRole):
-        goal: SceneGoal = self.novel.scene_goals[index.row()]
+        goal: Goal = self.novel.goals[index.row()]
         if role == Qt.DecorationRole:
             if goal.icon:
                 return IconRegistry.from_name(goal.icon, goal.icon_color)
@@ -76,7 +76,7 @@ class GoalScenesDistributionTableModel(DistributionModel):
     @overrides
     def _match_by_row_col(self, row: int, column: int):
         for agenda in self.novel.scenes[column - 2].agendas:
-            if self.novel.scene_goals[row] in agenda.goals(self.novel):
+            if self.novel.goals[row] in agenda.goals(self.novel):
                 return True
         return False
 

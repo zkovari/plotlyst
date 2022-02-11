@@ -30,6 +30,7 @@ from src.main.python.plotlyst.view.dialog.template import customize_character_pr
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import hbox, vbox
+from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -60,6 +61,9 @@ class CharacterEditor:
         self.ui.btnNewBackstory.clicked.connect(self.ui.wdgBackstory.add)
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
+
+        self._character_goals = CharacterGoalsEditor(self.novel, self.character)
+        self.ui.tabGoals.layout().addWidget(self._character_goals)
 
         self.ui.wdgJournal.setCharacter(self.novel, self.character)
 

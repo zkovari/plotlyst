@@ -28,7 +28,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
-    SelectionItem, SceneGoal, SceneStage, SceneType, SceneStructureItem, SceneStructureAgenda
+    SelectionItem, SceneStage, SceneType, SceneStructureAgenda
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -439,41 +439,40 @@ class SceneConflictsModel(SelectionItemsModel):
                     return IconRegistry.conflict_type_icon(conflict.type)
         return super(SceneConflictsModel, self).data(index, role)
 
-
-class SceneGoalsModel(SelectionItemsModel):
-
-    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem):
-        self.novel = novel
-        self.scene_structure_item = scene_structure_item
-        super(SceneGoalsModel, self).__init__()
-        self.repo = RepositoryPersistenceManager.instance()
-
-    @overrides
-    def item(self, index: QModelIndex) -> SelectionItem:
-        return self.novel.scene_goals[index.row()]
-
-    @overrides
-    def rowCount(self, parent: QModelIndex = None) -> int:
-        return len(self.novel.scene_goals)
-
-    @overrides
-    def _newItem(self) -> QModelIndex:
-        goal = SceneGoal('')
-        row = 0
-        self.novel.scene_goals.insert(row, goal)
-        self.repo.update_novel(self.novel)
-
-        return self.index(row, 0)
-
-    @overrides
-    def remove(self, index: QModelIndex):
-        super(SceneGoalsModel, self).remove(index)
-        self.novel.scene_goals.pop(index.row())
-        self.repo.update_novel(self.novel)
-
-    @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
-        updated = super(SceneGoalsModel, self).setData(index, value, role)
-        if updated and role != Qt.CheckStateRole:
-            self.repo.update_novel(self.novel)
-        return updated
+# class SceneGoalsModel(SelectionItemsModel):
+#
+#     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem):
+#         self.novel = novel
+#         self.scene_structure_item = scene_structure_item
+#         super(SceneGoalsModel, self).__init__()
+#         self.repo = RepositoryPersistenceManager.instance()
+#
+#     @overrides
+#     def item(self, index: QModelIndex) -> SelectionItem:
+#         return self.novel.scene_goals[index.row()]
+#
+#     @overrides
+#     def rowCount(self, parent: QModelIndex = None) -> int:
+#         return len(self.novel.scene_goals)
+#
+#     @overrides
+#     def _newItem(self) -> QModelIndex:
+#         goal = SceneGoal('')
+#         row = 0
+#         self.novel.scene_goals.insert(row, goal)
+#         self.repo.update_novel(self.novel)
+#
+#         return self.index(row, 0)
+#
+#     @overrides
+#     def remove(self, index: QModelIndex):
+#         super(SceneGoalsModel, self).remove(index)
+#         self.novel.scene_goals.pop(index.row())
+#         self.repo.update_novel(self.novel)
+#
+#     @overrides
+#     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+#         updated = super(SceneGoalsModel, self).setData(index, value, role)
+#         if updated and role != Qt.CheckStateRole:
+#             self.repo.update_novel(self.novel)
+#         return updated

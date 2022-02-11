@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>186</width>
-    <height>128</height>
+    <width>139</width>
+    <height>75</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,6 +39,21 @@
        <string/>
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
        <item>
         <widget class="QToolButton" name="btnCardsWidth">
          <property name="styleSheet">

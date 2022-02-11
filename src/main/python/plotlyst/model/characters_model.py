@@ -72,9 +72,9 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
             return self._dataForSelectionItem(enneagram, role, displayText=False)
         if index.column() == self.ColMbti:
             return self._dataForSelectionItem(character.mbti(), role)
-        if index.column() == self.ColGoals:
-            if role == Qt.DisplayRole or role == self.SortRole:
-                return ', '.join(character.goals())
+        # if index.column() == self.ColGoals:
+        #     if role == Qt.DisplayRole or role == self.SortRole:
+        #         return ', '.join(character.goals())
 
     def _dataForSelectionItem(self, item: SelectionItem, role: int, displayText: bool = True, sortByText: bool = True):
         if item is None:

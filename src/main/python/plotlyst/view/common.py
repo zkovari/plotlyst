@@ -258,19 +258,30 @@ class OpacityEventFilter(QObject):
 
 class VisibilityToggleEventFilter(QObject):
 
-    def __init__(self, target: QWidget, parent: QWidget = None):
+    def __init__(self, target: QWidget, parent: QWidget = None, reverse: bool = False):
         super(VisibilityToggleEventFilter, self).__init__(parent)
         self.target = target
+        self.reverse = reverse
         self.target.setHidden(True)
+        self._frozen: bool = False
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if self._frozen:
+            return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
         if event.type() == QEvent.Enter:
-            self.target.setVisible(True)
+            self.target.setVisible(True if not self.reverse else False)
         elif event.type() == QEvent.Leave:
-            self.target.setHidden(True)
+            self.target.setHidden(True if not self.reverse else False)
 
         return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
+
+    def freeze(self):
+        self._frozen = True
+
+    def resume(self):
+        self._frozen = False
+        self.target.setHidden(True if not self.reverse else False)
 
 
 class DisabledClickEventFilter(QObject):
@@ -350,6 +361,10 @@ def popup(btn: Union[QPushButton, QToolButton], popup: QWidget, hideMenuIcon: bo
     action = QWidgetAction(menu)
     action.setDefaultWidget(popup)
     menu.addAction(action)
+    popup_menu(btn, menu, hideMenuIcon)
+
+
+def popup_menu(btn: Union[QPushButton, QToolButton], menu: QMenu, hideMenuIcon: bool = True):
     if isinstance(btn, QToolButton):
         btn.setPopupMode(QToolButton.InstantPopup)
     if hideMenuIcon:
@@ -359,3 +374,8 @@ def popup(btn: Union[QPushButton, QToolButton], popup: QWidget, hideMenuIcon: bo
 
 def scroll_to_top(scroll_area: QAbstractScrollArea):
     scroll_area.verticalScrollBar().setValue(0)
+
+
+def hmax(widget: QWidget):
+    vpol = widget.sizePolicy().verticalPolicy()
+    widget.setSizePolicy(QSizePolicy.Maximum, vpol)

@@ -102,12 +102,25 @@ class BackstoryEvent(Event):
 
 
 @dataclass
+class CharacterGoal:
+    goal_id: uuid.UUID
+    support: bool = True
+    children: List['CharacterGoal'] = field(default_factory=list)
+
+    def goal(self, novel: 'Novel') -> Optional['Goal']:
+        for goal_ in novel.goals:
+            if goal_.id == self.goal_id:
+                return goal_
+
+
+@dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
+    goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional['Document'] = None
     journals: List['Document'] = field(default_factory=list)
 
@@ -131,11 +144,11 @@ class Character:
                     return SelectionItem(item.text, item.type, 'fa5s.chess-queen', item.icon_color)
                 return item
 
-    def goals(self) -> List[str]:
-        for value in self.template_values:
-            if value.id == goal_field.id:
-                return value.value
-        return []
+    # def goals(self) -> List[str]:
+    #     for value in self.template_values:
+    #         if value.id == goal_field.id:
+    #             return value.value
+    #     return []
 
     def gender(self) -> int:
         for value in self.template_values:
@@ -357,12 +370,13 @@ class Conflict(SelectionItem, CharacterBased):
 
 
 @dataclass
-class SceneGoal(SelectionItem):
-    story_goal: Optional[SelectionItem] = None
+class Goal(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    description: str = ''
 
     @overrides
     def __hash__(self):
-        return hash(self.text)
+        return hash(str(self.id))
 
 
 @dataclass
@@ -415,6 +429,12 @@ class ConflictReference:
 
 
 @dataclass
+class GoalReference:
+    goal_id: uuid.UUID
+    message: str = ''
+
+
+@dataclass
 class TagReference:
     tag_id: uuid.UUID
     message: str = ''
@@ -425,7 +445,7 @@ class SceneStructureAgenda(CharacterBased):
     character_id: Optional[uuid.UUID] = None
     items: List[SceneStructureItem] = field(default_factory=list)
     conflict_references: List[ConflictReference] = field(default_factory=list)
-    goal_ids: List[uuid.UUID] = field(default_factory=list)
+    goal_references: List[GoalReference] = field(default_factory=list)
     outcome: Optional[SceneOutcome] = None
     beginning_emotion: int = NEUTRAL
     ending_emotion: int = NEUTRAL
@@ -445,8 +465,14 @@ class SceneStructureAgenda(CharacterBased):
     def remove_conflict(self, conflict: Conflict):
         self.conflict_references = [x for x in self.conflict_references if x.conflict_id != conflict.id]
 
-    def goals(self, novel: 'Novel') -> List[SceneGoal]:
-        return []
+    def goals(self, novel: 'Novel') -> List[Goal]:
+        goals_ = []
+        for id_ in [x.goal_id for x in self.goal_references]:
+            for goal in novel.goals:
+                if goal.id == id_:
+                    goals_.append(goal)
+
+        return goals_
 
 
 @dataclass
@@ -1282,7 +1308,7 @@ class Novel(NovelDescriptor):
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
-    scene_goals: List[SceneGoal] = field(default_factory=list)
+    goals: List[Goal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)
     tags: Dict[TagType, List[Tag]] = field(default_factory=default_tags)
     logline: str = ''
@@ -1305,8 +1331,8 @@ class Novel(NovelDescriptor):
         self.character_profiles.extend(updated_novel.character_profiles)
         self.conflicts.clear()
         self.conflicts.extend(updated_novel.conflicts)
-        self.scene_goals.clear()
-        self.scene_goals.extend(updated_novel.scene_goals)
+        self.goals.clear()
+        self.goals.extend(updated_novel.goals)
         self.tags.clear()
         for k in updated_novel.tags:
             self.tags[k] = updated_novel.tags[k]

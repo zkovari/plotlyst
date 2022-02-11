@@ -324,6 +324,28 @@ border: 0px;
             </item>
            </layout>
           </widget>
+          <widget class="QWidget" name="tabGoals">
+           <attribute name="title">
+            <string>Story goals</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <property name="spacing">
+             <number>3</number>
+            </property>
+            <property name="leftMargin">
+             <number>2</number>
+            </property>
+            <property name="topMargin">
+             <number>2</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
+             <number>2</number>
+            </property>
+           </layout>
+          </widget>
           <widget class="QWidget" name="tabNotes">
            <attribute name="title">
             <string>Notes</string>
