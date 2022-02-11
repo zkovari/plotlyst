@@ -27,14 +27,14 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSignal, QTimer
 from PyQt5.QtGui import QFont
 from PyQt5.QtMultimedia import QSoundEffect
-from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction
+from PyQt5.QtWidgets import QWidget
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top
+from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
@@ -63,12 +63,8 @@ class SprintWidget(QWidget, Ui_SprintWidget):
 
         self.btnTimer.setIcon(IconRegistry.timer_icon())
         self.btnReset.setIcon(IconRegistry.restore_alert_icon('#9b2226'))
-        menu = QMenu(self.btnTimer)
-        action = QWidgetAction(menu)
         self._timer_setup = TimerSetupWidget()
-        action.setDefaultWidget(self._timer_setup)
-        menu.addAction(action)
-        self.btnTimer.setMenu(menu)
+        popup(self.btnTimer, self._timer_setup)
 
         self._timer_setup.btnStart.clicked.connect(self.start)
         self.btnPause.clicked.connect(self._pauseStartTimer)

@@ -27,7 +27,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent, QPixmap
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QTextEdit, QWidgetAction, QMenu, QListView, QPushButton
+    QSpacerItem, QTextEdit, QListView, QPushButton
 from fbs_runtime import platform
 from overrides import overrides
 
@@ -36,7 +36,7 @@ from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldTyp
     enneagram_field, traits_field, desire_field, fear_field, goal_field, HAlignment, VAlignment, mbti_field
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font
+from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, popup
 from src.main.python.plotlyst.view.dialog.utility import ArtbreederDialog
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
@@ -170,12 +170,8 @@ class TextSelectionWidget(QPushButton):
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
         self.setText(self.placeholder_text)
-        menu = QMenu(self)
-        action = QWidgetAction(menu)
         self._popup = self.Popup(self.field, help)
-        action.setDefaultWidget(self._popup)
-        menu.addAction(action)
-        self.setMenu(menu)
+        popup(self, self._popup)
 
         self._selected: Optional[SelectionItem] = None
         self._items: Dict[str, SelectionItem] = {}

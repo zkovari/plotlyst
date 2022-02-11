@@ -24,7 +24,7 @@ from typing import Optional, List
 import qtawesome
 from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
     QPoint
-from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu, QWidgetAction
+from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
@@ -184,10 +184,8 @@ class ScenesOutlineView(AbstractNovelView):
         popup(self.ui.btnPreferences, self.prefs_widget)
         self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
 
-        action = QWidgetAction(self.ui.btnFilter)
         self._scene_filter = SceneFilterWidget(self.novel)
-        action.setDefaultWidget(self._scene_filter)
-        self.ui.btnFilter.addAction(action)
+        popup(self.ui.btnFilter, self._scene_filter)
         self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
         self._scene_filter.povFilter.characterToggled.connect(self._update_cards)
 
