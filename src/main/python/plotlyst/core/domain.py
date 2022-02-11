@@ -504,9 +504,6 @@ class Scene:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     synopsis: str = ''
     type: SceneType = SceneType.ACTION
-    beginning: str = ''
-    middle: str = ''
-    end: str = ''
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
     agendas: List[SceneStructureAgenda] = field(default_factory=list)

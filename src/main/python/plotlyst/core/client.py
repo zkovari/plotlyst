@@ -149,9 +149,6 @@ class SceneInfo:
     id: uuid.UUID
     synopsis: str = ''
     type: SceneType = SceneType.ACTION
-    beginning: str = ''
-    middle: str = ''
-    end: str = ''
     pov: Optional[uuid.UUID] = None
     characters: List[uuid.UUID] = field(default_factory=list)
     agendas: List[SceneStructureAgenda] = field(default_factory=list)
@@ -462,8 +459,7 @@ class JsonClient:
                         arcs.append(CharacterArc(arc=arc.arc, character=characters_ids[str(arc.character)]))
 
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
-                              beginning=info.beginning,
-                              middle=info.middle, end=info.end, wip=info.wip, day=info.day,
+                              wip=info.wip, day=info.day,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,
@@ -542,8 +538,7 @@ class JsonClient:
         builder_elements = [self.__get_scene_builder_element_info(x) for x in
                             scene.builder_elements]
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
-                         beginning=scene.beginning, middle=scene.middle,
-                         end=scene.end, wip=scene.wip, day=scene.day,
+                         wip=scene.wip, day=scene.day,
                          pov=self.__id_or_none(scene.pov), plots=plots, characters=characters,
                          agendas=scene.agendas,
                          arcs=arcs, chapter=self.__id_or_none(scene.chapter),

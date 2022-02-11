@@ -57,24 +57,18 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
     ColCharacters = 2
     ColType = 3
     ColTime = 4
-    ColBeginning = 5
-    ColMiddle = 6
-    ColEnd = 7
-    ColArc = 8
-    ColSynopsis = 9
+    ColArc = 5
+    ColSynopsis = 6
 
     def __init__(self, novel: Novel, parent=None):
         self.novel = novel
         self._data: List[Scene] = novel.scenes
-        _headers = [''] * 10
+        _headers = [''] * 7
         _headers[self.ColTitle] = 'Title'
         _headers[self.ColType] = 'Type'
         _headers[self.ColPov] = 'POV'
         _headers[self.ColCharacters] = 'Characters'
         _headers[self.ColTime] = 'Day'
-        _headers[self.ColBeginning] = 'Beginning'
-        _headers[self.ColMiddle] = 'Middle'
-        _headers[self.ColEnd] = 'End'
         _headers[self.ColArc] = 'Arc'
         _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
@@ -117,12 +111,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 return scene.synopsis
             if index.column() == self.ColTime:
                 return scene.day
-            if index.column() == self.ColBeginning:
-                return scene.beginning
-            if index.column() == self.ColMiddle:
-                return scene.middle
-            if index.column() == self.ColEnd:
-                return scene.end
         elif role == Qt.DecorationRole:
             if index.column() == self.ColType:
                 if scene.wip:
@@ -138,43 +126,8 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
             elif index.column() == self.ColPov:
                 if scene.pov:
                     return QIcon(avatars.pixmap(scene.pov))
-            elif index.column() == self.ColBeginning:
-                if scene.type == SceneType.ACTION:
-                    return IconRegistry.goal_icon()
-                if scene.type == SceneType.REACTION:
-                    return IconRegistry.reaction_icon()
-                return IconRegistry.invisible_white_icon()
-            elif index.column() == self.ColMiddle:
-                if scene.type == SceneType.ACTION:
-                    if scene.middle:
-                        return IconRegistry.conflict_icon()
-                    else:
-                        return IconRegistry.conflict_icon(color='lightgrey')
-                if scene.type == SceneType.REACTION:
-                    return IconRegistry.dilemma_icon()
-                return IconRegistry.invisible_white_icon()
-            elif index.column() == self.ColEnd:
-                if scene.type == SceneType.ACTION:
-                    if scene.outcome_resolution():
-                        return IconRegistry.success_icon()
-                    if scene.outcome_trade_off():
-                        return IconRegistry.tradeoff_icon()
-                    return IconRegistry.disaster_icon()
-                if scene.type == SceneType.REACTION:
-                    return IconRegistry.decision_icon()
-                return IconRegistry.invisible_white_icon()
         elif role == Qt.ToolTipRole:
-            if index.column() == self.ColType:
-                if scene.beginning:
-                    tip = f' - {scene.beginning}\n\n'
-                    tip += f' - {scene.middle}\n\n'
-                    tip += f' - {scene.end}'
-                    return tip
-                elif scene.middle:
-                    return scene.middle
-                elif scene.end:
-                    return scene.end
-            elif index.column() == self.ColPov:
+            if index.column() == self.ColPov:
                 return scene.pov.name if scene.pov else ''
             elif index.column() == self.ColSynopsis:
                 return scene.synopsis
@@ -192,14 +145,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         flags = flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
         if index.column() == self.ColSynopsis:
             return flags | Qt.ItemIsEditable
-        if index.column() == self.ColBeginning:
-            return Qt.ItemIsEnabled | Qt.ItemIsEditable
-        if index.column() == self.ColMiddle:
-            if self._data[index.row()].type == SceneType.ACTION:
-                return Qt.ItemIsEnabled
-            return Qt.ItemIsEnabled | Qt.ItemIsEditable
-        if index.column() == self.ColEnd:
-            return Qt.ItemIsEnabled | Qt.ItemIsEditable
         if index.column() == self.ColArc:
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColTime:
@@ -212,12 +157,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
 
         if index.column() == self.ColSynopsis:
             scene.synopsis = value
-        elif index.column() == self.ColBeginning:
-            scene.beginning = value
-        elif index.column() == self.ColMiddle:
-            scene.middle = value
-        elif index.column() == self.ColEnd:
-            scene.end = value
         elif index.column() == self.ColArc:
             if scene.arcs:
                 for arc in scene.arcs:
