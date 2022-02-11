@@ -132,10 +132,9 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         if toggled:
             self._model = GoalScenesDistributionTableModel(self.novel)
             self._scenes_proxy.setSourceModel(self._model)
-            self.tblCharacters.showColumn(0)
-            self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexMeta, 34)
+            self.tblCharacters.hideColumn(0)
             self.tblCharacters.setColumnWidth(CharactersScenesDistributionTableModel.IndexTags, 170)
-            self.tblCharacters.setMaximumWidth(204)
+            self.tblCharacters.setMaximumWidth(170)
 
             self.spinAverage.setVisible(False)
 
