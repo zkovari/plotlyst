@@ -19,10 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import functools
 import math
-from dataclasses import dataclass
-from enum import Enum
 from functools import partial
-from typing import Optional, Any, Tuple, List, Union
+from typing import Optional, Tuple, List, Union
 
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
@@ -31,28 +29,6 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFr
     QStackedWidget, QLabel, QWidgetAction, QPushButton, QToolButton, QAbstractScrollArea, QToolTip, QLineEdit
 from fbs_runtime import platform
 from overrides import overrides
-
-
-class EditorCommandType(Enum):
-    UPDATE_SCENE_SEQUENCES = 5
-
-
-@dataclass
-class EditorCommand:
-    type: EditorCommandType
-    value: Optional[Any] = None
-
-    @staticmethod
-    def close_editor():
-        return EditorCommand(EditorCommandType.CLOSE_CURRENT_EDITOR)
-
-    @staticmethod
-    def display_scenes():
-        return EditorCommand(EditorCommandType.DISPLAY_SCENES)
-
-    @staticmethod
-    def display_characters():
-        return EditorCommand(EditorCommandType.DISPLAY_CHARACTERS)
 
 
 def rounded_pixmap(original: QPixmap) -> QPixmap:
