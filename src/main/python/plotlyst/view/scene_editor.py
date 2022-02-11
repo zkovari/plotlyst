@@ -158,7 +158,7 @@ class SceneEditor(QObject):
         if scene:
             self.scene = scene
             self._new_scene = False
-            index = self.scenes_model.index(self.scene.sequence, ScenesTableModel.ColTitle)
+            index = self.scenes_model.index(self.novel.scenes.index(scene), ScenesTableModel.ColTitle)
             self.ui.lstScenes.selectionModel().select(index, QItemSelectionModel.Select)
         else:
             self.scene = Scene('')
@@ -205,11 +205,12 @@ class SceneEditor(QObject):
             self.ui.btnNext.setDisabled(True)
             self.ui.btnNext.setHidden(True)
         else:
-            if self.scene.sequence == 0:
+            index = self.novel.scenes.index(scene)
+            if index == 0:
                 self.ui.btnPrevious.setDisabled(True)
             else:
                 self.ui.btnPrevious.setEnabled(True)
-            if self.scene.sequence == len(self.novel.scenes) - 1:
+            if index == len(self.novel.scenes) - 1:
                 self.ui.btnNext.setDisabled(True)
             else:
                 self.ui.btnNext.setEnabled(True)
@@ -309,7 +310,6 @@ class SceneEditor(QObject):
 
         if self._new_scene:
             self.novel.scenes.append(self.scene)
-            self.scene.sequence = self.novel.scenes.index(self.scene)
             self.repo.insert_scene(self.novel, self.scene)
         else:
             self.repo.update_scene(self.scene)
@@ -339,13 +339,13 @@ class SceneEditor(QObject):
                                    has_stakes=node.stakes)
 
     def _on_previous_scene(self):
-        row = self.scene.sequence - 1
+        row = self.novel.scenes.index(self.scene) - 1
         self.ui.lstScenes.selectionModel().select(self.scenes_model.index(row, ScenesTableModel.ColTitle),
                                                   QItemSelectionModel.ClearAndSelect)
         self._new_scene_selected(self.scenes_model.index(row, 0))
 
     def _on_next_scene(self):
-        row = self.scene.sequence + 1
+        row = self.novel.scenes.index(self.scene) + 1
         self.ui.lstScenes.selectionModel().select(self.scenes_model.index(row, ScenesTableModel.ColTitle),
                                                   QItemSelectionModel.ClearAndSelect)
         self._new_scene_selected(self.scenes_model.index(row, 0))

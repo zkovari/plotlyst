@@ -251,4 +251,4 @@ class ChaptersTreeModel(TreeItemModel, ActionBasedTreeModel):
             children_list[old_index], children_list[new_index] = children_list[new_index], children_list[old_index]
             parent_node.children = children_list
         else:
-            parent_node.children = sorted(parent_node.children, key=lambda x: x.scene.sequence)
+            parent_node.children = sorted(parent_node.children, key=lambda x: self.novel.scenes.index(x.scene))

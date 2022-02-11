@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List, Optional
+from typing import Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt, QThreadPool, QObject, QEvent
@@ -38,7 +38,7 @@ from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelRelo
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
-from src.main.python.plotlyst.view.common import EditorCommand, spacer_widget, EditorCommandType, busy, gc
+from src.main.python.plotlyst.view.common import spacer_widget, busy, gc
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSidebar
@@ -221,7 +221,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
-        self.scenes_outline_view.commands_sent.connect(self._on_received_commands)
         self.locations_view = LocationsView(self.novel)
         self.comments_view = CommentsView(self.novel)
         self.pageComments.layout().addWidget(self.comments_view.widget)
@@ -469,13 +468,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setDisabled(True)
         self.manuscript_mode.setDisabled(True)
         self.reports_mode.setDisabled(True)
-
-    def _on_received_commands(self, widget: QWidget, commands: List[EditorCommand]):
-        for cmd in commands:
-            if cmd.type == EditorCommandType.UPDATE_SCENE_SEQUENCES:
-                for index, scene in enumerate(self.novel.scenes):
-                    scene.sequence = index
-                self.repo.update_novel(self.novel)
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
         if isinstance(current_widget, (QLineEdit, QTextEdit)):

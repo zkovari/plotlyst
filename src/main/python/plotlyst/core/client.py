@@ -372,7 +372,7 @@ class JsonClient:
             plot_ids[str(plot.id)] = plot
         chapters = []
         chapters_ids = {}
-        for seq, chapter_info in enumerate(novel_info.chapters):
+        for chapter_info in novel_info.chapters:
             chapter = Chapter(title=chapter_info.title, id=chapter_info.id)
             chapters.append(chapter)
             chapters_ids[str(chapter.id)] = chapter
@@ -415,7 +415,7 @@ class JsonClient:
             novel_info.story_structures[0].active = True
 
         scenes: List[Scene] = []
-        for seq, scene_id in enumerate(novel_info.scenes):
+        for scene_id in novel_info.scenes:
             path = self.scenes_dir.joinpath(self.__json_file(scene_id))
             if not os.path.exists(path):
                 continue
@@ -464,7 +464,6 @@ class JsonClient:
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               beginning=info.beginning,
                               middle=info.middle, end=info.end, wip=info.wip, day=info.day,
-                              sequence=seq,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,

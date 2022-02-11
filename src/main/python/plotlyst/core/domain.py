@@ -504,7 +504,6 @@ class Scene:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     synopsis: str = ''
     type: SceneType = SceneType.ACTION
-    sequence: int = 0
     beginning: str = ''
     middle: str = ''
     end: str = ''

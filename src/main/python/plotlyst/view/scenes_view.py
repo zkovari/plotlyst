@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional, List
 
 import qtawesome
-from PyQt5.QtCore import pyqtSignal, Qt, QModelIndex, \
+from PyQt5.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
@@ -37,7 +37,7 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import EditorCommand, ask_confirmation, EditorCommandType, PopupMenuBuilder, \
+from src.main.python.plotlyst.view.common import ask_confirmation, PopupMenuBuilder, \
     action, increase_font, set_opacity, popup
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
@@ -86,7 +86,6 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
 
 
 class ScenesOutlineView(AbstractNovelView):
-    commands_sent = pyqtSignal(QWidget, list)
 
     def __init__(self, novel: Novel):
         super().__init__(novel, [NovelStoryStructureUpdated])
@@ -563,11 +562,9 @@ class ScenesOutlineView(AbstractNovelView):
         else:
             new_scene.chapter = scene.chapter
         self.novel.scenes.insert(i + 1, new_scene)
-        new_scene.sequence = i + 1
         self.repo.insert_scene(self.novel, new_scene)
         emit_event(SceneChangedEvent(self))
         self.refresh()
-        self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
 
         self.editor = SceneEditor(self.novel, new_scene)
         self._switch_to_editor()
@@ -578,7 +575,6 @@ class ScenesOutlineView(AbstractNovelView):
             self.novel.scenes.remove(scene)
             self.repo.delete_scene(self.novel, scene)
             self.refresh()
-            self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
             emit_event(SceneDeletedEvent(self))
         elif not scene:
             chapter = self._selected_chapter()
@@ -598,5 +594,5 @@ class ScenesOutlineView(AbstractNovelView):
         self.repo.update_novel(self.novel)
 
     def _on_scene_moved(self):
-        self.commands_sent.emit(self.widget, [EditorCommand(EditorCommandType.UPDATE_SCENE_SEQUENCES)])
+        self.repo.update_novel(self.novel)
         self.refresh()
