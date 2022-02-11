@@ -25,6 +25,7 @@ jobs:
           pip install git+https://github.com/plotlyst/qt-anim.git
           pip install git+https://github.com/plotlyst/qt-textedit.git
           pip install git+https://github.com/plotlyst/qt-handy.git
+          pip install git+https://github.com/plotlyst/language_tool_python.git@feature/macos-awt-flag
       - name: Test with pytest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -48,6 +49,7 @@ jobs:
           pip install git+https://github.com/plotlyst/qt-anim.git
           pip install git+https://github.com/plotlyst/qt-textedit.git
           pip install git+https://github.com/plotlyst/qt-handy.git
+          pip install git+https://github.com/plotlyst/language_tool_python.git@feature/macos-awt-flag
       - name: Test with pytest
         run: |
           pyqt5ac --config .pyqt5ac.yml
