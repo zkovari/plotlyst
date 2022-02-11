@@ -105,9 +105,6 @@ class ScenesOutlineView(AbstractNovelView):
         self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
                                  ScenesTableModel.ColCharacters,
                                  ScenesTableModel.ColSynopsis]
-        self._actions_view_columns = [ScenesTableModel.ColPov, ScenesTableModel.ColTitle,
-                                      ScenesTableModel.ColBeginning,
-                                      ScenesTableModel.ColMiddle, ScenesTableModel.ColEnd]
         self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.tblModel)
         self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
@@ -153,7 +150,6 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
-        self.ui.btnActionsView.setIcon(IconRegistry.action_scene_icon())
         self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on='darkBlue'))
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
@@ -308,7 +304,7 @@ class ScenesOutlineView(AbstractNovelView):
             return None
         else:
             indexes = None
-            if self.ui.btnTableView.isChecked() or self.ui.btnActionsView.isChecked():
+            if self.ui.btnTableView.isChecked():
                 indexes = self.ui.tblScenes.selectedIndexes()
             elif self.ui.btnTimelineView.isChecked():
                 indexes = self.timeline_view.ui.tblScenes.selectedIndexes()
@@ -437,14 +433,6 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.stackScenes.setCurrentWidget(self.ui.pageDefault)
             self.ui.tblSceneStages.clearSelection()
 
-        if self.ui.btnActionsView.isChecked():
-            columns = self._actions_view_columns
-            height = 60
-            relax_colors = True
-            self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColBeginning,
-                                                                      QHeaderView.Stretch)
-            self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColMiddle,
-                                                                      QHeaderView.Stretch)
         self.tblModel.setRelaxColors(relax_colors)
         for col in range(self.tblModel.columnCount()):
             if col in columns:
