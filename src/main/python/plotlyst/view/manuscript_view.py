@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QHeaderView, QTextEdit, QApplication
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document
+from src.main.python.plotlyst.core.domain import Novel, Document, DocumentStatistics, Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
@@ -45,12 +45,16 @@ class ManuscriptView(AbstractNovelView):
         super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent])
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
+        self._current_scene: Optional[Scene] = None
         self._current_doc: Optional[Document] = None
         self.ui.splitter.setSizes([100, 500])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
         self.ui.textEdit.setTitleVisible(False)
         self.ui.textEdit.setToolbarVisible(False)
+
+        self.ui.lblTitle.setText(self.novel.title)
+        self.ui.btnStoryGoal.setText('80,000')
 
         bold(self.ui.lblSceneTitle)
         increase_font(self.ui.lblSceneTitle)
@@ -78,6 +82,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnDistractionFree.clicked.connect(
             lambda: emit_event(OpenDistractionFreeMode(self, self.ui.textEdit, self.ui.wdgSprint.model())))
 
+        self._update_story_goal()
+
     @overrides
     def refresh(self):
         self.chaptersModel.modelReset.emit()
@@ -85,15 +91,29 @@ class ManuscriptView(AbstractNovelView):
     def restore_editor(self, editor: QTextEdit):
         self.ui.pageText.layout().insertWidget(2, editor)
 
+    def _update_story_goal(self):
+        wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
+        self.ui.btnStoryGoal.setText(f'{wc} word{"s" if wc > 1 else ""}')
+        self.ui.progressStory.setValue(int(wc / 80000 * 100))
+
     def _edit(self, index: QModelIndex):
         def set_wc():
-            self.ui.lblWordCount.setWordCount(self.ui.textEdit.statistics().word_count)
+            wc = self.ui.textEdit.statistics().word_count
+            self.ui.lblWordCount.setWordCount(wc)
+            if self._current_doc.statistics is None:
+                self._current_doc.statistics = DocumentStatistics()
+
+            if self._current_doc.statistics.wc != wc:
+                self._current_doc.statistics.wc = wc
+                self.repo.update_scene(self._current_scene)
+                self._update_story_goal()
 
         node = index.data(ChaptersTreeModel.NodeRole)
         if isinstance(node, SceneNode):
             if not node.scene.manuscript:
                 node.scene.manuscript = Document('', scene_id=node.scene.id)
                 self.repo.update_scene(node.scene)
+            self._current_scene = node.scene
             self._current_doc = node.scene.manuscript
 
             if not self._current_doc.loaded:
@@ -128,6 +148,8 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.btnSceneType.setHidden(True)
 
         elif isinstance(node, ChapterNode):
+            self._current_scene = None
+            self._current_doc = None
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
     def _save(self):
