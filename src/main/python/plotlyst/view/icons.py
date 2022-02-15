@@ -119,12 +119,20 @@ class IconRegistry:
         return qtawesome.icon('fa5s.user', color=color, color_on=color_on)
 
     @staticmethod
+    def major_character_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.chess-knight', '#619b8a')
+
+    @staticmethod
+    def minor_character_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.chess-pawn', '#886f68')
+
+    @staticmethod
     def location_icon() -> QIcon:
         return qtawesome.icon('fa5s.location-arrow', color_on='darkBlue')
 
     @staticmethod
     def scene_icon() -> QIcon:
-        return qtawesome.icon('mdi.movie-open', color_on='darkBlue')
+        return IconRegistry.from_name('mdi.movie-open', color_on='darkBlue')
 
     @staticmethod
     def chapter_icon() -> QIcon:

@@ -48,8 +48,8 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
         self.setupUi(self)
         self.btnCharacter.setIcon(IconRegistry.character_icon())
         increase_font(self.lblTitle)
-        self.btnMajor.setIcon(IconRegistry.from_name('fa5s.chess-knight', '#619b8a'))
-        self.btnMinor.setIcon(IconRegistry.from_name('mdi.chess-pawn', '#886f68'))
+        self.btnMajor.setIcon(IconRegistry.major_character_icon())
+        self.btnMinor.setIcon(IconRegistry.minor_character_icon())
 
         self.refresh()
 
