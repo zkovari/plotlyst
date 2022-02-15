@@ -21,7 +21,7 @@ from typing import Optional
 
 import emoji
 from PyQt5.QtChart import QChartView
-from PyQt5.QtCore import QPropertyAnimation
+from PyQt5.QtCore import QPropertyAnimation, pyqtProperty
 from PyQt5.QtGui import QPainter, QShowEvent
 from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
 from fbs_runtime import platform
@@ -97,6 +97,14 @@ class Subtitle(QWidget):
     def setIconName(self, icon: str, color: str = 'black'):
         self._iconName = icon
         self._iconColor = color
+
+    @pyqtProperty(str)
+    def title(self):
+        return self.lblTitle.text()
+
+    @title.setter
+    def title(self, value):
+        self.lblTitle.setText(value)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:

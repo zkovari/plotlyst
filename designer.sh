@@ -2,5 +2,6 @@
 
 # exit when any command fails
 set -e
+export QT_DEBUG_PLUGINS=0
 
-qt5-tools designer &
+pyqt5-tools designer -p plugins &
