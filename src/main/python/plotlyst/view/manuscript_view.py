@@ -61,6 +61,7 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
         self.ui.btnContext.setIcon(IconRegistry.context_icon())
         self.ui.btnContext.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self.ui.btnContext))
         self._contextMenuWidget = ManuscriptContextMenuWidget(novel, self.widget)
@@ -68,7 +69,10 @@ class ManuscriptView(AbstractNovelView):
         self._contextMenuWidget.languageChanged.connect(self._language_changed)
         self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
+        self.ui.btnAnalysis.toggled.connect(self._analysis_toggled)
+        self.ui.btnAnalysis.clicked.connect(self._analysis_clicked)
         self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
+        self._analysis_toggled(self.ui.btnAnalysis.isChecked())
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
@@ -77,6 +81,9 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.clicked.connect(self._edit)
+
+        self.ui.wdgTopAnalysis.setHidden(True)
+        self.ui.wdgSideAnalysis.setHidden(True)
 
         self.ui.textEdit.textEdit.textChanged.connect(self._save)
         self.ui.btnDistractionFree.clicked.connect(
@@ -172,6 +179,15 @@ class ManuscriptView(AbstractNovelView):
         else:
             self.ui.textEdit.setGrammarCheckEnabled(False)
             self.ui.textEdit.checkGrammar()
+
+    def _analysis_toggled(self, toggled: bool):
+        set_opacity(self.ui.btnAnalysisIcon, 1 if toggled else 0.4)
+
+    def _analysis_clicked(self, checked: bool):
+        if not checked:
+            return
+
+        self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.textEdit.document())
 
     def _language_changed(self, lang: str):
         emit_info('Application is shutting down. Persist workspace...')

@@ -22,20 +22,22 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-import qtawesome
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSignal, QTimer
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QTextDocument
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget
 from overrides import overrides
+from qthandy import retain_when_hidden
+from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup
+from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup, spin
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
+from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -273,9 +275,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
     def _languageChanged(self):
         self.btnShutDown.setText('Shutting down ...')
         self.lblShutdownHint.setHidden(True)
-        spin_icon = qtawesome.icon('fa5s.spinner', color='white',
-                                   animation=qtawesome.Spin(self.btnShutDown))
-        self.btnShutDown.setIcon(spin_icon)
+        spin(self.btnShutDown, color='white')
         qtanim.glow(self.btnShutDown, loop=15)
 
         self.languageChanged.emit(self.lang)
@@ -289,3 +289,33 @@ class ManuscriptTextEditor(DocumentTextEditor):
             family = 'Palatino'
             self.textEdit.setFontFamily(family)
             self.textEdit.document().setDefaultFont(QFont(family, 16))
+
+
+class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
+    def __init__(self, parent=None):
+        super(ReadabilityWidget, self).__init__(parent)
+        self.setupUi(self)
+
+        retain_when_hidden(self.btnRefresh)
+        self.btnRefresh.setHidden(True)
+
+    def checkTextDocument(self, doc: QTextDocument):
+        spin(self.btnResult)
+
+        text = doc.toPlainText()
+
+        score = textstat.flesch_reading_ease(text)
+        print(score)
+        readting_time = textstat.reading_time(text)
+        print(readting_time)
+        if score >= 80:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-a-circle-outline', color='darkGreen'))
+        elif score >= 60:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-b-circle-outline', color='lightGreen'))
+        elif score >= 50:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-c-circle-outline', color='orange'))
+        elif score >= 30:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-d-circle-outline', color='red'))
+        else:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-e-circle-outline', color='red'))
+        self.boxAvgSentenceLength.setValue(textstat.avg_sentence_length(text))
