@@ -1,23 +1,20 @@
-from PyQt5 import QtGui
 from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
-from PyQt5.QtGui import QIcon
 from overrides import overrides
 
+from plugins import PluginBase
 from src.main.python.plotlyst.view.widget.display import Subtitle
 
 
-class SubtitlePlugin(QPyDesignerCustomWidgetPlugin):
-    def __init__(self, parent=None):
-        super(SubtitlePlugin, self).__init__(parent)
-        self.initialized = False
+class DisplayPluginBase(PluginBase):
 
-    def initialize(self, core):
-        if self.initialized:
-            return
-        self.initialized = True
+    def group(self):
+        return "Plotlyst display"
 
-    def isInitialized(self):
-        return self.initialized
+    def includeFile(self):
+        return "src.main.python.plotlyst.view.widget.display"
+
+
+class SubtitlePlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
 
     @overrides
     def createWidget(self, parent):
@@ -28,23 +25,8 @@ class SubtitlePlugin(QPyDesignerCustomWidgetPlugin):
         return "Subtitle"
 
     @overrides
-    def group(self):
-        return "Plotlyst"
-
-    @overrides
     def toolTip(self):
         return "Subtitle display widget"
-
-    @overrides
-    def whatsThis(self) -> str:
-        return ''
-
-    @overrides
-    def isContainer(self):
-        return False
-
-    def icon(self) -> QtGui.QIcon:
-        return QIcon()
 
     @overrides
     def domXml(self):
