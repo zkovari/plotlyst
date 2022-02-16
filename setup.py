@@ -21,6 +21,7 @@ REQUIREMENTS: dict = {
         'python-slugify==5.0.2',
         'striprtf==0.0.19',
         'textstat==0.7.2',
+        'nltk==3.7',
     ],
     'test': [
         'pytest==6.2.4',

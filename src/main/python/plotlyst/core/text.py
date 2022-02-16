@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import re
 from typing import List, Optional
 
-from PyQt5.QtCore import QTextBoundaryFinder
+import nltk
 from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import SceneBuilderElement, SceneBuilderElementType, StoryStructure
@@ -111,10 +111,14 @@ def clean_text(text: str):
     return text
 
 
+nltk.download('punkt')
+
+
 def sentence_count(text: str) -> int:
     text = clean_text(text)
-    finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
-    count = 0
-    while finder.toNextBoundary() > 0:
-        count += 1
-    return count
+    return len(nltk.text.sent_tokenize(text))
+    # finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
+    # count = 0
+    # while finder.toNextBoundary() > 0:
+    #     count += 1
+    # return count
