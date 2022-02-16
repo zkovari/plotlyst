@@ -17,7 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import re
 from typing import List, Optional
+
+import nltk
+from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import SceneBuilderElement, SceneBuilderElementType, StoryStructure
 
@@ -87,4 +91,27 @@ def parse_structure_to_richtext(structure: StoryStructure):
 
 
 def wc(text: str) -> int:
-    return len([x for x in text.split(' ') if x])
+    return textstat.lexicon_count(text)
+
+
+def clean_text(text: str):
+    text = re.sub(r'[,:;()\-]', ' ', text)  # Override commas, colons, etc to spaces/
+    text = re.sub(r'[\.!?]', '.', text)  # Change all terminators like ! and ? to "."
+    text = re.sub(r'^\s+', '', text)  # Remove whites pace
+    text = re.sub(r'[ ]*(\n|\r\n|\r)[ ]*', ' ', text)  # Remove new lines
+    text = re.sub(r'([\.])[\. ]+', '.', text)  # Change all ".." to "."
+    text = re.sub(r'[ ]*([\.])', '. ', text)  # Normalize all "."`
+    text = re.sub(r'\s+', ' ', text)  # Remove multiple spaces
+    text = re.sub(r'\s+$', '', text)  # Remove trailing spaces
+    text = re.sub(r'\.(?! )', '. ', text)  # Add space after period where missing
+    text = re.sub(r'\,(?! )', ', ', text)  # Add space after comma where missing
+    text = re.sub(r' +', ' ', text)  # Compress many spaces to one
+    return text
+
+
+def sentence_count(text: str, preprocess: bool = True) -> int:
+    if preprocess:
+        text = clean_text(text)
+    sentences = nltk.tokenize.sent_tokenize(text)
+
+    return len(sentences)

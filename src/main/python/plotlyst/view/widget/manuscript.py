@@ -33,6 +33,7 @@ from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
+from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup, spin
@@ -302,20 +303,28 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
     def checkTextDocument(self, doc: QTextDocument):
         spin(self.btnResult)
 
-        text = doc.toPlainText()
+        cleaned_text = clean_text(doc.toPlainText())
+        score = textstat.flesch_reading_ease(cleaned_text)
+        tooltip = f'Flesch–Kincaid readability score: {score}'
+        self.btnResult.setToolTip(tooltip)
 
-        score = textstat.flesch_reading_ease(text)
-        print(score)
-        readting_time = textstat.reading_time(text)
-        print(readting_time)
         if score >= 80:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-a-circle-outline', color='darkGreen'))
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-a-circle-outline', color='#2d6a4f'))
+            result_text = 'Very easy to read' if score >= 90 else 'Easy to read'
+            self.lblResult.setText(f'<i style="color:#2d6a4f">{result_text}</i>')
         elif score >= 60:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-b-circle-outline', color='lightGreen'))
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-b-circle-outline', color='#52b788'))
+            result_text = 'Fairly easy to read. 7th grade' if score >= 70 else 'Fairly easy to read. 8-9th grade'
+            self.lblResult.setText(f'<i style="color:#52b788">{result_text}</i>')
         elif score >= 50:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-c-circle-outline', color='orange'))
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-c-circle-outline', color='#f77f00'))
+            self.lblResult.setText('<i style="color:#f77f00">Fairly difficult to read. 10-12th grade</i>')
         elif score >= 30:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-d-circle-outline', color='red'))
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-d-circle-outline', color='#bd1f36'))
+            self.lblResult.setText('<i style="color:#bd1f36">Difficult to read</i>')
         else:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-e-circle-outline', color='red'))
-        self.boxAvgSentenceLength.setValue(textstat.avg_sentence_length(text))
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-e-circle-outline', color='#85182a'))
+            self.lblResult.setText('<i style="color:#85182a">Very difficult to read</i>')
+
+        sentence_length = wc(cleaned_text) / sentence_count(cleaned_text, preprocess=False)
+        self.lblAvgSentenceLength.setText("%.2f" % round(sentence_length, 1))
