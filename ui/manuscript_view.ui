@@ -401,7 +401,7 @@ background-color: #f5f3f4;
            <number>3</number>
           </property>
           <item>
-           <widget class="QWidget" name="widget_3" native="true">
+           <widget class="QWidget" name="wdgEditor" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
               <horstretch>0</horstretch>

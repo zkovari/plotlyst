@@ -96,7 +96,7 @@ class ManuscriptView(AbstractNovelView):
         self.chaptersModel.modelReset.emit()
 
     def restore_editor(self, editor: QTextEdit):
-        self.ui.pageText.layout().insertWidget(2, editor)
+        self.ui.wdgEditor.layout().insertWidget(0, editor)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
@@ -104,7 +104,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.progressStory.setValue(int(wc / 80000 * 100))
 
     def _edit(self, index: QModelIndex):
-        def set_wc():
+        def text_changed():
             wc = self.ui.textEdit.statistics().word_count
             self.ui.lblWordCount.setWordCount(wc)
             if self._current_doc.statistics is None:
@@ -114,6 +114,7 @@ class ManuscriptView(AbstractNovelView):
                 self._current_doc.statistics.wc = wc
                 self.repo.update_scene(self._current_scene)
                 self._update_story_goal()
+            self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.textEdit.document())
 
         node = index.data(ChaptersTreeModel.NodeRole)
         if isinstance(node, SceneNode):
@@ -133,8 +134,8 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setMargins(30, 30, 30, 30)
             self.ui.textEdit.textEdit.setFormat(130, textIndent=20)
             self.ui.textEdit.textEdit.setFontPointSize(16)
-            set_wc()
-            self.ui.textEdit.textEdit.textChanged.connect(set_wc)
+            text_changed()
+            self.ui.textEdit.textEdit.textChanged.connect(text_changed)
 
             if self.ui.cbSpellCheck.isChecked():
                 self.ui.textEdit.setGrammarCheckEnabled(True)
@@ -153,6 +154,9 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.btnSceneType.setVisible(True)
             else:
                 self.ui.btnSceneType.setHidden(True)
+
+            if self.ui.btnAnalysis.isChecked():
+                self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.textEdit.document())
 
         elif isinstance(node, ChapterNode):
             self._current_scene = None

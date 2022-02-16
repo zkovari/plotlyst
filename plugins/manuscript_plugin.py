@@ -14,7 +14,7 @@ class ManuscriptPluginBase(PluginBase):
         return "src.main.python.plotlyst.view.widget.manuscript"
 
 
-class TogglePlugin(QPyDesignerCustomWidgetPlugin, ManuscriptPluginBase):
+class ReadabilityWidgetPlugin(QPyDesignerCustomWidgetPlugin, ManuscriptPluginBase):
 
     @overrides
     def createWidget(self, parent):

@@ -36,7 +36,8 @@ from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup, spin
+from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup, spin, \
+    OpacityEventFilter, set_opacity
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
@@ -297,8 +298,12 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         super(ReadabilityWidget, self).__init__(parent)
         self.setupUi(self)
 
+        self.btnRefresh.setIcon(IconRegistry.from_name('ei.refresh', 'darkBlue'))
+        self.btnRefresh.installEventFilter(OpacityEventFilter(parent=self.btnRefresh))
         retain_when_hidden(self.btnRefresh)
         self.btnRefresh.setHidden(True)
+        self._updatedDoc: Optional[QTextDocument] = None
+        self.btnRefresh.clicked.connect(lambda: self.checkTextDocument(self._updatedDoc))
 
     def checkTextDocument(self, doc: QTextDocument):
         spin(self.btnResult)
@@ -326,5 +331,27 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
             self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-e-circle-outline', color='#85182a'))
             self.lblResult.setText('<i style="color:#85182a">Very difficult to read</i>')
 
-        sentence_length = wc(cleaned_text) / sentence_count(cleaned_text, preprocess=False)
+        sentences_count = 0
+        for i in range(doc.blockCount()):
+            block = doc.findBlockByNumber(i)
+            block_text = block.text()
+            if block_text:
+                sentences_count += sentence_count(block_text)
+
+        if not sentences_count:
+            sentence_length = 0
+        else:
+            sentence_length = wc(cleaned_text) / sentences_count
         self.lblAvgSentenceLength.setText("%.2f" % round(sentence_length, 1))
+
+        self.btnRefresh.setHidden(True)
+
+    def setTextDocumentUpdated(self, doc: QTextDocument, updated: bool = True):
+        self._updatedDoc = doc
+        if updated:
+            if not self.btnRefresh.isVisible():
+                anim = qtanim.fade_in(self.btnRefresh)
+                anim.finished.connect(lambda: set_opacity(self.btnRefresh, 0.4))
+        else:
+            if self.btnRefresh.isVisible():
+                qtanim.fade_out(self.btnRefresh)
