@@ -1,5 +1,9 @@
+import nltk
+
 from src.main.python.plotlyst.core.domain import SceneBuilderElement, SceneBuilderElementType
 from src.main.python.plotlyst.core.text import generate_text_from_scene_builder, wc, sentence_count
+
+nltk.download('punkt')
 
 
 def test_generate_text_from_scene_builder():
