@@ -350,6 +350,18 @@
              <property name="spacing">
               <number>3</number>
              </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
              <item>
               <widget class="QLabel" name="lblDayEmoji">
                <property name="text">
@@ -1110,13 +1122,13 @@ QToolButton::menu-indicator {width:0px;}</string>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>DocumentTextEditor</class>
-   <extends>QTextEdit</extends>
+   <class>RotatedButton</class>
+   <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
-   <class>RotatedButton</class>
-   <extends>QPushButton</extends>
+   <class>DocumentTextEditor</class>
+   <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
