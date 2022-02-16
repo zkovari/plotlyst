@@ -22,6 +22,7 @@ import math
 from functools import partial
 from typing import Optional, Tuple, List, Union
 
+import qtawesome
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QCursor, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QSizePolicy, QFrame, QColorDialog, QAbstractItemView, \
@@ -355,3 +356,9 @@ def scroll_to_top(scroll_area: QAbstractScrollArea):
 def hmax(widget: QWidget):
     vpol = widget.sizePolicy().verticalPolicy()
     widget.setSizePolicy(QSizePolicy.Maximum, vpol)
+
+
+def spin(btn: QAbstractButton, color: str = 'black'):
+    spin_icon = qtawesome.icon('fa5s.spinner', color=color,
+                               animation=qtawesome.Spin(btn))
+    btn.setIcon(spin_icon)

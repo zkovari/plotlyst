@@ -22,20 +22,24 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-import qtawesome
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSignal, QTimer
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QTextDocument
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget
 from overrides import overrides
+from qthandy import retain_when_hidden
+from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
+from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup
+from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup, spin, \
+    OpacityEventFilter, set_opacity
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
+from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -273,9 +277,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
     def _languageChanged(self):
         self.btnShutDown.setText('Shutting down ...')
         self.lblShutdownHint.setHidden(True)
-        spin_icon = qtawesome.icon('fa5s.spinner', color='white',
-                                   animation=qtawesome.Spin(self.btnShutDown))
-        self.btnShutDown.setIcon(spin_icon)
+        spin(self.btnShutDown, color='white')
         qtanim.glow(self.btnShutDown, loop=15)
 
         self.languageChanged.emit(self.lang)
@@ -289,3 +291,67 @@ class ManuscriptTextEditor(DocumentTextEditor):
             family = 'Palatino'
             self.textEdit.setFontFamily(family)
             self.textEdit.document().setDefaultFont(QFont(family, 16))
+
+
+class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
+    def __init__(self, parent=None):
+        super(ReadabilityWidget, self).__init__(parent)
+        self.setupUi(self)
+
+        self.btnRefresh.setIcon(IconRegistry.from_name('ei.refresh', 'darkBlue'))
+        self.btnRefresh.installEventFilter(OpacityEventFilter(parent=self.btnRefresh))
+        retain_when_hidden(self.btnRefresh)
+        self.btnRefresh.setHidden(True)
+        self._updatedDoc: Optional[QTextDocument] = None
+        self.btnRefresh.clicked.connect(lambda: self.checkTextDocument(self._updatedDoc))
+
+    def checkTextDocument(self, doc: QTextDocument):
+        spin(self.btnResult)
+
+        cleaned_text = clean_text(doc.toPlainText())
+        score = textstat.flesch_reading_ease(cleaned_text)
+        tooltip = f'Flesch–Kincaid readability score: {score}'
+        self.btnResult.setToolTip(tooltip)
+
+        if score >= 80:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-a-circle-outline', color='#2d6a4f'))
+            result_text = 'Very easy to read' if score >= 90 else 'Easy to read'
+            self.lblResult.setText(f'<i style="color:#2d6a4f">{result_text}</i>')
+        elif score >= 60:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-b-circle-outline', color='#52b788'))
+            result_text = 'Fairly easy to read. 7th grade' if score >= 70 else 'Fairly easy to read. 8-9th grade'
+            self.lblResult.setText(f'<i style="color:#52b788">{result_text}</i>')
+        elif score >= 50:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-c-circle-outline', color='#f77f00'))
+            self.lblResult.setText('<i style="color:#f77f00">Fairly difficult to read. 10-12th grade</i>')
+        elif score >= 30:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-d-circle-outline', color='#bd1f36'))
+            self.lblResult.setText('<i style="color:#bd1f36">Difficult to read</i>')
+        else:
+            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-e-circle-outline', color='#85182a'))
+            self.lblResult.setText('<i style="color:#85182a">Very difficult to read</i>')
+
+        sentences_count = 0
+        for i in range(doc.blockCount()):
+            block = doc.findBlockByNumber(i)
+            block_text = block.text()
+            if block_text:
+                sentences_count += sentence_count(block_text)
+
+        if not sentences_count:
+            sentence_length = 0
+        else:
+            sentence_length = wc(cleaned_text) / sentences_count
+        self.lblAvgSentenceLength.setText("%.2f" % round(sentence_length, 1))
+
+        self.btnRefresh.setHidden(True)
+
+    def setTextDocumentUpdated(self, doc: QTextDocument, updated: bool = True):
+        self._updatedDoc = doc
+        if updated:
+            if not self.btnRefresh.isVisible():
+                anim = qtanim.fade_in(self.btnRefresh)
+                anim.finished.connect(lambda: set_opacity(self.btnRefresh, 0.4))
+        else:
+            if self.btnRefresh.isVisible():
+                qtanim.fade_out(self.btnRefresh)

@@ -25,10 +25,12 @@ from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
 from overrides import overrides
+from textstat import textstat
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.text import sentence_count
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender, \
     emit_info
@@ -53,8 +55,11 @@ from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, CapitalizationEventFilter
 from src.main.python.plotlyst.worker.cache import acts_registry
+from src.main.python.plotlyst.worker.download import NltkResourceDownloadWorker
 from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
+
+textstat.sentence_count = sentence_count
 
 
 class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
@@ -114,12 +119,15 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.repo = RepositoryPersistenceManager.instance()
 
         self._threadpool = QThreadPool()
-        self._language_tool_setup_worker = LanguageToolServerSetupWorker()
+        language_tool_setup_worker = LanguageToolServerSetupWorker()
+        download_worker = NltkResourceDownloadWorker()
+        self._threadpool.start(download_worker)
+
         if self.novel:
-            self._language_tool_setup_worker.lang = self.novel.lang_settings.lang
+            language_tool_setup_worker.lang = self.novel.lang_settings.lang
         if not app_env.test_env():
             emit_info('Start initializing grammar checker...')
-            self._threadpool.start(self._language_tool_setup_worker)
+            self._threadpool.start(language_tool_setup_worker)
 
             QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
 
