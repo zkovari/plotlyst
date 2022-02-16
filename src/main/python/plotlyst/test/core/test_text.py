@@ -53,7 +53,25 @@ def test_sentence_count():
     assert sentence_count(text) == 2
 
     text = "This is...just ellipses."
+    assert sentence_count(text) == 1
+
+    text = "This is...Just what is it?"
     assert sentence_count(text) == 2
 
+    text = "This is... I just don't know"
+    assert sentence_count(text) == 2
+
+    text = "Without punctuation"
+    assert sentence_count(text) == 1
+
     text = "“No, not enough I’m afraid.”"
+    assert sentence_count(text) == 1
+
+    text = "At 8 a.m. then we shall meet."
+    assert sentence_count(text) == 1
+
+    text = "At 8 a.m. Then we shall meet."
+    assert sentence_count(text) == 2
+
+    text = '"No but."'
     assert sentence_count(text) == 1

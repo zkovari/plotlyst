@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import re
 from typing import List, Optional
 
-import nltk
+from PyQt5.QtCore import QTextBoundaryFinder
 from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import SceneBuilderElement, SceneBuilderElementType, StoryStructure
@@ -96,7 +96,7 @@ def wc(text: str) -> int:
 
 def clean_text(text: str):
     text = re.sub(r'[,:;()\-]', ' ', text)  # Override commas, colons, etc to spaces/
-    text = re.sub(r'[“”«»‹›„‟’❝❞❮❯⹂〝〞〟＂‚‘‛❛❜❟]', '', text)  # Replace quotation marks
+    text = re.sub(r'["\'“”«»‹›„‟’❝❞❮❯⹂〝〞〟＂‚‘‛❛❜❟]', '', text)  # Replace quotation marks
     text = re.sub(r'[\.!?]', '.', text)  # Change all terminators like ! and ? to "."
     text = re.sub(r'^\s+', '', text)  # Remove whites pace
     text = re.sub(r'[ ]*(\n|\r\n|\r)[ ]*', ' ', text)  # Remove new lines
@@ -113,5 +113,8 @@ def clean_text(text: str):
 
 def sentence_count(text: str) -> int:
     text = clean_text(text)
-    sentences = nltk.tokenize.sent_tokenize(text)
-    return len(sentences)
+    finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
+    count = 0
+    while finder.toNextBoundary() > 0:
+        count += 1
+    return count
