@@ -55,6 +55,7 @@ from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, CapitalizationEventFilter
 from src.main.python.plotlyst.worker.cache import acts_registry
+from src.main.python.plotlyst.worker.download import NltkResourceDownloadWorker
 from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
@@ -118,12 +119,15 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.repo = RepositoryPersistenceManager.instance()
 
         self._threadpool = QThreadPool()
-        self._language_tool_setup_worker = LanguageToolServerSetupWorker()
+        language_tool_setup_worker = LanguageToolServerSetupWorker()
+        download_worker = NltkResourceDownloadWorker()
+        self._threadpool.start(download_worker)
+
         if self.novel:
-            self._language_tool_setup_worker.lang = self.novel.lang_settings.lang
+            language_tool_setup_worker.lang = self.novel.lang_settings.lang
         if not app_env.test_env():
             emit_info('Start initializing grammar checker...')
-            self._threadpool.start(self._language_tool_setup_worker)
+            self._threadpool.start(language_tool_setup_worker)
 
             QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
 

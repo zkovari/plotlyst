@@ -111,14 +111,6 @@ def clean_text(text: str):
     return text
 
 
-nltk.download('punkt')
-
-
 def sentence_count(text: str) -> int:
     text = clean_text(text)
     return len(nltk.text.sent_tokenize(text))
-    # finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
-    # count = 0
-    # while finder.toNextBoundary() > 0:
-    #     count += 1
-    # return count
