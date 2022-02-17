@@ -554,6 +554,9 @@ class Scene:
     def outcome_trade_off(self) -> bool:
         return self.__is_outcome(SceneOutcome.TRADE_OFF)
 
+    def title_or_index(self, novel: 'Novel') -> str:
+        return self.title if self.title else f'Scene {novel.scenes.index(self) + 1}'
+
     def __is_outcome(self, expected) -> bool:
         if self.agendas:
             for item_ in reversed(self.agendas[0].items):
@@ -1348,6 +1351,16 @@ class Novel(NovelDescriptor):
                 pov_ids.add(str(scene.pov.id))
 
         return povs
+
+    def agenda_characters(self) -> List[Character]:
+        char_ids = set()
+        chars: List[Character] = []
+        for scene in self.scenes:
+            if scene.agendas and scene.agendas[0].character_id and str(scene.agendas[0].character_id) not in char_ids:
+                chars.append(scene.agendas[0].character(self))
+                char_ids.add(str(scene.agendas[0].character_id))
+
+        return chars
 
     def major_characters(self) -> List[Character]:
         return [x for x in self.characters if

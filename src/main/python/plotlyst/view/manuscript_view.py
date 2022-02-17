@@ -141,8 +141,7 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 self.ui.textEdit.asyncCheckGrammer()
 
-            title = node.scene.title if node.scene.title else f'Scene {self.novel.scenes.index(node.scene) + 1}'
-            self.ui.lblSceneTitle.setText(title)
+            self.ui.lblSceneTitle.setText(node.scene.title_or_index(self.novel))
             if node.scene.pov:
                 self.ui.btnPov.setIcon(QIcon(avatars.pixmap(node.scene.pov)))
                 self.ui.btnPov.setVisible(True)

@@ -109,7 +109,7 @@ class ChaptersTreeModel(TreeItemModel, ActionBasedTreeModel):
                 return f'{node.name} ({len(node.children)})'
         if isinstance(node, SceneNode) and role == Qt.DisplayRole:
             if not node.name:
-                return f'Scene {self.novel.scenes.index(node.scene) + 1}'
+                return node.scene.title_or_index(self.novel)
 
         return super().data(index, role)
 

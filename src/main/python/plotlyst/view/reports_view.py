@@ -23,11 +23,11 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
     PlotCreatedEvent
-from src.main.python.plotlyst.model.report import ReportsTreeModel, CharacterReportNode
+from src.main.python.plotlyst.model.report import ReportsTreeModel, CharacterReportNode, CharacterArcReportNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
 from src.main.python.plotlyst.view.layout import clear_layout
-from src.main.python.plotlyst.view.report.character import CharacterReport
+from src.main.python.plotlyst.view.report.character import CharacterReport, CharacterArcReport
 
 
 class ReportsView(AbstractNovelView):
@@ -39,6 +39,7 @@ class ReportsView(AbstractNovelView):
 
         self._treeModel = ReportsTreeModel()
         self.ui.treeReports.setModel(self._treeModel)
+        self.ui.treeReports.expandAll()
         self.ui.treeReports.clicked.connect(self._reportClicked)
 
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
@@ -93,19 +94,21 @@ class ReportsView(AbstractNovelView):
     @overrides
     def refresh(self):
         pass
-        # self.scenes_model.modelReset.emit()
-        # self._update_characters_selectors()
-        # self._update_characters_chart()
-        # self.storylines_distribution.refresh()
 
     def _reportClicked(self):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageReport)
         clear_layout(self.ui.wdgReportContainer.layout())
+
         index = self.ui.treeReports.selectedIndexes()[0]
         node = index.data(ReportsTreeModel.NodeRole)
         if isinstance(node, CharacterReportNode):
             report = CharacterReport(self.novel, self.ui.wdgReportContainer)
-            self.ui.wdgReportContainer.layout().addWidget(report)
+        elif isinstance(node, CharacterArcReportNode):
+            report = CharacterArcReport(self.novel, self.ui.wdgReportContainer)
+        else:
+            return
+
+        self.ui.wdgReportContainer.layout().addWidget(report)
 
     # def _update_characters_selectors(self):
     #     pov_chars = []

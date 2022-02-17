@@ -30,8 +30,8 @@ from PyQt5.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined, config
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, CharacterArc, \
-    SceneBuilderElement, SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneBuilderElement, \
+    SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
@@ -156,7 +156,6 @@ class SceneInfo:
     plots: List[ScenePlotValueInfo] = field(default_factory=list)
     day: int = 1
     chapter: Optional[uuid.UUID] = None
-    arcs: List[CharacterArcInfo] = field(default_factory=list)
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
     beats: List[SceneStoryBeat] = field(default_factory=list)
@@ -453,15 +452,9 @@ class JsonClient:
                     if match:
                         stage = match[0]
 
-                arcs = []
-                for arc in info.arcs:
-                    if str(arc.character) in characters_ids.keys():
-                        arcs.append(CharacterArc(arc=arc.arc, character=characters_ids[str(arc.character)]))
-
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               wip=info.wip, day=info.day,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
-                              arcs=arcs,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,
                               comments=info.comments, tags=info.tags,
                               document=info.document, manuscript=info.manuscript)
@@ -534,14 +527,13 @@ class JsonClient:
     def _persist_scene(self, scene: Scene):
         plots = [ScenePlotValueInfo(x.plot.id, x.value) for x in scene.plot_values]
         characters = [x.id for x in scene.characters]
-        arcs = [CharacterArcInfo(arc=x.arc, character=x.character.id) for x in scene.arcs]
         builder_elements = [self.__get_scene_builder_element_info(x) for x in
                             scene.builder_elements]
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          wip=scene.wip, day=scene.day,
                          pov=self.__id_or_none(scene.pov), plots=plots, characters=characters,
                          agendas=scene.agendas,
-                         arcs=arcs, chapter=self.__id_or_none(scene.chapter),
+                         chapter=self.__id_or_none(scene.chapter),
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
                          beats=scene.beats, comments=scene.comments,

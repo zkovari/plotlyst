@@ -410,7 +410,7 @@
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="toolTip">
-             <string>Apply additional filters</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Customize view&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="styleSheet">
              <string notr="true">QToolButton::menu-indicator{width:0px;}</string>

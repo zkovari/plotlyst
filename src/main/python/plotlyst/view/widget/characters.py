@@ -199,7 +199,7 @@ class CharacterSelectorButtons(QWidget):
         super(CharacterSelectorButtons, self).__init__(parent)
         hbox(self)
         self.container = QWidget()
-        self.container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.container.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
 
         self._layout = flow(self.container)
 

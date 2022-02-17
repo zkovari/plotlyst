@@ -22,6 +22,7 @@ from abc import abstractmethod
 from PyQt5.QtWidgets import QWidget
 
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class AbstractReport(QWidget):
@@ -29,6 +30,8 @@ class AbstractReport(QWidget):
         super(AbstractReport, self).__init__(parent)
         self.novel = novel
         self.setupUi(self)
+
+        self.repo = RepositoryPersistenceManager.instance()
 
     @abstractmethod
     def display(self):
