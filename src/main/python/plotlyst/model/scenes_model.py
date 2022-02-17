@@ -106,7 +106,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                     return self._pivotal_brush
         elif role == Qt.DisplayRole:
             if index.column() == self.ColTitle:
-                return scene.title if scene.title else f'Scene {self.novel.scenes.index(scene) + 1}'
+                return scene.title_or_index(self.novel)
             if index.column() == self.ColSynopsis:
                 return scene.synopsis
             if index.column() == self.ColTime:

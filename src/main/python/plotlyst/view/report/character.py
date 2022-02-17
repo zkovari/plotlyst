@@ -19,17 +19,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtChart import QChart, QChartView, QBarSet, QStackedBarSeries, \
-    QBarCategoryAxis, QPieSeries
+from PyQt5.QtChart import QChart, QPieSeries
 from PyQt5.QtChart import QValueAxis, QSplineSeries
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QLabel, QWidget, QToolButton
 from overrides import overrides
+from qthandy import clear_layout, vspacer, hbox, transparent
 
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene
+from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import vbox
 from src.main.python.plotlyst.view.report import AbstractReport
+from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton
 
 
 class CharacterReport(AbstractReport, Ui_CharacterReport):
@@ -94,34 +97,93 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         self.chart.addSeries(series)
 
 
-class CharacterArc(QChartView):
+class SceneArcWidget(QWidget):
+    arcChanged = pyqtSignal(Scene)
+
+    def __init__(self, scene: Scene, novel: Novel, parent=None):
+        super(SceneArcWidget, self).__init__(parent)
+        hbox(self, 0, 2)
+
+        self.scene = scene
+
+        self.btnSceneType = QToolButton()
+        transparent(self.btnSceneType)
+        self.btnSceneType.setIcon(IconRegistry.scene_type_icon(scene))
+        self.lblTitle = QLabel(scene.title_or_index(novel))
+        self.btnEndingEmotion = CharacterEmotionButton()
+        self.btnEndingEmotion.setValue(scene.agendas[0].ending_emotion)
+        self.btnEndingEmotion.emotionChanged.connect(self._emotionChanged)
+
+        self.layout().addWidget(self.btnSceneType)
+        self.layout().addWidget(self.lblTitle)
+        self.layout().addWidget(self.btnEndingEmotion)
+
+    def _emotionChanged(self):
+        self.scene.agendas[0].ending_emotion = self.btnEndingEmotion.value()
+        self.arcChanged.emit(self.scene)
+
+
+class CharacterArcReport(AbstractReport, Ui_CharacterArcReport):
+
+    def __init__(self, novel: Novel, parent=None):
+        super(CharacterArcReport, self).__init__(novel, parent)
+        self.wdgCharacterSelector.characterToggled.connect(self._characterChanged)
+        self.chart = CharacterArcChart(self.novel)
+        self.chartView.setChart(self.chart)
+        vbox(self.wdgScenes)
+        self.btnScenes.setIcon(IconRegistry.scene_icon())
+
+        self.character: Optional[Character] = None
+
+        self.display()
+
+    @overrides
+    def display(self):
+        self.wdgCharacterSelector.setCharacters(self.novel.agenda_characters(), checkAll=False)
+
+    def _characterChanged(self, character: Character, toggled: bool):
+        if not toggled:
+            return
+        self.character = character
+        self.chart.refresh(character)
+        clear_layout(self.wdgScenes)
+        for scene in self.novel.scenes:
+            if scene.agendas[0].character_id != character.id:
+                continue
+            wdgArc = SceneArcWidget(scene, self.novel)
+            wdgArc.arcChanged.connect(self._arcChanged)
+            self.wdgScenes.layout().addWidget(wdgArc)
+        self.wdgScenes.layout().addWidget(vspacer())
+
+    def _arcChanged(self, scene: Scene):
+        self.repo.update_scene(scene)
+        self.chart.refresh(self.character)
+
+
+class CharacterArcChart(QChart):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
-        arc_chart = QChart()
-        arc_chart.createDefaultAxes()
-        arc_chart.legend().hide()
-        arc_chart.setAnimationOptions(QChart.AllAnimations)
-        self.setChart(arc_chart)
-        self.setRenderHint(QPainter.Antialiasing)
+        self.createDefaultAxes()
+        self.legend().hide()
+        self.setAnimationOptions(QChart.SeriesAnimations)
+        self.setAnimationDuration(500)
         self.axis: Optional[QValueAxis] = None
 
     def refresh(self, character: Character):
-        self.chart().removeAllSeries()
+        self.removeAllSeries()
         if self.axis:
-            self.chart().removeAxis(self.axis)
-        self.chart().setTitle(f'Character arc for {character.name}')
+            self.removeAxis(self.axis)
+        self.setTitle(f'<b>Emotional arc of {character.name}</b>')
 
         series = QSplineSeries()
         arc_value: int = 0
         series.append(0, 0)
         for scene in self.novel.scenes:
-            if scene.pov != character:
+            if scene.agendas[0].character_id != character.id:
                 continue
-            for arc in scene.arcs:
-                if arc.character.id == character.id:
-                    arc_value += arc.arc
-                    series.append(len(series), arc_value)
+            arc_value += scene.agendas[0].ending_emotion
+            series.append(len(series), arc_value)
 
         points = series.pointsVector()
         if not points:
@@ -132,47 +194,46 @@ class CharacterArc(QChartView):
         limit = max(abs(min_), max_)
         self.axis = QValueAxis()
         self.axis.setRange(-limit - 3, limit + 3)
-        self.chart().addSeries(series)
-        self.chart().setAxisY(self.axis, series)
+        self.addSeries(series)
+        self.setAxisY(self.axis, series)
         self.axis.setVisible(False)
 
-
-class StorylinesDistribution(QChartView):
-    def __init__(self, novel: Novel, parent=None):
-        super().__init__(parent)
-        self.novel = novel
-        arc_chart = QChart()
-        arc_chart.createDefaultAxes()
-        arc_chart.setAnimationOptions(QChart.SeriesAnimations)
-        arc_chart.setTitle('Storylines and characters distribution')
-        self.setChart(arc_chart)
-        self.setRenderHint(QPainter.Antialiasing)
-        self.axis: Optional[QBarCategoryAxis] = None
-
-        self.refresh()
-
-    def refresh(self):
-        self.chart().removeAllSeries()
-        if self.axis:
-            self.chart().removeAxis(self.axis)
-
-        character_names = [x.name for x in self.novel.characters]
-        series = QStackedBarSeries()
-        for i, plot in enumerate(self.novel.plots):
-            set = QBarSet(plot.text)
-            set.setColor(QColor(plot.color_hexa))
-            occurences = []
-            for char in self.novel.characters:
-                v = 0
-                for scene in self.novel.scenes:
-                    if plot in scene.plots():
-                        if char == scene.pov or char in scene.characters:
-                            v += 1
-                occurences.append(v)
-                set.append(v)
-            series.append(set)
-        self.axis = QBarCategoryAxis()
-        self.axis.append(character_names)
-        self.chart().addAxis(self.axis, Qt.AlignBottom)
-        series.attachAxis(self.axis)
-        self.chart().addSeries(series)
+# class StorylinesDistribution(QChartView):
+#     def __init__(self, novel: Novel, parent=None):
+#         super().__init__(parent)
+#         self.novel = novel
+#         arc_chart = QChart()
+#         arc_chart.createDefaultAxes()
+#         arc_chart.setAnimationOptions(QChart.SeriesAnimations)
+#         arc_chart.setTitle('Storylines and characters distribution')
+#         self.setChart(arc_chart)
+#         self.setRenderHint(QPainter.Antialiasing)
+#         self.axis: Optional[QBarCategoryAxis] = None
+#
+#         self.refresh()
+#
+#     def refresh(self):
+#         self.chart().removeAllSeries()
+#         if self.axis:
+#             self.chart().removeAxis(self.axis)
+#
+#         character_names = [x.name for x in self.novel.characters]
+#         series = QStackedBarSeries()
+#         for i, plot in enumerate(self.novel.plots):
+#             set = QBarSet(plot.text)
+#             set.setColor(QColor(plot.color_hexa))
+#             occurences = []
+#             for char in self.novel.characters:
+#                 v = 0
+#                 for scene in self.novel.scenes:
+#                     if plot in scene.plots():
+#                         if char == scene.pov or char in scene.characters:
+#                             v += 1
+#                 occurences.append(v)
+#                 set.append(v)
+#             series.append(set)
+#         self.axis = QBarCategoryAxis()
+#         self.axis.append(character_names)
+#         self.chart().addAxis(self.axis, Qt.AlignBottom)
+#         series.attachAxis(self.axis)
+#         self.chart().addSeries(series)

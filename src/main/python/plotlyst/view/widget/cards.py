@@ -258,8 +258,7 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
         self.wdgCharacters.layout().setSpacing(1)
 
         self.textTitle.setFontPointSize(QApplication.font().pointSize() + 1)
-        self.textTitle.setText(
-            self.scene.title if self.scene.title else f'Scene {self.novel.scenes.index(self.scene) + 1}')
+        self.textTitle.setText(self.scene.title_or_index(self.novel))
         self.textTitle.setAlignment(Qt.AlignCenter)
 
         self.textSynopsis.setAlignment(Qt.AlignCenter)

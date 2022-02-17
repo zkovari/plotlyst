@@ -67,9 +67,9 @@ class ToggleHelp(QPushButton):
         self.setText(u'\u02C7' if checked else u'\u00BB')
 
 
-class Chart(QChartView):
+class ChartView(QChartView):
     def __init__(self, parent=None):
-        super(Chart, self).__init__(parent)
+        super(ChartView, self).__init__(parent)
         self.setRenderHint(QPainter.Antialiasing)
 
 
