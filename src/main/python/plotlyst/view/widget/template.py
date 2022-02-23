@@ -34,7 +34,7 @@ from qthandy import ask_confirmation, spacer, btn_popup
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, TemplateValue, ProfileElement, Character, avatar_field, SelectionItemType, \
-    enneagram_field, traits_field, desire_field, fear_field, goal_field, HAlignment, VAlignment, mbti_field
+    enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
 from src.main.python.plotlyst.view.common import emoji_font
@@ -690,8 +690,6 @@ class CharacterProfileTemplateView(ProfileTemplateView):
                 self._fear_widget = widget
             elif widget.field.id == traits_field.id:
                 self._traits_widget = widget.wdgEditor
-            elif widget.field.id == goal_field.id:
-                self._goals_widget = widget
 
         self._avatar_widget.setCharacter(self.character)
         if self._enneagram_widget:

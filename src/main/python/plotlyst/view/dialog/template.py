@@ -28,7 +28,7 @@ from overrides import overrides
 from qthandy import ask_confirmation
 
 from src.main.python.plotlyst.core.domain import age_field, \
-    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
+    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, fear_field, misbelief_field, \
     desire_field, default_character_profiles, role_field, mbti_field, traits_field, Novel
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
 from src.main.python.plotlyst.view.common import emoji_font
@@ -51,7 +51,6 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnAge.setIcon(IconRegistry.from_name('mdi.numeric'))
         self.btnRole.setIcon(IconRegistry.from_name('fa5s.user-tag'))
         self.btnFear.setIcon(IconRegistry.from_name('mdi.spider-thread'))
-        self.btnGoal.setIcon(IconRegistry.goal_icon())
         self.btnEnneagram.setIcon(IconRegistry.from_name('mdi.numeric-9-box-outline'))
         self.btnMbti.setIcon(IconRegistry.from_name('ei.group-alt'))
         self.btnTraits.setIcon(IconRegistry.from_name('ei.adjust'))
@@ -88,7 +87,6 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnAge.installEventFilter(self)
         self.btnRole.installEventFilter(self)
         self.btnFear.installEventFilter(self)
-        self.btnGoal.installEventFilter(self)
         self.btnEnneagram.installEventFilter(self)
         self.btnMbti.installEventFilter(self)
         self.btnTraits.installEventFilter(self)
@@ -135,8 +133,6 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = mbti_field
             elif self._dragged is self.btnTraits:
                 field = traits_field
-            elif self._dragged is self.btnGoal:
-                field = goal_field
             elif self._dragged is self.btnFear:
                 field = fear_field
             elif self._dragged is self.btnMisbelief:
@@ -187,8 +183,6 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.btnMbti.setEnabled(enabled)
         elif field.id == traits_field.id:
             self.btnTraits.setEnabled(enabled)
-        elif field.id == goal_field.id:
-            self.btnGoal.setEnabled(enabled)
         elif field.id == fear_field.id:
             self.btnFear.setEnabled(enabled)
         elif field.id == desire_field.id:

@@ -993,10 +993,6 @@ def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
 _enneagram_choices = get_selection_values(enneagram_field)
 _mbti_choices = get_selection_values(mbti_field)
 
-goal_field = TemplateField('Goals', type=TemplateFieldType.LABELS,
-                           id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'),
-                           emoji=':bullseye:',
-                           placeholder='Character goals throughout the story')
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
                                 placeholder='The misbelief/lie the character believes in')
@@ -1076,7 +1072,6 @@ def default_character_profiles() -> List[ProfileTemplate]:
     fields = [ProfileElement(avatar_field, 0, 1, row_span=3, h_alignment=HAlignment.RIGHT),
               ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
               ProfileElement(role_field, 3, 0, v_alignment=VAlignment.BOTTOM),
-              ProfileElement(goal_field, 4, 0, col_span=2, v_alignment=VAlignment.TOP),
               ProfileElement(enneagram_field, 5, 0),
               ProfileElement(mbti_field, 5, 1),
               ProfileElement(desire_field, 6, 0),
