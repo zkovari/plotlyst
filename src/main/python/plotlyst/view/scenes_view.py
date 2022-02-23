@@ -32,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneSta
 from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
-    SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged
+    SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, ChapterChangedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -350,6 +350,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _new_chapter(self, index: int = -1):
         self.chaptersModel.newChapter(index)
         self.repo.update_novel(self.novel)
+        emit_event(ChapterChangedEvent(self))
 
     def _update_cards(self):
         def cursorEnter(scene: Scene):
@@ -574,6 +575,7 @@ class ScenesOutlineView(AbstractNovelView):
             index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
             if ask_confirmation(f'Are you sure you want to delete "{index.data()}"? (scenes will remain)'):
                 self.chaptersModel.removeChapter(index)
+                emit_event(ChapterChangedEvent(self))
 
     def _scenes_swapped(self, removed: SceneCard, moved_to: SceneCard):
         self.novel.scenes.remove(removed.scene)

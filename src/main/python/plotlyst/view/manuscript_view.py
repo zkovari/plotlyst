@@ -29,7 +29,8 @@ from qthandy import opaque, incr_font, bold, btn_popup
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentStatistics, Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
-from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
+from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
+    ChapterChangedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import OpacityEventFilter
@@ -43,7 +44,7 @@ from src.main.python.plotlyst.worker.persistence import flush_or_fail
 class ManuscriptView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent])
+        super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent, ChapterChangedEvent])
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self._current_scene: Optional[Scene] = None
@@ -94,6 +95,7 @@ class ManuscriptView(AbstractNovelView):
 
     @overrides
     def refresh(self):
+        self.chaptersModel.update()
         self.chaptersModel.modelReset.emit()
 
     def restore_editor(self, editor: QTextEdit):

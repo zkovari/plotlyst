@@ -49,6 +49,11 @@ class SceneChangedEvent(Event):
 
 
 @dataclass
+class ChapterChangedEvent(Event):
+    pass
+
+
+@dataclass
 class SceneDeletedEvent(Event):
     pass
 
