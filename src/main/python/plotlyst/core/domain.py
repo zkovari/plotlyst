@@ -144,12 +144,6 @@ class Character:
                     return SelectionItem(item.text, item.type, 'fa5s.chess-queen', item.icon_color)
                 return item
 
-    # def goals(self) -> List[str]:
-    #     for value in self.template_values:
-    #         if value.id == goal_field.id:
-    #             return value.value
-    #     return []
-
     def gender(self) -> int:
         for value in self.template_values:
             if value.id == gender_field.id:
@@ -870,9 +864,6 @@ class TemplateField:
     show_label: bool = True
 
 
-name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':bust_in_silhouette:', placeholder='Name',
-                           id=uuid.UUID('45525d2e-3ba7-40e4-b072-e367f96a6eb4'), required=True, highlighted=True,
-                           frozen=True, compact=True, show_label=False)
 avatar_field = TemplateField(name='Avatar', type=TemplateFieldType.IMAGE,
                              id=uuid.UUID('c3b5c7b5-6fd2-4ae1-959d-6fabd659cb3c'), required=True, highlighted=True,
                              frozen=True, compact=True, show_label=False)
@@ -1088,8 +1079,7 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(name_field, 0, 0),
-              ProfileElement(avatar_field, 0, 1, row_span=3, h_alignment=HAlignment.RIGHT),
+    fields = [ProfileElement(avatar_field, 0, 1, row_span=3, h_alignment=HAlignment.RIGHT),
               ProfileElement(gender_field, 1, 0, v_alignment=VAlignment.BOTTOM),
               ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
               ProfileElement(role_field, 3, 0, v_alignment=VAlignment.BOTTOM),

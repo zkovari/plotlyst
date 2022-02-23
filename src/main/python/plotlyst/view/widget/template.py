@@ -33,7 +33,7 @@ from overrides import overrides
 from qthandy import ask_confirmation, spacer, btn_popup
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field, SelectionItemType, \
+    ProfileTemplate, TemplateValue, ProfileElement, Character, avatar_field, SelectionItemType, \
     enneagram_field, traits_field, desire_field, fear_field, goal_field, HAlignment, VAlignment, mbti_field
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
@@ -673,7 +673,6 @@ class CharacterProfileTemplateView(ProfileTemplateView):
     def __init__(self, character: Character, profile: ProfileTemplate):
         super().__init__(character.template_values, profile)
         self.character = character
-        self._name_widget: Optional[TemplateFieldWidget] = None
         self._avatar_widget: Optional[AvatarWidget] = None
         self._enneagram_widget: Optional[TextSelectionWidget] = None
         self._desire_widget: Optional[TemplateFieldWidget] = None
@@ -681,9 +680,7 @@ class CharacterProfileTemplateView(ProfileTemplateView):
         self._traits_widget: Optional[TraitSelectionWidget] = None
         self._goals_widget: Optional[TemplateFieldWidget] = None
         for widget in self.widgets:
-            if widget.field.id == name_field.id:
-                self._name_widget = widget
-            elif widget.field.id == avatar_field.id:
+            if widget.field.id == avatar_field.id:
                 self._avatar_widget = widget.wdgEditor
             elif widget.field.id == enneagram_field.id:
                 self._enneagram_widget = widget.wdgEditor
@@ -695,22 +692,10 @@ class CharacterProfileTemplateView(ProfileTemplateView):
                 self._traits_widget = widget.wdgEditor
             elif widget.field.id == goal_field.id:
                 self._goals_widget = widget
-        if not self._name_widget:
-            raise ValueError('Obligatory name field is missing from profile')
-        if not self._avatar_widget:
-            raise ValueError('Obligatory avatar field is missing from profile')
 
         self._avatar_widget.setCharacter(self.character)
         if self._enneagram_widget:
             self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
-
-        self.setName(self.character.name)
-
-    def name(self) -> str:
-        return self._name_widget.value()
-
-    def setName(self, value: str):
-        self._name_widget.setValue(value)
 
     def avatarUpdated(self) -> bool:
         return self._avatar_widget.avatarUpdated
