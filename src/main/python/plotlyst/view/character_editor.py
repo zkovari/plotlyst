@@ -93,6 +93,9 @@ class CharacterEditor:
                 if not btn.isChecked():
                     btn.setHidden(True)
 
+        self.ui.wdgAvatar.setCharacter(self.character)
+
+        self.ui.lineName.textEdited.connect(self._name_edited)
         self.ui.lineName.setText(self.character.name)
 
         self._character_goals = CharacterGoalsEditor(self.novel, self.character)
@@ -120,6 +123,11 @@ class CharacterEditor:
         if not updated:
             return
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[profile_index])
+
+    def _name_edited(self, text: str):
+        self.character.name = text
+        if not self.character.avatar:
+            self.ui.wdgAvatar.setCharacter(self.character)
 
     def _tab_changed(self, index: int):
         if self.ui.tabAttributes.widget(index) is self.ui.tabNotes:

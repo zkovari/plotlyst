@@ -503,6 +503,11 @@ class AvatarsRegistry:
 
         return self._avatars[str(character.id)]
 
+    def has_name_initial_icon(self, character: Character) -> bool:
+        if character.name and (character.name[0].isnumeric() or character.name[0].isalpha()):
+            return True
+        return False
+
     def name_initial_icon(self, character: Character) -> QIcon:
         _sum = sum([ord(x) for x in character.name])
         color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_sum % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]

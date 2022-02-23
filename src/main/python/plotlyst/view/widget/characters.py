@@ -1117,14 +1117,14 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
         self.reset()
 
     def setCharacter(self, character: Character):
-        # self.btnPov.setToolTip(f'<html>Point of view character: <b>{self.scene.pov.name}</b>')
         self.btnPov.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.btnPov.setIconSize(QSize(168, 168))
         if character.avatar:
             self.btnPov.setIcon(QIcon(avatars.pixmap(character)))
-        else:
-            # self.btnPov.setToolTip('Select point of view character')
+        elif avatars.has_name_initial_icon(character):
             self.btnPov.setIcon(avatars.name_initial_icon(character))
+        else:
+            self.reset()
 
     def reset(self):
         self.btnPov.setIconSize(QSize(118, 118))
