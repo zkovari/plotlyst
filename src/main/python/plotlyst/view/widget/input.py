@@ -432,6 +432,9 @@ class RotatedButton(QPushButton):
 
     @overrides
     def paintEvent(self, event: QPaintEvent):
+        if app_env.test_env():
+            super(RotatedButton, self).paintEvent(event)
+            return
         painter = QStylePainter(self)
         option = QStyleOptionButton()
         self.initStyleOption(option)
