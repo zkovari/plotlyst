@@ -17,16 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
 
+import qtanim
 from PyQt5.QtWidgets import QWidget
 from fbs_runtime import platform
-from qthandy import spacer, hbox, vbox
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -37,19 +36,13 @@ from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceMan
 
 class CharacterEditor:
 
-    def __init__(self, novel: Novel, character: Optional[Character] = None):
+    def __init__(self, novel: Novel, character: Character = None):
         super().__init__()
         self.widget = QWidget()
         self.ui = Ui_CharacterEditor()
         self.ui.setupUi(self.widget)
         self.novel = novel
-
-        if character:
-            self.character = character
-            self._new_character = False
-        else:
-            self.character = Character('')
-            self._new_character = True
+        self.character = character
 
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
@@ -62,13 +55,18 @@ class CharacterEditor:
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
 
+        self.ui.btnMale.setIcon(IconRegistry.from_name('mdi.gender-male', color_on='#067bc2'))
+        self.ui.btnFemale.setIcon(IconRegistry.from_name('mdi.gender-female', color_on='#832161'))
+        self.ui.btnMale.installEventFilter(OpacityEventFilter(parent=self.ui.btnMale, ignoreCheckedButton=True))
+        self.ui.btnFemale.installEventFilter(OpacityEventFilter(parent=self.ui.btnFemale, ignoreCheckedButton=True))
+        self.ui.btnMale.clicked.connect(self._male_clicked)
+        self.ui.btnFemale.clicked.connect(self._female_clicked)
+
         self._character_goals = CharacterGoalsEditor(self.novel, self.character)
         self.ui.tabGoals.layout().addWidget(self._character_goals)
 
-        self.ui.wdgJournal.setCharacter(self.novel, self.character)
-
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
-        self._init_profile_view()
+        self.ui.wdgProfile.layout().addWidget(self.profile)
 
         self.ui.wdgBackstory.setCharacter(self.character)
         self.widget.setStyleSheet(
@@ -83,20 +81,6 @@ class CharacterEditor:
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    def _init_profile_view(self):
-        self._profile_with_toolbar = QWidget()
-        self._toolbar = QWidget()
-        hbox(self._toolbar, 0)
-        self._toolbar.layout().addWidget(spacer())
-        self._toolbar.layout().addWidget(self.ui.btnCustomize)
-        vbox(self._profile_with_toolbar, 0)
-        self._profile_with_toolbar.layout().addWidget(self._toolbar)
-        self._profile_with_toolbar.layout().addWidget(self.profile)
-        self._profile_container = QWidget()
-        hbox(self._profile_container, 0)
-        self._profile_container.layout().addWidget(self._profile_with_toolbar)
-        self.ui.wdgProfile.layout().insertWidget(0, self._profile_container)
-
     def _customize_profile(self):
         profile_index = 0
         updated = customize_character_profile(self.novel, profile_index, self.widget)
@@ -104,29 +88,34 @@ class CharacterEditor:
             return
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[profile_index])
 
-        self.ui.wdgProfile.layout().takeAt(0)
-        self._profile_container.deleteLater()
-        self._init_profile_view()
-
     def _tab_changed(self, index: int):
         if self.ui.tabAttributes.widget(index) is self.ui.tabNotes:
             if self.character.document and not self.character.document.loaded:
                 json_client.load_document(self.novel, self.character.document)
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
 
+    def _male_clicked(self, checked: bool):
+        if checked:
+            self.ui.btnFemale.setChecked(False)
+            qtanim.fade_out(self.ui.btnFemale)
+        else:
+            self.ui.btnFemale.setVisible(True)
+            qtanim.fade_in(self.ui.btnFemale)
+
+    def _female_clicked(self, checked: bool):
+        if checked:
+            self.ui.btnMale.setChecked(False)
+            qtanim.fade_out(self.ui.btnMale)
+        else:
+            self.ui.btnMale.setVisible(True)
+            qtanim.fade_in(self.ui.btnMale)
+
     def _save(self):
-        name = self.profile.name()
-        if not name:
-            return
-        self.character.name = name
+        self.character.name = self.ui.lineName.text()
         self.character.template_values = self.profile.values()
 
-        if self._new_character:
-            self.novel.characters.append(self.character)
-            self.repo.insert_character(self.novel, self.character)
-        else:
-            self.repo.update_character(self.character, self.profile.avatarUpdated())
-            self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
+        self.repo.update_character(self.character, self.profile.avatarUpdated())
+        self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
 
         if not self.character.document:
             self.character.document = Document('', character_id=self.character.id)
@@ -135,5 +124,3 @@ class CharacterEditor:
         if self.character.document.loaded:
             self.character.document.content = self.ui.textEdit.textEdit.toHtml()
             self.repo.update_doc(self.novel, self.character.document)
-
-        self._new_character = False

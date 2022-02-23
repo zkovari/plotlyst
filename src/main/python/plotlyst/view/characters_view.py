@@ -206,7 +206,10 @@ class CharactersView(AbstractNovelView):
         self.refresh()
 
     def _on_new(self):
-        self.editor = CharacterEditor(self.novel)
+        character = Character('')
+        self.novel.characters.append(character)
+        self.repo.insert_character(self.novel, character)
+        self.editor = CharacterEditor(self.novel, character)
         self._switch_to_editor()
 
     @busy

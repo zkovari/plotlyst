@@ -507,10 +507,15 @@ class AvatarsRegistry:
         _sum = sum([ord(x) for x in character.name])
         color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_sum % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]
 
+        if not character.name:
+            return IconRegistry.character_icon(color_on='black')
+
         if character.name[0].isnumeric():
             icon = f'mdi.numeric-{int(character.name[0])}-circle-outline'
-        else:
+        elif character.name[0].isalpha():
             icon = f'mdi.alpha-{character.name[0].lower()}-circle-outline'
+        else:
+            return IconRegistry.character_icon(color_on='black')
 
         return qtawesome.icon(icon, options=[{'scale_factor': 1.2}], color=color)
 

@@ -52,7 +52,7 @@ class LabelsWidget(QWidget):
 
     def __init__(self, parent=None):
         super(LabelsWidget, self).__init__(parent)
-        self.setLayout(FlowLayout(0, 3))
+        self.setLayout(FlowLayout())
 
     def addText(self, text: str, color: str = '#7c98b3'):
         label = QLabel(truncate_string(text, 40))

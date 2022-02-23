@@ -384,7 +384,7 @@ class CardsView(QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._layout = FlowLayout(spacing=9)
+        self._layout = FlowLayout(9, 9)
         self._cards: List[Card] = []
         self.setLayout(self._layout)
         self.setAcceptDrops(True)
