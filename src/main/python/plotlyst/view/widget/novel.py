@@ -25,6 +25,7 @@ from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView
 from overrides import overrides
+from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag
@@ -36,8 +37,7 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.locations_model import LocationsTreeModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
-from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, transparent, spacer_widget, bold, \
-    popup, gc, link_buttons_to_pages
+from src.main.python.plotlyst.view.common import OpacityEventFilter, link_buttons_to_pages
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.story_structure_character_link_widget_ui import \
@@ -45,7 +45,7 @@ from src.main.python.plotlyst.view.generated.story_structure_character_link_widg
 from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.layout import clear_layout, flow, vbox, group
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
@@ -91,7 +91,7 @@ class _StoryStructureButton(QPushButton):
         return self._structure
 
     def _toggled(self, toggled: bool):
-        set_opacity(self, 1.0 if toggled else 0.5)
+        opaque(self, 1.0 if toggled else 0.5)
         font = self.font()
         font.setBold(toggled)
         self.setFont(font)
@@ -182,7 +182,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         return True
 
     def _beatToggled(self, toggled: bool):
-        set_opacity(self, 1 if toggled else 0.3)
+        opaque(self, 1 if toggled else 0.3)
         bold(self.lblTitle, toggled)
 
     def _beatClicked(self, checked: bool):
@@ -291,7 +291,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.wdgCharacterLink: Optional[StoryStructureCharacterLinkWidget] = None
         self.structureSelector = StoryStructureSelector(self.btnTemplateEditor)
         self.structureSelector.structureClicked.connect(self._structureSelectionChanged)
-        popup(self.btnTemplateEditor, self.structureSelector, hideMenuIcon=False)
+        btn_popup(self.btnTemplateEditor, self.structureSelector, show_menu_icon=True)
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
@@ -311,7 +311,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.wdgCharacterLink = StoryStructureCharacterLinkWidget(self.novel)
         self.wdgCharacterLink.linkCharacter.connect(self._linkCharacter)
         self.wdgCharacterLink.unlinkCharacter.connect(self._unlinkCharacter)
-        popup(self.btnLinkCharacter, self.wdgCharacterLink)
+        btn_popup(self.btnLinkCharacter, self.wdgCharacterLink)
         self.structureSelector.setNovel(self.novel)
         for structure in self.novel.story_structures:
             self._addStructure(structure)
@@ -380,7 +380,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         for beat in structure.beats:
             wdg = BeatWidget(beat)
             if beat.act - 1 > col:  # new act
-                self.beats.layout().addWidget(spacer_widget(vertical=True), row + 1, col)
+                self.beats.layout().addWidget(vspacer(), row + 1, col)
                 col = beat.act - 1
                 row = 0
             self.beats.layout().addWidget(wdg, row, col)
@@ -457,7 +457,7 @@ class TagTypeDisplay(QWidget):
             self.subtitle.setIconName(tagType.icon, tagType.icon_color)
         self.labelsEditor = TagLabelsEditor(self.novel, tagType, self.novel.tags[tagType])
         self.layout().addWidget(self.subtitle)
-        self.layout().addWidget(group(spacer_widget(20), self.labelsEditor))
+        self.layout().addWidget(group(spacer(20), self.labelsEditor))
 
 
 class TagsEditor(QWidget):

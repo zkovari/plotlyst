@@ -26,6 +26,7 @@ from PyQt5.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
+from qthandy import ask_confirmation, incr_font, opaque, btn_popup, clear_layout
 
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.event.core import emit_event, EventListener
@@ -37,14 +38,12 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ask_confirmation, PopupMenuBuilder, \
-    action, increase_font, set_opacity, popup
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, action
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
@@ -64,11 +63,11 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.novel = novel
         self.setupUi(self)
         self.btnScenes.setIcon(IconRegistry.scene_icon())
-        increase_font(self.lblTitle)
+        incr_font(self.lblTitle)
         self.btnScene.setIcon(IconRegistry.action_scene_icon())
         self.btnSequel.setIcon(IconRegistry.reaction_scene_icon())
-        set_opacity(self.btnScene, 0.6)
-        set_opacity(self.btnSequel, 0.6)
+        opaque(self.btnScene, 0.6)
+        opaque(self.btnSequel, 0.6)
 
         self.refresh()
 
@@ -176,11 +175,11 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
         self.ui.btnPreferences.setIcon(IconRegistry.preferences_icon())
         self.prefs_widget = ScenesPreferencesWidget()
-        popup(self.ui.btnPreferences, self.prefs_widget)
+        btn_popup(self.ui.btnPreferences, self.prefs_widget)
         self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
 
         self._scene_filter = SceneFilterWidget(self.novel)
-        popup(self.ui.btnFilter, self._scene_filter)
+        btn_popup(self.ui.btnFilter, self._scene_filter)
         self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
         self._scene_filter.povFilter.characterToggled.connect(self._update_cards)
 
@@ -210,7 +209,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.setDisabled(True)
 
         if self.ui.wdgStoryStructure.novel is not None:
-            clear_layout(self.ui.wdgStoryStructureParent.layout())
+            clear_layout(self.ui.wdgStoryStructureParent)
             self.ui.wdgStoryStructure = SceneStoryStructureWidget(self.ui.wdgStoryStructureParent)
             self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
         self.ui.wdgStoryStructure.setNovel(self.novel)

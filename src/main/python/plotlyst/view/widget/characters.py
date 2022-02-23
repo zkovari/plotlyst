@@ -29,7 +29,9 @@ from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, Q
     QHeaderView
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import vspacer
+from qthandy import vspacer, ask_confirmation, busy, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
+    spacer, clear_layout, vbox, hbox, flow
+from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
@@ -41,9 +43,8 @@ from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, busy, transparent, \
-    OpacityEventFilter, increase_font, gc, popup, DisabledClickEventFilter, InstantTooltipEventFilter, \
-    VisibilityToggleEventFilter, hmax, line, popup_menu
+from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
+    VisibilityToggleEventFilter, hmax
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
@@ -52,7 +53,6 @@ from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
-from src.main.python.plotlyst.view.layout import clear_layout, vbox, hbox, flow
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel
@@ -420,7 +420,7 @@ class CharacterConflictSelector(QWidget):
         self.btnLinkConflict.installEventFilter(OpacityEventFilter(parent=self.btnLinkConflict))
         self.selectorWidget = CharacterConflictWidget(self.novel, self.scene, self.scene.agendas[0],
                                                       self.btnLinkConflict)
-        popup(self.btnLinkConflict, self.selectorWidget)
+        btn_popup(self.btnLinkConflict, self.selectorWidget)
 
         self.selectorWidget.conflictSelectionChanged.connect(self._conflictSelected)
 
@@ -477,7 +477,7 @@ class CharacterLinkWidget(QWidget):
         self.selectorWidget = CharacterSelectorButtons(self.btnLinkCharacter)
         self.selectorWidget.setMinimumWidth(100)
         self.selectorWidget.characterClicked.connect(self._characterClicked)
-        popup(self.btnLinkCharacter, self.selectorWidget)
+        btn_popup(self.btnLinkCharacter, self.selectorWidget)
 
     def setCharacter(self, character: Character):
         if self.character and character.id == self.character.id:
@@ -531,7 +531,7 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self._delete)
         menu.aboutToShow.connect(self._aboutToShowContextMenu)
         menu.aboutToHide.connect(self._aboutToHideContextMenu)
-        popup_menu(self.btnContext, menu)
+        btn_popup_menu(self.btnContext, menu)
 
         self.btnAddChildGoal.setIcon(IconRegistry.plus_icon('grey'))
         self.btnAddChildGoal.installEventFilter(OpacityEventFilter(leaveOpacity=0.65, parent=self.btnAddChildGoal))
@@ -703,7 +703,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.btnType = QToolButton(self)
         self.btnType.setIconSize(QSize(24, 24))
 
-        increase_font(self.lblKeyphrase, 2)
+        incr_font(self.lblKeyphrase, 2)
 
         self.setMinimumWidth(30)
         self.refresh()
@@ -786,7 +786,7 @@ class CharacterBackstoryEvent(QWidget):
         self.card = CharacterBackstoryCard(backstory, first)
 
         self._layout = hbox(self, 0, 3)
-        self.spacer = spacer_widget()
+        self.spacer = spacer()
         self.spacer.setFixedWidth(self.width() // 2 + 3)
         if self.alignment == Qt.AlignRight:
             self.layout().addWidget(self.spacer)
@@ -911,9 +911,9 @@ class CharacterTimelineWidget(QWidget):
             event.card.relationChanged.connect(self.refresh)
 
         self._addControlButtons(-1)
-        spacer = spacer_widget(vertical=True)
-        spacer.setMinimumHeight(200)
-        self.layout().addWidget(spacer)
+        spacer_ = spacer(vertical=True)
+        spacer_.setMinimumHeight(200)
+        self.layout().addWidget(spacer_)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:

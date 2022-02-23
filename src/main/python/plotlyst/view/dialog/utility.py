@@ -30,12 +30,12 @@ from PyQt5.QtGui import QColor, QPixmap, QIcon, QDesktopServices
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
+from qthandy import hbox, FlowLayout
+from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import InstantTooltipEventFilter
 from src.main.python.plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import FlowLayout, hbox
 from src.main.python.plotlyst.view.widget.utility import IconSelectorWidget
 
 

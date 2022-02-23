@@ -22,6 +22,7 @@ from typing import Optional
 from PyQt5.QtCore import QItemSelection
 from PyQt5.QtWidgets import QWidget
 from overrides import overrides
+from qthandy import ask_confirmation, busy, gc, incr_font
 
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
@@ -32,7 +33,7 @@ from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
-from src.main.python.plotlyst.view.common import ask_confirmation, busy, link_buttons_to_pages, gc, increase_font
+from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -47,7 +48,7 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
         self.novel = novel
         self.setupUi(self)
         self.btnCharacter.setIcon(IconRegistry.character_icon())
-        increase_font(self.lblTitle)
+        incr_font(self.lblTitle)
         self.btnMajor.setIcon(IconRegistry.major_character_icon())
         self.btnMinor.setIcon(IconRegistry.minor_character_icon())
 

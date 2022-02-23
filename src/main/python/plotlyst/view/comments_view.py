@@ -22,11 +22,11 @@ from typing import Optional
 from PyQt5.QtCore import QEvent, pyqtSignal, Qt
 from PyQt5.QtWidgets import QFrame
 from overrides import overrides
+from qthandy import ask_confirmation
 
 from src.main.python.plotlyst.core.domain import Novel, Comment, Scene, Event
 from src.main.python.plotlyst.events import SceneSelectedEvent, SceneSelectionClearedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ask_confirmation
 from src.main.python.plotlyst.view.generated.comment_widget_ui import Ui_CommentWidget
 from src.main.python.plotlyst.view.generated.comments_view_ui import Ui_CommentsView
 from src.main.python.plotlyst.view.icons import IconRegistry

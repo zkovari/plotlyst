@@ -23,6 +23,7 @@ from PyQt5.QtCore import QModelIndex, Qt, QSize
 from PyQt5.QtWidgets import QHeaderView, QWidgetAction, QListView, QWidget
 from fbs_runtime import platform
 from overrides import overrides
+from qthandy import vspacer, clear_layout
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, Character, DocumentType, \
@@ -33,12 +34,11 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import spacer_widget, PopupMenuBuilder
+from src.main.python.plotlyst.view.common import PopupMenuBuilder
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
 from src.main.python.plotlyst.view.widget.input import RotatedButton, DocumentTextEditor
 
@@ -236,4 +236,4 @@ class DocumentsSidebar(QWidget, AbstractNovelView, Ui_DocumentsSidebarWidget):
             btn = RotatedButton()
             btn.setText(doc.title)
             self.scrollAreaWidgetContents.layout().addWidget(btn)
-        self.scrollAreaWidgetContents.layout().addWidget(spacer_widget(vertical=True))
+        self.scrollAreaWidgetContents.layout().addWidget(vspacer())

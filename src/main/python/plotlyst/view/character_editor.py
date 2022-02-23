@@ -21,15 +21,15 @@ from typing import Optional
 
 from PyQt5.QtWidgets import QWidget
 from fbs_runtime import platform
+from qthandy import spacer, hbox, vbox
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import emoji_font, spacer_widget
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import hbox, vbox
 from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -87,7 +87,7 @@ class CharacterEditor:
         self._profile_with_toolbar = QWidget()
         self._toolbar = QWidget()
         hbox(self._toolbar, 0)
-        self._toolbar.layout().addWidget(spacer_widget())
+        self._toolbar.layout().addWidget(spacer())
         self._toolbar.layout().addWidget(self.ui.btnCustomize)
         vbox(self._profile_with_toolbar, 0)
         self._profile_with_toolbar.layout().addWidget(self._toolbar)

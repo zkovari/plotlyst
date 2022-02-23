@@ -22,6 +22,7 @@ from typing import Optional
 from PyQt5.QtCore import QObject, QEvent
 from PyQt5.QtWidgets import QHeaderView
 from overrides import overrides
+from qthandy import retain_when_hidden, ask_confirmation
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Plot, Document
@@ -31,8 +32,7 @@ from src.main.python.plotlyst.events import NovelUpdatedEvent, \
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import ask_confirmation, link_buttons_to_pages, OpacityEventFilter, \
-    retain_size_when_hidden
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, OpacityEventFilter
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult, NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
@@ -56,7 +56,7 @@ class NovelView(AbstractNovelView):
         self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
         self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))
         self.ui.btnEditNovel.clicked.connect(self._edit_novel)
-        retain_size_when_hidden(self.ui.btnEditNovel)
+        retain_when_hidden(self.ui.btnEditNovel)
         self.ui.wdgTitle.installEventFilter(self)
         self.ui.btnEditNovel.setHidden(True)
 

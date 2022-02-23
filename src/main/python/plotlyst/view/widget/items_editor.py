@@ -22,10 +22,11 @@ from typing import Optional
 from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QAbstractItemView
+from qthandy import ask_confirmation
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import ask_confirmation, show_color_picker
+from src.main.python.plotlyst.view.common import show_color_picker
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.items_editor_widget_ui import Ui_ItemsEditorWidget

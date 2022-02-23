@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit
 from language_tool_python import LanguageTool
 from overrides import overrides
+from qthandy import transparent, hbox
 from qttextedit import EnhancedTextEdit, RichTextEditor
 
 from src.main.python.plotlyst.core.domain import TextStatistics
@@ -38,9 +39,8 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
-from src.main.python.plotlyst.view.common import OpacityEventFilter, transparent
+from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import hbox
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy, dictionary

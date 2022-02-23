@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from overrides import overrides
+from qthandy import clear_layout
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
@@ -26,7 +27,6 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedE
 from src.main.python.plotlyst.model.report import ReportsTreeModel, CharacterReportNode, CharacterArcReportNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
-from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.report.character import CharacterReport, CharacterArcReport
 
 

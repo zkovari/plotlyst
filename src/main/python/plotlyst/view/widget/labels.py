@@ -25,13 +25,13 @@ from PyQt5.QtGui import QIcon, QMouseEvent
 from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
 from overrides import overrides
+from qthandy import hbox, FlowLayout, vline, vbox, clear_layout
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem, Novel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import line, text_color_with_bg_color, VisibilityToggleEventFilter
+from src.main.python.plotlyst.view.common import text_color_with_bg_color, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
-from src.main.python.plotlyst.view.layout import FlowLayout, hbox, vbox
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 
@@ -52,7 +52,7 @@ class LabelsWidget(QWidget):
 
     def __init__(self, parent=None):
         super(LabelsWidget, self).__init__(parent)
-        self.setLayout(FlowLayout(margin=0, spacing=3))
+        self.setLayout(FlowLayout(0, 3))
 
     def addText(self, text: str, color: str = '#7c98b3'):
         label = QLabel(truncate_string(text, 40))
@@ -68,7 +68,7 @@ class LabelsWidget(QWidget):
         self.layout().addWidget(label)
 
     def clear(self):
-        self.layout().clear()
+        clear_layout(self)
 
 
 class CharacterLabel(Label):
@@ -86,7 +86,7 @@ class CharacterLabel(Label):
         if role:
             self.lblRole = QLabel()
             self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
-            self.layout().addWidget(line(vertical=True))
+            self.layout().addWidget(vline())
             self.layout().addWidget(self.lblRole)
 
         border_size = 3 if pov else 2

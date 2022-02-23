@@ -24,14 +24,14 @@ import qtanim
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QDialog, QToolButton, QButtonGroup, QDialogButtonBox
 from fbs_runtime import platform
+from qthandy import FlowLayout
+from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.domain import BackstoryEvent, NEUTRAL, VERY_HAPPY, VERY_UNHAPPY, UNHAPPY, HAPPY, \
     BackstoryEventType
-from src.main.python.plotlyst.view.common import emoji_font, DisabledClickEventFilter, \
-    InstantTooltipEventFilter
+from src.main.python.plotlyst.view.common import emoji_font, DisabledClickEventFilter
 from src.main.python.plotlyst.view.generated.backstory_editor_dialog_ui import Ui_BackstoryEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import FlowLayout
 
 
 class _BackstoryEventTypeButton(QToolButton):

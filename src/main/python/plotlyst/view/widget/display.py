@@ -26,11 +26,12 @@ from PyQt5.QtGui import QPainter, QShowEvent
 from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
 from fbs_runtime import platform
 from overrides import overrides
+from qthandy import spacer, incr_font, bold, transparent, vbox
 
 from src.main.python.plotlyst.core.text import wc
-from src.main.python.plotlyst.view.common import bold, increase_font, transparent, spacer_widget, emoji_font
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import vbox, group
+from src.main.python.plotlyst.view.layout import group
 
 
 class ToggleHelp(QPushButton):
@@ -82,11 +83,11 @@ class Subtitle(QWidget):
         transparent(self.icon)
         self.lblDescription = QLabel(self)
         bold(self.lblTitle)
-        increase_font(self.lblTitle)
+        incr_font(self.lblTitle)
 
         self._iconName: str = ''
         self._iconColor: str = 'black'
-        self._descSpacer = spacer_widget(20)
+        self._descSpacer = spacer(20)
 
         self.lblDescription.setStyleSheet('color: #8d99ae;')
         self.lblDescription.setWordWrap(True)
