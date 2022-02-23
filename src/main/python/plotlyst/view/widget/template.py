@@ -700,7 +700,6 @@ class CharacterProfileTemplateView(ProfileTemplateView):
         if not self._avatar_widget:
             raise ValueError('Obligatory avatar field is missing from profile')
 
-        self._name_widget.wdgEditor.setFocusPolicy(Qt.StrongFocus)
         self._avatar_widget.setCharacter(self.character)
         if self._enneagram_widget:
             self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)

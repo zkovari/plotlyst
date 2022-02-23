@@ -62,6 +62,8 @@ class CharacterEditor:
         self.ui.btnMale.clicked.connect(self._male_clicked)
         self.ui.btnFemale.clicked.connect(self._female_clicked)
 
+        self.ui.lineName.setText(self.character.name)
+
         self._character_goals = CharacterGoalsEditor(self.novel, self.character)
         self.ui.tabGoals.layout().addWidget(self._character_goals)
 

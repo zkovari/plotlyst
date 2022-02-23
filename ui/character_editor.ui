@@ -146,6 +146,9 @@
             <pointsize>28</pointsize>
            </font>
           </property>
+          <property name="focusPolicy">
+           <enum>Qt::TabFocus</enum>
+          </property>
           <property name="styleSheet">
            <string notr="true">border: 0px;
 background-color: rgba(0,0,0,0);</string>
@@ -174,6 +177,9 @@ background-color: rgba(0,0,0,0);</string>
            <widget class="QToolButton" name="btnMale">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
             </property>
             <property name="styleSheet">
              <string notr="true">QToolButton {
@@ -208,6 +214,9 @@ QToolButton:checked {
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="styleSheet">
              <string notr="true">QToolButton {
 	border: 1px dashed grey;
@@ -238,6 +247,9 @@ QToolButton:checked {
           </item>
           <item>
            <widget class="QPushButton" name="btnRole">
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
             <property name="text">
              <string>Role</string>
             </property>
@@ -306,6 +318,9 @@ border: 0px;
       </layout>
      </widget>
      <widget class="QTabWidget" name="tabAttributes">
+      <property name="focusPolicy">
+       <enum>Qt::ClickFocus</enum>
+      </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
@@ -511,6 +526,13 @@ border: 0px;
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>lineName</tabstop>
+  <tabstop>tabAttributes</tabstop>
+  <tabstop>btnFemale</tabstop>
+  <tabstop>btnMale</tabstop>
+  <tabstop>btnRole</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

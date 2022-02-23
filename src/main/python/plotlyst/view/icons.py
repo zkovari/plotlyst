@@ -132,7 +132,7 @@ class IconRegistry:
 
     @staticmethod
     def scene_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.movie-open', color_on='darkBlue')
+        return IconRegistry.from_name('mdi.movie-open', color_on='darkBlue', mdi_scale=1.1)
 
     @staticmethod
     def chapter_icon() -> QIcon:
