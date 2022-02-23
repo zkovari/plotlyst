@@ -181,6 +181,9 @@ background-color: rgba(0,0,0,0);</string>
             <property name="focusPolicy">
              <enum>Qt::ClickFocus</enum>
             </property>
+            <property name="toolTip">
+             <string>Male</string>
+            </property>
             <property name="styleSheet">
              <string notr="true">QToolButton {
 	border: 1px dashed grey;
@@ -196,7 +199,7 @@ QToolButton:checked {
 }</string>
             </property>
             <property name="text">
-             <string/>
+             <string>male</string>
             </property>
             <property name="iconSize">
              <size>
@@ -207,6 +210,9 @@ QToolButton:checked {
             <property name="checkable">
              <bool>true</bool>
             </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btnGroupGender</string>
+            </attribute>
            </widget>
           </item>
           <item alignment="Qt::AlignLeft">
@@ -216,6 +222,9 @@ QToolButton:checked {
             </property>
             <property name="focusPolicy">
              <enum>Qt::ClickFocus</enum>
+            </property>
+            <property name="toolTip">
+             <string>Female</string>
             </property>
             <property name="styleSheet">
              <string notr="true">QToolButton {
@@ -232,7 +241,7 @@ QToolButton:checked {
 }</string>
             </property>
             <property name="text">
-             <string/>
+             <string>female</string>
             </property>
             <property name="iconSize">
              <size>
@@ -242,6 +251,158 @@ QToolButton:checked {
             </property>
             <property name="checkable">
              <bool>true</bool>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btnGroupGender</string>
+            </attribute>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnMoreGender">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Display more genders</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QToolButton {
+	border: 0px;
+}
+
+QToolButton:pressed {
+	color: white;
+}</string>
+            </property>
+            <property name="text">
+             <string>»</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnTransgender">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
+            <property name="toolTip">
+             <string>Transgender</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QToolButton {
+	border: 1px dashed grey;
+	border-radius: 6px;
+}
+
+QToolButton:pressed {
+	border: 1px solid grey;
+}
+
+QToolButton:checked {
+	border: 2px solid #f4a261;	
+}</string>
+            </property>
+            <property name="text">
+             <string>transgender</string>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>26</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnNonBinary">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
+            <property name="toolTip">
+             <string>Non-binary</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QToolButton {
+	border: 1px dashed grey;
+	border-radius: 6px;
+}
+
+QToolButton:pressed {
+	border: 1px solid grey;
+}
+
+QToolButton:checked {
+		border: 2px solid #7209b7;	
+}</string>
+            </property>
+            <property name="text">
+             <string>non-binary</string>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>26</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="btnGenderless">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::ClickFocus</enum>
+            </property>
+            <property name="toolTip">
+             <string>Genderless</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QToolButton {
+	border: 1px dashed grey;
+	border-radius: 6px;
+}
+
+QToolButton:pressed {
+	border: 1px solid grey;
+}
+
+QToolButton:checked {
+		border: 2px solid #6c757d;	
+}</string>
+            </property>
+            <property name="text">
+             <string>genderless</string>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>26</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
            </widget>
           </item>
@@ -535,4 +696,11 @@ border: 0px;
  </tabstops>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="btnGroupGender">
+   <property name="exclusive">
+    <bool>false</bool>
+   </property>
+  </buttongroup>
+ </buttongroups>
 </ui>

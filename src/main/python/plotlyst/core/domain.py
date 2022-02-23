@@ -113,10 +113,15 @@ class CharacterGoal:
                 return goal_
 
 
+MALE = 'male'
+FEMALE = 'female'
+
+
 @dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    gender: str = ''
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
@@ -140,15 +145,9 @@ class Character:
                 item = _role_choices.get(value.value)
                 if not item:
                     return None
-                if item.text == 'Protagonist' and self.gender() == 1:
+                if item.text == 'Protagonist' and self.gender == FEMALE:
                     return SelectionItem(item.text, item.type, 'fa5s.chess-queen', item.icon_color)
                 return item
-
-    def gender(self) -> int:
-        for value in self.template_values:
-            if value.id == gender_field.id:
-                return value.value[0] if value.value else -1
-        return -1
 
     @overrides
     def __hash__(self):
@@ -870,11 +869,6 @@ avatar_field = TemplateField(name='Avatar', type=TemplateFieldType.IMAGE,
 age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
                           id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), emoji=':birthday_cake:',
                           show_label=False, compact=True, placeholder='Age')
-gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECTION,
-                             id=uuid.UUID('dd5421f5-b332-4295-8020-e69c482a2ac5'),
-                             selections=[SelectionItem('Male', icon='mdi.gender-male', icon_color='#067bc2'),
-                                         SelectionItem('Female', icon='mdi.gender-female', icon_color='#832161')],
-                             compact=True, show_label=False, exclusive=True)
 enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
                                 id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
                                 selections=[SelectionItem('Perfectionist', icon='mdi.numeric-1-circle',
@@ -1080,7 +1074,6 @@ class ProfileTemplate:
 
 def default_character_profiles() -> List[ProfileTemplate]:
     fields = [ProfileElement(avatar_field, 0, 1, row_span=3, h_alignment=HAlignment.RIGHT),
-              ProfileElement(gender_field, 1, 0, v_alignment=VAlignment.BOTTOM),
               ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
               ProfileElement(role_field, 3, 0, v_alignment=VAlignment.BOTTOM),
               ProfileElement(goal_field, 4, 0, col_span=2, v_alignment=VAlignment.TOP),

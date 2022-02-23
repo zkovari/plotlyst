@@ -111,6 +111,7 @@ def load_image(path: pathlib.Path):
 class CharacterInfo:
     name: str
     id: uuid.UUID
+    gender: str = ''
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
@@ -381,7 +382,8 @@ class JsonClient:
             with open(path, encoding='utf8') as json_file:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
-                character = Character(name=info.name, id=info.id, template_values=info.template_values,
+                character = Character(name=info.name, id=info.id, gender=info.gender,
+                                      template_values=info.template_values,
                                       backstory=info.backstory, goals=info.goals, document=info.document,
                                       journals=info.journals)
                 if info.avatar_id:
@@ -519,7 +521,8 @@ class JsonClient:
         self.__persist_info(self.novels_dir, novel_info)
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
-        char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id,
+        char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, template_values=char.template_values,
+                                  avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,
                                   journals=char.journals)
         self.__persist_info(self.characters_dir, char_info)

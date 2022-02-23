@@ -17,13 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 
 import qtanim
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QAbstractButton
 from fbs_runtime import platform
+from qthandy import opaque
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Document
+from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
@@ -56,11 +58,40 @@ class CharacterEditor:
         self.ui.textEdit.setTitleVisible(False)
 
         self.ui.btnMale.setIcon(IconRegistry.from_name('mdi.gender-male', color_on='#067bc2'))
-        self.ui.btnFemale.setIcon(IconRegistry.from_name('mdi.gender-female', color_on='#832161'))
         self.ui.btnMale.installEventFilter(OpacityEventFilter(parent=self.ui.btnMale, ignoreCheckedButton=True))
+        self.ui.btnFemale.setIcon(IconRegistry.from_name('mdi.gender-female', color_on='#832161'))
         self.ui.btnFemale.installEventFilter(OpacityEventFilter(parent=self.ui.btnFemale, ignoreCheckedButton=True))
-        self.ui.btnMale.clicked.connect(self._male_clicked)
-        self.ui.btnFemale.clicked.connect(self._female_clicked)
+        self.ui.btnTransgender.setIcon(IconRegistry.from_name('fa5s.transgender-alt', color_on='#f4a261'))
+        self.ui.btnTransgender.installEventFilter(
+            OpacityEventFilter(parent=self.ui.btnTransgender, ignoreCheckedButton=True))
+        self.ui.btnTransgender.setHidden(True)
+        self.ui.btnNonBinary.setIcon(IconRegistry.from_name('mdi.gender-male-female-variant', color_on='#7209b7'))
+        self.ui.btnNonBinary.installEventFilter(
+            OpacityEventFilter(parent=self.ui.btnNonBinary, ignoreCheckedButton=True))
+        self.ui.btnNonBinary.setHidden(True)
+        self.ui.btnGenderless.setIcon(IconRegistry.from_name('fa5s.genderless', color_on='#6c757d'))
+        self.ui.btnGenderless.installEventFilter(
+            OpacityEventFilter(parent=self.ui.btnGenderless, ignoreCheckedButton=True))
+        self.ui.btnGenderless.setHidden(True)
+        self.ui.btnGroupGender.buttonClicked.connect(self._gender_clicked)
+        self.ui.btnMoreGender.clicked.connect(self._display_more_gender_clicked)
+
+        if self.character.gender:
+            self.ui.btnMoreGender.setHidden(True)
+            if self.character.gender == MALE:
+                self.ui.btnMale.setChecked(True)
+            elif self.character.gender == FEMALE:
+                self.ui.btnFemale.setChecked(True)
+            else:
+                for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
+                    self.ui.btnGroupGender.addButton(btn)
+                    if self.character.gender == btn.text():
+                        btn.setChecked(True)
+                        btn.setVisible(True)
+
+            for btn in self.ui.btnGroupGender.buttons():
+                if not btn.isChecked():
+                    btn.setHidden(True)
 
         self.ui.lineName.setText(self.character.name)
 
@@ -96,23 +127,40 @@ class CharacterEditor:
                 json_client.load_document(self.novel, self.character.document)
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
 
-    def _male_clicked(self, checked: bool):
-        if checked:
-            self.ui.btnFemale.setChecked(False)
-            qtanim.fade_out(self.ui.btnFemale)
-        else:
-            self.ui.btnFemale.setVisible(True)
-            qtanim.fade_in(self.ui.btnFemale)
+    def _gender_clicked(self, btn: QAbstractButton):
+        self.ui.btnMoreGender.setHidden(True)
 
-    def _female_clicked(self, checked: bool):
-        if checked:
-            self.ui.btnMale.setChecked(False)
-            qtanim.fade_out(self.ui.btnMale)
-        else:
-            self.ui.btnMale.setVisible(True)
-            qtanim.fade_in(self.ui.btnMale)
+        for other_btn in self.ui.btnGroupGender.buttons():
+            if other_btn is btn:
+                continue
+
+            if btn.isChecked():
+                other_btn.setChecked(False)
+                qtanim.fade_out(other_btn)
+            else:
+                other_btn.setVisible(True)
+                anim = qtanim.fade_in(other_btn)
+                anim.finished.connect(partial(opaque, other_btn, 0.4))
+
+        if len(self.ui.btnGroupGender.buttons()) == 2:
+            self.ui.btnMoreGender.setHidden(btn.isChecked())
+
+    def _display_more_gender_clicked(self):
+        for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
+            btn.setVisible(True)
+            qtanim.fade_in(btn)
+            self.ui.btnGroupGender.addButton(btn)
+            opaque(btn, 0.4)
+
+        self.ui.btnMoreGender.setHidden(True)
 
     def _save(self):
+        gender = ''
+        for btn in self.ui.btnGroupGender.buttons():
+            if btn.isChecked():
+                gender = btn.text()
+                break
+        self.character.gender = gender
         self.character.name = self.ui.lineName.text()
         self.character.template_values = self.profile.values()
 
