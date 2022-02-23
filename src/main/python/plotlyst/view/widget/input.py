@@ -23,8 +23,8 @@ from typing import Optional
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
-from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat, QTextCharFormat, QTextFormat, \
-    QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, QColor, QSyntaxHighlighter, \
+from PyQt5.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
+    QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
     QApplication, QToolButton, QLineEdit
@@ -329,30 +329,10 @@ class DocumentTextEditor(RichTextEditor):
         # self._lblPlaceholder.setFont(font)
         # self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
-        self.setMouseTracking(True)
         self.textEdit.installEventFilter(self)
-        self.textEdit.setMouseTracking(True)
         self.setMargins(3, 3, 3, 3)
 
         self.layout().insertWidget(1, self.textTitle)
-
-        # self.cbHeading = QComboBox()
-        # if platform.is_linux() or platform.is_windows():
-        #     self.cbHeading.setStyleSheet('''
-        #         QComboBox {
-        #             border: 0px;
-        #             padding: 1px 1px 1px 3px;
-        #         }
-        #     ''')
-        #
-        # self.cbHeading.addItem('Normal')
-        # self.cbHeading.addItem(IconRegistry.heading_1_icon(), '')
-        # self.cbHeading.addItem(IconRegistry.heading_2_icon(), '')
-        # self.cbHeading.addItem(IconRegistry.heading_3_icon(), '')
-        # self.cbHeading.setCurrentText('Normal')
-        # self.cbHeading.currentIndexChanged.connect(self._setHeading)
-        #
-        # self.toolbar.addWidget(self.cbHeading)
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
@@ -404,13 +384,6 @@ class DocumentTextEditor(RichTextEditor):
                 if self.textEdit.textCursor().atBlockStart():
                     self._showCommands()
 
-            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Return:
-                level = cursor.blockFormat().headingLevel()
-                if level > 0:  # heading
-                    cursor.insertBlock()
-                    self.cbHeading.setCurrentIndex(0)
-                    self._setHeading()
-
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
                 cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
                 if cursor.selectedText() == ' ':
@@ -429,33 +402,6 @@ class DocumentTextEditor(RichTextEditor):
 
         return super(DocumentTextEditor, self).eventFilter(watched, event)
 
-    # def _updateFormat(self):
-    #     self.cbHeading.blockSignals(True)
-    #     cursor = self.textEdit.textCursor()
-    #     level = cursor.blockFormat().headingLevel()
-    #     self.cbHeading.setCurrentIndex(level)
-    #     self.cbHeading.blockSignals(False)
-
-    def _setHeading(self):
-        cursor: QTextCursor = self.textEdit.textCursor()
-        cursor.beginEditBlock()
-
-        blockFormat: QTextBlockFormat = cursor.blockFormat()
-        blockFormat.setObjectIndex(-1)
-        headingLevel = self.cbHeading.currentIndex()
-        blockFormat.setHeadingLevel(headingLevel)
-        cursor.setBlockFormat(blockFormat)
-        sizeAdjustment = 5 - headingLevel if headingLevel else 0
-
-        charFormat = QTextCharFormat()
-        charFormat.setFontWeight(QFont.Bold if headingLevel else QFont.Normal)
-        charFormat.setProperty(QTextFormat.FontSizeAdjustment, sizeAdjustment)
-        cursor.select(QTextCursor.LineUnderCursor)
-        cursor.mergeCharFormat(charFormat)
-        self.textEdit.mergeCurrentCharFormat(charFormat)
-
-        cursor.endEditBlock()
-
     def _showCommands(self):
         def trigger(func):
             self.textEdit.textCursor().deletePreviousChar()
@@ -464,8 +410,8 @@ class DocumentTextEditor(RichTextEditor):
         rect = self.textEdit.cursorRect(self.textEdit.textCursor())
 
         menu = QMenu(self.textEdit)
-        menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(1)))
-        menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.cbHeading.setCurrentIndex(2)))
+        menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.textEdit.setHeading(1)))
+        menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.textEdit.setHeading(2)))
 
         menu.popup(self.textEdit.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
