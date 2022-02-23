@@ -24,6 +24,7 @@ from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt, QTimer
 from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor, QIcon
 from PyQt5.QtWidgets import QHeaderView, QTextEdit, QApplication
 from overrides import overrides
+from qthandy import opaque, incr_font, bold, btn_popup
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentStatistics, Scene
@@ -31,7 +32,7 @@ from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import set_opacity, OpacityEventFilter, popup, bold, increase_font
+from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget
@@ -57,7 +58,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnStoryGoal.setText('80,000')
 
         bold(self.ui.lblSceneTitle)
-        increase_font(self.ui.lblSceneTitle)
+        incr_font(self.ui.lblSceneTitle)
 
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
@@ -65,7 +66,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnContext.setIcon(IconRegistry.context_icon())
         self.ui.btnContext.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self.ui.btnContext))
         self._contextMenuWidget = ManuscriptContextMenuWidget(novel, self.widget)
-        popup(self.ui.btnContext, self._contextMenuWidget)
+        btn_popup(self.ui.btnContext, self._contextMenuWidget)
         self._contextMenuWidget.languageChanged.connect(self._language_changed)
         self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
@@ -169,7 +170,7 @@ class ManuscriptView(AbstractNovelView):
         self.repo.update_doc(self.novel, self._current_doc)
 
     def _spellcheck_toggled(self, toggled: bool):
-        set_opacity(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
+        opaque(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
 
     def _spellcheck_clicked(self, checked: bool):
         if checked:
@@ -184,7 +185,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.checkGrammar()
 
     def _analysis_toggled(self, toggled: bool):
-        set_opacity(self.ui.btnAnalysisIcon, 1 if toggled else 0.4)
+        opaque(self.ui.btnAnalysisIcon, 1 if toggled else 0.4)
 
     def _analysis_clicked(self, checked: bool):
         if not checked:

@@ -28,7 +28,7 @@ from PyQt5.QtGui import QFont, QTextDocument
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import retain_when_hidden
+from qthandy import retain_when_hidden, opaque, btn_popup
 from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import Novel
@@ -36,8 +36,8 @@ from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import retain_size_when_hidden, scroll_to_top, popup, spin, \
-    OpacityEventFilter, set_opacity
+from src.main.python.plotlyst.view.common import scroll_to_top, spin, \
+    OpacityEventFilter
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
@@ -68,7 +68,7 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self.btnTimer.setIcon(IconRegistry.timer_icon())
         self.btnReset.setIcon(IconRegistry.restore_alert_icon('#9b2226'))
         self._timer_setup = TimerSetupWidget()
-        popup(self.btnTimer, self._timer_setup)
+        btn_popup(self.btnTimer, self._timer_setup)
 
         self._timer_setup.btnStart.clicked.connect(self.start)
         self.btnPause.clicked.connect(self._pauseStartTimer)
@@ -103,8 +103,8 @@ class SprintWidget(QWidget, Ui_SprintWidget):
             self.btnPause.setIcon(IconRegistry.pause_icon())
         if self._compact:
             self.btnTimer.setHidden(running)
-            retain_size_when_hidden(self.btnPause)
-            retain_size_when_hidden(self.btnReset)
+            retain_when_hidden(self.btnPause)
+            retain_when_hidden(self.btnReset)
             self.btnPause.setHidden(True)
             self.btnReset.setHidden(True)
         else:
@@ -351,7 +351,7 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         if updated:
             if not self.btnRefresh.isVisible():
                 anim = qtanim.fade_in(self.btnRefresh)
-                anim.finished.connect(lambda: set_opacity(self.btnRefresh, 0.4))
+                anim.finished.connect(lambda: opaque(self.btnRefresh, 0.4))
         else:
             if self.btnRefresh.isVisible():
                 qtanim.fade_out(self.btnRefresh)

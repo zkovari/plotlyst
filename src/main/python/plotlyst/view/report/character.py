@@ -24,13 +24,12 @@ from PyQt5.QtChart import QValueAxis, QSplineSeries
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QLabel, QWidget, QToolButton
 from overrides import overrides
-from qthandy import clear_layout, vspacer, hbox, transparent
+from qthandy import clear_layout, vspacer, hbox, transparent, vbox
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene
 from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import vbox
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton
 

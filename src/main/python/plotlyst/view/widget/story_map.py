@@ -24,10 +24,11 @@ from PyQt5.QtCore import Qt, QPoint, QEvent, pyqtSignal, QSize
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QColor, QMouseEvent
 from PyQt5.QtWidgets import QWidget
 from overrides import overrides
+from qthandy import busy
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Scene, Novel, ScenePlotValue, Plot
-from src.main.python.plotlyst.view.common import busy, PopupMenuBuilder
+from src.main.python.plotlyst.view.common import PopupMenuBuilder
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 

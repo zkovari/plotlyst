@@ -23,11 +23,11 @@ from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
 from overrides import overrides
+from qthandy import flow
 
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import flow
 from src.main.python.plotlyst.view.widget._icons import icons_registry
 
 

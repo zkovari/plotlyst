@@ -23,12 +23,12 @@ from typing import List, Any, Optional
 from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QWidget
 from overrides import overrides
+from qthandy import busy
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadedEvent
-from src.main.python.plotlyst.view.common import busy
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 

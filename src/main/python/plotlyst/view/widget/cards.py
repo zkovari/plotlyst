@@ -30,6 +30,7 @@ from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEve
 from PyQt5.QtWidgets import QFrame, QApplication, QAction
 from fbs_runtime import platform
 from overrides import overrides
+from qthandy import FlowLayout, clear_layout
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
@@ -42,7 +43,6 @@ from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCa
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
 from src.main.python.plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar, avatars
-from src.main.python.plotlyst.view.layout import FlowLayout
 from src.main.python.plotlyst.view.widget.labels import CharacterAvatarLabel
 
 
@@ -411,7 +411,7 @@ class CardsView(QFrame):
     def clear(self):
         self._selected = None
         self._cards.clear()
-        self._layout.clear()
+        clear_layout(self._layout)
 
     def addCard(self, card: Card):
         card.setAcceptDrops(True)

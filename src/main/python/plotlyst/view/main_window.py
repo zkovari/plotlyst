@@ -25,6 +25,7 @@ from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
 from overrides import overrides
+from qthandy import spacer, busy, gc, clear_layout
 from textstat import textstat
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
@@ -40,14 +41,12 @@ from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelRelo
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
-from src.main.python.plotlyst.view.common import spacer_widget, busy, gc
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSidebar
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import clear_layout
 from src.main.python.plotlyst.view.locations_view import LocationsView
 from src.main.python.plotlyst.view.manuscript_view import ManuscriptView, SentenceHighlighter
 from src.main.python.plotlyst.view.novel_view import NovelView
@@ -282,7 +281,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.notes_view.activate()
 
         if title:
-            clear_layout(self.wdgTitle.layout(), autoDelete=False)
+            clear_layout(self.wdgTitle.layout(), auto_delete=False)
             self.wdgTitle.layout().addWidget(title)
             self.wdgTitle.setVisible(True)
         else:
@@ -352,15 +351,15 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.setCheckable(True)
         self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
 
-        self.toolBar.addWidget(spacer_widget(5))
+        self.toolBar.addWidget(spacer(5))
         self.toolBar.addWidget(self.home_mode)
-        self.toolBar.addWidget(spacer_widget(5))
+        self.toolBar.addWidget(spacer(5))
         self.toolBar.addSeparator()
-        self.toolBar.addWidget(spacer_widget(5))
+        self.toolBar.addWidget(spacer(5))
         self.toolBar.addWidget(self.outline_mode)
         self.toolBar.addWidget(self.manuscript_mode)
         self.toolBar.addWidget(self.reports_mode)
-        self.toolBar.addWidget(spacer_widget())
+        self.toolBar.addWidget(spacer())
         self.toolBar.addWidget(self.btnComments)
 
         self.wdgSidebar.setHidden(True)

@@ -30,13 +30,14 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
     QSpacerItem, QTextEdit, QListView, QPushButton
 from fbs_runtime import platform
 from overrides import overrides
+from qthandy import ask_confirmation, spacer, btn_popup
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, TemplateValue, ProfileElement, name_field, Character, avatar_field, SelectionItemType, \
     enneagram_field, traits_field, desire_field, fear_field, goal_field, HAlignment, VAlignment, mbti_field
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, emoji_font, popup
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.utility import ArtbreederDialog
 from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
@@ -171,7 +172,7 @@ class TextSelectionWidget(QPushButton):
 
         self.setText(self.placeholder_text)
         self._popup = self.Popup(self.field, help)
-        popup(self, self._popup)
+        btn_popup(self, self._popup)
 
         self._selected: Optional[SelectionItem] = None
         self._items: Dict[str, SelectionItem] = {}
@@ -375,13 +376,13 @@ class TemplateFieldWidget(QFrame):
         if not field.show_label:
             self.lblName.setHidden(True)
             if not self.field.emoji:
-                self.layout.addWidget(spacer_widget(20))
+                self.layout.addWidget(spacer(20))
 
         self.wdgEditor = self._fieldWidget()
         self.layout.addWidget(self.wdgEditor)
 
         if self.field.compact:
-            self.layout.addWidget(spacer_widget())
+            self.layout.addWidget(spacer())
 
         self.layout.setSpacing(4)
         self.layout.setContentsMargins(2, 2, 1, 2)

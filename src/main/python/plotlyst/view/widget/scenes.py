@@ -29,7 +29,9 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton
     QPushButton
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import decr_font
+from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hidden, opaque, underline, flow, \
+    clear_layout, hbox, spacer
+from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
@@ -38,16 +40,13 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
-from src.main.python.plotlyst.view.common import spacer_widget, ask_confirmation, retain_size_when_hidden, \
-    set_opacity, PopupMenuBuilder, OpacityEventFilter, gc, transparent, DisabledClickEventFilter, \
-    InstantTooltipEventFilter, underlined
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, OpacityEventFilter, DisabledClickEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.layout import flow, clear_layout, hbox
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
@@ -227,7 +226,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnIcon.setIcon(IconRegistry.circle_icon())
         self.btnDelete.setIcon(IconRegistry.wrong_icon(color='black'))
         self.btnDelete.clicked.connect(self._remove)
-        retain_size_when_hidden(self.btnDelete)
+        retain_when_hidden(self.btnDelete)
         self.btnDelete.installEventFilter(OpacityEventFilter(parent=self.btnDelete))
         self.btnDelete.setHidden(True)
 
@@ -277,7 +276,7 @@ class SceneOutcomeItemWidget(SceneStructureItemWidget):
         super(SceneOutcomeItemWidget, self).__init__(novel, scene_structure_item, topVisible=True, parent=parent)
 
         self.layoutTop.addWidget(SceneOutcomeSelector(self.scene_structure_item))
-        self.layoutTop.addWidget(spacer_widget())
+        self.layoutTop.addWidget(spacer())
         self.text.setPlaceholderText(
             "Outcome of the scene, typically ending with disaster")
         self.btnIcon.setIcon(IconRegistry.action_scene_icon())
@@ -393,7 +392,7 @@ class _SceneTypeButton(QPushButton):
         self.toggled.connect(self._toggled)
 
     def _toggled(self, toggled: bool):
-        set_opacity(self, 1.0 if toggled else 0.5)
+        opaque(self, 1.0 if toggled else 0.5)
         font = self.font()
         font.setBold(toggled)
         self.setFont(font)
@@ -415,7 +414,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.btnInventory.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
         decr_font(self.lblBeatsInventory)
-        underlined(self.lblBeatsInventory)
+        underline(self.lblBeatsInventory)
 
         self.btnScene = _SceneTypeButton(SceneType.ACTION)
         self.btnSequel = _SceneTypeButton(SceneType.REACTION)
@@ -563,13 +562,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def reset(self, clearBeats: bool = True, addPlaceholders: bool = False):
         if clearBeats:
             for widget in [self.wdgBeginning, self.wdgMiddle, self.wdgEnd]:
-                clear_layout(widget.layout())
+                clear_layout(widget)
         if clearBeats and addPlaceholders:
             self._addPlaceholder(self.wdgBeginning)
             self._addPlaceholder(self.wdgMiddle)
             self._addPlaceholder(self.wdgEnd)
 
-        clear_layout(self.wdgGoalConflictContainer.layout())
+        clear_layout(self.wdgGoalConflictContainer)
         if self.scene.agendas and self.scene.agendas[0].conflict_references:
             for conflict in self.scene.agendas[0].conflicts(self.novel):
                 self._addConfictSelector(simplified=False, conflict=conflict)
@@ -921,9 +920,9 @@ class SceneStoryStructureWidget(QWidget):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(watched, QToolButton) and watched.isCheckable() and not watched.isChecked():
             if event.type() == QEvent.Enter:
-                set_opacity(watched, 0.5)
+                opaque(watched, 0.5)
             elif event.type() == QEvent.Leave:
-                set_opacity(watched, 0.2)
+                opaque(watched, 0.2)
         return super(SceneStoryStructureWidget, self).eventFilter(watched, event)
 
     @overrides
@@ -1060,10 +1059,10 @@ class SceneStoryStructureWidget(QWidget):
         return act
 
     def _actToggled(self, btn: QToolButton, toggled: bool):
-        set_opacity(btn, 1.0 if toggled else 0.2)
+        opaque(btn, 1.0 if toggled else 0.2)
 
     def _beatToggled(self, btn: QToolButton, toggled: bool):
-        set_opacity(btn, 1.0 if toggled else 0.2)
+        opaque(btn, 1.0 if toggled else 0.2)
 
     def _beatClicked(self, beat: StoryBeat, btn: QToolButton):
         if btn.isCheckable() and btn.isChecked():
