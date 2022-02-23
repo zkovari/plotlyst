@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, QTextBoundaryFinder, Qt, QTimer
-from PyQt5.QtGui import QSyntaxHighlighter, QTextCharFormat, QTextBlock, QColor, QIcon
-from PyQt5.QtWidgets import QHeaderView, QTextEdit, QApplication
+from PyQt5.QtCore import QModelIndex, QTimer
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
 from qthandy import opaque, incr_font, bold, btn_popup
 
@@ -36,7 +36,7 @@ from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget
+from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, ManuscriptTextEditor
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
@@ -98,7 +98,7 @@ class ManuscriptView(AbstractNovelView):
         self.chaptersModel.update()
         self.chaptersModel.modelReset.emit()
 
-    def restore_editor(self, editor: QTextEdit):
+    def restore_editor(self, editor: ManuscriptTextEditor):
         self.ui.wdgEditor.layout().insertWidget(0, editor)
 
     def _update_story_goal(self):
@@ -201,34 +201,3 @@ class ManuscriptView(AbstractNovelView):
         self.repo.update_project_novel(self.novel)
         flush_or_fail()
         QTimer.singleShot(1000, QApplication.exit)
-
-
-class SentenceHighlighter(QSyntaxHighlighter):
-
-    def __init__(self, textedit: QTextEdit):
-        super(SentenceHighlighter, self).__init__(textedit.document())
-        self._editor = textedit
-
-        self._hidden_format = QTextCharFormat()
-        self._hidden_format.setForeground(QColor('#dee2e6'))
-
-        self._visible_format = QTextCharFormat()
-        self._visible_format.setForeground(Qt.black)
-
-        self._prevBlock: Optional[QTextBlock] = None
-        self._editor.cursorPositionChanged.connect(self.rehighlight)
-
-    @overrides
-    def highlightBlock(self, text: str) -> None:
-        self.setFormat(0, len(text), self._hidden_format)
-        if self._editor.textCursor().block() == self.currentBlock():
-            text = self._editor.textCursor().block().text()
-            finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
-            pos = self._editor.textCursor().positionInBlock()
-            boundary = finder.toNextBoundary()
-            prev_boundary = 0
-            while -1 < boundary < pos:
-                prev_boundary = boundary
-                boundary = finder.toNextBoundary()
-
-            self.setFormat(prev_boundary, boundary - prev_boundary, self._visible_format)

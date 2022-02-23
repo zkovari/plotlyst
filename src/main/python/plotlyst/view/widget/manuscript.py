@@ -23,12 +23,12 @@ from typing import Optional
 
 import qtanim
 from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, pyqtSignal, QTimer
-from PyQt5.QtGui import QFont, QTextDocument
+from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder
+from PyQt5.QtGui import QFont, QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter
 from PyQt5.QtMultimedia import QSoundEffect
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QTextEdit
 from overrides import overrides
-from qthandy import retain_when_hidden, opaque, btn_popup
+from qthandy import retain_when_hidden, opaque, btn_popup, transparent
 from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import Novel
@@ -283,14 +283,83 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         self.languageChanged.emit(self.lang)
 
 
+class SentenceHighlighter(QSyntaxHighlighter):
+
+    def __init__(self, textedit: QTextEdit):
+        super(SentenceHighlighter, self).__init__(textedit.document())
+        self._editor = textedit
+
+        self._hidden_format = QTextCharFormat()
+        self._hidden_format.setForeground(QColor('#dee2e6'))
+
+        self._visible_format = QTextCharFormat()
+        self._visible_format.setForeground(Qt.black)
+
+        self._prevBlock: Optional[QTextBlock] = None
+        self._editor.cursorPositionChanged.connect(self.rehighlight)
+
+    @overrides
+    def highlightBlock(self, text: str) -> None:
+        self.setFormat(0, len(text), self._hidden_format)
+        if self._editor.textCursor().block() == self.currentBlock():
+            text = self._editor.textCursor().block().text()
+            finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
+            pos = self._editor.textCursor().positionInBlock()
+            boundary = finder.toNextBoundary()
+            prev_boundary = 0
+            while -1 < boundary < pos:
+                prev_boundary = boundary
+                boundary = finder.toNextBoundary()
+
+            self.setFormat(prev_boundary, boundary - prev_boundary, self._visible_format)
+
+
+class NightModeHighlighter(QSyntaxHighlighter):
+    def __init__(self, textedit: QTextEdit):
+        super(NightModeHighlighter, self).__init__(textedit.document())
+
+        self._nightFormat = QTextCharFormat()
+        self._nightFormat.setForeground(QColor('#edf6f9'))
+
+    @overrides
+    def highlightBlock(self, text: str) -> None:
+        self.setFormat(0, len(text), self._nightFormat)
+
+
 class ManuscriptTextEditor(DocumentTextEditor):
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
+
+        self._sentenceHighlighter: Optional[SentenceHighlighter] = None
+        self._nightModeHighligter: Optional[NightModeHighlighter] = None
 
         if app_env.is_mac():
             family = 'Palatino'
             self.textEdit.setFontFamily(family)
             self.textEdit.document().setDefaultFont(QFont(family, 16))
+
+        self._setDefaultStyleSheet()
+
+    def setNightModeEnabled(self, enabled: bool):
+        if enabled:
+            self.setHighlighterEnabled(False)
+            transparent(self.textEdit)
+            self._nightModeHighligter = NightModeHighlighter(self.textEdit)
+        elif self._nightModeHighligter:
+            self._nightModeHighligter.deleteLater()
+            self._nightModeHighligter = None
+            self._setDefaultStyleSheet()
+
+    def setHighlighterEnabled(self, enabled: bool):
+        if enabled:
+            self.setNightModeEnabled(False)
+            self._sentenceHighlighter = SentenceHighlighter(self.textEdit)
+        elif self._sentenceHighlighter is not None:
+            self._sentenceHighlighter.deleteLater()
+            self._sentenceHighlighter = None
+
+    def _setDefaultStyleSheet(self):
+        self.textEdit.setStyleSheet('QTextEdit {border: 1px; background-color: #f8f9fa;}')
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):

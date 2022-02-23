@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt, QThreadPool, QObject, QEvent
+from PyQt5.QtCore import Qt, QThreadPool, QObject, QEvent, QTimer
 from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
@@ -48,11 +48,12 @@ from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.locations_view import LocationsView
-from src.main.python.plotlyst.view.manuscript_view import ManuscriptView, SentenceHighlighter
+from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, CapitalizationEventFilter
+from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
+from src.main.python.plotlyst.view.widget.manuscript import ManuscriptTextEditor
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.download import NltkResourceDownloadWorker
 from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
@@ -111,9 +112,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.wdgBottom.installEventFilter(self)
         self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
         self.btnReturn.clicked.connect(lambda: self._toggle_fullscreen(on=False))
-        self._sentenceHighlighter: Optional[SentenceHighlighter] = None
         self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkBlue'))
         self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
+        self.btnNightMode.setIcon(IconRegistry.from_name('mdi.weather-night', color_on='darkBlue'))
+        self.btnNightMode.toggled.connect(self._toggle_manuscript_night_mode)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -155,6 +157,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.wdgHeader.setHidden(True)
             self.wdgDistractionFreeEditor.layout().addWidget(event.editor)
             event.editor.setFocus()
+            event.editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             self.wdgBottom.setVisible(True)
             self.sliderDocWidth.setMaximum(self.width() / 3)
             if self.sliderDocWidth.value() <= 2:
@@ -189,19 +192,29 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.showFullScreen()
         if on:
             self._toggle_manuscript_focus(self.btnFocus.isChecked())
+            self._toggle_manuscript_night_mode(self.btnNightMode.isChecked())
+            QTimer.singleShot(10000, lambda: self.wdgBottom.setHidden(True))
         else:
-            editor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
+            editor: ManuscriptTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
+            editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
             self._toggle_manuscript_focus(False)
+            self._toggle_manuscript_night_mode(False)
             self.manuscript_view.restore_editor(editor)
             self.stackMainPanels.setCurrentWidget(self.pageManuscript)
 
     def _toggle_manuscript_focus(self, toggled: bool):
         if toggled:
-            editor: DocumentTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
-            self._sentenceHighlighter = SentenceHighlighter(editor.textEdit)
-        elif self._sentenceHighlighter is not None:
-            self._sentenceHighlighter.deleteLater()
-            self._sentenceHighlighter = None
+            if self.btnNightMode.isChecked():
+                self.btnNightMode.setChecked(False)
+        editor: ManuscriptTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
+        editor.setHighlighterEnabled(toggled)
+
+    def _toggle_manuscript_night_mode(self, toggled: bool):
+        if toggled:
+            if self.btnFocus.isChecked():
+                self.btnFocus.setChecked(False)
+        editor: ManuscriptTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
+        editor.setNightModeEnabled(toggled)
 
     @busy
     def _flush_end_fetch_novel(self):
