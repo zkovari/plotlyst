@@ -1,8 +1,10 @@
+from abc import abstractmethod
+
 from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
 from overrides import overrides
 
 from plugins import PluginBase
-from src.main.python.plotlyst.view.widget.input import Toggle, RotatedButton
+from src.main.python.plotlyst.view.widget.input import Toggle, RotatedButton, DocumentTextEditor
 
 
 class InputPluginBase(PluginBase):
@@ -13,39 +15,27 @@ class InputPluginBase(PluginBase):
     def includeFile(self):
         return "src.main.python.plotlyst.view.widget.input"
 
+    @abstractmethod
+    def classType(self):
+        pass
+
 
 class TogglePlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
 
     @overrides
-    def createWidget(self, parent):
-        return Toggle(parent=parent)
-
-    @overrides
-    def name(self):
-        return "Toggle"
-
-    @overrides
-    def toolTip(self):
-        return "Toggle checkbox widget"
-
-    @overrides
-    def domXml(self):
-        return '<widget class="Toggle" name="toggle">\n</widget>'
+    def classType(self):
+        return Toggle
 
 
 class RotatedButtonPlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
-    @overrides
-    def createWidget(self, parent):
-        return RotatedButton(parent=parent)
 
     @overrides
-    def name(self):
-        return "RotatedButton"
+    def classType(self):
+        return RotatedButton
+
+
+class DocumentTextEditorPlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
 
     @overrides
-    def toolTip(self):
-        return "RotatedButton widget"
-
-    @overrides
-    def domXml(self):
-        return '<widget class="RotatedButton" name="btn">\n</widget>'
+    def classType(self):
+        return DocumentTextEditor
