@@ -43,10 +43,12 @@ from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
+from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
     VisibilityToggleEventFilter, hmax
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
+from src.main.python.plotlyst.view.generated.character_avatar_ui import Ui_CharacterAvatar
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
@@ -1099,3 +1101,32 @@ class JournalWidget(QWidget, Ui_JournalWidget):
 
     def _titleChanged(self, journal: Document):
         journal.title = self.textEditor.textTitle.toPlainText()
+
+
+class CharacterAvatar(QWidget, Ui_CharacterAvatar):
+    def __init__(self, parent=None):
+        super(CharacterAvatar, self).__init__(parent)
+        self.setupUi(self)
+
+        self.setStyleSheet(
+            f'''#wdgPovFrame {{background-image: url({resource_registry.circular_frame1});}}
+                                                       ''')
+        self.wdgPovFrame.setFixedSize(190, 190)
+        self.btnPov.installEventFilter(OpacityEventFilter(enterOpacity=0.7, leaveOpacity=1.0, parent=self.btnPov))
+
+        self.reset()
+
+    def setCharacter(self, character: Character):
+        # self.btnPov.setToolTip(f'<html>Point of view character: <b>{self.scene.pov.name}</b>')
+        self.btnPov.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.btnPov.setIconSize(QSize(168, 168))
+        if character.avatar:
+            self.btnPov.setIcon(QIcon(avatars.pixmap(character)))
+        else:
+            # self.btnPov.setToolTip('Select point of view character')
+            self.btnPov.setIcon(avatars.name_initial_icon(character))
+
+    def reset(self):
+        self.btnPov.setIconSize(QSize(118, 118))
+        self.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
+        self.btnPov.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)

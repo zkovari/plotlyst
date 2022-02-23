@@ -421,57 +421,8 @@
           </item>
          </layout>
         </item>
-        <item alignment="Qt::AlignTop">
-         <widget class="QWidget" name="wdgPovParent" native="true">
-          <layout class="QVBoxLayout" name="verticalLayout_15">
-           <property name="spacing">
-            <number>0</number>
-           </property>
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>1</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-            <widget class="QToolButton" name="btnPov">
-             <property name="cursor">
-              <cursorShape>PointingHandCursor</cursorShape>
-             </property>
-             <property name="toolTip">
-              <string>Select point of view character</string>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">QToolButton {
-	border: 0px;
-}
-QToolButton::menu-indicator {width:0px;}</string>
-             </property>
-             <property name="text">
-              <string>Select POV</string>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>118</width>
-               <height>118</height>
-              </size>
-             </property>
-             <property name="popupMode">
-              <enum>QToolButton::InstantPopup</enum>
-             </property>
-             <property name="toolButtonStyle">
-              <enum>Qt::ToolButtonTextUnderIcon</enum>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+        <item>
+         <widget class="CharacterAvatar" name="wdgPov"/>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -754,8 +705,8 @@ QToolButton::menu-indicator {width:0px;}</string>
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>98</width>
-                     <height>28</height>
+                     <width>72</width>
+                     <height>16</height>
                     </rect>
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -1121,6 +1072,11 @@ QToolButton::menu-indicator {width:0px;}</string>
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>CharacterAvatar</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.characters</header>
+  </customwidget>
   <customwidget>
    <class>RotatedButton</class>
    <extends>QPushButton</extends>

@@ -22,8 +22,8 @@ def test_editor_with_new_scene(qtbot):
     novel.story_structures[0].active = True
     view: SceneEditor = editor(qtbot, novel)
 
-    assert view.ui.btnPov.text() == 'Select POV'
-    assert view.ui.btnPov.toolButtonStyle() == Qt.ToolButtonTextUnderIcon
+    assert view.ui.wdgPov.btnPov.text() == 'Select POV'
+    assert view.ui.wdgPov.btnPov.toolButtonStyle() == Qt.ToolButtonTextUnderIcon
 
 
 def _test_display_scene_builder(qtbot):

@@ -37,14 +37,14 @@ def test_scene_characters(qtbot, filled_window: MainWindow):
 
     view: ScenesOutlineView = start_new_scene_editor(filled_window)
     qtbot.keyClicks(view.editor.ui.lineTitle, 'Scene 3')
-    actions = view.editor.ui.btnPov.menu().actions()
+    actions = view.editor.ui.wdgPov.btnPov.menu().actions()
     actions[5].trigger()
     view.editor.ui.btnClose.click()
     assert view.novel.scenes[2].pov == view.novel.characters[5]
 
     view: ScenesOutlineView = start_new_scene_editor(filled_window)
     qtbot.keyClicks(view.editor.ui.lineTitle, 'Scene 4')
-    actions = view.editor.ui.btnPov.menu().actions()
+    actions = view.editor.ui.wdgPov.btnPov.menu().actions()
     actions[6].trigger()
     view.editor.ui.btnClose.click()
     assert view.novel.scenes[3].pov == view.novel.characters[6]
