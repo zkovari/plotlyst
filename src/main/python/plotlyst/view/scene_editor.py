@@ -89,6 +89,7 @@ class SceneEditor(QObject):
         for char in self.novel.characters:
             self._povMenu.addAction(QIcon(avatars.pixmap(char)), char.name, partial(self._on_pov_changed, char))
         self.ui.wdgPov.btnPov.setMenu(self._povMenu)
+        self.ui.wdgPov.btnPov.setText('Select POV')
 
         self.ui.textNotes.setTitleVisible(False)
 

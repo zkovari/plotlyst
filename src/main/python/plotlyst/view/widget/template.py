@@ -18,30 +18,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
-from typing import Optional, List, Any, Dict, Set, Union
+from typing import Optional, List, Any, Dict, Set
 
 import emoji
 import qtawesome
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QByteArray, QBuffer, QIODevice, QObject, QEvent
-from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QImageReader, QImage, QDragMoveEvent, QPixmap
+from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent
+from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
-    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QFileDialog, QMessageBox, QSizePolicy, QVBoxLayout, \
+    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
     QSpacerItem, QTextEdit, QListView, QPushButton
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import ask_confirmation, spacer, btn_popup
 
 from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate, TemplateValue, ProfileElement, Character, avatar_field, SelectionItemType, \
+    ProfileTemplate, TemplateValue, ProfileElement, Character, SelectionItemType, \
     enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
 from src.main.python.plotlyst.view.common import emoji_font
-from src.main.python.plotlyst.view.dialog.utility import ArtbreederDialog
-from src.main.python.plotlyst.view.generated.avatar_widget_ui import Ui_AvatarWidget
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
-from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 
@@ -110,55 +108,6 @@ def _icon(item: SelectionItem) -> QIcon:
         return IconRegistry.from_name(item.icon, item.icon_color)
     else:
         return QIcon('')
-
-
-class AvatarWidget(QWidget, Ui_AvatarWidget):
-
-    def __init__(self, field: TemplateField, parent=None):
-        super(AvatarWidget, self).__init__(parent)
-        self.setupUi(self)
-        self.field = field
-        self.character: Optional[Character] = None
-        self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
-        self.btnUploadAvatar.clicked.connect(self._upload_avatar)
-        self.btnAi.setIcon(IconRegistry.from_name('mdi.robot-happy-outline', 'white'))
-        self.btnAi.clicked.connect(self._select_ai)
-        self.avatarUpdated: bool = False
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-
-    def setCharacter(self, character: Character):
-        self.character = character
-        set_avatar(self.lblAvatar, self.character)
-
-    def _upload_avatar(self):
-        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
-        if not filename or not filename[0]:
-            return
-        reader = QImageReader(filename[0])
-        reader.setAutoTransform(True)
-        image: QImage = reader.read()
-        if image is None:
-            QMessageBox.warning(self.widget, 'Error while uploading image', 'Could not upload image')
-            return
-        self._update_avatar(image)
-
-    def _update_avatar(self, image: Union[QImage, QPixmap]):
-        array = QByteArray()
-        buffer = QBuffer(array)
-        buffer.open(QIODevice.WriteOnly)
-        image.save(buffer, 'PNG')
-        self.character.avatar = array
-
-        avatars.update(self.character)
-        set_avatar(self.lblAvatar, self.character)
-
-        self.avatarUpdated = True
-
-    def _select_ai(self):
-        diag = ArtbreederDialog()
-        pixmap = diag.display()
-        if pixmap:
-            self._update_avatar(pixmap)
 
 
 class TextSelectionWidget(QPushButton):
@@ -452,8 +401,6 @@ class TemplateFieldWidget(QFrame):
                     widget.insertSeparator(widget.count())
         elif self.field.type == TemplateFieldType.BUTTON_SELECTION:
             widget = ButtonSelectionWidget(self.field)
-        elif self.field.type == TemplateFieldType.IMAGE:
-            widget = AvatarWidget(self.field)
         elif self.field.type == TemplateFieldType.SMALL_TEXT:
             widget = AutoAdjustableTextEdit(height=60)
             widget.setPlaceholderText(self.field.placeholder)
@@ -580,10 +527,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.MouseButtonRelease:
             if isinstance(watched, (QToolButton, QPushButton)):
-                if isinstance(watched.parent(), AvatarWidget):
-                    self._select(watched.parent().parent())
-                else:
-                    self._select(watched.parent())
+                self._select(watched.parent())
             else:
                 self._select(watched)
         elif event.type() == QEvent.DragEnter:
@@ -629,8 +573,6 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
     def _installEventFilter(self, widget: TemplateFieldWidget):
         widget.installEventFilter(self)
-        if isinstance(widget.wdgEditor, AvatarWidget):
-            widget.wdgEditor.btnUploadAvatar.installEventFilter(self)
         if isinstance(widget.wdgEditor, TextSelectionWidget):
             widget.wdgEditor.installEventFilter(self)
 
@@ -673,16 +615,13 @@ class CharacterProfileTemplateView(ProfileTemplateView):
     def __init__(self, character: Character, profile: ProfileTemplate):
         super().__init__(character.template_values, profile)
         self.character = character
-        self._avatar_widget: Optional[AvatarWidget] = None
         self._enneagram_widget: Optional[TextSelectionWidget] = None
         self._desire_widget: Optional[TemplateFieldWidget] = None
         self._fear_widget: Optional[TemplateFieldWidget] = None
         self._traits_widget: Optional[TraitSelectionWidget] = None
         self._goals_widget: Optional[TemplateFieldWidget] = None
         for widget in self.widgets:
-            if widget.field.id == avatar_field.id:
-                self._avatar_widget = widget.wdgEditor
-            elif widget.field.id == enneagram_field.id:
+            if widget.field.id == enneagram_field.id:
                 self._enneagram_widget = widget.wdgEditor
             elif widget.field.id == desire_field.id:
                 self._desire_widget = widget
@@ -691,12 +630,8 @@ class CharacterProfileTemplateView(ProfileTemplateView):
             elif widget.field.id == traits_field.id:
                 self._traits_widget = widget.wdgEditor
 
-        self._avatar_widget.setCharacter(self.character)
         if self._enneagram_widget:
             self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
-
-    def avatarUpdated(self) -> bool:
-        return self._avatar_widget.avatarUpdated
 
     def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
         update_desire = False

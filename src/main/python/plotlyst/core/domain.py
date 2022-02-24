@@ -863,9 +863,6 @@ class TemplateField:
     show_label: bool = True
 
 
-avatar_field = TemplateField(name='Avatar', type=TemplateFieldType.IMAGE,
-                             id=uuid.UUID('c3b5c7b5-6fd2-4ae1-959d-6fabd659cb3c'), required=True, highlighted=True,
-                             frozen=True, compact=True, show_label=False)
 age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
                           id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), emoji=':birthday_cake:',
                           show_label=False, compact=True, placeholder='Age')
@@ -1069,8 +1066,7 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(avatar_field, 0, 1, row_span=3, h_alignment=HAlignment.RIGHT),
-              ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
+    fields = [ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
               ProfileElement(role_field, 3, 0, v_alignment=VAlignment.BOTTOM),
               ProfileElement(enneagram_field, 5, 0),
               ProfileElement(mbti_field, 5, 1),

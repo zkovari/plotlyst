@@ -56,7 +56,7 @@
          <enum>Qt::ClickFocus</enum>
         </property>
         <property name="toolTip">
-         <string>Select point of view character</string>
+         <string/>
         </property>
         <property name="styleSheet">
          <string notr="true">QToolButton {
@@ -65,7 +65,7 @@
 QToolButton::menu-indicator {width:0px;}</string>
         </property>
         <property name="text">
-         <string>Select POV</string>
+         <string>Avatar</string>
         </property>
         <property name="iconSize">
          <size>

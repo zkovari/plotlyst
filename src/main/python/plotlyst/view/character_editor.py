@@ -30,7 +30,7 @@ from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -93,7 +93,11 @@ class CharacterEditor:
                 if not btn.isChecked():
                     btn.setHidden(True)
 
+        self.ui.wdgAvatar.btnPov.setToolTip('Character avatar. Click to add an image')
         self.ui.wdgAvatar.setCharacter(self.character)
+        self.ui.wdgAvatar.setUploadPopupMenu()
+
+        self.ui.splitter.setSizes([400, 400])
 
         self.ui.lineName.textEdited.connect(self._name_edited)
         self.ui.lineName.setText(self.character.name)
@@ -135,6 +139,9 @@ class CharacterEditor:
                 json_client.load_document(self.novel, self.character.document)
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
 
+    def _avatar_updated(self):
+        avatars.update(self.character)
+
     def _gender_clicked(self, btn: QAbstractButton):
         self.ui.btnMoreGender.setHidden(True)
 
@@ -156,9 +163,9 @@ class CharacterEditor:
     def _display_more_gender_clicked(self):
         for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
             btn.setVisible(True)
-            qtanim.fade_in(btn)
             self.ui.btnGroupGender.addButton(btn)
-            opaque(btn, 0.4)
+            anim = qtanim.fade_in(btn)
+            anim.finished.connect(partial(opaque, btn, 0.4))
 
         self.ui.btnMoreGender.setHidden(True)
 
@@ -172,7 +179,7 @@ class CharacterEditor:
         self.character.name = self.ui.lineName.text()
         self.character.template_values = self.profile.values()
 
-        self.repo.update_character(self.character, self.profile.avatarUpdated())
+        self.repo.update_character(self.character, self.ui.wdgAvatar.avatarUpdated())
         self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
 
         if not self.character.document:

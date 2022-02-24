@@ -21,7 +21,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>1</number>
+    <number>0</number>
    </property>
    <property name="leftMargin">
     <number>2</number>
@@ -109,6 +109,12 @@
    </item>
    <item>
     <widget class="QWidget" name="wdgBanner" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <property name="spacing">
        <number>3</number>
@@ -126,7 +132,14 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="CharacterAvatar" name="wdgAvatar"/>
+       <widget class="CharacterAvatar" name="wdgAvatar">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -136,7 +149,7 @@
         <item>
          <widget class="QLineEdit" name="lineName">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -147,7 +160,7 @@
            </font>
           </property>
           <property name="focusPolicy">
-           <enum>Qt::TabFocus</enum>
+           <enum>Qt::StrongFocus</enum>
           </property>
           <property name="styleSheet">
            <string notr="true">border: 0px;
@@ -157,19 +170,6 @@ background-color: rgba(0,0,0,0);</string>
            <string>Character's name</string>
           </property>
          </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -569,8 +569,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>512</width>
-             <height>234</height>
+             <width>866</width>
+             <height>313</height>
             </rect>
            </property>
            <property name="styleSheet">
