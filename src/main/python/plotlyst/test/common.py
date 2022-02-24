@@ -188,7 +188,7 @@ def create_character(qtbot, window: MainWindow, name: str):
     characters.ui.btnNew.click()
     assert characters.editor
 
-    characters.editor.profile.setName(name)
+    characters.editor.ui.lineName.setText(name)
 
     characters.editor.ui.btnClose.click()
 
