@@ -113,10 +113,16 @@ class CharacterGoal:
                 return goal_
 
 
+MALE = 'male'
+FEMALE = 'female'
+
+
 @dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    gender: str = ''
+    role: Optional['SelectionItem'] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
@@ -133,28 +139,6 @@ class Character:
         for value in self.template_values:
             if value.id == mbti_field.id:
                 return _mbti_choices.get(value.value)
-
-    def role(self) -> Optional['SelectionItem']:
-        for value in self.template_values:
-            if value.id == role_field.id:
-                item = _role_choices.get(value.value)
-                if not item:
-                    return None
-                if item.text == 'Protagonist' and self.gender() == 1:
-                    return SelectionItem(item.text, item.type, 'fa5s.chess-queen', item.icon_color)
-                return item
-
-    # def goals(self) -> List[str]:
-    #     for value in self.template_values:
-    #         if value.id == goal_field.id:
-    #             return value.value
-    #     return []
-
-    def gender(self) -> int:
-        for value in self.template_values:
-            if value.id == gender_field.id:
-                return value.value[0] if value.value else -1
-        return -1
 
     @overrides
     def __hash__(self):
@@ -870,20 +854,9 @@ class TemplateField:
     show_label: bool = True
 
 
-name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':bust_in_silhouette:', placeholder='Name',
-                           id=uuid.UUID('45525d2e-3ba7-40e4-b072-e367f96a6eb4'), required=True, highlighted=True,
-                           frozen=True, compact=True, show_label=False)
-avatar_field = TemplateField(name='Avatar', type=TemplateFieldType.IMAGE,
-                             id=uuid.UUID('c3b5c7b5-6fd2-4ae1-959d-6fabd659cb3c'), required=True, highlighted=True,
-                             frozen=True, compact=True, show_label=False)
 age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
                           id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), emoji=':birthday_cake:',
                           show_label=False, compact=True, placeholder='Age')
-gender_field = TemplateField(name='Gender', type=TemplateFieldType.BUTTON_SELECTION,
-                             id=uuid.UUID('dd5421f5-b332-4295-8020-e69c482a2ac5'),
-                             selections=[SelectionItem('Male', icon='mdi.gender-male', icon_color='#067bc2'),
-                                         SelectionItem('Female', icon='mdi.gender-female', icon_color='#832161')],
-                             compact=True, show_label=False, exclusive=True)
 enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
                                 id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
                                 selections=[SelectionItem('Perfectionist', icon='mdi.numeric-1-circle',
@@ -1008,10 +981,6 @@ def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
 _enneagram_choices = get_selection_values(enneagram_field)
 _mbti_choices = get_selection_values(mbti_field)
 
-goal_field = TemplateField('Goals', type=TemplateFieldType.LABELS,
-                           id=uuid.UUID('5e6bf763-6fa1-424a-b011-f5974290a32a'),
-                           emoji=':bullseye:',
-                           placeholder='Character goals throughout the story')
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
                                 placeholder='The misbelief/lie the character believes in')
@@ -1022,37 +991,20 @@ desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=
                              placeholder='Desire (select Enneagram to autofill)',
                              id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'), show_label=False)
 
+protagonist_role = SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c')
+deuteragonist_role = SelectionItem('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a')
+antagonist_role = SelectionItem('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b')
+contagonist_role = SelectionItem('Contagonist', icon='mdi.biohazard', icon_color='#ea9010')
+adversary_role = SelectionItem('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946')
+guide_role = SelectionItem('Guide', icon='mdi.compass-rose', icon_color='#80ced7')
+confidant_role = SelectionItem('Confidant', icon='fa5s.user-friends', icon_color='#304d6d')
+sidekick_role = SelectionItem('Sidekick', icon='ei.asl', icon_color='#b0a990')
+love_interest_role = SelectionItem('Love Interest', icon='ei.heart', icon_color='#d1495b')
+supporter_role = SelectionItem('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3')
+foil_role = SelectionItem('Foil', icon='fa5s.yin-yang', icon_color='#947eb0')
+secondary_role = SelectionItem('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a')
 henchmen_role = SelectionItem('Henchmen', icon='mdi.shuriken', icon_color='#596475')
 tertiary_role = SelectionItem('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68')
-role_field = TemplateField('Role', type=TemplateFieldType.TEXT_SELECTION, emoji=':chess_pawn:',
-                           id=uuid.UUID('131b9de6-ac95-4db5-b9a1-33200100b676'),
-                           selections=[SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c'),
-                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
-                                       SelectionItem('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a'),
-                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
-                                       SelectionItem('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b'),
-                                       SelectionItem('Contagonist', icon='mdi.biohazard', icon_color='#ea9010'),
-                                       SelectionItem('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946'),
-                                       henchmen_role,
-                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
-                                       SelectionItem('Guide', icon='mdi.compass-rose', icon_color='#80ced7'),
-                                       SelectionItem('Confidant', icon='fa5s.user-friends', icon_color='#304d6d'),
-                                       SelectionItem('Sidekick', icon='ei.asl', icon_color='#b0a990'),
-                                       SelectionItem('Love Interest', icon='ei.heart', icon_color='#d1495b'),
-                                       SelectionItem('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3'),
-                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
-                                       SelectionItem('Foil', icon='fa5s.yin-yang', icon_color='#947eb0'),
-                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
-                                       SelectionItem('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a'),
-                                       SelectionItem('', type=SelectionItemType.SEPARATOR),
-                                       tertiary_role,
-                                       ], compact=True)
-
-_role_choices = {}
-for item in role_field.selections:
-    if item.type != SelectionItemType.CHOICE:
-        continue
-    _role_choices[item.text] = item
 
 
 class HAlignment(Enum):
@@ -1088,12 +1040,7 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(name_field, 0, 0),
-              ProfileElement(avatar_field, 0, 1, row_span=3, h_alignment=HAlignment.RIGHT),
-              ProfileElement(gender_field, 1, 0, v_alignment=VAlignment.BOTTOM),
-              ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
-              ProfileElement(role_field, 3, 0, v_alignment=VAlignment.BOTTOM),
-              ProfileElement(goal_field, 4, 0, col_span=2, v_alignment=VAlignment.TOP),
+    fields = [ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
               ProfileElement(enneagram_field, 5, 0),
               ProfileElement(mbti_field, 5, 1),
               ProfileElement(desire_field, 6, 0),
@@ -1364,10 +1311,10 @@ class Novel(NovelDescriptor):
 
     def major_characters(self) -> List[Character]:
         return [x for x in self.characters if
-                x.role() and x.role().text not in [tertiary_role.text, henchmen_role.text]]
+                x.role and x.role.text not in [tertiary_role.text, henchmen_role.text]]
 
     def minor_characters(self) -> List[Character]:
-        return [x for x in self.characters if x.role() and x.role().text in [tertiary_role.text, henchmen_role.text]]
+        return [x for x in self.characters if x.role and x.role.text in [tertiary_role.text, henchmen_role.text]]
 
     @property
     def active_story_structure(self) -> StoryStructure:

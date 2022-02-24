@@ -161,8 +161,9 @@ class OpacityEventFilter(QObject):
 
     def _btnToggled(self, toggled: bool):
         if toggled:
-            return
-        opaque(self._parent, self.leaveOpacity)
+            opaque(self._parent, self.enterOpacity)
+        else:
+            opaque(self._parent, self.leaveOpacity)
 
 
 class VisibilityToggleEventFilter(QObject):

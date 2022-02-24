@@ -165,3 +165,27 @@ class WordsDisplay(QLabel):
             self.setText(f'{count} word{"s" if count > 1 else ""}')
         else:
             self.clear()
+
+
+class _RoleIcon(QPushButton):
+    def __init__(self, parent=None):
+        super(_RoleIcon, self).__init__(parent)
+        transparent(self)
+
+
+class MajorRoleIcon(_RoleIcon):
+    def __init__(self, parent=None):
+        super(MajorRoleIcon, self).__init__(parent)
+        self.setIcon(IconRegistry.major_character_icon())
+
+
+class SecondaryRoleIcon(_RoleIcon):
+    def __init__(self, parent=None):
+        super(SecondaryRoleIcon, self).__init__(parent)
+        self.setIcon(IconRegistry.secondary_character_icon())
+
+
+class MinorRoleIcon(_RoleIcon):
+    def __init__(self, parent=None):
+        super(MinorRoleIcon, self).__init__(parent)
+        self.setIcon(IconRegistry.minor_character_icon())

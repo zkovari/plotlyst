@@ -51,9 +51,6 @@ def test_default_template(qtbot):
     diag = new_diag(qtbot, default_character_profiles()[0])
 
     assert not diag.btnEnneagram.isEnabled()
-    assert not diag.btnGender.isEnabled()
-    assert not diag.btnRole.isEnabled()
-    assert not diag.btnGoal.isEnabled()
     assert not diag.btnFear.isEnabled()
     assert not diag.btnDesire.isEnabled()
     assert not diag.btnTraits.isEnabled()

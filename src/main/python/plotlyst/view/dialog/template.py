@@ -27,9 +27,9 @@ from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 from qthandy import ask_confirmation
 
-from src.main.python.plotlyst.core.domain import age_field, gender_field, \
-    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, goal_field, fear_field, misbelief_field, \
-    desire_field, default_character_profiles, role_field, mbti_field, traits_field, Novel
+from src.main.python.plotlyst.core.domain import age_field, \
+    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, fear_field, misbelief_field, \
+    desire_field, default_character_profiles, mbti_field, traits_field, Novel
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
@@ -49,10 +49,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self._restore_requested: bool = False
 
         self.btnAge.setIcon(IconRegistry.from_name('mdi.numeric'))
-        self.btnGender.setIcon(IconRegistry.from_name('mdi.gender-female', color='#fface4'))
-        self.btnRole.setIcon(IconRegistry.from_name('fa5s.user-tag'))
         self.btnFear.setIcon(IconRegistry.from_name('mdi.spider-thread'))
-        self.btnGoal.setIcon(IconRegistry.goal_icon())
         self.btnEnneagram.setIcon(IconRegistry.from_name('mdi.numeric-9-box-outline'))
         self.btnMbti.setIcon(IconRegistry.from_name('ei.group-alt'))
         self.btnTraits.setIcon(IconRegistry.from_name('ei.adjust'))
@@ -87,10 +84,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.lineEmoji.textEdited.connect(self._emoji_edited)
 
         self.btnAge.installEventFilter(self)
-        self.btnGender.installEventFilter(self)
-        self.btnRole.installEventFilter(self)
         self.btnFear.installEventFilter(self)
-        self.btnGoal.installEventFilter(self)
         self.btnEnneagram.installEventFilter(self)
         self.btnMbti.installEventFilter(self)
         self.btnTraits.installEventFilter(self)
@@ -129,18 +123,12 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             pix = self._dragged.grab()
             if self._dragged is self.btnAge:
                 field = age_field
-            elif self._dragged is self.btnGender:
-                field = gender_field
-            elif self._dragged is self.btnRole:
-                field = role_field
             elif self._dragged is self.btnEnneagram:
                 field = enneagram_field
             elif self._dragged is self.btnMbti:
                 field = mbti_field
             elif self._dragged is self.btnTraits:
                 field = traits_field
-            elif self._dragged is self.btnGoal:
-                field = goal_field
             elif self._dragged is self.btnFear:
                 field = fear_field
             elif self._dragged is self.btnMisbelief:
@@ -183,18 +171,12 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
     def _enable_in_inventory(self, field: TemplateField, enabled: bool):
         if field.id == age_field.id:
             self.btnAge.setEnabled(enabled)
-        elif field.id == gender_field.id:
-            self.btnGender.setEnabled(enabled)
-        elif field.id == role_field.id:
-            self.btnRole.setEnabled(enabled)
         elif field.id == enneagram_field.id:
             self.btnEnneagram.setEnabled(enabled)
         elif field.id == mbti_field.id:
             self.btnMbti.setEnabled(enabled)
         elif field.id == traits_field.id:
             self.btnTraits.setEnabled(enabled)
-        elif field.id == goal_field.id:
-            self.btnGoal.setEnabled(enabled)
         elif field.id == fear_field.id:
             self.btnFear.setEnabled(enabled)
         elif field.id == desire_field.id:

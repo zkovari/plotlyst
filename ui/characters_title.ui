@@ -86,24 +86,10 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="btnMajor">
-     <property name="styleSheet">
-      <string notr="true">border: 0px;</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
+    <widget class="SecondaryRoleIcon" name="btnMajor"/>
    </item>
    <item>
-    <widget class="QPushButton" name="btnMinor">
-     <property name="styleSheet">
-      <string notr="true">border: 0px;</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
+    <widget class="MinorRoleIcon" name="btnMinor"/>
    </item>
    <item>
     <spacer name="horizontalSpacer_2">
@@ -120,6 +106,18 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SecondaryRoleIcon</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
+  <customwidget>
+   <class>MinorRoleIcon</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

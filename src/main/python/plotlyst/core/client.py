@@ -36,7 +36,8 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
     Location, default_location_profiles, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
-    default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal
+    default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
+    SelectionItem
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -111,6 +112,8 @@ def load_image(path: pathlib.Path):
 class CharacterInfo:
     name: str
     id: uuid.UUID
+    gender: str = ''
+    role: Optional[SelectionItem] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
@@ -381,7 +384,8 @@ class JsonClient:
             with open(path, encoding='utf8') as json_file:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
-                character = Character(name=info.name, id=info.id, template_values=info.template_values,
+                character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role,
+                                      template_values=info.template_values,
                                       backstory=info.backstory, goals=info.goals, document=info.document,
                                       journals=info.journals)
                 if info.avatar_id:
@@ -519,7 +523,9 @@ class JsonClient:
         self.__persist_info(self.novels_dir, novel_info)
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
-        char_info = CharacterInfo(id=char.id, name=char.name, template_values=char.template_values, avatar_id=avatar_id,
+        char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role,
+                                  template_values=char.template_values,
+                                  avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,
                                   journals=char.journals)
         self.__persist_info(self.characters_dir, char_info)

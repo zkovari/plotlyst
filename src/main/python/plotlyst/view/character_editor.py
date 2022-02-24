@@ -17,39 +17,35 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from functools import partial
 
-from PyQt5.QtWidgets import QWidget
+import qtanim
+from PyQt5.QtWidgets import QWidget, QAbstractButton
 from fbs_runtime import platform
-from qthandy import spacer, hbox, vbox
+from qthandy import opaque, btn_popup
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Document
+from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem, \
+    protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
-from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor, CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class CharacterEditor:
 
-    def __init__(self, novel: Novel, character: Optional[Character] = None):
+    def __init__(self, novel: Novel, character: Character = None):
         super().__init__()
         self.widget = QWidget()
         self.ui = Ui_CharacterEditor()
         self.ui.setupUi(self.widget)
         self.novel = novel
-
-        if character:
-            self.character = character
-            self._new_character = False
-        else:
-            self.character = Character('')
-            self._new_character = True
+        self.character = character
 
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
@@ -62,13 +58,66 @@ class CharacterEditor:
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
 
+        self.ui.btnMale.setIcon(IconRegistry.from_name('mdi.gender-male', color_on='#067bc2'))
+        self.ui.btnMale.installEventFilter(OpacityEventFilter(parent=self.ui.btnMale, ignoreCheckedButton=True))
+        self.ui.btnFemale.setIcon(IconRegistry.from_name('mdi.gender-female', color_on='#832161'))
+        self.ui.btnFemale.installEventFilter(OpacityEventFilter(parent=self.ui.btnFemale, ignoreCheckedButton=True))
+        self.ui.btnTransgender.setIcon(IconRegistry.from_name('fa5s.transgender-alt', color_on='#f4a261'))
+        self.ui.btnTransgender.installEventFilter(
+            OpacityEventFilter(parent=self.ui.btnTransgender, ignoreCheckedButton=True))
+        self.ui.btnTransgender.setHidden(True)
+        self.ui.btnNonBinary.setIcon(IconRegistry.from_name('mdi.gender-male-female-variant', color_on='#7209b7'))
+        self.ui.btnNonBinary.installEventFilter(
+            OpacityEventFilter(parent=self.ui.btnNonBinary, ignoreCheckedButton=True))
+        self.ui.btnNonBinary.setHidden(True)
+        self.ui.btnGenderless.setIcon(IconRegistry.from_name('fa5s.genderless', color_on='#6c757d'))
+        self.ui.btnGenderless.installEventFilter(
+            OpacityEventFilter(parent=self.ui.btnGenderless, ignoreCheckedButton=True))
+        self.ui.btnGenderless.setHidden(True)
+        self.ui.btnGroupGender.buttonClicked.connect(self._gender_clicked)
+        self.ui.btnMoreGender.clicked.connect(self._display_more_gender_clicked)
+
+        self.ui.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))
+        self._btnRoleEventFilter = OpacityEventFilter(leaveOpacity=0.7, parent=self.ui.btnRole,
+                                                      ignoreCheckedButton=True)
+        self.ui.btnRole.installEventFilter(self._btnRoleEventFilter)
+        self._roleSelector = CharacterRoleSelector()
+        self._roleSelector.roleSelected.connect(self._role_changed)
+        btn_popup(self.ui.btnRole, self._roleSelector)
+        if self.character.role:
+            self._display_role()
+
+        if self.character.gender:
+            self.ui.btnMoreGender.setHidden(True)
+            if self.character.gender == MALE:
+                self.ui.btnMale.setChecked(True)
+            elif self.character.gender == FEMALE:
+                self.ui.btnFemale.setChecked(True)
+            else:
+                for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
+                    self.ui.btnGroupGender.addButton(btn)
+                    if self.character.gender == btn.text():
+                        btn.setChecked(True)
+                        btn.setVisible(True)
+
+            for btn in self.ui.btnGroupGender.buttons():
+                if not btn.isChecked():
+                    btn.setHidden(True)
+
+        self.ui.wdgAvatar.btnPov.setToolTip('Character avatar. Click to add an image')
+        self.ui.wdgAvatar.setCharacter(self.character)
+        self.ui.wdgAvatar.setUploadPopupMenu()
+
+        self.ui.splitter.setSizes([400, 400])
+
+        self.ui.lineName.textEdited.connect(self._name_edited)
+        self.ui.lineName.setText(self.character.name)
+
         self._character_goals = CharacterGoalsEditor(self.novel, self.character)
         self.ui.tabGoals.layout().addWidget(self._character_goals)
 
-        self.ui.wdgJournal.setCharacter(self.novel, self.character)
-
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
-        self._init_profile_view()
+        self.ui.wdgProfile.layout().addWidget(self.profile)
 
         self.ui.wdgBackstory.setCharacter(self.character)
         self.widget.setStyleSheet(
@@ -83,20 +132,6 @@ class CharacterEditor:
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    def _init_profile_view(self):
-        self._profile_with_toolbar = QWidget()
-        self._toolbar = QWidget()
-        hbox(self._toolbar, 0)
-        self._toolbar.layout().addWidget(spacer())
-        self._toolbar.layout().addWidget(self.ui.btnCustomize)
-        vbox(self._profile_with_toolbar, 0)
-        self._profile_with_toolbar.layout().addWidget(self._toolbar)
-        self._profile_with_toolbar.layout().addWidget(self.profile)
-        self._profile_container = QWidget()
-        hbox(self._profile_container, 0)
-        self._profile_container.layout().addWidget(self._profile_with_toolbar)
-        self.ui.wdgProfile.layout().insertWidget(0, self._profile_container)
-
     def _customize_profile(self):
         profile_index = 0
         updated = customize_character_profile(self.novel, profile_index, self.widget)
@@ -104,9 +139,10 @@ class CharacterEditor:
             return
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[profile_index])
 
-        self.ui.wdgProfile.layout().takeAt(0)
-        self._profile_container.deleteLater()
-        self._init_profile_view()
+    def _name_edited(self, text: str):
+        self.character.name = text
+        if not self.character.avatar:
+            self.ui.wdgAvatar.setCharacter(self.character)
 
     def _tab_changed(self, index: int):
         if self.ui.tabAttributes.widget(index) is self.ui.tabNotes:
@@ -114,19 +150,79 @@ class CharacterEditor:
                 json_client.load_document(self.novel, self.character.document)
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
 
+    def _role_changed(self, role: SelectionItem):
+        self.ui.btnRole.menu().hide()
+        if role.text == protagonist_role.text and self.character.gender == FEMALE:
+            role.icon = 'fa5s.chess-queen'
+        self.character.role = role
+        self._display_role()
+
+    def _display_role(self):
+        self.ui.btnRole.setText(self.character.role.text)
+        if self.character.role.icon:
+            self.ui.btnRole.setIcon(IconRegistry.from_name(self.character.role.icon, self.character.role.icon_color))
+        self.ui.btnRole.setStyleSheet(f'''
+            #btnRole {{
+                border: 2px solid {self.character.role.icon_color};
+                color: {self.character.role.icon_color};
+                border-radius: 6px;
+                padding: 3px;
+                font: bold;
+            }}
+            #btnRole::menu-indicator {{width:0px;}}
+            #btnRole:pressed {{
+                border: 2px solid white;
+            }}
+        ''')
+        self._btnRoleEventFilter.enterOpacity = 0.8
+
+    def _avatar_updated(self):
+        avatars.update(self.character)
+
+    def _gender_clicked(self, btn: QAbstractButton):
+        self.ui.btnMoreGender.setHidden(True)
+
+        for other_btn in self.ui.btnGroupGender.buttons():
+            if other_btn is btn:
+                continue
+
+            if btn.isChecked():
+                other_btn.setChecked(False)
+                qtanim.fade_out(other_btn)
+            else:
+                other_btn.setVisible(True)
+                anim = qtanim.fade_in(other_btn)
+                anim.finished.connect(partial(opaque, other_btn, 0.4))
+
+        if len(self.ui.btnGroupGender.buttons()) == 2:
+            self.ui.btnMoreGender.setHidden(btn.isChecked())
+
+    def _display_more_gender_clicked(self):
+        for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
+            btn.setVisible(True)
+            self.ui.btnGroupGender.addButton(btn)
+            anim = qtanim.fade_in(btn)
+            anim.finished.connect(partial(opaque, btn, 0.4))
+
+        self.ui.btnMoreGender.setHidden(True)
+
     def _save(self):
-        name = self.profile.name()
-        if not name:
-            return
-        self.character.name = name
+        gender = ''
+        for btn in self.ui.btnGroupGender.buttons():
+            if btn.isChecked():
+                gender = btn.text()
+                break
+        self.character.gender = gender
+        if self.character.role and self.character.role.text == protagonist_role.text:
+            if self.character.gender == FEMALE:
+                self.character.role.icon = 'fa5s.chess-queen'
+            else:
+                self.character.role.icon = 'fa5s.chess-king'
+        self.character.name = self.ui.lineName.text()
         self.character.template_values = self.profile.values()
 
-        if self._new_character:
-            self.novel.characters.append(self.character)
-            self.repo.insert_character(self.novel, self.character)
-        else:
-            self.repo.update_character(self.character, self.profile.avatarUpdated())
-            self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
+        self.repo.update_character(self.character, self.ui.wdgAvatar.avatarUpdated())
+        self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
 
         if not self.character.document:
             self.character.document = Document('', character_id=self.character.id)
@@ -135,5 +231,3 @@ class CharacterEditor:
         if self.character.document.loaded:
             self.character.document.content = self.ui.textEdit.textEdit.toHtml()
             self.repo.update_doc(self.novel, self.character.document)
-
-        self._new_character = False

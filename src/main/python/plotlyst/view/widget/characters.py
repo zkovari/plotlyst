@@ -17,16 +17,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 from functools import partial
-from typing import Iterable, List, Optional, Dict
+from typing import Iterable, List, Optional, Dict, Union
 
 import emoji
 import qtanim
 from PyQt5 import QtCore
-from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent
-from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor
+from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
+from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap
 from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView
+    QHeaderView, QFileDialog, QMessageBox
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, busy, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
@@ -36,7 +37,9 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal
+    CharacterGoal, Goal, protagonist_role, antagonist_role, secondary_role, henchmen_role, tertiary_role, \
+    deuteragonist_role, guide_role, love_interest_role, sidekick_role, contagonist_role, confidant_role, foil_role, \
+    supporter_role, adversary_role, SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -47,11 +50,13 @@ from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
     VisibilityToggleEventFilter, hmax
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog
+from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
 from src.main.python.plotlyst.view.generated.character_avatar_ui import Ui_CharacterAvatar
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
+from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -1103,30 +1108,136 @@ class JournalWidget(QWidget, Ui_JournalWidget):
         journal.title = self.textEditor.textTitle.toPlainText()
 
 
+class AvatarSelectors(QWidget, Ui_AvatarSelectors):
+    updated = pyqtSignal()
+
+    def __init__(self, character: Character, parent=None):
+        super(AvatarSelectors, self).__init__(parent)
+        self.setupUi(self)
+        self.character = character
+        self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
+        self.btnUploadAvatar.clicked.connect(self._upload_avatar)
+        self.btnAi.setIcon(IconRegistry.from_name('mdi.robot-happy-outline', 'white'))
+        self.btnAi.clicked.connect(self._select_ai)
+
+    def _upload_avatar(self):
+        filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
+        if not filename or not filename[0]:
+            return
+        reader = QImageReader(filename[0])
+        reader.setAutoTransform(True)
+        image: QImage = reader.read()
+        if image is None:
+            QMessageBox.warning(self.widget, 'Error while uploading image', 'Could not upload image')
+            return
+        self._update_avatar(image)
+
+    def _update_avatar(self, image: Union[QImage, QPixmap]):
+        array = QByteArray()
+        buffer = QBuffer(array)
+        buffer.open(QIODevice.WriteOnly)
+        image.save(buffer, 'PNG')
+        self.character.avatar = array
+
+        self.updated.emit()
+
+    def _select_ai(self):
+        diag = ArtbreederDialog()
+        pixmap = diag.display()
+        if pixmap:
+            self._update_avatar(pixmap)
+
+
 class CharacterAvatar(QWidget, Ui_CharacterAvatar):
+
     def __init__(self, parent=None):
         super(CharacterAvatar, self).__init__(parent)
         self.setupUi(self)
-
         self.setStyleSheet(
             f'''#wdgPovFrame {{background-image: url({resource_registry.circular_frame1});}}
-                                                       ''')
+                                                           ''')
         self.wdgPovFrame.setFixedSize(190, 190)
         self.btnPov.installEventFilter(OpacityEventFilter(enterOpacity=0.7, leaveOpacity=1.0, parent=self.btnPov))
 
+        self._character: Optional[Character] = None
+        self._updated: bool = False
+        self._uploadSelectorsEnabled: bool = False
+
         self.reset()
 
+    def setUploadPopupMenu(self):
+        if not self._character:
+            raise ValueError('Set character first')
+        wdg = AvatarSelectors(self._character)
+        wdg.updated.connect(self._uploadedAvatar)
+        btn_popup(self.btnPov, wdg)
+
     def setCharacter(self, character: Character):
-        # self.btnPov.setToolTip(f'<html>Point of view character: <b>{self.scene.pov.name}</b>')
+        self._character = character
+        self._updateAvatar()
+
+    def _updateAvatar(self):
         self.btnPov.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.btnPov.setIconSize(QSize(168, 168))
-        if character.avatar:
-            self.btnPov.setIcon(QIcon(avatars.pixmap(character)))
+        if self._character.avatar:
+            self.btnPov.setIcon(QIcon(avatars.pixmap(self._character)))
+        elif avatars.has_name_initial_icon(self._character):
+            self.btnPov.setIcon(avatars.name_initial_icon(self._character))
         else:
-            # self.btnPov.setToolTip('Select point of view character')
-            self.btnPov.setIcon(avatars.name_initial_icon(character))
+            self.reset()
 
     def reset(self):
         self.btnPov.setIconSize(QSize(118, 118))
         self.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
         self.btnPov.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+
+    def avatarUpdated(self) -> bool:
+        return self._updated
+
+    def _uploadedAvatar(self):
+        self._updated = True
+        avatars.update(self._character)
+        self._updateAvatar()
+
+
+class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
+    roleSelected = pyqtSignal(SelectionItem)
+
+    def __init__(self, parent=None):
+        super(CharacterRoleSelector, self).__init__(parent)
+        self.setupUi(self)
+
+        self.btnItemProtagonist.setSelectionItem(protagonist_role)
+        self.btnItemDeuteragonist.setSelectionItem(deuteragonist_role)
+        self.btnItemAntagonist.setSelectionItem(antagonist_role)
+        self.btnItemContagonist.setSelectionItem(contagonist_role)
+        self.btnItemSecondary.setSelectionItem(secondary_role)
+        self.btnItemGuide.setSelectionItem(guide_role)
+        self.btnItemLoveInterest.setSelectionItem(love_interest_role)
+        self.btnItemSidekick.setSelectionItem(sidekick_role)
+        self.btnItemConfidant.setSelectionItem(confidant_role)
+        self.btnItemFoil.setSelectionItem(foil_role)
+        self.btnItemSupporter.setSelectionItem(supporter_role)
+        self.btnItemAdversary.setSelectionItem(adversary_role)
+        self.btnItemTertiary.setSelectionItem(tertiary_role)
+        self.btnItemHenchmen.setSelectionItem(henchmen_role)
+
+        self._extendedButtons = [self.btnItemDeuteragonist, self.btnItemContagonist, self.btnItemFoil,
+                                 self.btnItemConfidant, self.btnItemAdversary, self.btnItemSupporter,
+                                 self.btnItemHenchmen]
+
+        for btn in self._extendedButtons:
+            btn.setHidden(True)
+
+        for btn in self.buttonGroup.buttons():
+            btn.itemClicked.connect(lambda x: self.roleSelected.emit(copy.deepcopy(x)))
+
+        self.btnShowAll.clicked.connect(self._showAll)
+
+    def _showAll(self):
+        for btn in self._extendedButtons:
+            btn.setVisible(True)
+            qtanim.fade_in(btn)
+
+        self.btnShowAll.setHidden(True)
+        self.parent().setMinimumHeight(self.sizeHint().height())

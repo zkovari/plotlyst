@@ -120,6 +120,10 @@ class IconRegistry:
 
     @staticmethod
     def major_character_icon() -> QIcon:
+        return IconRegistry.from_name('mdi6.chess-king', '#00798c')
+
+    @staticmethod
+    def secondary_character_icon() -> QIcon:
         return IconRegistry.from_name('fa5s.chess-knight', '#619b8a')
 
     @staticmethod
@@ -132,7 +136,7 @@ class IconRegistry:
 
     @staticmethod
     def scene_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.movie-open', color_on='darkBlue')
+        return IconRegistry.from_name('mdi.movie-open', color_on='darkBlue', mdi_scale=1.1)
 
     @staticmethod
     def chapter_icon() -> QIcon:
@@ -503,14 +507,24 @@ class AvatarsRegistry:
 
         return self._avatars[str(character.id)]
 
+    def has_name_initial_icon(self, character: Character) -> bool:
+        if character.name and (character.name[0].isnumeric() or character.name[0].isalpha()):
+            return True
+        return False
+
     def name_initial_icon(self, character: Character) -> QIcon:
         _sum = sum([ord(x) for x in character.name])
         color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_sum % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]
 
+        if not character.name:
+            return IconRegistry.character_icon(color_on='black')
+
         if character.name[0].isnumeric():
             icon = f'mdi.numeric-{int(character.name[0])}-circle-outline'
-        else:
+        elif character.name[0].isalpha():
             icon = f'mdi.alpha-{character.name[0].lower()}-circle-outline'
+        else:
+            return IconRegistry.character_icon(color_on='black')
 
         return qtawesome.icon(icon, options=[{'scale_factor': 1.2}], color=color)
 

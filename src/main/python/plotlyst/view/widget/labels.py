@@ -52,7 +52,7 @@ class LabelsWidget(QWidget):
 
     def __init__(self, parent=None):
         super(LabelsWidget, self).__init__(parent)
-        self.setLayout(FlowLayout(0, 3))
+        self.setLayout(FlowLayout())
 
     def addText(self, text: str, color: str = '#7c98b3'):
         label = QLabel(truncate_string(text, 40))
@@ -82,7 +82,7 @@ class CharacterLabel(Label):
         self.layout().addWidget(self.btnAvatar)
         self.layout().addWidget(QLabel(truncate_string(character.name)))
 
-        role = self.character.role()
+        role = self.character.role
         if role:
             self.lblRole = QLabel()
             self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
