@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
 
@@ -36,7 +37,9 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal
+    CharacterGoal, Goal, protagonist_role, antagonist_role, secondary_role, henchmen_role, tertiary_role, \
+    deuteragonist_role, guide_role, love_interest_role, sidekick_role, contagonist_role, confidant_role, foil_role, \
+    supporter_role, adversary_role, SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -53,6 +56,7 @@ from src.main.python.plotlyst.view.generated.character_avatar_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
+from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -1194,3 +1198,46 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
         self._updated = True
         avatars.update(self._character)
         self._updateAvatar()
+
+
+class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
+    roleSelected = pyqtSignal(SelectionItem)
+
+    def __init__(self, parent=None):
+        super(CharacterRoleSelector, self).__init__(parent)
+        self.setupUi(self)
+
+        self.btnItemProtagonist.setSelectionItem(protagonist_role)
+        self.btnItemDeuteragonist.setSelectionItem(deuteragonist_role)
+        self.btnItemAntagonist.setSelectionItem(antagonist_role)
+        self.btnItemContagonist.setSelectionItem(contagonist_role)
+        self.btnItemSecondary.setSelectionItem(secondary_role)
+        self.btnItemGuide.setSelectionItem(guide_role)
+        self.btnItemLoveInterest.setSelectionItem(love_interest_role)
+        self.btnItemSidekick.setSelectionItem(sidekick_role)
+        self.btnItemConfidant.setSelectionItem(confidant_role)
+        self.btnItemFoil.setSelectionItem(foil_role)
+        self.btnItemSupporter.setSelectionItem(supporter_role)
+        self.btnItemAdversary.setSelectionItem(adversary_role)
+        self.btnItemTertiary.setSelectionItem(tertiary_role)
+        self.btnItemHenchmen.setSelectionItem(henchmen_role)
+
+        self._extendedButtons = [self.btnItemDeuteragonist, self.btnItemContagonist, self.btnItemFoil,
+                                 self.btnItemConfidant, self.btnItemAdversary, self.btnItemSupporter,
+                                 self.btnItemHenchmen]
+
+        for btn in self._extendedButtons:
+            btn.setHidden(True)
+
+        for btn in self.buttonGroup.buttons():
+            btn.itemClicked.connect(lambda x: self.roleSelected.emit(copy.deepcopy(x)))
+
+        self.btnShowAll.clicked.connect(self._showAll)
+
+    def _showAll(self):
+        for btn in self._extendedButtons:
+            btn.setVisible(True)
+            qtanim.fade_in(btn)
+
+        self.btnShowAll.setHidden(True)
+        self.parent().setMinimumHeight(self.sizeHint().height())

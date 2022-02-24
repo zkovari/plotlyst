@@ -22,16 +22,17 @@ from functools import partial
 import qtanim
 from PyQt5.QtWidgets import QWidget, QAbstractButton
 from fbs_runtime import platform
-from qthandy import opaque
+from qthandy import opaque, btn_popup
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE
+from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem, \
+    protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor
+from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor, CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -75,6 +76,16 @@ class CharacterEditor:
         self.ui.btnGenderless.setHidden(True)
         self.ui.btnGroupGender.buttonClicked.connect(self._gender_clicked)
         self.ui.btnMoreGender.clicked.connect(self._display_more_gender_clicked)
+
+        self.ui.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))
+        self._btnRoleEventFilter = OpacityEventFilter(leaveOpacity=0.7, parent=self.ui.btnRole,
+                                                      ignoreCheckedButton=True)
+        self.ui.btnRole.installEventFilter(self._btnRoleEventFilter)
+        self._roleSelector = CharacterRoleSelector()
+        self._roleSelector.roleSelected.connect(self._role_changed)
+        btn_popup(self.ui.btnRole, self._roleSelector)
+        if self.character.role:
+            self._display_role()
 
         if self.character.gender:
             self.ui.btnMoreGender.setHidden(True)
@@ -139,6 +150,32 @@ class CharacterEditor:
                 json_client.load_document(self.novel, self.character.document)
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
 
+    def _role_changed(self, role: SelectionItem):
+        self.ui.btnRole.menu().hide()
+        if role.text == protagonist_role.text and self.character.gender == FEMALE:
+            role.icon = 'fa5s.chess-queen'
+        self.character.role = role
+        self._display_role()
+
+    def _display_role(self):
+        self.ui.btnRole.setText(self.character.role.text)
+        if self.character.role.icon:
+            self.ui.btnRole.setIcon(IconRegistry.from_name(self.character.role.icon, self.character.role.icon_color))
+        self.ui.btnRole.setStyleSheet(f'''
+            #btnRole {{
+                border: 2px solid {self.character.role.icon_color};
+                color: {self.character.role.icon_color};
+                border-radius: 6px;
+                padding: 3px;
+                font: bold;
+            }}
+            #btnRole::menu-indicator {{width:0px;}}
+            #btnRole:pressed {{
+                border: 2px solid white;
+            }}
+        ''')
+        self._btnRoleEventFilter.enterOpacity = 0.8
+
     def _avatar_updated(self):
         avatars.update(self.character)
 
@@ -176,6 +213,11 @@ class CharacterEditor:
                 gender = btn.text()
                 break
         self.character.gender = gender
+        if self.character.role and self.character.role.text == protagonist_role.text:
+            if self.character.gender == FEMALE:
+                self.character.role.icon = 'fa5s.chess-queen'
+            else:
+                self.character.role.icon = 'fa5s.chess-king'
         self.character.name = self.ui.lineName.text()
         self.character.template_values = self.profile.values()
 

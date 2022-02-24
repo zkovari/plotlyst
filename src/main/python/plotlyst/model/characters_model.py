@@ -64,7 +64,7 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
             if role == Qt.DecorationRole:
                 return QIcon(avatars.pixmap(character))
         if index.column() == self.ColRole:
-            return self._dataForSelectionItem(character.role(), role, displayText=False)
+            return self._dataForSelectionItem(character.role, role, displayText=False)
         if index.column() == self.ColEnneagram:
             enneagram = character.enneagram()
             if role == self.SortRole:

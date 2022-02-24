@@ -120,6 +120,10 @@ class IconRegistry:
 
     @staticmethod
     def major_character_icon() -> QIcon:
+        return IconRegistry.from_name('mdi6.chess-king', '#00798c')
+
+    @staticmethod
+    def secondary_character_icon() -> QIcon:
         return IconRegistry.from_name('fa5s.chess-knight', '#619b8a')
 
     @staticmethod

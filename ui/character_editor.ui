@@ -408,11 +408,27 @@ QToolButton:checked {
           </item>
           <item>
            <widget class="QPushButton" name="btnRole">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
             <property name="focusPolicy">
              <enum>Qt::ClickFocus</enum>
             </property>
+            <property name="styleSheet">
+             <string notr="true">.QPushButton {
+	border: 2px dashed grey;
+	border-radius: 6px;
+	padding: 3px;
+	font: italic;
+}
+
+.QPushButton:pressed {
+	border: 2px solid grey;
+}
+</string>
+            </property>
             <property name="text">
-             <string>Role</string>
+             <string>Select character role</string>
             </property>
             <property name="iconSize">
              <size>

@@ -4,7 +4,8 @@ from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
 from overrides import overrides
 
 from plugins import PluginBase
-from src.main.python.plotlyst.view.widget.display import Subtitle, ChartView
+from src.main.python.plotlyst.view.widget.display import Subtitle, ChartView, MajorRoleIcon, SecondaryRoleIcon, \
+    MinorRoleIcon
 
 
 class DisplayPluginBase(PluginBase):
@@ -32,3 +33,24 @@ class ChartViewPlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
     @overrides
     def classType(self):
         return ChartView
+
+
+class MajorRoleIconPlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
+
+    @overrides
+    def classType(self):
+        return MajorRoleIcon
+
+
+class SecondaryRoleIconPlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
+
+    @overrides
+    def classType(self):
+        return SecondaryRoleIcon
+
+
+class MinorRoleIconPlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
+
+    @overrides
+    def classType(self):
+        return MinorRoleIcon

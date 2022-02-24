@@ -82,7 +82,7 @@ class CharacterLabel(Label):
         self.layout().addWidget(self.btnAvatar)
         self.layout().addWidget(QLabel(truncate_string(character.name)))
 
-        role = self.character.role()
+        role = self.character.role
         if role:
             self.lblRole = QLabel()
             self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))

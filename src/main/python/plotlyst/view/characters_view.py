@@ -49,8 +49,6 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
         self.setupUi(self)
         self.btnCharacter.setIcon(IconRegistry.character_icon())
         incr_font(self.lblTitle)
-        self.btnMajor.setIcon(IconRegistry.major_character_icon())
-        self.btnMinor.setIcon(IconRegistry.minor_character_icon())
 
         self.refresh()
 
@@ -106,7 +104,7 @@ class CharactersView(AbstractNovelView):
         self.selected_card: Optional[CharacterCard] = None
         self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
         self.ui.cards.setCardsSizeRatio(CardSizeRatio.RATIO_2_3)
-        self.ui.cards.setCardsWidth(140)
+        self.ui.cards.setCardsWidth(142)
         self._update_cards()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
