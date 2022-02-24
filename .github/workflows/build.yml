@@ -11,7 +11,7 @@ jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ ubuntu-18.04, windows-latest, macos-10.15 ]
+        os: [ ubuntu-18.04, windows-2019, macos-10.15 ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -42,7 +42,7 @@ jobs:
         name: Install fpm on Mac
         run: |
           gem install --no-document fpm
-      - if: matrix.os == 'windows-latest'
+      - if: matrix.os == 'windows-2019'
         name: Install fpm on Windows
         run: |
           gem install --no-document fpm
@@ -112,7 +112,7 @@ jobs:
           name: app-mac-artifact
           path: target/Plotlyst.dmg
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         with:
           name: app-win-artifact
           path: target\PlotlystSetup.exe
