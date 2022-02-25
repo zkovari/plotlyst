@@ -293,8 +293,9 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
         # else:
         #     self.btnComments.setHidden(True)
 
-        if self.scene.type:
-            self.lblType.setPixmap(IconRegistry.scene_type_icon(self.scene).pixmap(QSize(24, 24, )))
+        icon = IconRegistry.scene_type_icon(self.scene)
+        if icon:
+            self.lblType.setPixmap(icon.pixmap(QSize(24, 24, )))
         else:
             self.lblType.clear()
 

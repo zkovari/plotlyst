@@ -563,7 +563,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _on_delete(self):
         scene: Optional[Scene] = self._selected_scene()
-        if scene and ask_confirmation(f'Are you sure you want to delete scene {scene.title}?'):
+        if scene and ask_confirmation(f'Are you sure you want to delete scene {scene.title_or_index(self.novel)}?'):
             self.novel.scenes.remove(scene)
             self.repo.delete_scene(self.novel, scene)
             self.refresh()
