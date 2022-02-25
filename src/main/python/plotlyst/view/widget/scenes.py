@@ -377,8 +377,8 @@ class _SceneTypeButton(QPushButton):
             QPushButton {{
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
                                       stop: 0 {bgColor};);
-                border: 2px solid {borderColor};
-                border-radius: 6px;
+                border: 2px dashed {borderColor};
+                border-radius: 8px;
                 padding: 2px;
             }}
             QPushButton:checked {{
@@ -494,20 +494,20 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             for item in scene.agendas[0].items:
                 if item.type == SceneStructureItemType.GOAL:
                     widget = SceneGoalItemWidget(self.novel, item)
-                    self.btnGoal.setDisabled(True)
+                    # self.btnGoal.setDisabled(True)
                 elif item.type == SceneStructureItemType.CONFLICT:
                     widget = SceneConflictItemWidget(self.novel, item)
-                    self.btnConflict.setDisabled(True)
+                    # self.btnConflict.setDisabled(True)
                 elif item.type == SceneStructureItemType.OUTCOME:
                     widget = SceneOutcomeItemWidget(self.novel, item)
-                    self.btnOutcome.setDisabled(True)
+                    # self.btnOutcome.setDisabled(True)
                 elif item.type == SceneStructureItemType.REACTION:
                     widget = ReactionSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.DILEMMA:
                     widget = DilemmaSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.DECISION:
                     widget = DecisionSceneItemWidget(self.novel, item)
-                    self.btnDecision.setDisabled(True)
+                    # self.btnDecision.setDisabled(True)
                 elif item.type == SceneStructureItemType.HOOK:
                     widget = HookSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.INCITING_INCIDENT:
@@ -547,7 +547,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self._addPlaceholder(self.wdgEnd)
 
         if not self.scene.agendas[0].items:
-            self._typeClicked(SceneType.ACTION, True, lazy=False)
+            self._typeClicked(SceneType.DEFAULT, True, lazy=False)
 
     def updateAvailableAgendaCharacters(self):
         chars = []
@@ -723,11 +723,19 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def _checkSceneType(self):
         if self.scene.type == SceneType.ACTION:
             self.btnScene.setChecked(True)
+            self.btnScene.setVisible(True)
             self.btnSequel.setChecked(False)
+            self.btnSequel.setHidden(True)
         elif self.scene.type == SceneType.REACTION:
             self.btnSequel.setChecked(True)
+            self.btnSequel.setVisible(True)
             self.btnScene.setChecked(False)
+            self.btnScene.setHidden(True)
         else:
+            self.btnScene.setChecked(False)
+            self.btnScene.setVisible(True)
+            self.btnSequel.setChecked(False)
+            self.btnSequel.setVisible(True)
             self.btnInventory.setChecked(True)
 
     def _setEmotionColorChange(self):
@@ -806,14 +814,16 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             bottom = SceneOutcomeItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.OUTCOME,
                                                                            outcome=SceneOutcome.DISASTER))
             self.btnSequel.setChecked(False)
+            qtanim.fade_out(self.btnSequel)
         elif type == SceneType.REACTION and checked:
             self.scene.type = type
             top = ReactionSceneItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.REACTION))
             middle = DilemmaSceneItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.DILEMMA))
             bottom = DecisionSceneItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.DECISION))
             self.btnScene.setChecked(False)
+            qtanim.fade_out(self.btnScene)
         else:
-            self.scene.type = SceneType.MIXED
+            self.scene.type = SceneType.DEFAULT
             top = SceneStructureItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.BEAT),
                                            placeholder='Describe the beginning event')
             middle = SceneStructureItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.BEAT),
@@ -821,6 +831,10 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             bottom = SceneStructureItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.BEAT),
                                               placeholder='Describe the ending of this scene')
             self.btnInventory.setChecked(True)
+            if self.btnScene.isHidden():
+                qtanim.fade_in(self.btnScene)
+            if self.btnSequel.isHidden():
+                qtanim.fade_in(self.btnSequel)
 
         self.reset(addPlaceholders=True)
         self._addWidget(self.wdgBeginning.layout().itemAt(0).widget(), top)
