@@ -370,9 +370,9 @@ class ScenePlotValue:
 
 
 class SceneType(Enum):
+    DEFAULT = ''
     ACTION = 'action'
     REACTION = 'reaction'
-    MIXED = ''
 
 
 class SceneStructureItemType(Enum):
@@ -487,7 +487,7 @@ class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     synopsis: str = ''
-    type: SceneType = SceneType.ACTION
+    type: SceneType = SceneType.DEFAULT
     pov: Optional[Character] = None
     characters: List[Character] = field(default_factory=list)
     agendas: List[SceneStructureAgenda] = field(default_factory=list)

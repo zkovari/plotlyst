@@ -27,7 +27,7 @@ def test_create_new_scene(qtbot, filled_window: MainWindow):
     assert_data(scenes.ui.tblScenes.model(), 'New scene', row, 1)
     assert filled_window.novel.scenes
     assert filled_window.novel.scenes[row].title == 'New scene'
-    assert filled_window.novel.scenes[row].type == SceneType.ACTION
+    assert filled_window.novel.scenes[row].type == SceneType.DEFAULT
     assert filled_window.novel.scenes[row].day == 1
 
 
