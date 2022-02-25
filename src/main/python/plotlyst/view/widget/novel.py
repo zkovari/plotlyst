@@ -295,6 +295,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
+        self.__initWdgPReview()
+
         self.novel: Optional[Novel] = None
         self.beats.installEventFilter(self)
         self.repo = RepositoryPersistenceManager.instance()
@@ -373,8 +375,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             item = self.layout().takeAt(1)
             gc(item.widget())
             self.wdgPreview = SceneStoryStructureWidget(self)
+            self.__initWdgPReview()
             self.layout().insertWidget(1, self.wdgPreview)
-        self.wdgPreview.setNovel(self.novel, checkOccupiedBeats=False)
+        self.wdgPreview.setNovel(self.novel)
         row = 0
         col = 0
         for beat in structure.beats:
@@ -387,6 +390,10 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             row += 1
             wdg.beatHighlighted.connect(self.wdgPreview.highlightBeat)
             wdg.beatToggled.connect(self._beatToggled)
+
+    def __initWdgPReview(self):
+        self.wdgPreview.setCheckOccupiedBeats(False)
+        self.wdgPreview.setBeatCursor(Qt.ArrowCursor)
 
     def _activeStructureClicked(self, structure: StoryStructure, toggled: bool):
         if not toggled:

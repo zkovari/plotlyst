@@ -41,7 +41,7 @@ from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, Sc
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, OpacityEventFilter, DisabledClickEventFilter
+from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -861,6 +861,10 @@ class SceneStoryStructureWidget(QWidget):
         super(SceneStoryStructureWidget, self).__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
 
+        self._checkOccupiedBeats: bool = True
+        self._beatsCheckable: bool = False
+        self._removalContextMenuEnabled: bool = False
+        self._beatCursor = Qt.PointingHandCursor
         self.novel: Optional[Novel] = None
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
@@ -875,7 +879,28 @@ class SceneStoryStructureWidget(QWidget):
         self._beatHeight: int = 20
         self._margin = 5
 
-    def setNovel(self, novel: Novel, checkOccupiedBeats: bool = True):
+    def checkOccupiedBeats(self) -> bool:
+        return self._checkOccupiedBeats
+
+    def setCheckOccupiedBeats(self, value: bool):
+        self._checkOccupiedBeats = value
+
+    def beatsCheckable(self) -> bool:
+        return self._beatsCheckable
+
+    def setBeatsCheckable(self, value: bool):
+        self._beatsCheckable = value
+
+    def setRemovalContextMenuEnabled(self, value: bool):
+        self._removalContextMenuEnabled = value
+
+    def beatCursor(self) -> int:
+        return self._beatCursor
+
+    def setBeatCursor(self, value: int):
+        self._beatCursor = value
+
+    def setNovel(self, novel: Novel):
         self.novel = novel
         self._acts.clear()
         self._beats.clear()
@@ -891,9 +916,10 @@ class SceneStoryStructureWidget(QWidget):
             btn.toggled.connect(partial(self._beatToggled, btn))
             btn.clicked.connect(partial(self._beatClicked, beat, btn))
             btn.installEventFilter(self)
-            btn.setCursor(Qt.PointingHandCursor)
-            if checkOccupiedBeats and beat not in occupied_beats:
-                btn.setCheckable(True)
+            btn.setCursor(self._beatCursor)
+            if self._checkOccupiedBeats and beat not in occupied_beats:
+                if self._beatsCheckable:
+                    btn.setCheckable(True)
                 self._beatToggled(btn, False)
             self._beats[beat] = btn
             if not beat.enabled:
@@ -1086,7 +1112,7 @@ class SceneStoryStructureWidget(QWidget):
         if btn.isCheckable() and btn.isChecked():
             self.beatSelected.emit(beat)
             btn.setCheckable(False)
-        elif not btn.isCheckable():
+        elif not btn.isCheckable() and self._removalContextMenuEnabled:
             builder = PopupMenuBuilder.from_widget_position(self, self.mapFromGlobal(QCursor.pos()))
             builder.add_action('Remove', IconRegistry.trash_can_icon(), lambda: self.beatRemovalRequested.emit(beat))
             builder.popup()

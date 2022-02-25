@@ -80,9 +80,11 @@ class SceneEditor(QObject):
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
         self.ui.lblSynopsisEmoji.setText(emoji.emojize(':scroll:'))
 
+        self.ui.wdgStructure.setBeatsCheckable(True)
         self.ui.wdgStructure.setNovel(self.novel)
         self.ui.wdgStructure.setActsClickable(False)
         self.ui.wdgStructure.beatSelected.connect(self._beat_selected)
+        self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
         self._povMenu = QMenu(self.ui.wdgPov.btnPov)

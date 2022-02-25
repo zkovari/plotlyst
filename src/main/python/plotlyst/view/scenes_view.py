@@ -169,6 +169,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.wdgStoryStructureParent.setHidden(True)
+        self.ui.wdgStoryStructure.setBeatCursor(Qt.ArrowCursor)
         self.ui.wdgStoryStructure.setNovel(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
 
@@ -211,6 +212,7 @@ class ScenesOutlineView(AbstractNovelView):
         if self.ui.wdgStoryStructure.novel is not None:
             clear_layout(self.ui.wdgStoryStructureParent)
             self.ui.wdgStoryStructure = SceneStoryStructureWidget(self.ui.wdgStoryStructureParent)
+            self.ui.wdgStoryStructure.setBeatCursor(Qt.ArrowCursor)
             self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
         self.ui.wdgStoryStructure.setNovel(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
