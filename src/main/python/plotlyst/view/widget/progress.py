@@ -17,13 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List
+from typing import List, Dict
 
 from PyQt5.QtChart import QChart, QChartView, QPieSeries, QPieSlice
 from PyQt5.QtCore import Qt, QMargins
 from PyQt5.QtGui import QPainter, QColor, QFont
 
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
+from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class ProgressChartView(QChartView):
@@ -73,7 +74,6 @@ class SceneStageProgressCharts:
             self._stage = self.novel.stages[0]
         else:
             self._stage = None
-        self._stage_index = 1
         self._act_colors = {1: '#02bcd4', 2: '#1bbc9c', 3: '#ff7800'}
 
     def charts(self) -> List[ProgressChartView]:
@@ -84,55 +84,26 @@ class SceneStageProgressCharts:
 
     def setStage(self, stage: SceneStage):
         self._stage = stage
-        self._stage_index = self.novel.stages.index(self._stage)
         self.refresh()
 
     def refresh(self):
-        in_act_1 = True
-        in_act_2 = False
-        in_act_3 = False
-        act1: List[bool] = []
-        act2: List[bool] = []
-        act3: List[bool] = []
+        acts: Dict[int, List[bool]] = {1: [], 2: [], 3: []}
+        active_stage_index = self.novel.stages.index(self._stage)
 
         for scene in self.novel.scenes:
-            beat = scene.beat(self.novel)
-            if beat and beat.act == 1 and beat.ends_act:
-                in_act_2 = True
-                in_act_1 = False
-            elif beat and beat.act == 2 and beat.ends_act:
-                in_act_3 = True
-                in_act_2 = False
-            if scene.stage and self.novel.stages.index(scene.stage) >= self._stage_index:
-                match = True
+            if scene.stage and self.novel.stages.index(scene.stage) >= active_stage_index:
+                acts[acts_registry.act(scene)].append(True)
             else:
-                match = False
-            if in_act_1:
-                act1.append(match)
-            elif in_act_2:
-                act2.append(match)
-            elif in_act_3:
-                act3.append(match)
+                acts[acts_registry.act(scene)].append(False)
 
         values = []
-        match_in_act1 = len([x for x in act1 if x])
-        match_in_act2 = len([x for x in act2 if x])
-        match_in_act3 = len([x for x in act3 if x])
+        all_matches = 0
+        for act in [1, 2, 3]:
+            matches = len([x for x in acts[act] if x])
+            all_matches += matches
+            values.append((matches, len(acts[act])))
 
-        values.append((match_in_act1 + match_in_act2 + match_in_act3, len(self.novel.scenes)))
-
-        if act1:
-            values.append((match_in_act1, len(act1)))
-        else:
-            values.append((0, 1))
-        if act2:
-            values.append((match_in_act2, len(act2)))
-        else:
-            values.append((0, 1))
-        if act3:
-            values.append((match_in_act3, len(act3)))
-        else:
-            values.append((0, 1))
+        values.insert(0, (all_matches, len(self.novel.scenes)))
 
         if not self._chartviews:
             overall = ProgressChartView(values[0][0], values[0][1], 'Overall:')
