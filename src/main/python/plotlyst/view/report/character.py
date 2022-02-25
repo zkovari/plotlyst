@@ -32,6 +32,7 @@ from src.main.python.plotlyst.view.generated.report.character_report_ui import U
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton
+from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class CharacterReport(AbstractReport, Ui_CharacterReport):
@@ -65,23 +66,15 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         for k in self.pov_number.keys():
             self.pov_number[k] = 0
 
-        include_act1 = self.btnAct1.isChecked()
-        include_act2 = self.btnAct2.isChecked()
-        include_act3 = self.btnAct3.isChecked()
-        in_act_2 = False
-        in_act_3 = False
-        for scene in self.novel.scenes:
-            if (include_act1 and not in_act_2) or (include_act2 and in_act_2) or (include_act3 and in_act_3):
-                if scene.pov and scene.pov.name not in self.pov_number.keys():
-                    self.pov_number[scene.pov.name] = 0
-                if scene.pov:
-                    self.pov_number[scene.pov.name] += 1
+        acts_filter = {1: self.btnAct1.isChecked(), 2: self.btnAct2.isChecked(), 3: self.btnAct3.isChecked()}
 
-            beat = scene.beat(self.novel)
-            if beat and beat.act == 1 and beat.ends_act:
-                in_act_2 = True
-            elif beat and beat.act == 2 and beat.ends_act:
-                in_act_3 = True
+        for scene in self.novel.scenes:
+            if not acts_filter[acts_registry.act(scene)]:
+                continue
+            if scene.pov and scene.pov.name not in self.pov_number.keys():
+                self.pov_number[scene.pov.name] = 0
+            if scene.pov:
+                self.pov_number[scene.pov.name] += 1
 
         series = QPieSeries()
         for k, v in self.pov_number.items():
