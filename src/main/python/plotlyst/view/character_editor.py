@@ -190,7 +190,6 @@ class CharacterEditor:
                 other_btn.setChecked(False)
                 qtanim.fade_out(other_btn)
             else:
-                other_btn.setVisible(True)
                 anim = qtanim.fade_in(other_btn)
                 anim.finished.connect(partial(opaque, other_btn, 0.4))
 
@@ -199,7 +198,6 @@ class CharacterEditor:
 
     def _display_more_gender_clicked(self):
         for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
-            btn.setVisible(True)
             self.ui.btnGroupGender.addButton(btn)
             anim = qtanim.fade_in(btn)
             anim.finished.connect(partial(opaque, btn, 0.4))

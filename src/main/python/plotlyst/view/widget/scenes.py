@@ -22,6 +22,7 @@ from abc import abstractmethod
 from functools import partial
 from typing import List, Optional, Union, Dict
 
+import qtanim
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
     QResizeEvent, QCursor
@@ -1021,7 +1022,10 @@ class SceneStoryStructureWidget(QWidget):
         if btn is None:
             return
 
-        btn.setVisible(beat.enabled)
+        if beat.enabled:
+            qtanim.fade_in(btn)
+        else:
+            qtanim.fade_out(btn)
 
     def _xForAct(self, act: int):
         if act == 1:
