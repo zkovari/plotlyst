@@ -29,6 +29,7 @@ from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, 
     QWidgetAction, QTableView, QMenu
 from fbs_runtime import platform
 from overrides import overrides
+from qthandy import flow, clear_layout
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue, StoryBeat, \
@@ -44,7 +45,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.scenes import SceneDramaticQuestionsWidget
+from src.main.python.plotlyst.view.widget.scenes import SceneDramaticQuestionsWidget, ScenePlotSelector
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -79,6 +80,8 @@ class SceneEditor(QObject):
         self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
         self.ui.lblSynopsisEmoji.setText(emoji.emojize(':scroll:'))
+        self.ui.lblPlotEmoji.setFont(self._emoji_font)
+        self.ui.lblPlotEmoji.setText(emoji.emojize(':chart_increasing:'))
 
         self.ui.wdgStructure.setBeatsCheckable(True)
         self.ui.wdgStructure.setNovel(self.novel)
@@ -122,6 +125,8 @@ class SceneEditor(QObject):
         self.ui.btnPrevious.clicked.connect(self._on_previous_scene)
         self.ui.btnNext.setIcon(IconRegistry.arrow_right_thick_icon())
         self.ui.btnNext.clicked.connect(self._on_next_scene)
+
+        flow(self.ui.wdgPlotContainer)
 
         self._scene_builder_inventory_model = SceneBuilderInventoryTreeModel()
         self.ui.treeInventory.setModel(self._scene_builder_inventory_model)
@@ -171,6 +176,8 @@ class SceneEditor(QObject):
         self.ui.sbDay.setValue(self.scene.day)
 
         self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
+        clear_layout(self.ui.wdgPlotContainer)
+        self.ui.wdgPlotContainer.layout().addWidget(ScenePlotSelector(self.novel, self.scene))
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)

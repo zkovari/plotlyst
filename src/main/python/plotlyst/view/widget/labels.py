@@ -28,7 +28,7 @@ from overrides import overrides
 from qthandy import hbox, FlowLayout, vline, vbox, clear_layout
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem, Novel
+from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
@@ -123,20 +123,7 @@ class ConflictLabel(Label):
         if self.conflict.conflicting_character(self.novel):
             set_avatar(self.lblAvatar, self.conflict.conflicting_character(self.novel), 24)
         else:
-            if self.conflict.type == ConflictType.CHARACTER:
-                icon = IconRegistry.conflict_character_icon()
-            elif self.conflict.type == ConflictType.SOCIETY:
-                icon = IconRegistry.conflict_society_icon()
-            elif self.conflict.type == ConflictType.NATURE:
-                icon = IconRegistry.conflict_nature_icon()
-            elif self.conflict.type == ConflictType.TECHNOLOGY:
-                icon = IconRegistry.conflict_technology_icon()
-            elif self.conflict.type == ConflictType.SUPERNATURAL:
-                icon = IconRegistry.conflict_supernatural_icon()
-            elif self.conflict.type == ConflictType.SELF:
-                icon = IconRegistry.conflict_self_icon()
-            else:
-                icon = IconRegistry.conflict_icon()
+            icon = IconRegistry.conflict_type_icon(self.conflict.type)
             self.lblAvatar.setPixmap(icon.pixmap(QSize(24, 24)))
         self.layout().addWidget(self.lblAvatar)
         self.layout().addWidget(QLabel(self.conflict.text))
@@ -175,7 +162,9 @@ class TraitLabel(QLabel):
 
 
 class SelectionItemLabel(Label):
-    def __init__(self, item: SelectionItem, parent=None):
+    removalRequested = pyqtSignal()
+
+    def __init__(self, item: SelectionItem, parent=None, removalEnabled: bool = False):
         super(SelectionItemLabel, self).__init__(parent)
         self.item = item
 
@@ -186,6 +175,12 @@ class SelectionItemLabel(Label):
 
         self.lblText = QLabel(self.item.text)
         self.layout().addWidget(self.lblText)
+        self.btnRemoval = RemovalButton(self)
+        self.layout().addWidget(self.btnRemoval)
+        self.btnRemoval.clicked.connect(self.removalRequested.emit)
+        self.btnRemoval.setVisible(removalEnabled)
+        if removalEnabled:
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnRemoval, self))
 
         if item.color_hexa:
             bg_color = item.color_hexa

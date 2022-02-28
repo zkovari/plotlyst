@@ -344,6 +344,26 @@
             </item>
            </layout>
           </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item alignment="Qt::AlignTop">
+             <widget class="QLabel" name="lblPlotEmoji">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>emo</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="wdgPlotContainer" native="true"/>
+            </item>
+           </layout>
+          </item>
           <item alignment="Qt::AlignTop">
            <widget class="QWidget" name="wdgDayParent" native="true">
             <layout class="QHBoxLayout" name="horizontalLayout_16">
@@ -511,7 +531,7 @@
         <widget class="QWidget" name="widget_5" native="true">
          <layout class="QVBoxLayout" name="verticalLayout_17">
           <property name="spacing">
-           <number>2</number>
+           <number>4</number>
           </property>
           <property name="leftMargin">
            <number>0</number>
@@ -914,7 +934,7 @@
            </property>
            <item>
             <widget class="DocumentTextEditor" name="textNotes">
-             <property name="placeholderText">
+             <property name="placeholderText" stdset="0">
               <string>Scene notes or type '/' for commands</string>
              </property>
             </widget>
@@ -1084,7 +1104,7 @@
   </customwidget>
   <customwidget>
    <class>DocumentTextEditor</class>
-   <extends>QTextEdit</extends>
+   <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>

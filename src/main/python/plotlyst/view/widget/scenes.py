@@ -31,13 +31,13 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hidden, opaque, underline, flow, \
-    clear_layout, hbox, spacer
+    clear_layout, hbox, spacer, btn_popup, vbox
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
-    Character
+    Character, Plot
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
@@ -50,7 +50,7 @@ from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui i
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, SelectionItemLabel
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
@@ -133,6 +133,88 @@ class _SceneLabelsEditor(LabelsEditorWidget):
     @abstractmethod
     def items(self) -> List[SelectionItem]:
         pass
+
+
+class _PlotSelectorWidget(QWidget):
+    plotSelected = pyqtSignal(Plot)
+
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
+        super(_PlotSelectorWidget, self).__init__(parent)
+        self.novel = novel
+        self.scene = scene
+
+        vbox(self)
+
+        for plot in self.novel.plots:
+            label = SelectionItemLabel(plot)
+            label.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=label))
+            label.clicked.connect(partial(self.plotSelected.emit, plot))
+            self.layout().addWidget(label)
+
+
+class ScenePlotSelector(QWidget):
+    plotSelected = pyqtSignal()
+
+    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
+        super(ScenePlotSelector, self).__init__(parent)
+        self.novel = novel
+        self.scene = scene
+        self.plot: Optional[Plot] = None
+        hbox(self)
+
+        self.label: Optional[SelectionItemLabel] = None
+
+        self.btnLinkPlot = QPushButton(self)
+        if not simplified:
+            self.btnLinkPlot.setText('Associate plot')
+        self.layout().addWidget(self.btnLinkPlot)
+        self.btnLinkPlot.setCursor(Qt.PointingHandCursor)
+        self.btnLinkPlot.setStyleSheet('''
+                                QPushButton {
+                                    border: 2px dotted #f25c54;
+                                    border-radius: 6px;
+                                    padding: 2px;
+                                    color: #f25c54;
+                                }
+                                QPushButton:hover {
+                                    border: 2px dotted #da1e37;
+                                    color: #da1e37;
+                                }
+                                QPushButton:pressed {
+                                    border: 2px solid #a71e34;
+                                }
+                            ''')
+
+        self.btnLinkPlot.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self.btnLinkPlot))
+
+        self.selectorWidget = _PlotSelectorWidget(self.novel, self.scene)
+        btn_popup(self.btnLinkPlot, self.selectorWidget)
+
+        self.selectorWidget.plotSelected.connect(self._plotSelected)
+
+    def setPlot(self, plot: Plot):
+        self.plot = plot
+        self.label = SelectionItemLabel(self.plot, removalEnabled=True)
+        self.label.removalRequested.connect(self._remove)
+        self.layout().addWidget(self.label)
+        self.btnLinkPlot.setHidden(True)
+
+    def _plotSelected(self, plot: Plot):
+        self.btnLinkPlot.menu().hide()
+        self.setPlot(plot)
+
+        self.plotSelected.emit()
+
+    def _remove(self):
+        if self.parent():
+            anim = qtanim.fade_out(self, duration=150)
+            anim.finished.connect(self.__destroy)
+
+    def __destroy(self):
+        pass
+        # self.scene.agendas[0].remove_conflict(self.conflict)
+        # self.parent().layout().removeWidget(self)
+        gc(self)
 
 
 class SceneDramaticQuestionsWidget(_SceneLabelsEditor):
