@@ -29,10 +29,11 @@ from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, 
     QWidgetAction, QTableView, QMenu
 from fbs_runtime import platform
 from overrides import overrides
+from qthandy import flow, clear_layout
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, ScenePlotValue, StoryBeat, \
-    SceneStoryBeat, SceneStructureAgenda, Character
+from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, StoryBeat, \
+    SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotValue
 from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
@@ -44,7 +45,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.scenes import SceneDramaticQuestionsWidget
+from src.main.python.plotlyst.view.widget.scenes import ScenePlotSelector
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -79,6 +80,8 @@ class SceneEditor(QObject):
         self.ui.lblTitleEmoji.setText(emoji.emojize(':clapper_board:'))
         self.ui.lblSynopsisEmoji.setFont(self._emoji_font)
         self.ui.lblSynopsisEmoji.setText(emoji.emojize(':scroll:'))
+        self.ui.lblPlotEmoji.setFont(self._emoji_font)
+        self.ui.lblPlotEmoji.setText(emoji.emojize(':chart_increasing:'))
 
         self.ui.wdgStructure.setBeatsCheckable(True)
         self.ui.wdgStructure.setNovel(self.novel)
@@ -123,6 +126,8 @@ class SceneEditor(QObject):
         self.ui.btnNext.setIcon(IconRegistry.arrow_right_thick_icon())
         self.ui.btnNext.clicked.connect(self._on_next_scene)
 
+        flow(self.ui.wdgPlotContainer)
+
         self._scene_builder_inventory_model = SceneBuilderInventoryTreeModel()
         self.ui.treeInventory.setModel(self._scene_builder_inventory_model)
         self.ui.treeInventory.doubleClicked.connect(self._on_dclick_scene_builder_inventory)
@@ -133,9 +138,6 @@ class SceneEditor(QObject):
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit_scene_builder_element)
         self.ui.btnPreview.clicked.connect(self._on_preview_scene_builder)
-
-        self.questionsEditor = SceneDramaticQuestionsWidget(self.novel)
-        self.ui.wdgDramaticQuestions.layout().addWidget(self.questionsEditor)
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
 
@@ -171,6 +173,10 @@ class SceneEditor(QObject):
         self.ui.sbDay.setValue(self.scene.day)
 
         self.ui.wdgSceneStructure.setScene(self.novel, self.scene)
+        clear_layout(self.ui.wdgPlotContainer)
+        for plot_v in self.scene.plot_values:
+            self._add_plot_selector(plot_v)
+        self._add_plot_selector()
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
@@ -188,12 +194,6 @@ class SceneEditor(QObject):
 
         self._characters_model.setScene(self.scene)
         self._character_changed()
-
-        self.questionsEditor.clear()
-        self.questionsEditor.setValue([x.plot.text for x in self.scene.plot_values])
-
-        # self.tagsEditor.clear()
-        # self.tagsEditor.setValue(self.scene.tags)
 
         if self._new_scene:
             self.ui.btnPrevious.setDisabled(True)
@@ -257,6 +257,14 @@ class SceneEditor(QObject):
         emit_info('POV character must be selected first')
         qtanim.shake(self.ui.wdgPov)
 
+    def _add_plot_selector(self, plot_value: Optional[ScenePlotValue] = None):
+        if plot_value or len(self.novel.plots) > len(self.scene.plot_values):
+            plot_selector = ScenePlotSelector(self.novel, self.scene, simplified=len(self.scene.plot_values) > 0)
+            plot_selector.plotSelected.connect(self._add_plot_selector)
+            if plot_value:
+                plot_selector.setPlot(plot_value)
+            self.ui.wdgPlotContainer.layout().addWidget(plot_selector)
+
     def _on_pov_changed(self, pov: Character):
         self.scene.pov = pov
 
@@ -289,13 +297,6 @@ class SceneEditor(QObject):
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.ui.wdgSceneStructure.updateAgendas()
         self.scene.day = self.ui.sbDay.value()
-
-        self.scene.plot_values.clear()
-        scene_plots = [ScenePlotValue(x) for x in self.questionsEditor.selectedItems()]
-        self.scene.plot_values.extend(scene_plots)
-
-        # self.scene.tags.clear()
-        # self.scene.tags.extend(self.tagsEditor.value())
 
         if self._new_scene:
             self.novel.scenes.append(self.scene)

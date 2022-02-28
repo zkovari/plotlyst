@@ -25,10 +25,10 @@ from PyQt5.QtGui import QIcon, QMouseEvent
 from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
 from overrides import overrides
-from qthandy import hbox, FlowLayout, vline, vbox, clear_layout
+from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character, Conflict, ConflictType, SelectionItem, Novel
+from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotValue
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
@@ -123,20 +123,7 @@ class ConflictLabel(Label):
         if self.conflict.conflicting_character(self.novel):
             set_avatar(self.lblAvatar, self.conflict.conflicting_character(self.novel), 24)
         else:
-            if self.conflict.type == ConflictType.CHARACTER:
-                icon = IconRegistry.conflict_character_icon()
-            elif self.conflict.type == ConflictType.SOCIETY:
-                icon = IconRegistry.conflict_society_icon()
-            elif self.conflict.type == ConflictType.NATURE:
-                icon = IconRegistry.conflict_nature_icon()
-            elif self.conflict.type == ConflictType.TECHNOLOGY:
-                icon = IconRegistry.conflict_technology_icon()
-            elif self.conflict.type == ConflictType.SUPERNATURAL:
-                icon = IconRegistry.conflict_supernatural_icon()
-            elif self.conflict.type == ConflictType.SELF:
-                icon = IconRegistry.conflict_self_icon()
-            else:
-                icon = IconRegistry.conflict_icon()
+            icon = IconRegistry.conflict_type_icon(self.conflict.type)
             self.lblAvatar.setPixmap(icon.pixmap(QSize(24, 24)))
         self.layout().addWidget(self.lblAvatar)
         self.layout().addWidget(QLabel(self.conflict.text))
@@ -175,17 +162,28 @@ class TraitLabel(QLabel):
 
 
 class SelectionItemLabel(Label):
-    def __init__(self, item: SelectionItem, parent=None):
+    removalRequested = pyqtSignal()
+
+    def __init__(self, item: SelectionItem, parent=None, removalEnabled: bool = False):
         super(SelectionItemLabel, self).__init__(parent)
         self.item = item
 
+        self.btnIcon = QToolButton(self)
+        transparent(self.btnIcon)
+        self.layout().addWidget(self.btnIcon)
         if self.item.icon:
-            self.lblIcon = QLabel()
-            self.lblIcon.setPixmap(IconRegistry.from_name(self.item.icon, self.item.icon_color).pixmap(QSize(24, 24)))
-            self.layout().addWidget(self.lblIcon)
+            self.btnIcon.setIcon(IconRegistry.from_name(self.item.icon, self.item.icon_color))
+        else:
+            self.btnIcon.setHidden(True)
 
         self.lblText = QLabel(self.item.text)
         self.layout().addWidget(self.lblText)
+        self.btnRemoval = RemovalButton(self)
+        self.layout().addWidget(self.btnRemoval)
+        self.btnRemoval.clicked.connect(self.removalRequested.emit)
+        self.btnRemoval.setVisible(removalEnabled)
+        if removalEnabled:
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnRemoval, self))
 
         if item.color_hexa:
             bg_color = item.color_hexa
@@ -209,10 +207,25 @@ class SelectionItemLabel(Label):
         return '#2e5266'
 
 
+class ScenePlotValueLabel(SelectionItemLabel):
+    def __init__(self, plot_value: ScenePlotValue, parent=None, removalEnabled: bool = True):
+        super(ScenePlotValueLabel, self).__init__(plot_value.plot, parent, removalEnabled)
+        self.lblText.clear()
+        self.lblText.hide()
+        if self.item.icon:
+            self.btnIcon.setIcon(IconRegistry.from_name(self.item.icon, text_color_with_bg_color(self.item.color_hexa)))
+        else:
+            self.btnIcon.setVisible(True)
+            self.btnIcon.setIcon(IconRegistry.plot_type_icon(plot_value.plot.plot_type))
+
+    @overrides
+    def _borderColor(self):
+        return self.item.color_hexa
+
+
 class GoalLabel(SelectionItemLabel):
     def __init__(self, item: SelectionItem, parent=None):
         super(GoalLabel, self).__init__(item, parent)
-        self.item = item
 
         self.lblGoal = QLabel()
         self.lblGoal.setPixmap(IconRegistry.goal_icon().pixmap(QSize(24, 24)))

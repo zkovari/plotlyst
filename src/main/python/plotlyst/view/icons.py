@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QLabel
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
-    Scene, SceneType
+    Scene, SceneType, PlotType
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
 
@@ -480,6 +480,19 @@ class IconRegistry:
     @staticmethod
     def story_structure_icon(**kwargs) -> QIcon:
         return IconRegistry.from_name('fa5s.theater-masks', **kwargs)
+
+    @staticmethod
+    def plot_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('mdi.chart-bell-curve-cumulative', **kwargs)
+
+    @staticmethod
+    def plot_type_icon(plot_type: PlotType) -> QIcon:
+        if plot_type == PlotType.Main:
+            return IconRegistry.cause_and_effect_icon()
+        elif plot_type == PlotType.Internal:
+            return IconRegistry.conflict_self_icon()
+        elif plot_type == PlotType.Subplot:
+            return IconRegistry.from_name('mdi.source-branch')
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:

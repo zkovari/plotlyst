@@ -48,7 +48,7 @@ class NovelView(AbstractNovelView):
         self.ui.setupUi(self.widget)
 
         self.ui.btnStructure.setIcon(IconRegistry.story_structure_icon(color='white'))
-        self.ui.btnPlot.setIcon(IconRegistry.from_name('mdi.chart-bell-curve-cumulative', 'white'))
+        self.ui.btnPlot.setIcon(IconRegistry.plot_icon(color='white'))
         self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('white'))
         self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
