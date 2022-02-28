@@ -25,10 +25,10 @@ from PyQt5.QtGui import QIcon, QMouseEvent
 from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QMenu, QWidgetAction, \
     QSizePolicy, QPushButton
 from overrides import overrides
-from qthandy import hbox, FlowLayout, vline, vbox, clear_layout
+from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel
+from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotValue
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
@@ -168,10 +168,13 @@ class SelectionItemLabel(Label):
         super(SelectionItemLabel, self).__init__(parent)
         self.item = item
 
+        self.btnIcon = QToolButton(self)
+        transparent(self.btnIcon)
+        self.layout().addWidget(self.btnIcon)
         if self.item.icon:
-            self.lblIcon = QLabel()
-            self.lblIcon.setPixmap(IconRegistry.from_name(self.item.icon, self.item.icon_color).pixmap(QSize(24, 24)))
-            self.layout().addWidget(self.lblIcon)
+            self.btnIcon.setIcon(IconRegistry.from_name(self.item.icon, self.item.icon_color))
+        else:
+            self.btnIcon.setHidden(True)
 
         self.lblText = QLabel(self.item.text)
         self.layout().addWidget(self.lblText)
@@ -204,10 +207,25 @@ class SelectionItemLabel(Label):
         return '#2e5266'
 
 
+class ScenePlotValueLabel(SelectionItemLabel):
+    def __init__(self, plot_value: ScenePlotValue, parent=None, removalEnabled: bool = True):
+        super(ScenePlotValueLabel, self).__init__(plot_value.plot, parent, removalEnabled)
+        self.lblText.clear()
+        self.lblText.hide()
+        if self.item.icon:
+            self.btnIcon.setIcon(IconRegistry.from_name(self.item.icon, text_color_with_bg_color(self.item.color_hexa)))
+        else:
+            self.btnIcon.setVisible(True)
+            self.btnIcon.setIcon(IconRegistry.plot_type_icon(plot_value.plot.plot_type))
+
+    @overrides
+    def _borderColor(self):
+        return self.item.color_hexa
+
+
 class GoalLabel(SelectionItemLabel):
     def __init__(self, item: SelectionItem, parent=None):
         super(GoalLabel, self).__init__(item, parent)
-        self.item = item
 
         self.lblGoal = QLabel()
         self.lblGoal.setPixmap(IconRegistry.goal_icon().pixmap(QSize(24, 24)))
