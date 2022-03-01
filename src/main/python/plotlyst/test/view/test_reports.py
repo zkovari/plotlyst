@@ -1,6 +1,5 @@
 from functools import partial
 
-from PyQt5.QtCore import QModelIndex
 from PyQt5.QtWidgets import QComboBox
 
 from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, NEUTRAL, VERY_HAPPY, HAPPY
@@ -10,9 +9,14 @@ from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.reports_view import ReportsView
 
 
-def test_reports_display(qtbot, filled_window: MainWindow):
+def test_character_report_display(qtbot, filled_window: MainWindow):
     view: ReportsView = go_to_reports(filled_window)
-    click_on_item(qtbot, view.ui.treeReports, 0, 0, QModelIndex())
+    view.displayCharactersReport()
+
+
+def test_arc_report_display(qtbot, filled_window: MainWindow):
+    view: ReportsView = go_to_reports(filled_window)
+    view.displayArcReport()
 
 
 def _edit_arc(value: int, editor: QComboBox):
