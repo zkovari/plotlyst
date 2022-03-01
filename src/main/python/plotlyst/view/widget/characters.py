@@ -458,7 +458,7 @@ class CharacterConflictSelector(QWidget):
 
 
 class CharacterGoalSelector(QWidget):
-    goalSelected = pyqtSignal()
+    goalSelected = pyqtSignal(CharacterGoal)
 
     def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
         super(CharacterGoalSelector, self).__init__(parent)
@@ -495,17 +495,13 @@ class CharacterGoalSelector(QWidget):
         scrollArea = QScrollArea(self)
         scrollArea.setWidgetResizable(True)
         scrollArea.setMinimumSize(400, 300)
+        self._goalSelector = _GoalSelectionObject()
+        self._goalSelector.goalSelected.connect(self.goalSelected.emit)
         self.selectorWidget = CharacterGoalsEditor(self.novel, self.scene.agendas[0].character(self.novel),
-                                                   checkable=True)
-        # self.selectorWidget.show()
-        # self.btnLinkGoal.clicked.connect(self.selectorWidget.show)
+                                                   selector=self._goalSelector)
         scrollArea.setBackgroundRole(QPalette.Light)
         scrollArea.setWidget(self.selectorWidget)
         btn_popup(self.btnLinkGoal, scrollArea)
-        # self.selectorWidget.goalAdded.connect(
-        #     lambda: self.selectorWidget.parent().resize(self.selectorWidget.sizeHint()))
-        # self.selectorWidget.size
-        # self.selectorWidget.goalAdded.connect(lambda: print(self.selectorWidget.sizeHint()))
 
         # self.selectorWidget.conflictSelectionChanged.connect(self._conflictSelected)
 
@@ -580,16 +576,20 @@ class CharacterLinkWidget(QWidget):
 
 class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
     def __init__(self, novel: Novel, character: Character, goal: CharacterGoal,
-                 parent_goal: Optional[CharacterGoal] = None, parent=None, checkable: bool = False):
+                 parent_goal: Optional[CharacterGoal] = None, parent=None, selector: '_GoalSelectionObject' = None):
         super(CharacterGoalWidget, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
         self.character = character
-        self.checkable = checkable
+        self.selector = selector
         self.char_goal = goal
         self.parent_goal = parent_goal
         self.goal = self.char_goal.goal(self.novel)
-        self.btnToggle.setVisible(checkable)
+        if selector:
+            self.btnToggle.setVisible(True)
+            self.btnToggle.clicked.connect(lambda: self.selector.goalSelected.emit(self.char_goal))
+        else:
+            self.btnToggle.setVisible(False)
 
         self._filtersFrozen: bool = False
 
@@ -625,7 +625,7 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
 
         for child in self.char_goal.children:
             wdg = CharacterGoalWidget(self.novel, self.character, child, self.char_goal, parent=self,
-                                      checkable=self.checkable)
+                                      selector=selector)
             self.wdgChildren.layout().addWidget(wdg)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -662,7 +662,7 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         self.char_goal.children.append(child_char_goal)
 
         wdg = CharacterGoalWidget(self.novel, self.character, child_char_goal, parent_goal=self.char_goal, parent=self,
-                                  checkable=self.checkable)
+                                  selector=self.selector)
         self.wdgChildren.layout().addWidget(wdg)
         wdg.lineName.setFocus()
 
@@ -703,21 +703,24 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         ''')
 
 
-class CharacterGoalsEditor(QWidget):
-    goalAdded = pyqtSignal(Goal)
+class _GoalSelectionObject(QObject):
+    goalSelected = pyqtSignal(CharacterGoal)
 
-    def __init__(self, novel: Novel, character: Character, parent=None, checkable: bool = False):
+
+class CharacterGoalsEditor(QWidget):
+
+    def __init__(self, novel: Novel, character: Character, parent=None, selector: '_GoalSelectionObject' = None):
         super(CharacterGoalsEditor, self).__init__(parent)
         self.novel = novel
         self.character = character
-        self.checkable = checkable
+        self._goalSelector = selector
         self.repo = RepositoryPersistenceManager.instance()
 
         vbox(self)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 
         for goal in self.character.goals:
-            wdg = CharacterGoalWidget(self.novel, self.character, goal, parent=self, checkable=checkable)
+            wdg = CharacterGoalWidget(self.novel, self.character, goal, parent=self, selector=self._goalSelector)
             self.layout().addWidget(wdg)
         self.layout().addWidget(line())
 
@@ -737,7 +740,7 @@ class CharacterGoalsEditor(QWidget):
         char_goal = CharacterGoal(goal.id)
         self.character.goals.append(char_goal)
 
-        wdg = CharacterGoalWidget(self.novel, self.character, char_goal, parent=self)
+        wdg = CharacterGoalWidget(self.novel, self.character, char_goal, parent=self, selector=self._goalSelector)
         self.layout().insertWidget(len(self.character.goals) - 1, wdg)
         self._styleAddButton()
 
