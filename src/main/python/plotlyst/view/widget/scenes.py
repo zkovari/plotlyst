@@ -500,8 +500,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.wdgTypes.layout().addWidget(self.btnScene)
         self.wdgTypes.layout().addWidget(self.btnSequel)
 
-        flow(self.wdgGoalContainer)
-        flow(self.wdgConflictContainer)
+        flow(self.wdgGoalConflictContainer)
 
         self.btnBeginningIcon.setIcon(IconRegistry.cause_icon())
         self.btnMiddleIcon.setIcon(IconRegistry.from_name('mdi.ray-vertex'))
@@ -920,7 +919,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def _initSelectors(self):
         if not self.scene.agendas[0].character_id:
             return
-        clear_layout(self.wdgGoalContainer)
+        clear_layout(self.wdgGoalConflictContainer)
         if self.scene.agendas[0].goal_references:
             for char_goal in self.scene.agendas[0].goals(self.scene.agendas[0].character(self.novel)):
                 self._addGoalSelector(char_goal)
@@ -928,7 +927,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         else:
             self._addGoalSelector()
 
-        clear_layout(self.wdgConflictContainer)
         if self.scene.agendas[0].conflict_references:
             for conflict in self.scene.agendas[0].conflicts(self.novel):
                 self._addConfictSelector(conflict=conflict)
@@ -939,19 +937,19 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def _addGoalSelector(self, charGoal: Optional[CharacterGoal] = None):
         simplified = len(self.scene.agendas[0].goal_references) > 0
         selector = CharacterGoalSelector(self.novel, self.scene, simplified=simplified)
-        self.wdgGoalContainer.layout().addWidget(selector)
-        selector.goalSelected.connect(self._addGoalSelector)
+        self.wdgGoalConflictContainer.layout().addWidget(selector)
+        selector.goalSelected.connect(self._initSelectors)
         if charGoal:
             selector.setGoal(charGoal)
 
     def _addConfictSelector(self, conflict: Optional[Conflict] = None):
         simplified = len(self.scene.agendas[0].conflict_references) > 0
         conflict_selector = CharacterConflictSelector(self.novel, self.scene, simplified=simplified,
-                                                      parent=self.wdgConflictContainer)
+                                                      parent=self.wdgGoalConflictContainer)
         if conflict:
             conflict_selector.setConflict(conflict)
-        self.wdgConflictContainer.layout().addWidget(conflict_selector)
-        conflict_selector.conflictSelected.connect(self._addConfictSelector)
+        self.wdgGoalConflictContainer.layout().addWidget(conflict_selector)
+        conflict_selector.conflictSelected.connect(self._initSelectors)
 
 
 class SceneStoryStructureWidget(QWidget):

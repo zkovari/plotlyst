@@ -26,7 +26,7 @@ import qtanim
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QPalette
+    QPalette, QMouseEvent
 from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
     QHeaderView, QFileDialog, QMessageBox, QScrollArea
 from fbs_runtime import platform
@@ -745,6 +745,10 @@ class CharacterGoalsEditor(QWidget):
         self.layout().addWidget(self.btnAdd)
         self.layout().addWidget(vspacer())
 
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        pass
+
     def _newGoal(self):
         goal = Goal('')
         self.novel.goals.append(goal)
@@ -756,8 +760,6 @@ class CharacterGoalsEditor(QWidget):
         wdg = CharacterGoalWidget(self.novel, self.character, char_goal, parent=self, selector=self._goalSelector)
         self.layout().insertWidget(len(self.character.goals) - 1, wdg)
         self._styleAddButton()
-
-        self.goalAdded.emit(goal)
 
     def _styleAddButton(self):
         if self.character.goals:
