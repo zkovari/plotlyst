@@ -449,6 +449,9 @@ class SceneStructureAgenda(CharacterBased):
     def remove_conflict(self, conflict: Conflict):
         self.conflict_references = [x for x in self.conflict_references if x.conflict_id != conflict.id]
 
+    def remove_goal(self, goal: Goal):
+        self.goal_references = [x for x in self.goal_references if x.goal_id != goal.id]
+
     def goals(self, novel: 'Novel') -> List[Goal]:
         goals_ = []
         for id_ in [x.goal_id for x in self.goal_references]:

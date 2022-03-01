@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>258</width>
-    <height>55</height>
+    <width>285</width>
+    <height>53</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,6 +41,13 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
+      <item>
+       <widget class="Toggle" name="btnToggle">
+        <property name="toolTip">
+         <string>Select goal</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QToolButton" name="btnGoalIcon">
         <property name="cursor">
@@ -97,7 +104,7 @@ QPushButton:pressed {
 }</string>
         </property>
         <property name="text">
-         <string>Add child goal</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -143,6 +150,13 @@ QPushButton:pressed {
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
