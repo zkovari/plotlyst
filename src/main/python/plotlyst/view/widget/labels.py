@@ -28,7 +28,8 @@ from overrides import overrides
 from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotValue
+from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotValue, \
+    CharacterGoal
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
@@ -223,9 +224,9 @@ class ScenePlotValueLabel(SelectionItemLabel):
         return self.item.color_hexa
 
 
-class GoalLabel(SelectionItemLabel):
-    def __init__(self, item: SelectionItem, parent=None):
-        super(GoalLabel, self).__init__(item, parent)
+class CharacterGoalLabel(SelectionItemLabel):
+    def __init__(self, novel: Novel, characterGoal: CharacterGoal, parent=None, removalEnabled: bool = False):
+        super(CharacterGoalLabel, self).__init__(characterGoal.goal(novel), parent, removalEnabled)
 
         self.lblGoal = QLabel()
         self.lblGoal.setPixmap(IconRegistry.goal_icon().pixmap(QSize(24, 24)))

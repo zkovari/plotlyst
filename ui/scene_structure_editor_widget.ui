@@ -34,7 +34,7 @@
      <widget class="QWidget" name="pageEditor">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <property name="spacing">
-        <number>3</number>
+        <number>10</number>
        </property>
        <property name="leftMargin">
         <number>2</number>
@@ -410,19 +410,6 @@ Clock</string>
           </widget>
          </item>
         </layout>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>7</width>
-           <height>503</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_12">

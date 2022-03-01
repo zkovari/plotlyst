@@ -25,9 +25,10 @@ import emoji
 import qtanim
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
-from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap
+from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
+    QPalette, QMouseEvent
 from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox
+    QHeaderView, QFileDialog, QMessageBox, QScrollArea
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, busy, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
@@ -39,7 +40,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, Con
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
     CharacterGoal, Goal, protagonist_role, antagonist_role, secondary_role, henchmen_role, tertiary_role, \
     deuteragonist_role, guide_role, love_interest_role, sidekick_role, contagonist_role, confidant_role, foil_role, \
-    supporter_role, adversary_role, SelectionItem
+    supporter_role, adversary_role, SelectionItem, GoalReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -62,7 +63,7 @@ from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import 
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
-from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel
+from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -456,6 +457,78 @@ class CharacterConflictSelector(QWidget):
         gc(self)
 
 
+class CharacterGoalSelector(QWidget):
+    goalSelected = pyqtSignal()
+
+    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
+        super(CharacterGoalSelector, self).__init__(parent)
+        self.novel = novel
+        self.scene = scene
+        self.characterGoal: Optional[CharacterGoal] = None
+        hbox(self)
+
+        self.label: Optional[CharacterGoalLabel] = None
+
+        self.btnLinkGoal = QPushButton(self)
+        if not simplified:
+            self.btnLinkGoal.setText('Track goal')
+        self.layout().addWidget(self.btnLinkGoal)
+        self.btnLinkGoal.setIcon(IconRegistry.goal_icon())
+        self.btnLinkGoal.setCursor(Qt.PointingHandCursor)
+        self.btnLinkGoal.setStyleSheet('''
+                QPushButton {
+                    border: 2px dotted grey;
+                    border-radius: 6px;
+                    font: italic;
+                }
+                QPushButton:hover {
+                    border: 2px dotted darkBlue;
+                    color: darkBlue;
+                    font: normal;
+                }
+                QPushButton:pressed {
+                    border: 2px solid white;
+                }
+            ''')
+
+        self.btnLinkGoal.installEventFilter(OpacityEventFilter(parent=self.btnLinkGoal))
+        scrollArea = QScrollArea(self)
+        scrollArea.setWidgetResizable(True)
+        scrollArea.setMinimumSize(400, 300)
+        self._goalSelector = _GoalSelectionObject()
+        self.selectorWidget = CharacterGoalsEditor(self.novel, self.scene.agendas[0].character(self.novel),
+                                                   selector=self._goalSelector)
+        scrollArea.setBackgroundRole(QPalette.Light)
+        scrollArea.setWidget(self.selectorWidget)
+        btn_popup(self.btnLinkGoal, scrollArea)
+
+        self._goalSelector.goalSelected.connect(self._goalSelected)
+
+    def setGoal(self, characterGoal: CharacterGoal):
+        self.characterGoal = characterGoal
+        self.label = CharacterGoalLabel(self.novel, self.characterGoal, removalEnabled=True)
+        self.label.removalRequested.connect(self._remove)
+        self.layout().addWidget(self.label)
+        self.btnLinkGoal.setHidden(True)
+
+    def _goalSelected(self, characterGoal: CharacterGoal):
+        self.scene.agendas[0].goal_references.append(GoalReference(characterGoal.id))
+
+        self.btnLinkGoal.menu().hide()
+        self.setGoal(characterGoal)
+        self.goalSelected.emit()
+
+    def _remove(self):
+        if self.parent():
+            anim = qtanim.fade_out(self, duration=150)
+            anim.finished.connect(self.__destroy)
+
+    def __destroy(self):
+        self.scene.agendas[0].remove_goal(self.characterGoal)
+        self.parent().layout().removeWidget(self)
+        gc(self)
+
+
 class CharacterLinkWidget(QWidget):
     characterSelected = pyqtSignal(Character)
 
@@ -486,6 +559,9 @@ class CharacterLinkWidget(QWidget):
         self.selectorWidget.characterClicked.connect(self._characterClicked)
         btn_popup(self.btnLinkCharacter, self.selectorWidget)
 
+    def setDefaultText(self, value: str):
+        self.btnLinkCharacter.setText(value)
+
     def setCharacter(self, character: Character):
         if self.character and character.id == self.character.id:
             return
@@ -513,14 +589,20 @@ class CharacterLinkWidget(QWidget):
 
 class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
     def __init__(self, novel: Novel, character: Character, goal: CharacterGoal,
-                 parent_goal: Optional[CharacterGoal] = None, parent=None):
+                 parent_goal: Optional[CharacterGoal] = None, parent=None, selector: '_GoalSelectionObject' = None):
         super(CharacterGoalWidget, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
         self.character = character
+        self.selector = selector
         self.char_goal = goal
         self.parent_goal = parent_goal
         self.goal = self.char_goal.goal(self.novel)
+        if selector:
+            self.btnToggle.setVisible(True)
+            self.btnToggle.clicked.connect(lambda: self.selector.goalSelected.emit(self.char_goal))
+        else:
+            self.btnToggle.setVisible(False)
 
         self._filtersFrozen: bool = False
 
@@ -555,7 +637,8 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         self.btnAddChildGoal.clicked.connect(self._addChild)
 
         for child in self.char_goal.children:
-            wdg = CharacterGoalWidget(self.novel, self.character, child, self.char_goal, parent=self)
+            wdg = CharacterGoalWidget(self.novel, self.character, child, self.char_goal, parent=self,
+                                      selector=selector)
             self.wdgChildren.layout().addWidget(wdg)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -591,7 +674,8 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         child_char_goal = CharacterGoal(goal.id)
         self.char_goal.children.append(child_char_goal)
 
-        wdg = CharacterGoalWidget(self.novel, self.character, child_char_goal, parent_goal=self.char_goal, parent=self)
+        wdg = CharacterGoalWidget(self.novel, self.character, child_char_goal, parent_goal=self.char_goal, parent=self,
+                                  selector=self.selector)
         self.wdgChildren.layout().addWidget(wdg)
         wdg.lineName.setFocus()
 
@@ -632,17 +716,24 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         ''')
 
 
+class _GoalSelectionObject(QObject):
+    goalSelected = pyqtSignal(CharacterGoal)
+
+
 class CharacterGoalsEditor(QWidget):
-    def __init__(self, novel: Novel, character: Character, parent=None):
+
+    def __init__(self, novel: Novel, character: Character, parent=None, selector: '_GoalSelectionObject' = None):
         super(CharacterGoalsEditor, self).__init__(parent)
         self.novel = novel
         self.character = character
+        self._goalSelector = selector
         self.repo = RepositoryPersistenceManager.instance()
 
         vbox(self)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 
         for goal in self.character.goals:
-            wdg = CharacterGoalWidget(self.novel, self.character, goal, parent=self)
+            wdg = CharacterGoalWidget(self.novel, self.character, goal, parent=self, selector=self._goalSelector)
             self.layout().addWidget(wdg)
         self.layout().addWidget(line())
 
@@ -654,6 +745,10 @@ class CharacterGoalsEditor(QWidget):
         self.layout().addWidget(self.btnAdd)
         self.layout().addWidget(vspacer())
 
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        pass
+
     def _newGoal(self):
         goal = Goal('')
         self.novel.goals.append(goal)
@@ -662,7 +757,7 @@ class CharacterGoalsEditor(QWidget):
         char_goal = CharacterGoal(goal.id)
         self.character.goals.append(char_goal)
 
-        wdg = CharacterGoalWidget(self.novel, self.character, char_goal, parent=self)
+        wdg = CharacterGoalWidget(self.novel, self.character, char_goal, parent=self, selector=self._goalSelector)
         self.layout().insertWidget(len(self.character.goals) - 1, wdg)
         self._styleAddButton()
 

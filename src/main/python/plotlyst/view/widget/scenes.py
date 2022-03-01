@@ -37,7 +37,7 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotValue
+    Character, Plot, ScenePlotValue, CharacterGoal
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
@@ -48,7 +48,7 @@ from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector
+from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, SelectionItemLabel, ScenePlotValueLabel
 from src.main.python.plotlyst.worker.cache import acts_registry
@@ -547,6 +547,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
+        self.wdgAgendaCharacter.setDefaultText('Agenda character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
         self.unsetCharacterSlot = None
 
@@ -646,13 +647,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self._addPlaceholder(self.wdgMiddle)
             self._addPlaceholder(self.wdgEnd)
 
-        clear_layout(self.wdgGoalConflictContainer)
-        if self.scene.agendas and self.scene.agendas[0].conflict_references:
-            for conflict in self.scene.agendas[0].conflicts(self.novel):
-                self._addConfictSelector(simplified=False, conflict=conflict)
-            self._addConfictSelector()
-        else:
-            self._addConfictSelector(simplified=False)
+        self._initSelectors()
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -921,13 +916,40 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def _dragDestroyed(self):
         self._dragged = None
 
-    def _addConfictSelector(self, simplified: bool = True, conflict: Optional[Conflict] = None):
+    def _initSelectors(self):
+        if not self.scene.agendas[0].character_id:
+            return
+        clear_layout(self.wdgGoalConflictContainer)
+        if self.scene.agendas[0].goal_references:
+            for char_goal in self.scene.agendas[0].goals(self.scene.agendas[0].character(self.novel)):
+                self._addGoalSelector(char_goal)
+            self._addGoalSelector()
+        else:
+            self._addGoalSelector()
+
+        if self.scene.agendas[0].conflict_references:
+            for conflict in self.scene.agendas[0].conflicts(self.novel):
+                self._addConfictSelector(conflict=conflict)
+            self._addConfictSelector()
+        else:
+            self._addConfictSelector()
+
+    def _addGoalSelector(self, charGoal: Optional[CharacterGoal] = None):
+        simplified = len(self.scene.agendas[0].goal_references) > 0
+        selector = CharacterGoalSelector(self.novel, self.scene, simplified=simplified)
+        self.wdgGoalConflictContainer.layout().addWidget(selector)
+        selector.goalSelected.connect(self._initSelectors)
+        if charGoal:
+            selector.setGoal(charGoal)
+
+    def _addConfictSelector(self, conflict: Optional[Conflict] = None):
+        simplified = len(self.scene.agendas[0].conflict_references) > 0
         conflict_selector = CharacterConflictSelector(self.novel, self.scene, simplified=simplified,
                                                       parent=self.wdgGoalConflictContainer)
         if conflict:
             conflict_selector.setConflict(conflict)
         self.wdgGoalConflictContainer.layout().addWidget(conflict_selector)
-        conflict_selector.conflictSelected.connect(self._addConfictSelector)
+        conflict_selector.conflictSelected.connect(self._initSelectors)
 
 
 class SceneStoryStructureWidget(QWidget):
