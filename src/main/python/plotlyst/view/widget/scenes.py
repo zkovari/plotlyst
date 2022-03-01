@@ -1293,4 +1293,5 @@ class ScenesTreeView(ActionBasedTreeView):
                 self.insertSceneAfter(node.scene)
 
     def _on_scene_moved(self):
-        pass
+        self.repo.update_novel(app_env.novel)
+        emit_event(SceneChangedEvent(self))

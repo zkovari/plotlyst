@@ -87,7 +87,7 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
 class ScenesOutlineView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelStoryStructureUpdated, SceneChangedEvent])
+        super().__init__(novel, [NovelStoryStructureUpdated, SceneChangedEvent, ChapterChangedEvent, SceneDeletedEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -131,12 +131,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.setModel(self.chaptersModel)
         self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
 
-        # self.ui.treeChapters.expandAll()
-        # self.chaptersModel.orderChanged.connect(self._on_scene_moved)
-        # self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
-        # self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
-        # self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
-        # self.ui.treeChapters.clicked.connect(self._on_chapter_clicked)
         self.ui.treeChapters.doubleClicked.connect(self._on_edit)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
@@ -263,31 +257,7 @@ class ScenesOutlineView(AbstractNovelView):
         node = indexes[0].data(ChaptersTreeModel.NodeRole)
         self.ui.btnEdit.setEnabled(isinstance(node, SceneNode))
 
-    # def _on_chapter_clicked(self, index: QModelIndex):
-    #     if index.column() == 0:
-    #         return
-    #     chapter = self._selected_chapter()
-    #     if chapter:
-    #         builder = PopupMenuBuilder.from_index(self.ui.treeChapters, index)
-    #
-    #         scenes = self.novel.scenes_in_chapter(chapter)
-    #         if scenes:
-    #             builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self._insert_scene_after(scenes[-1]))
-    #             builder.add_separator()
-    #
-    #         builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
-    #                            slot=lambda: self._new_chapter(self.novel.chapters.index(chapter)))
-    #         builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
-    #                            slot=lambda: self._new_chapter(self.novel.chapters.index(chapter) + 1))
-    #         builder.popup()
-    #     else:
-    #         scene = self._selected_scene()
-    #         if scene and scene.chapter:
-    #             self._insert_scene_after(scene)
-
     def _hide_chapters_toggled(self, toggled: bool):
-        # self.ui.wgtChapters.setVisible(toggled)
-        # self.ui.btnChaptersToggle.setIcon(IconRegistry.eye_closed_icon() if toggled else IconRegistry.eye_open_icon())
         if toggled:
             menu = QMenu(self.ui.btnNew)
             menu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
