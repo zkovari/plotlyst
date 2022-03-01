@@ -37,7 +37,7 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotValue, Goal
+    Character, Plot, ScenePlotValue, CharacterGoal
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
@@ -922,8 +922,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             return
         clear_layout(self.wdgGoalContainer)
         if self.scene.agendas[0].goal_references:
-            for goal in self.scene.agendas[0].goals(self.novel):
-                self._addGoalSelector(goal)
+            for char_goal in self.scene.agendas[0].goals(self.scene.agendas[0].character(self.novel)):
+                self._addGoalSelector(char_goal)
+            self._addGoalSelector()
         else:
             self._addGoalSelector()
 
@@ -935,13 +936,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         else:
             self._addConfictSelector()
 
-    def _addGoalSelector(self, goal: Optional[Goal] = None):
+    def _addGoalSelector(self, charGoal: Optional[CharacterGoal] = None):
         simplified = len(self.scene.agendas[0].goal_references) > 0
         selector = CharacterGoalSelector(self.novel, self.scene, simplified=simplified)
         self.wdgGoalContainer.layout().addWidget(selector)
         selector.goalSelected.connect(self._addGoalSelector)
-        # if goal:
-        #     selector.setGoal
+        if charGoal:
+            selector.setGoal(charGoal)
 
     def _addConfictSelector(self, conflict: Optional[Conflict] = None):
         simplified = len(self.scene.agendas[0].conflict_references) > 0

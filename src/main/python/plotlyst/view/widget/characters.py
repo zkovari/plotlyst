@@ -40,7 +40,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, Con
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
     CharacterGoal, Goal, protagonist_role, antagonist_role, secondary_role, henchmen_role, tertiary_role, \
     deuteragonist_role, guide_role, love_interest_role, sidekick_role, contagonist_role, confidant_role, foil_role, \
-    supporter_role, adversary_role, SelectionItem
+    supporter_role, adversary_role, SelectionItem, GoalReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -63,7 +63,7 @@ from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import 
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
-from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, GoalLabel
+from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -458,16 +458,16 @@ class CharacterConflictSelector(QWidget):
 
 
 class CharacterGoalSelector(QWidget):
-    goalSelected = pyqtSignal(CharacterGoal)
+    goalSelected = pyqtSignal()
 
     def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
         super(CharacterGoalSelector, self).__init__(parent)
         self.novel = novel
         self.scene = scene
-        self.goal: Optional[Goal] = None
+        self.characterGoal: Optional[CharacterGoal] = None
         hbox(self)
 
-        self.label: Optional[GoalLabel] = None
+        self.label: Optional[CharacterGoalLabel] = None
 
         self.btnLinkGoal = QPushButton(self)
         if not simplified:
@@ -496,14 +496,27 @@ class CharacterGoalSelector(QWidget):
         scrollArea.setWidgetResizable(True)
         scrollArea.setMinimumSize(400, 300)
         self._goalSelector = _GoalSelectionObject()
-        self._goalSelector.goalSelected.connect(self.goalSelected.emit)
         self.selectorWidget = CharacterGoalsEditor(self.novel, self.scene.agendas[0].character(self.novel),
                                                    selector=self._goalSelector)
         scrollArea.setBackgroundRole(QPalette.Light)
         scrollArea.setWidget(self.selectorWidget)
         btn_popup(self.btnLinkGoal, scrollArea)
 
-        # self.selectorWidget.conflictSelectionChanged.connect(self._conflictSelected)
+        self._goalSelector.goalSelected.connect(self._goalSelected)
+
+    def setGoal(self, characterGoal: CharacterGoal):
+        self.characterGoal = characterGoal
+        self.label = CharacterGoalLabel(self.novel, self.characterGoal, removalEnabled=True)
+        self.label.removalRequested.connect(self._remove)
+        self.layout().addWidget(self.label)
+        self.btnLinkGoal.setHidden(True)
+
+    def _goalSelected(self, characterGoal: CharacterGoal):
+        self.scene.agendas[0].goal_references.append(GoalReference(characterGoal.id))
+
+        self.btnLinkGoal.menu().hide()
+        self.setGoal(characterGoal)
+        self.goalSelected.emit()
 
     def _remove(self):
         if self.parent():
@@ -511,7 +524,7 @@ class CharacterGoalSelector(QWidget):
             anim.finished.connect(self.__destroy)
 
     def __destroy(self):
-        self.scene.agendas[0].remove_goal(self.goal)
+        self.scene.agendas[0].remove_goal(self.characterGoal)
         self.parent().layout().removeWidget(self)
         gc(self)
 

@@ -104,6 +104,7 @@ class BackstoryEvent(Event):
 @dataclass
 class CharacterGoal:
     goal_id: uuid.UUID
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     support: bool = True
     children: List['CharacterGoal'] = field(default_factory=list)
 
@@ -139,6 +140,16 @@ class Character:
         for value in self.template_values:
             if value.id == mbti_field.id:
                 return _mbti_choices.get(value.value)
+
+    def flatten_goals(self) -> List[CharacterGoal]:
+        all_goals = []
+        self.__traverse_goals(all_goals, self.goals)
+        return all_goals
+
+    def __traverse_goals(self, all_goals: List[CharacterGoal], current_goals: List[CharacterGoal]):
+        for goal in current_goals:
+            all_goals.append(goal)
+            self.__traverse_goals(all_goals, goal.children)
 
     @overrides
     def __hash__(self):
@@ -414,7 +425,7 @@ class ConflictReference:
 
 @dataclass
 class GoalReference:
-    goal_id: uuid.UUID
+    character_goal_id: uuid.UUID
     message: str = ''
 
 
@@ -449,17 +460,13 @@ class SceneStructureAgenda(CharacterBased):
     def remove_conflict(self, conflict: Conflict):
         self.conflict_references = [x for x in self.conflict_references if x.conflict_id != conflict.id]
 
-    def remove_goal(self, goal: Goal):
-        self.goal_references = [x for x in self.goal_references if x.goal_id != goal.id]
+    def remove_goal(self, char_goal: CharacterGoal):
+        self.goal_references = [x for x in self.goal_references if x.character_goal_id != char_goal.id]
 
-    def goals(self, novel: 'Novel') -> List[Goal]:
-        goals_ = []
-        for id_ in [x.goal_id for x in self.goal_references]:
-            for goal in novel.goals:
-                if goal.id == id_:
-                    goals_.append(goal)
-
-        return goals_
+    def goals(self, character: Character) -> List[CharacterGoal]:
+        goals_ = character.flatten_goals()
+        agenda_goal_ids = [x.character_goal_id for x in self.goal_references]
+        return [x for x in goals_ if x.id in agenda_goal_ids]
 
 
 @dataclass
