@@ -23,11 +23,11 @@ from functools import partial
 from typing import List, Optional, Union, Dict
 
 import qtanim
-from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal
+from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal, QModelIndex
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
     QResizeEvent, QCursor
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QSplitter, \
-    QPushButton
+    QPushButton, QHeaderView
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hidden, opaque, underline, flow, \
@@ -37,8 +37,11 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotValue, CharacterGoal
-from src.main.python.plotlyst.event.core import emit_critical
+    Character, Plot, ScenePlotValue, CharacterGoal, Chapter
+from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.event.core import emit_critical, emit_event
+from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
+from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
 from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder
@@ -51,9 +54,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, SelectionItemLabel, ScenePlotValueLabel
+from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
 from src.main.python.plotlyst.worker.cache import acts_registry
-
-
 # class SceneGoalsWidget(LabelsEditorWidget):
 #
 #     def __init__(self, novel: Novel, agenda: SceneStructureAgenda, parent=None):
@@ -84,6 +86,7 @@ from src.main.python.plotlyst.worker.cache import acts_registry
 #     self._wdgLabels.addLabel(GoalLabel(item))
 # self.agenda.goal_ids.clear()
 # self.agenda.goal_ids.extend(items)
+from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
@@ -1225,3 +1228,69 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.btnCardsWidth.setIcon(IconRegistry.from_name('ei.resize-horizontal'))
 
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
+
+
+class ScenesTreeView(ActionBasedTreeView):
+
+    def __init__(self, parent=None):
+        super(ScenesTreeView, self).__init__(parent)
+        self.clicked.connect(self._on_chapter_clicked)
+        self.repo = RepositoryPersistenceManager.instance()
+
+    @overrides
+    def setModel(self, model: ChaptersTreeModel) -> None:
+        super(ScenesTreeView, self).setModel(model)
+        self.expandAll()
+        self.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
+        model.orderChanged.connect(self._on_scene_moved)
+        model.modelReset.connect(self.expandAll)
+
+    def insertChapter(self, index: int = -1):
+        self.model().newChapter(index)
+        self.repo.update_novel(app_env.novel)
+        emit_event(ChapterChangedEvent(self))
+
+    def insertSceneAfter(self, scene: Scene, chapter: Optional[Chapter] = None):
+        new_scene = app_env.novel.insert_scene_after(scene, chapter)
+        self.model().update()
+        self.model().modelReset.emit()
+        self.repo.insert_scene(app_env.novel, new_scene)
+        emit_event(SceneChangedEvent(self))
+
+    def selectedChapter(self) -> Optional[Chapter]:
+        indexes = self.selectionModel().selectedIndexes()
+        if indexes:
+            node = indexes[0].data(ChaptersTreeModel.NodeRole)
+            if isinstance(node, ChapterNode):
+                return node.chapter
+
+    def _on_chapter_clicked(self, index: QModelIndex):
+        if index.column() == 0:
+            return
+
+        indexes = self.selectionModel().selectedIndexes()
+        if not indexes:
+            return
+        node = indexes[0].data(ChaptersTreeModel.NodeRole)
+
+        novel = app_env.novel
+        if isinstance(node, ChapterNode):
+            builder = PopupMenuBuilder.from_index(self, index)
+
+            scenes = novel.scenes_in_chapter(node.chapter)
+            if scenes:
+                builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self.insertSceneAfter(scenes[-1]))
+                builder.add_separator()
+
+            builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
+                               slot=lambda: self.insertChapter(novel.chapters.index(node.chapter)))
+            builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
+                               slot=lambda: self.insertChapter(novel.chapters.index(node.chapter) + 1))
+            builder.popup()
+        elif isinstance(node, SceneNode):
+            if node.scene and node.scene.chapter:
+                self.insertSceneAfter(node.scene)
+
+    def _on_scene_moved(self):
+        pass

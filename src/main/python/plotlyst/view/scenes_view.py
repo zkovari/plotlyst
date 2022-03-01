@@ -33,7 +33,7 @@ from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, ChapterChangedEvent
-from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
+from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
@@ -87,7 +87,7 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
 class ScenesOutlineView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelStoryStructureUpdated])
+        super().__init__(novel, [NovelStoryStructureUpdated, SceneChangedEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -129,14 +129,18 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
-        self.ui.treeChapters.expandAll()
-        self.chaptersModel.orderChanged.connect(self._on_scene_moved)
-        self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
-        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
-        self.ui.treeChapters.clicked.connect(self._on_chapter_clicked)
+
+        # self.ui.treeChapters.expandAll()
+        # self.chaptersModel.orderChanged.connect(self._on_scene_moved)
+        # self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
+        # self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        # self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
+        # self.ui.treeChapters.clicked.connect(self._on_chapter_clicked)
         self.ui.treeChapters.doubleClicked.connect(self._on_edit)
+
+        self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
+        self.ui.btnChaptersToggle.setIcon(IconRegistry.chapter_icon())
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self._hide_chapters_toggled(self.ui.btnChaptersToggle.isChecked())
 
@@ -259,35 +263,35 @@ class ScenesOutlineView(AbstractNovelView):
         node = indexes[0].data(ChaptersTreeModel.NodeRole)
         self.ui.btnEdit.setEnabled(isinstance(node, SceneNode))
 
-    def _on_chapter_clicked(self, index: QModelIndex):
-        if index.column() == 0:
-            return
-        chapter = self._selected_chapter()
-        if chapter:
-            builder = PopupMenuBuilder.from_index(self.ui.treeChapters, index)
-
-            scenes = self.novel.scenes_in_chapter(chapter)
-            if scenes:
-                builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self._insert_scene_after(scenes[-1]))
-                builder.add_separator()
-
-            builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
-                               slot=lambda: self._new_chapter(self.novel.chapters.index(chapter)))
-            builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
-                               slot=lambda: self._new_chapter(self.novel.chapters.index(chapter) + 1))
-            builder.popup()
-        else:
-            scene = self._selected_scene()
-            if scene and scene.chapter:
-                self._insert_scene_after(scene)
+    # def _on_chapter_clicked(self, index: QModelIndex):
+    #     if index.column() == 0:
+    #         return
+    #     chapter = self._selected_chapter()
+    #     if chapter:
+    #         builder = PopupMenuBuilder.from_index(self.ui.treeChapters, index)
+    #
+    #         scenes = self.novel.scenes_in_chapter(chapter)
+    #         if scenes:
+    #             builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self._insert_scene_after(scenes[-1]))
+    #             builder.add_separator()
+    #
+    #         builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
+    #                            slot=lambda: self._new_chapter(self.novel.chapters.index(chapter)))
+    #         builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
+    #                            slot=lambda: self._new_chapter(self.novel.chapters.index(chapter) + 1))
+    #         builder.popup()
+    #     else:
+    #         scene = self._selected_scene()
+    #         if scene and scene.chapter:
+    #             self._insert_scene_after(scene)
 
     def _hide_chapters_toggled(self, toggled: bool):
-        self.ui.wgtChapters.setVisible(toggled)
-        self.ui.btnChaptersToggle.setIcon(IconRegistry.eye_closed_icon() if toggled else IconRegistry.eye_open_icon())
+        # self.ui.wgtChapters.setVisible(toggled)
+        # self.ui.btnChaptersToggle.setIcon(IconRegistry.eye_closed_icon() if toggled else IconRegistry.eye_open_icon())
         if toggled:
             menu = QMenu(self.ui.btnNew)
             menu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
-            menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self._new_chapter)
+            menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
             self.ui.btnNew.setMenu(menu)
         else:
             self.ui.btnNew.setMenu(None)
@@ -319,13 +323,6 @@ class ScenesOutlineView(AbstractNovelView):
             else:
                 return None
 
-    def _selected_chapter(self) -> Optional[Chapter]:
-        indexes = self.ui.treeChapters.selectionModel().selectedIndexes()
-        if indexes:
-            node = indexes[0].data(ChaptersTreeModel.NodeRole)
-            if isinstance(node, ChapterNode):
-                return node.chapter
-
     def _switch_to_editor(self):
         emit_event(ToggleOutlineViewTitle(self, visible=False))
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
@@ -348,11 +345,6 @@ class ScenesOutlineView(AbstractNovelView):
     def _new_scene(self):
         self.editor = SceneEditor(self.novel)
         self._switch_to_editor()
-
-    def _new_chapter(self, index: int = -1):
-        self.chaptersModel.newChapter(index)
-        self.repo.update_novel(self.novel)
-        emit_event(ChapterChangedEvent(self))
 
     def _update_cards(self):
         def cursorEnter(scene: Scene):
@@ -546,20 +538,11 @@ class ScenesOutlineView(AbstractNovelView):
         builder.popup()
 
     def _insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None):
-        i = self.novel.scenes.index(scene)
-        day = scene.day
-
-        new_scene = self.novel.new_scene()
-        new_scene.day = day
-        if chapter:
-            new_scene.chapter = chapter
-        else:
-            new_scene.chapter = scene.chapter
-        self.novel.scenes.insert(i + 1, new_scene)
+        new_scene = self.novel.insert_scene_after(scene, chapter)
         self.repo.insert_scene(self.novel, new_scene)
         emit_event(SceneChangedEvent(self))
-        self.refresh()
 
+        self.refresh()
         self.editor = SceneEditor(self.novel, new_scene)
         self._switch_to_editor()
 
@@ -571,8 +554,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.refresh()
             emit_event(SceneDeletedEvent(self))
         elif not scene:
-            chapter = self._selected_chapter()
-            if not chapter:
+            if not self.ui.treeChapters.selectedChapter():
                 return
             index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
             if ask_confirmation(f'Are you sure you want to delete "{index.data()}"? (scenes will remain)'):

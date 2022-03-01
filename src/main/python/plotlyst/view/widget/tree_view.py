@@ -28,11 +28,13 @@ class ActionBasedTreeView(QTreeView):
 
     def __init__(self, parent=None):
         super(ActionBasedTreeView, self).__init__(parent)
+        self.setMouseTracking(True)
 
     @overrides
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         index = self.indexAt(event.pos())
-        self.model().displayAction(index)
+        if self.model():
+            self.model().displayAction(index)
         super(ActionBasedTreeView, self).mouseMoveEvent(event)
 
     def select(self, index: QModelIndex):
