@@ -1667,6 +1667,20 @@ class Novel(NovelDescriptor):
     def new_scene(title: str = '') -> Scene:
         return Scene(title, agendas=[SceneStructureAgenda()])
 
+    def insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None) -> Scene:
+        i = self.scenes.index(scene)
+        day = scene.day
+
+        new_scene = self.new_scene()
+        new_scene.day = day
+        if chapter:
+            new_scene.chapter = chapter
+        else:
+            new_scene.chapter = scene.chapter
+        self.scenes.insert(i + 1, new_scene)
+
+        return new_scene
+
 
 @dataclass
 class Task:

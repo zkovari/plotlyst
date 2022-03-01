@@ -607,7 +607,7 @@
             <number>2</number>
            </property>
            <item>
-            <widget class="ActionBasedTreeView" name="treeChapters">
+            <widget class="ScenesTreeView" name="treeChapters">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                <horstretch>0</horstretch>
@@ -625,12 +625,6 @@
              </property>
              <property name="indentation">
               <number>10</number>
-             </property>
-             <property name="rootIsDecorated">
-              <bool>true</bool>
-             </property>
-             <property name="itemsExpandable">
-              <bool>true</bool>
              </property>
              <attribute name="headerVisible">
               <bool>false</bool>
@@ -1034,9 +1028,9 @@
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
-   <class>ActionBasedTreeView</class>
+   <class>ScenesTreeView</class>
    <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.tree_view</header>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
   </customwidget>
   <customwidget>
    <class>CardsView</class>
@@ -1060,12 +1054,28 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>382</x>
-     <y>51</y>
+     <x>423</x>
+     <y>58</y>
     </hint>
     <hint type="destinationlabel">
      <x>595</x>
      <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnChaptersToggle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>wgtChapters</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>21</x>
+     <y>52</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>3</x>
+     <y>79</y>
     </hint>
    </hints>
   </connection>

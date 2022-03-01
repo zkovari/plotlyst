@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>555</width>
-    <height>322</height>
+    <width>557</width>
+    <height>323</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,8 +15,9 @@
   </property>
   <property name="styleSheet">
    <string notr="true">#wdgSideAnalysis {
-	background-color: white;
-}</string>
+                background-color: white;
+                }
+            </string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <property name="spacing">
@@ -44,8 +45,9 @@
      </property>
      <property name="styleSheet">
       <string notr="true">.QWidget {
-background-color: #f5f3f4;
-}</string>
+                            background-color: #f5f3f4;
+                            }
+                        </string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="spacing">
@@ -117,8 +119,9 @@ background-color: #f5f3f4;
        <widget class="QPushButton" name="btnStoryGoal">
         <property name="styleSheet">
          <string notr="true">QPushButton {
-	border:0px;
-}</string>
+                                        border:0px;
+                                        }
+                                    </string>
         </property>
         <property name="text">
          <string/>
@@ -155,7 +158,13 @@ background-color: #f5f3f4;
      <property name="childrenCollapsible">
       <bool>false</bool>
      </property>
-     <widget class="QTreeView" name="treeChapters">
+     <widget class="ScenesTreeView" name="treeChapters">
+      <property name="dragEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="dragDropMode">
+       <enum>QAbstractItemView::DragDrop</enum>
+      </property>
       <property name="indentation">
        <number>10</number>
       </property>
@@ -440,13 +449,16 @@ background-color: #f5f3f4;
                </property>
                <property name="styleSheet">
                 <string notr="true">#wdgBottom {
-    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
-                                      stop: 0 #FFFFFF, stop: 0.5 #E1E1E1, stop: 1 #E7E7E7);
-	border-bottom-left-radius: 6px;
-	border-bottom-right-radius: 6px;
-    border: 1px hidden black;
-    border-top: 0px;
-}</string>
+                                                                    background-color: qlineargradient(x1: 0, y1: 0, x2:
+                                                                    1, y2: 1,
+                                                                    stop: 0 #FFFFFF, stop: 0.5 #E1E1E1, stop: 1
+                                                                    #E7E7E7);
+                                                                    border-bottom-left-radius: 6px;
+                                                                    border-bottom-right-radius: 6px;
+                                                                    border: 1px hidden black;
+                                                                    border-top: 0px;
+                                                                    }
+                                                                </string>
                </property>
                <layout class="QHBoxLayout" name="horizontalLayout_8">
                 <property name="spacing">
@@ -552,6 +564,11 @@ background-color: #f5f3f4;
    <class>ReadabilityWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.manuscript</header>
+  </customwidget>
+  <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
   </customwidget>
   <customwidget>
    <class>WordsDisplay</class>
