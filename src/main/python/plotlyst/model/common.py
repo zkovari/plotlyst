@@ -109,6 +109,15 @@ class SelectionItemsModel(QAbstractTableModel):
             self._checked.remove(item)
             self.selection_changed.emit()
 
+    def toggleCheckedItem(self, item: SelectionItem):
+        if self._checkable:
+            if item in self._checked:
+                self.uncheckItem(item)
+            else:
+                self.checkItem(item)
+            
+            self.modelReset.emit()
+
     def uncheckAll(self):
         self._checked.clear()
         self.modelReset.emit()
