@@ -570,7 +570,7 @@ class CharacterLinkWidget(QWidget):
             self.layout().removeWidget(self.label)
             gc(self.label)
             self.label = None
-        self.label = CharacterLabel(self.character, pov=True)
+        self.label = CharacterLabel(self.character)
         self.label.setToolTip(f'<html>Agenda character: <b>{character.name}</b>')
         self.label.installEventFilter(OpacityEventFilter(enterOpacity=0.7, leaveOpacity=1.0, parent=self.label))
         self.label.setCursor(Qt.PointingHandCursor)

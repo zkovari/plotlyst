@@ -73,7 +73,7 @@ class LabelsWidget(QWidget):
 
 
 class CharacterLabel(Label):
-    def __init__(self, character: Character, pov: bool = False, parent=None):
+    def __init__(self, character: Character, parent=None):
         super(CharacterLabel, self).__init__(parent)
         self.character = character
         self.btnAvatar = QToolButton()
@@ -89,13 +89,13 @@ class CharacterLabel(Label):
             self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
             self.layout().addWidget(vline())
             self.layout().addWidget(self.lblRole)
-
-        border_size = 3 if pov else 2
-        border_color = '#3f7cac' if pov else '#bad7f2'
+            border_color = role.icon_color
+        else:
+            border_color = '#bad7f2'
 
         self.setStyleSheet(f'''
         CharacterLabel {{
-            border: {border_size}px solid {border_color}; 
+            border: 2px solid {border_color}; 
             border-radius: 8px; padding-left: 3px; padding-right: 3px;}}
         ''')
 
