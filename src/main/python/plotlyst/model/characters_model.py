@@ -141,7 +141,7 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
             self.scene.characters.append(character)
 
         self.selection_changed.emit()
-        self.modelReset.emit()
+        self.layoutChanged.emit()
 
     def update(self):
         if self.scene.pov in self.scene.characters:

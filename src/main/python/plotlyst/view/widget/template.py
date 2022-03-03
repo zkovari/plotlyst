@@ -23,7 +23,7 @@ from typing import Optional, List, Any, Dict, Set
 import emoji
 import qtawesome
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent
+from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
@@ -36,9 +36,11 @@ from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldTyp
     ProfileTemplate, TemplateValue, ProfileElement, Character, SelectionItemType, \
     enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
-from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel
+from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
+    TraitsProxyModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
+from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -237,16 +239,9 @@ class TraitSelectionWidget(LabelsSelectionWidget):
 
     @overrides
     def _initPopupWidget(self) -> QWidget:
-        _lstTraitsView = QListView()
-        _lstTraitsView.setMaximumHeight(300)
-        _lstTraitsView.setMaximumWidth(300)
-        _lstTraitsView.setMinimumWidth(300)
-        _lstTraitsView.setMinimumHeight(300)
-        _lstTraitsView.setModel(self._model)
-        _lstTraitsView.setModelColumn(TemplateFieldSelectionModel.ColName)
-        _lstTraitsView.setViewMode(QListView.IconMode)
-
-        return _lstTraitsView
+        wdg = self.Popup()
+        wdg.setModel(self._model)
+        return wdg
 
     @overrides
     def _addItems(self, items: Set[SelectionItem]):
@@ -256,6 +251,47 @@ class TraitSelectionWidget(LabelsSelectionWidget):
         for item in items:
             if not item.meta.get('positive', True):
                 self._wdgLabels.addLabel(TraitLabel(item.text, False))
+
+    class Popup(QWidget, Ui_TraitSelectionWidget):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.setupUi(self)
+            self.positiveProxy = TraitsProxyModel()
+            self.negativeProxy = TraitsProxyModel(positive=False)
+            self._model: Optional[TraitsFieldItemsSelectionModel] = None
+            self.lstPositiveTraitsView.clicked.connect(self._toggleSelection)
+            self.lstNegativeTraitsView.clicked.connect(self._toggleSelection)
+
+        def setModel(self, model: TraitsFieldItemsSelectionModel):
+            self._model = model
+
+            self.positiveProxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self.positiveProxy.setSourceModel(model)
+            self.positiveProxy.setFilterKeyColumn(TemplateFieldSelectionModel.ColName)
+            self.lstPositiveTraitsView.setModel(self.positiveProxy)
+            self.filterPositive.textChanged.connect(self.positiveProxy.setFilterRegExp)
+
+            self.negativeProxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self.negativeProxy.setSourceModel(model)
+            self.negativeProxy.setFilterKeyColumn(TemplateFieldSelectionModel.ColName)
+            self.lstNegativeTraitsView.setModel(self.negativeProxy)
+            self.filterNegative.textChanged.connect(self.negativeProxy.setFilterRegExp)
+
+            for lst in [self.lstPositiveTraitsView, self.lstNegativeTraitsView]:
+                lst.setModelColumn(TemplateFieldSelectionModel.ColName)
+                lst.setViewMode(QListView.IconMode)
+                lst.setFixedSize(300, 300)
+
+        @overrides
+        def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+            pass
+
+        def _toggleSelection(self, index: QModelIndex):
+            if self._model is None:
+                return
+
+            item = index.data(role=TraitsFieldItemsSelectionModel.ItemRole)
+            self._model.toggleCheckedItem(item)
 
 
 class ButtonSelectionWidget(QWidget):

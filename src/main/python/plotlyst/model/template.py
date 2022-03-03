@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any
 
-from PyQt5.QtCore import QModelIndex, Qt
+from PyQt5.QtCore import QModelIndex, Qt, QSortFilterProxyModel
 from PyQt5.QtGui import QBrush, QColor
 from overrides import overrides
 
@@ -53,15 +53,40 @@ class TemplateFieldSelectionModel(SelectionItemsModel):
 
 
 class TraitsFieldItemsSelectionModel(TemplateFieldSelectionModel):
+    PositivityRole = Qt.UserRole + 2
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        item = self._field.selections[index.row()]
         if role == Qt.ForegroundRole:
-            item = self._field.selections[index.row()]
             brush = QBrush()
             if item.meta.get('positive', True):
                 brush.setColor(QColor('#519872'))
             else:
                 brush.setColor(QColor('#db5461'))
             return brush
+        if role == self.PositivityRole:
+            return item.meta.get('positive', True)
         return super(TraitsFieldItemsSelectionModel, self).data(index, role)
+
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+        super_set = super(TraitsFieldItemsSelectionModel, self).setData(index, value, role)
+        self.layoutChanged.emit()
+        return super_set
+
+
+class TraitsProxyModel(QSortFilterProxyModel):
+    def __init__(self, positive: bool = True):
+        super().__init__()
+        self.positive = positive
+
+    @overrides
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        filtered = super().filterAcceptsRow(source_row, source_parent)
+        if not filtered:
+            return filtered
+
+        pos: bool = self.sourceModel().data(self.sourceModel().index(source_row, 0),
+                                            role=TraitsFieldItemsSelectionModel.PositivityRole)
+
+        return pos == self.positive
