@@ -28,7 +28,8 @@ from overrides import overrides
 from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag
+    three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
+    StoryBeatType
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
@@ -381,6 +382,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         row = 0
         col = 0
         for beat in structure.beats:
+            if beat.type != StoryBeatType.BEAT:
+                continue
             wdg = BeatWidget(beat)
             if beat.act - 1 > col:  # new act
                 self.beats.layout().addWidget(vspacer(), row + 1, col)

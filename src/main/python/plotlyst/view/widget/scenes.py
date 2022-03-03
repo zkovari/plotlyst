@@ -31,13 +31,13 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hidden, opaque, underline, flow, \
-    clear_layout, hbox, spacer, btn_popup, vbox
+    clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
 from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotValue, CharacterGoal, Chapter
+    Character, Plot, ScenePlotValue, CharacterGoal, Chapter, StoryBeatType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
@@ -874,13 +874,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if lazy and type == self.scene.type and checked:
             return
 
-        for item in self.scene.agendas[0].items:
-            if item.text or self.scene.agendas[0].goals(self.novel) or self.scene.agendas[0].conflicts(self.novel):
-                if not ask_confirmation(
-                        "Some beats are filled up. Are you sure you want to change the scene's structure?"):
-                    self._checkSceneType()  # revert
-                    return
-                break
+        if any(x.text for x in self.scene.agendas[0].items):
+            if not ask_confirmation(
+                    "Some beats are filled up. Are you sure you want to change the scene's structure?"):
+                self._checkSceneType()  # revert
+                return
+                # break
 
         if type == SceneType.ACTION and checked:
             self.scene.type = type
@@ -970,6 +969,7 @@ class SceneStoryStructureWidget(QWidget):
         self.novel: Optional[Novel] = None
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
+        self._containers: Dict[StoryBeat, QPushButton] = {}
         self.btnCurrentScene = QToolButton(self)
         self._currentScenePercentage = 1
         self.btnCurrentScene.setIcon(IconRegistry.circle_icon(color='red'))
@@ -979,7 +979,8 @@ class SceneStoryStructureWidget(QWidget):
         hbox(self._wdgLine, 0, 0)
         self._lineHeight: int = 22
         self._beatHeight: int = 20
-        self._margin = 5
+        self._margin: int = 5
+        self._containerTopMargin: int = 6
 
     def checkOccupiedBeats(self) -> bool:
         return self._checkOccupiedBeats
@@ -1009,21 +1010,35 @@ class SceneStoryStructureWidget(QWidget):
 
         occupied_beats = acts_registry.occupied_beats()
         for beat in self.novel.active_story_structure.beats:
-            btn = QToolButton(self)
+            if beat.type == StoryBeatType.CONTAINER:
+                btn = QPushButton(self)
+                btn.setText(beat.text)
+                self._containers[beat] = btn
+                btn.setStyleSheet(f'''
+                    QPushButton {{border-top:2px dashed {beat.icon_color}; color: {beat.icon_color};}}
+                ''')
+                italic(btn)
+                opaque(btn)
+            else:
+                btn = QToolButton(self)
+                self._beats[beat] = btn
+                btn.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
+
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-            btn.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
             btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
-            btn.installEventFilter(InstantTooltipEventFilter(btn))
-            btn.toggled.connect(partial(self._beatToggled, btn))
-            btn.clicked.connect(partial(self._beatClicked, beat, btn))
-            btn.installEventFilter(self)
-            btn.setCursor(self._beatCursor)
-            if self._checkOccupiedBeats and beat not in occupied_beats:
-                if self._beatsCheckable:
-                    btn.setCheckable(True)
-                self._beatToggled(btn, False)
-            self._beats[beat] = btn
+
+            if beat.type == StoryBeatType.BEAT:
+                btn.installEventFilter(InstantTooltipEventFilter(btn))
+                btn.toggled.connect(partial(self._beatToggled, btn))
+                btn.clicked.connect(partial(self._beatClicked, beat, btn))
+                btn.installEventFilter(self)
+                btn.setCursor(self._beatCursor)
+                if self._checkOccupiedBeats and beat not in occupied_beats:
+                    if self._beatsCheckable:
+                        btn.setCheckable(True)
+                    self._beatToggled(btn, False)
+
             if not beat.enabled:
                 btn.setHidden(True)
 
@@ -1057,13 +1072,14 @@ class SceneStoryStructureWidget(QWidget):
 
     @overrides
     def minimumSizeHint(self) -> QSize:
-        return QSize(300, self._lineHeight + self._beatHeight + 8)
+        beat_height = self._beatHeight * 2 if self._containers else self._beatHeight
+        return QSize(300, self._lineHeight + beat_height + 6)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(watched, QToolButton) and watched.isCheckable() and not watched.isChecked():
             if event.type() == QEvent.Enter:
-                opaque(watched, 0.5)
+                opaque(watched)
             elif event.type() == QEvent.Leave:
                 opaque(watched, 0.2)
         return super(SceneStoryStructureWidget, self).eventFilter(watched, event)
@@ -1071,15 +1087,26 @@ class SceneStoryStructureWidget(QWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         for beat, btn in self._beats.items():
-            btn.setGeometry(self.width() * beat.percentage / 100 - self._lineHeight // 2, self._lineHeight,
+            btn.setGeometry(self._xForPercentage(beat.percentage), self._lineHeight,
                             self._beatHeight,
                             self._beatHeight)
+
+        for beat, btn in self._containers.items():
+            x = self._xForPercentage(beat.percentage)
+            btn.setGeometry(x + self._beatHeight // 2,
+                            self._lineHeight + self._beatHeight + self._containerTopMargin,
+                            self._xForPercentage(beat.percentage_end) - x,
+                            self._beatHeight)
+
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
         if self.btnCurrentScene:
             self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
                                              self._lineHeight,
                                              self._beatHeight,
                                              self._beatHeight)
+
+    def _xForPercentage(self, percentage: int) -> int:
+        return int(self.width() * percentage / 100 - self._lineHeight // 2)
 
     def uncheckActs(self):
         for act in self._acts:

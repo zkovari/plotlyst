@@ -1,6 +1,7 @@
 from typing import Set
 
-from src.main.python.plotlyst.core.domain import default_story_structures, positive_traits, negative_traits
+from src.main.python.plotlyst.core.domain import default_story_structures, positive_traits, negative_traits, \
+    StoryBeatType
 
 
 def test_unique_story_structures():
@@ -22,6 +23,10 @@ def test_unique_story_structures():
             assert beat.act
             assert str(beat.id) not in beat_ids
             beat_ids.add(str(beat.id))
+
+            if beat.type == StoryBeatType.CONTAINER:
+                assert beat.percentage_end, 'beat percentage_end should be set for beat ' + beat.text
+                assert beat.percentage_end > beat.percentage
 
             if beat.ends_act:
                 act += 1
