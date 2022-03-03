@@ -25,7 +25,7 @@ from typing import List, Optional, Union, Dict
 import qtanim
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal, QModelIndex
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
-    QResizeEvent, QCursor
+    QResizeEvent, QCursor, QColor
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QSplitter, \
     QPushButton, QHeaderView
 from overrides import overrides
@@ -1097,8 +1097,10 @@ class SceneStoryStructureWidget(QWidget):
         btn = self._beats.get(beat)
         if btn is None:
             return
-        btn.setStyleSheet('QToolButton {border: 4px dotted #9b2226; border-radius: 6;} QToolTip {border: 0px;}')
-        btn.setFixedSize(self._beatHeight + 8, self._beatHeight + 8)
+        btn.setStyleSheet(
+            'QToolButton {border: 3px dotted #9b2226; border-radius: 5;} QToolTip {border: 0px;}')
+        btn.setFixedSize(self._beatHeight + 6, self._beatHeight + 6)
+        qtanim.glow(btn, color=QColor(beat.icon_color))
 
     def highlightScene(self, scene: Scene):
         beat = scene.beat(self.novel)
