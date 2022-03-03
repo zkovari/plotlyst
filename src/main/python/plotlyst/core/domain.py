@@ -28,11 +28,13 @@ from PyQt5.QtCore import Qt
 from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
-from src.main.python.plotlyst.common import PIVOTAL_COLOR
-
 
 def exclude_if_empty(value):
     return not value
+
+
+def exclude_if_black(value):
+    return value == 'black'
 
 
 @dataclass
@@ -215,16 +217,26 @@ class SceneBuilderElement:
     has_stakes: bool = False
 
 
+class StoryBeatType(Enum):
+    BEAT = 'beat'
+    CONTAINER = 'container'
+
+
+def exclude_if_beat(value):
+    return value == StoryBeatType.BEAT
+
+
 @dataclass
 class StoryBeat:
     text: str
     act: int
-    ends_act: bool = False
-    color_hexa: str = PIVOTAL_COLOR
+    type: StoryBeatType = field(default=StoryBeatType.BEAT, metadata=config(exclude=exclude_if_beat))
+    ends_act: bool = field(default=False, metadata=config(exclude=exclude_if_empty))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = ''
-    icon_color: str = 'black'
+    icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     percentage: int = 0
+    percentage_end: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     enabled: bool = True
 
     @overrides
@@ -239,10 +251,6 @@ class SelectionItemType(Enum):
 
 def exclude_if_choice(value):
     return value == SelectionItemType.CHOICE
-
-
-def exclude_if_black(value):
-    return value == 'black'
 
 
 @dataclass
@@ -707,11 +715,12 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                icon_color='#1ea896',
                                                id=uuid.UUID('249bba52-98b8-4577-8b3c-94481f6bf622'),
                                                act=1, percentage=1),
-                                     StoryBeat(text='Set-up',
+                                     StoryBeat(text='Setup',
+                                               type=StoryBeatType.CONTAINER,
                                                icon='mdi.toy-brick-outline',
-                                               icon_color='#1d3958',
+                                               icon_color='#02bcd4',
                                                id=uuid.UUID('7ce4345b-60eb-4cd6-98cc-7cce98028839'),
-                                               act=1, percentage=3),
+                                               act=1, percentage=1, percentage_end=10),
                                      StoryBeat(text='Theme Stated',
                                                icon='ei.idea-alt',
                                                icon_color='#f72585',
@@ -723,35 +732,38 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                id=uuid.UUID('cc3d8641-bcdf-402b-ba84-7ff59b2cc76a'),
                                                act=1, percentage=10),
                                      StoryBeat(text='Debate',
+                                               type=StoryBeatType.CONTAINER,
                                                icon='fa5s.map-signs',
                                                icon_color='#ba6f4d',
                                                id=uuid.UUID('0203696e-dc54-4a10-820a-bfdf392a82dc'),
-                                               act=1, percentage=14),
+                                               act=1, percentage=10, percentage_end=20),
                                      StoryBeat(text='Break into Two',
                                                icon='mdi6.clock-time-three-outline',
-                                               icon_color='#283618',
+                                               icon_color='#1bbc9c',
                                                id=uuid.UUID('43eb267f-2840-437b-9eac-9e52d80eba2b'),
                                                act=1, ends_act=True, percentage=20),
                                      StoryBeat(text='B Story',
                                                icon='mdi.alpha-b-box',
                                                icon_color='#a6808c',
                                                id=uuid.UUID('64229c74-5513-4391-9b45-c54ad106c137'),
-                                               act=2, percentage=25),
+                                               act=2, percentage=22),
                                      StoryBeat(text='Fun and Games',
+                                               type=StoryBeatType.CONTAINER,
                                                icon='fa5s.gamepad',
                                                icon_color='#2c699a',
                                                id=uuid.UUID('490157f0-f255-4ab3-82f3-bc5cb22ce03b'),
-                                               act=2, percentage=27),
+                                               act=2, percentage=20, percentage_end=50),
                                      StoryBeat(text='Midpoint',
                                                icon='mdi.middleware-outline',
                                                icon_color='#2e86ab',
                                                id=uuid.UUID('af4fb4e9-f287-47b6-b219-be75af752622'),
                                                act=2, percentage=50),
                                      StoryBeat(text='Bad Guys Close In',
+                                               type=StoryBeatType.CONTAINER,
                                                icon='fa5s.biohazard',
                                                icon_color='#cd533b',
                                                id=uuid.UUID('2060c95f-dcdb-4074-a096-4b054f70d57a'),
-                                               act=2, percentage=62),
+                                               act=2, percentage=50, percentage_end=75),
                                      StoryBeat(text='All is Lost',
                                                icon='mdi.trophy-broken',
                                                icon_color='#e9c46a',
@@ -766,7 +778,13 @@ save_the_cat = StoryStructure(title='Save the Cat',
                                                icon='mdi.clock-time-nine-outline',
                                                icon_color='#e85d04',
                                                id=uuid.UUID('677f83ad-355a-47fb-8ff7-812997bdb23a'),
-                                               act=2, ends_act=True, percentage=78),
+                                               act=2, ends_act=True, percentage=80),
+                                     StoryBeat(text='Finale',
+                                               type=StoryBeatType.CONTAINER,
+                                               icon='fa5s.flag-checkered',
+                                               icon_color='#ff7800',
+                                               id=uuid.UUID('10191cac-7786-4e85-9a36-75f99be22b92'),
+                                               act=3, percentage=80, percentage_end=99),
                                      StoryBeat(text='Gather the Team',
                                                icon='ri.team-fill',
                                                icon_color='#489fb5',
