@@ -181,7 +181,6 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         self.cropped = None
 
     def display(self, pixmap: QPixmap) -> Optional[QPixmap]:
-        print(f'original size, w: {pixmap.width()}, h: {pixmap.height()}')
         ratio = pixmap.width() / pixmap.height()
 
         if max(pixmap.width(), pixmap.height()) > 512:
@@ -197,7 +196,6 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
             w = pixmap.width()
             h = pixmap.height()
 
-        print(f'modified w: {w} h: {h}')
         self.frame.setFixedSize(min(w, h), min(w, h))
         self.scaled = pixmap.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.lblImage.setPixmap(self.scaled)
@@ -213,12 +211,10 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         painter = QPainter(self.cropped)
         painter.setRenderHint(QPainter.Antialiasing)
         cropped_rect = self.scaled.rect()
-        print(f'frame pos {self.frame.pos()}')
         cropped_rect.setX(self.frame.pos().x())
         cropped_rect.setY(self.frame.pos().y())
         cropped_rect.setWidth(self.cropped.width())
         cropped_rect.setHeight(self.cropped.height())
-        print(cropped_rect)
         painter.drawPixmap(self.cropped.rect(), self.scaled, cropped_rect)
         painter.end()
 
