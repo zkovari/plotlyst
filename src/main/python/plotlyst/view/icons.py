@@ -307,8 +307,8 @@ class IconRegistry:
         return qtawesome.icon('mdi.emoticon-neutral', color='grey')
 
     @staticmethod
-    def upload_icon() -> QIcon:
-        return qtawesome.icon('fa5s.file-upload')
+    def upload_icon(**kwargs) -> QIcon:
+        return qtawesome.icon('fa5s.file-upload', **kwargs)
 
     @staticmethod
     def portrait_icon() -> QIcon:

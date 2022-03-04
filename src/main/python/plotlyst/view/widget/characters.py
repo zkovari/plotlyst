@@ -1210,10 +1210,13 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
         super(AvatarSelectors, self).__init__(parent)
         self.setupUi(self)
         self.character = character
-        self.btnUploadAvatar.setIcon(IconRegistry.upload_icon())
+        self.btnUploadAvatar.setIcon(IconRegistry.upload_icon(color='white'))
         self.btnUploadAvatar.clicked.connect(self._upload_avatar)
         self.btnAi.setIcon(IconRegistry.from_name('mdi.robot-happy-outline', 'white'))
         self.btnAi.clicked.connect(self._select_ai)
+        self.btnInitial.setIcon(IconRegistry.from_name('mdi.alpha-a-circle'))
+        self.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))
+        self.btnCustomIcon.setIcon(IconRegistry.icons_icon())
 
     def _upload_avatar(self):
         filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
