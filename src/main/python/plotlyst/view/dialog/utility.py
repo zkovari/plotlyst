@@ -259,14 +259,11 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
                 elif self._resizeCorner == Corner.BottomLeft:
                     self.setGeometry(self.geometry().x() + x_diff, self.geometry().y(), self.width(), self.height())
                     self.setFixedSize(self.geometry().width() - x_diff, self._originalSize.height() + y_diff)
-
-                elif self.height() == self.parent().height() and self._xMovementAllowed(x_diff):
-                    self.setGeometry(self.geometry().x() + x_diff, self.geometry().y(), self.width(), self.height())
-                elif self.width() == self.parent().width() and self._yMovementAllowed(y_diff):
-                    self.setGeometry(self.geometry().x(), self.geometry().y() + y_diff, self.width(), self.height())
-                elif self._xMovementAllowed(x_diff) and self._yMovementAllowed(y_diff):
-                    self.setGeometry(self.geometry().x() + x_diff, self.geometry().y() + y_diff, self.width(),
-                                     self.height())
+                else:
+                    if self._xMovementAllowed(x_diff):
+                        self.setGeometry(self.geometry().x() + x_diff, self.geometry().y(), self.width(), self.height())
+                    if self._yMovementAllowed(y_diff):
+                        self.setGeometry(self.geometry().x(), self.geometry().y() + y_diff, self.width(), self.height())
 
             else:
                 self._resizeCorner = None
