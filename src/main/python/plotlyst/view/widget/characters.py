@@ -1223,7 +1223,12 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
         reader.setAutoTransform(True)
         image: QImage = reader.read()
         if image is None:
-            QMessageBox.warning(self.widget, 'Error while loading image', 'Could not load image')
+            QMessageBox.warning(self, 'Error while loading image',
+                                'Could not load image. Did you select a valid image? (e.g.: png, jpg, jpeg)')
+            return
+        if image.width() < 128 or image.height() < 128:
+            QMessageBox.warning(self, 'Uploaded image is too small',
+                                'The uploaded image is too small. It must be larger than 128 pixels')
             return
 
         pixmap = QPixmap.fromImage(image)

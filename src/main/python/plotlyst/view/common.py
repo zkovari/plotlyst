@@ -44,8 +44,6 @@ def rounded_pixmap(original: QPixmap) -> QPixmap:
     painter.setRenderHint(QPainter.Antialiasing)
     painter.setClipPath(path)
     painter.fillRect(rounded.rect(), Qt.black)
-    # x = int((original.width() - size) / 2)
-    # y = int((original.height() - size) / 2)
 
     painter.drawPixmap(0, 0, original.width(), original.height(), original)
     painter.end()
