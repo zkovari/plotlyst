@@ -33,20 +33,21 @@ from qthandy import opaque
 
 
 def rounded_pixmap(original: QPixmap) -> QPixmap:
-    size = max(original.width(), original.height())
+    size = min(original.width(), original.height())
 
     rounded = QPixmap(size, size)
     rounded.fill(Qt.transparent)
+
     path = QPainterPath()
     path.addEllipse(QRectF(rounded.rect()))
     painter = QPainter(rounded)
     painter.setRenderHint(QPainter.Antialiasing)
     painter.setClipPath(path)
     painter.fillRect(rounded.rect(), Qt.black)
-    x = int((original.width() - size) / 2)
-    y = int((original.height() - size) / 2)
+    # x = int((original.width() - size) / 2)
+    # y = int((original.height() - size) / 2)
 
-    painter.drawPixmap(x, y, original.width(), original.height(), original)
+    painter.drawPixmap(0, 0, original.width(), original.height(), original)
     painter.end()
 
     return rounded

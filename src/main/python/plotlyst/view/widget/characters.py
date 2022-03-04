@@ -51,7 +51,7 @@ from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
     VisibilityToggleEventFilter, hmax
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
 from src.main.python.plotlyst.view.generated.character_avatar_ui import Ui_CharacterAvatar
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
@@ -1223,9 +1223,15 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
         reader.setAutoTransform(True)
         image: QImage = reader.read()
         if image is None:
-            QMessageBox.warning(self.widget, 'Error while uploading image', 'Could not upload image')
+            QMessageBox.warning(self.widget, 'Error while loading image', 'Could not load image')
             return
-        self._update_avatar(image)
+
+        # pixmap = QPixmap()
+        # pixmap.fromImage(image)
+        pixmap = QPixmap.fromImage(image)
+        crop = ImageCropDialog().display(pixmap)
+        if crop:
+            self._update_avatar(crop)
 
     def _update_avatar(self, image: Union[QImage, QPixmap]):
         array = QByteArray()

@@ -25,16 +25,17 @@ from functools import partial
 from typing import Optional
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, Qt, QSize, QObject, QEvent
+from PyQt5.QtCore import QUrl, Qt, QSize, QObject, QEvent, QPoint
 from PyQt5.QtGui import QColor, QPixmap, QIcon, QDesktopServices
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-from PyQt5.QtWidgets import QDialog, QToolButton
+from PyQt5.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
 from overrides import overrides
 from qthandy import hbox, FlowLayout
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
+from src.main.python.plotlyst.view.generated.image_crop_dialog_ui import Ui_ImageCropDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.utility import IconSelectorWidget
 
@@ -158,3 +159,97 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
     def _scrolled(self, value: int):
         if value == self.scrollArea.verticalScrollBar().maximum():
             self._loadImages()
+
+
+class ImageCropDialog(QDialog, Ui_ImageCropDialog):
+    def __init__(self, parent=None):
+        super(ImageCropDialog, self).__init__(parent)
+        self.setupUi(self)
+
+        self.frame = self.CropFrame(self.lblImage)
+
+    def display(self, pixmap: QPixmap) -> Optional[QPixmap]:
+        print(f'original size, w: {pixmap.width()}, h: {pixmap.height()}')
+        ratio = pixmap.width() / pixmap.height()
+
+        if max(pixmap.width(), pixmap.height()) > 512:
+            if pixmap.width() > pixmap.height():
+                w = 512
+                h = 512 / ratio
+            elif pixmap.width() < pixmap.height():
+                h = 512
+                w = 512 * ratio
+            else:
+                h = w = 512
+        else:
+            w = pixmap.width()
+            h = pixmap.height()
+
+        print(f'modified w: {w} h: {h}')
+        self.frame.setFixedSize(min(w, h), min(w, h))
+        self.lblImage.setPixmap(pixmap.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        result = self.exec()
+        QApplication.restoreOverrideCursor()
+        if result == QDialog.Accepted:
+            return pixmap
+
+    class CropFrame(QPushButton):
+        cornerRange: int = 15
+
+        def __init__(self, parent):
+            super().__init__(parent)
+            self.setStyleSheet('QPushButton {border: 3px dashed red;}')
+            self.setMouseTracking(True)
+            self._pressedPoint: Optional[QPoint] = None
+            self._resize: bool = False
+
+        @overrides
+        def enterEvent(self, event: QEvent) -> None:
+            if not QApplication.overrideCursor():
+                QApplication.setOverrideCursor(Qt.SizeAllCursor)
+
+        @overrides
+        def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+            if self._pressedPoint:
+                x_diff = event.pos().x() - self._pressedPoint.x()
+                y_diff = event.pos().y() - self._pressedPoint.y()
+                # print(f' x diff {x_diff}, y diff {y_diff}')
+                if self._resize:
+                    self.setGeometry(self.geometry().x() + x_diff, self.geometry().y() + y_diff,
+                                     self.width(),
+                                     self.height())
+                    self.setFixedSize(self.geometry().width() - x_diff, self.geometry().height() - y_diff)
+                    # print(self.geometry())
+                elif 0 < self.geometry().x() + x_diff \
+                        and self.geometry().x() + x_diff + self.width() < self.parent().width() \
+                        and 0 < self.geometry().y() + y_diff \
+                        and self.geometry().y() + y_diff + self.height() < self.parent().height():
+                    self.setGeometry(self.geometry().x() + x_diff, self.geometry().y() + y_diff, self.width(),
+                                     self.height())
+
+            else:
+                if (event.pos().x() < self.cornerRange and event.pos().y() < self.cornerRange) or (
+                        event.pos().x() > self.width() - self.cornerRange and event.pos().y() > self.height() - self.cornerRange):
+                    self._resize = True
+                    QApplication.changeOverrideCursor(Qt.SizeFDiagCursor)
+                elif (event.pos().x() > self.width() - self.cornerRange and event.pos().y() < self.cornerRange) or (
+                        event.pos().x() < self.cornerRange and event.pos().y() > self.height() - self.cornerRange):
+                    self._resize = True
+                    QApplication.changeOverrideCursor(Qt.SizeBDiagCursor)
+                else:
+                    self._resize = False
+                    QApplication.changeOverrideCursor(Qt.SizeAllCursor)
+
+        @overrides
+        def leaveEvent(self, event: QEvent) -> None:
+            QApplication.restoreOverrideCursor()
+            self._pressedPoint = None
+
+        @overrides
+        def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+            self._pressedPoint = event.pos()
+            # print(f'press {self._pressedPoint}')
+
+        @overrides
+        def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
+            self._pressedPoint = None
