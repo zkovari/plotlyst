@@ -209,14 +209,11 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
 
     def _updatePreview(self):
         self.cropped = QPixmap(self.frame.width(), self.frame.height())
-        # print(f'cropped size {cropped.width()} {cropped.height()}, frame size {self.frame.rect()}')
 
         painter = QPainter(self.cropped)
         painter.setRenderHint(QPainter.Antialiasing)
         cropped_rect = self.scaled.rect()
-        # pos = self.frame.mapToParent(self.frame.pos())
         print(f'frame pos {self.frame.pos()}')
-        # print(f'in parent pos {pos}')
         cropped_rect.setX(self.frame.pos().x())
         cropped_rect.setY(self.frame.pos().y())
         cropped_rect.setWidth(self.cropped.width())
@@ -251,18 +248,18 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
                 x_diff = event.pos().x() - self._pressedPoint.x()
                 y_diff = event.pos().y() - self._pressedPoint.y()
                 if self._resizeCorner == Corner.TopLeft:
-                    self.setGeometry(self.geometry().x() + x_diff, self.geometry().y() + y_diff,
-                                     self.width(),
+                    self.setGeometry(self.geometry().x() + x_diff, self.geometry().y() + y_diff, self.width(),
                                      self.height())
                     self.setFixedSize(self.geometry().width() - x_diff, self.geometry().height() - y_diff)
                 elif self._resizeCorner == Corner.TopRight:
-                    # print(f' diff x {x_diff} y {y_diff}')
                     self.setGeometry(self.geometry().x(), self.geometry().y() + y_diff, self.width(), self.height())
                     self.setFixedSize(self._originalSize.width() + x_diff, self.geometry().height() - y_diff)
                 elif self._resizeCorner == Corner.BottomRight:
-                    pass
+                    self.setFixedSize(self._originalSize.width() + x_diff, self._originalSize.height() + y_diff)
                 elif self._resizeCorner == Corner.BottomLeft:
-                    pass
+                    self.setGeometry(self.geometry().x() + x_diff, self.geometry().y(), self.width(), self.height())
+                    self.setFixedSize(self.geometry().width() - x_diff, self._originalSize.height() + y_diff)
+
                 elif self.height() == self.parent().height() and self._xMovementAllowed(x_diff):
                     self.setGeometry(self.geometry().x() + x_diff, self.geometry().y(), self.width(), self.height())
                 elif self.width() == self.parent().width() and self._yMovementAllowed(y_diff):
@@ -306,7 +303,6 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
             self._pressedPoint = event.pos()
             self._originalSize = self.geometry()
-            # print(f'press {self._pressedPoint}')
 
         @overrides
         def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:

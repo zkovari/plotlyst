@@ -1226,8 +1226,6 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
             QMessageBox.warning(self.widget, 'Error while loading image', 'Could not load image')
             return
 
-        # pixmap = QPixmap()
-        # pixmap.fromImage(image)
         pixmap = QPixmap.fromImage(image)
         crop = ImageCropDialog().display(pixmap)
         if crop:
