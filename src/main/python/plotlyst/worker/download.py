@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import ssl
+
 import nltk
 from PyQt5.QtCore import QRunnable
 from overrides import overrides
@@ -28,4 +30,13 @@ class NltkResourceDownloadWorker(QRunnable):
 
     @overrides
     def run(self) -> None:
+        # print(nltk.downloader._downloader.status('punkt', download_dir=app_env.nltk_data))
+
+        try:
+            _create_unverified_https_context = ssl._create_unverified_context
+        except AttributeError:
+            pass
+        else:
+            ssl._create_unverified_context = _create_unverified_https_context
+
         nltk.download('punkt', download_dir=app_env.nltk_data)
