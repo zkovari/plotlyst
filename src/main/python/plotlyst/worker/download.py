@@ -30,8 +30,6 @@ class NltkResourceDownloadWorker(QRunnable):
 
     @overrides
     def run(self) -> None:
-        # print(nltk.downloader._downloader.status('punkt', download_dir=app_env.nltk_data))
-
         try:
             _create_unverified_https_context = ssl._create_unverified_context
         except AttributeError:
