@@ -21,7 +21,6 @@ import os
 import urllib.request
 import zipfile
 
-import nltk
 from PyQt5.QtCore import QRunnable
 from overrides import overrides
 
@@ -32,12 +31,11 @@ class NltkResourceDownloadWorker(QRunnable):
 
     @overrides
     def run(self) -> None:
-        status = nltk.downloader._downloader.status('punkt', download_dir=app_env.nltk_data)
-        if status == nltk.downloader.Downloader.INSTALLED:
+        tokenizers_path = os.path.join(app_env.nltk_data, 'tokenizers')
+        if os.path.exists(os.path.join(tokenizers_path, 'punkt')):
             print('Resource punkt is already present. Skip downloading.')
             return
-
-        tokenizers_path = os.path.join(app_env.nltk_data, 'tokenizers')
+        
         os.makedirs(tokenizers_path, exist_ok=True)
 
         punkt_zip_path = os.path.join(tokenizers_path, 'punkt.zip')
