@@ -17,7 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import ssl
+import os
+import urllib.request
+import zipfile
 
 import nltk
 from PyQt5.QtCore import QRunnable
@@ -30,11 +32,16 @@ class NltkResourceDownloadWorker(QRunnable):
 
     @overrides
     def run(self) -> None:
-        try:
-            _create_unverified_https_context = ssl._create_unverified_context
-        except AttributeError:
-            pass
-        else:
-            ssl._create_unverified_context = _create_unverified_https_context
+        status = nltk.downloader._downloader.status('punkt', download_dir=app_env.nltk_data)
+        if status == nltk.downloader.Downloader.INSTALLED:
+            print('Resource punkt is already present. Skip downloading.')
+            return
 
-        nltk.download('punkt', download_dir=app_env.nltk_data)
+        tokenizers_path = os.path.join(app_env.nltk_data, 'tokenizers')
+        os.makedirs(tokenizers_path, exist_ok=True)
+
+        punkt_zip_path = os.path.join(tokenizers_path, 'punkt.zip')
+        urllib.request.urlretrieve('https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip',
+                                   punkt_zip_path)
+        with zipfile.ZipFile(punkt_zip_path) as zip_ref:
+            zip_ref.extractall(tokenizers_path)
