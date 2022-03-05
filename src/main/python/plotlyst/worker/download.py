@@ -21,9 +21,11 @@ import nltk
 from PyQt5.QtCore import QRunnable
 from overrides import overrides
 
+from src.main.python.plotlyst.env import app_env
+
 
 class NltkResourceDownloadWorker(QRunnable):
 
     @overrides
     def run(self) -> None:
-        nltk.download('punkt')
+        nltk.download('punkt', download_dir=app_env.nltk_data)

@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from src.main.python.plotlyst.resources import resource_registry
 
 try:
     import argparse
@@ -30,6 +29,7 @@ try:
     from overrides import overrides
 
     from src.main.python.plotlyst.env import AppMode, app_env
+    from src.main.python.plotlyst.resources import resource_registry
     from src.main.python.plotlyst.settings import settings
     from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
     from src.main.python.plotlyst.worker.persistence import flush_or_fail
