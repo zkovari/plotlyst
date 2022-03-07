@@ -85,10 +85,11 @@ class CharacterLabel(Label):
 
         role = self.character.role
         if role:
-            self.lblRole = QLabel()
-            self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
-            self.layout().addWidget(vline())
-            self.layout().addWidget(self.lblRole)
+            if not self.character.prefs.avatar.use_role:
+                self.lblRole = QLabel()
+                self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
+                self.layout().addWidget(vline())
+                self.layout().addWidget(self.lblRole)
             border_color = role.icon_color
         else:
             border_color = '#bad7f2'
