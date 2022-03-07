@@ -21,6 +21,7 @@ import os
 from enum import Enum
 from typing import Optional
 
+import nltk
 from fbs_runtime import platform
 
 from src.main.python.plotlyst.core.domain import Novel
@@ -35,6 +36,10 @@ class AppEnvironment:
     def __init__(self):
         self._mode: AppMode = AppMode.PROD
         self._novel: Optional[Novel] = None
+        self._plotlyst_cache_dir = os.path.join(os.path.expanduser('~'), '.cache', 'plotlyst')
+        self._nltk_data = os.path.join(self._plotlyst_cache_dir, 'nltk')
+        nltk.data.path.insert(0, self._nltk_data)
+        os.environ['LTP_PATH'] = os.path.join(self._plotlyst_cache_dir, 'language_tool_python')
 
     @property
     def mode(self) -> AppMode:
@@ -51,6 +56,10 @@ class AppEnvironment:
     @novel.setter
     def novel(self, novel: Novel):
         self._novel = novel
+
+    @property
+    def nltk_data(self) -> str:
+        return self._nltk_data
 
     def is_dev(self) -> bool:
         return self._mode == AppMode.DEV

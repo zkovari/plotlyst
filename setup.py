@@ -22,6 +22,7 @@ REQUIREMENTS: dict = {
         'striprtf==0.0.19',
         'textstat==0.7.2',
         'nltk==3.7',
+        'requests==2.27.1',
     ],
     'test': [
         'pytest==6.2.4',

@@ -21,6 +21,7 @@ import datetime
 from functools import partial
 from typing import Optional
 
+import nltk
 import qtanim
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder
@@ -326,12 +327,34 @@ class NightModeHighlighter(QSyntaxHighlighter):
         self.setFormat(0, len(text), self._nightFormat)
 
 
+class WordTagHighlighter(QSyntaxHighlighter):
+    def __init__(self, textedit: QTextEdit):
+        super(WordTagHighlighter, self).__init__(textedit.document())
+
+        self._adverbFormat = QTextCharFormat()
+        self._adverbFormat.setBackground(QColor('#0a9396'))
+
+    @overrides
+    def highlightBlock(self, text: str) -> None:
+        tokens = nltk.word_tokenize(text)
+        tags = nltk.pos_tag(tokens)
+
+        word_start = 0
+        for word, tag in tags:
+            if tag == 'RB':
+                i = text.index(word, word_start)
+                if i:
+                    self.setFormat(i, len(word), self._adverbFormat)
+            word_start += len(word)
+
+
 class ManuscriptTextEditor(DocumentTextEditor):
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
 
         self._sentenceHighlighter: Optional[SentenceHighlighter] = None
         self._nightModeHighligter: Optional[NightModeHighlighter] = None
+        self._wordTagHighlighter: Optional[WordTagHighlighter] = None
 
         if app_env.is_mac():
             family = 'Palatino'
@@ -341,22 +364,32 @@ class ManuscriptTextEditor(DocumentTextEditor):
         self._setDefaultStyleSheet()
 
     def setNightModeEnabled(self, enabled: bool):
+        self.clearHighlights()
         if enabled:
-            self.setHighlighterEnabled(False)
             transparent(self.textEdit)
             self._nightModeHighligter = NightModeHighlighter(self.textEdit)
-        elif self._nightModeHighligter:
+
+    def setSentenceHighlighterEnabled(self, enabled: bool):
+        self.clearHighlights()
+        if enabled:
+            self._sentenceHighlighter = SentenceHighlighter(self.textEdit)
+
+    def setWordTagHighlighterEnabled(self, enabled: bool):
+        self.clearHighlights()
+        if enabled:
+            self._wordTagHighlighter = WordTagHighlighter(self.textEdit)
+
+    def clearHighlights(self):
+        if self._sentenceHighlighter is not None:
+            self._sentenceHighlighter.deleteLater()
+            self._sentenceHighlighter = None
+        if self._nightModeHighligter is not None:
             self._nightModeHighligter.deleteLater()
             self._nightModeHighligter = None
             self._setDefaultStyleSheet()
-
-    def setHighlighterEnabled(self, enabled: bool):
-        if enabled:
-            self.setNightModeEnabled(False)
-            self._sentenceHighlighter = SentenceHighlighter(self.textEdit)
-        elif self._sentenceHighlighter is not None:
-            self._sentenceHighlighter.deleteLater()
-            self._sentenceHighlighter = None
+        if self._wordTagHighlighter is not None:
+            self._wordTagHighlighter.deleteLater()
+            self._wordTagHighlighter = None
 
     def _setDefaultStyleSheet(self):
         self.textEdit.setStyleSheet('QTextEdit {border: 1px; background-color: #f8f9fa;}')
