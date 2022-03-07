@@ -23,7 +23,6 @@ from typing import Any, List, Optional
 
 import emoji
 from PyQt5.QtCore import QModelIndex, Qt, QMimeData, QByteArray
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 from anytree import Node
 from overrides import overrides
@@ -264,7 +263,7 @@ class _SceneBuilderTreeModel(TreeItemModel):
                 if node.character:
                     if isinstance(node.character, NpcCharacter):
                         return IconRegistry.portrait_icon()
-                    return QIcon(avatars.pixmap(node.character))
+                    return avatars.avatar(node.character)
 
     @overrides
     def mimeData(self, indexes: List[QModelIndex]) -> QMimeData:

@@ -36,7 +36,7 @@ from src.main.python.plotlyst.view.character_editor import CharacterEditor
 from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
 from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
 
@@ -192,14 +192,11 @@ class CharactersView(AbstractNovelView):
 
     def _on_close_editor(self):
         character = self.editor.character
-        if not character.avatar and character.name:
-            avatars.update(character)
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.editor.widget.deleteLater()
         self.editor = None
-        if character.name:
-            emit_event(CharacterChangedEvent(self, character))
+        emit_event(CharacterChangedEvent(self, character))
         emit_event(ToggleOutlineViewTitle(self, visible=True))
         self.refresh()
 

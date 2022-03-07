@@ -121,6 +121,39 @@ FEMALE = 'female'
 
 
 @dataclass
+class AvatarPreferences:
+    use_image: bool = True
+    use_initial: bool = False
+    use_role: bool = False
+    use_custom_icon: bool = False
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+
+    def allow_initial(self):
+        self.__allow(initial=True)
+
+    def allow_image(self):
+        self.__allow(image=True)
+
+    def allow_role(self):
+        self.__allow(role=True)
+
+    def allow_custom_icon(self):
+        self.__allow(custom=True)
+
+    def __allow(self, image: bool = False, initial: bool = False, role: bool = False, custom: bool = False):
+        self.use_image = image
+        self.use_initial = initial
+        self.use_role = role
+        self.use_custom_icon = custom
+
+
+@dataclass
+class CharacterPreferences:
+    avatar: AvatarPreferences = AvatarPreferences()
+
+
+@dataclass
 class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -132,6 +165,7 @@ class Character:
     goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional['Document'] = None
     journals: List['Document'] = field(default_factory=list)
+    prefs: CharacterPreferences = CharacterPreferences()
 
     def enneagram(self) -> Optional['SelectionItem']:
         for value in self.template_values:

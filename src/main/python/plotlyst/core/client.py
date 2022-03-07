@@ -37,7 +37,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
     Location, default_location_profiles, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    SelectionItem
+    SelectionItem, CharacterPreferences
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -120,6 +120,7 @@ class CharacterInfo:
     goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional[Document] = None
     journals: List[Document] = field(default_factory=list)
+    prefs: CharacterPreferences = CharacterPreferences()
 
 
 @dataclass
@@ -387,7 +388,7 @@ class JsonClient:
                 character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role,
                                       template_values=info.template_values,
                                       backstory=info.backstory, goals=info.goals, document=info.document,
-                                      journals=info.journals)
+                                      journals=info.journals, prefs=info.prefs)
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -527,7 +528,7 @@ class JsonClient:
                                   template_values=char.template_values,
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,
-                                  journals=char.journals)
+                                  journals=char.journals, prefs=char.prefs)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):

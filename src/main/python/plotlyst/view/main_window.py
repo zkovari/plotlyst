@@ -122,7 +122,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._threadpool = QThreadPool()
         language_tool_setup_worker = LanguageToolServerSetupWorker()
         download_worker = NltkResourceDownloadWorker()
-        self._threadpool.start(download_worker)
+        if not app_env.test_env():
+            self._threadpool.start(download_worker)
 
         if self.novel:
             language_tool_setup_worker.lang = self.novel.lang_settings.lang

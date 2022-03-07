@@ -37,9 +37,9 @@ from src.main.python.plotlyst.view.timeline_view import TimelineView
 
 
 def show_widget(qtbot, widget):
-    qtbot.addWidget(widget)
     widget.show()
-    qtbot.waitExposed(widget, timeout=5000)
+    qtbot.addWidget(widget)
+    # qtbot.waitExposed(widget, timeout=5000)
 
 
 def click_on_item(qtbot, view: QAbstractItemView, row: int, column: int = 0, parent=None, modifier=Qt.NoModifier):

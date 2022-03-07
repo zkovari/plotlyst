@@ -141,8 +141,8 @@ class CharacterEditor:
 
     def _name_edited(self, text: str):
         self.character.name = text
-        if not self.character.avatar:
-            self.ui.wdgAvatar.setCharacter(self.character)
+        if self.character.prefs.avatar.use_initial:
+            self.ui.wdgAvatar.updateAvatar()
 
     def _tab_changed(self, index: int):
         if self.ui.tabAttributes.widget(index) is self.ui.tabNotes:
@@ -156,6 +156,8 @@ class CharacterEditor:
             role.icon = 'fa5s.chess-queen'
         self.character.role = role
         self._display_role()
+        if self.character.prefs.avatar.use_role:
+            self.ui.wdgAvatar.updateAvatar()
 
     def _display_role(self):
         self.ui.btnRole.setText(self.character.role.text)
@@ -177,7 +179,7 @@ class CharacterEditor:
         self._btnRoleEventFilter.enterOpacity = 0.8
 
     def _avatar_updated(self):
-        avatars.update(self.character)
+        avatars.update_image(self.character)
 
     def _gender_clicked(self, btn: QAbstractButton):
         self.ui.btnMoreGender.setHidden(True)

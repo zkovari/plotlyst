@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex, QTimer
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
 from qthandy import opaque, incr_font, bold, btn_popup
@@ -148,7 +147,7 @@ class ManuscriptView(AbstractNovelView):
 
             self.ui.lblSceneTitle.setText(node.scene.title_or_index(self.novel))
             if node.scene.pov:
-                self.ui.btnPov.setIcon(QIcon(avatars.pixmap(node.scene.pov)))
+                self.ui.btnPov.setIcon(avatars.avatar(node.scene.pov))
                 self.ui.btnPov.setVisible(True)
             else:
                 self.ui.btnPov.setHidden(True)

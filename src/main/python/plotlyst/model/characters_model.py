@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Any, Optional
 
 from PyQt5.QtCore import QModelIndex, Qt, QVariant, pyqtSignal
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SelectionItem, enneagram_field
@@ -62,7 +62,7 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
             if role == Qt.DisplayRole or role == self.SortRole:
                 return character.name
             if role == Qt.DecorationRole:
-                return QIcon(avatars.pixmap(character))
+                return avatars.avatar(character)
         if index.column() == self.ColRole:
             return self._dataForSelectionItem(character.role, role, displayText=False)
         if index.column() == self.ColEnneagram:

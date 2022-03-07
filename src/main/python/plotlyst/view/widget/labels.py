@@ -78,17 +78,18 @@ class CharacterLabel(Label):
         self.character = character
         self.btnAvatar = QToolButton()
         self.btnAvatar.setStyleSheet('border: 0px;')
-        self.btnAvatar.setIcon(QIcon(avatars.pixmap(self.character)))
+        self.btnAvatar.setIcon(QIcon(avatars.avatar(self.character)))
         self.btnAvatar.setIconSize(QSize(24, 24))
         self.layout().addWidget(self.btnAvatar)
         self.layout().addWidget(QLabel(truncate_string(character.name)))
 
         role = self.character.role
         if role:
-            self.lblRole = QLabel()
-            self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
-            self.layout().addWidget(vline())
-            self.layout().addWidget(self.lblRole)
+            if not self.character.prefs.avatar.use_role:
+                self.lblRole = QLabel()
+                self.lblRole.setPixmap(IconRegistry.from_name(role.icon, role.icon_color).pixmap(QSize(24, 24)))
+                self.layout().addWidget(vline())
+                self.layout().addWidget(self.lblRole)
             border_color = role.icon_color
         else:
             border_color = '#bad7f2'
@@ -104,7 +105,7 @@ class CharacterAvatarLabel(QToolButton):
     def __init__(self, character: Character, size: int = 24, parent=None):
         super(CharacterAvatarLabel, self).__init__(parent)
         self.setStyleSheet('border: 0px;')
-        self.setIcon(QIcon(avatars.pixmap(character)))
+        self.setIcon(avatars.avatar(character))
         self.setIconSize(QSize(size, size))
 
 

@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt5.QtCore import QModelIndex, Qt
-from PyQt5.QtGui import QIcon, QBrush, QColor
+from PyQt5.QtGui import QBrush, QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Conflict, ConflictType, Tag, Goal
@@ -36,7 +36,7 @@ class CharactersScenesDistributionTableModel(DistributionModel):
     @overrides
     def _dataForTag(self, index: QModelIndex, role: int = Qt.DisplayRole):
         if role == Qt.DecorationRole:
-            return QIcon(avatars.pixmap(self.novel.characters[index.row()]))
+            return avatars.avatar(self.novel.characters[index.row()])
         if role == Qt.ToolTipRole:
             return self.novel.characters[index.row()].name
         elif role == Qt.DisplayRole or role == self.SortRole:
@@ -94,7 +94,7 @@ class ConflictScenesDistributionTableModel(DistributionModel):
         conflict: Conflict = self.novel.conflicts[index.row()]
         if role == Qt.DecorationRole:
             if conflict.type == ConflictType.CHARACTER:
-                return QIcon(avatars.pixmap(conflict.conflicting_character(self.novel)))
+                return avatars.avatar(conflict.conflicting_character(self.novel))
             elif conflict.type == ConflictType.SELF:
                 return IconRegistry.conflict_self_icon()
             elif conflict.type == ConflictType.NATURE:
@@ -115,7 +115,7 @@ class ConflictScenesDistributionTableModel(DistributionModel):
     def _dataForMeta(self, index: QModelIndex, role: int = Qt.DisplayRole):
         conflict: Conflict = self.novel.conflicts[index.row()]
         if role == Qt.DecorationRole:
-            return QIcon(avatars.pixmap(conflict.character(self.novel)))
+            return avatars.avatar(conflict.character(self.novel))
 
     @overrides
     def _match_by_row_col(self, row: int, column: int):
