@@ -1242,6 +1242,10 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
 
         if prefs.icon:
             self.btnCustomIcon.setIcon(IconRegistry.from_name(prefs.icon, prefs.icon_color))
+        if self.character.role:
+            self.btnRole.setIcon(IconRegistry.from_name(self.character.role.icon, self.character.role.icon_color))
+        if avatars.has_name_initial_icon(self.character):
+            self.btnInitial.setIcon(avatars.name_initial_icon(self.character))
         if self.character.avatar:
             self.btnImage.setIcon(QIcon(avatars.image(self.character)))
 
@@ -1327,7 +1331,10 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
 
     def updateAvatar(self):
         self.btnPov.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        self.btnPov.setIconSize(QSize(168, 168))
+        if self._character.prefs.avatar.use_role:
+            self.btnPov.setIconSize(QSize(132, 132))
+        else:
+            self.btnPov.setIconSize(QSize(168, 168))
         avatar = avatars.avatar(self._character, fallback=False)
         if avatar:
             self.btnPov.setIcon(avatar)
