@@ -73,6 +73,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
         self.ui.btnAnalysis.toggled.connect(self._analysis_toggled)
         self.ui.btnAnalysis.clicked.connect(self._analysis_clicked)
+        self.ui.wdgReadability.cbAdverbs.toggled.connect(self._adverb_highlight_toggled)
         self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
         self._analysis_toggled(self.ui.btnAnalysis.isChecked())
 
@@ -100,6 +101,7 @@ class ManuscriptView(AbstractNovelView):
 
     def restore_editor(self, editor: ManuscriptTextEditor):
         self.ui.wdgEditor.layout().insertWidget(0, editor)
+        self.ui.wdgReadability.cbAdverbs.setChecked(False)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
@@ -180,6 +182,7 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.cbSpellCheck.setChecked(False)
                 emit_critical(language_tool_proxy.error)
             else:
+                self.ui.wdgReadability.cbAdverbs.setChecked(False)
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 self.ui.textEdit.asyncCheckGrammer()
         else:
@@ -194,6 +197,14 @@ class ManuscriptView(AbstractNovelView):
             return
 
         self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.textEdit.document())
+
+    def _adverb_highlight_toggled(self, toggled: bool):
+        if toggled:
+            if self.ui.cbSpellCheck.isChecked():
+                self.ui.cbSpellCheck.setChecked(False)
+                self.ui.textEdit.setGrammarCheckEnabled(False)
+                self.ui.textEdit.checkGrammar()
+        self.ui.textEdit.setWordTagHighlighterEnabled(toggled)
 
     def _language_changed(self, lang: str):
         emit_info('Application is shutting down. Persist workspace...')

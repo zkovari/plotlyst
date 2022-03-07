@@ -207,7 +207,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if self.btnNightMode.isChecked():
                 self.btnNightMode.setChecked(False)
         editor: ManuscriptTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
-        editor.setHighlighterEnabled(toggled)
+        editor.setSentenceHighlighterEnabled(toggled)
 
     def _toggle_manuscript_night_mode(self, toggled: bool):
         if toggled:
