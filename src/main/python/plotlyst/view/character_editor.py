@@ -156,6 +156,8 @@ class CharacterEditor:
             role.icon = 'fa5s.chess-queen'
         self.character.role = role
         self._display_role()
+        if self.character.prefs.avatar.use_role:
+            self.ui.wdgAvatar.updateAvatar()
 
     def _display_role(self):
         self.ui.btnRole.setText(self.character.role.text)
