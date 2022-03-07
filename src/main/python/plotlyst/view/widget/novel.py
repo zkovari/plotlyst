@@ -22,7 +22,6 @@ from functools import partial
 from typing import Optional, List
 
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView
 from overrides import overrides
 from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox
@@ -65,7 +64,7 @@ class _StoryStructureButton(QPushButton):
         self.setCursor(Qt.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
         if self._structure.character_id:
-            self.setIcon(QIcon(avatars.pixmap(self._structure.character(self.novel))))
+            self.setIcon(avatars.avatar(self._structure.character(self.novel)))
         elif self._structure.icon:
             self.setIcon(IconRegistry.from_name(self._structure.icon, self._structure.icon_color))
 
@@ -143,7 +142,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
                     self.lblSceneTitle.setText(self.scene.title)
                     self.textSynopsis.setText(self.scene.synopsis)
                     if self.scene.pov:
-                        self.btnPov.setIcon(QIcon(avatars.pixmap(self.scene.pov)))
+                        self.btnPov.setIcon(avatars.avatar(self.scene.pov))
                     if self.scene.type == SceneType.ACTION:
                         self.btnSceneType.setIcon(
                             IconRegistry.action_scene_icon(self.scene.outcome_resolution(),

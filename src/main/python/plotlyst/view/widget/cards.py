@@ -26,7 +26,7 @@ import emoji
 import qtanim
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
-from PyQt5.QtGui import QIcon, QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor
+from PyQt5.QtGui import QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor
 from PyQt5.QtWidgets import QFrame, QApplication, QAction
 from fbs_runtime import platform
 from overrides import overrides
@@ -268,7 +268,7 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
         self.btnStage.clicked.connect(self.select)
 
         if scene.pov:
-            self.btnPov.setIcon(QIcon(avatars.pixmap(scene.pov)))
+            self.btnPov.setIcon(avatars.avatar(scene.pov))
         for char in scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 

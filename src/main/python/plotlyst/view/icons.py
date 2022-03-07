@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict, Optional
 
 import qtawesome
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QLabel
 
@@ -504,57 +504,75 @@ class IconRegistry:
 
 class AvatarsRegistry:
     def __init__(self):
-        self._avatars: Dict[str, QPixmap] = {}
+        self._images: Dict[Character, QPixmap] = {}
 
-    def pixmap(self, character: Character) -> QPixmap:
-        if str(character.id) not in self._avatars:
-            if character.avatar:
-                array = character.avatar
-                pixmap = QPixmap()
-                if array:
-                    pixmap.loadFromData(array)
-                self._avatars[str(character.id)] = rounded_pixmap(pixmap)
-            else:
-                icon = self.name_initial_icon(character)
-                self._avatars[str(character.id)] = icon.pixmap(QSize(64, 64))
+    def avatar(self, character: Character, fallback: bool = True) -> QIcon:
+        if character.prefs.avatar.use_image and character.avatar:
+            return QIcon(self.image(character))
+        elif character.prefs.avatar.use_role and character.role:
+            return IconRegistry.from_name(character.role.icon, character.role.icon_color)
+        elif character.prefs.avatar.use_custom_icon and character.prefs.avatar.icon:
+            return IconRegistry.from_name(character.prefs.avatar.icon, character.prefs.avatar.icon_color)
+        elif character.prefs.avatar.use_initial and self.has_name_initial_icon(character):
+            return self.name_initial_icon(character, fallback)
 
-        return self._avatars[str(character.id)]
+        if fallback:
+            return self._dummy_avatar()
+        else:
+            return None
+
+    def image(self, character: Character) -> QPixmap:
+        if character in self._images.keys():
+            return self._images[character]
+
+        pixmap = QPixmap()
+        if not character.avatar:
+            return pixmap
+
+        pixmap.loadFromData(character.avatar)
+        rounded = rounded_pixmap(pixmap)
+        self._images[character] = rounded
+
+        return rounded
 
     def has_name_initial_icon(self, character: Character) -> bool:
         if character.name and (character.name[0].isnumeric() or character.name[0].isalpha()):
             return True
         return False
 
-    def name_initial_icon(self, character: Character) -> QIcon:
+    def name_initial_icon(self, character: Character, fallback: bool = True) -> QIcon:
         _sum = sum([ord(x) for x in character.name])
         color = CHARACTER_INITIAL_AVATAR_COLOR_CODES[_sum % len(CHARACTER_INITIAL_AVATAR_COLOR_CODES)]
 
         if not character.name:
-            return IconRegistry.character_icon(color_on='black')
+            return self._dummy_avatar()
 
         if character.name[0].isnumeric():
             icon = f'mdi.numeric-{int(character.name[0])}-circle-outline'
         elif character.name[0].isalpha():
             icon = f'mdi.alpha-{character.name[0].lower()}-circle-outline'
+        elif fallback:
+            return self._dummy_avatar()
         else:
-            return IconRegistry.character_icon(color_on='black')
+            return None
 
-        return qtawesome.icon(icon, options=[{'scale_factor': 1.2}], color=color)
+        return IconRegistry.from_name(icon, color)
 
-    def update(self, character: Character):
-        if str(character.id) in self._avatars.keys():
-            self._avatars.pop(str(character.id))
-        self.pixmap(character)
+    def update_image(self, character: Character):
+        if character in self._images.keys():
+            self._images.pop(character)
+        self.image(character)
+
+    def _dummy_avatar(self) -> QIcon:
+        return IconRegistry.character_icon(color_on='black')
 
 
 avatars = AvatarsRegistry()
 
 
 def set_avatar(label: QLabel, character: Character, size: int = 128):
-    if character.avatar:
-        label.setPixmap(
-            avatars.pixmap(character).scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-    elif character.name:
-        label.setPixmap(avatars.name_initial_icon(character).pixmap(QSize(size, size)))
+    avatar = avatars.avatar(character, fallback=False)
+    if avatar:
+        label.setPixmap(avatar.pixmap(size, size))
     else:
         label.setPixmap(IconRegistry.portrait_icon().pixmap(QSize(size, size)))

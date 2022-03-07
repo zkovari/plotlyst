@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Any
 
 from PyQt5.QtCore import QModelIndex, Qt
-from PyQt5.QtGui import QIcon
 from anytree import Node
 from overrides import overrides
 
@@ -79,7 +78,7 @@ class DocumentsTreeModel(TreeItemModel, ActionBasedTreeModel):
                 return index.internalPointer().document.title
             if role == Qt.DecorationRole:
                 if char:
-                    return QIcon(avatars.pixmap(char))
+                    return avatars.avatar(char)
                 if doc.icon:
                     return IconRegistry.from_name(doc.icon, doc.icon_color)
             return super(DocumentsTreeModel, self).data(index, role)

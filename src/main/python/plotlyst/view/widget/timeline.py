@@ -121,8 +121,7 @@ class TimelineWidget(QWidget):
 
         if scene.pov:
             if scene.pov.avatar:
-                painter.drawPixmap(QPoint(x, y - 10), avatars.pixmap(scene.pov).scaled(24, 24, Qt.KeepAspectRatio,
-                                                                                       Qt.SmoothTransformation))
+                painter.drawPixmap(QPoint(x, y - 10), avatars.avatar(scene.pov).pixmap(24, 24))
             else:
                 painter.setPen(QPen(Qt.white, 1, Qt.SolidLine))
                 painter.setBrush(Qt.white)

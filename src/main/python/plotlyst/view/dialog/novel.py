@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from dataclasses import dataclass
 from typing import Optional
 
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Novel, Plot, PlotType, Character
@@ -66,7 +65,7 @@ class PlotEditorDialog(QDialog, Ui_PlotEditorDialog):
         self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
 
         for char in self.novel.characters:
-            self.cbCharacter.addItem(QIcon(avatars.pixmap(char)), char.name, char)
+            self.cbCharacter.addItem(avatars.avatar(char), char.name, char)
         if self.cbCharacter.count() == 0:
             self.cbCharacter.addItem('No character available yet', None)
 

@@ -56,9 +56,10 @@ class ScenesViewDelegate(QStyledItemDelegate):
                                    QSize(self.avatarSize, self.avatarSize)))
 
     def _drawAvatar(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', x: int, character: Character):
+        return
         if character.avatar:
             painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
-                               avatars.pixmap(character).scaled(self.avatarSize, self.avatarSize, Qt.KeepAspectRatio,
+                               avatars.avatar(character).scaled(self.avatarSize, self.avatarSize, Qt.KeepAspectRatio,
                                                                 Qt.SmoothTransformation))
         else:
             painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,

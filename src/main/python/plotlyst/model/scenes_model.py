@@ -23,7 +23,7 @@ from typing import List, Any, Dict, Optional
 import emoji
 from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMimeData, QByteArray, pyqtSignal, \
     QAbstractTableModel
-from PyQt5.QtGui import QIcon, QFont, QBrush, QColor
+from PyQt5.QtGui import QFont, QBrush, QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
@@ -125,7 +125,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                     return self._reaction_icon
             elif index.column() == self.ColPov:
                 if scene.pov:
-                    return QIcon(avatars.pixmap(scene.pov))
+                    return avatars.avatar(scene.pov)
         elif role == Qt.ToolTipRole:
             if index.column() == self.ColPov:
                 return scene.pov.name if scene.pov else ''
@@ -370,10 +370,7 @@ class SceneConflictsModel(SelectionItemsModel):
         if index.column() == self.ColIcon:
             if role == Qt.DecorationRole:
                 if conflict.conflicting_character(self.novel):
-                    if conflict.character(self.novel).avatar:
-                        return QIcon(avatars.pixmap(conflict.conflicting_character(self.novel)))
-                    else:
-                        return avatars.name_initial_icon(conflict.conflicting_character(self.novel))
+                    return avatars.avatar(conflict.conflicting_character(self.novel))
                 else:
                     return IconRegistry.conflict_type_icon(conflict.type)
         return super(SceneConflictsModel, self).data(index, role)

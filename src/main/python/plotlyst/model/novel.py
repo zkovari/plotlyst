@@ -21,7 +21,6 @@ from abc import abstractmethod
 from typing import Any, List
 
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel
-from PyQt5.QtGui import QIcon
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict, SceneStage, Plot, PlotType, TagType, \
@@ -115,7 +114,7 @@ class NovelPlotsModel(_NovelSelectionItemsModel):
                 if role == Qt.DisplayRole:
                     return character.name
                 if role == Qt.DecorationRole:
-                    return QIcon(avatars.pixmap(character))
+                    return avatars.avatar(character)
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
@@ -219,13 +218,10 @@ class NovelConflictsModel(QAbstractTableModel):
         if role == self.ConflictRole:
             return conflict
         if index.column() == self.ColPov and role == Qt.DecorationRole:
-            return QIcon(avatars.pixmap(conflict.character(self.novel)))
+            return avatars.avatar(conflict.character(self.novel))
         if index.column() == self.ColType and role == Qt.DecorationRole:
             if conflict.conflicting_character(self.novel):
-                if conflict.conflicting_character(self.novel).avatar:
-                    return QIcon(avatars.pixmap(conflict.conflicting_character(self.novel)))
-                else:
-                    return avatars.name_initial_icon(conflict.conflicting_character(self.novel))
+                return avatars.avatar(conflict.conflicting_character(self.novel))
             else:
                 return IconRegistry.conflict_type_icon(conflict.type)
         if index.column() == self.ColPhrase and role == Qt.DisplayRole:

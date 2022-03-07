@@ -194,7 +194,7 @@ class CharacterToolButton(QToolButton):
         super(CharacterToolButton, self).__init__(parent)
         self.character = character
         self.setToolTip(character.name)
-        self.setIcon(QIcon(avatars.pixmap(self.character)))
+        self.setIcon(avatars.avatar(self.character))
         self.setCheckable(True)
         self.setCursor(Qt.PointingHandCursor)
 
@@ -343,7 +343,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
     def _update_characters(self):
         for char in self.novel.characters:
             if self.agenda.character_id and char.id != self.agenda.character_id:
-                self.cbCharacter.addItem(QIcon(avatars.pixmap(char)), char.name, char)
+                self.cbCharacter.addItem(avatars.avatar(char), char.name, char)
 
     def _type_toggled(self):
         lbl_prefix = 'Character vs.'
@@ -1205,6 +1205,7 @@ class JournalWidget(QWidget, Ui_JournalWidget):
 
 class AvatarSelectors(QWidget, Ui_AvatarSelectors):
     updated = pyqtSignal()
+    selectorChanged = pyqtSignal()
 
     def __init__(self, character: Character, parent=None):
         super(AvatarSelectors, self).__init__(parent)
@@ -1217,6 +1218,44 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
         self.btnInitial.setIcon(IconRegistry.from_name('mdi.alpha-a-circle'))
         self.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))
         self.btnCustomIcon.setIcon(IconRegistry.icons_icon())
+        if character.avatar:
+            pass
+        else:
+            self.btnImage.setHidden(True)
+            if self.character.prefs.avatar.use_image:
+                self.character.prefs.avatar.allow_initial()
+
+        self.btnGroupSelectors.buttonClicked.connect(self._selectorClicked)
+        self.refresh()
+
+    def refresh(self):
+        prefs = self.character.prefs.avatar
+        if prefs.use_image:
+            self.btnImage.setChecked(True)
+            self.btnImage.setVisible(True)
+        elif prefs.use_initial:
+            self.btnInitial.setChecked(True)
+        elif prefs.use_role:
+            self.btnRole.setChecked(True)
+        elif prefs.use_custom_icon:
+            self.btnCustomIcon.setChecked(True)
+
+        if prefs.icon:
+            self.btnCustomIcon.setIcon(IconRegistry.from_name(prefs.icon, prefs.icon_color))
+        if self.character.avatar:
+            self.btnImage.setIcon(QIcon(avatars.image(self.character)))
+
+    def _selectorClicked(self):
+        if self.btnImage.isChecked():
+            self.character.prefs.avatar.allow_image()
+        elif self.btnInitial.isChecked():
+            self.character.prefs.avatar.allow_initial()
+        elif self.btnRole.isChecked():
+            self.character.prefs.avatar.allow_role()
+        elif self.btnCustomIcon.isChecked():
+            self.character.prefs.avatar.allow_custom_icon()
+
+        self.selectorChanged.emit()
 
     def _upload_avatar(self):
         filename: str = QFileDialog.getOpenFileName(None, 'Choose an image', '', 'Images (*.png *.jpg *jpeg)')
@@ -1245,6 +1284,8 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
         buffer.open(QIODevice.WriteOnly)
         image.save(buffer, 'PNG')
         self.character.avatar = array
+        self.character.prefs.avatar.allow_image()
+        self.refresh()
 
         self.updated.emit()
 
@@ -1277,19 +1318,19 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
             raise ValueError('Set character first')
         wdg = AvatarSelectors(self._character)
         wdg.updated.connect(self._uploadedAvatar)
+        wdg.selectorChanged.connect(self.updateAvatar)
         btn_popup(self.btnPov, wdg)
 
     def setCharacter(self, character: Character):
         self._character = character
-        self._updateAvatar()
+        self.updateAvatar()
 
-    def _updateAvatar(self):
+    def updateAvatar(self):
         self.btnPov.setToolButtonStyle(Qt.ToolButtonIconOnly)
         self.btnPov.setIconSize(QSize(168, 168))
-        if self._character.avatar:
-            self.btnPov.setIcon(QIcon(avatars.pixmap(self._character)))
-        elif avatars.has_name_initial_icon(self._character):
-            self.btnPov.setIcon(avatars.name_initial_icon(self._character))
+        avatar = avatars.avatar(self._character, fallback=False)
+        if avatar:
+            self.btnPov.setIcon(avatar)
         else:
             self.reset()
 
@@ -1303,8 +1344,8 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
 
     def _uploadedAvatar(self):
         self._updated = True
-        avatars.update(self._character)
-        self._updateAvatar()
+        avatars.update_image(self._character)
+        self.updateAvatar()
 
 
 class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):

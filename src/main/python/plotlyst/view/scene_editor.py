@@ -24,7 +24,6 @@ import emoji
 import qtanim
 from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
     QAbstractItemModel, Qt
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
     QWidgetAction, QTableView, QMenu
 from fbs_runtime import platform
@@ -93,7 +92,7 @@ class SceneEditor(QObject):
 
         self._povMenu = QMenu(self.ui.wdgPov.btnPov)
         for char in self.novel.characters:
-            self._povMenu.addAction(QIcon(avatars.pixmap(char)), char.name, partial(self._on_pov_changed, char))
+            self._povMenu.addAction(avatars.avatar(char), char.name, partial(self._on_pov_changed, char))
         self.ui.wdgPov.btnPov.setMenu(self._povMenu)
         self.ui.wdgPov.btnPov.setText('Select POV')
 
@@ -412,7 +411,7 @@ class ScenesBuilderDelegate(QStyledItemDelegate):
             editor.setText(node.name)
         elif isinstance(editor, QComboBox):
             for char in self.scene.characters:
-                editor.addItem(QIcon(avatars.pixmap(char)), char.name, char)
+                editor.addItem(avatars.avatar(char), char.name, char)
             editor.activated.connect(lambda: self._commit_and_close(editor))
             editor.showPopup()
 

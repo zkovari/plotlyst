@@ -193,7 +193,7 @@ class CharactersView(AbstractNovelView):
     def _on_close_editor(self):
         character = self.editor.character
         if not character.avatar and character.name:
-            avatars.update(character)
+            avatars.update_image(character)
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.editor.widget.deleteLater()

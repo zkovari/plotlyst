@@ -78,7 +78,7 @@ class CharacterLabel(Label):
         self.character = character
         self.btnAvatar = QToolButton()
         self.btnAvatar.setStyleSheet('border: 0px;')
-        self.btnAvatar.setIcon(QIcon(avatars.pixmap(self.character)))
+        self.btnAvatar.setIcon(QIcon(avatars.avatar(self.character)))
         self.btnAvatar.setIconSize(QSize(24, 24))
         self.layout().addWidget(self.btnAvatar)
         self.layout().addWidget(QLabel(truncate_string(character.name)))
@@ -104,7 +104,7 @@ class CharacterAvatarLabel(QToolButton):
     def __init__(self, character: Character, size: int = 24, parent=None):
         super(CharacterAvatarLabel, self).__init__(parent)
         self.setStyleSheet('border: 0px;')
-        self.setIcon(QIcon(avatars.pixmap(character)))
+        self.setIcon(avatars.avatar(character))
         self.setIconSize(QSize(size, size))
 
 

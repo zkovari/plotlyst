@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from typing import Optional, List
 
 from PyQt5.QtCore import QVariantAnimation, QVariant, pyqtSlot, QEasingCurve, QEventLoop, QTimer
-from PyQt5.QtGui import QIcon, QPalette, QColor
+from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QDialog, QApplication, QLabel
 from overrides import overrides
 
@@ -65,7 +65,7 @@ class CharacterBasedEditionDialog(SceneElementEditionDialog):
     @overrides
     def _setup(self, scene: Scene):
         for char in scene.characters:
-            self.cbCharacter.addItem(QIcon(avatars.pixmap(char)), char.name, char)
+            self.cbCharacter.addItem(avatars.avatar(char), char.name, char)
         self.cbCharacter.insertSeparator(self.cbCharacter.count())
         self.cbCharacter.addItem(IconRegistry.portrait_icon(), 'Other', NpcCharacter('Other'))
 
@@ -77,7 +77,7 @@ class DialogEditionDialog(CharacterBasedEditionDialog):
     @overrides
     def _setup(self, scene: Scene):
         if scene.pov:
-            self.cbCharacter.addItem(QIcon(avatars.pixmap(scene.pov)), scene.pov.name, scene.pov)
+            self.cbCharacter.addItem(avatars.avatar(scene.pov), scene.pov.name, scene.pov)
             self.cbCharacter.insertSeparator(1)
         super()._setup(scene)
 
