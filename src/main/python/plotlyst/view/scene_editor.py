@@ -60,6 +60,7 @@ class SceneEditor(QObject):
         self.ui.setupUi(self.widget)
         self.novel = novel
         self.scene: Optional[Scene] = None
+        self.notes_updated: bool = False
 
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
@@ -187,6 +188,7 @@ class SceneEditor(QObject):
         self.ui.wdgStructure.uncheckActs()
         self.ui.wdgStructure.setActChecked(acts_registry.act(self.scene))
 
+        self.notes_updated = False
         if self.ui.btnNotes.isChecked() or (self.scene.document and self.scene.document.loaded):
             self._update_notes()
         else:
@@ -249,7 +251,9 @@ class SceneEditor(QObject):
         if self.scene.document:
             if not self.scene.document.loaded:
                 json_client.load_document(self.novel, self.scene.document)
-            self.ui.textNotes.setText(self.scene.document.content, self.scene.title, title_read_only=True)
+            if not self.notes_updated:
+                self.ui.textNotes.setText(self.scene.document.content, self.scene.title, title_read_only=True)
+                self.notes_updated = True
         else:
             self.ui.textNotes.clear()
 
