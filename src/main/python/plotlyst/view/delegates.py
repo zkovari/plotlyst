@@ -56,14 +56,8 @@ class ScenesViewDelegate(QStyledItemDelegate):
                                    QSize(self.avatarSize, self.avatarSize)))
 
     def _drawAvatar(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', x: int, character: Character):
-        return
-        if character.avatar:
-            painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
-                               avatars.avatar(character).scaled(self.avatarSize, self.avatarSize, Qt.KeepAspectRatio,
-                                                                Qt.SmoothTransformation))
-        else:
-            painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
-                               avatars.name_initial_icon(character).pixmap(QSize(self.avatarSize, self.avatarSize)))
+        painter.drawPixmap(option.rect.x() + x, option.rect.y() + 8,
+                           avatars.avatar(character).pixmap(self.avatarSize, self.avatarSize))
 
     @overrides
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
