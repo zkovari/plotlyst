@@ -86,7 +86,6 @@ class DocumentsView(AbstractNovelView):
             doc.data_id = casuality.id
             self.repo.update_doc(self.novel, doc)
         if doc_type == DocumentType.STORY_STRUCTURE:
-            print(self.novel.active_story_structure)
             doc.title = self.novel.active_story_structure.title
             doc.icon = self.novel.active_story_structure.icon
             doc.icon_color = self.novel.active_story_structure.icon_color

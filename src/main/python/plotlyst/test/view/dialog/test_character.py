@@ -7,7 +7,7 @@ def test_backstory_editor(qtbot):
     show_widget(qtbot, diag)
 
     assert not diag.btnSave.isEnabled()
-    qtbot.keyClicks(diag.lineKeyphrase, 'Test')
+    diag.lineKeyphrase.setText('Test')
     assert diag.btnSave.isEnabled()
 
     diag.btnVeryUnhappy.click()

@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QLabel, QWidget, QToolButton
 from overrides import overrides
 from qthandy import clear_layout, vspacer, hbox, transparent, vbox
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, SceneType
 from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -100,7 +100,8 @@ class SceneArcWidget(QWidget):
 
         self.btnSceneType = QToolButton()
         transparent(self.btnSceneType)
-        self.btnSceneType.setIcon(IconRegistry.scene_type_icon(scene))
+        if scene.type != SceneType.DEFAULT:
+            self.btnSceneType.setIcon(IconRegistry.scene_type_icon(scene))
         self.lblTitle = QLabel(scene.title_or_index(novel))
         self.btnEndingEmotion = CharacterEmotionButton()
         self.btnEndingEmotion.setValue(scene.agendas[0].ending_emotion)
