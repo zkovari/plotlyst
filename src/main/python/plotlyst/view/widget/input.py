@@ -25,7 +25,7 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
 from PyQt5.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
-    QTextDocument, QTextBlockUserData
+    QTextDocument, QTextBlockUserData, QIcon
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
     QApplication, QToolButton, QLineEdit
 from language_tool_python import LanguageTool
@@ -313,8 +313,15 @@ class CapitalizationEventFilter(QObject):
 class DocumentTextEditor(RichTextEditor):
     def __init__(self, parent=None):
         super(DocumentTextEditor, self).__init__(parent)
-        self.textTitle = AutoAdjustableTextEdit(height=50)
-        self.textTitle.setStyleSheet('border: 0px;')
+        self.textTitle = QLineEdit()
+        self.textTitle.setStyleSheet('border: 0px; icon-size: 40px;')
+        self.textTitle.setFrame(False)
+        title_font = self.textTitle.font()
+        title_font.setBold(True)
+        title_font.setPointSize(40)
+        title_font.setFamily('Arial')
+        self.textTitle.setFont(title_font)
+        self.textTitle.returnPressed.connect(self.textEdit.setFocus)
 
         self.textEdit.setViewportMargins(5, 5, 5, 5)
 
@@ -350,15 +357,16 @@ class DocumentTextEditor(RichTextEditor):
     def _initHighlighter(self) -> QSyntaxHighlighter:
         return GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
 
-    def setText(self, content: str, title: str = '', title_read_only: bool = False):
+    def setText(self, content: str, title: str = '', icon: Optional[QIcon] = None, title_read_only: bool = False):
         self.textEdit.setHtml(content)
         self.textEdit.setFocus()
-        self.textTitle.setHtml(f'''
-                            <style>
-                                h1 {{text-align: center;}}
-                                </style>
-                            <h1>{title}</h1>''')
+        self.textTitle.setText(title)
         self.textTitle.setReadOnly(title_read_only)
+        self.textTitle.addAction(icon, QLineEdit.LeadingPosition)
+
+    def setTitleIcon(self, icon: Optional[QIcon] = None):
+        self.textTitle.addAction(icon, QLineEdit.LeadingPosition)
+        self.textTitle.update()
 
     def setPlaceholderText(self, text: str):
         self.textEdit.setPlaceholderText(text)

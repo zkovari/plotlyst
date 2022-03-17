@@ -38,7 +38,7 @@ from src.main.python.plotlyst.view.common import PopupMenuBuilder
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
 from src.main.python.plotlyst.view.widget.input import RotatedButton, DocumentTextEditor
 
@@ -176,9 +176,14 @@ class DocumentsView(AbstractNovelView):
             self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
             self.textEditor.setGrammarCheckEnabled(False)
             if char:
-                self.textEditor.setText(self._current_doc.content, char.name, title_read_only=True)
+                self.textEditor.setText(self._current_doc.content, char.name, icon=avatars.avatar(char),
+                                        title_read_only=True)
             else:
-                self.textEditor.setText(self._current_doc.content, self._current_doc.title)
+                if self._current_doc.icon:
+                    icon = IconRegistry.from_name(self._current_doc.icon, self._current_doc.icon_color)
+                else:
+                    icon = None
+                self.textEditor.setText(self._current_doc.content, self._current_doc.title, icon)
             self.textEditor.setGrammarCheckEnabled(True)
             self.textEditor.asyncCheckGrammer()
         else:
@@ -198,6 +203,7 @@ class DocumentsView(AbstractNovelView):
             node.document.icon = result[0]
             node.document.icon_color = result[1].name()
             self.repo.update_novel(self.novel)
+            self.textEditor.setTitleIcon(IconRegistry.from_name(node.document.icon, node.document.icon_color))
 
     def _save(self):
         if not self._current_doc:
@@ -208,7 +214,7 @@ class DocumentsView(AbstractNovelView):
 
     def _title_changed(self):
         if self._current_doc:
-            new_title = self.textEditor.textTitle.toPlainText()
+            new_title = self.textEditor.textTitle.text()
             if new_title and new_title != self._current_doc.title:
                 self._current_doc.title = new_title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
