@@ -482,6 +482,8 @@ class ScenesOutlineView(AbstractNovelView):
         menu = QMenu(self.ui.btnStageSelector)
         for stage in self.novel.stages:
             menu.addAction(stage.text, partial(change_stage, stage))
+        menu.addSeparator()
+        menu.addAction(IconRegistry.cog_icon(), 'Customize', self._customize_stages)
         self.ui.btnStageSelector.setMenu(menu)
         if not self.novel.prefs.active_stage_id:
             self.novel.prefs.active_stage_id = self.stagesProgress.stage().id
