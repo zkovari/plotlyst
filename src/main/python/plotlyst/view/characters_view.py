@@ -60,6 +60,7 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 
     def refresh(self):
         self.btnMajor.setText(str(len(self.novel.major_characters())))
+        self.btnSecondary.setText(str(len(self.novel.secondary_characters())))
         self.btnMinor.setText(str(len(self.novel.minor_characters())))
 
 

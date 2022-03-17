@@ -86,7 +86,10 @@
     </widget>
    </item>
    <item>
-    <widget class="SecondaryRoleIcon" name="btnMajor"/>
+    <widget class="MajorRoleIcon" name="btnMajor"/>
+   </item>
+   <item>
+    <widget class="SecondaryRoleIcon" name="btnSecondary"/>
    </item>
    <item>
     <widget class="MinorRoleIcon" name="btnMinor"/>
@@ -107,6 +110,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>MajorRoleIcon</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
   <customwidget>
    <class>SecondaryRoleIcon</class>
    <extends>QPushButton</extends>

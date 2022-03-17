@@ -1692,8 +1692,13 @@ class Novel(NovelDescriptor):
         return chars
 
     def major_characters(self) -> List[Character]:
+        return [x for x in self.characters if x.role and x.role.text in [protagonist_role.text,
+                                                                         antagonist_role.text, deuteragonist_role.text]]
+
+    def secondary_characters(self) -> List[Character]:
         return [x for x in self.characters if
-                x.role and x.role.text not in [tertiary_role.text, henchmen_role.text]]
+                x.role and x.role.text not in [tertiary_role.text, henchmen_role.text, protagonist_role.text,
+                                               antagonist_role.text, deuteragonist_role.text]]
 
     def minor_characters(self) -> List[Character]:
         return [x for x in self.characters if x.role and x.role.text in [tertiary_role.text, henchmen_role.text]]
