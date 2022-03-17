@@ -1645,7 +1645,7 @@ class Novel(NovelDescriptor):
     goals: List[Goal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)
     tags: Dict[TagType, List[Tag]] = field(default_factory=default_tags)
-    logline: str = ''
+    premise: str = ''
     synopsis: Optional['Document'] = None
     prefs: NovelPreferences = NovelPreferences()
 

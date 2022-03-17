@@ -37,7 +37,6 @@ from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult, NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.input import GrammarHighlighter
 
 
 class NovelView(AbstractNovelView):
@@ -61,12 +60,14 @@ class NovelView(AbstractNovelView):
         self.ui.btnEditNovel.setHidden(True)
 
         self.ui.lblTitle.setText(self.novel.title)
-        self.ui.textLogline.setPlainText(self.novel.logline)
-        self.ui.lblLoglineWords.calculateWordCount(self.novel.logline)
-        self.ui.textLogline.textChanged.connect(self._logline_changed)
+        self.ui.textPremise.setText(self.novel.premise)
+        self.ui.lblLoglineWords.calculateWordCount(self.novel.premise)
+        self.ui.textPremise.textEdit.textChanged.connect(self._premise_changed)
         self.ui.textSynopsis.setGrammarCheckEnabled(True)
-        self.loglineHighlighter = GrammarHighlighter(self.ui.textLogline.document())
+        self.ui.textPremise.setGrammarCheckEnabled(True)
 
+        self.ui.textPremise.setToolbarVisible(False)
+        self.ui.textPremise.setTitleVisible(False)
         self.ui.textSynopsis.setToolbarVisible(False)
         self.ui.textSynopsis.setTitleVisible(False)
         if self.novel.synopsis:
@@ -202,9 +203,9 @@ class NovelView(AbstractNovelView):
             self.novel.conflicts.remove(conflict)
             self.repo.update_novel(self.novel)
 
-    def _logline_changed(self):
-        self.novel.logline = self.ui.textLogline.toPlainText()
-        self.ui.lblLoglineWords.calculateWordCount(self.novel.logline)
+    def _premise_changed(self):
+        self.novel.premise = self.ui.textPremise.textEdit.toPlainText()
+        self.ui.lblLoglineWords.calculateWordCount(self.novel.premise)
         self.repo.update_novel(self.novel)
 
     def _synopsis_changed(self):

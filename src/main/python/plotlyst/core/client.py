@@ -193,7 +193,7 @@ class NovelInfo:
     tags: List[Tag] = field(default_factory=default_general_tags)
     tag_types: List[TagType] = field(default_factory=default_tag_types, metadata=config(exclude=exclude_if_empty))
     documents: List[Document] = field(default_factory=default_documents)
-    logline: str = ''
+    premise: str = ''
     synopsis: Optional['Document'] = None
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
     prefs: NovelPreferences = NovelPreferences()
@@ -489,7 +489,7 @@ class JsonClient:
                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                      location_profiles=novel_info.location_profiles,
                      conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
-                     documents=novel_info.documents, logline=novel_info.logline, synopsis=novel_info.synopsis,
+                     documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
                      prefs=novel_info.prefs)
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
@@ -518,7 +518,7 @@ class JsonClient:
                                tags=[item for sublist in novel.tags.values() for item in sublist if not item.builtin],
                                tag_types=list(novel.tags.keys()),
                                documents=novel.documents,
-                               logline=novel.logline, synopsis=novel.synopsis,
+                               premise=novel.premise, synopsis=novel.synopsis,
                                version=LATEST_VERSION, prefs=novel.prefs)
 
         self.__persist_info(self.novels_dir, novel_info)

@@ -218,7 +218,7 @@ QToolButton:pressed {
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="text">
-        <string>Plot lines</string>
+        <string>Plot</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -243,7 +243,7 @@ QToolButton:pressed {
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="text">
-        <string>Synopsis</string>
+        <string>Premise</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -379,7 +379,7 @@ QToolButton:pressed {
         <number>2</number>
        </property>
        <item>
-        <widget class="Subtitle" name="widget_6" native="true">
+        <widget class="Subtitle" name="widget_6">
          <property name="title" stdset="0">
           <string>Plots</string>
          </property>
@@ -475,12 +475,12 @@ QToolButton:pressed {
            <number>0</number>
           </property>
           <item>
-           <widget class="Subtitle" name="widget" native="true">
+           <widget class="Subtitle" name="widget">
             <property name="title" stdset="0">
-             <string>Logline</string>
+             <string>Premise</string>
             </property>
             <property name="description" stdset="0">
-             <string>Write one or two sentences summary of your book. Try to keep it between 10 and 30 words.</string>
+             <string>Pitch your story in maximum 3 sentences.</string>
             </property>
             <property name="icon" stdset="0">
              <string>mdi.elevator-passenger</string>
@@ -516,21 +516,12 @@ QToolButton:pressed {
            <number>0</number>
           </property>
           <item>
-           <widget class="QTextEdit" name="textLogline">
+           <widget class="DocumentTextEditor" name="textPremise">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>50</height>
-             </size>
-            </property>
-            <property name="placeholderText">
-             <string>Pitch your novel in one or two sentences</string>
             </property>
            </widget>
           </item>
@@ -543,7 +534,7 @@ QToolButton:pressed {
           <number>3</number>
          </property>
          <item>
-          <widget class="Subtitle" name="widget_2" native="true">
+          <widget class="Subtitle" name="widget_2">
            <property name="title" stdset="0">
             <string>Synopsis</string>
            </property>
@@ -584,7 +575,7 @@ QToolButton:pressed {
           </property>
           <item>
            <widget class="DocumentTextEditor" name="textSynopsis">
-            <property name="placeholderText">
+            <property name="placeholderText" stdset="0">
              <string>Write down your novel's main events</string>
             </property>
            </widget>
@@ -739,7 +730,7 @@ QToolButton:pressed {
               <bool>false</bool>
              </attribute>
              <attribute name="verticalHeaderDefaultSectionSize">
-              <number>20</number>
+              <number>21</number>
              </attribute>
             </widget>
            </item>
@@ -776,8 +767,8 @@ QToolButton:pressed {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>640</width>
-            <height>419</height>
+            <width>94</width>
+            <height>24</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -803,6 +794,11 @@ QToolButton:pressed {
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>DocumentTextEditor</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
    <class>ItemsEditorWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.items_editor</header>
@@ -824,11 +820,6 @@ QToolButton:pressed {
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.novel</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>DocumentTextEditor</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>
