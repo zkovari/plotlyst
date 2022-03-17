@@ -155,6 +155,8 @@ class Emoji(QLabel):
 class WordsDisplay(QLabel):
     def __init__(self, parent=None):
         super(WordsDisplay, self).__init__(parent)
+        self._text = ''
+        self.setText(self._text)
 
     def calculateWordCount(self, text: str):
         count = wc(text)
@@ -162,9 +164,25 @@ class WordsDisplay(QLabel):
 
     def setWordCount(self, count: int):
         if count:
-            self.setText(f'{count} word{"s" if count > 1 else ""}')
+            self._text = f'{count} word{"s" if count > 1 else ""}'
+            self.setText(self._text)
         else:
             self.clear()
+
+    def calculateSecondaryWordCount(self, text: str):
+        if text:
+            self.setSecondaryWordCount(wc(text))
+        else:
+            self.setText(self._text)
+
+    def setSecondaryWordCount(self, count: int):
+        if count:
+            self.setText(f'{count} of {self._text}')
+        else:
+            self.setText(self._text)
+    
+    def clearSecondaryWordCount(self):
+        self.setText(self._text)
 
 
 class _RoleIcon(QPushButton):

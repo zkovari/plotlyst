@@ -120,6 +120,13 @@ class ManuscriptView(AbstractNovelView):
                 self._update_story_goal()
             self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.textEdit.document())
 
+        def selection_changed():
+            fragment = self.ui.textEdit.textEdit.textCursor().selection()
+            if fragment:
+                self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
+            else:
+                self.ui.lblWordCount.clearSecondaryWordCount()
+
         node = index.data(ChaptersTreeModel.NodeRole)
         if isinstance(node, SceneNode):
             if not node.scene.manuscript:
@@ -140,6 +147,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.textEdit.setFontPointSize(16)
             text_changed()
             self.ui.textEdit.textEdit.textChanged.connect(text_changed)
+            self.ui.textEdit.textEdit.selectionChanged.connect(selection_changed)
 
             if self.ui.cbSpellCheck.isChecked():
                 self.ui.textEdit.setGrammarCheckEnabled(True)
