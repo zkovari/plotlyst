@@ -102,26 +102,35 @@ class AbstractTextBlockHighlighter(QSyntaxHighlighter):
         return data
 
 
+class GrammarHighlightStyle(Enum):
+    UNDERLINE = 1
+    BACKGOUND = 2
+
+
 # partially based on https://gist.github.com/ssokolow/0e69b9bd9ca442163164c8a9756aa15f
 class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
-    def __init__(self, document: QTextDocument, checkEnabled: bool = True):
+    def __init__(self, document: QTextDocument, checkEnabled: bool = True,
+                 highlightStyle: GrammarHighlightStyle = GrammarHighlightStyle.UNDERLINE):
         super(GrammarHighlighter, self).__init__(document)
         self._checkEnabled: bool = checkEnabled
 
         self._misspelling_format = QTextCharFormat()
         self._misspelling_format.setUnderlineColor(QColor('#d90429'))
-        self._misspelling_format.setBackground(QBrush(QColor('#fbe0dd')))
+        if highlightStyle == GrammarHighlightStyle.BACKGOUND:
+            self._misspelling_format.setBackground(QBrush(QColor('#fbe0dd')))
         self._misspelling_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
 
         self._style_format = QTextCharFormat()
         self._style_format.setUnderlineColor(QColor('#5a189a'))
-        self._style_format.setBackground(QBrush(QColor('#dec9e9')))
+        if highlightStyle == GrammarHighlightStyle.BACKGOUND:
+            self._style_format.setBackground(QBrush(QColor('#dec9e9')))
         self._style_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
 
         self._grammar_format = QTextCharFormat()
         self._grammar_format.setUnderlineColor(QColor('#ffc300'))
-        self._grammar_format.setBackground(QBrush(QColor('#fffae6')))
+        if highlightStyle == GrammarHighlightStyle.BACKGOUND:
+            self._grammar_format.setBackground(QBrush(QColor('#fffae6')))
         self._grammar_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
 
         self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
@@ -309,7 +318,7 @@ class DocumentTextEditor(RichTextEditor):
 
         self.textEdit.setViewportMargins(5, 5, 5, 5)
 
-        self.highlighter = GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
+        self.highlighter = self._initHighlighter()
 
         if app_env.is_linux():
             family = 'Noto Sans Mono'
@@ -337,6 +346,9 @@ class DocumentTextEditor(RichTextEditor):
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
         return _TextEditor(self)
+
+    def _initHighlighter(self) -> QSyntaxHighlighter:
+        return GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
 
     def setText(self, content: str, title: str = '', title_read_only: bool = False):
         self.textEdit.setHtml(content)

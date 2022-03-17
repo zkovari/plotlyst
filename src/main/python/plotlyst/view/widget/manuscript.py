@@ -44,7 +44,7 @@ from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_Rea
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
+from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, GrammarHighlighter, GrammarHighlightStyle
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -362,6 +362,11 @@ class ManuscriptTextEditor(DocumentTextEditor):
             self.textEdit.document().setDefaultFont(QFont(family, 16))
 
         self._setDefaultStyleSheet()
+
+    @overrides
+    def _initHighlighter(self) -> QSyntaxHighlighter:
+        return GrammarHighlighter(self.textEdit.document(), checkEnabled=False,
+                                  highlightStyle=GrammarHighlightStyle.BACKGOUND)
 
     def setNightModeEnabled(self, enabled: bool):
         self.clearHighlights()
