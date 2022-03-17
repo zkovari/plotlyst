@@ -17,9 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional
 
-from PyQt5.QtCore import QItemSelection
+from PyQt5.QtCore import QItemSelection, QPoint
 from PyQt5.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import ask_confirmation, busy, gc, incr_font
@@ -33,7 +34,7 @@ from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
-from src.main.python.plotlyst.view.common import link_buttons_to_pages
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -129,6 +130,13 @@ class CharactersView(AbstractNovelView):
         return self.ui.stackedWidget.currentWidget() is self.ui.pageView
 
     def _update_cards(self):
+        def custom_menu(card: CharacterCard, pos: QPoint):
+            builder = PopupMenuBuilder.from_widget_position(card, pos)
+            builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
+            builder.add_separator()
+            builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+            builder.popup()
+
         self.selected_card = None
         self.ui.cards.clear()
 
@@ -137,6 +145,7 @@ class CharactersView(AbstractNovelView):
             self.ui.cards.addCard(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
+            card.customContextMenuRequested.connect(partial(custom_menu, card))
 
     def _on_character_selected(self, selection: QItemSelection):
         self._enable_action_buttons(len(selection.indexes()) > 0)

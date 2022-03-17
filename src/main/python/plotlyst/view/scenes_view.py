@@ -38,7 +38,7 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, action
+from src.main.python.plotlyst.view.common import PopupMenuBuilder
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
@@ -317,9 +317,18 @@ class ScenesOutlineView(AbstractNovelView):
         self._switch_to_editor()
 
     def _update_cards(self):
-        def cursorEnter(scene: Scene):
+        def cursor_enter(scene: Scene):
             if self.ui.wdgStoryStructure.isVisible():
                 self.ui.wdgStoryStructure.highlightScene(scene)
+
+        def custom_menu(card: SceneCard, pos: QPoint):
+            builder = PopupMenuBuilder.from_widget_position(card, pos)
+            builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
+            builder.add_action('Insert new scene', IconRegistry.plus_icon('black'),
+                               partial(self._insert_scene_after, card.scene))
+            builder.add_separator()
+            builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+            builder.popup()
 
         self.scene_cards.clear()
         self.selected_card = None
@@ -337,12 +346,8 @@ class ScenesOutlineView(AbstractNovelView):
             self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
-            card.cursorEntered.connect(partial(cursorEnter, card.scene))
-
-            card.setPopupMenuActions(
-                [action('Edit', IconRegistry.edit_icon(), self._on_edit),
-                 action('Insert new scene', IconRegistry.plus_icon('black'), partial(self._insert_scene_after, scene)),
-                 action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)])
+            card.cursorEntered.connect(partial(cursor_enter, card.scene))
+            card.customContextMenuRequested.connect(partial(custom_menu, card))
 
     def _card_selected(self, card: SceneCard):
         if self.selected_card and self.selected_card is not card:

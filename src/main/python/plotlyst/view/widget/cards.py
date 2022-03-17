@@ -37,7 +37,7 @@ from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Sce
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import ActiveSceneStageChanged
-from src.main.python.plotlyst.view.common import emoji_font, PopupMenuBuilder
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
@@ -59,6 +59,8 @@ class Card(QFrame):
 
     def __init__(self, parent):
         super().__init__(parent)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.select)
         self.dragStartPosition: Optional[QPoint] = None
         self._dragEnabled: bool = True
         self._popup_actions: List[QAction] = []
@@ -131,11 +133,6 @@ class Card(QFrame):
         else:
             event.ignore()
 
-    def setPopupMenuActions(self, actions: List[QAction]):
-        self._popup_actions = actions
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self._contextMenuRequested)
-
     def select(self):
         self._setStyleSheet(selected=True)
         self.selected.emit(self)
@@ -166,14 +163,6 @@ class Card(QFrame):
 
     def _borderColor(self, selected: bool = False) -> str:
         return '#2a4d69' if selected else '#adcbe3'
-
-    def _contextMenuRequested(self, pos: QPoint):
-        self.select()
-        builder = PopupMenuBuilder.from_widget_position(self, pos)
-        for action in self._popup_actions:
-            action.setParent(builder.menu)
-            builder.menu.addAction(action)
-        builder.popup()
 
 
 class NovelCard(Ui_NovelCard, Card):
