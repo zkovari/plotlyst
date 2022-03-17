@@ -19,7 +19,7 @@
   <property name="mainFrame" stdset="0">
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_5">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -108,84 +108,97 @@
     </widget>
    </item>
    <item>
-    <widget class="QWidget" name="wdgBanner" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
-      <property name="spacing">
-       <number>3</number>
-      </property>
-      <property name="leftMargin">
-       <number>2</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>2</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <item>
-       <widget class="CharacterAvatar" name="wdgAvatar">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <property name="spacing">
-         <number>6</number>
-        </property>
-        <item>
-         <widget class="QLineEdit" name="lineName">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+     <widget class="QWidget" name="">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="wdgBanner" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="spacing">
+           <number>3</number>
           </property>
-          <property name="font">
-           <font>
-            <pointsize>28</pointsize>
-           </font>
+          <property name="leftMargin">
+           <number>2</number>
           </property>
-          <property name="focusPolicy">
-           <enum>Qt::StrongFocus</enum>
+          <property name="topMargin">
+           <number>0</number>
           </property>
-          <property name="styleSheet">
-           <string notr="true">border: 0px;
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="CharacterAvatar" name="wdgAvatar">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <item>
+             <widget class="QLineEdit" name="lineName">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>28</pointsize>
+               </font>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::StrongFocus</enum>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border: 0px;
 background-color: rgba(0,0,0,0);</string>
-          </property>
-          <property name="placeholderText">
-           <string>Character's name</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item alignment="Qt::AlignLeft">
-           <widget class="QToolButton" name="btnMale">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::ClickFocus</enum>
-            </property>
-            <property name="toolTip">
-             <string>Male</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton {
+              </property>
+              <property name="frame">
+               <bool>false</bool>
+              </property>
+              <property name="placeholderText">
+               <string>Character's name</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item alignment="Qt::AlignLeft">
+               <widget class="QToolButton" name="btnMale">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::ClickFocus</enum>
+                </property>
+                <property name="toolTip">
+                 <string>Male</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton {
 	border: 1px dashed grey;
 	border-radius: 6px;
 }
@@ -197,37 +210,37 @@ QToolButton:pressed {
 QToolButton:checked {
 		border: 2px solid #067bc2;	
 }</string>
-            </property>
-            <property name="text">
-             <string>male</string>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>26</width>
-              <height>26</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupGender</string>
-            </attribute>
-           </widget>
-          </item>
-          <item alignment="Qt::AlignLeft">
-           <widget class="QToolButton" name="btnFemale">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::ClickFocus</enum>
-            </property>
-            <property name="toolTip">
-             <string>Female</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton {
+                </property>
+                <property name="text">
+                 <string>male</string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>26</width>
+                  <height>26</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">btnGroupGender</string>
+                </attribute>
+               </widget>
+              </item>
+              <item alignment="Qt::AlignLeft">
+               <widget class="QToolButton" name="btnFemale">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::ClickFocus</enum>
+                </property>
+                <property name="toolTip">
+                 <string>Female</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton {
 	border: 1px dashed grey;
 	border-radius: 6px;
 }
@@ -239,62 +252,62 @@ QToolButton:pressed {
 QToolButton:checked {
 		border: 2px solid #832161;	
 }</string>
-            </property>
-            <property name="text">
-             <string>female</string>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>26</width>
-              <height>26</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupGender</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnMoreGender">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="toolTip">
-             <string>Display more genders</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton {
+                </property>
+                <property name="text">
+                 <string>female</string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>26</width>
+                  <height>26</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">btnGroupGender</string>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnMoreGender">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="toolTip">
+                 <string>Display more genders</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton {
 	border: 0px;
 }
 
 QToolButton:pressed {
 	color: white;
 }</string>
-            </property>
-            <property name="text">
-             <string>»</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnTransgender">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::ClickFocus</enum>
-            </property>
-            <property name="toolTip">
-             <string>Transgender</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton {
+                </property>
+                <property name="text">
+                 <string>»</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnTransgender">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::ClickFocus</enum>
+                </property>
+                <property name="toolTip">
+                 <string>Transgender</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton {
 	border: 1px dashed grey;
 	border-radius: 6px;
 }
@@ -306,34 +319,34 @@ QToolButton:pressed {
 QToolButton:checked {
 	border: 2px solid #f4a261;	
 }</string>
-            </property>
-            <property name="text">
-             <string>transgender</string>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>26</width>
-              <height>26</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnNonBinary">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::ClickFocus</enum>
-            </property>
-            <property name="toolTip">
-             <string>Non-binary</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton {
+                </property>
+                <property name="text">
+                 <string>transgender</string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>26</width>
+                  <height>26</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnNonBinary">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::ClickFocus</enum>
+                </property>
+                <property name="toolTip">
+                 <string>Non-binary</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton {
 	border: 1px dashed grey;
 	border-radius: 6px;
 }
@@ -345,34 +358,34 @@ QToolButton:pressed {
 QToolButton:checked {
 		border: 2px solid #7209b7;	
 }</string>
-            </property>
-            <property name="text">
-             <string>non-binary</string>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>26</width>
-              <height>26</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnGenderless">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::ClickFocus</enum>
-            </property>
-            <property name="toolTip">
-             <string>Genderless</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QToolButton {
+                </property>
+                <property name="text">
+                 <string>non-binary</string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>26</width>
+                  <height>26</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="btnGenderless">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::ClickFocus</enum>
+                </property>
+                <property name="toolTip">
+                 <string>Genderless</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QToolButton {
 	border: 1px dashed grey;
 	border-radius: 6px;
 }
@@ -384,38 +397,38 @@ QToolButton:pressed {
 QToolButton:checked {
 		border: 2px solid #6c757d;	
 }</string>
-            </property>
-            <property name="text">
-             <string>genderless</string>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>26</width>
-              <height>26</height>
-             </size>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="Line" name="line_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btnRole">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::ClickFocus</enum>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">.QPushButton {
+                </property>
+                <property name="text">
+                 <string>genderless</string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>26</width>
+                  <height>26</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="Line" name="line_2">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnRole">
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::ClickFocus</enum>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">.QPushButton {
 	border: 2px dashed grey;
 	border-radius: 6px;
 	padding: 3px;
@@ -426,75 +439,71 @@ QToolButton:checked {
 	border: 2px solid grey;
 }
 </string>
-            </property>
-            <property name="text">
-             <string>Select character role</string>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>26</width>
-              <height>26</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
+                </property>
+                <property name="text">
+                 <string>Role</string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>26</width>
+                  <height>26</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QSplitter" name="splitter">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="childrenCollapsible">
-      <bool>false</bool>
-     </property>
-     <widget class="QWidget" name="wdgProfile" native="true">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">.Frame {
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="wdgProfile" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">.Frame {
 border: 0px;
 
 }</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_7">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+         </layout>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QTabWidget" name="tabAttributes">
@@ -588,8 +597,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>866</width>
-             <height>313</height>
+             <width>368</width>
+             <height>503</height>
             </rect>
            </property>
            <property name="styleSheet">
