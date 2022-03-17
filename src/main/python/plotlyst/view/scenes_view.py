@@ -436,6 +436,11 @@ class ScenesOutlineView(AbstractNovelView):
             self.repo.update_novel(self.novel)
             emit_event(ActiveSceneStageChanged(self, stage))
 
+        def header_clicked(col: int):
+            if col > 1:
+                stage = self.novel.stages[col - 2]
+                change_stage(stage)
+
         if self.stagesModel:
             self.stagesModel.modelReset.emit()
         else:
@@ -455,6 +460,7 @@ class ScenesOutlineView(AbstractNovelView):
                 '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
                    QHeaderView {background-color: white;}''')
             self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
+            self.ui.tblSceneStages.horizontalHeader().sectionClicked.connect(header_clicked)
             self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
 
         for col in range(1, self.stagesModel.columnCount()):
