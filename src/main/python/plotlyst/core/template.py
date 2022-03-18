@@ -100,7 +100,6 @@ class TemplateField:
     min_value: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     max_value = 2_147_483_647
     compact: bool = field(default=False, metadata=config(exclude=exclude_if_false))
-    frozen: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
 
 
@@ -322,8 +321,7 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(age_field, 2, 0, v_alignment=VAlignment.TOP),
-              ProfileElement(enneagram_field, 5, 0),
+    fields = [ProfileElement(enneagram_field, 5, 0),
               ProfileElement(mbti_field, 5, 1),
               ProfileElement(desire_field, 6, 0),
               ProfileElement(fear_field, 6, 1),
