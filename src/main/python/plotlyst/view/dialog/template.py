@@ -27,9 +27,10 @@ from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 from qthandy import ask_confirmation
 
-from src.main.python.plotlyst.core.domain import age_field, \
+from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.template import age_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, fear_field, misbelief_field, \
-    desire_field, default_character_profiles, mbti_field, traits_field, Novel
+    desire_field, default_character_profiles, mbti_field, traits_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog

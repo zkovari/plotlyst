@@ -32,10 +32,11 @@ from fbs_runtime import platform
 from overrides import overrides
 from qthandy import ask_confirmation, spacer, btn_popup
 
-from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate, TemplateValue, ProfileElement, Character, SelectionItemType, \
-    enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field
+from src.main.python.plotlyst.core.domain import TemplateValue, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
+from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, SelectionItem, \
+    ProfileTemplate, ProfileElement, SelectionItemType, \
+    enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import emoji_font

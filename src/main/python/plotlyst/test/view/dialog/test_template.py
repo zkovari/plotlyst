@@ -4,7 +4,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QMouseEvent
 
-from src.main.python.plotlyst.core.domain import ProfileTemplate, fear_field, default_character_profiles
+from src.main.python.plotlyst.core.template import ProfileTemplate, fear_field, default_character_profiles
 from src.main.python.plotlyst.view.dialog.template import CharacterProfileEditorDialog
 
 

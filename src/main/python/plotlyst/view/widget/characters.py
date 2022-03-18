@@ -38,9 +38,10 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal, protagonist_role, antagonist_role, secondary_role, henchmen_role, tertiary_role, \
-    deuteragonist_role, guide_role, love_interest_role, sidekick_role, contagonist_role, confidant_role, foil_role, \
-    supporter_role, adversary_role, SelectionItem, GoalReference
+    CharacterGoal, Goal, protagonist_role, GoalReference
+from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
+    contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
+    tertiary_role, deuteragonist_role, SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel

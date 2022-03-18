@@ -1,7 +1,7 @@
 from typing import Set
 
-from src.main.python.plotlyst.core.domain import default_story_structures, positive_traits, negative_traits, \
-    StoryBeatType
+from src.main.python.plotlyst.core.domain import default_story_structures, StoryBeatType
+from src.main.python.plotlyst.core.template import positive_traits, negative_traits
 
 
 def test_unique_story_structures():
