@@ -107,6 +107,12 @@ class Subtitle(QWidget):
     def title(self, value):
         self.lblTitle.setText(value)
 
+    def setTitle(self, value):
+        self.lblTitle.setText(value)
+
+    def setDescription(self, value):
+        self.lblDescription.setText(value)
+
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
         if not self.lblTitle.text():
@@ -180,7 +186,7 @@ class WordsDisplay(QLabel):
             self.setText(f'{count} of {self._text}')
         else:
             self.setText(self._text)
-    
+
     def clearSecondaryWordCount(self):
         self.setText(self._text)
 

@@ -75,6 +75,8 @@ class TemplateFieldType(Enum):
     NUMERIC = 4
     IMAGE = 5
     LABELS = 6
+    DISPLAY_SUBTITLE = 7
+    DISPLAY_LABEL = 8
 
 
 class SelectionType(Enum):
@@ -321,7 +323,9 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(enneagram_field, 5, 0),
+    personality_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_SUBTITLE)
+    fields = [ProfileElement(personality_title, 0, 0),
+              ProfileElement(enneagram_field, 5, 0),
               ProfileElement(mbti_field, 5, 1),
               ProfileElement(desire_field, 6, 0),
               ProfileElement(fear_field, 6, 1),
@@ -340,8 +344,7 @@ sight_field = TemplateField('Sight', type=TemplateFieldType.LABELS,
 location_name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':round_pushpin:',
                                     placeholder='Name',
                                     id=uuid.UUID('84f9bdee-c817-4caa-9e65-666cd0c4a546'), required=True,
-                                    highlighted=True,
-                                    frozen=True, show_label=False)
+                                    highlighted=True, show_label=False)
 
 smell_field = TemplateField('Smell', type=TemplateFieldType.LABELS,
                             id=uuid.UUID('50245a33-599b-49c6-9746-094f12b4d667'),

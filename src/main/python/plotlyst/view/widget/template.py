@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
     QSpacerItem, QTextEdit, QListView, QPushButton
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import ask_confirmation, spacer, btn_popup
+from qthandy import ask_confirmation, spacer, btn_popup, hbox
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
@@ -44,6 +44,7 @@ from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 
@@ -66,7 +67,7 @@ class _ProfileTemplateBase(QWidget):
 
         self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
 
-        self.widgets: List[TemplateFieldWidget] = []
+        self.widgets: List[TemplateWidgetBase] = []
         self._initGrid(editor_mode)
 
     def _initGrid(self, editor_mode: bool):
@@ -350,9 +351,29 @@ class TemplateWidgetBase(QFrame):
         self.setStyleSheet('')
 
 
-class TemplateDisplayWidgetBase(TemplateWidgetBase):
+class TemplateDisplayWidget(TemplateWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
-        super(TemplateDisplayWidgetBase, self).__init__(field, parent)
+        super(TemplateDisplayWidget, self).__init__(field, parent)
+
+
+class SubtitleTemplateDisplayWidget(TemplateDisplayWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super(SubtitleTemplateDisplayWidget, self).__init__(field, parent)
+        hbox(self)
+        self.subtitle = Subtitle(self)
+        self.subtitle.setTitle(field.name)
+        self.subtitle.setDescription(field.description)
+        self.layout().addWidget(self.subtitle)
+
+
+class LabelTemplateDisplayWidget(TemplateDisplayWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super(LabelTemplateDisplayWidget, self).__init__(field, parent)
+        hbox(self)
+        self.label = QLabel(self)
+        self.label.setText(field.name)
+        self.label.setToolTip(field.description)
+        self.layout().addWidget(self.label)
 
 
 class TemplateFieldWidgetBase(TemplateWidgetBase):
@@ -445,7 +466,12 @@ class TemplateFieldWidget(TemplateFieldWidgetBase):
 class TemplateFieldWidgetFactory:
 
     @staticmethod
-    def widget(field: TemplateField) -> TemplateFieldWidget:
+    def widget(field: TemplateField) -> TemplateWidgetBase:
+        if field.type == TemplateFieldType.DISPLAY_SUBTITLE:
+            return SubtitleTemplateDisplayWidget(field)
+        elif field.type == TemplateFieldType.DISPLAY_LABEL:
+            return LabelTemplateDisplayWidget(field)
+
         if field.id == enneagram_field.id:
             widget = TextSelectionWidget(field, enneagram_help)
         elif field.id == mbti_field.id:
@@ -475,8 +501,7 @@ class TemplateFieldWidgetFactory:
         elif field.type == TemplateFieldType.LABELS:
             widget = LabelsSelectionWidget(field)
         else:
-            widget = QLineEdit()
-            widget.setPlaceholderText(field.placeholder)
+            raise ValueError('Unrecognized template field type %s', field.type)
 
         return TemplateFieldWidget(field, widget)
 
@@ -571,7 +596,8 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         index = self.gridLayout.indexOf(placeholder)
 
         field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
-        widget_to_drop = TemplateFieldWidget(field)
+        widget_to_drop = TemplateFieldWidgetFactory.widget(field)
+        # widget_to_drop = TemplateFieldWidget(field)
         widget_to_drop.setEnabled(False)
         pos = self.gridLayout.getItemPosition(index)
         item: QLayoutItem = self.gridLayout.takeAt(index)
@@ -606,7 +632,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             self._target_to_drop = None
         return super().eventFilter(watched, event)
 
-    def _select(self, widget: TemplateFieldWidget):
+    def _select(self, widget: TemplateWidgetBase):
         if self._selected:
             self._selected.deselect()
         if is_placeholder(widget):
@@ -639,7 +665,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         if self._selected:
             self._selected.updateEmoji(emoji.emojize(text))
 
-    def _installEventFilter(self, widget: TemplateFieldWidget):
+    def _installEventFilter(self, widget: TemplateWidgetBase):
         widget.installEventFilter(self)
         if isinstance(widget.wdgEditor, TextSelectionWidget):
             widget.wdgEditor.installEventFilter(self)
@@ -656,14 +682,13 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 class ProfileTemplateView(_ProfileTemplateBase):
     def __init__(self, values: List[TemplateValue], profile: ProfileTemplate):
         super().__init__(profile)
-        self._name_widget: Optional[TemplateFieldWidget] = None
         self.setProperty('mainFrame', True)
         self.setValues(values)
 
     def values(self) -> List[TemplateValue]:
         values: List[TemplateValue] = []
         for widget in self.widgets:
-            if widget is self._name_widget:
+            if isinstance(widget, TemplateDisplayWidget):
                 continue
             values.append(TemplateValue(id=widget.field.id, value=widget.value()))
 
@@ -675,6 +700,8 @@ class ProfileTemplateView(_ProfileTemplateBase):
             ids[str(value.id)] = value.value
 
         for widget in self.widgets:
+            if isinstance(widget, TemplateDisplayWidget):
+                continue
             if str(widget.field.id) in ids.keys():
                 widget.setValue(ids[str(widget.field.id)])
 
