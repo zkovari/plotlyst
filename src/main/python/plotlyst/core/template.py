@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 
 from PyQt5.QtCore import Qt
 from dataclasses_json import config
@@ -305,6 +305,14 @@ class VAlignment(Enum):
 
 
 @dataclass
+class Margins:
+    left: int = 2
+    top: int = 2
+    right: int = 2
+    bottom: int = 2
+
+
+@dataclass
 class ProfileElement:
     field: TemplateField
     row: int
@@ -313,6 +321,7 @@ class ProfileElement:
     col_span: int = 1
     h_alignment: HAlignment = HAlignment.DEFAULT
     v_alignment: VAlignment = VAlignment.CENTER
+    margins: Optional[Margins] = None
 
 
 @dataclass

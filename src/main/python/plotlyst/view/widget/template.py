@@ -31,13 +31,13 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
     QSpacerItem, QTextEdit, QListView, QPushButton
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import ask_confirmation, spacer, btn_popup, hbox
+from qthandy import ask_confirmation, spacer, btn_popup, hbox, margins
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, ProfileElement, SelectionItemType, \
-    enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field
+    enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field, Margins
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import emoji_font
@@ -395,16 +395,16 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
 
 
 class TemplateFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, editor: QWidget, parent=None):
+    def __init__(self, field: TemplateField, editor: QWidget, parent=None, field_margins: Optional[Margins] = None):
         super(TemplateFieldWidget, self).__init__(field, editor, parent)
-        self.layout = QHBoxLayout()
-
-        self.setLayout(self.layout)
+        self._layout = hbox(self)
+        if field_margins:
+            margins(self, field_margins.left, field_margins.top, field_margins.right, field_margins.bottom)
 
         self.lblEmoji = QLabel()
         if self.field.emoji:
             self.updateEmoji(emoji.emojize(self.field.emoji))
-            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
+            self._layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
         # elif editor_mode:
         #     self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
 
@@ -414,20 +414,17 @@ class TemplateFieldWidget(TemplateFieldWidgetBase):
             label_alignment = Qt.AlignTop
         else:
             label_alignment = Qt.AlignVCenter
-        self.layout.addWidget(self.lblName, alignment=label_alignment)
+        self._layout.addWidget(self.lblName, alignment=label_alignment)
 
         if not field.show_label:
             self.lblName.setHidden(True)
             if not self.field.emoji:
-                self.layout.addWidget(spacer(20))
+                self._layout.addWidget(spacer(20))
 
-        self.layout.addWidget(self.wdgEditor)
+        self._layout.addWidget(self.wdgEditor)
 
         if self.field.compact:
-            self.layout.addWidget(spacer())
-
-        self.layout.setSpacing(4)
-        self.layout.setContentsMargins(2, 2, 1, 2)
+            self._layout.addWidget(spacer())
 
     @overrides
     def value(self) -> Any:
