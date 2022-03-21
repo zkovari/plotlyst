@@ -1,7 +1,6 @@
 from typing import Set
 
-from src.main.python.plotlyst.core.domain import default_story_structures, positive_traits, negative_traits, \
-    StoryBeatType
+from src.main.python.plotlyst.core.domain import default_story_structures, StoryBeatType
 
 
 def test_unique_story_structures():
@@ -30,11 +29,3 @@ def test_unique_story_structures():
 
             if beat.ends_act:
                 act += 1
-
-
-def test_unique_traits():
-    pos_traits_set = set(positive_traits)
-    assert len(pos_traits_set) == len(positive_traits)
-
-    neg_traits_set = set(negative_traits)
-    assert len(neg_traits_set) == len(negative_traits)

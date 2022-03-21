@@ -23,7 +23,7 @@ from PyQt5.QtCore import QModelIndex, Qt, QSortFilterProxyModel
 from PyQt5.QtGui import QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import TemplateField, SelectionItem
+from src.main.python.plotlyst.core.template import TemplateField, SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 
 

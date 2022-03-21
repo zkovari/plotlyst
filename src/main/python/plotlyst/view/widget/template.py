@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
+from abc import abstractmethod
 from typing import Optional, List, Any, Dict, Set
 
 import emoji
@@ -27,21 +28,24 @@ from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QTextEdit, QListView, QPushButton
-from fbs_runtime import platform
+    QSpacerItem, QListView, QPushButton
 from overrides import overrides
-from qthandy import ask_confirmation, spacer, btn_popup
+from qthandy import ask_confirmation, spacer, btn_popup, hbox, vbox, bold, line
 
-from src.main.python.plotlyst.core.domain import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate, TemplateValue, ProfileElement, Character, SelectionItemType, \
-    enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field
+from src.main.python.plotlyst.core.domain import TemplateValue, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
+from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, SelectionItem, \
+    ProfileTemplate, ProfileElement, SelectionItemType, \
+    enneagram_field, traits_field, core_desire_field, core_fear_field, HAlignment, VAlignment, mbti_field
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 
@@ -57,19 +61,21 @@ class _ProfileTemplateBase(QWidget):
         self.scrollArea.setFocusPolicy(Qt.NoFocus)
         self.scrollAreaWidgetContents = QWidget()
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
-        self.gridLayout.setSpacing(4)
+        self.gridLayout.setSpacing(1)
         self.gridLayout.setContentsMargins(2, 0, 2, 0)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
 
         self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
 
-        self.widgets: List[TemplateFieldWidget] = []
+        self.widgets: List[TemplateWidgetBase] = []
         self._initGrid(editor_mode)
 
     def _initGrid(self, editor_mode: bool):
         for el in self._profile.elements:
-            widget = TemplateFieldWidget(el.field, editor_mode)
+            widget = TemplateFieldWidgetFactory.widget(el.field)
+            if el.margins:
+                widget.setContentsMargins(el.margins.left, el.margins.top, el.margins.right, el.margins.bottom)
             self.widgets.append(widget)
             self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span,
                                       el.h_alignment.value | el.v_alignment.value)
@@ -334,47 +340,11 @@ class ButtonSelectionWidget(QWidget):
                 btn.setChecked(True)
 
 
-class TemplateFieldWidget(QFrame):
-    def __init__(self, field: TemplateField, editor_mode: bool = False, parent=None):
-        super(TemplateFieldWidget, self).__init__(parent)
+class TemplateWidgetBase(QFrame):
+    def __init__(self, field: TemplateField, parent=None):
+        super(TemplateWidgetBase, self).__init__(parent)
         self.field = field
-        self.layout = QHBoxLayout()
         self.setProperty('mainFrame', True)
-
-        self.setLayout(self.layout)
-
-        self.lblEmoji = QLabel()
-        if self.field.emoji:
-            self.updateEmoji(emoji.emojize(self.field.emoji))
-            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
-        elif editor_mode:
-            self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
-
-        self.lblName = QLabel()
-        self.lblName.setText(self.field.name)
-        if self.field.type in [TemplateFieldType.LABELS, TemplateFieldType.SMALL_TEXT]:
-            label_alignment = Qt.AlignTop
-        else:
-            label_alignment = Qt.AlignVCenter
-        self.layout.addWidget(self.lblName, alignment=label_alignment)
-
-        if not field.show_label:
-            self.lblName.setHidden(True)
-            if not self.field.emoji:
-                self.layout.addWidget(spacer(20))
-
-        self.wdgEditor = self._fieldWidget()
-        self.layout.addWidget(self.wdgEditor)
-
-        if self.field.compact:
-            self.layout.addWidget(spacer())
-
-        self.layout.setSpacing(4)
-        self.layout.setContentsMargins(2, 2, 1, 2)
-
-    @overrides
-    def setEnabled(self, enabled: bool):
-        self.wdgEditor.setEnabled(enabled)
 
     def select(self):
         self.setStyleSheet('QFrame[mainFrame=true] {border: 2px dashed #0496ff;}')
@@ -382,71 +352,250 @@ class TemplateFieldWidget(QFrame):
     def deselect(self):
         self.setStyleSheet('')
 
-    def value(self) -> Any:
-        if isinstance(self.wdgEditor, QSpinBox):
-            return self.wdgEditor.value()
-        if isinstance(self.wdgEditor, QLineEdit):
-            return self.wdgEditor.text()
-        if isinstance(self.wdgEditor, QTextEdit):
-            return self.wdgEditor.toPlainText()
-        if isinstance(self.wdgEditor, QComboBox):
-            return self.wdgEditor.currentText()
-        if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
-            return self.wdgEditor.value()
 
-    def setValue(self, value: Any):
-        if isinstance(self.wdgEditor, QSpinBox):
-            self.wdgEditor.setValue(value)
-        if isinstance(self.wdgEditor, (QLineEdit, QTextEdit)):
-            self.wdgEditor.setText(value)
-        if isinstance(self.wdgEditor, QComboBox):
-            self.wdgEditor.setCurrentText(value)
-        if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
-            self.wdgEditor.setValue(value)
+class TemplateDisplayWidget(TemplateWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(TemplateDisplayWidget, self).__init__(field, parent)
+
+
+class SubtitleTemplateDisplayWidget(TemplateDisplayWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super(SubtitleTemplateDisplayWidget, self).__init__(field, parent)
+        hbox(self)
+        self.subtitle = Subtitle(self)
+        self.subtitle.setTitle(field.name)
+        self.subtitle.setDescription(field.description)
+        self.layout().addWidget(self.subtitle)
+
+
+class LabelTemplateDisplayWidget(TemplateDisplayWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super(LabelTemplateDisplayWidget, self).__init__(field, parent)
+        hbox(self)
+        self.label = QLabel(self)
+        bold(self.label)
+        self.label.setText(field.name)
+        self.label.setToolTip(field.description)
+        self.layout().addWidget(self.label)
+
+
+class LineTemplateDisplayWidget(TemplateDisplayWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super(LineTemplateDisplayWidget, self).__init__(field, parent)
+        hbox(self)
+        self.layout().addWidget(line())
+
+
+class TemplateFieldWidgetBase(TemplateWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(TemplateFieldWidgetBase, self).__init__(field, parent)
+        self.lblEmoji = QLabel()
+        self.lblEmoji.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.lblName = QLabel()
+        self.lblName.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.lblName.setText(self.field.name)
+
+        if self.field.emoji:
+            self.updateEmoji(emoji.emojize(self.field.emoji))
+        else:
+            self.lblEmoji.setHidden(True)
+
+        if not field.show_label:
+            self.lblName.setHidden(True)
+
+    @overrides
+    def setEnabled(self, enabled: bool):
+        if not self.layout():
+            return
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i)
+            if item and item.widget():
+                item.widget().setEnabled(enabled)
 
     def updateEmoji(self, emoji: str):
-        if platform.is_windows():
+        if app_env.is_windows():
             emoji_size = 14
         else:
             emoji_size = 20
 
         self.lblEmoji.setFont(emoji_font(emoji_size))
         self.lblEmoji.setText(emoji)
+        self.lblEmoji.setVisible(True)
 
-    def _fieldWidget(self) -> QWidget:
-        if self.field.id == enneagram_field.id:
-            widget = TextSelectionWidget(self.field, enneagram_help)
-        elif self.field.id == mbti_field.id:
-            widget = TextSelectionWidget(self.field, mbti_help)
-        elif self.field.id == traits_field.id:
-            widget = TraitSelectionWidget(self.field)
-        elif self.field.type == TemplateFieldType.NUMERIC:
-            widget = QSpinBox()
-            if self.field.placeholder:
-                widget.setPrefix(self.field.placeholder + ': ')
-            widget.setMinimum(self.field.min_value)
-            widget.setMaximum(self.field.max_value)
-        elif self.field.type == TemplateFieldType.TEXT_SELECTION:
+    @abstractmethod
+    def value(self) -> Any:
+        pass
+
+    @abstractmethod
+    def setValue(self, value: Any):
+        pass
+
+
+class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(LineTextTemplateFieldWidget, self).__init__(field, parent)
+        _layout = hbox(self)
+        self.wdgEditor = QLineEdit(self)
+
+        _layout.addWidget(self.lblEmoji)
+        _layout.addWidget(self.lblName)
+        _layout.addWidget(self.wdgEditor)
+
+        if self.field.compact:
+            _layout.addWidget(spacer())
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.text()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setText(value)
+
+
+class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
+        _layout = vbox(self)
+        self.wdgEditor = AutoAdjustableTextEdit(height=60)
+        self.wdgEditor.setAcceptRichText(False)
+        self.wdgEditor.setPlaceholderText(field.placeholder)
+
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        _layout.addWidget(self.wdgEditor)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.toPlainText()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setText(value)
+
+
+class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(NumericTemplateFieldWidget, self).__init__(field, parent)
+
+        _layout = hbox(self)
+        self.wdgEditor = QSpinBox()
+        if field.placeholder:
+            self.wdgEditor.setPrefix(field.placeholder + ': ')
+        self.wdgEditor.setMinimum(field.min_value)
+        self.wdgEditor.setMaximum(field.max_value)
+
+        _layout.addWidget(self.lblEmoji)
+        _layout.addWidget(self.lblName)
+        _layout.addWidget(self.wdgEditor)
+        if self.field.compact:
+            _layout.addWidget(spacer())
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+
+
+class CustomTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, editor: QWidget, parent=None, vertical: bool = True):
+        super(CustomTemplateFieldWidget, self).__init__(field, parent)
+        self.wdgEditor = editor
+        _layout = vbox(self) if vertical else hbox(self)
+
+        if vertical:
+            _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        else:
+            _layout.addWidget(self.lblEmoji)
+            _layout.addWidget(self.lblName)
+        _layout.addWidget(self.wdgEditor)
+
+        if self.field.compact:
+            _layout.addWidget(spacer())
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+
+
+class TemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, editor: QWidget, parent=None):
+        super(TemplateFieldWidget, self).__init__(field, parent)
+        self._layout = hbox(self)
+        self.wdgEditor = editor
+
+        if self.field.type in [TemplateFieldType.LABELS, TemplateFieldType.SMALL_TEXT]:
+            label_alignment = Qt.AlignTop
+        else:
+            label_alignment = Qt.AlignVCenter
+        self._layout.addWidget(self.lblName, alignment=label_alignment)
+
+        self._layout.addWidget(self.wdgEditor)
+
+        if self.field.compact:
+            self._layout.addWidget(spacer())
+
+    @overrides
+    def value(self) -> Any:
+        if isinstance(self.wdgEditor, QComboBox):
+            return self.wdgEditor.currentText()
+        if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
+            return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        if isinstance(self.wdgEditor, QComboBox):
+            self.wdgEditor.setCurrentText(value)
+        if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
+            self.wdgEditor.setValue(value)
+
+
+class TemplateFieldWidgetFactory:
+
+    @staticmethod
+    def widget(field: TemplateField) -> TemplateWidgetBase:
+        if field.type == TemplateFieldType.DISPLAY_SUBTITLE:
+            return SubtitleTemplateDisplayWidget(field)
+        elif field.type == TemplateFieldType.DISPLAY_LABEL:
+            return LabelTemplateDisplayWidget(field)
+        elif field.type == TemplateFieldType.DISPLAY_LINE:
+            return LineTemplateDisplayWidget(field)
+
+        if field.id == enneagram_field.id:
+            return CustomTemplateFieldWidget(field, TextSelectionWidget(field, enneagram_help), vertical=False)
+        elif field.id == mbti_field.id:
+            return CustomTemplateFieldWidget(field, TextSelectionWidget(field, mbti_help), vertical=False)
+        elif field.id == traits_field.id:
+            return CustomTemplateFieldWidget(field, TraitSelectionWidget(field))
+        elif field.type == TemplateFieldType.NUMERIC:
+            return NumericTemplateFieldWidget(field)
+        elif field.type == TemplateFieldType.TEXT_SELECTION:
             widget = QComboBox()
-            if not self.field.required:
+            if not field.required:
                 widget.addItem('')
-            for item in self.field.selections:
+            for item in field.selections:
                 if item.type == SelectionItemType.CHOICE:
                     widget.addItem(_icon(item), item.text)
                 if item.type == SelectionItemType.SEPARATOR:
                     widget.insertSeparator(widget.count())
-        elif self.field.type == TemplateFieldType.BUTTON_SELECTION:
-            widget = ButtonSelectionWidget(self.field)
-        elif self.field.type == TemplateFieldType.SMALL_TEXT:
-            widget = AutoAdjustableTextEdit(height=60)
-            widget.setPlaceholderText(self.field.placeholder)
-        elif self.field.type == TemplateFieldType.LABELS:
-            widget = LabelsSelectionWidget(self.field)
+        # elif field.type == TemplateFieldType.BUTTON_SELECTION:
+        #     widget = ButtonSelectionWidget(field)
+        elif field.type == TemplateFieldType.SMALL_TEXT:
+            return SmallTextTemplateFieldWidget(field)
+        elif field.type == TemplateFieldType.TEXT:
+            return LineTextTemplateFieldWidget(field)
+        elif field.type == TemplateFieldType.LABELS:
+            return CustomTemplateFieldWidget(field, LabelsSelectionWidget(field))
         else:
-            widget = QLineEdit()
-            widget.setPlaceholderText(self.field.placeholder)
+            raise ValueError('Unrecognized template field type %s', field.type)
 
-        return widget
+        return TemplateFieldWidget(field, widget)
 
 
 class ProfileTemplateEditor(_ProfileTemplateBase):
@@ -478,7 +627,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         elements = []
         for i in range(self.gridLayout.count()):
             item = self.gridLayout.itemAt(i)
-            if item and isinstance(item.widget(), TemplateFieldWidget):
+            if item and isinstance(item.widget(), TemplateFieldWidgetBase):
                 pos = self.gridLayout.getItemPosition(i)
                 item = self.gridLayout.itemAtPosition(pos[0], pos[1])
                 if item.alignment() & Qt.AlignRight:
@@ -539,7 +688,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         index = self.gridLayout.indexOf(placeholder)
 
         field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
-        widget_to_drop = TemplateFieldWidget(field)
+        widget_to_drop = TemplateFieldWidgetFactory.widget(field)
         widget_to_drop.setEnabled(False)
         pos = self.gridLayout.getItemPosition(index)
         item: QLayoutItem = self.gridLayout.takeAt(index)
@@ -574,7 +723,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             self._target_to_drop = None
         return super().eventFilter(watched, event)
 
-    def _select(self, widget: TemplateFieldWidget):
+    def _select(self, widget: TemplateWidgetBase):
         if self._selected:
             self._selected.deselect()
         if is_placeholder(widget):
@@ -607,9 +756,9 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         if self._selected:
             self._selected.updateEmoji(emoji.emojize(text))
 
-    def _installEventFilter(self, widget: TemplateFieldWidget):
+    def _installEventFilter(self, widget: TemplateWidgetBase):
         widget.installEventFilter(self)
-        if isinstance(widget.wdgEditor, TextSelectionWidget):
+        if isinstance(TemplateWidgetBase, TemplateFieldWidget) and isinstance(widget.wdgEditor, TextSelectionWidget):
             widget.wdgEditor.installEventFilter(self)
 
     def _addPlaceholder(self, row: int, col: int):
@@ -624,14 +773,13 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 class ProfileTemplateView(_ProfileTemplateBase):
     def __init__(self, values: List[TemplateValue], profile: ProfileTemplate):
         super().__init__(profile)
-        self._name_widget: Optional[TemplateFieldWidget] = None
         self.setProperty('mainFrame', True)
         self.setValues(values)
 
     def values(self) -> List[TemplateValue]:
         values: List[TemplateValue] = []
         for widget in self.widgets:
-            if widget is self._name_widget:
+            if isinstance(widget, TemplateDisplayWidget):
                 continue
             values.append(TemplateValue(id=widget.field.id, value=widget.value()))
 
@@ -643,6 +791,8 @@ class ProfileTemplateView(_ProfileTemplateBase):
             ids[str(value.id)] = value.value
 
         for widget in self.widgets:
+            if isinstance(widget, TemplateDisplayWidget):
+                continue
             if str(widget.field.id) in ids.keys():
                 widget.setValue(ids[str(widget.field.id)])
 
@@ -659,9 +809,9 @@ class CharacterProfileTemplateView(ProfileTemplateView):
         for widget in self.widgets:
             if widget.field.id == enneagram_field.id:
                 self._enneagram_widget = widget.wdgEditor
-            elif widget.field.id == desire_field.id:
+            elif widget.field.id == core_desire_field.id:
                 self._desire_widget = widget
-            elif widget.field.id == fear_field.id:
+            elif widget.field.id == core_fear_field.id:
                 self._fear_widget = widget
             elif widget.field.id == traits_field.id:
                 self._traits_widget = widget.wdgEditor

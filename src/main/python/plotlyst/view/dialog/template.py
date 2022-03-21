@@ -27,9 +27,10 @@ from PyQt5.QtWidgets import QDialog, QToolButton
 from overrides import overrides
 from qthandy import ask_confirmation
 
-from src.main.python.plotlyst.core.domain import age_field, \
-    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, fear_field, misbelief_field, \
-    desire_field, default_character_profiles, mbti_field, traits_field, Novel
+from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.template import age_field, \
+    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, core_fear_field, misbelief_field, \
+    core_desire_field, default_character_profiles, mbti_field, traits_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
@@ -130,11 +131,11 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             elif self._dragged is self.btnTraits:
                 field = traits_field
             elif self._dragged is self.btnFear:
-                field = fear_field
+                field = core_fear_field
             elif self._dragged is self.btnMisbelief:
                 field = misbelief_field
             elif self._dragged is self.btnDesire:
-                field = desire_field
+                field = core_desire_field
             elif self._dragged is self.btnCustomText:
                 field = TemplateField(name='Label', type=TemplateFieldType.TEXT, custom=True)
             elif self._dragged is self.btnCustomNumber:
@@ -177,9 +178,9 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.btnMbti.setEnabled(enabled)
         elif field.id == traits_field.id:
             self.btnTraits.setEnabled(enabled)
-        elif field.id == fear_field.id:
+        elif field.id == core_fear_field.id:
             self.btnFear.setEnabled(enabled)
-        elif field.id == desire_field.id:
+        elif field.id == core_desire_field.id:
             self.btnDesire.setEnabled(enabled)
         elif field.id == misbelief_field.id:
             self.btnMisbelief.setEnabled(enabled)
@@ -187,8 +188,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
     def _field_selected(self, field: TemplateField):
         self._selected_field = field
         self.stackedSettings.setCurrentWidget(self.pageSettings)
-        self.btnRemove.setVisible(not field.frozen)
-        self.btnRemove.setEnabled(not field.frozen)
+        self.btnRemove.setEnabled(True)
         self.cbShowLabel.setChecked(field.show_label)
         self.lineLabel.setText(field.name)
         if field.emoji:

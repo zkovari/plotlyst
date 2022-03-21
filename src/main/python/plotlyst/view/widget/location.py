@@ -20,7 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from PyQt5.QtCore import Qt
 
-from src.main.python.plotlyst.core.domain import Location, ProfileTemplate, location_name_field, Novel
+from src.main.python.plotlyst.core.domain import Location, Novel
+from src.main.python.plotlyst.core.template import location_name_field, ProfileTemplate
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateView, LabelsSelectionWidget
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 

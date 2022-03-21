@@ -35,9 +35,10 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
-    Location, default_location_profiles, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
-    default_tag_types, exclude_if_empty, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    SelectionItem, CharacterPreferences
+    Location, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
+    default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
+    CharacterPreferences
+from src.main.python.plotlyst.core.template import default_location_profiles, exclude_if_empty, SelectionItem
 
 
 class ApplicationNovelVersion(IntEnum):
