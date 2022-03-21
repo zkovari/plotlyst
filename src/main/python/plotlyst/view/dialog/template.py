@@ -188,6 +188,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
     def _field_selected(self, field: TemplateField):
         self._selected_field = field
         self.stackedSettings.setCurrentWidget(self.pageSettings)
+        self.btnRemove.setEnabled(True)
         self.cbShowLabel.setChecked(field.show_label)
         self.lineLabel.setText(field.name)
         if field.emoji:

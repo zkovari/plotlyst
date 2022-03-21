@@ -627,7 +627,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         elements = []
         for i in range(self.gridLayout.count()):
             item = self.gridLayout.itemAt(i)
-            if item and isinstance(item.widget(), TemplateFieldWidget):
+            if item and isinstance(item.widget(), TemplateFieldWidgetBase):
                 pos = self.gridLayout.getItemPosition(i)
                 item = self.gridLayout.itemAtPosition(pos[0], pos[1])
                 if item.alignment() & Qt.AlignRight:
