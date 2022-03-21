@@ -28,22 +28,23 @@ from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QTextEdit, QListView, QPushButton
-from fbs_runtime import platform
+    QSpacerItem, QListView, QPushButton
 from overrides import overrides
-from qthandy import ask_confirmation, spacer, btn_popup, hbox, margins
+from qthandy import ask_confirmation, spacer, btn_popup, hbox, vbox
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, ProfileElement, SelectionItemType, \
-    enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field, Margins
+    enneagram_field, traits_field, desire_field, fear_field, HAlignment, VAlignment, mbti_field
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -73,7 +74,8 @@ class _ProfileTemplateBase(QWidget):
     def _initGrid(self, editor_mode: bool):
         for el in self._profile.elements:
             widget = TemplateFieldWidgetFactory.widget(el.field)
-            # widget = TemplateFieldWidget(el.field, editor_mode)
+            if el.margins:
+                widget.setContentsMargins(el.margins.left, el.margins.top, el.margins.right, el.margins.bottom)
             self.widgets.append(widget)
             self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span,
                                       el.h_alignment.value | el.v_alignment.value)
@@ -377,13 +379,38 @@ class LabelTemplateDisplayWidget(TemplateDisplayWidget):
 
 
 class TemplateFieldWidgetBase(TemplateWidgetBase):
-    def __init__(self, field: TemplateField, editor: QWidget, parent=None):
+    def __init__(self, field: TemplateField, parent=None):
         super(TemplateFieldWidgetBase, self).__init__(field, parent)
-        self.wdgEditor = editor
+        self.lblEmoji = QLabel()
+        self.lblName = QLabel()
+        self.lblName.setText(self.field.name)
+
+        if self.field.emoji:
+            self.updateEmoji(emoji.emojize(self.field.emoji))
+        else:
+            self.lblEmoji.setHidden(True)
+
+        if not field.show_label:
+            self.lblName.setHidden(True)
 
     @overrides
     def setEnabled(self, enabled: bool):
-        self.wdgEditor.setEnabled(enabled)
+        if not self.layout():
+            return
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i)
+            if item and item.widget():
+                item.widget().setEnabled(enabled)
+
+    def updateEmoji(self, emoji: str):
+        if app_env.is_windows():
+            emoji_size = 14
+        else:
+            emoji_size = 20
+
+        self.lblEmoji.setFont(emoji_font(emoji_size))
+        self.lblEmoji.setText(emoji)
+        self.lblEmoji.setVisible(True)
 
     @abstractmethod
     def value(self) -> Any:
@@ -394,32 +421,59 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
         pass
 
 
+class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(LineTextTemplateFieldWidget, self).__init__(field, parent)
+        layout_ = hbox(self)
+        self.wdgEditor = QLineEdit(self)
+
+        layout_.addWidget(self.lblEmoji)
+        layout_.addWidget(self.lblName)
+        layout_.addWidget(self.wdgEditor)
+
+        if self.field.compact:
+            layout_.addWidget(spacer())
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.text()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setText(value)
+
+
+class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
+        layout_ = vbox(self)
+        self.wdgEditor = AutoAdjustableTextEdit(height=60)
+        self.wdgEditor.setAcceptRichText(False)
+        self.wdgEditor.setPlaceholderText(field.placeholder)
+
+        layout_.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        layout_.addWidget(self.wdgEditor)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.toPlainText()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setText(value)
+
+
 class TemplateFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, editor: QWidget, parent=None, field_margins: Optional[Margins] = None):
-        super(TemplateFieldWidget, self).__init__(field, editor, parent)
+    def __init__(self, field: TemplateField, editor: QWidget, parent=None):
+        super(TemplateFieldWidget, self).__init__(field, parent)
         self._layout = hbox(self)
-        if field_margins:
-            margins(self, field_margins.left, field_margins.top, field_margins.right, field_margins.bottom)
+        self.wdgEditor = editor
 
-        self.lblEmoji = QLabel()
-        if self.field.emoji:
-            self.updateEmoji(emoji.emojize(self.field.emoji))
-            self._layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
-        # elif editor_mode:
-        #     self.layout.addWidget(self.lblEmoji, alignment=Qt.AlignTop)
-
-        self.lblName = QLabel()
-        self.lblName.setText(self.field.name)
         if self.field.type in [TemplateFieldType.LABELS, TemplateFieldType.SMALL_TEXT]:
             label_alignment = Qt.AlignTop
         else:
             label_alignment = Qt.AlignVCenter
         self._layout.addWidget(self.lblName, alignment=label_alignment)
-
-        if not field.show_label:
-            self.lblName.setHidden(True)
-            if not self.field.emoji:
-                self._layout.addWidget(spacer(20))
 
         self._layout.addWidget(self.wdgEditor)
 
@@ -430,10 +484,6 @@ class TemplateFieldWidget(TemplateFieldWidgetBase):
     def value(self) -> Any:
         if isinstance(self.wdgEditor, QSpinBox):
             return self.wdgEditor.value()
-        if isinstance(self.wdgEditor, QLineEdit):
-            return self.wdgEditor.text()
-        if isinstance(self.wdgEditor, QTextEdit):
-            return self.wdgEditor.toPlainText()
         if isinstance(self.wdgEditor, QComboBox):
             return self.wdgEditor.currentText()
         if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
@@ -443,21 +493,10 @@ class TemplateFieldWidget(TemplateFieldWidgetBase):
     def setValue(self, value: Any):
         if isinstance(self.wdgEditor, QSpinBox):
             self.wdgEditor.setValue(value)
-        if isinstance(self.wdgEditor, (QLineEdit, QTextEdit)):
-            self.wdgEditor.setText(value)
         if isinstance(self.wdgEditor, QComboBox):
             self.wdgEditor.setCurrentText(value)
         if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
             self.wdgEditor.setValue(value)
-
-    def updateEmoji(self, emoji: str):
-        if platform.is_windows():
-            emoji_size = 14
-        else:
-            emoji_size = 20
-
-        self.lblEmoji.setFont(emoji_font(emoji_size))
-        self.lblEmoji.setText(emoji)
 
 
 class TemplateFieldWidgetFactory:
@@ -493,8 +532,9 @@ class TemplateFieldWidgetFactory:
         elif field.type == TemplateFieldType.BUTTON_SELECTION:
             widget = ButtonSelectionWidget(field)
         elif field.type == TemplateFieldType.SMALL_TEXT:
-            widget = AutoAdjustableTextEdit(height=60)
-            widget.setPlaceholderText(field.placeholder)
+            return SmallTextTemplateFieldWidget(field)
+        elif field.type == TemplateFieldType.TEXT:
+            return LineTextTemplateFieldWidget(field)
         elif field.type == TemplateFieldType.LABELS:
             widget = LabelsSelectionWidget(field)
         else:
@@ -594,7 +634,6 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
         field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
         widget_to_drop = TemplateFieldWidgetFactory.widget(field)
-        # widget_to_drop = TemplateFieldWidget(field)
         widget_to_drop.setEnabled(False)
         pos = self.gridLayout.getItemPosition(index)
         item: QLayoutItem = self.gridLayout.takeAt(index)
@@ -664,7 +703,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
     def _installEventFilter(self, widget: TemplateWidgetBase):
         widget.installEventFilter(self)
-        if isinstance(widget.wdgEditor, TextSelectionWidget):
+        if isinstance(TemplateWidgetBase, TemplateFieldWidget) and isinstance(widget.wdgEditor, TextSelectionWidget):
             widget.wdgEditor.installEventFilter(self)
 
     def _addPlaceholder(self, row: int, col: int):
