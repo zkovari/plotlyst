@@ -1060,8 +1060,10 @@ class Novel(NovelDescriptor):
         chars: List[Character] = []
         for scene in self.scenes:
             if scene.agendas and scene.agendas[0].character_id and str(scene.agendas[0].character_id) not in char_ids:
-                chars.append(scene.agendas[0].character(self))
-                char_ids.add(str(scene.agendas[0].character_id))
+                character = scene.agendas[0].character(self)
+                if character:
+                    chars.append(character)
+                    char_ids.add(str(scene.agendas[0].character_id))
 
         return chars
 
