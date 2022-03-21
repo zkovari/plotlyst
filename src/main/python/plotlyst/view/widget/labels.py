@@ -22,10 +22,9 @@ from typing import Union, List, Iterable, Set
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QMouseEvent
-from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QMenu, QWidgetAction, \
-    QSizePolicy, QPushButton
+from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy, QPushButton
 from overrides import overrides
-from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent
+from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent, btn_popup
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotValue, \
@@ -246,16 +245,15 @@ class LabelsEditorWidget(QFrame):
         self.setFrameShape(QFrame.Box)
         self.setStyleSheet('LabelsEditorWidget {background: white;}')
         if alignment == Qt.Horizontal:
-            hbox(self, 0, 1)
+            hbox(self, 2, 1)
         else:
-            vbox(self, 0, 1)
+            vbox(self, 2, 1)
         self._labels_index = {}
         self.clear()
 
         self.btnEdit = QPushButton()
         self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
         self.btnEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
-        self.btnEdit.setStyleSheet('QPushButton::menu-indicator{width:0px;} QPushButton {padding:1 5 1 5;}')
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
@@ -264,11 +262,7 @@ class LabelsEditorWidget(QFrame):
         self._popup = self._initPopupWidget()
         self._model.selection_changed.connect(self._selectionChanged)
 
-        menu = QMenu(self.btnEdit)
-        action = QWidgetAction(menu)
-        action.setDefaultWidget(self._popup)
-        menu.addAction(action)
-        self.btnEdit.setMenu(menu)
+        btn_popup(self.btnEdit, self._popup)
         self.layout().addWidget(self.btnEdit, alignment=Qt.AlignTop)
 
         self._wdgLabels = LabelsWidget()

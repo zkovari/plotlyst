@@ -77,6 +77,7 @@ class TemplateFieldType(Enum):
     LABELS = 6
     DISPLAY_SUBTITLE = 7
     DISPLAY_LABEL = 8
+    DISPLAY_LINE = 9
 
 
 class SelectionType(Enum):
@@ -244,7 +245,7 @@ negative_traits = sorted([
     'Unrealistic', 'Unreliable', 'Unstable', 'Vulnerable', 'Weak',
 ])
 
-traits_field = TemplateField(name='Traits', type=TemplateFieldType.LABELS,
+traits_field = TemplateField(name='Traits', type=TemplateFieldType.LABELS, emoji=':dna:',
                              id=uuid.UUID('76faae5f-b1e4-47f4-9e3f-ed8497f6c6d3'))
 for trait in positive_traits:
     traits_field.selections.append(SelectionItem(trait, meta={'positive': True}))
@@ -267,12 +268,25 @@ mbti_choices = get_selection_values(mbti_field)
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
                                 placeholder='The misbelief/lie the character believes in')
-fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':face_screaming_in_fear:',
-                           placeholder='Fear (select Enneagram to autofill)',
-                           id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'), show_label=False)
-desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
-                             placeholder='Desire (select Enneagram to autofill)',
-                             id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'), show_label=False)
+core_fear_field = TemplateField('Basic core fear', type=TemplateFieldType.SMALL_TEXT,
+                                emoji=':face_screaming_in_fear:',
+                                placeholder='Basic fear (select Enneagram to autofill)',
+                                id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'))
+core_desire_field = TemplateField('Basic core desire', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face:',
+                                  placeholder='Basic desire (select Enneagram to autofill)',
+                                  id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'))
+
+desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
+                             placeholder='What does the character want in the story?',
+                             id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
+need_field = TemplateField('Subconscious need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
+                           placeholder='What does the character actually need in the story?',
+                           id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
+weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
+                                 placeholder="What are the character's weaknesses or flaws in the story?",
+                                 id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
+values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hugging_face:',
+                             id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
 protagonist_role = SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c')
 deuteragonist_role = SelectionItem('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a')
@@ -307,9 +321,9 @@ class VAlignment(Enum):
 @dataclass
 class Margins:
     left: int = 2
-    top: int = 2
+    top: int = 0
     right: int = 2
-    bottom: int = 2
+    bottom: int = 0
 
 
 @dataclass
@@ -332,13 +346,20 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    personality_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_SUBTITLE)
-    fields = [ProfileElement(personality_title, 0, 0),
-              ProfileElement(enneagram_field, 5, 0),
-              ProfileElement(mbti_field, 5, 1),
-              ProfileElement(desire_field, 6, 0),
-              ProfileElement(fear_field, 6, 1),
-              ProfileElement(traits_field, 7, 0, col_span=2),
+    characterization_title = TemplateField('Basic characterization', type=TemplateFieldType.DISPLAY_LABEL)
+    story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_LABEL)
+    fields = [ProfileElement(characterization_title, 0, 0, col_span=2),
+              ProfileElement(enneagram_field, 1, 0, margins=Margins(left=15)),
+              ProfileElement(mbti_field, 1, 1),
+              ProfileElement(core_desire_field, 2, 0, margins=Margins(left=15)),
+              ProfileElement(core_fear_field, 2, 1),
+              ProfileElement(traits_field, 3, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(TemplateField('', type=TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2),
+              ProfileElement(story_title, 5, 0, col_span=2),
+              ProfileElement(desire_field, 6, 0, margins=Margins(left=15)),
+              ProfileElement(need_field, 6, 1),
+              ProfileElement(weaknesses_field, 7, 0, margins=Margins(left=15)),
+              ProfileElement(values_field, 8, 0, col_span=2, margins=Margins(left=15))
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
