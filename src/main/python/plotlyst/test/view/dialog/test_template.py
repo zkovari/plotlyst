@@ -55,7 +55,6 @@ def test_default_template(qtbot):
     assert not diag.btnDesire.isEnabled()
     assert not diag.btnTraits.isEnabled()
     assert diag.btnMisbelief.isEnabled()
-    assert not diag.btnAge.isEnabled()
     assert not diag.btnMbti.isEnabled()
 
     assert diag.profile_editor.profile().elements

@@ -424,15 +424,15 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
 class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(LineTextTemplateFieldWidget, self).__init__(field, parent)
-        layout_ = hbox(self)
+        _layout = hbox(self)
         self.wdgEditor = QLineEdit(self)
 
-        layout_.addWidget(self.lblEmoji)
-        layout_.addWidget(self.lblName)
-        layout_.addWidget(self.wdgEditor)
+        _layout.addWidget(self.lblEmoji)
+        _layout.addWidget(self.lblName)
+        _layout.addWidget(self.wdgEditor)
 
         if self.field.compact:
-            layout_.addWidget(spacer())
+            _layout.addWidget(spacer())
 
     @overrides
     def value(self) -> Any:
@@ -446,13 +446,13 @@ class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
-        layout_ = vbox(self)
+        _layout = vbox(self)
         self.wdgEditor = AutoAdjustableTextEdit(height=60)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setPlaceholderText(field.placeholder)
 
-        layout_.addWidget(group(self.lblEmoji, self.lblName, spacer()))
-        layout_.addWidget(self.wdgEditor)
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        _layout.addWidget(self.wdgEditor)
 
     @overrides
     def value(self) -> Any:
@@ -461,6 +461,32 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
     @overrides
     def setValue(self, value: Any):
         self.wdgEditor.setText(value)
+
+
+class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(NumericTemplateFieldWidget, self).__init__(field, parent)
+
+        _layout = hbox(self)
+        self.wdgEditor = QSpinBox()
+        if field.placeholder:
+            self.wdgEditor.setPrefix(field.placeholder + ': ')
+        self.wdgEditor.setMinimum(field.min_value)
+        self.wdgEditor.setMaximum(field.max_value)
+
+        _layout.addWidget(self.lblEmoji)
+        _layout.addWidget(self.lblName)
+        _layout.addWidget(self.wdgEditor)
+        if self.field.compact:
+            _layout.addWidget(spacer())
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
 
 
 class TemplateFieldWidget(TemplateFieldWidgetBase):
@@ -482,8 +508,6 @@ class TemplateFieldWidget(TemplateFieldWidgetBase):
 
     @overrides
     def value(self) -> Any:
-        if isinstance(self.wdgEditor, QSpinBox):
-            return self.wdgEditor.value()
         if isinstance(self.wdgEditor, QComboBox):
             return self.wdgEditor.currentText()
         if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
@@ -491,8 +515,6 @@ class TemplateFieldWidget(TemplateFieldWidgetBase):
 
     @overrides
     def setValue(self, value: Any):
-        if isinstance(self.wdgEditor, QSpinBox):
-            self.wdgEditor.setValue(value)
         if isinstance(self.wdgEditor, QComboBox):
             self.wdgEditor.setCurrentText(value)
         if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
@@ -515,11 +537,7 @@ class TemplateFieldWidgetFactory:
         elif field.id == traits_field.id:
             widget = TraitSelectionWidget(field)
         elif field.type == TemplateFieldType.NUMERIC:
-            widget = QSpinBox()
-            if field.placeholder:
-                widget.setPrefix(field.placeholder + ': ')
-            widget.setMinimum(field.min_value)
-            widget.setMaximum(field.max_value)
+            return NumericTemplateFieldWidget(field)
         elif field.type == TemplateFieldType.TEXT_SELECTION:
             widget = QComboBox()
             if not field.required:
@@ -529,8 +547,8 @@ class TemplateFieldWidgetFactory:
                     widget.addItem(_icon(item), item.text)
                 if item.type == SelectionItemType.SEPARATOR:
                     widget.insertSeparator(widget.count())
-        elif field.type == TemplateFieldType.BUTTON_SELECTION:
-            widget = ButtonSelectionWidget(field)
+        # elif field.type == TemplateFieldType.BUTTON_SELECTION:
+        #     widget = ButtonSelectionWidget(field)
         elif field.type == TemplateFieldType.SMALL_TEXT:
             return SmallTextTemplateFieldWidget(field)
         elif field.type == TemplateFieldType.TEXT:
