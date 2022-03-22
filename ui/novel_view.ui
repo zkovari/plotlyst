@@ -337,7 +337,7 @@ QToolButton:pressed {
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -392,37 +392,25 @@ QToolButton:pressed {
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <item>
-          <spacer name="horizontalSpacer_6">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="ItemsEditorWidget" name="wdgDramaticQuestions" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QWidget" name="wdgPlotContainer" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <property name="spacing">
+           <number>3</number>
+          </property>
+          <property name="leftMargin">
+           <number>15</number>
+          </property>
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
+         </layout>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">
@@ -797,12 +785,6 @@ QToolButton:pressed {
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
-   <class>ItemsEditorWidget</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.items_editor</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>StoryStructureEditor</class>

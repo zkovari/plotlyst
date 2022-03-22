@@ -20,9 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QPushButton, QSizePolicy
 
 from src.main.python.plotlyst.core.domain import SelectionItem
+from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -39,3 +40,24 @@ class SelectionItemPushButton(QPushButton):
             self.setIcon(IconRegistry.from_name(item.icon, item.icon_color))
 
         self.clicked.connect(partial(self.itemClicked.emit, item))
+
+
+class SecondaryActionPushButton(QPushButton):
+    def __init__(self, parent=None):
+        super(SecondaryActionPushButton, self).__init__(parent)
+        self.setStyleSheet('''
+            QPushButton {
+                border: 1px dashed grey;
+                border-radius: 6px;
+                color: grey;
+            }
+            QPushButton:pressed {
+                border: 1px solid grey;
+            }
+            QPushButton:checked {
+                border: 2px solid black;
+            }
+        ''')
+        self.setCursor(Qt.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        self.installEventFilter(OpacityEventFilter(enterOpacity=0.9, leaveOpacity=0.7, parent=self))

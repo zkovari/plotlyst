@@ -21,14 +21,16 @@ import copy
 from functools import partial
 from typing import Optional, List
 
+import qtanim
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView
+from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox
+from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
+    margins, italic, btn_popup_menu, ask_confirmation
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType
+    StoryBeatType, Plot, PlotType
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
@@ -37,9 +39,11 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.locations_model import LocationsTreeModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
-from src.main.python.plotlyst.view.common import OpacityEventFilter, link_buttons_to_pages
+from src.main.python.plotlyst.view.common import OpacityEventFilter, link_buttons_to_pages, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
+from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
+from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.generated.story_structure_character_link_widget_ui import \
     Ui_StoryStructureCharacterLink
 from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
@@ -523,3 +527,87 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
             self.treeChapters.hideColumn(ChaptersTreeModel.ColPlus)
             if not self.btnLocations.isChecked():
                 self.btnScenes.setChecked(True)
+
+
+class PlotWidget(QFrame, Ui_PlotWidget):
+    removalRequested = pyqtSignal()
+
+    def __init__(self, novel: Novel, plot: Plot, parent=None):
+        super(PlotWidget, self).__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+        self.plot = plot
+        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border: 1px solid {plot.icon_color};}}')
+
+        incr_font(self.lineName)
+        self.lineName.setText(self.plot.text)
+        self.lineName.textEdited.connect(self._nameEdited)
+
+        if plot.plot_type == PlotType.Main:
+            self.btnPlotIcon.setIcon(IconRegistry.cause_and_effect_icon(plot.icon_color))
+        elif plot.plot_type == PlotType.Internal:
+            self.btnPlotIcon.setIcon(IconRegistry.conflict_self_icon(plot.icon_color))
+        else:
+            self.btnPlotIcon.setIcon(IconRegistry.subplot_icon(plot.icon_color))
+
+        self.btnRemove.clicked.connect(self.removalRequested.emit)
+
+        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemove, parent=self))
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def _nameEdited(self, name: str):
+        self.plot.text = name
+        self.repo.update_novel(self.novel)
+
+
+class PlotEditor(QWidget, Ui_PlotEditor):
+    def __init__(self, novel: Novel, parent=None):
+        super(PlotEditor, self).__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+        for plot in self.novel.plots:
+            self._addPlotWidget(plot)
+
+        italic(self.btnAdd)
+        self.btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        menu = QMenu(self.btnAdd)
+        menu.addAction(IconRegistry.cause_and_effect_icon(), 'Main plot', lambda: self._newPlot(PlotType.Main))
+        menu.addAction(IconRegistry.conflict_self_icon(), 'Internal plot', lambda: self._newPlot(PlotType.Internal))
+        menu.addAction(IconRegistry.subplot_icon(), 'Subplot', lambda: self._newPlot(PlotType.Subplot))
+        btn_popup_menu(self.btnAdd, menu)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def _addPlotWidget(self, plot: Plot) -> PlotWidget:
+        widget = PlotWidget(self.novel, plot)
+        margins(widget, left=15)
+        widget.removalRequested.connect(partial(self._remove, widget))
+        self.scrollAreaWidgetContents.layout().insertWidget(self.scrollAreaWidgetContents.layout().count() - 2, widget)
+
+        return widget
+
+    def _newPlot(self, plot_type: PlotType):
+        if plot_type == PlotType.Internal:
+            name = 'Internal plot'
+        elif plot_type == PlotType.Subplot:
+            name = 'Subplot'
+        else:
+            name = 'Main plot'
+        plot = Plot(name, plot_type=plot_type)
+        self.novel.plots.append(plot)
+        widget = self._addPlotWidget(plot)
+        widget.lineName.setFocus()
+
+        self.repo.update_novel(self.novel)
+
+    def _remove(self, widget: PlotWidget):
+        if ask_confirmation(f'Are you sure you wnat to delete the plot {widget.plot.text}?'):
+            anim = qtanim.fade_out(widget, duration=150)
+            anim.finished.connect(partial(self.__destroy, widget))
+
+    def __destroy(self, widget: PlotWidget):
+        self.novel.plots.remove(widget.plot)
+        self.repo.update_novel(self.novel)
+        self.scrollAreaWidgetContents.layout().removeWidget(widget)
+        gc(widget)

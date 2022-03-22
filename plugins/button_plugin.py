@@ -4,7 +4,7 @@ from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
 from overrides import overrides
 
 from plugins import PluginBase
-from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
+from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton, SecondaryActionPushButton
 
 
 class ButtonPluginBase(PluginBase):
@@ -25,3 +25,10 @@ class SelectionItemPushButtonPlugin(QPyDesignerCustomWidgetPlugin, ButtonPluginB
     @overrides
     def classType(self):
         return SelectionItemPushButton
+
+
+class SecondaryActionPushButtonPlugin(QPyDesignerCustomWidgetPlugin, ButtonPluginBase):
+
+    @overrides
+    def classType(self):
+        return SecondaryActionPushButton

@@ -366,8 +366,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.creation', color='#ac7b84')
 
     @staticmethod
-    def conflict_self_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.mirror', color='#94b0da')
+    def conflict_self_icon(color: str = '#94b0da') -> QIcon:
+        return IconRegistry.from_name('mdi.mirror', color=color)
+
+    @staticmethod
+    def subplot_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.source-branch', color=color)
 
     @staticmethod
     def baby_icon() -> QIcon:
@@ -394,8 +398,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.ray-start', color=color)
 
     @staticmethod
-    def cause_and_effect_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.ray-start-arrow')
+    def cause_and_effect_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.ray-start-arrow', color=color)
 
     @staticmethod
     def reversed_cause_and_effect_icon() -> QIcon:

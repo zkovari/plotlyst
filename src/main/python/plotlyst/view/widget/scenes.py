@@ -43,7 +43,7 @@ from src.main.python.plotlyst.event.core import emit_critical, emit_event
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
+from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
@@ -213,19 +213,6 @@ class ScenePlotSelector(QWidget):
         self.scene.plot_values.remove(self.plotValue)
         self.parent().layout().removeWidget(self)
         gc(self)
-
-
-class SceneDramaticQuestionsWidget(_SceneLabelsEditor):
-
-    @overrides
-    def _initModel(self) -> SelectionItemsModel:
-        model = NovelPlotsModel(self.novel)
-        model.setEditable(False)
-        return model
-
-    @overrides
-    def items(self) -> List[SelectionItem]:
-        return self.novel.plots
 
 
 class SceneTagsWidget(_SceneLabelsEditor):
