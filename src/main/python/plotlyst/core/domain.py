@@ -333,6 +333,7 @@ class Plot(SelectionItem, CharacterBased):
     plot_type: PlotType = PlotType.Main
     value: Optional[PlotValue] = None
     character_id: Optional[uuid.UUID] = None
+    question: str = ''
 
     def __post_init__(self):
         self._character: Optional[Character] = None

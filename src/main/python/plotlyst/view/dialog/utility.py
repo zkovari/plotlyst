@@ -23,7 +23,7 @@ import logging
 import random
 from enum import Enum
 from functools import partial
-from typing import Optional
+from typing import Optional, Tuple
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, Qt, QSize, QObject, QEvent, QPoint, QRect, pyqtSignal
@@ -52,13 +52,15 @@ class IconSelectorDialog(QDialog):
         hbox(self, 1, 0)
 
         self._icon = ''
-        self._color = None
+        self._color: Optional[QColor] = None
         self.selector = IconSelectorWidget(self)
         self.selector.iconSelected.connect(self._icon_selected)
 
         self.layout().addWidget(self.selector)
 
-    def display(self):
+    def display(self, color: Optional[QColor] = None) -> Optional[Tuple[str, QColor]]:
+        if color:
+            self.selector.setColor(color)
         result = self.exec()
         if result == QDialog.Accepted and self._icon:
             return self._icon, self._color

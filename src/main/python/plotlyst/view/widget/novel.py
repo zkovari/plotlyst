@@ -23,6 +23,7 @@ from typing import Optional, List
 
 import qtanim
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
@@ -39,7 +40,9 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.locations_model import LocationsTreeModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
+from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import OpacityEventFilter, link_buttons_to_pages, VisibilityToggleEventFilter
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -537,18 +540,15 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.setupUi(self)
         self.novel = novel
         self.plot = plot
-        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border: 1px solid {plot.icon_color};}}')
 
         incr_font(self.lineName)
         self.lineName.setText(self.plot.text)
         self.lineName.textEdited.connect(self._nameEdited)
+        self.textQuestion.setPlainText(self.plot.question)
+        self.textQuestion.textChanged.connect(self._questionChanged)
 
-        if plot.plot_type == PlotType.Main:
-            self.btnPlotIcon.setIcon(IconRegistry.cause_and_effect_icon(plot.icon_color))
-        elif plot.plot_type == PlotType.Internal:
-            self.btnPlotIcon.setIcon(IconRegistry.conflict_self_icon(plot.icon_color))
-        else:
-            self.btnPlotIcon.setIcon(IconRegistry.subplot_icon(plot.icon_color))
+        self._updateIcon()
+        self.btnPlotIcon.clicked.connect(self._changeIcon)
 
         self.btnRemove.clicked.connect(self.removalRequested.emit)
 
@@ -556,9 +556,26 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
         self.repo = RepositoryPersistenceManager.instance()
 
+    def _updateIcon(self):
+        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border: 2px solid {self.plot.icon_color};}}')
+        if self.plot.icon:
+            self.btnPlotIcon.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
+
     def _nameEdited(self, name: str):
         self.plot.text = name
         self.repo.update_novel(self.novel)
+
+    def _questionChanged(self):
+        self.plot.question = self.textQuestion.toPlainText()
+        self.repo.update_novel(self.novel)
+
+    def _changeIcon(self):
+        result = IconSelectorDialog(self).display(QColor(self.plot.icon_color))
+        if result:
+            self.plot.icon = result[0]
+            self.plot.icon_color = result[1].name()
+            self._updateIcon()
+            self.repo.update_novel(self.novel)
 
 
 class PlotEditor(QWidget, Ui_PlotEditor):
@@ -590,12 +607,16 @@ class PlotEditor(QWidget, Ui_PlotEditor):
     def _newPlot(self, plot_type: PlotType):
         if plot_type == PlotType.Internal:
             name = 'Internal plot'
+            icon = 'mdi.mirror'
         elif plot_type == PlotType.Subplot:
             name = 'Subplot'
+            icon = 'mdi.source-branch'
         else:
             name = 'Main plot'
-        plot = Plot(name, plot_type=plot_type)
+            icon = 'mdi.ray-start-arrow'
+        plot = Plot(name, plot_type=plot_type, icon=icon)
         self.novel.plots.append(plot)
+        plot.icon_color = STORY_LINE_COLOR_CODES[(len(self.novel.plots) - 1) % len(STORY_LINE_COLOR_CODES)]
         widget = self._addPlotWidget(plot)
         widget.lineName.setFocus()
 

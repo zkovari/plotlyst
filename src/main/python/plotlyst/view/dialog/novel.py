@@ -17,15 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from dataclasses import dataclass
 from typing import Optional
 
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+from PyQt5.QtWidgets import QDialog
 
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Novel, Plot, PlotType, Character
+from src.main.python.plotlyst.core.domain import NovelDescriptor
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
-from src.main.python.plotlyst.view.generated.plot_editor_dialog_ui import Ui_PlotEditorDialog
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 
 class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
@@ -40,57 +37,3 @@ class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
         if result == QDialog.Rejected:
             return None
         return self.lineTitle.text()
-
-
-@dataclass
-class PlotEditionResult:
-    text: str
-    plot_type: PlotType
-    character: Optional[Character] = None
-
-
-class PlotEditorDialog(QDialog, Ui_PlotEditorDialog):
-    def __init__(self, novel: Novel, plot: Optional[Plot] = None, parent=None):
-        super().__init__(parent)
-        self.setupUi(self)
-        self.novel = novel
-
-        self.rbMainPlot.setIcon(IconRegistry.cause_and_effect_icon())
-        self.rbInternalPlot.setIcon(IconRegistry.conflict_self_icon())
-        self.rbSubplot.setIcon(IconRegistry.from_name('mdi.source-branch'))
-
-        self.btnSave = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.btnSave.setDisabled(True)
-
-        self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
-
-        for char in self.novel.characters:
-            self.cbCharacter.addItem(avatars.avatar(char), char.name, char)
-        if self.cbCharacter.count() == 0:
-            self.cbCharacter.addItem('No character available yet', None)
-
-        self.cbCharacter.setCurrentIndex(0)
-
-        if plot:
-            self.lineKeyphrase.setText(plot.text)
-            if plot.plot_type == PlotType.Main:
-                self.rbMainPlot.setChecked(True)
-            elif plot.plot_type == PlotType.Internal:
-                self.rbInternalPlot.setChecked(True)
-            elif plot.plot_type == PlotType.Subplot:
-                self.rbSubplot.setChecked(True)
-
-            char = plot.character(self.novel)
-            if char:
-                self.cbCharacter.setCurrentText(char.name)
-
-    def display(self) -> Optional[PlotEditionResult]:
-        result = self.exec()
-        if result == QDialog.Rejected:
-            return None
-        plot_type = PlotType.Main
-        if self.rbInternalPlot.isChecked():
-            plot_type = PlotType.Internal
-        elif self.rbSubplot.isChecked():
-            plot_type = PlotType.Subplot
-        return PlotEditionResult(self.lineKeyphrase.text(), plot_type, self.cbCharacter.currentData())

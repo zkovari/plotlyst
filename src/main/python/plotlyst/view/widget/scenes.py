@@ -53,7 +53,8 @@ from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui i
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, SelectionItemLabel, ScenePlotValueLabel
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, SelectionItemLabel, ScenePlotValueLabel, \
+    PlotLabel
 from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
 from src.main.python.plotlyst.worker.cache import acts_registry
 # class SceneGoalsWidget(LabelsEditorWidget):
@@ -182,7 +183,7 @@ class ScenePlotSelector(QWidget):
         for plot in self.novel.plots:
             if plot.id in occupied_plot_ids:
                 continue
-            label = SelectionItemLabel(plot)
+            label = PlotLabel(plot)
             label.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=label))
             label.clicked.connect(partial(self._plotSelected, plot))
             self.selectorWidget.layout().addWidget(label)

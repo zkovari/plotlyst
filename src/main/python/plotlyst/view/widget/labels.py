@@ -208,20 +208,20 @@ class SelectionItemLabel(Label):
         return '#2e5266'
 
 
-class ScenePlotValueLabel(SelectionItemLabel):
+class PlotLabel(SelectionItemLabel):
+    @overrides
+    def _borderColor(self):
+        return self.item.icon_color
+
+
+class ScenePlotValueLabel(PlotLabel):
     def __init__(self, plot_value: ScenePlotValue, parent=None, removalEnabled: bool = True):
         super(ScenePlotValueLabel, self).__init__(plot_value.plot, parent, removalEnabled)
         self.lblText.clear()
         self.lblText.hide()
-        if self.item.icon:
-            self.btnIcon.setIcon(IconRegistry.from_name(self.item.icon, text_color_with_bg_color(self.item.color_hexa)))
-        else:
+        if not self.item.icon:
             self.btnIcon.setVisible(True)
             self.btnIcon.setIcon(IconRegistry.plot_type_icon(plot_value.plot.plot_type))
-
-    @overrides
-    def _borderColor(self):
-        return self.item.color_hexa
 
 
 class CharacterGoalLabel(SelectionItemLabel):
