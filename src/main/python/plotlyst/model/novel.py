@@ -23,12 +23,11 @@ from typing import Any, List
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict, SceneStage, Plot, TagType, \
+from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict, SceneStage, TagType, \
     Tag
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import PlotCreatedEvent, NovelReloadRequestedEvent
+from src.main.python.plotlyst.events import NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel, DefaultSelectionItemsModel
-from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -56,29 +55,6 @@ class _NovelSelectionItemsModel(SelectionItemsModel):
         if updated and role != Qt.CheckStateRole:
             self.repo.update_novel(self.novel)
         return updated
-
-
-class NovelPlotsModel(_NovelSelectionItemsModel):
-
-    @overrides
-    def _newItem(self) -> QModelIndex:
-        plot = Plot(text='')
-        self.novel.plots.append(plot)
-        plot.color_hexa = STORY_LINE_COLOR_CODES[
-            (len(self.novel.plots) - 1) % len(STORY_LINE_COLOR_CODES)]
-        self.repo.update_novel(self.novel)
-
-        emit_event(PlotCreatedEvent(self))
-
-        return self.index(self.rowCount() - 1, 0)
-
-    @overrides
-    def remove(self, index: QModelIndex):
-        super().remove(index)
-        self.novel.plots.pop(index.row())
-
-        self.repo.update_novel(self.novel)
-        emit_event(NovelReloadRequestedEvent(self))
 
 
 class NovelTagsModel(_NovelSelectionItemsModel):

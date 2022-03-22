@@ -85,21 +85,6 @@ class NovelView(AbstractNovelView):
             f'#wdgTitle {{border-image: url({resource_registry.frame1}) 0 0 0 0 stretch stretch;}}')
 
         self.ui.wdgPlotContainer.layout().addWidget(PlotEditor(self.novel))
-        # for plot in self.novel.plots:
-        #     w = PlotWidget(self.novel, plot)
-        #     margins(w, left=15)
-        #     self.ui.wdgPlotContainer.layout().addWidget(w)
-
-        # self.btnAddPlot = SecondaryActionPushButton('Add new plot')
-        # italic(self.btnAddPlot)
-        # self.btnAddPlot.setIcon(IconRegistry.plus_icon('grey'))
-        # menu = QMenu(self.btnAddPlot)
-        # menu.addAction(IconRegistry.cause_and_effect_icon(), 'Main plot', lambda: self._add_new_plot(PlotType.Main))
-        # menu.addAction(IconRegistry.conflict_self_icon(), 'Internal plot',
-        #                lambda: self._add_new_plot(PlotType.Internal))
-        # menu.addAction(IconRegistry.subplot_icon(), 'Subplot', lambda: self._add_new_plot(PlotType.Subplot))
-        # btn_popup_menu(self.btnAddPlot, menu)
-        # self.ui.wdgPlotContainer.layout().addWidget(self.btnAddPlot, alignment=Qt.AlignLeft)
 
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
@@ -148,7 +133,6 @@ class NovelView(AbstractNovelView):
     @overrides
     def refresh(self):
         self.ui.lblTitle.setText(self.novel.title)
-        self.story_lines_model.modelReset.emit()
         self.conflict_model.modelReset.emit()
 
         self._conflict_selected()
@@ -169,22 +153,6 @@ class NovelView(AbstractNovelView):
             self.repo.update_project_novel(self.novel)
             self.ui.lblTitle.setText(self.novel.title)
             emit_event(NovelUpdatedEvent(self, self.novel))
-
-    # def _add_new_plot(self, plot_type: PlotType):
-    #     if plot_type == PlotType.Internal:
-    #         name = 'Internal plot'
-    #     elif plot_type == PlotType.Subplot:
-    #         name = 'Subplot'
-    #     else:
-    #         name = 'Main plot'
-    #     plot = Plot(name, plot_type=plot_type)
-    #     self.novel.plots.append(plot)
-    #     widget = PlotWidget(self.novel, plot)
-    #     margins(widget, left=15)
-    #     self.ui.wdgPlotContainer.layout().insertWidget(self.ui.wdgPlotContainer.layout().count() - 1, widget)
-    #     widget.lineName.setFocus()
-    #
-    #     self.repo.update_novel(self.novel)
 
     def _conflict_selected(self):
         selection = bool(self.ui.tblConflicts.selectedIndexes())
