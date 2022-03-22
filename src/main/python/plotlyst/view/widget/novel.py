@@ -547,6 +547,9 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.textQuestion.setPlainText(self.plot.question)
         self.textQuestion.textChanged.connect(self._questionChanged)
 
+        if not self.plot.values:
+            self.wdgValues.setHidden(True)
+
         self._updateIcon()
         self.btnPlotIcon.clicked.connect(self._changeIcon)
 

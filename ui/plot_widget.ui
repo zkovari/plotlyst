@@ -145,15 +145,9 @@ QToolButton:checked {
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="btnValueIcon">
-       <property name="focusPolicy">
-        <enum>Qt::ClickFocus</enum>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
-       </property>
-       <property name="text">
-        <string/>
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
        </property>
       </widget>
      </item>
