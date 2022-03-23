@@ -31,7 +31,7 @@ from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, c
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType, Plot, PlotType
+    StoryBeatType, Plot, PlotType, PlotValue
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
@@ -57,7 +57,7 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, PlotValueLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -544,6 +544,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.plot = plot
 
         incr_font(self.lineName)
+        bold(self.lineName)
         self.lineName.setText(self.plot.text)
         self.lineName.textEdited.connect(self._nameEdited)
         self.textQuestion.setPlainText(self.plot.question)
@@ -551,10 +552,13 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
         flow(self.wdgValues)
 
+        for value in self.plot.values:
+            self._addValue(value)
+
         self._btnAddValue = SecondaryActionPushButton(self)
         self._btnAddValue.setText('Attach story value')
         self.wdgValues.layout().addWidget(self._btnAddValue)
-        self._btnAddValue.clicked.connect(self._addValue)
+        self._btnAddValue.clicked.connect(self._newValue)
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemove, parent=self))
 
@@ -586,10 +590,31 @@ class PlotWidget(QFrame, Ui_PlotWidget):
             self._updateIcon()
             self.repo.update_novel(self.novel)
 
-    def _addValue(self):
+    def _newValue(self):
         value = PlotValueEditorDialog().display()
         if value:
-            pass
+            self.plot.values.append(value)
+            self.wdgValues.layout().removeWidget(self._btnAddValue)
+            self._addValue(value)
+            self.wdgValues.layout().addWidget(self._btnAddValue)
+
+            self.repo.update_novel(self.novel)
+
+    def _addValue(self, value: PlotValue):
+        label = PlotValueLabel(value, self, removalEnabled=True)
+        label.installEventFilter(OpacityEventFilter(parent=label))
+        self.wdgValues.layout().addWidget(label)
+        label.removalRequested.connect(partial(self._removeValue, label))
+
+    def _removeValue(self, widget: PlotValueLabel):
+        anim = qtanim.fade_out(widget, duration=150)
+        anim.finished.connect(partial(self.__destroyValue, widget))
+
+    def __destroyValue(self, widget: PlotValueLabel):
+        self.plot.values.remove(widget.value)
+        self.repo.update_novel(self.novel)
+        self.wdgValues.layout().removeWidget(widget)
+        gc(widget)
 
 
 class PlotEditor(QWidget, Ui_PlotEditor):

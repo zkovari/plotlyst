@@ -218,13 +218,14 @@ class PlotValueLabel(SelectionItemLabel):
 
     def __init__(self, item: PlotValue, parent=None, removalEnabled: bool = False):
         super(PlotValueLabel, self).__init__(item, parent, removalEnabled)
+        self.value = item
         if item.negative:
             versusIcon = QToolButton(self)
             transparent(versusIcon)
             versusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-h'))
-            self.layout().insertWidget(1, versusIcon)
+            self.layout().insertWidget(2, versusIcon)
             self.lblNegative = QLabel(item.negative)
-            self.layout().insertWidget(1, self.lblNegative)
+            self.layout().insertWidget(3, self.lblNegative)
 
     @overrides
     def _borderColor(self):

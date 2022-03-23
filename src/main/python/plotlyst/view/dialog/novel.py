@@ -28,6 +28,7 @@ from qthandy import flow
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue
 from src.main.python.plotlyst.view.common import OpacityEventFilter, link_editor_to_btn, DisabledClickEventFilter
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from src.main.python.plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -64,10 +65,10 @@ class _TemplatePlotValueButton(QPushButton):
                 padding: 2px;
             }}
             QPushButton:pressed {{
-                border: 3px solid white;
+                border: 3px solid black;
             }}
         ''')
-        self.installEventFilter(OpacityEventFilter(leaveOpacity=0.6, parent=self))
+        self.installEventFilter(OpacityEventFilter(parent=self))
         self.setCursor(Qt.PointingHandCursor)
 
 
@@ -76,9 +77,14 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         super(PlotValueEditorDialog, self).__init__(parent)
         self.setupUi(self)
 
+        self._value = PlotValue('')
+
         self.btnChargeUp.setIcon(IconRegistry.charge_icon(3))
         self.btnChargeDown.setIcon(IconRegistry.charge_icon(-3))
         self.btnVersusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-v'))
+
+        self.btnIcon.setIcon(IconRegistry.icons_icon('grey'))
+        self.btnIcon.clicked.connect(self._changeIcon)
 
         flow(self.wdgTemplates)
         templates = [
@@ -104,15 +110,26 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
     def display(self) -> Optional[PlotValue]:
         result = self.exec()
         if result == QDialog.Accepted:
-            return PlotValue(text=self.linePositive.text(), negative=self.lineNegative.text())
+            self._value.text = self.linePositive.text()
+            self._value.negative = self.lineNegative.text()
+            return self._value
 
     def _fillTemplate(self, value: PlotValue):
         self.linePositive.setText(value.text)
         self.lineNegative.setText(value.negative)
         if value.icon:
             self.btnIcon.setIcon(IconRegistry.from_name(value.icon, value.icon_color))
+            self._value.icon = value.icon
+            self._value.icon_color = value.icon_color
 
         glow_color = QColor(value.icon_color)
         qtanim.glow(self.linePositive, color=glow_color)
         qtanim.glow(self.lineNegative, color=glow_color)
         qtanim.glow(self.btnIcon, color=glow_color)
+
+    def _changeIcon(self):
+        result = IconSelectorDialog().display()
+        if result:
+            self._value.icon = result[0]
+            self._value.icon_color = result[1].name()
+            self.btnIcon.setIcon(IconRegistry.from_name(self._value.icon, self._value.icon_color))
