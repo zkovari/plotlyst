@@ -28,10 +28,10 @@ def test_delete_plot(qtbot, filled_window: MainWindow, monkeypatch):
     patch_confirmed(monkeypatch)
     item = view.plot_editor.scrollAreaWidgetContents.layout().itemAt(0)
     assert item and item.widget() and isinstance(item.widget(), PlotWidget)
-    plot_widet: PlotWidget = item.widget()
-    plot_widet.btnRemove.click()
+    plot_widget: PlotWidget = item.widget()
+    plot_widget.btnRemove.click()
 
-    qtbot.wait(200)
+    qtbot.wait(300)
 
     assert len(view.novel.plots) == 2
     assert plot not in view.novel.plots
