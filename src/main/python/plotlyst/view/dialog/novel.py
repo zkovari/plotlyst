@@ -17,15 +17,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from dataclasses import dataclass
+from functools import partial
 from typing import Optional
 
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+import qtanim
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QDialog, QPushButton, QDialogButtonBox
+from qthandy import flow
 
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Novel, Plot, PlotType, Character
+from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue
+from src.main.python.plotlyst.view.common import OpacityEventFilter, link_editor_to_btn, DisabledClickEventFilter
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
-from src.main.python.plotlyst.view.generated.plot_editor_dialog_ui import Ui_PlotEditorDialog
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
@@ -42,55 +48,88 @@ class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
         return self.lineTitle.text()
 
 
-@dataclass
-class PlotEditionResult:
-    text: str
-    plot_type: PlotType
-    character: Optional[Character] = None
+class _TemplatePlotValueButton(QPushButton):
+    def __init__(self, value: PlotValue, parent=None):
+        super(_TemplatePlotValueButton, self).__init__(parent)
+        if value.negative:
+            self.setText(f'{value.text}/{value.negative}')
+        else:
+            self.setText(value.text)
+        if value.icon:
+            self.setIcon(IconRegistry.from_name(value.icon, value.icon_color))
+
+        self.setStyleSheet(f'''
+            QPushButton {{
+                border: 3px solid {value.icon_color};
+                border-radius: 6px;
+                padding: 2px;
+            }}
+            QPushButton:pressed {{
+                border: 3px solid black;
+            }}
+        ''')
+        self.installEventFilter(OpacityEventFilter(parent=self))
+        self.setCursor(Qt.PointingHandCursor)
 
 
-class PlotEditorDialog(QDialog, Ui_PlotEditorDialog):
-    def __init__(self, novel: Novel, plot: Optional[Plot] = None, parent=None):
-        super().__init__(parent)
+class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
+    def __init__(self, parent=None):
+        super(PlotValueEditorDialog, self).__init__(parent)
         self.setupUi(self)
-        self.novel = novel
 
-        self.rbMainPlot.setIcon(IconRegistry.cause_and_effect_icon())
-        self.rbInternalPlot.setIcon(IconRegistry.conflict_self_icon())
-        self.rbSubplot.setIcon(IconRegistry.from_name('mdi.source-branch'))
+        self._value = PlotValue('')
 
-        self.btnSave = self.buttonBox.button(QDialogButtonBox.Ok)
-        self.btnSave.setDisabled(True)
+        self.btnChargeUp.setIcon(IconRegistry.charge_icon(3))
+        self.btnChargeDown.setIcon(IconRegistry.charge_icon(-3))
+        self.btnVersusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-v'))
 
-        self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
+        self.btnIcon.setIcon(IconRegistry.icons_icon('grey'))
+        self.btnIcon.clicked.connect(self._changeIcon)
 
-        for char in self.novel.characters:
-            self.cbCharacter.addItem(avatars.avatar(char), char.name, char)
-        if self.cbCharacter.count() == 0:
-            self.cbCharacter.addItem('No character available yet', None)
+        flow(self.wdgTemplates)
+        templates = [
+            PlotValue(text='Love', negative='Hate', icon='ei.heart', icon_color='#d1495b'),
+            PlotValue(text='Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c'),
+            PlotValue(text='Justice', negative='Injustice', icon='fa5s.gavel', icon_color='#a68a64'),
+            PlotValue(text='Maturity', negative='Immaturity', icon='fa5s.seedling', icon_color='#95d5b2'),
+            PlotValue(text='Truth', negative='Lie', icon='mdi.scale-balance', icon_color='#5390d9'),
+            PlotValue(text='Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9'),
+            PlotValue(text='Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c')
+        ]
 
-        self.cbCharacter.setCurrentIndex(0)
+        for value in templates:
+            btn = _TemplatePlotValueButton(value)
+            self.wdgTemplates.layout().addWidget(btn)
+            btn.clicked.connect(partial(self._fillTemplate, value))
 
-        if plot:
-            self.lineKeyphrase.setText(plot.text)
-            if plot.plot_type == PlotType.Main:
-                self.rbMainPlot.setChecked(True)
-            elif plot.plot_type == PlotType.Internal:
-                self.rbInternalPlot.setChecked(True)
-            elif plot.plot_type == PlotType.Subplot:
-                self.rbSubplot.setChecked(True)
+        btnOk = self.buttonBox.button(QDialogButtonBox.Ok)
+        btnOk.setEnabled(False)
+        btnOk.installEventFilter(DisabledClickEventFilter(lambda: qtanim.shake(self.linePositive), parent=btnOk))
+        link_editor_to_btn(self.linePositive, btnOk)
 
-            char = plot.character(self.novel)
-            if char:
-                self.cbCharacter.setCurrentText(char.name)
-
-    def display(self) -> Optional[PlotEditionResult]:
+    def display(self) -> Optional[PlotValue]:
         result = self.exec()
-        if result == QDialog.Rejected:
-            return None
-        plot_type = PlotType.Main
-        if self.rbInternalPlot.isChecked():
-            plot_type = PlotType.Internal
-        elif self.rbSubplot.isChecked():
-            plot_type = PlotType.Subplot
-        return PlotEditionResult(self.lineKeyphrase.text(), plot_type, self.cbCharacter.currentData())
+        if result == QDialog.Accepted:
+            self._value.text = self.linePositive.text()
+            self._value.negative = self.lineNegative.text()
+            return self._value
+
+    def _fillTemplate(self, value: PlotValue):
+        self.linePositive.setText(value.text)
+        self.lineNegative.setText(value.negative)
+        if value.icon:
+            self.btnIcon.setIcon(IconRegistry.from_name(value.icon, value.icon_color))
+            self._value.icon = value.icon
+            self._value.icon_color = value.icon_color
+
+        glow_color = QColor(value.icon_color)
+        qtanim.glow(self.linePositive, color=glow_color)
+        qtanim.glow(self.lineNegative, color=glow_color)
+        qtanim.glow(self.btnIcon, color=glow_color)
+
+    def _changeIcon(self):
+        result = IconSelectorDialog().display()
+        if result:
+            self._value.icon = result[0]
+            self._value.icon_color = result[1].name()
+            self.btnIcon.setIcon(IconRegistry.from_name(self._value.icon, self._value.icon_color))

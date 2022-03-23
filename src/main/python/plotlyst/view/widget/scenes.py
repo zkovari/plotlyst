@@ -43,7 +43,7 @@ from src.main.python.plotlyst.event.core import emit_critical, emit_event
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelTagsModel
+from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
@@ -53,7 +53,8 @@ from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui i
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, SelectionItemLabel, ScenePlotValueLabel
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, SelectionItemLabel, ScenePlotValueLabel, \
+    PlotLabel
 from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
 from src.main.python.plotlyst.worker.cache import acts_registry
 # class SceneGoalsWidget(LabelsEditorWidget):
@@ -182,7 +183,7 @@ class ScenePlotSelector(QWidget):
         for plot in self.novel.plots:
             if plot.id in occupied_plot_ids:
                 continue
-            label = SelectionItemLabel(plot)
+            label = PlotLabel(plot)
             label.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=label))
             label.clicked.connect(partial(self._plotSelected, plot))
             self.selectorWidget.layout().addWidget(label)
@@ -213,19 +214,6 @@ class ScenePlotSelector(QWidget):
         self.scene.plot_values.remove(self.plotValue)
         self.parent().layout().removeWidget(self)
         gc(self)
-
-
-class SceneDramaticQuestionsWidget(_SceneLabelsEditor):
-
-    @overrides
-    def _initModel(self) -> SelectionItemsModel:
-        model = NovelPlotsModel(self.novel)
-        model.setEditable(False)
-        return model
-
-    @overrides
-    def items(self) -> List[SelectionItem]:
-        return self.novel.plots
 
 
 class SceneTagsWidget(_SceneLabelsEditor):

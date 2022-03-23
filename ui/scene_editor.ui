@@ -980,6 +980,9 @@
                    <property name="positive" stdset="0">
                     <bool>true</bool>
                    </property>
+                   <property name="base" stdset="0">
+                    <bool>true</bool>
+                   </property>
                   </widget>
                  </item>
                 </layout>

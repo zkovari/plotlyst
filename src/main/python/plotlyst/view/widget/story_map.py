@@ -86,7 +86,7 @@ class StoryLinesMapWidget(QWidget):
             previous_x = 0
             y = self._story_line_y(sl_i)
             path = QPainterPath()
-            painter.setPen(QPen(QColor(plot.color_hexa), 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
             path.moveTo(0, y)
             path.lineTo(5, y)
 
@@ -127,7 +127,7 @@ class StoryLinesMapWidget(QWidget):
         base_y = y
         for sl_i, plot in enumerate(self.novel.plots):
             y = 50 * (sl_i + 1) + 25 + base_y
-            painter.setPen(QPen(QColor(plot.color_hexa), 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
             painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
             painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
             painter.drawText(5, y - 15, plot.text)

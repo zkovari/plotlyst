@@ -297,9 +297,10 @@ class PlotType(Enum):
     Subplot = 'subplot'
 
 
+@dataclass
 class PlotValue(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    description: str = ''
+    negative: str = ''
 
     @overrides
     def __hash__(self):
@@ -331,8 +332,9 @@ class CharacterBased(ABC):
 class Plot(SelectionItem, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     plot_type: PlotType = PlotType.Main
-    value: Optional[PlotValue] = None
+    values: List[PlotValue] = field(default_factory=list)
     character_id: Optional[uuid.UUID] = None
+    question: str = ''
 
     def __post_init__(self):
         self._character: Optional[Character] = None

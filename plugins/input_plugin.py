@@ -4,7 +4,8 @@ from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
 from overrides import overrides
 
 from plugins import PluginBase
-from src.main.python.plotlyst.view.widget.input import Toggle, RotatedButton, DocumentTextEditor
+from src.main.python.plotlyst.view.widget.input import Toggle, RotatedButton, DocumentTextEditor, \
+    AutoAdjustableTextEdit, RemovalButton
 
 
 class InputPluginBase(PluginBase):
@@ -39,3 +40,17 @@ class DocumentTextEditorPlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
     @overrides
     def classType(self):
         return DocumentTextEditor
+
+
+class AutoAdjustableTextEditPlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
+
+    @overrides
+    def classType(self):
+        return AutoAdjustableTextEdit
+
+
+class RemovalButtonPlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
+
+    @overrides
+    def classType(self):
+        return RemovalButton

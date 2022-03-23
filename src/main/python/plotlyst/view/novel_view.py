@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
 
 from PyQt5.QtCore import QObject, QEvent
 from PyQt5.QtWidgets import QHeaderView
@@ -25,18 +24,19 @@ from overrides import overrides
 from qthandy import retain_when_hidden, ask_confirmation
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Plot, Document
+from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
-from src.main.python.plotlyst.model.novel import NovelPlotsModel, NovelConflictsModel
+from src.main.python.plotlyst.model.novel import NovelConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, OpacityEventFilter
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
-from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, PlotEditionResult, NovelEditionDialog
+from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.novel import PlotEditor
 
 
 class NovelView(AbstractNovelView):
@@ -84,19 +84,8 @@ class NovelView(AbstractNovelView):
         self.ui.wdgTitle.setStyleSheet(
             f'#wdgTitle {{border-image: url({resource_registry.frame1}) 0 0 0 0 stretch stretch;}}')
 
-        self.story_lines_model = NovelPlotsModel(self.novel)
-        self.ui.wdgDramaticQuestions.tableView.horizontalHeader().setStretchLastSection(False)
-        self.ui.wdgDramaticQuestions.setModel(self.story_lines_model)
-        self.ui.wdgDramaticQuestions.setInlineEditionEnabled(False)
-        self.ui.wdgDramaticQuestions.editRequested.connect(self._edit_plot)
-
-        self.ui.wdgDramaticQuestions.tableView.horizontalHeader().show()
-        self.ui.wdgDramaticQuestions.tableView.setColumnWidth(NovelPlotsModel.ColName, 250)
-        self.ui.wdgDramaticQuestions.tableView.setColumnWidth(NovelPlotsModel.ColPlotType, 100)
-        self.ui.wdgDramaticQuestions.tableView.setColumnWidth(NovelPlotsModel.ColCharacter, 155)
-        self.ui.wdgDramaticQuestions.tableView.setColumnWidth(NovelPlotsModel.ColValueType, 60)
-        self.ui.wdgDramaticQuestions.setAskRemovalConfirmation(True)
-        self.ui.wdgDramaticQuestions.setBgColorFieldEnabled(True)
+        self.plot_editor = PlotEditor(self.novel)
+        self.ui.wdgPlotContainer.layout().addWidget(self.plot_editor)
 
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
@@ -145,8 +134,8 @@ class NovelView(AbstractNovelView):
     @overrides
     def refresh(self):
         self.ui.lblTitle.setText(self.novel.title)
-        self.story_lines_model.modelReset.emit()
         self.conflict_model.modelReset.emit()
+
         self._conflict_selected()
 
     @overrides
@@ -165,18 +154,6 @@ class NovelView(AbstractNovelView):
             self.repo.update_project_novel(self.novel)
             self.ui.lblTitle.setText(self.novel.title)
             emit_event(NovelUpdatedEvent(self, self.novel))
-
-    def _edit_plot(self, plot: Plot):
-        edited_plot: Optional[PlotEditionResult] = PlotEditorDialog(self.novel, plot).display()
-        if edited_plot is None:
-            return
-
-        plot.text = edited_plot.text
-        plot.plot_type = edited_plot.plot_type
-        plot.set_character(edited_plot.character)
-
-        self.story_lines_model.modelReset.emit()
-        self.repo.update_novel(self.novel)
 
     def _conflict_selected(self):
         selection = bool(self.ui.tblConflicts.selectedIndexes())

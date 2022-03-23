@@ -23,10 +23,10 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt, QPoint, QAbstractItemModel, QCoreApplication, QTimer
 from PyQt5.QtWidgets import QAbstractItemView, QMenu, QAction, QMessageBox, QDialog, QApplication
 
-from src.main.python.plotlyst.model.common import SelectionItemsModel
+from src.main.python.plotlyst.core.domain import PlotType
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
-from src.main.python.plotlyst.view.dialog.novel import PlotEditorDialog, NovelEditionDialog
+from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.docs_view import DocumentsView
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -193,34 +193,10 @@ def create_character(qtbot, window: MainWindow, name: str):
     characters.editor.ui.btnClose.click()
 
 
-def edit_plot_dialog(text: str):
-    dialog: QDialog = QApplication.instance().activeModalWidget()
-    try:
-        assert isinstance(dialog, PlotEditorDialog)
-        edition_dialog: PlotEditorDialog = dialog
-        edition_dialog.lineKeyphrase.setText(text)
-        edition_dialog.btnSave.click()
-    finally:
-        dialog.close()
-
-
-def create_plot(qtbot, window: MainWindow, text: str):
+def create_plot(qtbot, window: MainWindow):
     novels: NovelView = go_to_novel(window)
 
-    QTimer.singleShot(40, lambda: edit_plot_dialog(text))
-    novels.ui.wdgDramaticQuestions.btnAdd.click()
-    # row = novels.ui.wdgDramaticQuestions.model.rowCount() - 1
-    # index = novels.ui.wdgDramaticQuestions.model.index(row, SelectionItemsModel.ColName)
-    # editor = novels.ui.wdgDramaticQuestions.tableView.indexWidget(index)
-    # assert editor, "Editor should be open"
-    # assert isinstance(editor, QLineEdit)
-
-    # qtbot.keyClicks(editor, text)
-    # novels.ui.wdgDramaticQuestions.tableView.itemDelegate().commitData.emit(editor)
-    # novels.ui.wdgDramaticQuestions.tableView.itemDelegate().closeEditor.emit(editor)
-
-    assert_data(novels.ui.wdgDramaticQuestions.model, text, novels.ui.wdgDramaticQuestions.model.rowCount() - 1,
-                SelectionItemsModel.ColName)
+    novels.plot_editor.newPlot(PlotType.Main)
 
 
 def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:

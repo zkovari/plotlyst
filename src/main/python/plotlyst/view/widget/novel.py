@@ -21,34 +21,44 @@ import copy
 from functools import partial
 from typing import Optional, List
 
+import qtanim
 from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox
+from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
+    margins, italic, btn_popup_menu, ask_confirmation
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType
+    StoryBeatType, Plot, PlotType, PlotValue
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
+    NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.locations_model import LocationsTreeModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
-from src.main.python.plotlyst.view.common import OpacityEventFilter, link_buttons_to_pages
+from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
+from src.main.python.plotlyst.view.common import OpacityEventFilter, link_buttons_to_pages, VisibilityToggleEventFilter
+from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
+from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
+from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.generated.story_structure_character_link_widget_ui import \
     Ui_StoryStructureCharacterLink
 from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
+from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, PlotValueLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -523,3 +533,159 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
             self.treeChapters.hideColumn(ChaptersTreeModel.ColPlus)
             if not self.btnLocations.isChecked():
                 self.btnScenes.setChecked(True)
+
+
+class PlotWidget(QFrame, Ui_PlotWidget):
+    removalRequested = pyqtSignal()
+
+    def __init__(self, novel: Novel, plot: Plot, parent=None):
+        super(PlotWidget, self).__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+        self.plot = plot
+
+        incr_font(self.lineName)
+        bold(self.lineName)
+        self.lineName.setText(self.plot.text)
+        self.lineName.textChanged.connect(self._nameEdited)
+        self.textQuestion.setPlainText(self.plot.question)
+        self.textQuestion.textChanged.connect(self._questionChanged)
+
+        flow(self.wdgValues)
+
+        for value in self.plot.values:
+            self._addValue(value)
+
+        self._btnAddValue = SecondaryActionPushButton(self)
+        self._btnAddValue.setText('Attach story value')
+        self.wdgValues.layout().addWidget(self._btnAddValue)
+        self._btnAddValue.clicked.connect(self._newValue)
+
+        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemove, parent=self))
+
+        self._updateIcon()
+
+        self.btnPlotIcon.clicked.connect(self._changeIcon)
+        self.btnRemove.clicked.connect(self.removalRequested.emit)
+        self.installEventFilter(self)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Enter:
+            self.setStyleSheet(f'''
+            .PlotWidget {{
+                background-color: #dee2e6;
+                border-radius: 6px;
+                border-left: 8px solid {self.plot.icon_color};
+            }}''')
+        elif event.type() == QEvent.Leave:
+            self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border-left: 8px solid {self.plot.icon_color};}}')
+
+        return super(PlotWidget, self).eventFilter(watched, event)
+
+    def _updateIcon(self):
+        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border-left: 8px solid {self.plot.icon_color};}}')
+        if self.plot.icon:
+            self.btnPlotIcon.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
+
+    def _nameEdited(self, name: str):
+        self.plot.text = name
+        self.repo.update_novel(self.novel)
+
+    def _questionChanged(self):
+        self.plot.question = self.textQuestion.toPlainText()
+        self.repo.update_novel(self.novel)
+
+    def _changeIcon(self):
+        result = IconSelectorDialog(self).display(QColor(self.plot.icon_color))
+        if result:
+            self.plot.icon = result[0]
+            self.plot.icon_color = result[1].name()
+            self._updateIcon()
+            self.repo.update_novel(self.novel)
+
+    def _newValue(self):
+        value = PlotValueEditorDialog().display()
+        if value:
+            self.plot.values.append(value)
+            self.wdgValues.layout().removeWidget(self._btnAddValue)
+            self._addValue(value)
+            self.wdgValues.layout().addWidget(self._btnAddValue)
+
+            self.repo.update_novel(self.novel)
+
+    def _addValue(self, value: PlotValue):
+        label = PlotValueLabel(value, parent=self.wdgValues, removalEnabled=True)
+        label.installEventFilter(OpacityEventFilter(parent=label))
+        self.wdgValues.layout().addWidget(label)
+        label.removalRequested.connect(partial(self._removeValue, label))
+
+    def _removeValue(self, widget: PlotValueLabel):
+        anim = qtanim.fade_out(widget, duration=150)
+        anim.finished.connect(partial(self.__destroyValue, widget))
+
+    def __destroyValue(self, widget: PlotValueLabel):
+        self.plot.values.remove(widget.value)
+        self.repo.update_novel(self.novel)
+        self.wdgValues.layout().removeWidget(widget)
+        gc(widget)
+
+
+class PlotEditor(QWidget, Ui_PlotEditor):
+    def __init__(self, novel: Novel, parent=None):
+        super(PlotEditor, self).__init__(parent)
+        self.setupUi(self)
+        self.novel = novel
+        for plot in self.novel.plots:
+            self._addPlotWidget(plot)
+
+        italic(self.btnAdd)
+        self.btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        menu = QMenu(self.btnAdd)
+        menu.addAction(IconRegistry.cause_and_effect_icon(), 'Main plot', lambda: self.newPlot(PlotType.Main))
+        menu.addAction(IconRegistry.conflict_self_icon(), 'Internal plot', lambda: self.newPlot(PlotType.Internal))
+        menu.addAction(IconRegistry.subplot_icon(), 'Subplot', lambda: self.newPlot(PlotType.Subplot))
+        btn_popup_menu(self.btnAdd, menu)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def _addPlotWidget(self, plot: Plot) -> PlotWidget:
+        widget = PlotWidget(self.novel, plot)
+        margins(widget, left=15)
+        widget.removalRequested.connect(partial(self._remove, widget))
+        self.scrollAreaWidgetContents.layout().insertWidget(self.scrollAreaWidgetContents.layout().count() - 2, widget)
+
+        return widget
+
+    def newPlot(self, plot_type: PlotType):
+        if plot_type == PlotType.Internal:
+            name = 'Internal plot'
+            icon = 'mdi.mirror'
+        elif plot_type == PlotType.Subplot:
+            name = 'Subplot'
+            icon = 'mdi.source-branch'
+        else:
+            name = 'Main plot'
+            icon = 'mdi.ray-start-arrow'
+        plot = Plot(name, plot_type=plot_type, icon=icon)
+        self.novel.plots.append(plot)
+        plot.icon_color = STORY_LINE_COLOR_CODES[(len(self.novel.plots) - 1) % len(STORY_LINE_COLOR_CODES)]
+        widget = self._addPlotWidget(plot)
+        widget.lineName.setFocus()
+
+        self.repo.update_novel(self.novel)
+
+    def _remove(self, widget: PlotWidget):
+        if ask_confirmation(f'Are you sure you wnat to delete the plot {widget.plot.text}?'):
+            anim = qtanim.fade_out(widget, duration=150)
+            anim.finished.connect(partial(self.__destroy, widget))
+
+    def __destroy(self, widget: PlotWidget):
+        self.novel.plots.remove(widget.plot)
+        self.repo.update_novel(self.novel)
+        self.scrollAreaWidgetContents.layout().removeWidget(widget)
+        gc(widget)
+
+        emit_event(NovelReloadRequestedEvent(self))

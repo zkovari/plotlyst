@@ -128,6 +128,9 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
 
         self.buttonGroup.buttonToggled.connect(self._filterToggled)
 
+    def setColor(self, color: QColor):
+        self.model.setColor(color)
+
     def _colorPicked(self, color: QColor):
         self.model.setColor(color)
 
@@ -158,7 +161,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
 
     def _iconClicked(self, index: QModelIndex):
         icon_alias: str = index.data(role=self._Model.IconAliasRole)
-        self.iconSelected.emit(icon_alias, self.colorPicker.color())
+        self.iconSelected.emit(icon_alias, QColor(self.model.color))
 
     class _IconItem:
         def __init__(self, type: str, name: str):

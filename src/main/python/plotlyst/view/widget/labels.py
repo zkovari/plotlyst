@@ -28,7 +28,7 @@ from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent, bt
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotValue, \
-    CharacterGoal
+    CharacterGoal, PlotValue
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
@@ -208,20 +208,38 @@ class SelectionItemLabel(Label):
         return '#2e5266'
 
 
-class ScenePlotValueLabel(SelectionItemLabel):
+class PlotLabel(SelectionItemLabel):
+    @overrides
+    def _borderColor(self):
+        return self.item.icon_color
+
+
+class PlotValueLabel(SelectionItemLabel):
+
+    def __init__(self, item: PlotValue, parent=None, removalEnabled: bool = False):
+        super(PlotValueLabel, self).__init__(item, parent, removalEnabled)
+        self.value = item
+        if item.negative:
+            versusIcon = QToolButton(self)
+            transparent(versusIcon)
+            versusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-h'))
+            self.layout().insertWidget(2, versusIcon)
+            self.lblNegative = QLabel(item.negative)
+            self.layout().insertWidget(3, self.lblNegative)
+
+    @overrides
+    def _borderColor(self):
+        return self.item.icon_color
+
+
+class ScenePlotValueLabel(PlotLabel):
     def __init__(self, plot_value: ScenePlotValue, parent=None, removalEnabled: bool = True):
         super(ScenePlotValueLabel, self).__init__(plot_value.plot, parent, removalEnabled)
         self.lblText.clear()
         self.lblText.hide()
-        if self.item.icon:
-            self.btnIcon.setIcon(IconRegistry.from_name(self.item.icon, text_color_with_bg_color(self.item.color_hexa)))
-        else:
+        if not self.item.icon:
             self.btnIcon.setVisible(True)
             self.btnIcon.setIcon(IconRegistry.plot_type_icon(plot_value.plot.plot_type))
-
-    @overrides
-    def _borderColor(self):
-        return self.item.color_hexa
 
 
 class CharacterGoalLabel(SelectionItemLabel):

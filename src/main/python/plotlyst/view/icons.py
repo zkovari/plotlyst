@@ -366,8 +366,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.creation', color='#ac7b84')
 
     @staticmethod
-    def conflict_self_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.mirror', color='#94b0da')
+    def conflict_self_icon(color: str = '#94b0da') -> QIcon:
+        return IconRegistry.from_name('mdi.mirror', color=color)
+
+    @staticmethod
+    def subplot_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.source-branch', color=color)
 
     @staticmethod
     def baby_icon() -> QIcon:
@@ -394,8 +398,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.ray-start', color=color)
 
     @staticmethod
-    def cause_and_effect_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.ray-start-arrow')
+    def cause_and_effect_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.ray-start-arrow', color=color)
 
     @staticmethod
     def reversed_cause_and_effect_icon() -> QIcon:
@@ -493,6 +497,21 @@ class IconRegistry:
             return IconRegistry.conflict_self_icon()
         elif plot_type == PlotType.Subplot:
             return IconRegistry.from_name('mdi.source-branch')
+
+    @staticmethod
+    def charge_icon(charge: int = 1) -> QIcon:
+        if charge == 1:
+            return IconRegistry.from_name('mdi.chevron-up', '#2d6a4f')
+        elif charge == 2:
+            return IconRegistry.from_name('mdi.chevron-double-up', '#40916c')
+        elif charge >= 3:
+            return IconRegistry.from_name('mdi.chevron-triple-up', '#52b788')
+        elif charge == -1:
+            return IconRegistry.from_name('mdi.chevron-down', '#dc2f02')
+        elif charge == -2:
+            return IconRegistry.from_name('mdi.chevron-double-down', '#d00000')
+        else:
+            return IconRegistry.from_name('mdi.chevron-triple-down', '#9d0208')
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
