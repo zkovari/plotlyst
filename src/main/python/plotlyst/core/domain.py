@@ -300,16 +300,11 @@ class PlotType(Enum):
 @dataclass
 class PlotValue(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    negative: str = ''
 
     @overrides
     def __hash__(self):
         return hash(str(id))
-
-
-@dataclass
-class PlotValuePair:
-    positive: PlotValue
-    negative: Optional[PlotValue]
 
 
 class CharacterBased(ABC):
@@ -337,7 +332,7 @@ class CharacterBased(ABC):
 class Plot(SelectionItem, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     plot_type: PlotType = PlotType.Main
-    values: List[PlotValuePair] = field(default_factory=list)
+    values: List[PlotValue] = field(default_factory=list)
     character_id: Optional[uuid.UUID] = None
     question: str = ''
 

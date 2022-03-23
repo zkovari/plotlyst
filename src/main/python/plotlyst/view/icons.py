@@ -499,6 +499,21 @@ class IconRegistry:
             return IconRegistry.from_name('mdi.source-branch')
 
     @staticmethod
+    def charge_icon(charge: int = 1) -> QIcon:
+        if charge == 1:
+            return IconRegistry.from_name('mdi.chevron-up', '#2d6a4f')
+        elif charge == 2:
+            return IconRegistry.from_name('mdi.chevron-double-up', '#40916c')
+        elif charge >= 3:
+            return IconRegistry.from_name('mdi.chevron-triple-up', '#52b788')
+        elif charge == -1:
+            return IconRegistry.from_name('mdi.chevron-down', '#dc2f02')
+        elif charge == -2:
+            return IconRegistry.from_name('mdi.chevron-double-down', '#d00000')
+        else:
+            return IconRegistry.from_name('mdi.chevron-triple-down', '#9d0208')
+
+    @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
         if name.startswith('md') or name.startswith('ri'):

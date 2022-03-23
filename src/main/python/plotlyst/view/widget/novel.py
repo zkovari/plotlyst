@@ -42,6 +42,7 @@ from src.main.python.plotlyst.model.locations_model import LocationsTreeModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import OpacityEventFilter, link_buttons_to_pages, VisibilityToggleEventFilter
+from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
@@ -53,6 +54,7 @@ from src.main.python.plotlyst.view.generated.story_structure_selector_ui import 
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
@@ -547,20 +549,24 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.textQuestion.setPlainText(self.plot.question)
         self.textQuestion.textChanged.connect(self._questionChanged)
 
-        if not self.plot.values:
-            self.wdgValues.setHidden(True)
+        flow(self.wdgValues)
 
-        self._updateIcon()
-        self.btnPlotIcon.clicked.connect(self._changeIcon)
-
-        self.btnRemove.clicked.connect(self.removalRequested.emit)
+        self._btnAddValue = SecondaryActionPushButton(self)
+        self._btnAddValue.setText('Attach story value')
+        self.wdgValues.layout().addWidget(self._btnAddValue)
+        self._btnAddValue.clicked.connect(self._addValue)
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemove, parent=self))
+
+        self._updateIcon()
+
+        self.btnPlotIcon.clicked.connect(self._changeIcon)
+        self.btnRemove.clicked.connect(self.removalRequested.emit)
 
         self.repo = RepositoryPersistenceManager.instance()
 
     def _updateIcon(self):
-        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border: 2px solid {self.plot.icon_color};}}')
+        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border: 3px solid {self.plot.icon_color};}}')
         if self.plot.icon:
             self.btnPlotIcon.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
 
@@ -579,6 +585,11 @@ class PlotWidget(QFrame, Ui_PlotWidget):
             self.plot.icon_color = result[1].name()
             self._updateIcon()
             self.repo.update_novel(self.novel)
+
+    def _addValue(self):
+        value = PlotValueEditorDialog().display()
+        if value:
+            pass
 
 
 class PlotEditor(QWidget, Ui_PlotEditor):

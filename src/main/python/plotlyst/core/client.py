@@ -438,11 +438,6 @@ class JsonClient:
                     if str(char_id) in characters_ids.keys():
                         scene_characters.append(characters_ids[str(char_id)])
 
-                # scene_goals = []
-                # for goal_text in info.goals:
-                #     if goal_text in goals_index.keys():
-                #         scene_goals.append(goals_index[goal_text])
-
                 if info.chapter and str(info.chapter) in chapters_ids.keys():
                     chapter = chapters_ids[str(info.chapter)]
                 else:

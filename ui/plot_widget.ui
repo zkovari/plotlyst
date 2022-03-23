@@ -140,7 +140,7 @@ QToolButton:checked {
         </size>
        </property>
        <property name="placeholderText">
-        <string>What's the most dramatic question of this plot?</string>
+        <string>What is the most dramatic question of this plot?</string>
        </property>
       </widget>
      </item>
@@ -148,32 +148,6 @@ QToolButton:checked {
       <widget class="Line" name="line">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item alignment="Qt::AlignLeft">
-      <widget class="QLabel" name="label">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Track story values</string>
-       </property>
-      </widget>
-     </item>
-     <item alignment="Qt::AlignLeft">
-      <widget class="Toggle" name="toggle">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="focusPolicy">
-        <enum>Qt::ClickFocus</enum>
        </property>
       </widget>
      </item>
@@ -199,11 +173,6 @@ QToolButton:checked {
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Toggle</class>
-   <extends>QCheckBox</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
    <class>AutoAdjustableTextEdit</class>
    <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
@@ -215,22 +184,5 @@ QToolButton:checked {
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>toggle</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>wdgValues</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>355</x>
-     <y>109</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>270</x>
-     <y>131</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
