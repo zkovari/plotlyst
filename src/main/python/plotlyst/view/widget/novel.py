@@ -34,7 +34,8 @@ from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBea
     StoryBeatType, Plot, PlotType, PlotValue
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
+    NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
@@ -546,7 +547,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         incr_font(self.lineName)
         bold(self.lineName)
         self.lineName.setText(self.plot.text)
-        self.lineName.textEdited.connect(self._nameEdited)
+        self.lineName.textChanged.connect(self._nameEdited)
         self.textQuestion.setPlainText(self.plot.question)
         self.textQuestion.textChanged.connect(self._questionChanged)
 
@@ -643,9 +644,9 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         italic(self.btnAdd)
         self.btnAdd.setIcon(IconRegistry.plus_icon('grey'))
         menu = QMenu(self.btnAdd)
-        menu.addAction(IconRegistry.cause_and_effect_icon(), 'Main plot', lambda: self._newPlot(PlotType.Main))
-        menu.addAction(IconRegistry.conflict_self_icon(), 'Internal plot', lambda: self._newPlot(PlotType.Internal))
-        menu.addAction(IconRegistry.subplot_icon(), 'Subplot', lambda: self._newPlot(PlotType.Subplot))
+        menu.addAction(IconRegistry.cause_and_effect_icon(), 'Main plot', lambda: self.newPlot(PlotType.Main))
+        menu.addAction(IconRegistry.conflict_self_icon(), 'Internal plot', lambda: self.newPlot(PlotType.Internal))
+        menu.addAction(IconRegistry.subplot_icon(), 'Subplot', lambda: self.newPlot(PlotType.Subplot))
         btn_popup_menu(self.btnAdd, menu)
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -658,7 +659,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         return widget
 
-    def _newPlot(self, plot_type: PlotType):
+    def newPlot(self, plot_type: PlotType):
         if plot_type == PlotType.Internal:
             name = 'Internal plot'
             icon = 'mdi.mirror'
@@ -686,3 +687,5 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.repo.update_novel(self.novel)
         self.scrollAreaWidgetContents.layout().removeWidget(widget)
         gc(widget)
+
+        emit_event(NovelReloadRequestedEvent(self))

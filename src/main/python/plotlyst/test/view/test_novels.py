@@ -1,33 +1,37 @@
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import weiland_10_beats, SceneStoryBeat
-from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.test.common import create_plot, go_to_novel, click_on_item, \
-    patch_confirmed, go_to_scenes
+from src.main.python.plotlyst.test.common import create_plot, go_to_novel, patch_confirmed, go_to_scenes
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
+from src.main.python.plotlyst.view.widget.novel import PlotWidget
 
 
 def test_create_plot(qtbot, filled_window: MainWindow):
     view: NovelView = go_to_novel(filled_window)
-    create_plot(qtbot, filled_window, 'New Storyline')
+    create_plot(qtbot, filled_window)
 
     assert filled_window.novel.plots
-    assert filled_window.novel.plots[-1].text == 'New Storyline'
+    assert filled_window.novel.plots[-1].text == 'Main plot'
 
     persisted_novel = client.fetch_novel(view.novel.id)
     assert len(persisted_novel.plots) == len(view.novel.plots)
-    assert persisted_novel.plots[-1].text == 'New Storyline'
+    assert persisted_novel.plots[-1].text == 'Main plot'
 
 
-def test_delete_dramatic_question(qtbot, filled_window: MainWindow, monkeypatch):
+def test_delete_plot(qtbot, filled_window: MainWindow, monkeypatch):
     view: NovelView = go_to_novel(filled_window)
-    click_on_item(qtbot, view.ui.wdgDramaticQuestions.tableView, 0, SelectionItemsModel.ColName)
+
     assert len(view.novel.plots) == 3
     plot = view.novel.plots[0]
     assert plot == view.novel.scenes[0].plot_values[0].plot
 
     patch_confirmed(monkeypatch)
-    view.ui.wdgDramaticQuestions.btnRemove.click()
+    item = view.plot_editor.scrollAreaWidgetContents.layout().itemAt(0)
+    assert item and item.widget() and isinstance(item.widget(), PlotWidget)
+    plot_widet: PlotWidget = item.widget()
+    plot_widet.btnRemove.click()
+
+    qtbot.wait(200)
 
     assert len(view.novel.plots) == 2
     assert plot not in view.novel.plots

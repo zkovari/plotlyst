@@ -84,7 +84,8 @@ class NovelView(AbstractNovelView):
         self.ui.wdgTitle.setStyleSheet(
             f'#wdgTitle {{border-image: url({resource_registry.frame1}) 0 0 0 0 stretch stretch;}}')
 
-        self.ui.wdgPlotContainer.layout().addWidget(PlotEditor(self.novel))
+        self.plot_editor = PlotEditor(self.novel)
+        self.ui.wdgPlotContainer.layout().addWidget(self.plot_editor)
 
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnRemove.setIcon(IconRegistry.minus_icon())
