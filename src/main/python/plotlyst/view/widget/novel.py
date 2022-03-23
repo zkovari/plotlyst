@@ -566,11 +566,26 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
         self.btnPlotIcon.clicked.connect(self._changeIcon)
         self.btnRemove.clicked.connect(self.removalRequested.emit)
+        self.installEventFilter(self)
 
         self.repo = RepositoryPersistenceManager.instance()
 
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Enter:
+            self.setStyleSheet(f'''
+            .PlotWidget {{
+                background-color: #dee2e6;
+                border-radius: 6px;
+                border-left: 8px solid {self.plot.icon_color};
+            }}''')
+        elif event.type() == QEvent.Leave:
+            self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border-left: 8px solid {self.plot.icon_color};}}')
+
+        return super(PlotWidget, self).eventFilter(watched, event)
+
     def _updateIcon(self):
-        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border: 3px solid {self.plot.icon_color};}}')
+        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border-left: 8px solid {self.plot.icon_color};}}')
         if self.plot.icon:
             self.btnPlotIcon.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
 
@@ -601,7 +616,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
             self.repo.update_novel(self.novel)
 
     def _addValue(self, value: PlotValue):
-        label = PlotValueLabel(value, self, removalEnabled=True)
+        label = PlotValueLabel(value, parent=self.wdgValues, removalEnabled=True)
         label.installEventFilter(OpacityEventFilter(parent=label))
         self.wdgValues.layout().addWidget(label)
         label.removalRequested.connect(partial(self._removeValue, label))
