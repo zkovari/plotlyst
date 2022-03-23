@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QPushButton, QSizePolicy
+from PyQt5.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.view.common import OpacityEventFilter
@@ -42,22 +42,30 @@ class SelectionItemPushButton(QPushButton):
         self.clicked.connect(partial(self.itemClicked.emit, item))
 
 
-class SecondaryActionPushButton(QPushButton):
+class _SecondaryActionButton(QAbstractButton):
     def __init__(self, parent=None):
-        super(SecondaryActionPushButton, self).__init__(parent)
-        self.setStyleSheet('''
-            QPushButton {
-                border: 1px dashed grey;
-                border-radius: 6px;
-                color: grey;
-            }
-            QPushButton:pressed {
-                border: 1px solid grey;
-            }
-            QPushButton:checked {
-                border: 2px solid black;
-            }
-        ''')
+        super(_SecondaryActionButton, self).__init__(parent)
+        self.setStyleSheet(f'''
+                {self.__class__.__name__} {{
+                    border: 1px dashed grey;
+                    border-radius: 6px;
+                    color: grey;
+                }}
+                {self.__class__.__name__}:pressed {{
+                    border: 1px solid grey;
+                }}
+                {self.__class__.__name__}:checked {{
+                    border: 2px solid black;
+                }}
+            ''')
         self.setCursor(Qt.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
         self.installEventFilter(OpacityEventFilter(enterOpacity=0.9, leaveOpacity=0.7, parent=self))
+
+
+class SecondaryActionToolButton(QToolButton, _SecondaryActionButton):
+    pass
+
+
+class SecondaryActionPushButton(QPushButton, _SecondaryActionButton):
+    pass
