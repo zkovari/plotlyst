@@ -32,6 +32,7 @@ from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, c
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, Plot, PlotType, PlotValue
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
@@ -623,8 +624,11 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         label.removalRequested.connect(partial(self._removeValue, label))
 
     def _removeValue(self, widget: PlotValueLabel):
-        anim = qtanim.fade_out(widget, duration=150)
-        anim.finished.connect(partial(self.__destroyValue, widget))
+        if app_env.test_env():
+            self.__destroyValue(widget)
+        else:
+            anim = qtanim.fade_out(widget, duration=150)
+            anim.finished.connect(partial(self.__destroyValue, widget))
 
     def __destroyValue(self, widget: PlotValueLabel):
         self.plot.values.remove(widget.value)
@@ -678,9 +682,12 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.repo.update_novel(self.novel)
 
     def _remove(self, widget: PlotWidget):
-        if ask_confirmation(f'Are you sure you wnat to delete the plot {widget.plot.text}?'):
-            anim = qtanim.fade_out(widget, duration=150)
-            anim.finished.connect(partial(self.__destroy, widget))
+        if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
+            if app_env.test_env():
+                self.__destroy(widget)
+            else:
+                anim = qtanim.fade_out(widget, duration=150)
+                anim.finished.connect(partial(self.__destroy, widget))
 
     def __destroy(self, widget: PlotWidget):
         self.novel.plots.remove(widget.plot)
