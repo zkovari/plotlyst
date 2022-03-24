@@ -203,6 +203,7 @@ class SceneTagSelector(QWidget):
         clear_layout(self.wdgTags)
         for tag in tags:
             label = SelectionItemLabel(tag, self.wdgTags, removalEnabled=True)
+            label.removalRequested.connect(partial(self._tagsModel.uncheck, tag))
             self.wdgTags.layout().addWidget(label)
 
     def _toggle(self, index: QModelIndex):
