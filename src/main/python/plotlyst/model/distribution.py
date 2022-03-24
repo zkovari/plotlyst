@@ -149,7 +149,7 @@ class TagScenesDistributionTableModel(DistributionModel):
 
     @overrides
     def _match_by_row_col(self, row: int, column: int):
-        return self._tag(row).text in self.novel.scenes[column - 2].tags
+        return self._tag(row) in self.novel.scenes[column - 2].tags(self.novel)
 
     def _tag(self, row: int) -> Tag:
         return [item for sublist in self.novel.tags.values() for item in sublist][row]

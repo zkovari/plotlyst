@@ -526,7 +526,6 @@ class Scene:
     stage: Optional[SceneStage] = None
     beats: List[SceneStoryBeat] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
     tag_references: List[TagReference] = field(default_factory=list)
     document: Optional['Document'] = None
     manuscript: Optional['Document'] = None
@@ -557,6 +556,16 @@ class Scene:
 
     def plots(self) -> List[Plot]:
         return [x.plot for x in self.plot_values]
+
+    def tags(self, novel: 'Novel') -> List['Tag']:
+        tags_ = []
+        for id_ in [x.tag_id for x in self.tag_references]:
+            for tags_per_type in novel.tags.values():
+                for tag in tags_per_type:
+                    if tag.id == id_:
+                        tags_.append(tag)
+
+        return tags_
 
     def outcome_resolution(self) -> bool:
         return self.__is_outcome(SceneOutcome.RESOLUTION)

@@ -37,7 +37,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
     Location, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    CharacterPreferences
+    CharacterPreferences, TagReference
 from src.main.python.plotlyst.core.template import default_location_profiles, exclude_if_empty, SelectionItem
 
 
@@ -165,7 +165,7 @@ class SceneInfo:
     stage: Optional[uuid.UUID] = None
     beats: List[SceneStoryBeat] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    tag_references: List[TagReference] = field(default_factory=list)
     document: Optional[Document] = None
     manuscript: Optional[Document] = None
 
@@ -457,7 +457,7 @@ class JsonClient:
                               wip=info.wip, day=info.day,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,
-                              comments=info.comments, tags=info.tags,
+                              comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript)
                 scenes.append(scene)
 
@@ -540,7 +540,7 @@ class JsonClient:
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
                          beats=scene.beats, comments=scene.comments,
-                         tags=scene.tags, document=scene.document, manuscript=scene.manuscript)
+                         tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript)
         self.__persist_info(self.scenes_dir, info)
 
     @staticmethod
