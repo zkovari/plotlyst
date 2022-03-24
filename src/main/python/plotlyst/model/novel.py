@@ -21,6 +21,7 @@ from abc import abstractmethod
 from typing import Any, List
 
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel, pyqtSignal
+from PyQt5.QtGui import QFont
 from anytree import Node
 from overrides import overrides
 
@@ -130,6 +131,11 @@ class NovelTagsTreeModel(TreeItemModel):
                 return IconRegistry.from_name(node.tag.icon, color)
             if role == Qt.CheckStateRole:
                 return Qt.Checked if node.tag in self._checked else Qt.Unchecked
+            if role == Qt.FontRole and node.tag in self._checked:
+                font = QFont()
+                font.setBold(True)
+                return font
+
         return super(NovelTagsTreeModel, self).data(index, role)
 
     @overrides
@@ -163,9 +169,10 @@ class NovelTagsTreeModel(TreeItemModel):
         self.modelReset.emit()
 
     def uncheck(self, tag: Tag):
-        self._checked.remove(tag)
-        self.selectionChanged.emit()
-        self.modelReset.emit()
+        if tag in self._checked:
+            self._checked.remove(tag)
+            self.selectionChanged.emit()
+            self.modelReset.emit()
 
     def toggle(self, tag: Tag):
         if tag in self._checked:
