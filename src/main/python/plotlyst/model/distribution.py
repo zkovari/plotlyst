@@ -78,7 +78,7 @@ class GoalScenesDistributionTableModel(DistributionModel):
         for agenda in self.novel.scenes[column - 2].agendas:
             if agenda.character_id:
                 character = agenda.character(self.novel)
-                if self.novel.goals[row].id in [x.goal_id for x in agenda.goals(character)]:
+                if character and self.novel.goals[row].id in [x.goal_id for x in agenda.goals(character)]:
                     return True
         return False
 
