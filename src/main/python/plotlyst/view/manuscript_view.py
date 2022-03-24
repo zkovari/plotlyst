@@ -23,19 +23,19 @@ from typing import Optional
 from PyQt5.QtCore import QModelIndex, QTimer
 from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
-from qthandy import opaque, incr_font, bold, btn_popup
+from qthandy import opaque, incr_font, bold, btn_popup, margins
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentStatistics, Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
-    ChapterChangedEvent, SceneDeletedEvent
+    ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, ManuscriptTextEditor
+from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.worker.grammar import language_tool_proxy
 from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
@@ -76,6 +76,10 @@ class ManuscriptView(AbstractNovelView):
         self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
         self._analysis_toggled(self.ui.btnAnalysis.isChecked())
 
+        self._dist_free_editor = DistractionFreeManuscriptEditor(self.ui.pageDistractionFree)
+        self._dist_free_editor.exitRequested.connect(self._exit_distraction_free)
+        self.ui.pageDistractionFree.layout().addWidget(self._dist_free_editor)
+
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
         self.ui.treeChapters.expandAll()
@@ -88,8 +92,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgSideAnalysis.setHidden(True)
 
         self.ui.textEdit.textEdit.textChanged.connect(self._save)
-        self.ui.btnDistractionFree.clicked.connect(
-            lambda: emit_event(OpenDistractionFreeMode(self, self.ui.textEdit, self.ui.wdgSprint.model())))
+        self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         self._update_story_goal()
 
@@ -98,8 +101,23 @@ class ManuscriptView(AbstractNovelView):
         self.chaptersModel.update()
         self.chaptersModel.modelReset.emit()
 
-    def restore_editor(self, editor: ManuscriptTextEditor):
-        self.ui.wdgEditor.layout().insertWidget(0, editor)
+    def _enter_distraction_free(self):
+        emit_event(OpenDistractionFreeMode(self))
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageDistractionFree)
+        margins(self.widget, 0, 0, 0, 0)
+        self.ui.wdgTitle.setHidden(True)
+        self.ui.treeChapters.setHidden(True)
+        self._dist_free_editor.activate(self.ui.textEdit, self.ui.wdgSprint.model())
+
+    def _exit_distraction_free(self):
+        emit_event(ExitDistractionFreeMode(self))
+        self._dist_free_editor.deactivate()
+        margins(self.widget, 4, 2, 2, 2)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
+        self.ui.wdgTitle.setVisible(True)
+        self.ui.treeChapters.setVisible(True)
+
+        self.ui.wdgEditor.layout().insertWidget(0, self.ui.textEdit)
         self.ui.wdgReadability.cbAdverbs.setChecked(False)
 
     def _update_story_goal(self):

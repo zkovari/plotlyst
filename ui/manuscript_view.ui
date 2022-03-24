@@ -21,10 +21,10 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <property name="spacing">
-    <number>0</number>
+    <number>3</number>
    </property>
    <property name="leftMargin">
-    <number>2</number>
+    <number>4</number>
    </property>
    <property name="topMargin">
     <number>2</number>
@@ -176,6 +176,16 @@
       </attribute>
      </widget>
      <widget class="QStackedWidget" name="stackedWidget">
+      <property name="styleSheet">
+       <string notr="true">#pageDistractionFree {
+background-color: rgb(39, 39, 39);
+}
+
+</string>
+      </property>
+      <property name="lineWidth">
+       <number>0</number>
+      </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
@@ -428,7 +438,7 @@
               <number>2</number>
              </property>
              <property name="rightMargin">
-              <number>2</number>
+              <number>4</number>
              </property>
              <property name="bottomMargin">
               <number>2</number>
@@ -549,6 +559,25 @@
        </layout>
       </widget>
       <widget class="QWidget" name="pageEmpty"/>
+      <widget class="QWidget" name="pageDistractionFree">
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <property name="spacing">
+         <number>3</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
      </widget>
     </widget>
    </item>
@@ -571,15 +600,15 @@
    <header>src.main.python.plotlyst.view.widget.scenes</header>
   </customwidget>
   <customwidget>
-   <class>WordsDisplay</class>
-   <extends>QLabel</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
-  </customwidget>
-  <customwidget>
    <class>SprintWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.manuscript</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>WordsDisplay</class>
+   <extends>QLabel</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>ManuscriptTextEditor</class>

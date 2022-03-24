@@ -20,8 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt, QThreadPool, QObject, QEvent, QTimer
-from PyQt5.QtGui import QKeyEvent
+from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
 from overrides import overrides
@@ -37,7 +36,7 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
     emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
-    SceneChangedEvent, NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle
+    NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -53,7 +52,6 @@ from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
-from src.main.python.plotlyst.view.widget.manuscript import ManuscriptTextEditor
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.download import NltkResourceDownloadWorker
 from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
@@ -105,18 +103,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
 
-        self.sliderDocWidth.valueChanged.connect(
-            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
-                                                                                self.width() / 3 - x, 0))
-        self.wdgSprint.setCompactMode(True)
-        self.wdgBottom.installEventFilter(self)
-        self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
-        self.btnReturn.clicked.connect(lambda: self._toggle_fullscreen(on=False))
-        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkBlue'))
-        self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
-        self.btnNightMode.setIcon(IconRegistry.from_name('mdi.weather-night', color_on='darkBlue'))
-        self.btnNightMode.toggled.connect(self._toggle_manuscript_night_mode)
-
         self.repo = RepositoryPersistenceManager.instance()
 
         self._threadpool = QThreadPool()
@@ -146,40 +132,13 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, NovelUpdatedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel.title = event.novel.title
-        elif isinstance(event, SceneChangedEvent):
-            event_dispatcher.deregister(self, SceneChangedEvent)
         elif isinstance(event, OpenDistractionFreeMode):
-            self.stackMainPanels.setCurrentWidget(self.pageDistractionFree)
-            clear_layout(self.wdgDistractionFreeEditor.layout())
-            if event.timer and event.timer.isActive():
-                self.wdgHeader.setVisible(True)
-                self.wdgSprint.setModel(event.timer)
-            else:
-                self.wdgHeader.setHidden(True)
-            self.wdgDistractionFreeEditor.layout().addWidget(event.editor)
-            event.editor.setFocus()
-            event.editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            self.wdgBottom.setVisible(True)
-            self.sliderDocWidth.setMaximum(self.width() / 3)
-            if self.sliderDocWidth.value() <= 2:
-                self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
+        elif isinstance(event, ExitDistractionFreeMode):
+            self._toggle_fullscreen(on=False)
         elif isinstance(event, ToggleOutlineViewTitle):
             self.wdgTitle.setVisible(event.visible)
-
-    @overrides
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key_Escape:
-            if self.stackMainPanels.currentWidget() is self.pageDistractionFree:
-                self._toggle_fullscreen(on=False)
-        event.accept()
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if watched is self.wdgBottom and event.type() == QEvent.Leave:
-            self.wdgBottom.setHidden(True)
-        return super(MainWindow, self).eventFilter(watched, event)
 
     def _toggle_fullscreen(self, on: bool):
         self.statusbar.setHidden(on)
@@ -191,31 +150,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not self.isFullScreen():
             if on:
                 self.showFullScreen()
-        if on:
-            self._toggle_manuscript_focus(self.btnFocus.isChecked())
-            self._toggle_manuscript_night_mode(self.btnNightMode.isChecked())
-            QTimer.singleShot(10000, lambda: self.wdgBottom.setHidden(True))
-        else:
-            editor: ManuscriptTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
-            editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-            self._toggle_manuscript_focus(False)
-            self._toggle_manuscript_night_mode(False)
-            self.manuscript_view.restore_editor(editor)
-            self.stackMainPanels.setCurrentWidget(self.pageManuscript)
-
-    def _toggle_manuscript_focus(self, toggled: bool):
-        if toggled:
-            if self.btnNightMode.isChecked():
-                self.btnNightMode.setChecked(False)
-        editor: ManuscriptTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
-        editor.setSentenceHighlighterEnabled(toggled)
-
-    def _toggle_manuscript_night_mode(self, toggled: bool):
-        if toggled:
-            if self.btnFocus.isChecked():
-                self.btnFocus.setChecked(False)
-        editor: ManuscriptTextEditor = self.wdgDistractionFreeEditor.layout().itemAt(0).widget()
-        editor.setNightModeEnabled(toggled)
 
     @busy
     def _flush_end_fetch_novel(self):
@@ -463,9 +397,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, NovelDeletedEvent)
         event_dispatcher.register(self, NovelUpdatedEvent)
         event_dispatcher.register(self, OpenDistractionFreeMode)
+        event_dispatcher.register(self, ExitDistractionFreeMode)
         event_dispatcher.register(self, ToggleOutlineViewTitle)
-        if self.novel and not self.novel.scenes:
-            event_dispatcher.register(self, SceneChangedEvent)
 
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)

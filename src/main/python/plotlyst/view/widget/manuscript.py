@@ -24,12 +24,13 @@ from typing import Optional
 import nltk
 import qtanim
 from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder
-from PyQt5.QtGui import QFont, QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter
+from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent
+from PyQt5.QtGui import QFont, QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
+    QMouseEvent
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QTextEdit
 from overrides import overrides
-from qthandy import retain_when_hidden, opaque, btn_popup, transparent
+from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout
 from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import Novel
@@ -39,6 +40,8 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import scroll_to_top, spin, \
     OpacityEventFilter
+from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
+    Ui_DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
 from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_ReadabilityWidget
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
@@ -462,3 +465,100 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         else:
             if self.btnRefresh.isVisible():
                 qtanim.fade_out(self.btnRefresh)
+
+
+class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEditor):
+    exitRequested = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(DistractionFreeManuscriptEditor, self).__init__(parent)
+        self.setupUi(self)
+        self.editor: Optional[ManuscriptTextEditor] = None
+
+        self.sliderDocWidth.valueChanged.connect(
+            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
+                                                                                self.width() / 3 - x, 0))
+        self.wdgSprint = SprintWidget(self)
+        self.wdgSprint.setCompactMode(True)
+        self.wdgHeader.layout().addWidget(self.wdgSprint)
+
+        self.wdgDistractionFreeEditor.installEventFilter(self)
+        self.wdgBottom.installEventFilter(self)
+        self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
+        self.btnReturn.clicked.connect(self.exitRequested.emit)
+        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkBlue'))
+        self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
+        self.btnNightMode.setIcon(IconRegistry.from_name('mdi.weather-night', color_on='darkBlue'))
+        self.btnNightMode.toggled.connect(self._toggle_manuscript_night_mode)
+
+    def activate(self, editor: ManuscriptTextEditor, timer: Optional[TimerModel] = None):
+        self.editor = editor
+        self.editor.textEdit.installEventFilter(self)
+        clear_layout(self.wdgDistractionFreeEditor.layout())
+        if timer and timer.isActive():
+            self.wdgHeader.setVisible(True)
+            self.wdgSprint.setModel(timer)
+        else:
+            self.wdgHeader.setHidden(True)
+        self.wdgDistractionFreeEditor.layout().addWidget(editor)
+        editor.textEdit.setFocus()
+        editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.wdgBottom.setVisible(True)
+        self.sliderDocWidth.setMaximum(self.width() / 3)
+        if self.sliderDocWidth.value() <= 2:
+            self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
+
+        self._toggle_manuscript_focus(self.btnFocus.isChecked())
+        self._toggle_manuscript_night_mode(self.btnNightMode.isChecked())
+        self.setMouseTracking(True)
+        self.wdgDistractionFreeEditor.setMouseTracking(True)
+        QTimer.singleShot(3000, self._autoHideBottomBar)
+
+    def deactivate(self):
+        self.editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.editor.textEdit.removeEventFilter(self)
+        self._toggle_manuscript_focus(False)
+        self._toggle_manuscript_night_mode(False)
+        self.editor = None
+        self.setMouseTracking(False)
+        self.wdgDistractionFreeEditor.setMouseTracking(False)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if watched is self.wdgBottom and event.type() == QEvent.Leave:
+            self.wdgBottom.setHidden(True)
+        if event.type() == QEvent.MouseMove and isinstance(event, QMouseEvent):
+            # print(event.pos())
+            if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 15:
+                self.wdgBottom.setVisible(True)
+            # print(watched)
+            # print('-------------')
+        return super().eventFilter(watched, event)
+
+    @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key_Escape:
+            if self.editor is not None:
+                self.exitRequested.emit()
+        event.accept()
+
+    @overrides
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 15:
+            self.wdgBottom.setVisible(True)
+
+    def _toggle_manuscript_focus(self, toggled: bool):
+        if toggled:
+            if self.btnNightMode.isChecked():
+                self.btnNightMode.setChecked(False)
+        self.editor.setSentenceHighlighterEnabled(toggled)
+
+    def _toggle_manuscript_night_mode(self, toggled: bool):
+        if toggled:
+            if self.btnFocus.isChecked():
+                self.btnFocus.setChecked(False)
+        self.editor.setNightModeEnabled(toggled)
+
+    def _autoHideBottomBar(self):
+        if not self.wdgBottom.underMouse():
+            self.wdgBottom.setHidden(True)

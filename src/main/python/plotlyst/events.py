@@ -18,13 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
-from typing import Optional
 
-from PyQt5.QtWidgets import QWidget
 from language_tool_python import LanguageTool
 
 from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, Location, SceneStage
-from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -100,8 +97,12 @@ class PlotCreatedEvent(Event):
 
 @dataclass
 class OpenDistractionFreeMode(Event):
-    editor: QWidget
-    timer: Optional[TimerModel] = None
+    pass
+
+
+@dataclass
+class ExitDistractionFreeMode(Event):
+    pass
 
 
 @dataclass
