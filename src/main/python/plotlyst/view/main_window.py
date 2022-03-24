@@ -21,7 +21,6 @@ from typing import Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt, QThreadPool
-from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
 from overrides import overrides
@@ -140,13 +139,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._toggle_fullscreen(on=False)
         elif isinstance(event, ToggleOutlineViewTitle):
             self.wdgTitle.setVisible(event.visible)
-
-    @overrides
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key_Escape:
-            if self.statusbar.isHidden():
-                self._toggle_fullscreen(on=False)
-        event.accept()
 
     def _toggle_fullscreen(self, on: bool):
         self.statusbar.setHidden(on)

@@ -23,7 +23,7 @@ from typing import Optional
 from PyQt5.QtCore import QModelIndex, QTimer
 from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
-from qthandy import opaque, incr_font, bold, btn_popup
+from qthandy import opaque, incr_font, bold, btn_popup, margins
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentStatistics, Scene
@@ -104,6 +104,7 @@ class ManuscriptView(AbstractNovelView):
     def _enter_distraction_free(self):
         emit_event(OpenDistractionFreeMode(self))
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageDistractionFree)
+        margins(self.widget, 0, 0, 0, 0)
         self.ui.wdgTitle.setHidden(True)
         self.ui.treeChapters.setHidden(True)
         self._dist_free_editor.activate(self.ui.textEdit, self.ui.wdgSprint.model())
@@ -111,6 +112,7 @@ class ManuscriptView(AbstractNovelView):
     def _exit_distraction_free(self):
         emit_event(ExitDistractionFreeMode(self))
         self._dist_free_editor.deactivate()
+        margins(self.widget, 4, 2, 2, 2)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
         self.ui.wdgTitle.setVisible(True)
         self.ui.treeChapters.setVisible(True)
