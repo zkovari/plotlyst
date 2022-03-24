@@ -20,7 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from abc import abstractmethod
 from typing import Any, List
 
-from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel
+from PyQt5.QtCore import QModelIndex, Qt, QAbstractTableModel, pyqtSignal
+from PyQt5.QtGui import QFont
+from anytree import Node
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict, SceneStage, TagType, \
@@ -28,6 +30,7 @@ from src.main.python.plotlyst.core.domain import Novel, SelectionItem, Conflict,
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel, DefaultSelectionItemsModel
+from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -87,6 +90,100 @@ class NovelTagsModel(_NovelSelectionItemsModel):
 
         self.repo.update_novel(self.novel)
         emit_event(NovelReloadRequestedEvent(self))
+
+
+class TagTypeNode(Node):
+    def __init__(self, tag_type: TagType, parent=None):
+        super(TagTypeNode, self).__init__(tag_type.text, parent)
+        self.tag_type = tag_type
+
+
+class TagNode(Node):
+    def __init__(self, tag: Tag, parent=None):
+        super(TagNode, self).__init__(tag.text, parent)
+        self.tag = tag
+
+
+class NovelTagsTreeModel(TreeItemModel):
+    selectionChanged = pyqtSignal()
+
+    def __init__(self, novel: Novel, parent=None):
+        super(NovelTagsTreeModel, self).__init__(parent)
+        self.novel = novel
+        for tag_type in novel.tags.keys():
+            tag_type_node = TagTypeNode(tag_type, self.root)
+            for tag in novel.tags[tag_type]:
+                TagNode(tag, tag_type_node)
+
+        self._checked = set()
+
+    @overrides
+    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        node = index.internalPointer()
+        if isinstance(node, TagTypeNode) and role == Qt.DecorationRole and node.tag_type.icon:
+            return IconRegistry.from_name(node.tag_type.icon, node.tag_type.icon_color)
+        elif isinstance(node, TagNode):
+            if role == Qt.DecorationRole and node.tag.icon:
+                if node.tag.color_hexa and node.tag.color_hexa.lower() != '#ffffff':
+                    color = node.tag.color_hexa
+                else:
+                    color = node.tag.icon_color
+                return IconRegistry.from_name(node.tag.icon, color)
+            if role == Qt.CheckStateRole:
+                return Qt.Checked if node.tag in self._checked else Qt.Unchecked
+            if role == Qt.FontRole and node.tag in self._checked:
+                font = QFont()
+                font.setBold(True)
+                return font
+
+        return super(NovelTagsTreeModel, self).data(index, role)
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        super_flags = super(NovelTagsTreeModel, self).flags(index)
+        node = index.internalPointer()
+        if isinstance(node, TagNode):
+            return super_flags | Qt.ItemIsUserCheckable
+        return super_flags
+
+    @overrides
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
+        node = index.internalPointer()
+        if isinstance(node, TagNode):
+            if role == Qt.CheckStateRole:
+                if value == Qt.Checked:
+                    self._checked.add(node.tag)
+                elif value == Qt.Unchecked:
+                    self._checked.remove(node.tag)
+                self.selectionChanged.emit()
+                return True
+
+        return False
+
+    def checkedTags(self) -> List[Tag]:
+        return list(self._checked)
+
+    def check(self, tag: Tag):
+        self._checked.add(tag)
+        self.selectionChanged.emit()
+        self.modelReset.emit()
+
+    def uncheck(self, tag: Tag):
+        if tag in self._checked:
+            self._checked.remove(tag)
+            self.selectionChanged.emit()
+            self.modelReset.emit()
+
+    def toggle(self, tag: Tag):
+        if tag in self._checked:
+            self.uncheck(tag)
+        else:
+            self.check(tag)
+
+    def clear(self):
+        self._checked.clear()
+        self.selectionChanged.emit()
+        self.modelReset.emit()
 
 
 class NovelConflictsModel(QAbstractTableModel):

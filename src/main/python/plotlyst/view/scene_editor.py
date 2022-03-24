@@ -32,7 +32,7 @@ from qthandy import flow, clear_layout
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, StoryBeat, \
-    SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotValue
+    SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotValue, TagReference
 from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
@@ -44,7 +44,7 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.scenes import ScenePlotSelector
+from src.main.python.plotlyst.view.widget.scenes import ScenePlotSelector, SceneTagSelector
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
@@ -114,6 +114,9 @@ class SceneEditor(QObject):
         action.setDefaultWidget(self.tblCharacters)
         self.ui.btnEditCharacters.addAction(action)
 
+        self.tag_selector = SceneTagSelector(self.novel, self.scene)
+        self.ui.wdgTags.layout().addWidget(self.tag_selector)
+
         self.scenes_model = ScenesTableModel(self.novel)
         self.ui.lstScenes.setModel(self.scenes_model)
         self.ui.lstScenes.setModelColumn(ScenesTableModel.ColTitle)
@@ -140,10 +143,6 @@ class SceneEditor(QObject):
         self.ui.btnPreview.clicked.connect(self._on_preview_scene_builder)
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
-
-        # self.tagsEditor = SceneTagsWidget(self.novel)
-        # self.tagsEditor.setMinimumHeight(50)
-        # self.ui.wdgTagsContainer.layout().addWidget(self.tagsEditor)
 
         self._update_view(scene)
 
@@ -177,6 +176,8 @@ class SceneEditor(QObject):
         for plot_v in self.scene.plot_values:
             self._add_plot_selector(plot_v)
         self._add_plot_selector()
+
+        self.tag_selector.setScene(self.scene)
 
         self.ui.lineTitle.setText(self.scene.title)
         self.ui.textSynopsis.setText(self.scene.synopsis)
@@ -300,6 +301,10 @@ class SceneEditor(QObject):
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
         self.ui.wdgSceneStructure.updateAgendas()
         self.scene.day = self.ui.sbDay.value()
+
+        self.scene.tag_references.clear()
+        for tag in self.tag_selector.tags():
+            self.scene.tag_references.append(TagReference(tag.id))
 
         if self._new_scene:
             self.novel.scenes.append(self.scene)

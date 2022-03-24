@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
-from abc import abstractmethod
 from functools import partial
 from typing import List, Optional, Union, Dict
 
@@ -26,8 +25,8 @@ import qtanim
 from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal, QModelIndex
 from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
     QResizeEvent, QCursor, QColor
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QListView, QFrame, QToolButton, QHBoxLayout, QSplitter, \
-    QPushButton, QHeaderView
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QHBoxLayout, QSplitter, \
+    QPushButton, QHeaderView, QTreeView
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hidden, opaque, underline, flow, \
@@ -35,15 +34,14 @@ from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hi
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
-from src.main.python.plotlyst.core.domain import Scene, SelectionItem, Novel, SceneType, \
+from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotValue, CharacterGoal, Chapter, StoryBeatType
+    Character, Plot, ScenePlotValue, CharacterGoal, Chapter, StoryBeatType, Tag
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
-from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.novel import NovelTagsModel
+from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
@@ -53,40 +51,10 @@ from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui i
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
-from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, SelectionItemLabel, ScenePlotValueLabel, \
+from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
     PlotLabel
 from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
 from src.main.python.plotlyst.worker.cache import acts_registry
-# class SceneGoalsWidget(LabelsEditorWidget):
-#
-#     def __init__(self, novel: Novel, agenda: SceneStructureAgenda, parent=None):
-#         self.novel = novel
-#         self.agenda = agenda
-#         super(SceneGoalsWidget, self).__init__(parent=parent)
-#         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
-#         self.setValue([x.text for x in self.agenda.goals(self.novel)])
-#         self.btnEdit.setIcon(IconRegistry.goal_icon())
-#         self.btnEdit.setText('Track goals')
-#         self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-#         self.setStyleSheet('SceneGoalsWidget {border: 0px;}')
-#
-#     @overrides
-#     def _initModel(self) -> SelectionItemsModel:
-#         model = SceneGoalsModel(self.novel, self.scene_structure_item)
-#         model.setCheckable(True, SceneGoalsModel.ColName)
-#         return model
-#
-#     @overrides
-#     def items(self) -> List[SelectionItem]:
-#         return self.novel.scene_goals
-#
-#     @overrides
-#     def _addItems(self, items: Set[SceneGoal]):
-#         pass
-# for item in items:
-#     self._wdgLabels.addLabel(GoalLabel(item))
-# self.agenda.goal_ids.clear()
-# self.agenda.goal_ids.extend(items)
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
@@ -115,28 +83,6 @@ class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
             self.scene_structure_item.outcome = SceneOutcome.RESOLUTION
         elif self.btnTradeOff.isChecked():
             self.scene_structure_item.outcome = SceneOutcome.TRADE_OFF
-
-
-class _SceneLabelsEditor(LabelsEditorWidget):
-
-    def __init__(self, novel: Novel, parent=None):
-        self.novel = novel
-        super().__init__(parent=parent)
-
-    @overrides
-    def _initPopupWidget(self) -> QWidget:
-        _view = QListView()
-        _view.setModel(self._model)
-        _view.setModelColumn(SelectionItemsModel.ColName)
-        return _view
-
-    @abstractmethod
-    def _initModel(self) -> SelectionItemsModel:
-        pass
-
-    @abstractmethod
-    def items(self) -> List[SelectionItem]:
-        pass
 
 
 class ScenePlotSelector(QWidget):
@@ -216,21 +162,54 @@ class ScenePlotSelector(QWidget):
         gc(self)
 
 
-class SceneTagsWidget(_SceneLabelsEditor):
-
+class SceneTagSelector(QWidget):
     def __init__(self, novel: Novel, parent=None):
-        super(SceneTagsWidget, self).__init__(novel, parent)
-        self.btnEdit.setIcon(IconRegistry.tag_plus_icon())
+        super(SceneTagSelector, self).__init__(parent)
+        self.novel = novel
 
-    @overrides
-    def _initModel(self) -> SelectionItemsModel:
-        model = NovelTagsModel(self.novel)
-        model.setEditable(False)
-        return model
+        hbox(self)
+        self.btnSelect = QToolButton(self)
+        self.btnSelect.setIcon(IconRegistry.tag_plus_icon())
+        self.btnSelect.setCursor(Qt.PointingHandCursor)
 
-    @overrides
-    def items(self) -> List[SelectionItem]:
-        return self.novel.tags
+        self._tagsModel = NovelTagsTreeModel(self.novel)
+        self._tagsModel.selectionChanged.connect(self._selectionChanged)
+        self._treeSelectorView = QTreeView()
+        self._treeSelectorView.setCursor(Qt.PointingHandCursor)
+        self._treeSelectorView.setModel(self._tagsModel)
+        self._treeSelectorView.setHeaderHidden(True)
+        self._treeSelectorView.clicked.connect(self._toggle)
+        self._treeSelectorView.expandAll()
+        self._tagsModel.modelReset.connect(self._treeSelectorView.expandAll)
+        btn_popup(self.btnSelect, self._treeSelectorView)
+
+        self.wdgTags = QFrame(self)
+        flow(self.wdgTags)
+        self.setStyleSheet('#wdgTags {background-color: white;}')
+
+        self.layout().addWidget(self.btnSelect, alignment=Qt.AlignTop)
+        self.layout().addWidget(self.wdgTags)
+
+    def setScene(self, scene: Scene):
+        self._tagsModel.clear()
+        for tag in scene.tags(self.novel):
+            self._tagsModel.check(tag)
+
+    def tags(self) -> List[Tag]:
+        return self._tagsModel.checkedTags()
+
+    def _selectionChanged(self):
+        tags = self._tagsModel.checkedTags()
+        clear_layout(self.wdgTags)
+        for tag in tags:
+            label = SelectionItemLabel(tag, self.wdgTags, removalEnabled=True)
+            label.removalRequested.connect(partial(self._tagsModel.uncheck, tag))
+            self.wdgTags.layout().addWidget(label)
+
+    def _toggle(self, index: QModelIndex):
+        node = index.data(NovelTagsTreeModel.NodeRole)
+        if isinstance(node, TagNode):
+            self._tagsModel.toggle(node.tag)
 
 
 class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):

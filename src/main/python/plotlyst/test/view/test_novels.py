@@ -31,8 +31,6 @@ def test_delete_plot(qtbot, filled_window: MainWindow, monkeypatch):
     plot_widget: PlotWidget = item.widget()
     plot_widget.btnRemove.click()
 
-    qtbot.wait(300)
-
     assert len(view.novel.plots) == 2
     assert plot not in view.novel.plots
     assert not view.novel.scenes[0].plot_values
