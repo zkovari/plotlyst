@@ -821,9 +821,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._addWidget(self.wdgMiddle.layout().itemAt(0).widget(), middle)
         self._addWidget(self.wdgEnd.layout().itemAt(0).widget(), bottom)
 
-    # def _dragDestroyed(self):
-    #     self._dragged = None
-
     def _initSelectors(self):
         if not self.scene.agendas[0].character_id:
             return
