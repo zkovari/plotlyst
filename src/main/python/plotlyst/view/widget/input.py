@@ -22,23 +22,25 @@ from functools import partial
 from typing import Optional
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel
 from PyQt5.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData, QIcon
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
-    QApplication, QToolButton, QLineEdit
+    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qthandy import transparent, hbox
 from qttextedit import EnhancedTextEdit, RichTextEditor
 
-from src.main.python.plotlyst.core.domain import TextStatistics
+from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
+from src.main.python.plotlyst.model.characters_model import CharactersTableModel
+from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
@@ -201,10 +203,53 @@ class BlockStatistics(AbstractTextBlockHighlighter):
         data.wordCount = wc(text)
 
 
-class _TextEditor(EnhancedTextEdit):
+class CharacterContentAssistMenu(QMenu):
+    characterSelected = pyqtSignal(Character)
 
     def __init__(self, parent=None):
-        super(_TextEditor, self).__init__(parent)
+        super(CharacterContentAssistMenu, self).__init__(parent)
+        self.novel = app_env.novel
+        self.lstCharacters = QListView(self)
+        self.model = CharactersTableModel(self.novel)
+        self._proxy = proxy(self.model)
+        self.lstCharacters.setCursor(Qt.PointingHandCursor)
+        self.lstCharacters.clicked.connect(self._clicked)
+        self.lstCharacters.setModel(self._proxy)
+
+    def init(self, text: str = ''):
+        action = QWidgetAction(self)
+
+        action.setDefaultWidget(self.lstCharacters)
+        self._proxy.setFilterRegExp(f'^{text}')
+        if self._proxy.rowCount():
+            self.lstCharacters.selectionModel().select(self._proxy.index(0, 0), QItemSelectionModel.Select)
+        self.addAction(action)
+
+    @overrides
+    def popup(self, pos: QPoint) -> None:
+        if self._proxy.rowCount() == 1:
+            character = self._proxy.index(0, 0).data(CharactersTableModel.CharacterRole)
+            self.characterSelected.emit(character)
+        elif self._proxy.rowCount() > 1:
+            super(CharacterContentAssistMenu, self).popup(pos)
+
+    @overrides
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        super(CharacterContentAssistMenu, self).keyPressEvent(event)
+        if event.key() == Qt.Key_Return:
+            indexes = self.lstCharacters.selectedIndexes()
+            if indexes:
+                self._clicked(indexes[0])
+
+    def _clicked(self, index: QModelIndex):
+        char = index.data(CharactersTableModel.CharacterRole)
+        self.characterSelected.emit(char)
+
+
+class _TextEdit(EnhancedTextEdit):
+
+    def __init__(self, parent=None):
+        super(_TextEdit, self).__init__(parent)
         self._blockStatistics = BlockStatistics(self.document())
 
     def statistics(self) -> TextStatistics:
@@ -218,8 +263,21 @@ class _TextEditor(EnhancedTextEdit):
         return TextStatistics(wc)
 
     @overrides
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        super(_TextEdit, self).keyPressEvent(event)
+        if event.key() == Qt.Key_Space and event.modifiers() & Qt.ControlModifier:
+            menu = CharacterContentAssistMenu(self)
+            cursor = self.textCursor()
+            cursor.select(QTextCursor.WordUnderCursor)
+            menu.init(cursor.selectedText())
+            menu.characterSelected.connect(self._insertCharacterName)
+            menu.characterSelected.connect(menu.hide)
+            rect = self.cursorRect(self.textCursor())
+            self._popupMenu(menu, QPoint(rect.x(), rect.y()))
+
+    @overrides
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        super(_TextEditor, self).mouseMoveEvent(event)
+        super(_TextEdit, self).mouseMoveEvent(event)
         cursor = self.cursorForPosition(event.pos())
         if cursor.atBlockStart() or cursor.atBlockEnd():
             QApplication.restoreOverrideCursor()
@@ -234,7 +292,7 @@ class _TextEditor(EnhancedTextEdit):
 
     @overrides
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        super(_TextEditor, self).mousePressEvent(event)
+        super(_TextEdit, self).mousePressEvent(event)
         QApplication.restoreOverrideCursor()
         cursor = self.cursorForPosition(event.pos())
         if cursor.atBlockStart() or cursor.atBlockEnd():
@@ -245,11 +303,14 @@ class _TextEditor(EnhancedTextEdit):
             if start <= cursor.positionInBlock() <= start + length:
                 menu = GrammarPopupMenu(self)
                 menu.init(replacements, msg, style)
-                pos = self.mapToGlobal(event.pos())
-                pos.setY(pos.y() + self.viewportMargins().top())
-                pos.setX(pos.x() + self.viewportMargins().left())
                 menu.popupWidget().replacementRequested.connect(partial(self._replaceWord, cursor, start, length))
-                menu.popup(pos)
+                self._popupMenu(menu, event.pos())
+
+    def _popupMenu(self, menu: QMenu, pos: QPoint):
+        global_pos = self.mapToGlobal(pos)
+        global_pos.setY(global_pos.y() + self.viewportMargins().top())
+        global_pos.setX(global_pos.x() + self.viewportMargins().left())
+        menu.popup(global_pos)
 
     def _errors(self, cursor: QTextCursor):
         data = cursor.block().userData()
@@ -280,6 +341,14 @@ class _TextEditor(EnhancedTextEdit):
         cursor.insertText(replacement)
         cursor.endEditBlock()
         QApplication.restoreOverrideCursor()
+
+    def _insertCharacterName(self, character: Character):
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        cursor.select(QTextCursor.WordUnderCursor)
+        cursor.removeSelectedText()
+        cursor.insertText(character.name)
+        cursor.endEditBlock()
 
 
 class CapitalizationEventFilter(QObject):
@@ -352,7 +421,7 @@ class DocumentTextEditor(RichTextEditor):
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
-        return _TextEditor(self)
+        return _TextEdit(self)
 
     def _initHighlighter(self) -> QSyntaxHighlighter:
         return GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
