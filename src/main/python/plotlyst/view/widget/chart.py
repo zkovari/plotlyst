@@ -17,23 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
-EXIT_CODE_RESTART = 10
-
-WIP_COLOR: str = '#f6cd61'
-PIVOTAL_COLOR: str = '#3da4ab'
-
-ACT_ONE_COLOR: str = '#02bcd4'
-ACT_TWO_COLOR: str = '#1bbc9c'
-ACT_THREE_COLOR: str = '#ff7800'
-
-CONFLICT_CHARACTER_COLOR: str = '#c1666b'
-CONFLICT_SOCIETY_COLOR: str = '#69306d'
-CONFLICT_NATURE_COLOR: str = '#157a6e'
-CONFLICT_TECHNOLOGY_COLOR: str = '#4a5859'
-CONFLICT_SUPERNATURAL_COLOR: str = '#ac7b84'
-CONFLICT_SELF_COLOR: str = '#94b0da'
+from PyQt5.QtChart import QChart
 
 
-def truncate_string(text: str, length: int = 25):
-    return (text[:length] + '...') if len(text) > length else text
+class BaseChart(QChart):
+    def __init__(self, parent=None):
+        super(BaseChart, self).__init__(parent)
+        self.setAnimationOptions(QChart.SeriesAnimations)
+        self.setAnimationDuration(500)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.setBackgroundRoundness(0)

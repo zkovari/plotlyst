@@ -35,18 +35,26 @@ class CharacterArcReportNode(Node):
     pass
 
 
+class ConflictReportNode(Node):
+    pass
+
+
 class ReportsTreeModel(TreeItemModel):
     def __init__(self, parent=None):
         super(ReportsTreeModel, self).__init__(parent)
         char_node = CharacterReportNode('Characters', self.root)
         CharacterArcReportNode('Arc', char_node)
+        ConflictReportNode('Conflicts', self.root)
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
         node = index.internalPointer()
-        if isinstance(node, CharacterReportNode) and role == Qt.DecorationRole:
-            return IconRegistry.character_icon()
-        if isinstance(node, CharacterArcReportNode) and role == Qt.DecorationRole:
-            return IconRegistry.from_name('mdi.chart-bell-curve-cumulative')
+        if role == Qt.DecorationRole:
+            if isinstance(node, CharacterReportNode):
+                return IconRegistry.character_icon()
+            if isinstance(node, CharacterArcReportNode):
+                return IconRegistry.from_name('mdi.chart-bell-curve-cumulative')
+            if isinstance(node, ConflictReportNode):
+                return IconRegistry.conflict_icon()
 
         return super(ReportsTreeModel, self).data(index, role)
