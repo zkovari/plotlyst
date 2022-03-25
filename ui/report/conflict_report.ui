@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>447</width>
-    <height>392</height>
+    <width>579</width>
+    <height>563</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,6 +34,12 @@
    </item>
    <item>
     <widget class="ChartView" name="chartViewConflictTypes">
+     <property name="minimumSize">
+      <size>
+       <width>240</width>
+       <height>240</height>
+      </size>
+     </property>
      <property name="sizeAdjustPolicy">
       <enum>QAbstractScrollArea::AdjustIgnored</enum>
      </property>
@@ -61,13 +67,34 @@
       <number>20</number>
      </property>
      <item>
-      <widget class="ChartView" name="chartViewGender"/>
+      <widget class="ChartView" name="chartViewGender">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="ChartView" name="chartViewRole"/>
+      <widget class="ChartView" name="chartViewRole">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="ChartView" name="chartViewEnneagram"/>
+      <widget class="ChartView" name="chartViewEnneagram">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

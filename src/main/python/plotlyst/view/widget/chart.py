@@ -17,10 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import List, Dict
 
 from PyQt5.QtChart import QChart, QPieSeries
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QCursor, QIcon
+from PyQt5.QtWidgets import QToolTip
 
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
@@ -42,6 +44,10 @@ class BaseChart(QChart):
 
 class GenderCharacterChart(BaseChart):
 
+    def __init__(self, parent=None):
+        super(GenderCharacterChart, self).__init__(parent)
+        self.setTitle('<b>Gender</b>')
+
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
 
@@ -57,12 +63,34 @@ class GenderCharacterChart(BaseChart):
             if v:
                 slice_ = series.append(k, v)
                 slice_.setLabelVisible()
-                slice_.setLabel(k.capitalize())
+                slice_.setLabel(icon_to_html_img(self._iconForGender(k)))
+                slice_.hovered.connect(partial(self._hovered, k))
                 slice_.setColor(QColor(self._colorForGender(k)))
 
         if self.series():
             self.removeAllSeries()
         self.addSeries(series)
+
+    def _hovered(self, gender: str, state: bool):
+        if state:
+            QToolTip.showText(QCursor.pos(),
+                              f'<b style="color: {self._colorForGender(gender)}">{gender.capitalize()}</b>')
+        else:
+            QToolTip.hideText()
+
+    def _iconForGender(self, gender: str) -> QIcon:
+        if gender == MALE:
+            return IconRegistry.male_gender_icon(self._colorForGender(gender))
+        elif gender == FEMALE:
+            return IconRegistry.female_gender_icon(self._colorForGender(gender))
+        elif gender == TRANSGENDER:
+            return IconRegistry.transgender_icon(self._colorForGender(gender))
+        elif gender == NON_BINARY:
+            return IconRegistry.non_binary_gender_icon(self._colorForGender(gender))
+        elif gender == GENDERLESS:
+            return IconRegistry.genderless_icon(self._colorForGender(gender))
+        else:
+            IconRegistry.empty_icon()
 
     def _colorForGender(self, gender: str) -> str:
         if gender == MALE:
@@ -75,9 +103,15 @@ class GenderCharacterChart(BaseChart):
             return '#7209b7'
         elif gender == GENDERLESS:
             return '#6c757d'
+        else:
+            return 'black'
 
 
 class SupporterRoleChart(BaseChart):
+
+    def __init__(self, parent=None):
+        super(SupporterRoleChart, self).__init__(parent)
+        self.setTitle('<b>Supporter/adversary role</b>')
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
@@ -117,9 +151,20 @@ class SupporterRoleChart(BaseChart):
         slice_ = series.append(
             icon_to_html_img(IconRegistry.from_name(role.icon, role.icon_color)), value)
         slice_.setColor(QColor(role.icon_color))
+        slice_.hovered.connect(partial(self._hovered, role))
+
+    def _hovered(self, role: SelectionItem, state: bool):
+        if state:
+            QToolTip.showText(QCursor.pos(), f'<b style="color: {role.icon_color}">{role.text.capitalize()}</b>')
+        else:
+            QToolTip.hideText()
 
 
 class EnneagramChart(BaseChart):
+
+    def __init__(self, parent=None):
+        super(EnneagramChart, self).__init__(parent)
+        self.setTitle('<b>Enneagram</b>')
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
@@ -139,7 +184,15 @@ class EnneagramChart(BaseChart):
             item = enneagram_choices[k]
             slice_.setLabel(icon_to_html_img(IconRegistry.from_name(item.icon, item.icon_color)))
             slice_.setColor(QColor(item.icon_color))
+            slice_.hovered.connect(partial(self._hovered, item))
 
         if self.series():
             self.removeAllSeries()
         self.addSeries(series)
+
+    def _hovered(self, enneagram: SelectionItem, state: bool):
+        if state:
+            QToolTip.showText(QCursor.pos(),
+                              f'<b style="color: {enneagram.icon_color}">{enneagram.text.capitalize()}</b>')
+        else:
+            QToolTip.hideText()

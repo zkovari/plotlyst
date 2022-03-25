@@ -17,16 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional, Dict
 
 from PyQt5.QtChart import QPieSeries
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QCursor
+from PyQt5.QtWidgets import QToolTip
 from overrides import overrides
 
 from src.main.python.plotlyst.common import CONFLICT_CHARACTER_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_SUPERNATURAL_COLOR, CONFLICT_SELF_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, ConflictType
+from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.conflict_report_ui import Ui_ConflictReport
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.widget.chart import BaseChart, GenderCharacterChart, SupporterRoleChart, \
     EnneagramChart
@@ -78,6 +82,7 @@ class ConflictTypeChart(BaseChart):
         super(ConflictTypeChart, self).__init__(parent)
         self.novel = novel
         self.legend().hide()
+        self.setTitle('<b>Conflict types<b>')
 
     def refresh(self, character: Character):
         conflicts: Dict[ConflictType, int] = {}
@@ -94,12 +99,20 @@ class ConflictTypeChart(BaseChart):
             if v:
                 slice_ = series.append(k.name, v)
                 slice_.setLabelVisible()
-                slice_.setLabel(k.name.lower().capitalize())
+                slice_.setLabel(icon_to_html_img(IconRegistry.conflict_type_icon(k), size=24))
                 slice_.setColor(QColor(self._colorForType(k)))
+                slice_.hovered.connect(partial(self._hovered, k))
 
         if self.series():
             self.removeAllSeries()
         self.addSeries(series)
+
+    def _hovered(self, conflictType: ConflictType, state: bool):
+        if state:
+            QToolTip.showText(QCursor.pos(),
+                              f'<b style="color: {self._colorForType(conflictType)}">{conflictType.name.capitalize()}</b>')
+        else:
+            QToolTip.hideText()
 
     def _colorForType(self, conflictType: ConflictType) -> str:
         if conflictType == ConflictType.CHARACTER:

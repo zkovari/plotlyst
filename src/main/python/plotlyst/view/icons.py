@@ -516,6 +516,26 @@ class IconRegistry:
             return IconRegistry.from_name('mdi.chevron-triple-down', '#9d0208')
 
     @staticmethod
+    def male_gender_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.gender-male', color=color, color_on='#067bc2')
+
+    @staticmethod
+    def female_gender_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.gender-female', color=color, color_on='#832161')
+
+    @staticmethod
+    def transgender_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.transgender-alt', color=color, color_on='#f4a261')
+
+    @staticmethod
+    def non_binary_gender_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.gender-male-female-variant', color=color, color_on='#7209b7')
+
+    @staticmethod
+    def genderless_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.genderless', color=color, color_on='#6c757d')
+
+    @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
         if name.startswith('md') or name.startswith('ri'):
