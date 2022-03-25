@@ -23,6 +23,7 @@ from PyQt5.QtChart import QChart, QPieSeries
 from PyQt5.QtGui import QColor
 
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
+from src.main.python.plotlyst.core.template import enneagram_choices
 
 
 class BaseChart(QChart):
@@ -31,6 +32,7 @@ class BaseChart(QChart):
         self.setAnimationOptions(QChart.SeriesAnimations)
         self.setAnimationDuration(500)
         self.layout().setContentsMargins(0, 0, 0, 0)
+        self.legend().hide()
         self.setBackgroundRoundness(0)
 
 
@@ -50,6 +52,7 @@ class GenderCharacterChart(BaseChart):
         for k, v in genders.items():
             if v:
                 slice_ = series.append(k, v)
+                slice_.setLabelVisible()
                 slice_.setLabel(k.capitalize())
                 slice_.setColor(QColor(self._colorForGender(k)))
 
@@ -68,3 +71,44 @@ class GenderCharacterChart(BaseChart):
             return '#7209b7'
         elif gender == GENDERLESS:
             return '#6c757d'
+
+
+class SupporterRoleChart(BaseChart):
+
+    def refresh(self, characters: List[Character]):
+        series = QPieSeries()
+
+        for char in characters:
+            if not char.role:
+                continue
+
+        if self.series():
+            self.removeAllSeries()
+        self.addSeries(series)
+
+
+class EnneagramChart(BaseChart):
+
+    def refresh(self, characters: List[Character]):
+        series = QPieSeries()
+
+        enneagrams: Dict[str, int] = {}
+        for char in characters:
+            enneagram = char.enneagram()
+            if not enneagram:
+                continue
+            if enneagram.text not in enneagrams.keys():
+                enneagrams[enneagram.text] = 0
+            enneagrams[enneagram.text] = enneagrams[enneagram.text] + 1
+
+        for k, v in enneagrams.items():
+            slice_ = series.append(k, v)
+            slice_.setLabelVisible()
+            item = enneagram_choices[k]
+            number = item.meta.get('number', 0)
+            slice_.setLabel(str(number))
+            slice_.setColor(QColor(item.icon_color))
+
+        if self.series():
+            self.removeAllSeries()
+        self.addSeries(series)

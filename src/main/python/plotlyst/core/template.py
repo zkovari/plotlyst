@@ -109,6 +109,7 @@ class TemplateField:
 age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
                           id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), emoji=':birthday_cake:',
                           show_label=False, compact=True, placeholder='Age')
+
 enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SELECTION,
                                 id=uuid.UUID('be281490-c1b7-413c-b519-f780dbdafaeb'),
                                 selections=[SelectionItem('Perfectionist', icon='mdi.numeric-1-circle',
@@ -117,41 +118,47 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                                              'Structured'],
                                                                 'negative': ['Strict'],
                                                                 'desire': 'Being good, balanced, have integrity',
-                                                                'fear': 'Being incorrect, corrupt, evil'}),
+                                                                'fear': 'Being incorrect, corrupt, evil',
+                                                                'number': 1}),
                                             SelectionItem('Giver', icon='mdi.numeric-2-circle',
                                                           icon_color='#7ae7c7',
                                                           meta={'positive': ['Generous', 'Warm', 'Caring'],
                                                                 'negative': ['Possessive'],
                                                                 'desire': 'To be loved and appreciated',
-                                                                'fear': 'Being unloved, unwanted'}
+                                                                'fear': 'Being unloved, unwanted',
+                                                                'number': 2}
                                                           ),
                                             SelectionItem('Achiever', icon='mdi.numeric-3-circle',
                                                           icon_color='#297045',
                                                           meta={'positive': ['Pragmatic', 'Driven', 'Ambitious'],
                                                                 'negative': ['Image-conscious'],
                                                                 'desire': 'Be valuable and worthwhile',
-                                                                'fear': 'Being worthless'}
+                                                                'fear': 'Being worthless',
+                                                                'number': 3}
                                                           ),
                                             SelectionItem('Individualist', icon='mdi.numeric-4-circle',
                                                           icon_color='#4d8b31',
                                                           meta={'positive': ['Self-aware', 'Sensitive', 'Expressive'],
                                                                 'negative': ['Temperamental'],
                                                                 'desire': 'Express their individuality',
-                                                                'fear': 'Having no identity or significance'}
+                                                                'fear': 'Having no identity or significance',
+                                                                'number': 4}
                                                           ),
                                             SelectionItem('Investigator', icon='mdi.numeric-5-circle',
                                                           icon_color='#ffc600',
                                                           meta={'positive': ['Perceptive', 'Curious', 'Innovative'],
                                                                 'negative': ['Isolated'],
                                                                 'desire': 'Be competent',
-                                                                'fear': 'Being useless, incompetent'}
+                                                                'fear': 'Being useless, incompetent',
+                                                                'number': 5}
                                                           ),
                                             SelectionItem('Skeptic', icon='mdi.numeric-6-circle',
                                                           icon_color='#ff6b35',
                                                           meta={'positive': ['Committed', 'Responsible', 'Organized'],
                                                                 'negative': ['Anxious'],
                                                                 'desire': 'Have security and support',
-                                                                'fear': 'Being vulnerable and unprepared'}
+                                                                'fear': 'Being vulnerable and unprepared',
+                                                                'number': 6}
                                                           ),
                                             SelectionItem('Enthusiast', icon='mdi.numeric-7-circle',
                                                           icon_color='#ec0b43',
@@ -159,7 +166,8 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                                              'Adventurous'],
                                                                 'negative': ['Impulsive', 'Self-centered'],
                                                                 'desire': 'Be stimulated, engaged, satisfied',
-                                                                'fear': 'Being deprived'}
+                                                                'fear': 'Being deprived',
+                                                                'number': 7}
                                                           ),
                                             SelectionItem('Challenger', icon='mdi.numeric-8-circle',
                                                           icon_color='#4f0147',
@@ -167,7 +175,8 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                                              'Independent'],
                                                                 'negative': ['Confrontational'],
                                                                 'desire': 'Be independent and in control',
-                                                                'fear': 'Being vulnerable, controlled, harmed'}
+                                                                'fear': 'Being vulnerable, controlled, harmed',
+                                                                'number': 8}
                                                           ),
                                             SelectionItem('Peacemaker', icon='mdi.numeric-9-circle',
                                                           icon_color='#3a015c',
@@ -175,7 +184,8 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                                              'Supportive'],
                                                                 'negative': ['Lazy', 'Indecisive'],
                                                                 'desire': 'Internal peace, harmony',
-                                                                'fear': 'Loss, separation'}
+                                                                'fear': 'Loss, separation',
+                                                                'number': 9}
                                                           )],
                                 compact=True)
 mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,

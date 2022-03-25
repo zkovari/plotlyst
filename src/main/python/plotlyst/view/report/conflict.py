@@ -28,7 +28,8 @@ from src.main.python.plotlyst.common import CONFLICT_CHARACTER_COLOR, CONFLICT_N
 from src.main.python.plotlyst.core.domain import Novel, Character, ConflictType
 from src.main.python.plotlyst.view.generated.report.conflict_report_ui import Ui_ConflictReport
 from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import BaseChart, GenderCharacterChart
+from src.main.python.plotlyst.view.widget.chart import BaseChart, GenderCharacterChart, SupporterRoleChart, \
+    EnneagramChart
 
 
 class ConflictReport(AbstractReport, Ui_ConflictReport):
@@ -40,8 +41,10 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
         self.chartViewConflictTypes.setChart(self.chartType)
         self.chartGender = GenderCharacterChart()
         self.chartViewGender.setChart(self.chartGender)
-        self.chartViewRole.setChart(BaseChart())
-        self.chartViewEnneagram.setChart(BaseChart())
+        self.chartRole = SupporterRoleChart()
+        self.chartViewRole.setChart(self.chartRole)
+        self.chartEnneagram = EnneagramChart()
+        self.chartViewEnneagram.setChart(self.chartEnneagram)
 
         self.character: Optional[Character] = None
         self.display()
@@ -66,6 +69,8 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
                         conflicting_characters.append(char)
 
         self.chartGender.refresh(conflicting_characters)
+        self.chartRole.refresh(conflicting_characters)
+        self.chartEnneagram.refresh(conflicting_characters)
 
 
 class ConflictTypeChart(BaseChart):
