@@ -19,12 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from functools import partial
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Dict
 
 import qtanim
-from PyQt5.QtCore import Qt, QObject, QEvent, QMimeData, QByteArray, QTimer, QSize, pyqtSignal, QModelIndex
-from PyQt5.QtGui import QDrag, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QDropEvent, QDragLeaveEvent, \
-    QResizeEvent, QCursor, QColor
+from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex, QTimer
+from PyQt5.QtGui import QDragEnterEvent, QDragLeaveEvent, \
+    QResizeEvent, QCursor, QColor, QDragMoveEvent, QDropEvent
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QHBoxLayout, QSplitter, \
     QPushButton, QHeaderView, QTreeView
 from overrides import overrides
@@ -42,7 +42,8 @@ from src.main.python.plotlyst.event.core import emit_critical, emit_event
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
-from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder
+from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder, \
+    DragEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -223,12 +224,17 @@ class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabPov), IconRegistry.character_icon())
 
 
+StructureItemMimeType: str = 'application/structure-item'
+
+
 class _PlaceHolder(QFrame):
+    dropped = pyqtSignal(object, SceneStructureItemType)
+
     def __init__(self):
         super(_PlaceHolder, self).__init__()
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.setFixedHeight(3)
+        self.setFixedHeight(5)
         self.setAcceptDrops(True)
         self.setFrameStyle(QFrame.Box)
 
@@ -246,11 +252,25 @@ class _PlaceHolder(QFrame):
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        self.setStyle(True)
+        if event.mimeData().hasFormat(StructureItemMimeType):
+            self.setStyle(True)
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        event.accept()
 
     @overrides
     def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
         self.setStyle()
+
+    @overrides
+    def dropEvent(self, event: QDropEvent) -> None:
+        self.setStyle()
+        data: SceneStructureItemType = pickle.loads(event.mimeData().data(StructureItemMimeType))
+        self.dropped.emit(self, data)
 
 
 def is_placeholder(widget: QWidget) -> bool:
@@ -447,13 +467,10 @@ class _SceneTypeButton(QPushButton):
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
-    MimeType: str = 'application/structure-item'
 
     def __init__(self, parent=None):
         super(SceneStructureWidget, self).__init__(parent)
         self.setupUi(self)
-        self._dragged: Optional[QToolButton] = None
-        self._target_to_drop: Optional[Union[_PlaceHolder, QWidget]] = None
 
         self.btnEmotionRangeDisplay.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
 
@@ -497,19 +514,10 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._addPlaceholder(self.wdgMiddle)
         self._addPlaceholder(self.wdgEnd)
 
-        self.btnGoal.installEventFilter(self)
-        self.btnConflict.installEventFilter(self)
-        self.btnOutcome.installEventFilter(self)
-        self.btnReaction.installEventFilter(self)
-        self.btnDilemma.installEventFilter(self)
-        self.btnDecision.installEventFilter(self)
-        self.btnHook.installEventFilter(self)
-        self.btnIncitingIncident.installEventFilter(self)
-        self.btnRisingAction.installEventFilter(self)
-        self.btnCrisis.installEventFilter(self)
-        self.btnTickingClock.installEventFilter(self)
-        self.btnExposition.installEventFilter(self)
-        self.btnBeat.installEventFilter(self)
+        for btn in [self.btnGoal, self.btnConflict, self.btnOutcome, self.btnReaction, self.btnDilemma,
+                    self.btnDecision, self.btnHook, self.btnIncitingIncident, self.btnRisingAction, self.btnCrisis,
+                    self.btnTickingClock, self.btnExposition, self.btnBeat]:
+            btn.installEventFilter(DragEventFilter(btn, StructureItemMimeType, self._buttonType))
 
         self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
@@ -542,20 +550,16 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             for item in scene.agendas[0].items:
                 if item.type == SceneStructureItemType.GOAL:
                     widget = SceneGoalItemWidget(self.novel, item)
-                    # self.btnGoal.setDisabled(True)
                 elif item.type == SceneStructureItemType.CONFLICT:
                     widget = SceneConflictItemWidget(self.novel, item)
-                    # self.btnConflict.setDisabled(True)
                 elif item.type == SceneStructureItemType.OUTCOME:
                     widget = SceneOutcomeItemWidget(self.novel, item)
-                    # self.btnOutcome.setDisabled(True)
                 elif item.type == SceneStructureItemType.REACTION:
                     widget = ReactionSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.DILEMMA:
                     widget = DilemmaSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.DECISION:
                     widget = DecisionSceneItemWidget(self.novel, item)
-                    # self.btnDecision.setDisabled(True)
                 elif item.type == SceneStructureItemType.HOOK:
                     widget = HookSceneItemWidget(self.novel, item)
                 elif item.type == SceneStructureItemType.INCITING_INCIDENT:
@@ -619,40 +623,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self._initSelectors()
 
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        self._dragged = watched
-        if event.type() == QEvent.MouseButtonPress:
-            self.mousePressEvent(event)
-        elif event.type() == QEvent.MouseMove:
-            self.mouseMoveEvent(event)
-        elif event.type() == QEvent.MouseButtonRelease:
-            self.mouseReleaseEvent(event)
-        elif event.type() == QEvent.DragEnter:
-            self._target_to_drop = watched
-            self.dragMoveEvent(event)
-        elif event.type() == QEvent.Drop:
-            self.dropEvent(event)
-            self._target_to_drop = None
-        return super().eventFilter(watched, event)
-
-    @overrides
-    def mousePressEvent(self, event: QMouseEvent):
-        self._dragged = None
-
-    @overrides
-    def mouseMoveEvent(self, event: QMouseEvent):
-        if event.buttons() & Qt.LeftButton and self._dragged and self._dragged.isEnabled():
-            drag = QDrag(self._dragged)
-            pix = self._dragged.grab()
-            mimedata = QMimeData()
-            mimedata.setData(self.MimeType, QByteArray(pickle.dumps(self._buttonType(self._dragged))))
-            drag.setMimeData(mimedata)
-            drag.setPixmap(pix)
-            drag.setHotSpot(event.pos())
-            drag.destroyed.connect(self._dragDestroyed)
-            drag.exec_()
-
     def updateAgendas(self):
         if not self.scene.agendas:
             return
@@ -663,36 +633,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.scene.agendas[0].beginning_emotion = self.btnEmotionStart.value()
         self.scene.agendas[0].ending_emotion = self.btnEmotionEnd.value()
 
-    @overrides
-    def dragEnterEvent(self, event: QDragEnterEvent):
-        if event.mimeData().hasFormat(self.MimeType):
-            event.accept()
-        else:
-            event.ignore()
-
-    @overrides
-    def dragMoveEvent(self, event: QDragMoveEvent):
-        if not self._target_to_drop:
-            event.ignore()
-            return
-        if is_placeholder(self._target_to_drop):
-            event.accept()
-        else:
-            event.ignore()
-
-    @overrides
-    def dropEvent(self, event: QDropEvent):
-        if not self._target_to_drop:
-            event.ignore()
-            return
-
-        if is_placeholder(self._target_to_drop):
-            placeholder: _PlaceHolder = self._target_to_drop
-        else:
-            event.ignore()
-            return
-        data: SceneStructureItemType = pickle.loads(event.mimeData().data(self.MimeType))
-
+    def _dropped(self, placeholder: _PlaceHolder, data: SceneStructureItemType):
         if data == SceneStructureItemType.GOAL:
             widget = SceneGoalItemWidget(self.novel, SceneStructureItem(data))
         elif data == SceneStructureItemType.CONFLICT:
@@ -723,8 +664,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             widget = SceneStructureItemWidget(self.novel, SceneStructureItem(data))
 
         self._addWidget(placeholder, widget)
-
-        event.accept()
 
         QTimer.singleShot(50, widget.activate)
 
@@ -827,7 +766,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         _placeholder = _PlaceHolder()
         layout.insertWidget(index + 1, _placeholder)
-        _placeholder.installEventFilter(self)
+        _placeholder.dropped.connect(self._dropped)
 
     def _addPlaceholder(self, widget: QWidget, pos: int = -1):
         _placeholder = _PlaceHolder()
@@ -835,7 +774,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             widget.layout().insertWidget(pos, _placeholder)
         else:
             widget.layout().addWidget(_placeholder)
-        _placeholder.installEventFilter(self)
+        _placeholder.dropped.connect(self._dropped)
 
     def _typeClicked(self, type: SceneType, checked: bool, lazy: bool = True):
         if lazy and type == self.scene.type and checked:
@@ -881,9 +820,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._addWidget(self.wdgBeginning.layout().itemAt(0).widget(), top)
         self._addWidget(self.wdgMiddle.layout().itemAt(0).widget(), middle)
         self._addWidget(self.wdgEnd.layout().itemAt(0).widget(), bottom)
-
-    def _dragDestroyed(self):
-        self._dragged = None
 
     def _initSelectors(self):
         if not self.scene.agendas[0].character_id:
