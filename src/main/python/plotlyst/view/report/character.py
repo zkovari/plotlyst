@@ -160,8 +160,6 @@ class CharacterArcChart(BaseChart):
         self.novel = novel
         self.createDefaultAxes()
         self.legend().hide()
-        # self.setAnimationOptions(QChart.SeriesAnimations)
-        # self.setAnimationDuration(500)
         self.axis: Optional[QValueAxis] = None
 
     def refresh(self, character: Character):

@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
+from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent, QBuffer, QIODevice, QSize
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon
 from PyQt5.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QAbstractButton, \
@@ -234,3 +234,11 @@ def spin(btn: QAbstractButton, color: str = 'black'):
     spin_icon = qtawesome.icon('fa5s.spinner', color=color,
                                animation=qtawesome.Spin(btn))
     btn.setIcon(spin_icon)
+
+
+def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
+    buffer = QBuffer()
+    buffer.open(QIODevice.WriteOnly)
+    pixmap = icon.pixmap(QSize(size, size))
+    pixmap.save(buffer, "PNG", quality=100)
+    return f"<img src='data:image/png;base64, {bytes(buffer.data().toBase64()).decode()}'>"

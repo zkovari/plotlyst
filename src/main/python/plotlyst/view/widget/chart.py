@@ -23,7 +23,11 @@ from PyQt5.QtChart import QChart, QPieSeries
 from PyQt5.QtGui import QColor
 
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
-from src.main.python.plotlyst.core.template import enneagram_choices
+from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
+    antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
+    secondary_role
+from src.main.python.plotlyst.view.common import icon_to_html_img
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class BaseChart(QChart):
@@ -78,13 +82,41 @@ class SupporterRoleChart(BaseChart):
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
 
+        supporter = 0
+        adversary = 0
+        secondary = 0
+        tertiary = 0
         for char in characters:
             if not char.role:
                 continue
+            if char.role in [supporter_role, guide_role, sidekick_role, confidant_role]:
+                supporter += 1
+            elif char.role in [antagonist_role, contagonist_role, adversary_role, henchmen_role]:
+                adversary += 1
+            elif char.role is tertiary_role:
+                tertiary += 1
+            else:
+                secondary += 1
+        if supporter:
+            self._addSlice(series, supporter_role, supporter)
+        if adversary:
+            self._addSlice(series, adversary_role, adversary)
+        if tertiary:
+            self._addSlice(series, tertiary_role, tertiary)
+        if secondary:
+            self._addSlice(series, secondary_role, secondary)
+
+        for slice_ in series.slices():
+            slice_.setLabelVisible()
 
         if self.series():
             self.removeAllSeries()
         self.addSeries(series)
+
+    def _addSlice(self, series: QPieSeries, role: SelectionItem, value: int):
+        slice_ = series.append(
+            icon_to_html_img(IconRegistry.from_name(role.icon, role.icon_color)), value)
+        slice_.setColor(QColor(role.icon_color))
 
 
 class EnneagramChart(BaseChart):
@@ -105,8 +137,7 @@ class EnneagramChart(BaseChart):
             slice_ = series.append(k, v)
             slice_.setLabelVisible()
             item = enneagram_choices[k]
-            number = item.meta.get('number', 0)
-            slice_.setLabel(str(number))
+            slice_.setLabel(icon_to_html_img(IconRegistry.from_name(item.icon, item.icon_color)))
             slice_.setColor(QColor(item.icon_color))
 
         if self.series():
