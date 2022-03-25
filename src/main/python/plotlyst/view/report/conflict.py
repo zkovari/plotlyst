@@ -28,7 +28,7 @@ from src.main.python.plotlyst.common import CONFLICT_CHARACTER_COLOR, CONFLICT_N
 from src.main.python.plotlyst.core.domain import Novel, Character, ConflictType
 from src.main.python.plotlyst.view.generated.report.conflict_report_ui import Ui_ConflictReport
 from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.widget.chart import BaseChart
+from src.main.python.plotlyst.view.widget.chart import BaseChart, GenderCharacterChart
 
 
 class ConflictReport(AbstractReport, Ui_ConflictReport):
@@ -38,6 +38,10 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
         self.wdgCharacterSelector.characterToggled.connect(self._characterChanged)
         self.chartType = ConflictTypeChart(self.novel)
         self.chartViewConflictTypes.setChart(self.chartType)
+        self.chartGender = GenderCharacterChart()
+        self.chartViewGender.setChart(self.chartGender)
+        self.chartViewRole.setChart(BaseChart())
+        self.chartViewEnneagram.setChart(BaseChart())
 
         self.character: Optional[Character] = None
         self.display()
@@ -51,6 +55,17 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
             return
         self.character = character
         self.chartType.refresh(self.character)
+
+        conflicting_characters = []
+        for scene in self.novel.scenes:
+            agenda = scene.agendas[0]
+            for conflict in agenda.conflicts(self.novel):
+                if conflict.character_id == character.id and conflict.type == ConflictType.CHARACTER:
+                    char = conflict.conflicting_character(self.novel)
+                    if char:
+                        conflicting_characters.append(char)
+
+        self.chartGender.refresh(conflicting_characters)
 
 
 class ConflictTypeChart(BaseChart):

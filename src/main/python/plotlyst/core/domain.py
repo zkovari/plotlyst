@@ -113,6 +113,9 @@ class CharacterGoal:
 
 MALE = 'male'
 FEMALE = 'female'
+TRANSGENDER = 'transgender'
+NON_BINARY = 'non-binary'
+GENDERLESS = 'genderless'
 
 
 @dataclass
