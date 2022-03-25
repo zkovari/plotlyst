@@ -19,6 +19,11 @@ def test_arc_report_display(qtbot, filled_window: MainWindow):
     view.displayArcReport()
 
 
+def test_conflict_report_display(qtbot, filled_window: MainWindow):
+    view: ReportsView = go_to_reports(filled_window)
+    view.displayConflictReport()
+
+
 def _edit_arc(value: int, editor: QComboBox):
     editor.setCurrentIndex(value)
 

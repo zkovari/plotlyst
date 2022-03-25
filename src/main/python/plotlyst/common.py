@@ -27,6 +27,13 @@ ACT_ONE_COLOR: str = '#02bcd4'
 ACT_TWO_COLOR: str = '#1bbc9c'
 ACT_THREE_COLOR: str = '#ff7800'
 
+CONFLICT_CHARACTER_COLOR: str = '#c1666b'
+CONFLICT_SOCIETY_COLOR: str = '#69306d'
+CONFLICT_NATURE_COLOR: str = '#157a6e'
+CONFLICT_TECHNOLOGY_COLOR: str = '#4a5859'
+CONFLICT_SUPERNATURAL_COLOR: str = '#ac7b84'
+CONFLICT_SELF_COLOR: str = '#94b0da'
+
 
 def truncate_string(text: str, length: int = 25):
     return (text[:length] + '...') if len(text) > length else text

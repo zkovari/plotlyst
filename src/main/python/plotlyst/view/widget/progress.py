@@ -19,21 +19,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Dict
 
-from PyQt5.QtChart import QChart, QChartView, QPieSeries, QPieSlice
-from PyQt5.QtCore import Qt, QMargins
+from PyQt5.QtChart import QChartView, QPieSeries, QPieSlice
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QColor, QFont
 
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
+from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class ProgressChartView(QChartView):
     def __init__(self, value: int, max: int, title_prefix: str = 'Progress', color=Qt.darkBlue, parent=None):
         super(ProgressChartView, self).__init__(parent)
-        self.chart = QChart()
+        self.chart = BaseChart()
         self.chart.legend().hide()
-        self.chart.setAnimationOptions(QChart.SeriesAnimations)
-        self.chart.setMargins(QMargins(0, 1, 0, 1))
         font = QFont()
         font.setBold(True)
         self.chart.setTitleFont(font)

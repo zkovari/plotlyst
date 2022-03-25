@@ -24,7 +24,9 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QLabel
 
-from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
+    CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
+    CONFLICT_SELF_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
     Scene, SceneType, PlotType
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
@@ -347,26 +349,26 @@ class IconRegistry:
 
     @staticmethod
     def conflict_character_icon() -> QIcon:
-        return IconRegistry.character_icon(color='#c1666b', color_on='#c1666b')
+        return IconRegistry.character_icon(color='#c1666b', color_on=CONFLICT_CHARACTER_COLOR)
 
     @staticmethod
     def conflict_society_icon() -> QIcon:
-        return IconRegistry.from_name('ei.group-alt', color='#69306d')
+        return IconRegistry.from_name('ei.group-alt', color=CONFLICT_SOCIETY_COLOR)
 
     @staticmethod
     def conflict_nature_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.weather-hurricane', color='#157a6e')
+        return IconRegistry.from_name('mdi.weather-hurricane', color=CONFLICT_NATURE_COLOR)
 
     @staticmethod
     def conflict_technology_icon() -> QIcon:
-        return IconRegistry.from_name('ei.cogs', color='#4a5859')
+        return IconRegistry.from_name('ei.cogs', color=CONFLICT_TECHNOLOGY_COLOR)
 
     @staticmethod
     def conflict_supernatural_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.creation', color='#ac7b84')
+        return IconRegistry.from_name('mdi.creation', color=CONFLICT_SUPERNATURAL_COLOR)
 
     @staticmethod
-    def conflict_self_icon(color: str = '#94b0da') -> QIcon:
+    def conflict_self_icon(color: str = CONFLICT_SELF_COLOR) -> QIcon:
         return IconRegistry.from_name('mdi.mirror', color=color)
 
     @staticmethod
@@ -512,6 +514,26 @@ class IconRegistry:
             return IconRegistry.from_name('mdi.chevron-double-down', '#d00000')
         else:
             return IconRegistry.from_name('mdi.chevron-triple-down', '#9d0208')
+
+    @staticmethod
+    def male_gender_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.gender-male', color=color, color_on='#067bc2')
+
+    @staticmethod
+    def female_gender_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.gender-female', color=color, color_on='#832161')
+
+    @staticmethod
+    def transgender_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.transgender-alt', color=color, color_on='#f4a261')
+
+    @staticmethod
+    def non_binary_gender_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.gender-male-female-variant', color=color, color_on='#7209b7')
+
+    @staticmethod
+    def genderless_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.genderless', color=color, color_on='#6c757d')
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:

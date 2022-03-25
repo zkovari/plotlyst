@@ -58,19 +58,19 @@ class CharacterEditor:
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
 
-        self.ui.btnMale.setIcon(IconRegistry.from_name('mdi.gender-male', color_on='#067bc2'))
+        self.ui.btnMale.setIcon(IconRegistry.male_gender_icon())
         self.ui.btnMale.installEventFilter(OpacityEventFilter(parent=self.ui.btnMale, ignoreCheckedButton=True))
-        self.ui.btnFemale.setIcon(IconRegistry.from_name('mdi.gender-female', color_on='#832161'))
+        self.ui.btnFemale.setIcon(IconRegistry.female_gender_icon())
         self.ui.btnFemale.installEventFilter(OpacityEventFilter(parent=self.ui.btnFemale, ignoreCheckedButton=True))
-        self.ui.btnTransgender.setIcon(IconRegistry.from_name('fa5s.transgender-alt', color_on='#f4a261'))
+        self.ui.btnTransgender.setIcon(IconRegistry.transgender_icon())
         self.ui.btnTransgender.installEventFilter(
             OpacityEventFilter(parent=self.ui.btnTransgender, ignoreCheckedButton=True))
         self.ui.btnTransgender.setHidden(True)
-        self.ui.btnNonBinary.setIcon(IconRegistry.from_name('mdi.gender-male-female-variant', color_on='#7209b7'))
+        self.ui.btnNonBinary.setIcon(IconRegistry.non_binary_gender_icon())
         self.ui.btnNonBinary.installEventFilter(
             OpacityEventFilter(parent=self.ui.btnNonBinary, ignoreCheckedButton=True))
         self.ui.btnNonBinary.setHidden(True)
-        self.ui.btnGenderless.setIcon(IconRegistry.from_name('fa5s.genderless', color_on='#6c757d'))
+        self.ui.btnGenderless.setIcon(IconRegistry.genderless_icon())
         self.ui.btnGenderless.installEventFilter(
             OpacityEventFilter(parent=self.ui.btnGenderless, ignoreCheckedButton=True))
         self.ui.btnGenderless.setHidden(True)

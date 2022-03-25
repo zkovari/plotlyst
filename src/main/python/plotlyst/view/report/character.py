@@ -32,6 +32,7 @@ from src.main.python.plotlyst.view.generated.report.character_report_ui import U
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton
+from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
@@ -80,7 +81,7 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         for k, v in self.pov_number.items():
             if v:
                 slice = series.append(k, v)
-                slice.setLabelVisible(True)
+                slice.setLabelVisible()
 
         for slice in series.slices():
             slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
@@ -153,14 +154,12 @@ class CharacterArcReport(AbstractReport, Ui_CharacterArcReport):
         self.chart.refresh(self.character)
 
 
-class CharacterArcChart(QChart):
+class CharacterArcChart(BaseChart):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self.novel = novel
         self.createDefaultAxes()
         self.legend().hide()
-        self.setAnimationOptions(QChart.SeriesAnimations)
-        self.setAnimationDuration(500)
         self.axis: Optional[QValueAxis] = None
 
     def refresh(self, character: Character):
