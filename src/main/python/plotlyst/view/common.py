@@ -18,12 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
+import pickle
 from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent, QBuffer, QIODevice, QSize
-from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon
+from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent, QBuffer, QIODevice, QSize, QMimeData, \
+    QByteArray
+from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QDrag
 from PyQt5.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit
@@ -205,6 +207,31 @@ class DisabledClickEventFilter(QObject):
             self._slot()
 
         return super(DisabledClickEventFilter, self).eventFilter(watched, event)
+
+
+class DragEventFilter(QObject):
+    def __init__(self, watched, mimeType: str, data_func):
+        super(DragEventFilter, self).__init__(watched)
+        self._pressed: bool = False
+        self.mimeType = mimeType
+        self.data_func = data_func
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.MouseButtonPress:
+            self._pressed = True
+        elif event.type() == QEvent.MouseButtonRelease:
+            self._pressed = False
+        elif event.type() == QEvent.MouseMove and self._pressed:
+            drag = QDrag(watched)
+            pix = watched.grab()
+            mimedata = QMimeData()
+            mimedata.setData(self.mimeType, QByteArray(pickle.dumps(self.data_func(watched))))
+            drag.setMimeData(mimedata)
+            drag.setPixmap(pix)
+            drag.setHotSpot(event.pos())
+            drag.exec_()
+        return super(DragEventFilter, self).eventFilter(watched, event)
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
