@@ -33,6 +33,8 @@ from fbs_runtime import platform
 from overrides import overrides
 from qthandy import opaque
 
+from src.main.python.plotlyst.env import app_env
+
 
 def rounded_pixmap(original: QPixmap) -> QPixmap:
     size = min(original.width(), original.height())
@@ -264,6 +266,8 @@ def spin(btn: QAbstractButton, color: str = 'black'):
 
 
 def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
+    if app_env.is_mac() and size > 15:
+        size = size - 8
     buffer = QBuffer()
     buffer.open(QIODevice.WriteOnly)
     pixmap = icon.pixmap(QSize(size, size))
