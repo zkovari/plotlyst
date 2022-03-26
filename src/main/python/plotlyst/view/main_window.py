@@ -416,8 +416,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.pageManuscript.layout().count():
             self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
-            self.manuscript_view.widget.deleteLater()
+            gc(self.manuscript_view.widget)
             self.manuscript_view = None
+        if self.pageReports.layout().count():
+            self.pageReports.layout().removeWidget(self.reports_view.widget)
+            gc(self.reports_view.widget)
+            self.reports_view = None
 
         self.outline_mode.setDisabled(True)
         self.manuscript_mode.setDisabled(True)
