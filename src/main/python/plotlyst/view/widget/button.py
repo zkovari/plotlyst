@@ -47,12 +47,13 @@ class _SecondaryActionButton(QAbstractButton):
         super(_SecondaryActionButton, self).__init__(parent)
         self.setStyleSheet(f'''
                 {self.__class__.__name__} {{
-                    border: 1px dashed grey;
+                    border: 2px dashed grey;
                     border-radius: 6px;
                     color: grey;
+                    padding: 2px;
                 }}
                 {self.__class__.__name__}:pressed {{
-                    border: 1px solid grey;
+                    border: 2px solid grey;
                 }}
                 {self.__class__.__name__}:checked {{
                     border: 2px solid black;
@@ -60,7 +61,7 @@ class _SecondaryActionButton(QAbstractButton):
             ''')
         self.setCursor(Qt.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
-        self.installEventFilter(OpacityEventFilter(enterOpacity=0.9, leaveOpacity=0.7, parent=self))
+        self.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self))
 
 
 class SecondaryActionToolButton(QToolButton, _SecondaryActionButton):
