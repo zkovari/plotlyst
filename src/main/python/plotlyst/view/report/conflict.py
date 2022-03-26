@@ -100,6 +100,7 @@ class ConflictTypeChart(BaseChart):
                 slice_ = series.append(k.name, v)
                 slice_.setLabelVisible()
                 slice_.setLabel(icon_to_html_img(IconRegistry.conflict_type_icon(k), size=24))
+                slice_.setLabelArmLengthFactor(0.2)
                 slice_.setColor(QColor(self._colorForType(k)))
                 slice_.hovered.connect(partial(self._hovered, k))
 

@@ -64,6 +64,7 @@ class GenderCharacterChart(BaseChart):
                 slice_ = series.append(k, v)
                 slice_.setLabelVisible()
                 slice_.setLabel(icon_to_html_img(self._iconForGender(k)))
+                slice_.setLabelArmLengthFactor(0.2)
                 slice_.hovered.connect(partial(self._hovered, k))
                 slice_.setColor(QColor(self._colorForGender(k)))
 
@@ -142,6 +143,7 @@ class SupporterRoleChart(BaseChart):
 
         for slice_ in series.slices():
             slice_.setLabelVisible()
+            slice_.setLabelArmLengthFactor(0.2)
 
         if self.series():
             self.removeAllSeries()
@@ -183,6 +185,7 @@ class EnneagramChart(BaseChart):
             slice_.setLabelVisible()
             item = enneagram_choices[k]
             slice_.setLabel(icon_to_html_img(IconRegistry.from_name(item.icon, item.icon_color)))
+            slice_.setLabelArmLengthFactor(0.2)
             slice_.setColor(QColor(item.icon_color))
             slice_.hovered.connect(partial(self._hovered, item))
 

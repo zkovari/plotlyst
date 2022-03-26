@@ -267,7 +267,7 @@ def spin(btn: QAbstractButton, color: str = 'black'):
 
 def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
     if app_env.is_mac() and size > 15:
-        size = size - 8
+        size = size - 10
     buffer = QBuffer()
     buffer.open(QIODevice.WriteOnly)
     pixmap = icon.pixmap(QSize(size, size))
