@@ -73,7 +73,7 @@ class _ProfileTemplateBase(QWidget):
 
     def _initGrid(self, editor_mode: bool):
         for el in self._profile.elements:
-            widget = TemplateFieldWidgetFactory.widget(el.field)
+            widget = TemplateFieldWidgetFactory.widget(el.field, self)
             if el.margins:
                 widget.setContentsMargins(el.margins.left, el.margins.top, el.margins.right, el.margins.bottom)
             self.widgets.append(widget)
@@ -389,9 +389,9 @@ class LineTemplateDisplayWidget(TemplateDisplayWidget):
 class TemplateFieldWidgetBase(TemplateWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(TemplateFieldWidgetBase, self).__init__(field, parent)
-        self.lblEmoji = QLabel()
+        self.lblEmoji = QLabel(self)
         self.lblEmoji.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        self.lblName = QLabel()
+        self.lblName = QLabel(self)
         self.lblName.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.lblName.setText(self.field.name)
 
@@ -559,22 +559,22 @@ class TemplateFieldWidget(TemplateFieldWidgetBase):
 class TemplateFieldWidgetFactory:
 
     @staticmethod
-    def widget(field: TemplateField) -> TemplateWidgetBase:
+    def widget(field: TemplateField, parent=None) -> TemplateWidgetBase:
         if field.type == TemplateFieldType.DISPLAY_SUBTITLE:
-            return SubtitleTemplateDisplayWidget(field)
+            return SubtitleTemplateDisplayWidget(field, parent)
         elif field.type == TemplateFieldType.DISPLAY_LABEL:
-            return LabelTemplateDisplayWidget(field)
+            return LabelTemplateDisplayWidget(field, parent)
         elif field.type == TemplateFieldType.DISPLAY_LINE:
-            return LineTemplateDisplayWidget(field)
+            return LineTemplateDisplayWidget(field, parent)
 
         if field.id == enneagram_field.id:
-            return CustomTemplateFieldWidget(field, TextSelectionWidget(field, enneagram_help), vertical=False)
+            return CustomTemplateFieldWidget(field, TextSelectionWidget(field, enneagram_help), parent, vertical=False)
         elif field.id == mbti_field.id:
-            return CustomTemplateFieldWidget(field, TextSelectionWidget(field, mbti_help), vertical=False)
+            return CustomTemplateFieldWidget(field, TextSelectionWidget(field, mbti_help), parent, vertical=False)
         elif field.id == traits_field.id:
-            return CustomTemplateFieldWidget(field, TraitSelectionWidget(field))
+            return CustomTemplateFieldWidget(field, TraitSelectionWidget(field, parent))
         elif field.type == TemplateFieldType.NUMERIC:
-            return NumericTemplateFieldWidget(field)
+            return NumericTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT_SELECTION:
             widget = QComboBox()
             if not field.required:
@@ -587,11 +587,11 @@ class TemplateFieldWidgetFactory:
         # elif field.type == TemplateFieldType.BUTTON_SELECTION:
         #     widget = ButtonSelectionWidget(field)
         elif field.type == TemplateFieldType.SMALL_TEXT:
-            return SmallTextTemplateFieldWidget(field)
+            return SmallTextTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT:
-            return LineTextTemplateFieldWidget(field)
+            return LineTextTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.LABELS:
-            return CustomTemplateFieldWidget(field, LabelsSelectionWidget(field))
+            return CustomTemplateFieldWidget(field, LabelsSelectionWidget(field), parent)
         else:
             raise ValueError('Unrecognized template field type %s', field.type)
 

@@ -142,7 +142,7 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.clear()
 
         for character in self.novel.characters:
-            card = CharacterCard(character)
+            card = CharacterCard(character, self.ui.cards)
             self.ui.cards.addCard(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)

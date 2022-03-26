@@ -341,7 +341,7 @@ class ScenesOutlineView(AbstractNovelView):
                 continue
             if scene.pov and scene.pov not in active_povs:
                 continue
-            card = SceneCard(scene, self.novel)
+            card = SceneCard(scene, self.novel, self.ui.cards)
             self.ui.cards.addCard(card)
             self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
