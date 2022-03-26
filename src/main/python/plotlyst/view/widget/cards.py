@@ -284,7 +284,7 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
 
         icon = IconRegistry.scene_type_icon(self.scene)
         if icon:
-            self.lblType.setPixmap(icon.pixmap(QSize(24, 24, )))
+            self.lblType.setPixmap(icon.pixmap(QSize(24, 24)))
         else:
             self.lblType.clear()
 
