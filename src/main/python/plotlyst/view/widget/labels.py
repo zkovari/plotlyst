@@ -22,7 +22,7 @@ from typing import Union, List, Iterable, Set
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QMouseEvent
-from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy, QPushButton
+from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
 from overrides import overrides
 from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent, btn_popup
 
@@ -269,9 +269,8 @@ class LabelsEditorWidget(QFrame):
         self._labels_index = {}
         self.clear()
 
-        self.btnEdit = QPushButton()
+        self.btnEdit = QToolButton(self)
         self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
-        self.btnEdit.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
