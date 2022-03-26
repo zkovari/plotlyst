@@ -54,6 +54,7 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
         self.refresh()
 
         event_dispatcher.register(self, CharacterChangedEvent)
+        event_dispatcher.register(self, NovelReloadRequestedEvent)
 
     @overrides
     def event_received(self, event: Event):
