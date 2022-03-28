@@ -69,10 +69,15 @@ class TraitsFieldItemsSelectionModel(TemplateFieldSelectionModel):
             return item.meta.get('positive', True)
         return super(TraitsFieldItemsSelectionModel, self).data(index, role)
 
+    @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
         super_set = super(TraitsFieldItemsSelectionModel, self).setData(index, value, role)
         self.layoutChanged.emit()
         return super_set
+
+    @overrides
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        return Qt.ItemIsEnabled
 
 
 class TraitsProxyModel(QSortFilterProxyModel):
