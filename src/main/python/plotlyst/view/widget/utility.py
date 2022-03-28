@@ -104,6 +104,8 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self.btnObjects.setToolTip('Objects')
         self.btnPlaces.setIcon(IconRegistry.from_name('ei.globe', color_on='darkGreen'))
         self.btnPlaces.setToolTip('Places and travel')
+        self.btnCharacters.setIcon(IconRegistry.from_name('mdi6.alphabetical-variant', color_on='darkGreen'))
+        self.btnCharacters.setToolTip('Numbers and characters')
         self.btnSymbols.setIcon(IconRegistry.from_name('mdi.symbol', color_on='darkGreen'))
         self.btnSymbols.setToolTip('Symbols')
         self.btnAll.setChecked(True)
@@ -154,6 +156,8 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
             self._proxy.setFilterFixedString('Travel & Places')
         elif self.btnObjects.isChecked():
             self._proxy.setFilterFixedString('Objects')
+        elif self.btnCharacters.isChecked():
+            self._proxy.setFilterFixedString('Numbers and Characters')
         elif self.btnSymbols.isChecked():
             self._proxy.setFilterFixedString('Symbols')
         elif self.btnAll.isChecked():
