@@ -139,14 +139,6 @@ class NovelTagsTreeModel(TreeItemModel):
         return super(NovelTagsTreeModel, self).data(index, role)
 
     @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        super_flags = super(NovelTagsTreeModel, self).flags(index)
-        node = index.internalPointer()
-        if isinstance(node, TagNode):
-            return super_flags | Qt.ItemIsUserCheckable
-        return super_flags
-
-    @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
         node = index.internalPointer()
         if isinstance(node, TagNode):
