@@ -208,7 +208,6 @@ class CharacterCard(Ui_CharacterCard, Card):
             self.lblRole.setPixmap(
                 IconRegistry.from_name(self.character.role.icon, self.character.role.icon_color).pixmap(QSize(24, 24)))
         self._setStyleSheet()
-        self.update()
 
     @overrides
     def mimeType(self) -> str:
