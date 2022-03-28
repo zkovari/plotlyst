@@ -205,6 +205,8 @@ class SelectionItemLabel(Label):
                         ''')
 
     def _borderColor(self) -> str:
+        if not self.item.color_hexa and self.item.icon:
+            return self.item.icon_color
         return '#2e5266'
 
 
