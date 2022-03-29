@@ -52,7 +52,7 @@ from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
     ScenesPreferencesWidget
-from src.main.python.plotlyst.view.widget.story_map import StoryLinesMapWidget
+from src.main.python.plotlyst.view.widget.scenes import StoryLinesMapWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
@@ -150,7 +150,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on='darkBlue'))
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
-        self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.passport-biometric', color_on='darkBlue'))
+        self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.transit-connection-horizontal', color_on='darkBlue'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
