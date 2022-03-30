@@ -51,8 +51,8 @@ from src.main.python.plotlyst.view.widget.characters import CharactersScenesDist
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
-    ScenesPreferencesWidget
-from src.main.python.plotlyst.view.widget.story_map import StoryLinesMapWidget
+    ScenesPreferencesWidget, StoryMap, StoryMapDisplayMode
+from src.main.python.plotlyst.view.widget.scenes import StoryLinesMapWidget
 from src.main.python.plotlyst.worker.cache import acts_registry
 
 
@@ -150,8 +150,12 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on='darkBlue'))
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
-        self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.passport-biometric', color_on='darkBlue'))
+        self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.transit-connection-horizontal', color_on='darkBlue'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
+
+        self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
+        self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
+        self.ui.rbDetailed.setIcon(IconRegistry.from_name('mdi.card-text-outline'))
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
@@ -378,9 +382,18 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblScenes.clearSelection()
             self.ui.tblSceneStages.clearSelection()
             if not self.storymap_view:
-                self.storymap_view = StoryLinesMapWidget()
+                self.storymap_view = StoryMap()
+                self.ui.scrollAreaStoryMap.layout().addWidget(self.storymap_view)
+                self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
+                self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
+                self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
+                self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
+                self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
+                self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
+                self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
+                self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
+                self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
                 self.storymap_view.setNovel(self.novel)
-                self.ui.pageStorymap.layout().addWidget(self.storymap_view)
         elif self.ui.btnTimelineView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageTimeline)
             self.ui.tblScenes.clearSelection()

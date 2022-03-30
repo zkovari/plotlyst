@@ -20,7 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton
+from PyQt5.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel
+from overrides import overrides
+from qthandy import hbox
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.view.common import OpacityEventFilter
@@ -70,3 +72,19 @@ class SecondaryActionToolButton(QToolButton, _SecondaryActionButton):
 
 class SecondaryActionPushButton(QPushButton, _SecondaryActionButton):
     pass
+
+
+class WordWrappedPushButton(QPushButton):
+    def __init__(self, parent=None):
+        super(WordWrappedPushButton, self).__init__(parent)
+        self.label = QLabel(self)
+        self.label.setWordWrap(True)
+        self.label.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.label.setAlignment(Qt.AlignCenter)
+        hbox(self, 0, 0).addWidget(self.label, alignment=Qt.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+
+    @overrides
+    def setText(self, text: str):
+        self.label.setText(text)
+        self.setFixedHeight(self.label.height() + 5)

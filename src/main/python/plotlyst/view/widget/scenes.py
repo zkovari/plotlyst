@@ -18,22 +18,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
+from enum import Enum
 from functools import partial
-from typing import List, Optional, Dict
+from typing import Dict, Optional
+from typing import List
 
 import qtanim
+from PyQt5.QtCore import QPoint, QTimeLine
 from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex, QTimer
 from PyQt5.QtGui import QDragEnterEvent, QDragLeaveEvent, \
-    QResizeEvent, QCursor, QColor, QDragMoveEvent, QDropEvent
+    QResizeEvent, QCursor, QColor, QDragMoveEvent, QDropEvent, QMouseEvent
+from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QHBoxLayout, QSplitter, \
     QPushButton, QHeaderView, QTreeView
 from overrides import overrides
 from qtanim import fade_out
+from qthandy import busy, margins
 from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hidden, opaque, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
+from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
     Character, Plot, ScenePlotValue, CharacterGoal, Chapter, StoryBeatType, Tag
@@ -50,6 +56,7 @@ from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
@@ -1227,3 +1234,265 @@ class ScenesTreeView(ActionBasedTreeView):
     def _on_scene_moved(self):
         self.repo.update_novel(app_env.novel)
         emit_event(SceneChangedEvent(self))
+
+
+class StoryMapDisplayMode(Enum):
+    DOTS = 0
+    TITLE = 1
+    DETAILED = 2
+
+
+class StoryLinesMapWidget(QWidget):
+    scene_selected = pyqtSignal(Scene)
+
+    def __init__(self, mode: StoryMapDisplayMode, acts_filter: Dict[int, bool], parent=None):
+        super().__init__(parent=parent)
+        hbox(self)
+        self.setMouseTracking(True)
+        self.novel: Optional[Novel] = None
+        self._scene_coord_y: Dict[int, int] = {}
+        self._clicked_scene: Optional[Scene] = None
+        self._display_mode: StoryMapDisplayMode = mode
+        self._acts_filter = acts_filter
+
+        if mode == StoryMapDisplayMode.DOTS:
+            self._scene_width = 25
+            self._top_height = 50
+        else:
+            self._scene_width = 120
+            self._top_height = 50
+        self._line_height = 50
+        self._first_paint_triggered: bool = False
+
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._context_menu_requested)
+
+    def setNovel(self, novel: Novel, animated: bool = True):
+        def changed(x: int):
+            self._first_paint_triggered = True
+            self.update(0, 0, x, self.minimumSizeHint().height())
+
+        self.novel = novel
+        if animated:
+            timeline = QTimeLine(700, parent=self)
+            timeline.setFrameRange(0, self.minimumSizeHint().width())
+            timeline.frameChanged.connect(changed)
+
+            timeline.start()
+        else:
+            self._first_paint_triggered = True
+
+    def scenes(self) -> List[Scene]:
+        return [x for x in self.novel.scenes if self._acts_filter.get(acts_registry.act(x), True)]
+
+    @overrides
+    def minimumSizeHint(self) -> QSize:
+        if self.novel:
+            x = self._scene_x(len(self.scenes()) - 1) + 50
+            y = self._story_line_y(len(self.novel.plots)) * 2
+            return QSize(x, y)
+        return super().minimumSizeHint()
+
+    @overrides
+    def event(self, event: QEvent) -> bool:
+        if event.type() == QEvent.ToolTip:
+            index = self._index_from_pos(event.pos())
+            scenes = self.scenes()
+            if index < len(scenes):
+                self.setToolTip(scenes[index].title_or_index(self.novel))
+
+            return super().event(event)
+        return super().event(event)
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        index = self._index_from_pos(event.pos())
+        scenes = self.scenes()
+        if index < len(scenes):
+            self._clicked_scene: Scene = scenes[index]
+            self.update()
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(self.rect(), QColor('#f8f9fa'))
+
+        if not self._first_paint_triggered:
+            painter.end()
+            return
+
+        scenes = self.scenes()
+
+        self._scene_coord_y.clear()
+        y = 0
+        last_sc_x: Dict[int, int] = {}
+        for sl_i, plot in enumerate(self.novel.plots):
+            previous_y = 0
+            previous_x = 0
+            y = self._story_line_y(sl_i)
+            path = QPainterPath()
+            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
+            path.moveTo(0, y)
+            painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
+            path.lineTo(5, y)
+            painter.drawPath(path)
+
+            for sc_i, scene in enumerate(scenes):
+                x = self._scene_x(sc_i)
+                if plot in scene.plots():
+                    if sc_i not in self._scene_coord_y.keys():
+                        self._scene_coord_y[sc_i] = y
+                    if previous_y > self._scene_coord_y[sc_i] or (previous_y == 0 and y > self._scene_coord_y[sc_i]):
+                        path.lineTo(x - self._scene_width // 2, y)
+                    elif 0 < previous_y < self._scene_coord_y[sc_i]:
+                        path.lineTo(previous_x + self._scene_width // 2, y)
+
+                    if previous_y == self._scene_coord_y[sc_i] and previous_y != y:
+                        path.arcTo(previous_x + 4, self._scene_coord_y[sc_i] - 3, x - previous_x,
+                                   self._scene_coord_y[sc_i] - 25,
+                                   -180, 180)
+                    else:
+                        path.lineTo(x, self._scene_coord_y[sc_i])
+
+                    painter.drawPath(path)
+                    previous_y = self._scene_coord_y[sc_i]
+                    previous_x = x
+                    last_sc_x[sl_i] = x
+
+        for sc_i, scene in enumerate(scenes):
+            if sc_i not in self._scene_coord_y.keys():
+                continue
+            self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), self._scene_coord_y[sc_i])
+
+        for sc_i, scene in enumerate(scenes):
+            if not scene.plots():
+                self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), 3)
+
+        if len(self.novel.plots) <= 1:
+            return
+
+        base_y = y
+        for sl_i, plot in enumerate(self.novel.plots):
+            y = 50 * (sl_i + 1) + 25 + base_y
+            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
+            painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
+            painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
+            painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
+            painter.drawText(26, y - 15, plot.text)
+
+            for sc_i, scene in enumerate(scenes):
+                if plot in scene.plots():
+                    self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), y)
+
+        painter.end()
+
+    def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
+        if scene.plot_values:
+            pen = Qt.red if scene is self._clicked_scene else Qt.black
+            if len(scene.plot_values) == 1:
+                painter.setPen(QPen(pen, 3, Qt.SolidLine))
+                painter.setBrush(Qt.black)
+                painter.drawEllipse(x, y - 7, 14, 14)
+            else:
+                painter.setPen(QPen(pen, 3, Qt.SolidLine))
+                painter.setBrush(Qt.white)
+                painter.drawEllipse(x, y - 10, 20, 20)
+        else:
+            pen = Qt.red if scene is self._clicked_scene else Qt.gray
+            painter.setPen(QPen(pen, 3, Qt.SolidLine))
+            painter.setBrush(Qt.gray)
+            painter.drawEllipse(x, y, 14, 14)
+
+    def _story_line_y(self, index: int) -> int:
+        return self._top_height + self._line_height * (index)
+
+    def _scene_x(self, index: int) -> int:
+        return self._scene_width * (index + 1)
+
+    def _index_from_pos(self, pos: QPoint) -> int:
+        return int((pos.x() / self._scene_width) - 1)
+
+    def _context_menu_requested(self, pos: QPoint) -> None:
+        index = self._index_from_pos(pos)
+        scenes = self.scenes()
+        if index < len(scenes):
+            self._clicked_scene: Scene = scenes[index]
+            self.update()
+
+            builder = PopupMenuBuilder.from_widget_position(self, pos)
+            if self.novel.plots:
+                for plot in self.novel.plots:
+                    plot_action = builder.add_action(truncate_string(plot.text, 70),
+                                                     IconRegistry.from_name(plot.icon, plot.icon_color),
+                                                     slot=partial(self._plot_changed, plot))
+                    plot_action.setCheckable(True)
+                    if plot in self._clicked_scene.plots():
+                        plot_action.setChecked(True)
+
+                builder.popup()
+
+    @busy
+    def _plot_changed(self, plot: Plot, checked: bool):
+        if checked:
+            self._clicked_scene.plot_values.append(ScenePlotValue(plot))
+        else:
+            to_be_removed = None
+            for plot_v in self._clicked_scene.plot_values:
+                if plot_v.plot is plot:
+                    to_be_removed = plot_v
+                    break
+            if to_be_removed:
+                self._clicked_scene.plot_values.remove(to_be_removed)
+        RepositoryPersistenceManager.instance().update_scene(self._clicked_scene)
+
+        self.update()
+
+
+class StoryMap(QWidget):
+    def __init__(self, parent=None):
+        super(StoryMap, self).__init__(parent)
+        self.novel: Optional[Novel] = None
+        self._display_mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS
+        self._acts_filter: Dict[int, bool] = {}
+        vbox(self, spacing=0)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+        self.refresh()
+
+    def refresh(self, animated: bool = True):
+        if not self.novel:
+            return
+        clear_layout(self)
+        wdg = StoryLinesMapWidget(self._display_mode, self._acts_filter, parent=self)
+        self.layout().addWidget(wdg)
+        wdg.setNovel(self.novel, animated=animated)
+        if self._display_mode == StoryMapDisplayMode.TITLE:
+            titles = QWidget(self)
+            titles.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+            titles.setStyleSheet('QWidget {background-color: #f8f9fa;}')
+            hbox(titles, 0, 0)
+            margins(titles, left=70)
+            self.layout().insertWidget(0, titles)
+            for scene in wdg.scenes():
+                btn = WordWrappedPushButton(parent=self)
+                btn.setFixedWidth(120)
+                btn.setText(scene.title_or_index(self.novel))
+                decr_font(btn.label, step=2)
+                transparent(btn)
+                titles.layout().addWidget(btn)
+            titles.layout().addWidget(spacer())
+
+    def setMode(self, mode: StoryMapDisplayMode):
+        if self._display_mode == mode:
+            return
+        self._display_mode = mode
+        if self.novel:
+            self.refresh()
+
+    def setActsFilter(self, act: int, filtered: bool):
+        self._acts_filter[act] = filtered
+        if self.novel:
+            self.refresh(animated=False)
