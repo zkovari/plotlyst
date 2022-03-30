@@ -1244,7 +1244,7 @@ class StoryMapDisplayMode(Enum):
 class StoryLinesMapWidget(QWidget):
     scene_selected = pyqtSignal(Scene)
 
-    def __init__(self, mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS, parent=None):
+    def __init__(self, mode: StoryMapDisplayMode, acts_filter: Dict[int, bool], parent=None):
         super().__init__(parent=parent)
         hbox(self)
         self.setMouseTracking(True)
@@ -1252,6 +1252,8 @@ class StoryLinesMapWidget(QWidget):
         self._scene_coord_y: Dict[int, int] = {}
         self._clicked_scene: Optional[Scene] = None
         self._display_mode: StoryMapDisplayMode = mode
+        self._acts_filter = acts_filter
+
         if mode == StoryMapDisplayMode.DOTS:
             self._scene_width = 25
             self._top_height = 50
@@ -1264,22 +1266,25 @@ class StoryLinesMapWidget(QWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu_requested)
 
-    def setNovel(self, novel: Novel):
+    def setNovel(self, novel: Novel, animated: bool = True):
         def changed(x: int):
             self._first_paint_triggered = True
             self.update(0, 0, x, self.minimumSizeHint().height())
 
         self.novel = novel
-        timeline = QTimeLine(700, parent=self)
-        timeline.setFrameRange(0, self.minimumSizeHint().width())
-        timeline.frameChanged.connect(changed)
+        if animated:
+            timeline = QTimeLine(700, parent=self)
+            timeline.setFrameRange(0, self.minimumSizeHint().width())
+            timeline.frameChanged.connect(changed)
 
-        timeline.start()
+            timeline.start()
+        else:
+            self._first_paint_triggered = True
 
     @overrides
     def minimumSizeHint(self) -> QSize:
         if self.novel:
-            x = self._scene_x(len(self.novel.scenes) - 1) + 50
+            x = self._scene_x(len(self._scenes()) - 1) + 50
             y = self._story_line_y(len(self.novel.plots)) * 2
             return QSize(x, y)
         return super().minimumSizeHint()
@@ -1288,8 +1293,9 @@ class StoryLinesMapWidget(QWidget):
     def event(self, event: QEvent) -> bool:
         if event.type() == QEvent.ToolTip:
             index = self._index_from_pos(event.pos())
-            if index < len(self.novel.scenes):
-                self.setToolTip(self.novel.scenes[index].title)
+            scenes = self._scenes()
+            if index < len(scenes):
+                self.setToolTip(scenes[index].title)
 
             return super().event(event)
         return super().event(event)
@@ -1297,8 +1303,9 @@ class StoryLinesMapWidget(QWidget):
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
         index = self._index_from_pos(event.pos())
-        if index < len(self.novel.scenes):
-            self._clicked_scene: Scene = self.novel.scenes[index]
+        scenes = self._scenes()
+        if index < len(scenes):
+            self._clicked_scene: Scene = scenes[index]
             self.update()
 
     @overrides
@@ -1310,6 +1317,8 @@ class StoryLinesMapWidget(QWidget):
         if not self._first_paint_triggered:
             painter.end()
             return
+
+        scenes = self._scenes()
 
         self._scene_coord_y.clear()
         y = 0
@@ -1323,7 +1332,7 @@ class StoryLinesMapWidget(QWidget):
             path.moveTo(0, y)
             path.lineTo(5, y)
 
-            for sc_i, scene in enumerate(self.novel.scenes):
+            for sc_i, scene in enumerate(scenes):
                 x = self._scene_x(sc_i)
                 if plot in scene.plots():
                     if sc_i not in self._scene_coord_y.keys():
@@ -1345,12 +1354,12 @@ class StoryLinesMapWidget(QWidget):
                     previous_x = x
                     last_sc_x[sl_i] = x
 
-        for sc_i, scene in enumerate(self.novel.scenes):
+        for sc_i, scene in enumerate(scenes):
             if sc_i not in self._scene_coord_y.keys():
                 continue
             self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), self._scene_coord_y[sc_i])
 
-        for sc_i, scene in enumerate(self.novel.scenes):
+        for sc_i, scene in enumerate(scenes):
             if not scene.plots():
                 self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), 3)
 
@@ -1366,7 +1375,7 @@ class StoryLinesMapWidget(QWidget):
             painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
             painter.drawText(26, y - 15, plot.text)
 
-            for sc_i, scene in enumerate(self.novel.scenes):
+            for sc_i, scene in enumerate(scenes):
                 if plot in scene.plots():
                     self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), y)
 
@@ -1389,6 +1398,9 @@ class StoryLinesMapWidget(QWidget):
             painter.setBrush(Qt.gray)
             painter.drawEllipse(x, y, 14, 14)
 
+    def _scenes(self) -> List[Scene]:
+        return [x for x in self.novel.scenes if self._acts_filter.get(acts_registry.act(x), True)]
+
     def _story_line_y(self, index: int) -> int:
         return self._top_height + self._line_height * (index)
 
@@ -1401,8 +1413,9 @@ class StoryLinesMapWidget(QWidget):
 
     def _context_menu_requested(self, pos: QPoint) -> None:
         index = self._index_from_pos(pos)
-        if index < len(self.novel.scenes):
-            self._clicked_scene: Scene = self.novel.scenes[index]
+        scenes = self._scenes()
+        if index < len(scenes):
+            self._clicked_scene: Scene = scenes[index]
             self.update()
 
             builder = PopupMenuBuilder.from_widget_position(self, pos)
@@ -1474,17 +1487,15 @@ class StoryMap(QWidget):
         super(StoryMap, self).__init__(parent)
         self.novel: Optional[Novel] = None
         self._display_mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS
+        self._acts_filter: Dict[int, bool] = {}
         vbox(self)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # self._scene_widgets: List[StoryMapSceneWidget] = []
 
-    def setNovel(self, novel: Novel, mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS):
+    def setNovel(self, novel: Novel):
         self.novel = novel
-        clear_layout(self)
-        wdg = StoryLinesMapWidget(mode, parent=self)
-        self.layout().addWidget(wdg)
-        wdg.setNovel(novel)
+        self.refresh()
 
         # for i, scene in enumerate(self.novel.scenes):
         #     wdg = StoryMapSceneWidget(self._display_mode, self.novel, scene, parent=self)
@@ -1494,8 +1505,22 @@ class StoryMap(QWidget):
         #     wdg.move(x - 4, 5)
         #     wdg.update()
 
+    def refresh(self, animated: bool = True):
+        if not self.novel:
+            return
+        clear_layout(self)
+        wdg = StoryLinesMapWidget(self._display_mode, self._acts_filter, parent=self)
+        self.layout().addWidget(wdg)
+        wdg.setNovel(self.novel, animated=animated)
+
     def setMode(self, mode: StoryMapDisplayMode):
         if self._display_mode == mode:
             return
         self._display_mode = mode
-        self.setNovel(self.novel, mode)
+        if self.novel:
+            self.refresh()
+
+    def setActsFilter(self, act: int, filtered: bool):
+        self._acts_filter[act] = filtered
+        if self.novel:
+            self.refresh(animated=False)

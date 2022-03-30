@@ -384,10 +384,16 @@ class ScenesOutlineView(AbstractNovelView):
             if not self.storymap_view:
                 self.storymap_view = StoryMap()
                 self.ui.scrollAreaStoryMap.layout().addWidget(self.storymap_view)
-                self.storymap_view.setNovel(self.novel)
                 self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
                 self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
                 self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
+                self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
+                self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
+                self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
+                self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
+                self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
+                self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
+                self.storymap_view.setNovel(self.novel)
         elif self.ui.btnTimelineView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageTimeline)
             self.ui.tblScenes.clearSelection()
