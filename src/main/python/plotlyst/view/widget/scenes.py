@@ -18,16 +18,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
+from enum import Enum
 from functools import partial
 from typing import Dict, Optional
 from typing import List
 
 import qtanim
-from PyQt5.QtCore import QPoint
+from PyQt5.QtCore import QPoint, QTimeLine
 from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex, QTimer
 from PyQt5.QtGui import QDragEnterEvent, QDragLeaveEvent, \
-    QResizeEvent, QCursor, QColor, QDragMoveEvent, QDropEvent
-from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath, QMouseEvent
+    QResizeEvent, QCursor, QColor, QDragMoveEvent, QDropEvent, QMouseEvent
+from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QHBoxLayout, QSplitter, \
     QPushButton, QHeaderView, QTreeView
 from overrides import overrides
@@ -1234,6 +1235,12 @@ class ScenesTreeView(ActionBasedTreeView):
         emit_event(SceneChangedEvent(self))
 
 
+class StoryMapDisplayMode(Enum):
+    DOTS = 0
+    TITLE = 1
+    DETAILED = 2
+
+
 class StoryLinesMapWidget(QWidget):
     scene_selected = pyqtSignal(Scene)
 
@@ -1244,12 +1251,39 @@ class StoryLinesMapWidget(QWidget):
         self.novel: Optional[Novel] = None
         self._scene_coord_y: Dict[int, int] = {}
         self._clicked_scene: Optional[Scene] = None
+        self._display_mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS
+        self._scene_width: int = 25
+        self._first_paint_triggered: bool = False
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu_requested)
 
     def setNovel(self, novel: Novel):
+        def changed(x: int):
+            self._first_paint_triggered = True
+            self.update(0, 0, x, self.height())
+
         self.novel = novel
+        timeline = QTimeLine(parent=self)
+        timeline.setFrameRange(0, self.width())
+        timeline.frameChanged.connect(changed)
+
+        timeline.start()
+        # for i, scene in enumerate(self.novel.scenes):
+        #     wdg = StoryMapSceneWidget(self._display_mode, self.novel, scene, parent=self)
+        #     self._scene_widgets.append(wdg)
+        #
+        #     x = self._scene_x(i)
+        #     wdg.move(x - 4, 5)
+        #     wdg.update()
+
+    def setMode(self, mode: StoryMapDisplayMode):
+        self._display_mode = mode
+        if mode == StoryMapDisplayMode.DOTS:
+            self._scene_width = 25
+        else:
+            self._scene_width = 120
+        self.update()
 
     @overrides
     def minimumSizeHint(self) -> QSize:
@@ -1280,7 +1314,12 @@ class StoryLinesMapWidget(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), Qt.white)
+        painter.fillRect(self.rect(), QColor('#f8f9fa'))
+
+        if not self._first_paint_triggered:
+            painter.end()
+            return
+
         self._scene_coord_y.clear()
         y = 0
         last_sc_x: Dict[int, int] = {}
@@ -1333,11 +1372,14 @@ class StoryLinesMapWidget(QWidget):
             painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
             painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
             painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
-            painter.drawText(5, y - 15, plot.text)
+            painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
+            painter.drawText(26, y - 15, plot.text)
 
             for sc_i, scene in enumerate(self.novel.scenes):
                 if plot in scene.plots():
                     self._draw_scene_ellipse(painter, scene, self._scene_x(sc_i), y)
+
+        painter.end()
 
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
         if scene.plot_values:
@@ -1360,9 +1402,8 @@ class StoryLinesMapWidget(QWidget):
     def _story_line_y(index: int) -> int:
         return 50 * (index + 1)
 
-    @staticmethod
-    def _scene_x(index: int) -> int:
-        return 25 * (index + 1)
+    def _scene_x(self, index: int) -> int:
+        return self._scene_width * (index + 1)
 
     @staticmethod
     def _index_from_pos(pos: QPoint) -> int:
@@ -1400,3 +1441,46 @@ class StoryLinesMapWidget(QWidget):
         RepositoryPersistenceManager.instance().update_scene(self._clicked_scene)
 
         self.update()
+
+
+# class StoryMapSceneWidget(QWidget):
+#     def __init__(self, mode: StoryMapDisplayMode, novel: Novel, scene: Scene, parent=None):
+#         super(StoryMapSceneWidget, self).__init__(parent)
+#         self.mode = mode
+#         self.novel = novel
+#         self.scene = scene
+#
+#         if mode == StoryMapDisplayMode.DOTS:
+#             self.btn = QPushButton(self)
+#             self.btn.setIcon(IconRegistry.from_name('fa5s.circle', 'grey'))
+#         elif self._display_mode == StoryMapDisplayMode.TITLE:
+#             self.btn = QPushButton(self)
+#             self.btn.setFixedWidth(100)
+#             lbl = QLabel(self.btn)
+#             decr_font(lbl, step=2)
+#             lbl.setWordWrap(True)
+#             lbl.setText(scene.title_or_index(self.novel))
+#             lbl.setTextInteractionFlags(Qt.NoTextInteraction)
+#             hbox(self.btn, 0, 0).addWidget(lbl, alignment=Qt.AlignCenter)
+#             self.btn.setFixedHeight(lbl.height() + 5)
+#         else:
+#             raise ValueError('Unsupported mode')
+#
+#         self.btn.installEventFilter(OpacityEventFilter(parent=self.btn))
+#         self.btn.setToolTip(scene.title_or_index(self.novel))
+#         transparent(self.btn)
+#         self.btn.setIconSize(QSize(18, 18))
+#
+#         hbox(self, 0, 0).addWidget(self.btn)
+#
+#     @overrides
+#     def update(self) -> None:
+#         self.setVisible(len(self.scene.plot_values) == 0)
+#         super(StoryMapSceneWidget, self).update()
+
+
+class StoryMap(QWidget):
+    def __init__(self, parent=None):
+        super(StoryMap, self).__init__(parent)
+        vbox(self)
+        # self._scene_widgets: List[StoryMapSceneWidget] = []
