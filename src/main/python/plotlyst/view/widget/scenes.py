@@ -1330,7 +1330,9 @@ class StoryLinesMapWidget(QWidget):
             path = QPainterPath()
             painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
             path.moveTo(0, y)
+            painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
             path.lineTo(5, y)
+            painter.drawPath(path)
 
             for sc_i, scene in enumerate(scenes):
                 x = self._scene_x(sc_i)
