@@ -1244,15 +1244,21 @@ class StoryMapDisplayMode(Enum):
 class StoryLinesMapWidget(QWidget):
     scene_selected = pyqtSignal(Scene)
 
-    def __init__(self, parent=None):
+    def __init__(self, mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS, parent=None):
         super().__init__(parent=parent)
         hbox(self)
         self.setMouseTracking(True)
         self.novel: Optional[Novel] = None
         self._scene_coord_y: Dict[int, int] = {}
         self._clicked_scene: Optional[Scene] = None
-        self._display_mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS
-        self._scene_width: int = 25
+        self._display_mode: StoryMapDisplayMode = mode
+        if mode == StoryMapDisplayMode.DOTS:
+            self._scene_width = 25
+            self._top_height = 50
+        else:
+            self._scene_width = 120
+            self._top_height = 50
+        self._line_height = 50
         self._first_paint_triggered: bool = False
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -1261,29 +1267,14 @@ class StoryLinesMapWidget(QWidget):
     def setNovel(self, novel: Novel):
         def changed(x: int):
             self._first_paint_triggered = True
-            self.update(0, 0, x, self.height())
+            self.update(0, 0, x, self.minimumSizeHint().height())
 
         self.novel = novel
-        timeline = QTimeLine(parent=self)
-        timeline.setFrameRange(0, self.width())
+        timeline = QTimeLine(700, parent=self)
+        timeline.setFrameRange(0, self.minimumSizeHint().width())
         timeline.frameChanged.connect(changed)
 
         timeline.start()
-        # for i, scene in enumerate(self.novel.scenes):
-        #     wdg = StoryMapSceneWidget(self._display_mode, self.novel, scene, parent=self)
-        #     self._scene_widgets.append(wdg)
-        #
-        #     x = self._scene_x(i)
-        #     wdg.move(x - 4, 5)
-        #     wdg.update()
-
-    def setMode(self, mode: StoryMapDisplayMode):
-        self._display_mode = mode
-        if mode == StoryMapDisplayMode.DOTS:
-            self._scene_width = 25
-        else:
-            self._scene_width = 120
-        self.update()
 
     @overrides
     def minimumSizeHint(self) -> QSize:
@@ -1338,9 +1329,9 @@ class StoryLinesMapWidget(QWidget):
                     if sc_i not in self._scene_coord_y.keys():
                         self._scene_coord_y[sc_i] = y
                     if previous_y > self._scene_coord_y[sc_i] or (previous_y == 0 and y > self._scene_coord_y[sc_i]):
-                        path.lineTo(x - 25, y)
+                        path.lineTo(x - self._scene_width // 2, y)
                     elif 0 < previous_y < self._scene_coord_y[sc_i]:
-                        path.lineTo(previous_x + 25, y)
+                        path.lineTo(previous_x + self._scene_width // 2, y)
 
                     if previous_y == self._scene_coord_y[sc_i] and previous_y != y:
                         path.arcTo(previous_x + 4, self._scene_coord_y[sc_i] - 3, x - previous_x,
@@ -1392,15 +1383,14 @@ class StoryLinesMapWidget(QWidget):
                 painter.setPen(QPen(pen, 3, Qt.SolidLine))
                 painter.setBrush(Qt.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
-        else:
+        elif self._display_mode == StoryMapDisplayMode.DOTS:
             pen = Qt.red if scene is self._clicked_scene else Qt.gray
             painter.setPen(QPen(pen, 3, Qt.SolidLine))
             painter.setBrush(Qt.gray)
             painter.drawEllipse(x, y, 14, 14)
 
-    @staticmethod
-    def _story_line_y(index: int) -> int:
-        return 50 * (index + 1)
+    def _story_line_y(self, index: int) -> int:
+        return self._top_height + self._line_height * (index)
 
     def _scene_x(self, index: int) -> int:
         return self._scene_width * (index + 1)
@@ -1482,5 +1472,30 @@ class StoryLinesMapWidget(QWidget):
 class StoryMap(QWidget):
     def __init__(self, parent=None):
         super(StoryMap, self).__init__(parent)
+        self.novel: Optional[Novel] = None
+        self._display_mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS
         vbox(self)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
         # self._scene_widgets: List[StoryMapSceneWidget] = []
+
+    def setNovel(self, novel: Novel, mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS):
+        self.novel = novel
+        clear_layout(self)
+        wdg = StoryLinesMapWidget(mode, parent=self)
+        self.layout().addWidget(wdg)
+        wdg.setNovel(novel)
+
+        # for i, scene in enumerate(self.novel.scenes):
+        #     wdg = StoryMapSceneWidget(self._display_mode, self.novel, scene, parent=self)
+        #     self._scene_widgets.append(wdg)
+        #
+        #     x = self._scene_x(i)
+        #     wdg.move(x - 4, 5)
+        #     wdg.update()
+
+    def setMode(self, mode: StoryMapDisplayMode):
+        if self._display_mode == mode:
+            return
+        self._display_mode = mode
+        self.setNovel(self.novel, mode)
