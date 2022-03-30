@@ -587,6 +587,10 @@ class Scene:
 
         return False
 
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
 
 def default_stages() -> List[SceneStage]:
     return [SceneStage('Outlined'), SceneStage('1st Draft'),
