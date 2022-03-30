@@ -1424,6 +1424,7 @@ class StoryLinesMapWidget(QWidget):
             if self.novel.plots:
                 for plot in self.novel.plots:
                     plot_action = builder.add_action(truncate_string(plot.text, 70),
+                                                     IconRegistry.from_name(plot.icon, plot.icon_color),
                                                      slot=partial(self._plot_changed, plot))
                     plot_action.setCheckable(True)
                     if plot in self._clicked_scene.plots():
