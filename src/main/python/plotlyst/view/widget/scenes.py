@@ -1299,7 +1299,7 @@ class StoryLinesMapWidget(QWidget):
             index = self._index_from_pos(event.pos())
             scenes = self.scenes()
             if index < len(scenes):
-                self.setToolTip(scenes[index].title)
+                self.setToolTip(scenes[index].title_or_index(self.novel))
 
             return super().event(event)
         return super().event(event)
@@ -1410,9 +1410,8 @@ class StoryLinesMapWidget(QWidget):
     def _scene_x(self, index: int) -> int:
         return self._scene_width * (index + 1)
 
-    @staticmethod
-    def _index_from_pos(pos: QPoint) -> int:
-        return int((pos.x() / 25) - 1)
+    def _index_from_pos(self, pos: QPoint) -> int:
+        return int((pos.x() / self._scene_width) - 1)
 
     def _context_menu_requested(self, pos: QPoint) -> None:
         index = self._index_from_pos(pos)
