@@ -33,7 +33,7 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QHBoxLayo
     QPushButton, QHeaderView, QTreeView
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import busy
+from qthandy import busy, margins
 from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hidden, opaque, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter
@@ -56,6 +56,7 @@ from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
@@ -1281,10 +1282,13 @@ class StoryLinesMapWidget(QWidget):
         else:
             self._first_paint_triggered = True
 
+    def scenes(self) -> List[Scene]:
+        return [x for x in self.novel.scenes if self._acts_filter.get(acts_registry.act(x), True)]
+
     @overrides
     def minimumSizeHint(self) -> QSize:
         if self.novel:
-            x = self._scene_x(len(self._scenes()) - 1) + 50
+            x = self._scene_x(len(self.scenes()) - 1) + 50
             y = self._story_line_y(len(self.novel.plots)) * 2
             return QSize(x, y)
         return super().minimumSizeHint()
@@ -1293,7 +1297,7 @@ class StoryLinesMapWidget(QWidget):
     def event(self, event: QEvent) -> bool:
         if event.type() == QEvent.ToolTip:
             index = self._index_from_pos(event.pos())
-            scenes = self._scenes()
+            scenes = self.scenes()
             if index < len(scenes):
                 self.setToolTip(scenes[index].title)
 
@@ -1303,7 +1307,7 @@ class StoryLinesMapWidget(QWidget):
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
         index = self._index_from_pos(event.pos())
-        scenes = self._scenes()
+        scenes = self.scenes()
         if index < len(scenes):
             self._clicked_scene: Scene = scenes[index]
             self.update()
@@ -1318,7 +1322,7 @@ class StoryLinesMapWidget(QWidget):
             painter.end()
             return
 
-        scenes = self._scenes()
+        scenes = self.scenes()
 
         self._scene_coord_y.clear()
         y = 0
@@ -1394,14 +1398,11 @@ class StoryLinesMapWidget(QWidget):
                 painter.setPen(QPen(pen, 3, Qt.SolidLine))
                 painter.setBrush(Qt.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
-        elif self._display_mode == StoryMapDisplayMode.DOTS:
+        else:
             pen = Qt.red if scene is self._clicked_scene else Qt.gray
             painter.setPen(QPen(pen, 3, Qt.SolidLine))
             painter.setBrush(Qt.gray)
             painter.drawEllipse(x, y, 14, 14)
-
-    def _scenes(self) -> List[Scene]:
-        return [x for x in self.novel.scenes if self._acts_filter.get(acts_registry.act(x), True)]
 
     def _story_line_y(self, index: int) -> int:
         return self._top_height + self._line_height * (index)
@@ -1415,7 +1416,7 @@ class StoryLinesMapWidget(QWidget):
 
     def _context_menu_requested(self, pos: QPoint) -> None:
         index = self._index_from_pos(pos)
-        scenes = self._scenes()
+        scenes = self.scenes()
         if index < len(scenes):
             self._clicked_scene: Scene = scenes[index]
             self.update()
@@ -1449,64 +1450,18 @@ class StoryLinesMapWidget(QWidget):
         self.update()
 
 
-# class StoryMapSceneWidget(QWidget):
-#     def __init__(self, mode: StoryMapDisplayMode, novel: Novel, scene: Scene, parent=None):
-#         super(StoryMapSceneWidget, self).__init__(parent)
-#         self.mode = mode
-#         self.novel = novel
-#         self.scene = scene
-#
-#         if mode == StoryMapDisplayMode.DOTS:
-#             self.btn = QPushButton(self)
-#             self.btn.setIcon(IconRegistry.from_name('fa5s.circle', 'grey'))
-#         elif self._display_mode == StoryMapDisplayMode.TITLE:
-#             self.btn = QPushButton(self)
-#             self.btn.setFixedWidth(100)
-#             lbl = QLabel(self.btn)
-#             decr_font(lbl, step=2)
-#             lbl.setWordWrap(True)
-#             lbl.setText(scene.title_or_index(self.novel))
-#             lbl.setTextInteractionFlags(Qt.NoTextInteraction)
-#             hbox(self.btn, 0, 0).addWidget(lbl, alignment=Qt.AlignCenter)
-#             self.btn.setFixedHeight(lbl.height() + 5)
-#         else:
-#             raise ValueError('Unsupported mode')
-#
-#         self.btn.installEventFilter(OpacityEventFilter(parent=self.btn))
-#         self.btn.setToolTip(scene.title_or_index(self.novel))
-#         transparent(self.btn)
-#         self.btn.setIconSize(QSize(18, 18))
-#
-#         hbox(self, 0, 0).addWidget(self.btn)
-#
-#     @overrides
-#     def update(self) -> None:
-#         self.setVisible(len(self.scene.plot_values) == 0)
-#         super(StoryMapSceneWidget, self).update()
-
-
 class StoryMap(QWidget):
     def __init__(self, parent=None):
         super(StoryMap, self).__init__(parent)
         self.novel: Optional[Novel] = None
         self._display_mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS
         self._acts_filter: Dict[int, bool] = {}
-        vbox(self)
+        vbox(self, spacing=0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        # self._scene_widgets: List[StoryMapSceneWidget] = []
 
     def setNovel(self, novel: Novel):
         self.novel = novel
         self.refresh()
-
-        # for i, scene in enumerate(self.novel.scenes):
-        #     wdg = StoryMapSceneWidget(self._display_mode, self.novel, scene, parent=self)
-        #     self._scene_widgets.append(wdg)
-        #
-        #     x = self._scene_x(i)
-        #     wdg.move(x - 4, 5)
-        #     wdg.update()
 
     def refresh(self, animated: bool = True):
         if not self.novel:
@@ -1515,6 +1470,21 @@ class StoryMap(QWidget):
         wdg = StoryLinesMapWidget(self._display_mode, self._acts_filter, parent=self)
         self.layout().addWidget(wdg)
         wdg.setNovel(self.novel, animated=animated)
+        if self._display_mode == StoryMapDisplayMode.TITLE:
+            titles = QWidget(self)
+            titles.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+            titles.setStyleSheet('QWidget {background-color: #f8f9fa;}')
+            hbox(titles, 0, 0)
+            margins(titles, left=70)
+            self.layout().insertWidget(0, titles)
+            for scene in wdg.scenes():
+                btn = WordWrappedPushButton(parent=self)
+                btn.setFixedWidth(120)
+                btn.setText(scene.title_or_index(self.novel))
+                decr_font(btn.label, step=2)
+                transparent(btn)
+                titles.layout().addWidget(btn)
+            titles.layout().addWidget(spacer())
 
     def setMode(self, mode: StoryMapDisplayMode):
         if self._display_mode == mode:

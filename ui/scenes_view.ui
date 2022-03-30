@@ -955,7 +955,7 @@
              <widget class="QWidget" name="pageStorymap">
               <layout class="QVBoxLayout" name="verticalLayout_9">
                <property name="spacing">
-                <number>2</number>
+                <number>0</number>
                </property>
                <property name="leftMargin">
                 <number>0</number>
@@ -1012,6 +1012,9 @@
                  </item>
                  <item>
                   <widget class="QRadioButton" name="rbDetailed">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
                    </property>
@@ -1049,7 +1052,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>408</width>
-                    <height>553</height>
+                    <height>555</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
