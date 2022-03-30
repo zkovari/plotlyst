@@ -380,7 +380,7 @@ class ScenesOutlineView(AbstractNovelView):
             if not self.storymap_view:
                 self.storymap_view = StoryLinesMapWidget()
                 self.storymap_view.setNovel(self.novel)
-                self.ui.pageStorymap.layout().addWidget(self.storymap_view)
+                self.ui.scrollAreaStoryMap.layout().addWidget(self.storymap_view)
         elif self.ui.btnTimelineView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageTimeline)
             self.ui.tblScenes.clearSelection()
