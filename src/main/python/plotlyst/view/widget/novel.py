@@ -619,7 +619,6 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
     def _addValue(self, value: PlotValue):
         label = PlotValueLabel(value, parent=self.wdgValues, removalEnabled=True)
-        label.installEventFilter(OpacityEventFilter(parent=label))
         self.wdgValues.layout().addWidget(label)
         label.removalRequested.connect(partial(self._removeValue, label))
 
@@ -627,7 +626,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         if app_env.test_env():
             self.__destroyValue(widget)
         else:
-            anim = qtanim.fade_out(widget, duration=150)
+            anim = qtanim.fade_out(widget, duration=150, hide_if_finished=False)
             anim.finished.connect(partial(self.__destroyValue, widget))
 
     def __destroyValue(self, widget: PlotValueLabel):
