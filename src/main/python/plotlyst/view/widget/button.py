@@ -47,23 +47,30 @@ class SelectionItemPushButton(QPushButton):
 class _SecondaryActionButton(QAbstractButton):
     def __init__(self, parent=None):
         super(_SecondaryActionButton, self).__init__(parent)
+        self.initStyleSheet()
+        self.setCursor(Qt.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        self.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self))
+
+    def initStyleSheet(self, border_color: str = 'grey', border_color_checked: str = 'black'):
         self.setStyleSheet(f'''
                 {self.__class__.__name__} {{
-                    border: 2px dashed grey;
+                    border: 2px dashed {border_color};
                     border-radius: 6px;
                     color: grey;
                     padding: 2px;
                 }}
                 {self.__class__.__name__}:pressed {{
-                    border: 2px solid grey;
+                    border: 2px solid {border_color};
                 }}
                 {self.__class__.__name__}:checked {{
-                    border: 2px solid black;
+                    border: 2px solid {border_color_checked};
                 }}
             ''')
-        self.setCursor(Qt.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
-        self.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self))
+
+    def setBorderColor(self, color_name: str):
+        self.initStyleSheet(color_name)
+        self.update()
 
 
 class SecondaryActionToolButton(QToolButton, _SecondaryActionButton):

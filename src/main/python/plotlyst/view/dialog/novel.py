@@ -68,7 +68,7 @@ class _TemplatePlotValueButton(QPushButton):
                 border: 3px solid black;
             }}
         ''')
-        self.installEventFilter(OpacityEventFilter(parent=self))
+        self.installEventFilter(OpacityEventFilter(leaveOpacity=0.5, parent=self))
         self.setCursor(Qt.PointingHandCursor)
 
 
@@ -90,11 +90,14 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         templates = [
             PlotValue(text='Love', negative='Hate', icon='ei.heart', icon_color='#d1495b'),
             PlotValue(text='Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c'),
+            PlotValue(text='Wealth', negative='Poverty', icon='fa5s.hand-holding-usd', icon_color='#e9c46a'),
             PlotValue(text='Justice', negative='Injustice', icon='fa5s.gavel', icon_color='#a68a64'),
             PlotValue(text='Maturity', negative='Immaturity', icon='fa5s.seedling', icon_color='#95d5b2'),
             PlotValue(text='Truth', negative='Lie', icon='mdi.scale-balance', icon_color='#5390d9'),
             PlotValue(text='Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9'),
-            PlotValue(text='Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c')
+            PlotValue(text='Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c'),
+            PlotValue(text='Morality', negative='Immorality', icon='ph.scales-bold', icon_color='#560bad'),
+            PlotValue(text='Esteem', negative='Disrespect', icon='mdi.account-star', icon_color='#f72585'),
         ]
 
         for value in templates:
@@ -121,6 +124,7 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
             self.btnIcon.setIcon(IconRegistry.from_name(value.icon, value.icon_color))
             self._value.icon = value.icon
             self._value.icon_color = value.icon_color
+            self.btnIcon.setBorderColor(self._value.icon_color)
 
         glow_color = QColor(value.icon_color)
         qtanim.glow(self.linePositive, color=glow_color)
@@ -133,3 +137,4 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
             self._value.icon = result[0]
             self._value.icon_color = result[1].name()
             self.btnIcon.setIcon(IconRegistry.from_name(self._value.icon, self._value.icon_color))
+            self.btnIcon.setBorderColor(self._value.icon_color)
