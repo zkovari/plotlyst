@@ -48,6 +48,7 @@ from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.widget.hint import ScenesViewHintWidget
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
@@ -90,6 +91,8 @@ class ScenesOutlineView(AbstractNovelView):
         super().__init__(novel, [NovelStoryStructureUpdated, SceneChangedEvent, ChapterChangedEvent, SceneDeletedEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
+
+        self.widget.layout().insertWidget(0, ScenesViewHintWidget(self.widget))
 
         self.title = ScenesTitle(self.novel)
 
