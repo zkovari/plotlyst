@@ -42,6 +42,12 @@ class SelectionItemPushButton(QPushButton):
             self.setIcon(IconRegistry.from_name(item.icon, item.icon_color))
 
         self.clicked.connect(partial(self.itemClicked.emit, item))
+        self.toggled.connect(self._toggled)
+
+    def _toggled(self, checked: bool):
+        font = self.font()
+        font.setBold(checked)
+        self.setFont(font)
 
 
 class _SecondaryActionButton(QAbstractButton):

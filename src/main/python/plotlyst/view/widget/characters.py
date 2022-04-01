@@ -41,7 +41,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, Con
     CharacterGoal, Goal, protagonist_role, GoalReference
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
-    tertiary_role, deuteragonist_role, SelectionItem
+    tertiary_role, SelectionItem
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -50,7 +50,7 @@ from src.main.python.plotlyst.model.distribution import CharactersScenesDistribu
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
-    VisibilityToggleEventFilter, hmax
+    VisibilityToggleEventFilter, hmax, link_buttons_to_pages
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
@@ -1368,7 +1368,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.setupUi(self)
 
         self.btnItemProtagonist.setSelectionItem(protagonist_role)
-        self.btnItemDeuteragonist.setSelectionItem(deuteragonist_role)
+        # self.btnItemDeuteragonist.setSelectionItem(deuteragonist_role)
         self.btnItemAntagonist.setSelectionItem(antagonist_role)
         self.btnItemContagonist.setSelectionItem(contagonist_role)
         self.btnItemSecondary.setSelectionItem(secondary_role)
@@ -1382,22 +1382,53 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.btnItemTertiary.setSelectionItem(tertiary_role)
         self.btnItemHenchmen.setSelectionItem(henchmen_role)
 
-        self._extendedButtons = [self.btnItemDeuteragonist, self.btnItemContagonist, self.btnItemFoil,
-                                 self.btnItemConfidant, self.btnItemAdversary, self.btnItemSupporter,
-                                 self.btnItemHenchmen]
+        transparent(self.btnSelectedRole)
+        incr_font(self.btnSelectedRole, 2)
 
-        for btn in self._extendedButtons:
-            btn.setHidden(True)
+        link_buttons_to_pages(self.stackedWidget, [(self.btnItemProtagonist, self.pageProtagonist),
+                                                   (self.btnItemAntagonist, self.pageAntagonist),
+                                                   (self.btnItemContagonist, self.pageContagonist),
+                                                   (self.btnItemSecondary, self.pageSecondary),
+                                                   (self.btnItemGuide, self.pageGuide),
+                                                   (self.btnItemLoveInterest, self.pageLoveInterest),
+                                                   (self.btnItemSidekick, self.pageSidekick),
+                                                   (self.btnItemConfidant, self.pageConfidant),
+                                                   (self.btnItemFoil, self.pageFoil),
+                                                   (self.btnItemSupporter, self.pageSupporter),
+                                                   (self.btnItemAdversary, self.pageAdversary),
+                                                   (self.btnItemTertiary, self.pageTertiary),
+                                                   (self.btnItemHenchmen, self.pageHenchmen)
+                                                   ])
 
         for btn in self.buttonGroup.buttons():
-            btn.itemClicked.connect(lambda x: self.roleSelected.emit(copy.deepcopy(x)))
+            btn.setStyleSheet('''
+                QPushButton {
+                    border: 1px hidden black;
+                    padding: 2px;
+                }
+                QPushButton:hover {
+                    background-color: #e9ecef;
+                }
+                QPushButton:checked {
+                    background-color: #ced4da;
+                }
+            ''')
+            btn.itemClicked.connect(self._roleClicked)
 
-        self.btnShowAll.clicked.connect(self._showAll)
+        self._currentRole = protagonist_role
+        self.btnItemProtagonist.click()
+        # self._roleClicked(self._currentRole)
 
-    def _showAll(self):
-        for btn in self._extendedButtons:
-            btn.setVisible(True)
-            qtanim.fade_in(btn)
+        self.btnSelect.clicked.connect(lambda: self.roleSelected.emit(copy.deepcopy(self._currentRole)))
 
-        self.btnShowAll.setHidden(True)
-        self.parent().setMinimumHeight(self.sizeHint().height())
+    def _roleClicked(self, role: SelectionItem):
+        self._currentRole = role
+        self.btnSelectedRole.setSelectionItem(role)
+
+    # def _showAll(self):
+    #     for btn in self._extendedButtons:
+    #         btn.setVisible(True)
+    #         qtanim.fade_in(btn)
+    #
+    #     self.btnShowAll.setHidden(True)
+    #     self.parent().setMinimumHeight(self.sizeHint().height())
