@@ -19,12 +19,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
 from enum import Enum
+from typing import Optional
 
 import qtanim
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QFrame, QPushButton, QApplication
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QWidget, QFrame, QPushButton, QApplication, QLabel
 from overrides import overrides
-from qthandy import vbox, ask_confirmation, busy
+from qthandy import vbox, ask_confirmation, busy, bold, incr_font
 
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_info
@@ -37,14 +38,16 @@ from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
 
-class HintIds(Enum):
+class HintId(Enum):
     SCENES_VIEW = 'scenesViewHint'
+    SCENES_VIEW_2 = 'scenesViewHint2'
+    SCENES_VIEW_3 = 'scenesViewHint3'
 
 
 @busy
 def reset_hints():
     if ask_confirmation('Display all hint messages again? The application will shut down first.'):
-        for id_ in HintIds:
+        for id_ in HintId:
             settings.reset_hint_showed(id_.value)
 
         emit_info('Application is shutting down. Persist workspace...')
@@ -53,12 +56,14 @@ def reset_hints():
 
 
 class HintWidget(QFrame):
-    def __init__(self, parent=None):
-        super(HintWidget, self).__init__(parent)
+    next = pyqtSignal()
 
-        print(settings.hint_showed(self.id()))
-        print(type(settings.hint_showed(self.id())))
-        if app_env.test_env() or settings.hint_showed(self.id()):
+    def __init__(self, parent=None, previous: Optional['HintWidget'] = None, has_next: bool = False):
+        super(HintWidget, self).__init__(parent)
+        self.previous = previous
+        self.has_next = has_next
+
+        if app_env.test_env() or settings.hint_showed(self.id().value):
             self.setHidden(True)
             return
 
@@ -79,31 +84,81 @@ class HintWidget(QFrame):
         vbox(self)
         self.btnRemoval = RemovalButton()
 
-        top = group(self.wdgHint, self.btnRemoval, margin=0, spacing=0)
-        top.layout().setAlignment(self.btnRemoval, Qt.AlignTop)
-        self.layout().addWidget(top)
-        self.btnOkay = QPushButton()
-        self.btnOkay.setProperty('base', True)
-        self.btnOkay.setText('Okay, understood')
-        self.btnOkay.setIcon(IconRegistry.from_name('fa5s.thumbs-up', '#7209b7'))
-        self.btnOkay.setCursor(Qt.PointingHandCursor)
-        hmax(self.btnOkay)
-        self.layout().addWidget(self.btnOkay, alignment=Qt.AlignRight)
+        self.lblTitle = QLabel()
+        bold(self.lblTitle)
+        incr_font(self.lblTitle, 2)
+        self.lblTitle.setText(self.title())
 
-        self.btnRemoval.clicked.connect(self._hide)
-        self.btnOkay.clicked.connect(self._hide)
+        top = group(self.lblTitle, self.btnRemoval, spacing=0)
+        self.layout().addWidget(top)
+        self.layout().addWidget(self.wdgHint)
+        if self.has_next:
+            self.btnAction = QPushButton()
+            self.btnAction.setIcon(IconRegistry.arrow_right_thick_icon())
+        else:
+            self.btnAction = QPushButton()
+            self.btnAction.setText('Okay, understood')
+            self.btnAction.setIcon(IconRegistry.from_name('fa5s.thumbs-up', '#7209b7'))
+        self.btnAction.setProperty('base', True)
+        self.btnAction.setCursor(Qt.PointingHandCursor)
+        hmax(self.btnAction)
+        self.layout().addWidget(self.btnAction, alignment=Qt.AlignRight)
+
+        self.btnRemoval.clicked.connect(self._action)
+        self.btnAction.clicked.connect(self._action)
+
+        if self.previous and not settings.hint_showed(self.previous.id().value):
+            self.setHidden(True)
+            self.previous.next.connect(lambda: qtanim.fade_in(self, duration=150))
 
     @abstractmethod
-    def id(self) -> str:
+    def id(self) -> HintId:
         pass
 
-    def _hide(self):
-        settings.set_hint_showed(self.id())
+    def title(self) -> str:
+        return 'Hint'
+
+    def previous_id(self) -> str:
+        return ''
+
+    def next_id(self) -> str:
+        return ''
+
+    def _action(self):
+        settings.set_hint_showed(self.id().value)
         qtanim.fade_out(self, duration=100)
+        if self.has_next:
+            self.next.emit()
 
 
 class ScenesViewHintWidget(HintWidget, Ui_ScenesViewHintWidget):
 
     @overrides
-    def id(self) -> str:
-        return HintIds.SCENES_VIEW.value
+    def title(self) -> str:
+        return 'Scenes view 1/3'
+
+    @overrides
+    def id(self) -> HintId:
+        return HintId.SCENES_VIEW
+
+
+class ScenesViewHintWidget2(HintWidget, Ui_ScenesViewHintWidget):
+
+    @overrides
+    def title(self) -> str:
+        return 'Scenes view 2/3'
+
+    @overrides
+    def id(self) -> HintId:
+        return HintId.SCENES_VIEW_2
+
+
+class ScenesViewHintWidget3(HintWidget, Ui_ScenesViewHintWidget):
+
+    @overrides
+    def title(self) -> str:
+        return 'Scenes view 3/3'
+
+    @overrides
+    def id(self) -> HintId:
+        return HintId.SCENES_VIEW_3
