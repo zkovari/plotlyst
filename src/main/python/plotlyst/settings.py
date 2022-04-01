@@ -54,11 +54,14 @@ class AppSettings:
     def set_last_novel_id(self, value: int):
         self._settings.setValue(self.LAST_NOVEL_ID, value)
 
-    def hint_showed(self, hint_id: str):
-        return self._settings.value(hint_id, False)
+    def hint_showed(self, hint_id: str) -> bool:
+        return self._settings.value(hint_id) == 'true'
 
     def set_hint_showed(self, hint_id: str):
-        self._settings.setValue(hint_id, True)
+        self._settings.setValue(hint_id, 'true')
+
+    def reset_hint_showed(self, hint_id: str):
+        self._settings.remove(hint_id)
 
 
 settings = AppSettings()

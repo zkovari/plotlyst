@@ -21,6 +21,7 @@ from typing import Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
 from overrides import overrides
@@ -51,6 +52,7 @@ from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.download import NltkResourceDownloadWorker
@@ -118,6 +120,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._threadpool.start(language_tool_setup_worker)
 
             QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
+
+    @overrides
+    def closeEvent(self, event: QCloseEvent) -> None:
+        if language_tool_proxy.is_set():
+            language_tool_proxy.tool.close()
 
     @overrides
     def event_received(self, event: Event):
@@ -243,6 +250,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
             self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
 
+        self.actionResetHints.triggered.connect(lambda: reset_hints())
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
         self.actionIncreaseFontSize.setIcon(IconRegistry.increase_font_size_icon())
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)

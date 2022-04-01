@@ -596,6 +596,8 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionResetHints"/>
+    <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -698,6 +700,14 @@
   <action name="actionCharacterTemplateEditor">
    <property name="text">
     <string>Character template editor</string>
+   </property>
+  </action>
+  <action name="actionResetHints">
+   <property name="text">
+    <string>Show all hints</string>
+   </property>
+   <property name="toolTip">
+    <string>Show all hints again. The application needs to be shut down to apply the changes</string>
    </property>
   </action>
  </widget>

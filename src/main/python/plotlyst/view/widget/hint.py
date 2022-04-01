@@ -18,28 +18,47 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
+from enum import Enum
 
 import qtanim
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QFrame, QPushButton
+from PyQt5.QtWidgets import QWidget, QFrame, QPushButton, QApplication
 from overrides import overrides
-from qthandy import vbox
+from qthandy import vbox, ask_confirmation, busy
 
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.common import hmax
 from src.main.python.plotlyst.view.generated.hint.scenes_view_hint_ui import Ui_ScenesViewHintWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.input import RemovalButton
+from src.main.python.plotlyst.worker.persistence import flush_or_fail
+
+
+class HintIds(Enum):
+    SCENES_VIEW = 'scenesViewHint'
+
+
+@busy
+def reset_hints():
+    if ask_confirmation('Display all hint messages again? The application will shut down first.'):
+        for id_ in HintIds:
+            settings.reset_hint_showed(id_.value)
+
+        emit_info('Application is shutting down. Persist workspace...')
+        flush_or_fail()
+        QApplication.exit()
 
 
 class HintWidget(QFrame):
     def __init__(self, parent=None):
         super(HintWidget, self).__init__(parent)
 
+        print(settings.hint_showed(self.id()))
+        print(type(settings.hint_showed(self.id())))
         if app_env.test_env() or settings.hint_showed(self.id()):
-            # self._shownAlready = True
             self.setHidden(True)
             return
 
@@ -50,7 +69,7 @@ class HintWidget(QFrame):
                 border: 2px solid #7209b7;
                 border-radius: 4px;
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
-                                      stop: 0 #4e4187);
+                                      stop: 0 #dec9e9);
             }
         ''')
 
@@ -74,16 +93,12 @@ class HintWidget(QFrame):
         self.btnRemoval.clicked.connect(self._hide)
         self.btnOkay.clicked.connect(self._hide)
 
-    # @overrides
-    # def showEvent(self, event: QtGui.QShowEvent) -> None:
-    #     if not self._shownAlready:
-    #         settings.set_hint_showed(self.id())
-
     @abstractmethod
     def id(self) -> str:
         pass
 
     def _hide(self):
+        settings.set_hint_showed(self.id())
         qtanim.fade_out(self, duration=100)
 
 
@@ -91,4 +106,4 @@ class ScenesViewHintWidget(HintWidget, Ui_ScenesViewHintWidget):
 
     @overrides
     def id(self) -> str:
-        return 'scenesView'
+        return HintIds.SCENES_VIEW.value
