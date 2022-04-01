@@ -29,7 +29,7 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, protagonist_role, \
-    antagonist_role, deuteragonist_role, tertiary_role, henchmen_role, enneagram_choices, mbti_choices
+    antagonist_role, deuteragonist_role, tertiary_role, henchmen_role, enneagram_choices, mbti_choices, Role
 
 
 @dataclass
@@ -156,7 +156,7 @@ class Character:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     gender: str = ''
-    role: Optional['SelectionItem'] = None
+    role: Optional[Role] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
@@ -165,12 +165,12 @@ class Character:
     journals: List['Document'] = field(default_factory=list)
     prefs: CharacterPreferences = CharacterPreferences()
 
-    def enneagram(self) -> Optional['SelectionItem']:
+    def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
             if value.id == enneagram_field.id:
                 return enneagram_choices.get(value.value)
 
-    def mbti(self) -> Optional['SelectionItem']:
+    def mbti(self) -> Optional[SelectionItem]:
         for value in self.template_values:
             if value.id == mbti_field.id:
                 return mbti_choices.get(value.value)

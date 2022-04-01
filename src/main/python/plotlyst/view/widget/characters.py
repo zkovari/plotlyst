@@ -41,7 +41,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, Con
     CharacterGoal, Goal, protagonist_role, GoalReference
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
-    tertiary_role, SelectionItem
+    tertiary_role, SelectionItem, Role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -1384,6 +1384,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
         transparent(self.btnSelectedRole)
         incr_font(self.btnSelectedRole, 2)
+        self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey'))
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnItemProtagonist, self.pageProtagonist),
                                                    (self.btnItemAntagonist, self.pageAntagonist),
@@ -1417,18 +1418,10 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
         self._currentRole = protagonist_role
         self.btnItemProtagonist.click()
-        # self._roleClicked(self._currentRole)
 
         self.btnSelect.clicked.connect(lambda: self.roleSelected.emit(copy.deepcopy(self._currentRole)))
 
-    def _roleClicked(self, role: SelectionItem):
+    def _roleClicked(self, role: Role):
         self._currentRole = role
         self.btnSelectedRole.setSelectionItem(role)
-
-    # def _showAll(self):
-    #     for btn in self._extendedButtons:
-    #         btn.setVisible(True)
-    #         qtanim.fade_in(btn)
-    #
-    #     self.btnShowAll.setHidden(True)
-    #     self.parent().setMinimumHeight(self.sizeHint().height())
+        self.btnPromote.setVisible(role.can_be_promoted)

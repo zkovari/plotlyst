@@ -298,20 +298,27 @@ weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hugging_face:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
-protagonist_role = SelectionItem('Protagonist', icon='fa5s.chess-king', icon_color='#00798c')
-deuteragonist_role = SelectionItem('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a')
-antagonist_role = SelectionItem('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b')
-contagonist_role = SelectionItem('Contagonist', icon='mdi.biohazard', icon_color='#ea9010')
-adversary_role = SelectionItem('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946')
-guide_role = SelectionItem('Guide', icon='mdi.compass-rose', icon_color='#80ced7')
-confidant_role = SelectionItem('Confidant', icon='fa5s.user-friends', icon_color='#304d6d')
-sidekick_role = SelectionItem('Sidekick', icon='ei.asl', icon_color='#b0a990')
-love_interest_role = SelectionItem('Love Interest', icon='ei.heart', icon_color='#d1495b')
-supporter_role = SelectionItem('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3')
-foil_role = SelectionItem('Foil', icon='fa5s.yin-yang', icon_color='#947eb0')
-secondary_role = SelectionItem('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a')
-henchmen_role = SelectionItem('Henchmen', icon='mdi.shuriken', icon_color='#596475')
-tertiary_role = SelectionItem('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68')
+
+@dataclass
+class Role(SelectionItem):
+    can_be_promoted: bool = False
+    promoted: bool = False
+
+
+protagonist_role = Role('Protagonist', icon='fa5s.chess-king', icon_color='#00798c')
+deuteragonist_role = Role('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a')
+antagonist_role = Role('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b')
+contagonist_role = Role('Contagonist', icon='mdi.biohazard', icon_color='#ea9010')
+adversary_role = Role('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946')
+guide_role = Role('Guide', icon='mdi.compass-rose', icon_color='#80ced7')
+confidant_role = Role('Confidant', icon='fa5s.user-friends', icon_color='#304d6d', can_be_promoted=True)
+sidekick_role = Role('Sidekick', icon='ei.asl', icon_color='#b0a990', can_be_promoted=True)
+love_interest_role = Role('Love Interest', icon='ei.heart', icon_color='#d1495b', can_be_promoted=True)
+supporter_role = Role('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3')
+foil_role = Role('Foil', icon='fa5s.yin-yang', icon_color='#947eb0', can_be_promoted=True)
+secondary_role = Role('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a', can_be_promoted=True)
+henchmen_role = Role('Henchmen', icon='mdi.shuriken', icon_color='#596475')
+tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68')
 
 
 class HAlignment(Enum):

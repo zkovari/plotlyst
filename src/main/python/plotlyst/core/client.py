@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Location, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
     CharacterPreferences, TagReference
-from src.main.python.plotlyst.core.template import default_location_profiles, exclude_if_empty, SelectionItem
+from src.main.python.plotlyst.core.template import default_location_profiles, exclude_if_empty, Role
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -114,7 +114,7 @@ class CharacterInfo:
     name: str
     id: uuid.UUID
     gender: str = ''
-    role: Optional[SelectionItem] = None
+    role: Optional[Role] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
