@@ -4,6 +4,8 @@ ioPaths:
     - "src/main/python/plotlyst/view/generated/%%FILENAME%%_ui.py"
   - - "ui/report/*.ui"
     - "src/main/python/plotlyst/view/generated/report/%%FILENAME%%_ui.py"
+  - - "ui/hint/*.ui"
+    - "src/main/python/plotlyst/view/generated/hint/%%FILENAME%%_ui.py"
   - - "resources/*.qrc"
     - "src/main/python/plotlyst//view/generated/%%FILENAME%%_rc.py"
 uic_options: --from-imports
