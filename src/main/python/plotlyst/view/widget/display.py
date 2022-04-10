@@ -28,6 +28,7 @@ from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox
 
+from src.main.python.plotlyst.core.template import Role
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -191,25 +192,32 @@ class WordsDisplay(QLabel):
         self.setText(self._text)
 
 
-class _RoleIcon(QPushButton):
+class _AbstractRoleIcon(QPushButton):
     def __init__(self, parent=None):
-        super(_RoleIcon, self).__init__(parent)
+        super(_AbstractRoleIcon, self).__init__(parent)
         transparent(self)
 
 
-class MajorRoleIcon(_RoleIcon):
+class MajorRoleIcon(_AbstractRoleIcon):
     def __init__(self, parent=None):
         super(MajorRoleIcon, self).__init__(parent)
         self.setIcon(IconRegistry.major_character_icon())
 
 
-class SecondaryRoleIcon(_RoleIcon):
+class SecondaryRoleIcon(_AbstractRoleIcon):
     def __init__(self, parent=None):
         super(SecondaryRoleIcon, self).__init__(parent)
         self.setIcon(IconRegistry.secondary_character_icon())
 
 
-class MinorRoleIcon(_RoleIcon):
+class MinorRoleIcon(_AbstractRoleIcon):
     def __init__(self, parent=None):
         super(MinorRoleIcon, self).__init__(parent)
         self.setIcon(IconRegistry.minor_character_icon())
+
+
+class RoleIcon(_AbstractRoleIcon):
+
+    def setRole(self, role: Role):
+        if role.icon:
+            self.setIcon(IconRegistry.from_name(role.icon, role.icon_color))

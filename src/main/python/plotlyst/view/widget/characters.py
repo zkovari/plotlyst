@@ -1425,3 +1425,5 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self._currentRole = role
         self.btnSelectedRole.setSelectionItem(role)
         self.btnPromote.setVisible(role.can_be_promoted)
+
+        qtanim.colorize(self.btnSelectedRole, duration=1000, strength=0.7)

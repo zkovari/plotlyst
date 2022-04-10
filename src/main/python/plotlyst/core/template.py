@@ -301,8 +301,11 @@ values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hu
 
 @dataclass
 class Role(SelectionItem):
-    can_be_promoted: bool = False
-    promoted: bool = False
+    can_be_promoted: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    promoted: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+
+    def is_major(self) -> bool:
+        pass
 
 
 protagonist_role = Role('Protagonist', icon='fa5s.chess-king', icon_color='#00798c')
