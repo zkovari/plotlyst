@@ -480,7 +480,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
                                                                                 self.width() / 3 - x, 0))
         self.wdgSprint = SprintWidget(self)
         self.wdgSprint.setCompactMode(True)
-        self.wdgHeader.layout().addWidget(self.wdgSprint)
+        self.wdgHeader.layout().addWidget(self.wdgSprint, alignment=Qt.AlignLeft)
 
         self.wdgDistractionFreeEditor.installEventFilter(self)
         self.wdgBottom.installEventFilter(self)
