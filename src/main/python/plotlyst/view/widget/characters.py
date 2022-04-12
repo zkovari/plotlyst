@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, Q
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, busy, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow
+    spacer, clear_layout, vbox, hbox, flow, opaque
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
@@ -1382,8 +1382,11 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.btnItemTertiary.setSelectionItem(tertiary_role)
         self.btnItemHenchmen.setSelectionItem(henchmen_role)
 
-        transparent(self.btnSelectedRole)
-        incr_font(self.btnSelectedRole, 2)
+        opaque(self.iconMajor, 0.7)
+        opaque(self.iconSecondary, 0.7)
+        opaque(self.iconMinor, 0.7)
+
+        incr_font(self.lblRole, 2)
         self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey'))
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnItemProtagonist, self.pageProtagonist),
@@ -1423,7 +1426,17 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
     def _roleClicked(self, role: Role):
         self._currentRole = role
-        self.btnSelectedRole.setSelectionItem(role)
+        self.iconRole.setRole(role)
+        self.lblRole.setText(role.text)
         self.btnPromote.setVisible(role.can_be_promoted)
 
-        qtanim.colorize(self.btnSelectedRole, duration=1000, strength=0.7)
+        self.iconMajor.setDisabled(True)
+        self.iconSecondary.setDisabled(True)
+        self.iconMinor.setDisabled(True)
+
+        if self._currentRole.is_major():
+            self.iconMajor.setEnabled(True)
+        elif self._currentRole.is_secondary():
+            self.iconSecondary.setEnabled(True)
+        else:
+            self.iconMinor.setEnabled(True)

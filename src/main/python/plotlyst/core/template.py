@@ -299,18 +299,32 @@ values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hu
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
 
+class RoleImportance(Enum):
+    MAJOR = 0
+    SECONDARY = 1
+    MINOR = 2
+
+
 @dataclass
 class Role(SelectionItem):
     can_be_promoted: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     promoted: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    importance: RoleImportance = RoleImportance.SECONDARY
 
     def is_major(self) -> bool:
-        pass
+        return self.importance == RoleImportance.MAJOR
+
+    def is_secondary(self) -> bool:
+        return self.importance == RoleImportance.SECONDARY
+
+    def is_minor(self) -> bool:
+        return self.importance == RoleImportance.MINOR
 
 
-protagonist_role = Role('Protagonist', icon='fa5s.chess-king', icon_color='#00798c')
-deuteragonist_role = Role('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a')
-antagonist_role = Role('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b')
+protagonist_role = Role('Protagonist', icon='fa5s.chess-king', icon_color='#00798c', importance=RoleImportance.MAJOR)
+deuteragonist_role = Role('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a',
+                          importance=RoleImportance.MAJOR)
+antagonist_role = Role('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b', importance=RoleImportance.MAJOR)
 contagonist_role = Role('Contagonist', icon='mdi.biohazard', icon_color='#ea9010')
 adversary_role = Role('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946')
 guide_role = Role('Guide', icon='mdi.compass-rose', icon_color='#80ced7')
@@ -320,8 +334,8 @@ love_interest_role = Role('Love Interest', icon='ei.heart', icon_color='#d1495b'
 supporter_role = Role('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3')
 foil_role = Role('Foil', icon='fa5s.yin-yang', icon_color='#947eb0', can_be_promoted=True)
 secondary_role = Role('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a', can_be_promoted=True)
-henchmen_role = Role('Henchmen', icon='mdi.shuriken', icon_color='#596475')
-tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68')
+henchmen_role = Role('Henchmen', icon='mdi.shuriken', icon_color='#596475', importance=RoleImportance.MINOR)
+tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68', importance=RoleImportance.MINOR)
 
 
 class HAlignment(Enum):

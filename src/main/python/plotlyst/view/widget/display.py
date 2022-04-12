@@ -17,18 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from typing import Optional
 
 import emoji
+import qtanim
 from PyQt5.QtChart import QChartView
-from PyQt5.QtCore import QPropertyAnimation, pyqtProperty
-from PyQt5.QtGui import QPainter, QShowEvent
+from PyQt5.QtCore import QPropertyAnimation, pyqtProperty, QSize
+from PyQt5.QtGui import QPainter, QShowEvent, QColor
 from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox
 
-from src.main.python.plotlyst.core.template import Role
+from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -221,3 +223,81 @@ class RoleIcon(_AbstractRoleIcon):
     def setRole(self, role: Role):
         if role.icon:
             self.setIcon(IconRegistry.from_name(role.icon, role.icon_color))
+
+        if role.is_major():
+            if role.text == protagonist_role.text:
+                color = '#a8dadc'
+            else:
+                color = '#f4978e'
+            qtanim.colorize(self, duration=1000, strength=0.7, color=QColor(color))
+
+
+class _AbstractIcon:
+    def __init__(self):
+        self._iconName: str = ''
+        self._iconColor: str = 'black'
+
+    @pyqtProperty(str)
+    def iconName(self):
+        return self._iconName
+
+    @iconName.setter
+    def iconName(self, value):
+        self._iconName = value
+        self._setIcon()
+
+    @pyqtProperty(str)
+    def iconColor(self):
+        return self._iconColor
+
+    @iconColor.setter
+    def iconColor(self, value):
+        self._iconColor = value
+        self._setIcon()
+
+    @abstractmethod
+    def _setIcon(self):
+        pass
+
+
+class Icon(QToolButton, _AbstractIcon):
+    def __init__(self, parent=None):
+        super(Icon, self).__init__(parent)
+        transparent(self)
+        # self._iconName: str = ''
+        # self._iconColor: str = 'black'
+
+    # @pyqtProperty(str)
+    # def iconName(self):
+    #     return self._iconName
+    #
+    # @iconName.setter
+    # def iconName(self, value):
+    #     self._iconName = value
+    #     self._setIcon()
+    #
+    # @pyqtProperty(str)
+    # def iconColor(self):
+    #     return self._iconColor
+    #
+    # @iconColor.setter
+    # def iconColor(self, value):
+    #     self._iconColor = value
+    #     self._setIcon()
+
+    @overrides
+    def _setIcon(self):
+        if self._iconName:
+            self.setIcon(IconRegistry.from_name(self._iconName, self._iconColor))
+
+
+class IconText(QPushButton, _AbstractIcon):
+    def __init__(self, parent=None):
+        super(IconText, self).__init__(parent)
+        transparent(self)
+        self.setIconSize(QSize(20, 20))
+
+    @overrides
+    def _setIcon(self):
+        if self._iconName:
+            self.setIcon(IconRegistry.from_name(self._iconName, self._iconColor))

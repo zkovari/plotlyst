@@ -205,8 +205,7 @@ class CharacterCard(Ui_CharacterCard, Card):
             self.btnMbti.setText(mbti.text)
             self.btnMbti.setIcon(IconRegistry.from_name(mbti.icon, mbti.icon_color))
         if self.character.role:
-            self.lblRole.setPixmap(
-                IconRegistry.from_name(self.character.role.icon, self.character.role.icon_color).pixmap(QSize(24, 24)))
+            self.iconRole.setRole(self.character.role)
         self._setStyleSheet()
 
     @overrides
