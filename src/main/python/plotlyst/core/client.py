@@ -34,11 +34,10 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
-    Plot, ScenePlotValue, SceneType, SceneStructureAgenda, \
+    Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
     Location, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    CharacterPreferences, TagReference
-from src.main.python.plotlyst.core.template import default_location_profiles, exclude_if_empty, Role
+    CharacterPreferences, TagReference, ScenePlotReferenceData
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -142,9 +141,9 @@ class SceneBuilderElementInfo:
 
 
 @dataclass
-class ScenePlotValueInfo:
+class ScenePlotReferenceInfo:
     plot_id: uuid.UUID
-    value: int = 0
+    data: ScenePlotReferenceData = ScenePlotReferenceData()
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -158,7 +157,7 @@ class SceneInfo:
     characters: List[uuid.UUID] = field(default_factory=list)
     agendas: List[SceneStructureAgenda] = field(default_factory=list)
     wip: bool = False
-    plots: List[ScenePlotValueInfo] = field(default_factory=list)
+    plots: List[ScenePlotReferenceInfo] = field(default_factory=list)
     day: int = 1
     chapter: Optional[uuid.UUID] = None
     scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
@@ -427,7 +426,7 @@ class JsonClient:
                 scene_plots = []
                 for plot_value in info.plots:
                     if str(plot_value.plot_id) in plot_ids.keys():
-                        scene_plots.append(ScenePlotValue(plot_ids[str(plot_value.plot_id)], plot_value.value))
+                        scene_plots.append(ScenePlotReference(plot_ids[str(plot_value.plot_id)], plot_value.data))
                 if info.pov and str(info.pov) in characters_ids.keys():
                     pov = characters_ids[str(info.pov)]
                 else:
@@ -528,7 +527,7 @@ class JsonClient:
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
-        plots = [ScenePlotValueInfo(x.plot.id, x.value) for x in scene.plot_values]
+        plots = [ScenePlotReferenceInfo(x.plot.id, x.data) for x in scene.plot_values]
         characters = [x.id for x in scene.characters]
         builder_elements = [self.__get_scene_builder_element_info(x) for x in
                             scene.builder_elements]

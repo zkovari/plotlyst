@@ -27,7 +27,7 @@ from overrides import overrides
 from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent, btn_popup
 
 from src.main.python.plotlyst.common import truncate_string
-from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotValue, \
+from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
     CharacterGoal, PlotValue
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color, VisibilityToggleEventFilter
@@ -170,6 +170,7 @@ class SelectionItemLabel(Label):
         self.item = item
 
         self.btnIcon = QToolButton(self)
+        self.btnIcon.clicked.connect(self.clicked.emit)
         transparent(self.btnIcon)
         self.layout().addWidget(self.btnIcon)
         if self.item.icon:
@@ -235,7 +236,7 @@ class PlotValueLabel(SelectionItemLabel):
 
 
 class ScenePlotValueLabel(PlotLabel):
-    def __init__(self, plot_value: ScenePlotValue, parent=None, removalEnabled: bool = True):
+    def __init__(self, plot_value: ScenePlotReference, parent=None, removalEnabled: bool = True):
         super(ScenePlotValueLabel, self).__init__(plot_value.plot, parent, removalEnabled)
         self.lblText.clear()
         self.lblText.hide()

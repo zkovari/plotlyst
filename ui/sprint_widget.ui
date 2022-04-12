@@ -40,6 +40,9 @@
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -50,6 +53,9 @@
    </item>
    <item>
     <widget class="QTimeEdit" name="time">
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
      <property name="wrapping">
       <bool>false</bool>
      </property>
@@ -85,6 +91,9 @@
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -97,6 +106,9 @@
     <widget class="QToolButton" name="btnReset">
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
      </property>
      <property name="text">
       <string/>

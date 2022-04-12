@@ -32,7 +32,7 @@ from qthandy import flow, clear_layout
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, StoryBeat, \
-    SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotValue, TagReference
+    SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotReference, TagReference
 from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
@@ -261,7 +261,7 @@ class SceneEditor(QObject):
         emit_info('POV character must be selected first')
         qtanim.shake(self.ui.wdgPov)
 
-    def _add_plot_selector(self, plot_value: Optional[ScenePlotValue] = None):
+    def _add_plot_selector(self, plot_value: Optional[ScenePlotReference] = None):
         if plot_value or len(self.novel.plots) > len(self.scene.plot_values):
             plot_selector = ScenePlotSelector(self.novel, self.scene, simplified=len(self.scene.plot_values) > 0)
             plot_selector.plotSelected.connect(self._add_plot_selector)
