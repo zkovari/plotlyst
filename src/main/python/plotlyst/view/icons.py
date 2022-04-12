@@ -502,7 +502,9 @@ class IconRegistry:
 
     @staticmethod
     def charge_icon(charge: int = 1) -> QIcon:
-        if charge == 1:
+        if charge == 0:
+            return IconRegistry.from_name('mdi.wave', 'grey')
+        elif charge == 1:
             return IconRegistry.from_name('mdi.chevron-up', '#2d6a4f')
         elif charge == 2:
             return IconRegistry.from_name('mdi.chevron-double-up', '#40916c')
