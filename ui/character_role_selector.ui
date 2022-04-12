@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+   <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -334,27 +334,6 @@
        <property name="spacing">
         <number>2</number>
        </property>
-       <item alignment="Qt::AlignTop">
-        <widget class="MajorRoleIcon" name="iconMajor">
-         <property name="toolTip">
-          <string>Major character role</string>
-         </property>
-        </widget>
-       </item>
-       <item alignment="Qt::AlignTop">
-        <widget class="SecondaryRoleIcon" name="iconSecondary">
-         <property name="toolTip">
-          <string>Secondary character role</string>
-         </property>
-        </widget>
-       </item>
-       <item alignment="Qt::AlignTop">
-        <widget class="MinorRoleIcon" name="iconMinor">
-         <property name="toolTip">
-          <string>Minor character role</string>
-         </property>
-        </widget>
-       </item>
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
@@ -375,6 +354,27 @@
          </property>
          <property name="checkable">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignTop">
+        <widget class="MajorRoleIcon" name="iconMajor">
+         <property name="toolTip">
+          <string>Major character role</string>
+         </property>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignTop">
+        <widget class="SecondaryRoleIcon" name="iconSecondary">
+         <property name="toolTip">
+          <string>Secondary character role</string>
+         </property>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignTop">
+        <widget class="MinorRoleIcon" name="iconMinor">
+         <property name="toolTip">
+          <string>Minor character role</string>
          </property>
         </widget>
        </item>
@@ -425,6 +425,15 @@
      </item>
      <item>
       <widget class="QStackedWidget" name="stackedWidget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="currentIndex">
+        <number>3</number>
+       </property>
        <widget class="QWidget" name="pageProtagonist">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -467,25 +476,18 @@ p, li { white-space: pre-wrap; }
           </widget>
          </item>
          <item>
-          <layout class="QGridLayout" name="gridLayout">
-           <property name="horizontalSpacing">
-            <number>0</number>
-           </property>
-           <property name="verticalSpacing">
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <property name="spacing">
             <number>3</number>
            </property>
-           <item row="2" column="0" colspan="2">
-            <widget class="IconText" name="icontext_5">
-             <property name="text">
-              <string>Harry Potter</string>
-             </property>
-             <property name="iconName" stdset="0">
-              <string>ei.magic</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" colspan="3">
+           <item>
             <widget class="IconText" name="icontext">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
               <string>Katniss (Hunger Games)</string>
              </property>
@@ -494,38 +496,53 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="IconText" name="icontext_3">
-             <property name="text">
-              <string>Hamlet</string>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <property name="spacing">
+              <number>3</number>
              </property>
-             <property name="iconName" stdset="0">
-              <string>fa5s.skull</string>
-             </property>
-            </widget>
+             <item>
+              <widget class="IconText" name="icontext_3">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Hamlet</string>
+               </property>
+               <property name="iconName" stdset="0">
+                <string>fa5s.skull</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="IconText" name="icontext_5">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Harry Potter</string>
+               </property>
+               <property name="iconName" stdset="0">
+                <string>ei.magic</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
-           <item row="0" column="3">
-            <widget class="IconText" name="icontext_2">
-             <property name="text">
-              <string>Frodo</string>
-             </property>
-             <property name="iconName" stdset="0">
-              <string>fa5s.ring</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2" colspan="2">
-            <widget class="IconText" name="icontext_6">
-             <property name="text">
-              <string>Sherlock Holmes</string>
-             </property>
-             <property name="iconName" stdset="0">
-              <string>mdi.incognito</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="3">
+           <item>
             <widget class="IconText" name="icontext_4">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
               <string>Anne (of Green Gables)</string>
              </property>
@@ -534,11 +551,146 @@ p, li { white-space: pre-wrap; }
              </property>
             </widget>
            </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <property name="spacing">
+              <number>3</number>
+             </property>
+             <item>
+              <widget class="IconText" name="icontext_6">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Sherlock Holmes</string>
+               </property>
+               <property name="iconName" stdset="0">
+                <string>mdi.incognito</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="IconText" name="icontext_2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Frodo</string>
+               </property>
+               <property name="iconName" stdset="0">
+                <string>fa5s.ring</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
           </layout>
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="pageAntagonist"/>
+       <widget class="QWidget" name="pageAntagonist">
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <property name="spacing">
+          <number>2</number>
+         </property>
+         <property name="leftMargin">
+          <number>1</number>
+         </property>
+         <property name="topMargin">
+          <number>1</number>
+         </property>
+         <property name="rightMargin">
+          <number>1</number>
+         </property>
+         <property name="bottomMargin">
+          <number>1</number>
+         </property>
+         <item>
+          <widget class="QTextBrowser" name="textBrowser_2">
+           <property name="html">
+            <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Fira Sans Semi-Light'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:13pt; color:#000000; background-color:#ffffff;&quot;&gt;The character who most opposes your protagonist in achieving their main story goal. They should produce the biggest conflicts.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:13pt; color:#000000; background-color:#ffffff;&quot;&gt;Sometimes they pursue the same goal as your protagonist but their methods are different.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:13pt; color:#000000; background-color:#ffffff;&quot;&gt;Often called villain, although the antagonis is not necessarily an evil character of the story.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Examples:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <widget class="IconText" name="icontext_7">
+               <property name="text">
+                <string>Sauron</string>
+               </property>
+               <property name="iconName" stdset="0">
+                <string>fa5s.ring</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="IconText" name="icontext_8">
+               <property name="text">
+                <string>The Joker</string>
+               </property>
+               <property name="iconName" stdset="0">
+                <string>fa5s.theater-masks</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="IconText" name="icontext_9">
+             <property name="text">
+              <string>Voldemort</string>
+             </property>
+             <property name="iconName" stdset="0">
+              <string>ei.magic</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="IconText" name="icontext_10">
+             <property name="text">
+              <string>Hannibal Lecter</string>
+             </property>
+             <property name="iconName" stdset="0">
+              <string>mdi.face-mask</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="IconText" name="icontext_11">
+             <property name="text">
+              <string>Agent Smith (Matrix)</string>
+             </property>
+             <property name="iconName" stdset="0">
+              <string>mdi.sunglasses</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
        <widget class="QWidget" name="pageSecondary"/>
        <widget class="QWidget" name="pageLoveInterest"/>
        <widget class="QWidget" name="pageSupporter"/>

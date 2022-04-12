@@ -1424,6 +1424,10 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
         self.btnSelect.clicked.connect(lambda: self.roleSelected.emit(copy.deepcopy(self._currentRole)))
 
+    @overrides
+    def mouseReleaseEvent(self, a0: QMouseEvent) -> None:
+        pass
+
     def _roleClicked(self, role: Role):
         self._currentRole = role
         self.iconRole.setRole(role)
