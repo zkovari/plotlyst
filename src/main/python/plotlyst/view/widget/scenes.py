@@ -111,6 +111,7 @@ class ScenePlotValueChargeWidget(QWidget):
 
         self.chargeIcon = QToolButton()
         transparent(self.chargeIcon)
+        self.chargeIcon.setIconSize(QSize(22, 22))
         self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
 
         self.posCharge = SecondaryActionToolButton()

@@ -427,7 +427,7 @@ class JsonClient:
                 scene_plots = []
                 for plot_value in info.plots:
                     if str(plot_value.plot_id) in plot_ids.keys():
-                        scene_plots.append(ScenePlotReference(plot_ids[str(plot_value.plot_id)]))
+                        scene_plots.append(ScenePlotReference(plot_ids[str(plot_value.plot_id)], plot_value.data))
                 if info.pov and str(info.pov) in characters_ids.keys():
                     pov = characters_ids[str(info.pov)]
                 else:
@@ -528,7 +528,7 @@ class JsonClient:
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
-        plots = [ScenePlotReferenceInfo(x.plot.id) for x in scene.plot_values]
+        plots = [ScenePlotReferenceInfo(x.plot.id, x.data) for x in scene.plot_values]
         characters = [x.id for x in scene.characters]
         builder_elements = [self.__get_scene_builder_element_info(x) for x in
                             scene.builder_elements]
