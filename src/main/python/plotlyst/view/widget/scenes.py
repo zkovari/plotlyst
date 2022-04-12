@@ -42,7 +42,7 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotReference, CharacterGoal, Chapter, StoryBeatType, Tag, PlotValue
+    Character, Plot, ScenePlotReference, CharacterGoal, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
@@ -97,15 +97,17 @@ class ScenePlotValueChargeWidget(QWidget):
     def __init__(self, plotReference: ScenePlotReference, value: PlotValue, parent=None):
         super(ScenePlotValueChargeWidget, self).__init__(parent)
         self.plotReference = plotReference
-        self.value = value
+        self.value: PlotValue = value
         lbl = PlotValueLabel(value)
         hmax(lbl)
         hbox(self)
 
         self.charge: int = 0
+        self.plot_value_charge: Optional[ScenePlotValueCharge] = None
         for v in self.plotReference.data.values:
             if v.plot_value_id == value.id:
                 self.charge = v.charge
+                self.plot_value_charge = v
 
         self.chargeIcon = QToolButton()
         transparent(self.chargeIcon)
@@ -114,12 +116,12 @@ class ScenePlotValueChargeWidget(QWidget):
         self.posCharge = SecondaryActionToolButton()
         self.posCharge.setIcon(IconRegistry.plus_circle_icon('grey'))
         self.posCharge.setIconSize(QSize(18, 18))
-        self.posCharge.clicked.connect(self._increase)
+        self.posCharge.clicked.connect(lambda: self._changeCharge(1))
         retain_when_hidden(self.posCharge)
         self.negCharge = SecondaryActionToolButton()
         self.negCharge.setIcon(IconRegistry.minus_icon('grey'))
         self.negCharge.setIconSize(QSize(18, 18))
-        self.negCharge.clicked.connect(self._decrease)
+        self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
         retain_when_hidden(self.negCharge)
 
         self.layout().addWidget(self.chargeIcon)
@@ -128,28 +130,36 @@ class ScenePlotValueChargeWidget(QWidget):
         self.layout().addWidget(self.negCharge)
         self.layout().addWidget(self.posCharge)
 
-    def _increase(self):
-        self.charge += 1
-        self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
-        qtanim.glow(self.chargeIcon, color=QColor('#52b788'))
+        self._updateButtons()
 
+    def _changeCharge(self, increment: int):
+        self.charge += increment
+        if self.plot_value_charge is None:
+            self.plot_value_charge = ScenePlotValueCharge(self.value.id, self.charge)
+            self.plotReference.data.values.append(self.plot_value_charge)
+        self.plot_value_charge.charge = self.charge
+
+        self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
+        if increment > 0:
+            qtanim.glow(self.chargeIcon, color=QColor('#52b788'))
+        else:
+            qtanim.glow(self.chargeIcon, color=QColor('#9d0208'))
+
+        self._updateButtons()
+
+    def _updateButtons(self):
+        if not self.negCharge.isEnabled():
+            self.negCharge.setEnabled(True)
+            self.negCharge.setVisible(True)
+        if not self.posCharge.isEnabled():
+            self.posCharge.setEnabled(True)
+            self.posCharge.setVisible(True)
         if self.charge == 3:
             self.posCharge.setDisabled(True)
-            qtanim.fade_out(self.posCharge)
-
-        self.negCharge.setEnabled(True)
-
-    def _decrease(self):
-        self.charge -= 1
-
-        self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
-        qtanim.glow(self.chargeIcon, color=QColor('#9d0208'))
-
+            self.posCharge.setHidden(True)
         if self.charge == -3:
             self.negCharge.setDisabled(True)
-            qtanim.fade_out(self.negCharge)
-
-        self.posCharge.setEnabled(True)
+            self.negCharge.setHidden(True)
 
 
 class ScenePlotValueEditor(QWidget):
