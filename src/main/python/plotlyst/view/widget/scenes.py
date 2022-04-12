@@ -30,7 +30,7 @@ from PyQt5.QtGui import QDragEnterEvent, QDragLeaveEvent, \
     QResizeEvent, QCursor, QColor, QDragMoveEvent, QDropEvent, QMouseEvent
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QHBoxLayout, QSplitter, \
-    QPushButton, QHeaderView, QTreeView
+    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import busy, margins
@@ -42,25 +42,25 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotValue, CharacterGoal, Chapter, StoryBeatType, Tag
+    Character, Plot, ScenePlotReference, CharacterGoal, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder, \
-    DragEventFilter
+    DragEventFilter, hmax
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton
+from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
-    PlotLabel
+    PlotLabel, PlotValueLabel
 from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
 from src.main.python.plotlyst.worker.cache import acts_registry
 from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
@@ -93,6 +93,102 @@ class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
             self.scene_structure_item.outcome = SceneOutcome.TRADE_OFF
 
 
+class ScenePlotValueChargeWidget(QWidget):
+    def __init__(self, plotReference: ScenePlotReference, value: PlotValue, parent=None):
+        super(ScenePlotValueChargeWidget, self).__init__(parent)
+        self.plotReference = plotReference
+        self.value: PlotValue = value
+        lbl = PlotValueLabel(value)
+        hmax(lbl)
+        hbox(self)
+
+        self.charge: int = 0
+        self.plot_value_charge: Optional[ScenePlotValueCharge] = None
+        for v in self.plotReference.data.values:
+            if v.plot_value_id == value.id:
+                self.charge = v.charge
+                self.plot_value_charge = v
+
+        self.chargeIcon = QToolButton()
+        transparent(self.chargeIcon)
+        self.chargeIcon.setIconSize(QSize(22, 22))
+        self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
+
+        self.posCharge = SecondaryActionToolButton()
+        self.posCharge.setIcon(IconRegistry.plus_circle_icon('grey'))
+        self.posCharge.setIconSize(QSize(18, 18))
+        self.posCharge.clicked.connect(lambda: self._changeCharge(1))
+        retain_when_hidden(self.posCharge)
+        self.negCharge = SecondaryActionToolButton()
+        self.negCharge.setIcon(IconRegistry.minus_icon('grey'))
+        self.negCharge.setIconSize(QSize(18, 18))
+        self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
+        retain_when_hidden(self.negCharge)
+
+        self.layout().addWidget(self.chargeIcon)
+        self.layout().addWidget(lbl, alignment=Qt.AlignLeft)
+        self.layout().addWidget(spacer())
+        self.layout().addWidget(self.negCharge)
+        self.layout().addWidget(self.posCharge)
+
+        self._updateButtons()
+
+    def _changeCharge(self, increment: int):
+        self.charge += increment
+        if self.plot_value_charge is None:
+            self.plot_value_charge = ScenePlotValueCharge(self.value.id, self.charge)
+            self.plotReference.data.values.append(self.plot_value_charge)
+        self.plot_value_charge.charge = self.charge
+
+        self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
+        if increment > 0:
+            qtanim.glow(self.chargeIcon, color=QColor('#52b788'))
+        else:
+            qtanim.glow(self.chargeIcon, color=QColor('#9d0208'))
+
+        self._updateButtons()
+
+    def _updateButtons(self):
+        if not self.negCharge.isEnabled():
+            self.negCharge.setEnabled(True)
+            self.negCharge.setVisible(True)
+        if not self.posCharge.isEnabled():
+            self.posCharge.setEnabled(True)
+            self.posCharge.setVisible(True)
+        if self.charge == 3:
+            self.posCharge.setDisabled(True)
+            self.posCharge.setHidden(True)
+        if self.charge == -3:
+            self.negCharge.setDisabled(True)
+            self.negCharge.setHidden(True)
+
+
+class ScenePlotValueEditor(QWidget):
+    def __init__(self, plotReference: ScenePlotReference, parent=None):
+        super(ScenePlotValueEditor, self).__init__(parent)
+        self.plotReference = plotReference
+
+        vbox(self)
+        self.textComment = QTextEdit(self)
+        self.textComment.setAcceptRichText(False)
+        self.textComment.setFixedHeight(100)
+        self.textComment.setPlaceholderText('Describe how this scene is related to the selected plot')
+        self.textComment.setText(self.plotReference.data.comment)
+        self.textComment.textChanged.connect(self._commentChanged)
+        self.layout().addWidget(self.textComment)
+
+        for value in self.plotReference.plot.values:
+            wdg = ScenePlotValueChargeWidget(self.plotReference, value)
+            self.layout().addWidget(wdg)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        pass
+
+    def _commentChanged(self):
+        self.plotReference.data.comment = self.textComment.toPlainText()
+
+
 class ScenePlotSelector(QWidget):
     plotSelected = pyqtSignal()
 
@@ -100,7 +196,7 @@ class ScenePlotSelector(QWidget):
         super(ScenePlotSelector, self).__init__(parent)
         self.novel = novel
         self.scene = scene
-        self.plotValue: Optional[ScenePlotValue] = None
+        self.plotValue: Optional[ScenePlotReference] = None
         hbox(self)
 
         self.label: Optional[SelectionItemLabel] = None
@@ -144,20 +240,30 @@ class ScenePlotSelector(QWidget):
 
         btn_popup(self.btnLinkPlot, self.selectorWidget)
 
-    def setPlot(self, plotValue: ScenePlotValue):
+    def setPlot(self, plotValue: ScenePlotReference):
         self.plotValue = plotValue
         self.label = ScenePlotValueLabel(plotValue)
+        self.label.setCursor(Qt.PointingHandCursor)
+        self.label.clicked.connect(self._plotValueClicked)
+
         self.label.removalRequested.connect(self._remove)
         self.layout().addWidget(self.label)
         self.btnLinkPlot.setHidden(True)
 
     def _plotSelected(self, plot: Plot):
         self.btnLinkPlot.menu().hide()
-        plotValue = ScenePlotValue(plot)
+        plotValue = ScenePlotReference(plot)
         self.scene.plot_values.append(plotValue)
         self.setPlot(plotValue)
 
         self.plotSelected.emit()
+
+    def _plotValueClicked(self):
+        menu = QMenu(self.label)
+        action = QWidgetAction(menu)
+        action.setDefaultWidget(ScenePlotValueEditor(self.plotValue))
+        menu.addAction(action)
+        menu.popup(QCursor.pos())
 
     def _remove(self):
         if self.parent():
@@ -1435,7 +1541,7 @@ class StoryLinesMapWidget(QWidget):
     @busy
     def _plot_changed(self, plot: Plot, checked: bool):
         if checked:
-            self._clicked_scene.plot_values.append(ScenePlotValue(plot))
+            self._clicked_scene.plot_values.append(ScenePlotReference(plot))
         else:
             to_be_removed = None
             for plot_v in self._clicked_scene.plot_values:

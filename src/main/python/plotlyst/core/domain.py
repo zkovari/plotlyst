@@ -394,9 +394,26 @@ class Goal(SelectionItem):
 
 
 @dataclass
-class ScenePlotValue:
+class ScenePlotValueCharge:
+    plot_value_id: uuid.UUID
+    charge: int
+
+    def plot_value(self, plot: Plot) -> Optional[PlotValue]:
+        for v in plot.values:
+            if v.id == self.plot_value_id:
+                return v
+
+
+@dataclass
+class ScenePlotReferenceData:
+    comment: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    values: List[ScenePlotValueCharge] = field(default_factory=list)
+
+
+@dataclass
+class ScenePlotReference:
     plot: Plot
-    value: int = 0
+    data: ScenePlotReferenceData = ScenePlotReferenceData()
 
 
 class SceneType(Enum):
@@ -521,7 +538,7 @@ class Scene:
     characters: List[Character] = field(default_factory=list)
     agendas: List[SceneStructureAgenda] = field(default_factory=list)
     wip: bool = False
-    plot_values: List[ScenePlotValue] = field(default_factory=list)
+    plot_values: List[ScenePlotReference] = field(default_factory=list)
     day: int = 1
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
