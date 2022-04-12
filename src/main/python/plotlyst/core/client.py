@@ -38,6 +38,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Location, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
     CharacterPreferences, TagReference, ScenePlotReferenceData
+from src.main.python.plotlyst.core.template import Role, default_location_profiles, exclude_if_empty
 
 
 class ApplicationNovelVersion(IntEnum):
