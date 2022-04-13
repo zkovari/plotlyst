@@ -23,6 +23,7 @@ from PyQt5.QtCore import QModelIndex, Qt
 from anytree import Node
 from overrides import overrides
 
+from src.main.python.plotlyst.core.domain import VERY_UNHAPPY
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -39,12 +40,17 @@ class ConflictReportNode(Node):
     pass
 
 
+class PlotReportNode(Node):
+    pass
+
+
 class ReportsTreeModel(TreeItemModel):
     def __init__(self, parent=None):
         super(ReportsTreeModel, self).__init__(parent)
         char_node = CharacterReportNode('Characters', self.root)
-        CharacterArcReportNode('Arc', char_node)
+        CharacterArcReportNode('Emotional Arc', char_node)
         ConflictReportNode('Conflicts', self.root)
+        PlotReportNode('Plot', self.root)
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
@@ -53,8 +59,10 @@ class ReportsTreeModel(TreeItemModel):
             if isinstance(node, CharacterReportNode):
                 return IconRegistry.character_icon()
             if isinstance(node, CharacterArcReportNode):
-                return IconRegistry.from_name('mdi.chart-bell-curve-cumulative')
+                return IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY)
             if isinstance(node, ConflictReportNode):
                 return IconRegistry.conflict_icon()
+            if isinstance(node, PlotReportNode):
+                return IconRegistry.plot_icon()
 
         return super(ReportsTreeModel, self).data(index, role)
