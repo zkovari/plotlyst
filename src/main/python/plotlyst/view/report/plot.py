@@ -19,13 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt5.QtChart import QSplineSeries, QValueAxis
+from PyQt5.QtChart import QSplineSeries, QValueAxis, QLegend
+from PyQt5.QtGui import QPen, QColor
 from PyQt5.QtWidgets import QPushButton, QButtonGroup
 from overrides import overrides
 from qthandy import flow, clear_layout
 
 from src.main.python.plotlyst.core.domain import Novel, Plot
-from src.main.python.plotlyst.view.common import pointy
+from src.main.python.plotlyst.view.common import pointy, icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
@@ -86,7 +87,8 @@ class PlotValuesArcChart(BaseChart):
         super().__init__(parent)
         self.novel = novel
         self.createDefaultAxes()
-        self.legend().hide()
+        self.legend().setMarkerShape(QLegend.MarkerShapeCircle)
+        self.legend().show()
         self.axisX: Optional[QValueAxis] = None
         self.axisY: Optional[QValueAxis] = None
 
@@ -110,11 +112,14 @@ class PlotValuesArcChart(BaseChart):
         min_ = 0
         max_ = 0
         for plot in plots:
-            print(plot.text)
             for value in plot.values:
-                print(value.text)
                 charge = 0
                 series = QSplineSeries()
+                series.setName(icon_to_html_img(IconRegistry.from_name(value.icon, value.icon_color)) + value.text)
+                pen = QPen()
+                pen.setColor(QColor(value.icon_color))
+                pen.setWidth(2)
+                series.setPen(pen)
                 series.append(0, charge)
 
                 for i, scene in enumerate(self.novel.scenes):
@@ -123,7 +128,6 @@ class PlotValuesArcChart(BaseChart):
                             continue
                         for scene_p_value in scene_ref.data.values:
                             if scene_p_value.plot_value_id == value.id:
-                                print(f'scene i {i} charge {scene_p_value.charge} overall charge {charge}')
                                 charge += scene_p_value.charge
                                 series.append(i + 1, charge)
 
