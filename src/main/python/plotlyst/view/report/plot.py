@@ -77,8 +77,6 @@ class PlotReport(AbstractReport, Ui_PlotReport):
             if btn.isChecked():
                 plots.append(btn.plot)
 
-        print(len(plots))
-
         self.chartValues.refresh(plots)
 
 
