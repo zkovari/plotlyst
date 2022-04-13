@@ -1030,7 +1030,8 @@ class SceneStoryStructureWidget(QWidget):
         for beat in self.novel.active_story_structure.beats:
             if beat.type == StoryBeatType.CONTAINER:
                 btn = QPushButton(self)
-                btn.setText(beat.text)
+                if beat.percentage_end - beat.percentage > 7:
+                    btn.setText(beat.text)
                 self._containers[beat] = btn
                 btn.setStyleSheet(f'''
                     QPushButton {{border-top:2px dashed {beat.icon_color}; color: {beat.icon_color};}}
