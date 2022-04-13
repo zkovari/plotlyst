@@ -787,7 +787,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self.wdgAgendaCharacter.setEnabled(True)
             self.btnEmotionStart.setToolTip('')
             self.btnEmotionEnd.setToolTip('')
-            self.wdgAgendaCharacter.setCharacter(self.scene.agendas[0].character(self.novel))
+            char = self.scene.agendas[0].character(self.novel)
+            if char:
+                self.wdgAgendaCharacter.setCharacter(char)
         else:
             self.btnEmotionStart.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
             self.btnEmotionEnd.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))

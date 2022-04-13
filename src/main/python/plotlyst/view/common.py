@@ -273,3 +273,7 @@ def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
     pixmap = icon.pixmap(QSize(size, size))
     pixmap.save(buffer, "PNG", quality=100)
     return f"<img src='data:image/png;base64, {bytes(buffer.data().toBase64()).decode()}'>"
+
+
+def pointy(widget):
+    widget.setCursor(Qt.PointingHandCursor)
