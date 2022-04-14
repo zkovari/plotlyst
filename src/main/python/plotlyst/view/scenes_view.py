@@ -156,6 +156,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
         self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
         self.ui.rbDetailed.setIcon(IconRegistry.from_name('mdi.card-text-outline'))
+        self.ui.wdgOrientation.setHidden(True)
+        self.ui.rbHorizontal.setIcon(IconRegistry.from_name('fa5s.grip-lines'))
+        self.ui.rbVertical.setIcon(IconRegistry.from_name('fa5s.grip-lines-vertical'))
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
@@ -321,10 +324,6 @@ class ScenesOutlineView(AbstractNovelView):
         self._switch_to_editor()
 
     def _update_cards(self):
-        def cursor_enter(scene: Scene):
-            if self.ui.wdgStoryStructure.isVisible():
-                self.ui.wdgStoryStructure.highlightScene(scene)
-
         def custom_menu(card: SceneCard, pos: QPoint):
             builder = PopupMenuBuilder.from_widget_position(card, pos)
             builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
@@ -350,7 +349,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
-            card.cursorEntered.connect(partial(cursor_enter, card.scene))
+            card.cursorEntered.connect(partial(self.ui.wdgStoryStructure.highlightScene, card.scene))
             card.customContextMenuRequested.connect(partial(custom_menu, card))
 
     def _card_selected(self, card: SceneCard):
@@ -387,12 +386,15 @@ class ScenesOutlineView(AbstractNovelView):
                 self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
                 self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
                 self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
+                self.ui.rbHorizontal.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Horizontal))
+                self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Vertical))
                 self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
                 self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
                 self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
                 self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
                 self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
                 self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
+                self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
                 self.storymap_view.setNovel(self.novel)
         elif self.ui.btnTimelineView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageTimeline)

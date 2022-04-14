@@ -1013,7 +1013,7 @@
                  <item>
                   <widget class="QRadioButton" name="rbDetailed">
                    <property name="enabled">
-                    <bool>false</bool>
+                    <bool>true</bool>
                    </property>
                    <property name="cursor">
                     <cursorShape>PointingHandCursor</cursorShape>
@@ -1024,6 +1024,67 @@
                    <attribute name="buttonGroup">
                     <string notr="true">btnGroupStoryMapView</string>
                    </attribute>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QWidget" name="wdgOrientation" native="true">
+                   <layout class="QHBoxLayout" name="horizontalLayout_2">
+                    <property name="spacing">
+                     <number>2</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>2</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="Line" name="line_7">
+                      <property name="orientation">
+                       <enum>Qt::Vertical</enum>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_4">
+                      <property name="text">
+                       <string>Orientation:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QRadioButton" name="rbHorizontal">
+                      <property name="cursor">
+                       <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QRadioButton" name="rbVertical">
+                      <property name="cursor">
+                       <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </widget>
                  </item>
                  <item>
@@ -1051,7 +1112,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>408</width>
+                    <width>441</width>
                     <height>555</height>
                    </rect>
                   </property>
@@ -1191,9 +1252,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>rbDetailed</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>wdgOrientation</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>623</x>
+     <y>87</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>649</x>
+     <y>97</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupStoryMapView"/>
+  <buttongroup name="btnGroupViews"/>
  </buttongroups>
 </ui>
