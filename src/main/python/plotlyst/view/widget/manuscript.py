@@ -29,6 +29,7 @@ from PyQt5.QtGui import QFont, QTextDocument, QTextCharFormat, QColor, QTextBloc
     QMouseEvent
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QTextEdit
+from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout
 from textstat import textstat
@@ -337,19 +338,31 @@ class WordTagHighlighter(QSyntaxHighlighter):
 
         self._adverbFormat = QTextCharFormat()
         self._adverbFormat.setBackground(QColor('#0a9396'))
+        self.tokenizer = WhitespaceTokenizer()
 
     @overrides
     def highlightBlock(self, text: str) -> None:
-        tokens = nltk.word_tokenize(text)
+        span_generator = self.tokenizer.span_tokenize(text)
+        spans = [x for x in span_generator]
+        tokens = self.tokenizer.tokenize(text)
         tags = nltk.pos_tag(tokens)
 
-        word_start = 0
-        for word, tag in tags:
-            if tag == 'RB':
-                i = text.index(word, word_start)
-                if i:
-                    self.setFormat(i, len(word), self._adverbFormat)
-            word_start += len(word)
+        print(f'{len(spans)} - {len(tags)}')
+        # nltk_text = nltk.Text(tokens)
+
+        # word_start = 0
+        for i, pos_tag in enumerate(tags):
+            if pos_tag[1] == 'RB':
+                # print(f'{pos_tag[0]} {pos_tag[1]}')
+                # nltk_text.concordance(word)
+                # nltk_text.findall(f'<{word}>')
+
+                # i = text.index(pos_tag[0], word_start)
+                if len(spans) > i:
+                    # print(spans[i])
+                    # if i:
+                    self.setFormat(spans[i][0], spans[i][1] - spans[i][0], self._adverbFormat)
+            # word_start += len(pos_tag[0])
 
 
 class ManuscriptTextEditor(DocumentTextEditor):
