@@ -1582,15 +1582,22 @@ class _SceneGridItem(QWidget):
         hbox(self.wdgTop, 0)
         self.wdgTop.layout().addWidget(btn)
 
-        textSynopsis = QTextEdit()
-        textSynopsis.setFontPointSize(btn.label.font().pointSize())
-        textSynopsis.verticalScrollBar().setVisible(False)
-        transparent(textSynopsis)
-        textSynopsis.setAcceptRichText(False)
-        textSynopsis.setText(self.scene.synopsis)
+        self.textSynopsis = QTextEdit()
+        self.textSynopsis.setFontPointSize(btn.label.font().pointSize())
+        self.textSynopsis.verticalScrollBar().setVisible(False)
+        transparent(self.textSynopsis)
+        self.textSynopsis.setAcceptRichText(False)
+        self.textSynopsis.setText(self.scene.synopsis)
+        self.textSynopsis.textChanged.connect(self._synopsisChanged)
 
         self.layout().addWidget(self.wdgTop)
-        self.layout().addWidget(textSynopsis)
+        self.layout().addWidget(self.textSynopsis)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def _synopsisChanged(self):
+        self.scene.synopsis = self.textSynopsis.toPlainText()
+        self.repo.update_scene(self.scene)
 
 
 class _ScenesLineWidget(QWidget):
@@ -1683,6 +1690,7 @@ class _ScenePlotAssociationsWidget(QWidget):
             if pv:
                 wdg = QTextEdit()
                 wdg.setText(pv.data.comment)
+                wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, pv))
             else:
                 wdg = QWidget()
 
@@ -1695,6 +1703,12 @@ class _ScenePlotAssociationsWidget(QWidget):
             self.wdgReferences.layout().addWidget(spacer())
 
         self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def _commentChanged(self, editor: QTextEdit, scene: Scene, scenePlotRef: ScenePlotReference):
+        scenePlotRef.data.comment = editor.toPlainText()
+        self.repo.update_scene(scene)
 
 
 class StoryMap(QWidget):
