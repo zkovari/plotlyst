@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from dataclasses import dataclass
+
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 
@@ -58,3 +60,16 @@ class ResourceRegistry:
 
 
 resource_registry = ResourceRegistry()
+
+
+@dataclass
+class NltkResource:
+    name: str
+    folder: str
+    web_url: str
+
+
+punkt_nltk_resource = NltkResource('punkt', 'tokenizers',
+                                   'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip')
+avg_tagger_url = 'https://github.com/nltk/nltk_data/raw/gh-pages/packages/taggers/averaged_perceptron_tagger.zip'
+avg_tagger_nltk_resource = NltkResource('averaged_perceptron_tagger', 'taggers', avg_tagger_url)
