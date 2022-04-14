@@ -324,10 +324,6 @@ class ScenesOutlineView(AbstractNovelView):
         self._switch_to_editor()
 
     def _update_cards(self):
-        def cursor_enter(scene: Scene):
-            if self.ui.wdgStoryStructure.isVisible():
-                self.ui.wdgStoryStructure.highlightScene(scene)
-
         def custom_menu(card: SceneCard, pos: QPoint):
             builder = PopupMenuBuilder.from_widget_position(card, pos)
             builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
@@ -353,7 +349,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
-            card.cursorEntered.connect(partial(cursor_enter, card.scene))
+            card.cursorEntered.connect(partial(self.ui.wdgStoryStructure.highlightScene, card.scene))
             card.customContextMenuRequested.connect(partial(custom_menu, card))
 
     def _card_selected(self, card: SceneCard):
@@ -398,6 +394,7 @@ class ScenesOutlineView(AbstractNovelView):
                 self.storymap_view.setActsFilter(1, self.ui.btnAct1.isChecked())
                 self.storymap_view.setActsFilter(2, self.ui.btnAct2.isChecked())
                 self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
+                self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
                 self.storymap_view.setNovel(self.novel)
         elif self.ui.btnTimelineView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageTimeline)

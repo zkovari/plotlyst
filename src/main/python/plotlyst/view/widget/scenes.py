@@ -1150,6 +1150,8 @@ class SceneStoryStructureWidget(QWidget):
         qtanim.glow(btn, color=QColor(beat.icon_color))
 
     def highlightScene(self, scene: Scene):
+        if not self.isVisible():
+            return
         beat = scene.beat(self.novel)
         if beat:
             self.highlightBeat(beat)
@@ -1353,7 +1355,7 @@ class StoryMapDisplayMode(Enum):
 
 
 class StoryLinesMapWidget(QWidget):
-    scene_selected = pyqtSignal(Scene)
+    sceneSelected = pyqtSignal(Scene)
 
     def __init__(self, mode: StoryMapDisplayMode, acts_filter: Dict[int, bool], parent=None):
         super().__init__(parent=parent)
@@ -1420,6 +1422,7 @@ class StoryLinesMapWidget(QWidget):
         scenes = self.scenes()
         if index < len(scenes):
             self._clicked_scene: Scene = scenes[index]
+            self.sceneSelected.emit(self._clicked_scene)
             self.update()
 
     @overrides
@@ -1643,6 +1646,8 @@ class _ScenePlotAssociationsWidget(QWidget):
 
 
 class StoryMap(QWidget):
+    sceneSelected = pyqtSignal(Scene)
+
     def __init__(self, parent=None):
         super(StoryMap, self).__init__(parent)
         self.novel: Optional[Novel] = None
@@ -1702,6 +1707,7 @@ class StoryMap(QWidget):
                     transparent(btn)
                     titles.layout().addWidget(btn)
                 titles.layout().addWidget(spacer())
+            wdg.sceneSelected.connect(self.sceneSelected.emit)
 
     def setMode(self, mode: StoryMapDisplayMode):
         if self._display_mode == mode:
