@@ -34,6 +34,8 @@ CONFLICT_TECHNOLOGY_COLOR: str = '#4a5859'
 CONFLICT_SUPERNATURAL_COLOR: str = '#ac7b84'
 CONFLICT_SELF_COLOR: str = '#94b0da'
 
+RELAXED_WHITE_COLOR: str = '#f8f9fa'
+
 
 def truncate_string(text: str, length: int = 25):
     return (text[:length] + '...') if len(text) > length else text

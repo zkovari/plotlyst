@@ -33,6 +33,7 @@ from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout
 from textstat import textstat
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
@@ -400,7 +401,7 @@ class ManuscriptTextEditor(DocumentTextEditor):
             self._wordTagHighlighter = None
 
     def _setDefaultStyleSheet(self):
-        self.textEdit.setStyleSheet('QTextEdit {border: 1px; background-color: #f8f9fa;}')
+        self.textEdit.setStyleSheet(f'QTextEdit {{border: 1px; background-color: {RELAXED_WHITE_COLOR};}}')
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
