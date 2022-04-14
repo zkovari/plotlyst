@@ -1564,6 +1564,35 @@ class StoryLinesMapWidget(QWidget):
 GRID_ITEM_SIZE: int = 150
 
 
+class _SceneGridItem(QWidget):
+    def __init__(self, novel: Novel, scene: Scene, parent=None):
+        super(_SceneGridItem, self).__init__(parent)
+        self.novel = novel
+        self.scene = scene
+
+        vbox(self)
+
+        btn = WordWrappedPushButton(parent=self)
+        btn.setFixedWidth(120)
+        btn.setText(scene.title_or_index(self.novel))
+        decr_font(btn.label, step=2)
+        transparent(btn)
+
+        self.wdgTop = QWidget()
+        hbox(self.wdgTop, 0)
+        self.wdgTop.layout().addWidget(btn)
+
+        textSynopsis = QTextEdit()
+        textSynopsis.setFontPointSize(btn.label.font().pointSize())
+        textSynopsis.verticalScrollBar().setVisible(False)
+        transparent(textSynopsis)
+        textSynopsis.setAcceptRichText(False)
+        textSynopsis.setText(self.scene.synopsis)
+
+        self.layout().addWidget(self.wdgTop)
+        self.layout().addWidget(textSynopsis)
+
+
 class _ScenesLineWidget(QWidget):
     def __init__(self, novel: Novel, parent=None, vertical: bool = False):
         super(_ScenesLineWidget, self).__init__(parent)
@@ -1578,10 +1607,22 @@ class _ScenesLineWidget(QWidget):
         wdgEmpty.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
         self.layout().addWidget(wdgEmpty)
 
+        if vertical:
+            hmax(self)
+            btnScenes = QPushButton()
+        else:
+            btnScenes = RotatedButton()
+            btnScenes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+        btnScenes.setText('Scenes')
+        transparent(btnScenes)
+        italic(btnScenes)
+        underline(btnScenes)
+        btnScenes.setIcon(IconRegistry.scene_icon())
+        self.layout().addWidget(btnScenes)
+
         for scene in self.novel.scenes:
-            wdg = QTextEdit()
+            wdg = _SceneGridItem(self.novel, scene)
             wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
-            wdg.setText(scene.synopsis)
             self.layout().addWidget(wdg)
 
         if vertical:
@@ -1615,6 +1656,7 @@ class _ScenePlotAssociationsWidget(QWidget):
 
             line.setFixedWidth(self.LineSize)
             line.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+            hmax(self)
         else:
             vbox(self, 0, 0)
             hbox(self.wdgReferences, margin=0)
@@ -1698,6 +1740,7 @@ class StoryMap(QWidget):
             else:
                 wdgScenePlotParent.layout().addWidget(spacer())
             self.layout().addWidget(wdgScenePlotParent)
+
         else:
             wdg = StoryLinesMapWidget(self._display_mode, self._acts_filter, parent=self)
             self.layout().addWidget(wdg)
@@ -1719,6 +1762,7 @@ class StoryMap(QWidget):
                 titles.layout().addWidget(spacer())
             wdg.sceneSelected.connect(self.sceneSelected.emit)
 
+    @busy
     def setMode(self, mode: StoryMapDisplayMode):
         if self._display_mode == mode:
             return
@@ -1726,6 +1770,7 @@ class StoryMap(QWidget):
         if self.novel:
             self.refresh()
 
+    @busy
     def setOrientation(self, orientation: int):
         self._orientation = orientation
         if self._display_mode != StoryMapDisplayMode.DETAILED:
