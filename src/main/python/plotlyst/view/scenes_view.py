@@ -156,6 +156,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
         self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
         self.ui.rbDetailed.setIcon(IconRegistry.from_name('mdi.card-text-outline'))
+        self.ui.wdgOrientation.setHidden(True)
+        self.ui.rbHorizontal.setIcon(IconRegistry.from_name('fa5s.grip-lines'))
+        self.ui.rbVertical.setIcon(IconRegistry.from_name('fa5s.grip-lines-vertical'))
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
@@ -387,6 +390,8 @@ class ScenesOutlineView(AbstractNovelView):
                 self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
                 self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
                 self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
+                self.ui.rbHorizontal.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Horizontal))
+                self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Vertical))
                 self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
                 self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
                 self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))

@@ -33,12 +33,12 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QHBoxLayo
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import busy, margins
+from qthandy import busy, margins, vspacer
 from qthandy import decr_font, ask_confirmation, gc, transparent, retain_when_hidden, opaque, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter
 
-from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, NEUTRAL, StoryBeat, Conflict, \
@@ -56,7 +56,8 @@ from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton
+from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
+    SelectionItemPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
@@ -1425,7 +1426,7 @@ class StoryLinesMapWidget(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), QColor('#f8f9fa'))
+        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
 
         if not self._first_paint_triggered:
             painter.end()
@@ -1558,14 +1559,100 @@ class StoryLinesMapWidget(QWidget):
         self.update()
 
 
+GRID_ITEM_SIZE: int = 150
+
+
+class _ScenesLineWidget(QWidget):
+    def __init__(self, novel: Novel, parent=None, vertical: bool = False):
+        super(_ScenesLineWidget, self).__init__(parent)
+        self.novel = novel
+
+        if vertical:
+            vbox(self, margin=0)
+        else:
+            hbox(self, margin=0)
+
+        for scene in self.novel.scenes:
+            wdg = QTextEdit()
+            wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+            wdg.setText(scene.synopsis)
+            self.layout().addWidget(wdg)
+
+        if vertical:
+            self.layout().addWidget(vspacer())
+        else:
+            self.layout().addWidget(spacer())
+
+
+class _ScenePlotAssociationsWidget(QWidget):
+    LineSize: int = 15
+
+    def __init__(self, novel: Novel, plot: Plot, parent=None, vertical: bool = False):
+        super(_ScenePlotAssociationsWidget, self).__init__(parent)
+        self.novel = novel
+        self.plot = plot
+
+        self.wdgReferences = QWidget()
+
+        if vertical:
+            hbox(self, margin=0)
+            vbox(self.wdgReferences, margin=0)
+        else:
+            vbox(self, margin=0)
+            hbox(self.wdgReferences, margin=0)
+
+        lbl = SelectionItemPushButton()
+        lbl.setSelectionItem(self.plot)
+        lbl.setCursor(Qt.ArrowCursor)
+        transparent(lbl)
+        hmax(lbl)
+        self.layout().addWidget(lbl)
+
+        line = QPushButton()
+        line.setStyleSheet(f'''
+            background-color: {plot.icon_color};
+            border-radius: 6px;
+        ''')
+        if vertical:
+            line.setFixedWidth(self.LineSize)
+            line.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+        else:
+            line.setFixedHeight(self.LineSize)
+            line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        self.layout().addWidget(line)
+        self.layout().addWidget(self.wdgReferences)
+
+        for scene in self.novel.scenes:
+            pv = next((x for x in scene.plot_values if x.plot.id == self.plot.id), None)
+            if pv:
+                wdg = QTextEdit()
+                wdg.setText(pv.data.comment)
+            else:
+                wdg = QWidget()
+
+            wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+            self.wdgReferences.layout().addWidget(wdg)
+
+        if vertical:
+            self.wdgReferences.layout().addWidget(vspacer())
+        else:
+            self.wdgReferences.layout().addWidget(spacer())
+
+        self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
+
+
 class StoryMap(QWidget):
     def __init__(self, parent=None):
         super(StoryMap, self).__init__(parent)
         self.novel: Optional[Novel] = None
         self._display_mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS
+        self._orientation: int = Qt.Horizontal
         self._acts_filter: Dict[int, bool] = {}
         vbox(self, spacing=0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
     def setNovel(self, novel: Novel):
         self.novel = novel
@@ -1575,29 +1662,58 @@ class StoryMap(QWidget):
         if not self.novel:
             return
         clear_layout(self)
-        wdg = StoryLinesMapWidget(self._display_mode, self._acts_filter, parent=self)
-        self.layout().addWidget(wdg)
-        wdg.setNovel(self.novel, animated=animated)
-        if self._display_mode == StoryMapDisplayMode.TITLE:
-            titles = QWidget(self)
-            titles.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
-            titles.setStyleSheet('QWidget {background-color: #f8f9fa;}')
-            hbox(titles, 0, 0)
-            margins(titles, left=70)
-            self.layout().insertWidget(0, titles)
-            for scene in wdg.scenes():
-                btn = WordWrappedPushButton(parent=self)
-                btn.setFixedWidth(120)
-                btn.setText(scene.title_or_index(self.novel))
-                decr_font(btn.label, step=2)
-                transparent(btn)
-                titles.layout().addWidget(btn)
-            titles.layout().addWidget(spacer())
+
+        if self._display_mode == StoryMapDisplayMode.DETAILED:
+            wdgScenePlotParent = QWidget(self)
+            if self._orientation == Qt.Horizontal:
+                vbox(wdgScenePlotParent, spacing=0)
+            else:
+                hbox(wdgScenePlotParent, spacing=0)
+
+            wdgScenes = _ScenesLineWidget(self.novel, vertical=self._orientation == Qt.Vertical)
+            wdgScenePlotParent.layout().addWidget(wdgScenes)
+
+            for plot in self.novel.plots:
+                wdg = _ScenePlotAssociationsWidget(self.novel, plot, parent=self,
+                                                   vertical=self._orientation == Qt.Vertical)
+                wdgScenePlotParent.layout().addWidget(wdg)
+
+            if self._orientation == Qt.Horizontal:
+                wdgScenePlotParent.layout().addWidget(vspacer())
+            else:
+                wdgScenePlotParent.layout().addWidget(spacer())
+            self.layout().addWidget(wdgScenePlotParent)
+        else:
+            wdg = StoryLinesMapWidget(self._display_mode, self._acts_filter, parent=self)
+            self.layout().addWidget(wdg)
+            wdg.setNovel(self.novel, animated=animated)
+            if self._display_mode == StoryMapDisplayMode.TITLE:
+                titles = QWidget(self)
+                titles.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+                titles.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
+                hbox(titles, 0, 0)
+                margins(titles, left=70)
+                self.layout().insertWidget(0, titles)
+                for scene in wdg.scenes():
+                    btn = WordWrappedPushButton(parent=self)
+                    btn.setFixedWidth(120)
+                    btn.setText(scene.title_or_index(self.novel))
+                    decr_font(btn.label, step=2)
+                    transparent(btn)
+                    titles.layout().addWidget(btn)
+                titles.layout().addWidget(spacer())
 
     def setMode(self, mode: StoryMapDisplayMode):
         if self._display_mode == mode:
             return
         self._display_mode = mode
+        if self.novel:
+            self.refresh()
+
+    def setOrientation(self, orientation: int):
+        self._orientation = orientation
+        if self._display_mode != StoryMapDisplayMode.DETAILED:
+            return
         if self.novel:
             self.refresh()
 
