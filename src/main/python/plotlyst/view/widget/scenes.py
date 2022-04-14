@@ -56,10 +56,9 @@ from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
-    SelectionItemPushButton
+from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
-from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
+from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
     PlotLabel, PlotValueLabel
 from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
@@ -1575,6 +1574,10 @@ class _ScenesLineWidget(QWidget):
         else:
             hbox(self, margin=0)
 
+        wdgEmpty = QWidget()
+        wdgEmpty.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+        self.layout().addWidget(wdgEmpty)
+
         for scene in self.novel.scenes:
             wdg = QTextEdit()
             wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
@@ -1596,35 +1599,42 @@ class _ScenePlotAssociationsWidget(QWidget):
         self.plot = plot
 
         self.wdgReferences = QWidget()
-
-        if vertical:
-            hbox(self, margin=0)
-            vbox(self.wdgReferences, margin=0)
-        else:
-            vbox(self, margin=0)
-            hbox(self.wdgReferences, margin=0)
-
-        lbl = SelectionItemPushButton()
-        lbl.setSelectionItem(self.plot)
-        lbl.setCursor(Qt.ArrowCursor)
-        transparent(lbl)
-        hmax(lbl)
-        self.layout().addWidget(lbl)
-
         line = QPushButton()
         line.setStyleSheet(f'''
-            background-color: {plot.icon_color};
-            border-radius: 6px;
-        ''')
+                    background-color: {plot.icon_color};
+                    border-radius: 6px;
+                ''')
+
         if vertical:
+            hbox(self, 0, 0)
+            vbox(self.wdgReferences, margin=0)
+            btnPlot = RotatedButton()
+            btnPlot.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+            hmax(btnPlot)
+            self.layout().addWidget(btnPlot, alignment=Qt.AlignTop)
+
             line.setFixedWidth(self.LineSize)
             line.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         else:
+            vbox(self, 0, 0)
+            hbox(self.wdgReferences, margin=0)
+            btnPlot = QPushButton()
+            self.layout().addWidget(btnPlot, alignment=Qt.AlignLeft)
+
             line.setFixedHeight(self.LineSize)
             line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
+        btnPlot.setText(self.plot.text)
+        if self.plot.icon:
+            btnPlot.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
+        transparent(btnPlot)
+
         self.layout().addWidget(line)
         self.layout().addWidget(self.wdgReferences)
+
+        wdgEmpty = QWidget()
+        wdgEmpty.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+        self.wdgReferences.layout().addWidget(wdgEmpty)
 
         for scene in self.novel.scenes:
             pv = next((x for x in scene.plot_values if x.plot.id == self.plot.id), None)
