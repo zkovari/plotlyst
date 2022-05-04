@@ -347,22 +347,10 @@ class WordTagHighlighter(QSyntaxHighlighter):
         tokens = self.tokenizer.tokenize(text)
         tags = nltk.pos_tag(tokens)
 
-        print(f'{len(spans)} - {len(tags)}')
-        # nltk_text = nltk.Text(tokens)
-
-        # word_start = 0
         for i, pos_tag in enumerate(tags):
             if pos_tag[1] == 'RB':
-                # print(f'{pos_tag[0]} {pos_tag[1]}')
-                # nltk_text.concordance(word)
-                # nltk_text.findall(f'<{word}>')
-
-                # i = text.index(pos_tag[0], word_start)
                 if len(spans) > i:
-                    # print(spans[i])
-                    # if i:
                     self.setFormat(spans[i][0], spans[i][1] - spans[i][0], self._adverbFormat)
-            # word_start += len(pos_tag[0])
 
 
 class ManuscriptTextEditor(DocumentTextEditor):
