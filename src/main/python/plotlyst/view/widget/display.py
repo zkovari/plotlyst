@@ -220,11 +220,11 @@ class MinorRoleIcon(_AbstractRoleIcon):
 
 class RoleIcon(_AbstractRoleIcon):
 
-    def setRole(self, role: Role):
+    def setRole(self, role: Role, animate: bool = False):
         if role.icon:
             self.setIcon(IconRegistry.from_name(role.icon, role.icon_color))
 
-        if role.is_major():
+        if animate and role.is_major():
             if role.text == protagonist_role.text:
                 color = '#a8dadc'
             else:
@@ -264,26 +264,6 @@ class Icon(QToolButton, _AbstractIcon):
     def __init__(self, parent=None):
         super(Icon, self).__init__(parent)
         transparent(self)
-        # self._iconName: str = ''
-        # self._iconColor: str = 'black'
-
-    # @pyqtProperty(str)
-    # def iconName(self):
-    #     return self._iconName
-    #
-    # @iconName.setter
-    # def iconName(self, value):
-    #     self._iconName = value
-    #     self._setIcon()
-    #
-    # @pyqtProperty(str)
-    # def iconColor(self):
-    #     return self._iconColor
-    #
-    # @iconColor.setter
-    # def iconColor(self, value):
-    #     self._iconColor = value
-    #     self._setIcon()
 
     @overrides
     def _setIcon(self):

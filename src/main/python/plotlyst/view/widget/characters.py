@@ -1368,7 +1368,6 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.setupUi(self)
 
         self.btnItemProtagonist.setSelectionItem(protagonist_role)
-        # self.btnItemDeuteragonist.setSelectionItem(deuteragonist_role)
         self.btnItemAntagonist.setSelectionItem(antagonist_role)
         self.btnItemContagonist.setSelectionItem(contagonist_role)
         self.btnItemSecondary.setSelectionItem(secondary_role)
@@ -1430,7 +1429,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
     def _roleClicked(self, role: Role):
         self._currentRole = role
-        self.iconRole.setRole(role)
+        self.iconRole.setRole(role, animate=True)
         self.lblRole.setText(role.text)
         self.btnPromote.setVisible(role.can_be_promoted)
 
