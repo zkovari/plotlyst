@@ -439,7 +439,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>12</number>
+        <number>10</number>
        </property>
        <widget class="QWidget" name="pageProtagonist">
         <property name="sizePolicy">
@@ -1395,41 +1395,99 @@ p, li { white-space: pre-wrap; }
         </layout>
        </widget>
        <widget class="QWidget" name="pageFoil">
-        <widget class="QLabel" name="label_12">
-         <property name="geometry">
-          <rect>
-           <x>30</x>
-           <y>250</y>
-           <width>338</width>
-           <height>17</height>
-          </rect>
+        <layout class="QVBoxLayout" name="verticalLayout_19">
+         <property name="spacing">
+          <number>3</number>
          </property>
-         <property name="font">
-          <font>
-           <underline>true</underline>
-          </font>
+         <property name="leftMargin">
+          <number>2</number>
          </property>
-         <property name="text">
-          <string>Examples:</string>
+         <property name="topMargin">
+          <number>2</number>
          </property>
-        </widget>
-        <widget class="QTextBrowser" name="textBrowser_11">
-         <property name="geometry">
-          <rect>
-           <x>60</x>
-           <y>40</y>
-           <width>251</width>
-           <height>171</height>
-          </rect>
+         <property name="rightMargin">
+          <number>2</number>
          </property>
-         <property name="html">
-          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+         <property name="bottomMargin">
+          <number>2</number>
+         </property>
+         <item>
+          <widget class="QTextBrowser" name="textBrowser_11">
+           <property name="html">
+            <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Fira Sans Semi-Light'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:13pt; color:#000000; background-color:#ffffff;&quot;&gt;Your main character who drives the plot and often has the most to lose. This character might change the most by the end of the story.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:13pt; color:#000000; background-color:#ffffff;&quot;&gt;A mirror character who represents the opposite of the protagonist in terms of personality, appearance, worldview, or values. Not necessarily an antagonistic character but could be.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:13pt; color:#000000; background-color:#ffffff;&quot;&gt;A foil role can help to contrast the protagonist making them a multi-dimensional character. Also, a foil might represent a different facade of the theme, thus contrasting or empowering the protagonist's version of the truth.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_12">
+           <property name="font">
+            <font>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>Examples:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="IconText" name="icontext_41">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Draco Malfoy</string>
+             </property>
+             <property name="iconName" stdset="0">
+              <string>ei.magic</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="IconText" name="icontext_43">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Spock</string>
+             </property>
+             <property name="iconName" stdset="0">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item alignment="Qt::AlignHCenter">
+          <widget class="IconText" name="icontext_42">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Effie (Hunger Games)</string>
+           </property>
+           <property name="iconName" stdset="0">
+            <string>mdi6.bow-arrow</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
        <widget class="QWidget" name="pageTertiary">
         <layout class="QVBoxLayout" name="verticalLayout_17">
