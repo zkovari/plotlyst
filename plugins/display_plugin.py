@@ -5,7 +5,7 @@ from overrides import overrides
 
 from plugins import PluginBase
 from src.main.python.plotlyst.view.widget.display import Subtitle, ChartView, MajorRoleIcon, SecondaryRoleIcon, \
-    MinorRoleIcon
+    MinorRoleIcon, RoleIcon, Icon, IconText
 
 
 class DisplayPluginBase(PluginBase):
@@ -54,3 +54,24 @@ class MinorRoleIconPlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
     @overrides
     def classType(self):
         return MinorRoleIcon
+
+
+class RoleIconPlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
+
+    @overrides
+    def classType(self):
+        return RoleIcon
+
+
+class IconPlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
+
+    @overrides
+    def classType(self):
+        return Icon
+
+
+class IconTextPlugin(QPyDesignerCustomWidgetPlugin, DisplayPluginBase):
+
+    @overrides
+    def classType(self):
+        return IconText

@@ -432,10 +432,6 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.icons', color)
 
     @staticmethod
-    def heading_3_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.format-header-3', mdi_scale=1)
-
-    @staticmethod
     def template_icon() -> QIcon:
         return IconRegistry.from_name('ei.magic', color='#35a7ff')
 
