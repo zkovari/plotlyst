@@ -267,9 +267,9 @@ background-color: rgb(39, 39, 39);
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="lblSceneTitle">
-             <property name="text">
-              <string>TextLabel</string>
+            <widget class="QLineEdit" name="lineSceneTitle">
+             <property name="readOnly">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -585,6 +585,11 @@ background-color: rgb(39, 39, 39);
  </widget>
  <customwidgets>
   <customwidget>
+   <class>WordsDisplay</class>
+   <extends>QLabel</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
+  <customwidget>
    <class>Toggle</class>
    <extends>QCheckBox</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
@@ -604,11 +609,6 @@ background-color: rgb(39, 39, 39);
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.manuscript</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>WordsDisplay</class>
-   <extends>QLabel</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>ManuscriptTextEditor</class>
