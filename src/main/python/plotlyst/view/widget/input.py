@@ -468,7 +468,7 @@ class DocumentTextEditor(RichTextEditor):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent):
-            cursor = self.textEdit.textCursor()
+            cursor: QTextCursor = self.textEdit.textCursor()
             if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
                 if self.textEdit.textCursor().atBlockStart():
                     self._showCommands()
@@ -478,7 +478,7 @@ class DocumentTextEditor(RichTextEditor):
                 if cursor.selectedText() == ' ':
                     self.textEdit.textCursor().deletePreviousChar()
                     self.textEdit.textCursor().insertText('.')
-            elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_QuoteDbl:
+            elif event.type() == QEvent.KeyPress and cursor.atBlockEnd() and event.key() == Qt.Key_QuoteDbl:
                 self.textEdit.textCursor().insertText(event.text())
                 cursor.movePosition(QTextCursor.PreviousCharacter)
                 self.textEdit.setTextCursor(cursor)
