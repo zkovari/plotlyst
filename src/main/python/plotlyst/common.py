@@ -38,6 +38,8 @@ RELAXED_WHITE_COLOR: str = '#f8f9fa'
 
 EM_DASH = u'\u2014'
 EN_DASH = u'\u2013'
+LEFT_QUOTATION_ENGLISH = u'\u201C'
+RIGHT_QUOTATION_ENGLISH = u'\u201D'
 
 
 def truncate_string(text: str, length: int = 25):
