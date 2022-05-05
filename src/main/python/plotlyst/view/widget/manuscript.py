@@ -49,6 +49,7 @@ from src.main.python.plotlyst.view.generated.readability_widget_ui import Ui_Rea
 from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWidget
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.display import WordsDisplay
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, GrammarHighlighter, GrammarHighlightStyle
 
 
@@ -94,7 +95,7 @@ class SprintWidget(QWidget, Ui_SprintWidget):
     def setCompactMode(self, compact: bool):
         self._compact = compact
         self._toggleState(self.model().isActive())
-        self.time.setStyleSheet('border: 0px; color: white; background-color: rgba(0,0,0,0);')
+        self.time.setStyleSheet(f'border: 0px; color: {RELAXED_WHITE_COLOR}; background-color: rgba(0,0,0,0);')
 
     def start(self):
         self._toggleState(True)
@@ -476,13 +477,14 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         super(DistractionFreeManuscriptEditor, self).__init__(parent)
         self.setupUi(self)
         self.editor: Optional[ManuscriptTextEditor] = None
+        self.lblWords: Optional[WordsDisplay] = None
 
         self.sliderDocWidth.valueChanged.connect(
             lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
                                                                                 self.width() / 3 - x, 0))
         self.wdgSprint = SprintWidget(self)
         self.wdgSprint.setCompactMode(True)
-        self.wdgHeader.layout().addWidget(self.wdgSprint, alignment=Qt.AlignLeft)
+        self.wdgHeader.layout().insertWidget(0, self.wdgSprint, alignment=Qt.AlignLeft)
 
         self.wdgDistractionFreeEditor.installEventFilter(self)
         self.wdgBottom.installEventFilter(self)
@@ -492,16 +494,18 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
         self.btnNightMode.setIcon(IconRegistry.from_name('mdi.weather-night', color_on='darkBlue'))
         self.btnNightMode.toggled.connect(self._toggle_manuscript_night_mode)
+        self.btnWordCount.setIcon(IconRegistry.from_name('mdi6.counter', color_on='darkBlue'))
+        self.btnWordCount.clicked.connect(self._wordCountClicked)
 
     def activate(self, editor: ManuscriptTextEditor, timer: Optional[TimerModel] = None):
         self.editor = editor
         self.editor.textEdit.installEventFilter(self)
         clear_layout(self.wdgDistractionFreeEditor.layout())
         if timer and timer.isActive():
-            self.wdgHeader.setVisible(True)
             self.wdgSprint.setModel(timer)
+            self.wdgSprint.setVisible(True)
         else:
-            self.wdgHeader.setHidden(True)
+            self.wdgSprint.setHidden(True)
         self.wdgDistractionFreeEditor.layout().addWidget(editor)
         editor.textEdit.setFocus()
         editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -512,6 +516,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
         self._toggle_manuscript_focus(self.btnFocus.isChecked())
         self._toggle_manuscript_night_mode(self.btnNightMode.isChecked())
+        self._wordCountClicked(self.btnWordCount.isChecked())
         self.setMouseTracking(True)
         self.wdgDistractionFreeEditor.setMouseTracking(True)
         QTimer.singleShot(3000, self._autoHideBottomBar)
@@ -525,16 +530,19 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.setMouseTracking(False)
         self.wdgDistractionFreeEditor.setMouseTracking(False)
 
+    def setWordDisplay(self, words: WordsDisplay):
+        self.lblWords = words
+        self.wdgHeader.layout().addWidget(self.lblWords, alignment=Qt.AlignRight)
+        self.lblWords.setStyleSheet(f'color: {RELAXED_WHITE_COLOR}')
+        self._wordCountClicked(self.btnWordCount.isChecked())
+
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if watched is self.wdgBottom and event.type() == QEvent.Leave:
             self.wdgBottom.setHidden(True)
         if event.type() == QEvent.MouseMove and isinstance(event, QMouseEvent):
-            # print(event.pos())
             if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 15:
                 self.wdgBottom.setVisible(True)
-            # print(watched)
-            # print('-------------')
         return super().eventFilter(watched, event)
 
     @overrides
@@ -548,6 +556,10 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 15:
             self.wdgBottom.setVisible(True)
+
+    def _wordCountClicked(self, checked: bool):
+        if self.lblWords:
+            self.lblWords.setVisible(checked)
 
     def _toggle_manuscript_focus(self, toggled: bool):
         if toggled:
