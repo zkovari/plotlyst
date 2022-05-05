@@ -35,7 +35,7 @@ from qttextedit import EnhancedTextEdit, RichTextEditor
 
 from src.main.python.plotlyst.common import EM_DASH
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
-from src.main.python.plotlyst.core.text import wc, clean_text
+from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -201,7 +201,7 @@ class BlockStatistics(AbstractTextBlockHighlighter):
     @overrides
     def highlightBlock(self, text: str) -> None:
         data = self._currentblockData()
-        data.wordCount = wc(clean_text(text))
+        data.wordCount = wc(text)
 
 
 class CharacterContentAssistMenu(QMenu):

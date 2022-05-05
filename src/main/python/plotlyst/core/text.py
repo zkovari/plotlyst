@@ -91,6 +91,7 @@ def parse_structure_to_richtext(structure: StoryStructure):
 
 
 def wc(text: str) -> int:
+    text = re.sub(r'—', ' ', text)  # Override em dash to spaces
     return textstat.lexicon_count(text)
 
 
