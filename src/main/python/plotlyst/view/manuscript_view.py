@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, QTimer
+from PyQt5.QtCore import QModelIndex, QTimer, Qt
 from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
 from qthandy import opaque, incr_font, bold, btn_popup, margins
@@ -108,6 +108,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgTitle.setHidden(True)
         self.ui.treeChapters.setHidden(True)
         self._dist_free_editor.activate(self.ui.textEdit, self.ui.wdgSprint.model())
+        self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
     def _exit_distraction_free(self):
         emit_event(ExitDistractionFreeMode(self))
@@ -117,6 +118,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgTitle.setVisible(True)
         self.ui.treeChapters.setVisible(True)
 
+        self.ui.wdgBottom.layout().addWidget(self.ui.lblWordCount, alignment=Qt.AlignCenter)
+        self.ui.lblWordCount.setStyleSheet('color: black')
         self.ui.wdgEditor.layout().insertWidget(0, self.ui.textEdit)
         self.ui.wdgReadability.cbAdverbs.setChecked(False)
 
