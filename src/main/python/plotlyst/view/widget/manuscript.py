@@ -421,7 +421,8 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
     def checkTextDocument(self, doc: QTextDocument):
         spin(self.btnResult)
 
-        cleaned_text = clean_text(doc.toPlainText())
+        text = doc.toPlainText()
+        cleaned_text = clean_text(text)
         score = textstat.flesch_reading_ease(cleaned_text)
         tooltip = f'Flesch–Kincaid readability score: {score}'
         self.btnResult.setToolTip(tooltip)
@@ -454,7 +455,7 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         if not sentences_count:
             sentence_length = 0
         else:
-            sentence_length = wc(cleaned_text) / sentences_count
+            sentence_length = wc(text) / sentences_count
         self.lblAvgSentenceLength.setText("%.2f" % round(sentence_length, 1))
 
         self.btnRefresh.setHidden(True)
