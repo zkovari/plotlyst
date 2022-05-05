@@ -95,7 +95,7 @@ def wc(text: str) -> int:
 
 
 def clean_text(text: str):
-    text = re.sub(r'[,:;()\-]', ' ', text)  # Override commas, colons, etc to spaces/
+    text = re.sub(r'[,:;()\-–—]', ' ', text)  # Override commas, colons, etc to spaces/
     text = re.sub(r'["\'“”«»‹›„‟’❝❞❮❯⹂〝〞〟＂‚‘‛❛❜❟]', '', text)  # Replace quotation marks
     text = re.sub(r'[\.!?]', '.', text)  # Change all terminators like ! and ? to "."
     text = re.sub(r'^\s+', '', text)  # Remove whites pace
