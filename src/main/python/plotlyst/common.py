@@ -36,6 +36,9 @@ CONFLICT_SELF_COLOR: str = '#94b0da'
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
 
+EM_DASH = u'\u2014'
+EN_DASH = u'\u2013'
+
 
 def truncate_string(text: str, length: int = 25):
     return (text[:length] + '...') if len(text) > length else text
