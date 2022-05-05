@@ -33,7 +33,7 @@ from overrides import overrides
 from qthandy import transparent, hbox
 from qttextedit import EnhancedTextEdit, RichTextEditor
 
-from src.main.python.plotlyst.common import EM_DASH
+from src.main.python.plotlyst.common import EM_DASH, LEFT_QUOTATION_ENGLISH, RIGHT_QUOTATION_ENGLISH
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
@@ -480,9 +480,11 @@ class DocumentTextEditor(RichTextEditor):
                     self.textEdit.textCursor().deletePreviousChar()
                     self.textEdit.textCursor().insertText('.')
             elif cursor.atBlockEnd() and event.key() == Qt.Key_QuoteDbl:
-                self.textEdit.textCursor().insertText(event.text())
+                self.textEdit.textCursor().insertText(LEFT_QUOTATION_ENGLISH)
+                self.textEdit.textCursor().insertText(RIGHT_QUOTATION_ENGLISH)
                 cursor.movePosition(QTextCursor.PreviousCharacter)
                 self.textEdit.setTextCursor(cursor)
+                return True
             elif event.key() == Qt.Key_Minus:
                 cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
                 if cursor.selectedText() == '-':
