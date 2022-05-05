@@ -23,7 +23,7 @@ from typing import Optional
 from PyQt5.QtCore import QModelIndex, QTimer, Qt
 from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
-from qthandy import opaque, incr_font, bold, btn_popup, margins
+from qthandy import opaque, incr_font, bold, btn_popup, margins, transparent
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentStatistics, Scene
@@ -57,8 +57,10 @@ class ManuscriptView(AbstractNovelView):
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.btnStoryGoal.setText('80,000')
 
-        bold(self.ui.lblSceneTitle)
-        incr_font(self.ui.lblSceneTitle)
+        bold(self.ui.lineSceneTitle)
+        incr_font(self.ui.lineSceneTitle)
+        transparent(self.ui.lineSceneTitle)
+        self.ui.lineSceneTitle.textEdited.connect(self._scene_title_edited)
 
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
@@ -92,6 +94,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgSideAnalysis.setHidden(True)
 
         self.ui.textEdit.textEdit.textChanged.connect(self._save)
+        self.ui.textEdit.textEdit.textChanged.connect(self._text_changed)
+        self.ui.textEdit.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         self._update_story_goal()
@@ -129,25 +133,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.progressStory.setValue(int(wc / 80000 * 100))
 
     def _edit(self, index: QModelIndex):
-        def text_changed():
-            wc = self.ui.textEdit.statistics().word_count
-            self.ui.lblWordCount.setWordCount(wc)
-            if self._current_doc.statistics is None:
-                self._current_doc.statistics = DocumentStatistics()
-
-            if self._current_doc.statistics.wc != wc:
-                self._current_doc.statistics.wc = wc
-                self.repo.update_scene(self._current_scene)
-                self._update_story_goal()
-            self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.textEdit.document())
-
-        def selection_changed():
-            fragment = self.ui.textEdit.textEdit.textCursor().selection()
-            if fragment:
-                self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
-            else:
-                self.ui.lblWordCount.clearSecondaryWordCount()
-
         node = index.data(ChaptersTreeModel.NodeRole)
         if isinstance(node, SceneNode):
             if not node.scene.manuscript:
@@ -166,15 +151,19 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setMargins(30, 30, 30, 30)
             self.ui.textEdit.textEdit.setFormat(130, textIndent=20)
             self.ui.textEdit.textEdit.setFontPointSize(16)
-            text_changed()
-            self.ui.textEdit.textEdit.textChanged.connect(text_changed)
-            self.ui.textEdit.textEdit.selectionChanged.connect(selection_changed)
+            self._text_changed()
 
             if self.ui.cbSpellCheck.isChecked():
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 self.ui.textEdit.asyncCheckGrammer()
 
-            self.ui.lblSceneTitle.setText(node.scene.title_or_index(self.novel))
+            if node.scene.title:
+                self.ui.lineSceneTitle.setText(node.scene.title)
+                self.ui.lineSceneTitle.setPlaceholderText('Scene title')
+            else:
+                self.ui.lineSceneTitle.clear()
+                self.ui.lineSceneTitle.setPlaceholderText(node.scene.title_or_index(self.novel))
+
             if node.scene.pov:
                 self.ui.btnPov.setIcon(avatars.avatar(node.scene.pov))
                 self.ui.btnPov.setVisible(True)
@@ -195,11 +184,35 @@ class ManuscriptView(AbstractNovelView):
             self._current_doc = None
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
+    def _text_changed(self):
+        wc = self.ui.textEdit.statistics().word_count
+        self.ui.lblWordCount.setWordCount(wc)
+        if self._current_doc.statistics is None:
+            self._current_doc.statistics = DocumentStatistics()
+
+        if self._current_doc.statistics.wc != wc:
+            self._current_doc.statistics.wc = wc
+            self.repo.update_scene(self._current_scene)
+            self._update_story_goal()
+        self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.textEdit.document())
+
+    def _text_selection_changed(self):
+        fragment = self.ui.textEdit.textEdit.textCursor().selection()
+        if fragment:
+            self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
+        else:
+            self.ui.lblWordCount.clearSecondaryWordCount()
+
     def _save(self):
         if not self._current_doc:
             return
         self._current_doc.content = self.ui.textEdit.textEdit.toHtml()
         self.repo.update_doc(self.novel, self._current_doc)
+
+    def _scene_title_edited(self, text: str):
+        if self._current_scene:
+            self._current_scene.title = text
+            self.repo.update_scene(self._current_scene)
 
     def _spellcheck_toggled(self, toggled: bool):
         opaque(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
