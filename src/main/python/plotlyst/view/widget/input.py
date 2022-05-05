@@ -33,6 +33,7 @@ from overrides import overrides
 from qthandy import transparent, hbox
 from qttextedit import EnhancedTextEdit, RichTextEditor
 
+from src.main.python.plotlyst.common import EM_DASH
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
@@ -467,21 +468,27 @@ class DocumentTextEditor(RichTextEditor):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if isinstance(event, QKeyEvent):
+        if isinstance(event, QKeyEvent) and event.type() == QEvent.KeyPress:
             cursor: QTextCursor = self.textEdit.textCursor()
-            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Slash:
+            if event.key() == Qt.Key_Slash:
                 if self.textEdit.textCursor().atBlockStart():
                     self._showCommands()
 
-            if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Space:
+            if event.key() == Qt.Key_Space:
                 cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
                 if cursor.selectedText() == ' ':
                     self.textEdit.textCursor().deletePreviousChar()
                     self.textEdit.textCursor().insertText('.')
-            elif event.type() == QEvent.KeyPress and cursor.atBlockEnd() and event.key() == Qt.Key_QuoteDbl:
+            elif cursor.atBlockEnd() and event.key() == Qt.Key_QuoteDbl:
                 self.textEdit.textCursor().insertText(event.text())
                 cursor.movePosition(QTextCursor.PreviousCharacter)
                 self.textEdit.setTextCursor(cursor)
+            elif event.key() == Qt.Key_Minus:
+                cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+                if cursor.selectedText() == '-':
+                    self.textEdit.textCursor().deletePreviousChar()
+                    self.textEdit.textCursor().insertText(EM_DASH)
+                    return True
             # elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
             #     self._lblPlaceholder.setText(' said ')
             #     self._lblPlaceholder.show()
