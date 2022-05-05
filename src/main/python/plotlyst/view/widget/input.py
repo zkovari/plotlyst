@@ -474,7 +474,7 @@ class DocumentTextEditor(RichTextEditor):
                 if self.textEdit.textCursor().atBlockStart():
                     self._showCommands()
 
-            if event.key() == Qt.Key_Space:
+            if cursor.atBlockEnd() and event.key() == Qt.Key_Space:
                 cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
                 if cursor.selectedText() == ' ':
                     self.textEdit.textCursor().deletePreviousChar()
