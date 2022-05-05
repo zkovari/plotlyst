@@ -31,7 +31,7 @@ from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox
 
 from src.main.python.plotlyst.core.template import Role, protagonist_role
-from src.main.python.plotlyst.core.text import wc
+from src.main.python.plotlyst.core.text import wc, clean_text
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -180,7 +180,7 @@ class WordsDisplay(QLabel):
 
     def calculateSecondaryWordCount(self, text: str):
         if text:
-            self.setSecondaryWordCount(wc(text))
+            self.setSecondaryWordCount(wc(clean_text(text)))
         else:
             self.setText(self._text)
 
