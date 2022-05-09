@@ -20,11 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Dict
 
-from PyQt5.QtChart import QChart, QPieSeries
+from PyQt5.QtChart import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QCursor, QIcon
 from PyQt5.QtWidgets import QToolTip
 
-from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
+from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
     secondary_role
@@ -199,3 +200,43 @@ class EnneagramChart(BaseChart):
                               f'<b style="color: {enneagram.icon_color}">{enneagram.text.capitalize()}</b>')
         else:
             QToolTip.hideText()
+
+
+class ManuscriptLengthChart(BaseChart):
+    def __init__(self, parent=None):
+        super(ManuscriptLengthChart, self).__init__(parent)
+        self.setTitle('<b>Manuscript length per chapters</b>')
+
+    def refresh(self, novel: Novel):
+        if self.series():
+            self.removeAllSeries()
+        if self.axisX():
+            self.removeAxis(self.axisX())
+        if self.axisY():
+            self.removeAxis(self.axisY())
+
+        self.setMinimumWidth(max(len(novel.chapters), 15) * 35)
+
+        set_ = QBarSet('Chapter')
+        for i, chapter in enumerate(novel.chapters):
+            chapter_wc = 0
+            for scene in novel.scenes_in_chapter(chapter):
+                if scene.manuscript and scene.manuscript.statistics:
+                    chapter_wc += scene.manuscript.statistics.wc
+            set_.append(chapter_wc)
+
+        series = QBarSeries()
+        series.append(set_)
+
+        axis_x = QBarCategoryAxis()
+        axis_x_values = [*range(1, len(novel.chapters) + 1)]
+        axis_x_values = [str(x) for x in axis_x_values]
+        axis_x.append(axis_x_values)
+        self.addAxis(axis_x, Qt.AlignBottom)
+
+        axis_y = QValueAxis()
+        self.addAxis(axis_y, Qt.AlignLeft)
+
+        self.addSeries(series)
+        series.attachAxis(axis_x)
+        series.attachAxis(axis_y)

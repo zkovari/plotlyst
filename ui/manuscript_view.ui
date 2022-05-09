@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>557</width>
-    <height>326</height>
+    <height>332</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -65,16 +65,27 @@
       <property name="bottomMargin">
        <number>2</number>
       </property>
-      <item alignment="Qt::AlignHCenter">
-       <widget class="QLabel" name="lblTitle">
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
+      <item>
+       <widget class="QPushButton" name="btnTitle">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton {
+	border: 1px hidden black;
+    padding: 2px;
+}
+
+QPushButton:hover {
+	border: 1px dashed black;
+}
+
+QPushButton:pressed {
+	border: 1px solid black;
+}</string>
         </property>
         <property name="text">
-         <string>TextLabel</string>
+         <string>Title</string>
         </property>
        </widget>
       </item>
@@ -117,11 +128,22 @@
       </item>
       <item>
        <widget class="QPushButton" name="btnStoryGoal">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="styleSheet">
          <string notr="true">QPushButton {
-                                        border:0px;
-                                        }
-                                    </string>
+	border: 1px hidden black;
+    padding: 2px;
+}
+
+QPushButton:hover {
+	border: 1px dashed black;
+}
+
+QPushButton:pressed {
+	border: 1px solid black;
+}</string>
         </property>
         <property name="text">
          <string/>
@@ -187,7 +209,7 @@ background-color: rgb(39, 39, 39);
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="pageText">
        <property name="styleSheet">
@@ -558,6 +580,68 @@ background-color: rgb(39, 39, 39);
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="pageOverview">
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <property name="spacing">
+         <number>3</number>
+        </property>
+        <property name="leftMargin">
+         <number>2</number>
+        </property>
+        <property name="topMargin">
+         <number>2</number>
+        </property>
+        <property name="rightMargin">
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scrollArea">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>342</width>
+             <height>294</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="ChartView" name="chartChaptersLength"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="pageEmpty"/>
       <widget class="QWidget" name="pageDistractionFree">
        <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -584,6 +668,11 @@ background-color: rgb(39, 39, 39);
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>ChartView</class>
+   <extends>QGraphicsView</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
   <customwidget>
    <class>WordsDisplay</class>
    <extends>QLabel</extends>
