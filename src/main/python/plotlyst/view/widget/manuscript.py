@@ -28,7 +28,7 @@ from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObj
 from PyQt5.QtGui import QFont, QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent
 from PyQt5.QtMultimedia import QSoundEffect
-from PyQt5.QtWidgets import QWidget, QTextEdit
+from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout
@@ -493,6 +493,8 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.btnReturn.clicked.connect(self.exitRequested.emit)
         self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkBlue'))
         self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
+        self.btnTypewriterMode.setIcon(IconRegistry.from_name('mdi.typewriter', color_on='darkBlue'))
+        self.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
         self.btnNightMode.setIcon(IconRegistry.from_name('mdi.weather-night', color_on='darkBlue'))
         self.btnNightMode.toggled.connect(self._toggle_manuscript_night_mode)
         self.btnWordCount.setIcon(IconRegistry.from_name('mdi6.counter', color_on='darkBlue'))
@@ -517,6 +519,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
         self._toggle_manuscript_focus(self.btnFocus.isChecked())
         self._toggle_manuscript_night_mode(self.btnNightMode.isChecked())
+        self._toggle_typewriter_mode(self.btnTypewriterMode.isChecked())
         self._wordCountClicked(self.btnWordCount.isChecked())
         self.setMouseTracking(True)
         self.wdgDistractionFreeEditor.setMouseTracking(True)
@@ -525,6 +528,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
     def deactivate(self):
         self.editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.editor.textEdit.removeEventFilter(self)
+        self.editor.setMargins(30, 30, 30, 30)
         self._toggle_manuscript_focus(False)
         self._toggle_manuscript_night_mode(False)
         self.editor = None
@@ -573,6 +577,12 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
             if self.btnFocus.isChecked():
                 self.btnFocus.setChecked(False)
         self.editor.setNightModeEnabled(toggled)
+
+    def _toggle_typewriter_mode(self, toggled: bool):
+        if toggled:
+            self.editor.setMargins(30, 30, 30, QApplication.desktop().height() // 2)
+        else:
+            self.editor.setMargins(30, 30, 30, 30)
 
     def _autoHideBottomBar(self):
         if not self.wdgBottom.underMouse():
