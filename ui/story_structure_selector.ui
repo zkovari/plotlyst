@@ -41,7 +41,7 @@
       <number>3</number>
      </property>
      <item>
-      <widget class="Subtitle" name="widget" native="true">
+      <widget class="Subtitle" name="widget">
        <property name="title" stdset="0">
         <string>Common 3 Act structure</string>
        </property>
@@ -68,7 +68,7 @@
       <number>3</number>
      </property>
      <item>
-      <widget class="Subtitle" name="widget_3" native="true">
+      <widget class="Subtitle" name="widget_3">
        <property name="title" stdset="0">
         <string>Save the Cat</string>
        </property>
@@ -79,33 +79,6 @@
      </item>
      <item>
       <widget class="Toggle" name="cbSaveTheCat">
-       <property name="text">
-        <string/>
-       </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup</string>
-       </attribute>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <property name="spacing">
-      <number>3</number>
-     </property>
-     <item>
-      <widget class="Subtitle" name="widget_2" native="true">
-       <property name="title" stdset="0">
-        <string>Weiland 10 beats</string>
-       </property>
-       <property name="icon" stdset="0">
-        <string>mdi.dice-d10-outline</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Toggle" name="cbWeiland10Beats">
        <property name="text">
         <string/>
        </property>
@@ -133,15 +106,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Toggle</class>
-   <extends>QCheckBox</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
    <class>Subtitle</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
  <resources/>

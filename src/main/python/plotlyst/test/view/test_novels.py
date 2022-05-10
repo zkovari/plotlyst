@@ -1,5 +1,5 @@
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import weiland_10_beats, SceneStoryBeat
+from src.main.python.plotlyst.core.domain import SceneStoryBeat, save_the_cat
 from src.main.python.plotlyst.test.common import create_plot, go_to_novel, patch_confirmed, go_to_scenes
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
@@ -46,11 +46,10 @@ def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
 
     patch_confirmed(monkeypatch)
     view.ui.wdgStructure.structureSelector.cbSaveTheCat.click()
-    view.ui.wdgStructure.structureSelector.cbWeiland10Beats.click()
-    btn = view.ui.wdgStructure.btnGroupStructure.buttons()[2]
+    btn = view.ui.wdgStructure.btnGroupStructure.buttons()[1]
     btn.click()
 
-    assert view.novel.active_story_structure == weiland_10_beats
+    assert view.novel.active_story_structure == save_the_cat
 
     for scene in view.novel.scenes:
         assert scene.beat(view.novel) is None
