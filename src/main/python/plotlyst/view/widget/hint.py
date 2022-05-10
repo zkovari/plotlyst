@@ -29,13 +29,13 @@ from qthandy import vbox, ask_confirmation, busy, bold, incr_font
 
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_info
+from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.common import hmax
 from src.main.python.plotlyst.view.generated.hint.scenes_view_hint_ui import Ui_ScenesViewHintWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.input import RemovalButton
-from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
 
 class HintId(Enum):

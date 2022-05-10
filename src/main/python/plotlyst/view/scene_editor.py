@@ -38,6 +38,8 @@ from src.main.python.plotlyst.model.characters_model import CharactersSceneAssoc
 from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
     SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
+from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuilderPreviewDialog
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
@@ -45,8 +47,6 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scenes import ScenePlotSelector, SceneTagSelector
-from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class SceneEditor(QObject):

@@ -32,11 +32,11 @@ from src.main.python.plotlyst.core.template import age_field, \
     enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, core_fear_field, misbelief_field, \
     core_desire_field, default_character_profiles, mbti_field, traits_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):

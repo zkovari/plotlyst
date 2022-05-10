@@ -37,6 +37,7 @@ from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, Sce
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import PopupMenuBuilder
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
@@ -53,7 +54,6 @@ from src.main.python.plotlyst.view.widget.progress import SceneStageProgressChar
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
     ScenesPreferencesWidget, StoryMap, StoryMapDisplayMode
 from src.main.python.plotlyst.view.widget.scenes import StoryLinesMapWidget
-from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):

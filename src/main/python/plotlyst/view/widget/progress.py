@@ -24,8 +24,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QColor, QFont
 
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.widget.chart import BaseChart
-from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class ProgressChartView(QChartView):

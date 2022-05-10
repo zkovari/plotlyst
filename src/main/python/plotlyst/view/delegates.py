@@ -29,8 +29,8 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Scene, VERY_UNHAPPY, UNHAPPY, NEUTRAL, HAPPY, VERY_HAPPY, \
     Character
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class ScenesViewDelegate(QStyledItemDelegate):

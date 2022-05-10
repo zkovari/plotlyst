@@ -26,8 +26,8 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree, ActionBasedTreeModel
 from src.main.python.plotlyst.model.tree_model import TreeItemModel, NodeMimeData
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class DocumentNode(Node):

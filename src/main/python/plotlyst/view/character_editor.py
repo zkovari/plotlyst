@@ -28,13 +28,13 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem, \
     protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor, CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class CharacterEditor:

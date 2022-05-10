@@ -38,6 +38,10 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
+from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
+from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -55,10 +59,6 @@ from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
-from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.download import NltkResourceDownloadWorker
-from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 textstat.sentence_count = sentence_count
 
