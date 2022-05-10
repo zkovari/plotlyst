@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>650</width>
-    <height>540</height>
+    <height>560</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -126,12 +126,13 @@
            </property>
            <property name="styleSheet">
             <string notr="true">QToolButton {
-	border: 0px;
-}
+                                                    border: 0px;
+                                                    }
 
-QToolButton:pressed {
-	border: 1px solid black;
-}</string>
+                                                    QToolButton:pressed {
+                                                    border: 1px solid black;
+                                                    }
+                                                </string>
            </property>
            <property name="text">
             <string/>
@@ -337,7 +338,7 @@ QToolButton:pressed {
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -451,11 +452,17 @@ QToolButton:pressed {
           </property>
           <item>
            <widget class="Subtitle" name="widget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="title" stdset="0">
              <string>Premise</string>
             </property>
             <property name="description" stdset="0">
-             <string>Pitch your story in maximum 3 sentences.</string>
+             <string>Summarize your story in one or two sentences</string>
             </property>
             <property name="icon" stdset="0">
              <string>mdi.elevator-passenger</string>
@@ -493,10 +500,19 @@ QToolButton:pressed {
           <item>
            <widget class="DocumentTextEditor" name="textPremise">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="placeholderText" stdset="0">
+             <string>Describe your story ...</string>
             </property>
            </widget>
           </item>
@@ -514,7 +530,7 @@ QToolButton:pressed {
             <string>Synopsis</string>
            </property>
            <property name="description" stdset="0">
-            <string>Summarize your whole book in 500 words.</string>
+            <string>Summarize your whole story in 500 words.</string>
            </property>
            <property name="icon" stdset="0">
             <string>fa5s.scroll</string>
@@ -742,8 +758,8 @@ QToolButton:pressed {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>94</width>
-            <height>24</height>
+            <width>98</width>
+            <height>28</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -769,6 +785,11 @@ QToolButton:pressed {
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>WordsDisplay</class>
+   <extends>QLabel</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
+  <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
@@ -778,11 +799,6 @@ QToolButton:pressed {
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.novel</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>WordsDisplay</class>
-   <extends>QLabel</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
    <class>TagsEditor</class>

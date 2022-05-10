@@ -18,10 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt5.QtCore import QObject, QEvent
+from PyQt5.QtCore import QObject, QEvent, Qt
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QHeaderView
 from overrides import overrides
-from qthandy import retain_when_hidden, ask_confirmation
+from qthandy import retain_when_hidden, ask_confirmation, transparent
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
@@ -59,10 +60,17 @@ class NovelView(AbstractNovelView):
         self.ui.wdgTitle.installEventFilter(self)
         self.ui.btnEditNovel.setHidden(True)
 
+        transparent(self.ui.textPremise.textEdit)
+        self.ui.textPremise.textEdit.setPlaceholderText('Premise')
+        self.ui.textPremise.textEdit.setFontFamily('Helvetica')
+        self.ui.textPremise.textEdit.setFontPointSize(16)
+        self.ui.textPremise.textEdit.setAlignment(Qt.AlignCenter)
+        self.ui.textPremise.textEdit.setFontWeight(QFont.Bold)
+
         self.ui.lblTitle.setText(self.novel.title)
-        self.ui.textPremise.setText(self.novel.premise)
-        self.ui.lblLoglineWords.calculateWordCount(self.novel.premise)
+        self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
         self.ui.textPremise.textEdit.textChanged.connect(self._premise_changed)
+        self._premise_changed()
         self.ui.textSynopsis.setGrammarCheckEnabled(True)
         self.ui.textPremise.setGrammarCheckEnabled(True)
 
@@ -181,7 +189,15 @@ class NovelView(AbstractNovelView):
             self.repo.update_novel(self.novel)
 
     def _premise_changed(self):
-        self.novel.premise = self.ui.textPremise.textEdit.toPlainText()
+        text = self.ui.textPremise.textEdit.toPlainText()
+        if not text:
+            self.ui.textPremise.textEdit.setFontWeight(QFont.Bold)
+            self.ui.textPremise.textEdit.setStyleSheet(
+                'border: 1px dashed darkBlue; border-radius: 6px; background-color: rgba(0, 0, 0, 0);')
+        elif not self.novel.premise:
+            transparent(self.ui.textPremise.textEdit)
+
+        self.novel.premise = text
         self.ui.lblLoglineWords.calculateWordCount(self.novel.premise)
         self.repo.update_novel(self.novel)
 
