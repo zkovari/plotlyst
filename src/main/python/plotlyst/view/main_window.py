@@ -42,6 +42,7 @@ from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
+from src.main.python.plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSidebar
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
@@ -256,6 +257,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)
         self.actionDecreaseFontSize.setIcon(IconRegistry.decrease_font_size_icon())
         self.actionDecreaseFontSize.triggered.connect(self.decrease_font_size)
+        self.actionPreview.triggered.connect(lambda: ManuscriptPreviewDialog().display(app_env.novel))
         self.actionCut.setIcon(IconRegistry.cut_icon())
         self.actionCut.triggered.connect(self._cut_text)
         self.actionCopy.setIcon(IconRegistry.copy_icon())

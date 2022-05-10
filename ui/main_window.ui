@@ -591,6 +591,7 @@
     </property>
     <addaction name="actionIncreaseFontSize"/>
     <addaction name="actionDecreaseFontSize"/>
+    <addaction name="actionPreview"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -708,6 +709,11 @@
    </property>
    <property name="toolTip">
     <string>Show all hints again. The application needs to be shut down to apply the changes</string>
+   </property>
+  </action>
+  <action name="actionPreview">
+   <property name="text">
+    <string>Manuscript preview</string>
    </property>
   </action>
  </widget>
