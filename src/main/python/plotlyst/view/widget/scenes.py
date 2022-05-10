@@ -973,9 +973,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
 
 class SceneStoryStructureWidget(QWidget):
+    BeatMimeType = 'application/story-beat'
+
     beatSelected = pyqtSignal(StoryBeat)
     beatRemovalRequested = pyqtSignal(StoryBeat)
     actsResized = pyqtSignal()
+    beatMoved = pyqtSignal(StoryBeat)
 
     def __init__(self, parent=None):
         super(SceneStoryStructureWidget, self).__init__(parent)
@@ -983,6 +986,7 @@ class SceneStoryStructureWidget(QWidget):
 
         self._checkOccupiedBeats: bool = True
         self._beatsCheckable: bool = False
+        self._beatsMoveable: bool = False
         self._removalContextMenuEnabled: bool = False
         self._actsClickable: bool = False
         self._actsResizeable: bool = False
@@ -1016,6 +1020,10 @@ class SceneStoryStructureWidget(QWidget):
     def setBeatsCheckable(self, value: bool):
         self._beatsCheckable = value
 
+    def setBeatsMoveable(self, enabled: bool):
+        self._beatsMoveable = enabled
+        self.setAcceptDrops(enabled)
+
     def setRemovalContextMenuEnabled(self, value: bool):
         self._removalContextMenuEnabled = value
 
@@ -1026,6 +1034,9 @@ class SceneStoryStructureWidget(QWidget):
         self._beatCursor = value
 
     def setNovel(self, novel: Novel):
+        def _beat(beat, btn):
+            return beat
+
         self.novel = novel
         self._acts.clear()
         self._beats.clear()
@@ -1056,7 +1067,11 @@ class SceneStoryStructureWidget(QWidget):
                 btn.toggled.connect(partial(self._beatToggled, btn))
                 btn.clicked.connect(partial(self._beatClicked, beat, btn))
                 btn.installEventFilter(self)
-                btn.setCursor(self._beatCursor)
+                if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
+                    btn.installEventFilter(DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat)))
+                    btn.setCursor(Qt.DragMoveCursor)
+                else:
+                    btn.setCursor(self._beatCursor)
                 if self._checkOccupiedBeats and beat not in occupied_beats:
                     if self._beatsCheckable:
                         btn.setCheckable(True)
@@ -1109,6 +1124,25 @@ class SceneStoryStructureWidget(QWidget):
             elif event.type() == QEvent.Leave:
                 opaque(watched, 0.2)
         return super(SceneStoryStructureWidget, self).eventFilter(watched, event)
+
+    @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasFormat(self.BeatMimeType):
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
+    def dropEvent(self, event: QDropEvent) -> None:
+        dropped_beat: StoryBeat = pickle.loads(event.mimeData().data(self.BeatMimeType))
+
+        for beat in self._beats.keys():
+            if beat == dropped_beat:
+                beat.percentage = self._percentageForX(event.pos().x() - self._beatHeight // 2)
+                self._rearrangeBeats()
+                event.accept()
+                self.beatMoved.emit(beat)
+                break
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
