@@ -27,45 +27,54 @@ from src.main.python.plotlyst.core.domain import Novel
 
 def format_manuscript(novel: Novel) -> QTextEdit:
     textedit = EnhancedTextEdit()
+    font = QFont('Times New Roman', 12)
+    textedit.setFont(font)
 
     json_client.load_manuscript(novel)
 
-    for scene in novel.scenes:
-        if not scene.manuscript:
-            continue
+    for i, chapter in enumerate(novel.chapters):
+        textedit.textCursor().insertBlock()
+        textedit.textCursor().insertText(f'Chapter {i + 1}')
+        textedit.textCursor().insertBlock()
+        scenes = novel.scenes_in_chapter(chapter)
+        for j, scene in enumerate(scenes):
+            if not scene.manuscript:
+                continue
 
-        document = QTextDocument()
-        document.setHtml(scene.manuscript.content)
-        document.setDocumentMargin(0)
+            document = QTextDocument()
+            document.setHtml(scene.manuscript.content)
+            document.setDocumentMargin(0)
 
-        cursor: QTextCursor = document.rootFrame().firstCursorPosition()
-        cursor.select(QTextCursor.Document)
-        format = QTextCharFormat()
-        font = QFont('Times New Roman', 12)
-        format.setFont(font)
-        cursor.mergeCharFormat(format)
+            cursor: QTextCursor = document.rootFrame().firstCursorPosition()
+            cursor.select(QTextCursor.Document)
+            format = QTextCharFormat()
 
-        blockFmt = QTextBlockFormat()
-        blockFmt.setTextIndent(20)
-        blockFmt.setTopMargin(0)
-        blockFmt.setBottomMargin(0)
-        blockFmt.setLeftMargin(0)
-        blockFmt.setRightMargin(0)
-        blockFmt.setLineHeight(200, QTextBlockFormat.ProportionalHeight)
+            format.setFont(font)
+            cursor.mergeCharFormat(format)
 
-        cursor.mergeBlockFormat(blockFmt)
-        cursor.clearSelection()
+            blockFmt = QTextBlockFormat()
+            blockFmt.setTextIndent(20)
+            blockFmt.setTopMargin(0)
+            blockFmt.setBottomMargin(0)
+            blockFmt.setLeftMargin(0)
+            blockFmt.setRightMargin(0)
+            blockFmt.setLineHeight(200, QTextBlockFormat.ProportionalHeight)
 
-        cursor = document.rootFrame().lastCursorPosition()
-        cursor.insertBlock()
-        cursor.movePosition(QTextCursor.NextBlock)
-        cursor.select(QTextCursor.BlockUnderCursor)
-        blockFmt = QTextBlockFormat()
-        blockFmt.setPageBreakPolicy(QTextFormat.PageBreak_AlwaysBefore)
-        cursor.mergeBlockFormat(blockFmt)
-        cursor.clearSelection()
+            cursor.mergeBlockFormat(blockFmt)
+            cursor.clearSelection()
 
-        textedit.insertHtml(document.toHtml())
+            cursor.insertBlock()
+
+            if j == len(scenes) - 1:
+                cursor = document.rootFrame().lastCursorPosition()
+                cursor.movePosition(QTextCursor.NextBlock)
+                cursor.select(QTextCursor.BlockUnderCursor)
+                blockFmt = QTextBlockFormat()
+                blockFmt.setPageBreakPolicy(QTextFormat.PageBreak_AlwaysBefore)
+                cursor.mergeBlockFormat(blockFmt)
+                cursor.clearSelection()
+
+            textedit.insertHtml(document.toHtml())
 
     textedit.setViewportMargins(0, 0, 0, 0)
 
