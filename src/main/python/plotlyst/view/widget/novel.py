@@ -403,9 +403,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
     def __initWdgPReview(self):
         self.wdgPreview.setCheckOccupiedBeats(False)
         self.wdgPreview.setBeatCursor(Qt.ArrowCursor)
+        self.wdgPreview.setBeatsMoveable(True)
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)
         self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
+        self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
 
     def _activeStructureClicked(self, structure: StoryStructure, toggled: bool):
         if not toggled:
