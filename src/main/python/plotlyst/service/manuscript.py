@@ -17,65 +17,70 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat
-from PyQt5.QtWidgets import QTextEdit
-from qttextedit import EnhancedTextEdit
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, Document
 
 
-def format_manuscript(novel: Novel) -> QTextEdit:
-    textedit = EnhancedTextEdit()
-    font = QFont('Times New Roman', 12)
-    textedit.setFont(font)
-
+def format_manuscript(novel: Novel) -> QTextDocument:
     json_client.load_manuscript(novel)
 
+    font = QFont('Times New Roman', 12)
+
+    chapter_title_block_format = QTextBlockFormat()
+    chapter_title_block_format.setAlignment(Qt.AlignCenter)
+
+    block_format = QTextBlockFormat()
+    block_format.setAlignment(Qt.AlignLeft)
+    block_format.setTextIndent(20)
+    block_format.setTopMargin(0)
+    block_format.setBottomMargin(0)
+    block_format.setLeftMargin(0)
+    block_format.setRightMargin(0)
+    block_format.setLineHeight(150, QTextBlockFormat.ProportionalHeight)
+
+    page_break_format = QTextBlockFormat()
+    page_break_format.setPageBreakPolicy(QTextFormat.PageBreak_AlwaysAfter)
+
+    char_format = QTextCharFormat()
+    char_format.setFont(font)
+
+    document = QTextDocument()
+    document.setDefaultFont(font)
+    document.setDocumentMargin(0)
+
+    cursor: QTextCursor = document.rootFrame().firstCursorPosition()
+
     for i, chapter in enumerate(novel.chapters):
-        textedit.textCursor().insertBlock()
-        textedit.textCursor().insertText(f'Chapter {i + 1}')
-        textedit.textCursor().insertBlock()
+        cursor.insertBlock(chapter_title_block_format)
+        cursor.insertText(f'Chapter {i + 1}')
+
+        cursor.insertBlock(block_format)
+
         scenes = novel.scenes_in_chapter(chapter)
         for j, scene in enumerate(scenes):
             if not scene.manuscript:
                 continue
 
-            document = QTextDocument()
-            document.setHtml(scene.manuscript.content)
-            document.setDocumentMargin(0)
+            scene_text_doc = format_document(scene.manuscript, char_format)
+            cursor.insertHtml(scene_text_doc.toHtml())
+            cursor.insertBlock(block_format)
 
-            cursor: QTextCursor = document.rootFrame().firstCursorPosition()
-            cursor.select(QTextCursor.Document)
-            format = QTextCharFormat()
+            if j == len(scenes) - 1 and i != len(novel.chapters) - 1:
+                cursor.insertBlock(page_break_format)
 
-            format.setFont(font)
-            cursor.mergeCharFormat(format)
+    return document
 
-            blockFmt = QTextBlockFormat()
-            blockFmt.setTextIndent(20)
-            blockFmt.setTopMargin(0)
-            blockFmt.setBottomMargin(0)
-            blockFmt.setLeftMargin(0)
-            blockFmt.setRightMargin(0)
-            blockFmt.setLineHeight(200, QTextBlockFormat.ProportionalHeight)
 
-            cursor.mergeBlockFormat(blockFmt)
-            cursor.clearSelection()
+def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocument:
+    text_doc = QTextDocument()
+    text_doc.setHtml(doc.content)
 
-            cursor.insertBlock()
+    cursor: QTextCursor = text_doc.rootFrame().firstCursorPosition()
+    cursor.select(QTextCursor.Document)
+    cursor.mergeCharFormat(char_format)
+    cursor.clearSelection()
 
-            if j == len(scenes) - 1:
-                cursor = document.rootFrame().lastCursorPosition()
-                cursor.movePosition(QTextCursor.NextBlock)
-                cursor.select(QTextCursor.BlockUnderCursor)
-                blockFmt = QTextBlockFormat()
-                blockFmt.setPageBreakPolicy(QTextFormat.PageBreak_AlwaysBefore)
-                cursor.mergeBlockFormat(blockFmt)
-                cursor.clearSelection()
-
-            textedit.insertHtml(document.toHtml())
-
-    textedit.setViewportMargins(0, 0, 0, 0)
-
-    return textedit
+    return text_doc

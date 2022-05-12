@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPageSize
+from PyQt5.QtGui import QPageSize, QTextDocument
 from PyQt5.QtPrintSupport import QPrintPreviewWidget, QPrinter
 from PyQt5.QtWidgets import QDialog, QTextEdit
 from qthandy import vbox
@@ -41,7 +41,10 @@ class ManuscriptPreviewDialog(QDialog):
     def display(self, novel: Novel):
         if not novel:
             return
-        textedit = format_manuscript(novel)
+        document: QTextDocument = format_manuscript(novel)
+        textedit = QTextEdit()
+        textedit.insertHtml(document.toHtml())
+        textedit.setViewportMargins(0, 0, 0, 0)
         self.printView.paintRequested.connect(partial(self._print, textedit))
         self.setWindowState(Qt.WindowMaximized)
         self.exec()
