@@ -82,12 +82,15 @@ def text_color_with_bg_color(bg_color: str) -> str:
     return 'black' if hsp > 127.5 else 'white'
 
 
-def action(text: str, icon: Optional[QIcon] = None, slot=None) -> QAction:
+def action(text: str, icon: Optional[QIcon] = None, slot=None, parent=None, checkable: bool = False) -> QAction:
     _action = QAction(text)
     if icon:
         _action.setIcon(icon)
     if slot:
         _action.triggered.connect(slot)
+    if parent:
+        _action.setParent(parent)
+    _action.setCheckable(checkable)
 
     return _action
 

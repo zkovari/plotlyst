@@ -32,6 +32,7 @@ from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout
+from qttextedit import EnhancedTextEdit
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -50,7 +51,8 @@ from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWi
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import WordsDisplay
-from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, GrammarHighlighter, GrammarHighlightStyle
+from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, GrammarHighlighter, GrammarHighlightStyle, \
+    TextEditBase
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -354,6 +356,10 @@ class WordTagHighlighter(QSyntaxHighlighter):
                     self.setFormat(spans[i][0], spans[i][1] - spans[i][0], self._adverbFormat)
 
 
+class ManuscriptTextEdit(TextEditBase):
+    pass
+
+
 class ManuscriptTextEditor(DocumentTextEditor):
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
@@ -368,6 +374,10 @@ class ManuscriptTextEditor(DocumentTextEditor):
             self.textEdit.document().setDefaultFont(QFont(family, 16))
 
         self._setDefaultStyleSheet()
+
+    @overrides
+    def _initTextEdit(self) -> EnhancedTextEdit:
+        return ManuscriptTextEdit(self)
 
     @overrides
     def _initHighlighter(self) -> QSyntaxHighlighter:

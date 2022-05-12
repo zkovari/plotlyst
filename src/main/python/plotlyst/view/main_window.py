@@ -30,7 +30,7 @@ from textstat import textstat
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender, \
@@ -127,6 +127,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if language_tool_proxy.is_set():
             language_tool_proxy.tool.close()
 
+        if self.novel:
+            self._persist_last_novel_state()
+
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelReloadRequestedEvent):
@@ -206,7 +209,15 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageLocations.layout().addWidget(self.locations_view.widget)
         self.pageNotes.layout().addWidget(self.notes_view.widget)
 
-        if self.novel.scenes:
+        if self.novel.prefs.panels.scenes_view == ScenesView.NOVEL:
+            self.btnNovel.setChecked(True)
+        elif self.novel.prefs.panels.scenes_view == ScenesView.CHARACTERS:
+            self.btnCharacters.setChecked(True)
+        elif self.novel.prefs.panels.scenes_view == ScenesView.LOCATIONS:
+            self.btnLocations.setChecked(True)
+        elif self.novel.prefs.panels.scenes_view == ScenesView.DOCS:
+            self.btnNotes.setChecked(True)
+        elif self.novel.scenes:
             self.btnScenes.setChecked(True)
         else:
             self.btnNovel.setChecked(True)
@@ -249,7 +260,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.menuFile.removeAction(self.actionRestart)
         else:
             self.actionRestart.setIcon(qtawesome.icon('mdi.restart'))
-            self.actionRestart.triggered.connect(lambda: QApplication.instance().exit(EXIT_CODE_RESTART))
+            self.actionRestart.triggered.connect(self._restart)
 
         self.actionResetHints.triggered.connect(lambda: reset_hints())
         self.actionAbout.triggered.connect(lambda: AboutDialog().exec())
@@ -324,7 +335,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.wdgDocs.setHidden(True)
 
         if self.novel:
-            self.outline_mode.setChecked(True)
+            if self.novel.prefs.panels.panel == NovelPanel.MANUSCRIPT:
+                self.manuscript_mode.setChecked(True)
+            elif self.novel.prefs.panels.panel == NovelPanel.REPORTS:
+                self.reports_mode.setChecked(True)
+            else:
+                self.outline_mode.setChecked(True)
         else:
             self.home_mode.setChecked(True)
             self.outline_mode.setDisabled(True)
@@ -459,3 +475,34 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _paste_text(self):
         if self._current_text_widget:
             self._current_text_widget.paste()
+
+    def _restart(self):
+        if self.novel:
+            self._persist_last_novel_state()
+        QApplication.instance().exit(EXIT_CODE_RESTART)
+
+    def _persist_last_novel_state(self):
+        if not self.novel:
+            return
+
+        if self.stackMainPanels.currentWidget() == self.pageManuscript:
+            panel = NovelPanel.MANUSCRIPT
+        elif self.stackMainPanels.currentWidget() == self.pageReports:
+            panel = NovelPanel.REPORTS
+        else:
+            panel = NovelPanel.OUTLINE
+        self.novel.prefs.panels.panel = panel
+
+        if self.stackedWidget.currentWidget() == self.pageNovel:
+            scenes_view = ScenesView.NOVEL
+        elif self.stackedWidget.currentWidget() == self.pageCharacters:
+            scenes_view = ScenesView.CHARACTERS
+        elif self.stackedWidget.currentWidget() == self.pageLocations:
+            scenes_view = ScenesView.LOCATIONS
+        elif self.stackedWidget.currentWidget() == self.pageNotes:
+            scenes_view = ScenesView.DOCS
+        else:
+            scenes_view = None
+        self.novel.prefs.panels.scenes_view = scenes_view
+
+        self.repo.update_novel(self.novel)

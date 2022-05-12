@@ -973,8 +973,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
 
 class SceneStoryStructureWidget(QWidget):
+    BeatMimeType = 'application/story-beat'
+
     beatSelected = pyqtSignal(StoryBeat)
     beatRemovalRequested = pyqtSignal(StoryBeat)
+    actsResized = pyqtSignal()
+    beatMoved = pyqtSignal(StoryBeat)
 
     def __init__(self, parent=None):
         super(SceneStoryStructureWidget, self).__init__(parent)
@@ -982,12 +986,16 @@ class SceneStoryStructureWidget(QWidget):
 
         self._checkOccupiedBeats: bool = True
         self._beatsCheckable: bool = False
+        self._beatsMoveable: bool = False
         self._removalContextMenuEnabled: bool = False
+        self._actsClickable: bool = False
+        self._actsResizeable: bool = False
         self._beatCursor = Qt.PointingHandCursor
         self.novel: Optional[Novel] = None
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
         self._containers: Dict[StoryBeat, QPushButton] = {}
+        self._actsSplitter: Optional[QSplitter] = None
         self.btnCurrentScene = QToolButton(self)
         self._currentScenePercentage = 1
         self.btnCurrentScene.setIcon(IconRegistry.circle_icon(color='red'))
@@ -1012,6 +1020,10 @@ class SceneStoryStructureWidget(QWidget):
     def setBeatsCheckable(self, value: bool):
         self._beatsCheckable = value
 
+    def setBeatsMoveable(self, enabled: bool):
+        self._beatsMoveable = enabled
+        self.setAcceptDrops(enabled)
+
     def setRemovalContextMenuEnabled(self, value: bool):
         self._removalContextMenuEnabled = value
 
@@ -1022,6 +1034,9 @@ class SceneStoryStructureWidget(QWidget):
         self._beatCursor = value
 
     def setNovel(self, novel: Novel):
+        def _beat(beat, btn):
+            return beat
+
         self.novel = novel
         self._acts.clear()
         self._beats.clear()
@@ -1052,7 +1067,11 @@ class SceneStoryStructureWidget(QWidget):
                 btn.toggled.connect(partial(self._beatToggled, btn))
                 btn.clicked.connect(partial(self._beatClicked, beat, btn))
                 btn.installEventFilter(self)
-                btn.setCursor(self._beatCursor)
+                if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
+                    btn.installEventFilter(DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat)))
+                    btn.setCursor(Qt.DragMoveCursor)
+                else:
+                    btn.setCursor(self._beatCursor)
                 if self._checkOccupiedBeats and beat not in occupied_beats:
                     if self._beatsCheckable:
                         btn.setCheckable(True)
@@ -1061,32 +1080,35 @@ class SceneStoryStructureWidget(QWidget):
             if not beat.enabled:
                 btn.setHidden(True)
 
-        splitter = QSplitter(self._wdgLine)
-        splitter.setContentsMargins(0, 0, 0, 0)
-        splitter.setChildrenCollapsible(False)
-        splitter.setHandleWidth(1)
-        self._wdgLine.layout().addWidget(splitter)
+        self._actsSplitter = QSplitter(self._wdgLine)
+        self._actsSplitter.setContentsMargins(0, 0, 0, 0)
+        self._actsSplitter.setChildrenCollapsible(False)
+        self._actsSplitter.setHandleWidth(1)
+        self._wdgLine.layout().addWidget(self._actsSplitter)
 
         act = self._actButton('Act 1', ACT_ONE_COLOR, left=True)
         self._acts.append(act)
         self._wdgLine.layout().addWidget(act)
-        splitter.addWidget(act)
+        self._actsSplitter.addWidget(act)
         act = self._actButton('Act 2', ACT_TWO_COLOR)
         self._acts.append(act)
-        splitter.addWidget(act)
+        self._actsSplitter.addWidget(act)
 
         act = self._actButton('Act 3', ACT_THREE_COLOR, right=True)
         self._acts.append(act)
-        splitter.addWidget(act)
+        self._actsSplitter.addWidget(act)
+        for btn in self._acts:
+            btn.setEnabled(self._actsClickable)
 
         beats = self.novel.active_story_structure.act_beats()
         if not len(beats) == 2:
             return emit_critical('Only 3 acts are supported at the moment for story structure widget')
 
-        splitter.setSizes([10 * beats[0].percentage,
-                           10 * (beats[1].percentage - beats[0].percentage),
-                           10 * (100 - beats[1].percentage)])
-        splitter.setDisabled(True)
+        self._actsSplitter.setSizes([10 * beats[0].percentage,
+                                     10 * (beats[1].percentage - beats[0].percentage),
+                                     10 * (100 - beats[1].percentage)])
+        self._actsSplitter.setEnabled(self._actsResizeable)
+        self._actsSplitter.splitterMoved.connect(self._actResized)
         self.update()
 
     @overrides
@@ -1104,19 +1126,44 @@ class SceneStoryStructureWidget(QWidget):
         return super(SceneStoryStructureWidget, self).eventFilter(watched, event)
 
     @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasFormat(self.BeatMimeType):
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
+    def dropEvent(self, event: QDropEvent) -> None:
+        dropped_beat: StoryBeat = pickle.loads(event.mimeData().data(self.BeatMimeType))
+
+        for beat in self._beats.keys():
+            if beat == dropped_beat:
+                beat.percentage = self._percentageForX(event.pos().x() - self._beatHeight // 2)
+                self._rearrangeBeats()
+                event.accept()
+                self.beatMoved.emit(beat)
+                break
+
+    @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
+        self._rearrangeBeats()
+        if self._actsResizeable and self._acts:
+            self._acts[0].setMinimumWidth(max(self._xForPercentage(15), 1))
+            self._acts[0].setMaximumWidth(self._xForPercentage(30))
+            self._acts[2].setMinimumWidth(max(self._xForPercentage(10), 1))
+            self._acts[2].setMaximumWidth(self._xForPercentage(30))
+
+    def _rearrangeBeats(self):
         for beat, btn in self._beats.items():
             btn.setGeometry(self._xForPercentage(beat.percentage), self._lineHeight,
                             self._beatHeight,
                             self._beatHeight)
-
         for beat, btn in self._containers.items():
             x = self._xForPercentage(beat.percentage)
             btn.setGeometry(x + self._beatHeight // 2,
                             self._lineHeight + self._beatHeight + self._containerTopMargin,
                             self._xForPercentage(beat.percentage_end) - x,
                             self._beatHeight)
-
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
         if self.btnCurrentScene:
             self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
@@ -1127,6 +1174,9 @@ class SceneStoryStructureWidget(QWidget):
     def _xForPercentage(self, percentage: int) -> int:
         return int(self.width() * percentage / 100 - self._lineHeight // 2)
 
+    def _percentageForX(self, x: int) -> float:
+        return (x + self._lineHeight // 2) * 100 / self.width()
+
     def uncheckActs(self):
         for act in self._acts:
             act.setChecked(False)
@@ -1135,8 +1185,14 @@ class SceneStoryStructureWidget(QWidget):
         self._acts[act - 1].setChecked(checked)
 
     def setActsClickable(self, clickable: bool):
+        self._actsClickable = clickable
         for act in self._acts:
             act.setEnabled(clickable)
+
+    def setActsResizeable(self, enabled: bool):
+        self._actsResizeable = enabled
+        if self._actsSplitter:
+            self._actsSplitter.setEnabled(self._actsResizeable)
 
     def highlightBeat(self, beat: StoryBeat):
         self.clearHighlights()
@@ -1219,15 +1275,6 @@ class SceneStoryStructureWidget(QWidget):
         else:
             qtanim.fade_out(btn)
 
-    def _xForAct(self, act: int):
-        if act == 1:
-            return self.rect().x() + self._margin
-        width = self.rect().width() - 2 * self._margin
-        if act == 2:
-            return width * 0.2 - 8
-        if act == 3:
-            return width * 0.75 - 8
-
     def _actButton(self, text: str, color: str, left: bool = False, right: bool = False) -> QPushButton:
         act = QPushButton(self)
         act.setText(text)
@@ -1268,6 +1315,26 @@ class SceneStoryStructureWidget(QWidget):
             builder = PopupMenuBuilder.from_widget_position(self, self.mapFromGlobal(QCursor.pos()))
             builder.add_action('Remove', IconRegistry.trash_can_icon(), lambda: self.beatRemovalRequested.emit(beat))
             builder.popup()
+
+    def _actResized(self, pos: int, index: int):
+        old_percentage = 0
+        new_percentage = 0
+        for beat in self._beats.keys():
+            if beat.ends_act and beat.act == index:
+                old_percentage = beat.percentage
+                beat.percentage = self._percentageForX(pos - self._beatHeight // 2)
+                new_percentage = beat.percentage
+                break
+
+        if new_percentage:
+            for con in self._containers:
+                if con.percentage == old_percentage:
+                    con.percentage = new_percentage
+                elif con.percentage_end == old_percentage:
+                    con.percentage_end = new_percentage
+
+        self._rearrangeBeats()
+        self.actsResized.emit()
 
 
 class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):

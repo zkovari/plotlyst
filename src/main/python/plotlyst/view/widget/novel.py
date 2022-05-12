@@ -30,7 +30,7 @@ from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, c
     margins, italic, btn_popup_menu, ask_confirmation
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    three_act_structure, save_the_cat, weiland_10_beats, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
+    three_act_structure, save_the_cat, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, Plot, PlotType, PlotValue
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
@@ -214,7 +214,6 @@ class StoryStructureSelector(QWidget, Ui_StoryStructureSelector):
         self.setupUi(self)
         self.novel: Optional[Novel] = None
         self.cb3act.clicked.connect(partial(self.structureClicked.emit, three_act_structure))
-        self.cbWeiland10Beats.clicked.connect(partial(self.structureClicked.emit, weiland_10_beats))
         self.cbSaveTheCat.clicked.connect(partial(self.structureClicked.emit, save_the_cat))
         self.buttonGroup.buttonToggled.connect(self._btnToggled)
 
@@ -222,14 +221,11 @@ class StoryStructureSelector(QWidget, Ui_StoryStructureSelector):
         self.novel = novel
 
         self.cb3act.setChecked(False)
-        self.cbWeiland10Beats.setChecked(False)
         self.cbSaveTheCat.setChecked(False)
 
         for structure in self.novel.story_structures:
             if structure.id == three_act_structure.id:
                 self.cb3act.setChecked(True)
-            elif structure.id == weiland_10_beats.id:
-                self.cbWeiland10Beats.setChecked(True)
             elif structure.id == save_the_cat.id:
                 self.cbSaveTheCat.setChecked(True)
 
@@ -407,6 +403,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
     def __initWdgPReview(self):
         self.wdgPreview.setCheckOccupiedBeats(False)
         self.wdgPreview.setBeatCursor(Qt.ArrowCursor)
+        self.wdgPreview.setBeatsMoveable(True)
+        self.wdgPreview.setActsClickable(False)
+        self.wdgPreview.setActsResizeable(True)
+        self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
+        self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
 
     def _activeStructureClicked(self, structure: StoryStructure, toggled: bool):
         if not toggled:

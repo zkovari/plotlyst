@@ -45,7 +45,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="pageOutline">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -519,7 +519,6 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="pageDocuments"/>
       <widget class="QWidget" name="pageComments">
        <layout class="QVBoxLayout" name="verticalLayout_9">
         <property name="spacing">

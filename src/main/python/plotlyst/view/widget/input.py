@@ -43,6 +43,7 @@ from src.main.python.plotlyst.events import LanguageToolSet
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.service.grammar import language_tool_proxy, dictionary
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
@@ -170,6 +171,7 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
 
     @overrides
     def highlightBlock(self, text: str) -> None:
+        data = self._currentblockData()
         if self._checkEnabled and self._language_tool:
             matches = self._language_tool.check(text)
             misspellings = []
@@ -179,8 +181,9 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
                 self.setFormat(m.offset, m.errorLength,
                                self._formats_per_issue.get(m.ruleIssueType, self._grammar_format))
                 misspellings.append((m.offset, m.errorLength, m.replacements, m.message, m.ruleIssueType))
-            data = self._currentblockData()
             data.misspellings = misspellings
+        else:
+            data.misspellings.clear()
 
     def asyncRehighlight(self):
         if self._checkEnabled and self._language_tool:
@@ -247,10 +250,10 @@ class CharacterContentAssistMenu(QMenu):
         self.characterSelected.emit(char)
 
 
-class _TextEdit(EnhancedTextEdit):
+class TextEditBase(EnhancedTextEdit):
 
     def __init__(self, parent=None):
-        super(_TextEdit, self).__init__(parent)
+        super(TextEditBase, self).__init__(parent)
         self._blockStatistics = BlockStatistics(self.document())
 
     def statistics(self) -> TextStatistics:
@@ -265,7 +268,7 @@ class _TextEdit(EnhancedTextEdit):
 
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        super(_TextEdit, self).keyPressEvent(event)
+        super(TextEditBase, self).keyPressEvent(event)
         if event.key() == Qt.Key_Space and event.modifiers() & Qt.ControlModifier:
             menu = CharacterContentAssistMenu(self)
             cursor = self.textCursor()
@@ -278,7 +281,7 @@ class _TextEdit(EnhancedTextEdit):
 
     @overrides
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        super(_TextEdit, self).mouseMoveEvent(event)
+        super(TextEditBase, self).mouseMoveEvent(event)
         cursor = self.cursorForPosition(event.pos())
         if cursor.atBlockStart() or cursor.atBlockEnd():
             QApplication.restoreOverrideCursor()
@@ -293,7 +296,7 @@ class _TextEdit(EnhancedTextEdit):
 
     @overrides
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        super(_TextEdit, self).mousePressEvent(event)
+        super(TextEditBase, self).mousePressEvent(event)
         QApplication.restoreOverrideCursor()
         cursor = self.cursorForPosition(event.pos())
         if cursor.atBlockStart() or cursor.atBlockEnd():
@@ -350,6 +353,20 @@ class _TextEdit(EnhancedTextEdit):
         cursor.removeSelectedText()
         cursor.insertText(character.name)
         cursor.endEditBlock()
+
+
+class DocumentTextEdit(TextEditBase):
+    grammarCheckToggled = pyqtSignal(bool)
+
+    @overrides
+    def createEnhancedContextMenu(self, pos: QPoint) -> QMenu:
+        menu = super(DocumentTextEdit, self).createEnhancedContextMenu(pos)
+
+        menu.addSeparator()
+        grammar_action = action('Grammar check', slot=self.grammarCheckToggled.emit, parent=menu, checkable=True)
+        grammar_action.setChecked(app_env.novel.prefs.docs.grammar_check)
+        menu.addAction(grammar_action)
+        return menu
 
 
 class CapitalizationEventFilter(QObject):
@@ -422,7 +439,19 @@ class DocumentTextEditor(RichTextEditor):
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
-        return _TextEdit(self)
+        def grammarCheckToggled(toggled: bool):
+            app_env.novel.prefs.docs.grammar_check = toggled
+            RepositoryPersistenceManager.instance().update_novel(app_env.novel)
+
+            self.setGrammarCheckEnabled(toggled)
+            if toggled:
+                self.asyncCheckGrammer()
+            else:
+                self.checkGrammar()
+
+        textedit = DocumentTextEdit(self)
+        textedit.grammarCheckToggled.connect(grammarCheckToggled)
+        return textedit
 
     def _initHighlighter(self) -> QSyntaxHighlighter:
         return GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
