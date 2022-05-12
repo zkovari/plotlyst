@@ -49,6 +49,7 @@ from src.main.python.plotlyst.model.distribution import CharactersScenesDistribu
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
     VisibilityToggleEventFilter, hmax, link_buttons_to_pages
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
@@ -65,7 +66,6 @@ from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avata
 from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):

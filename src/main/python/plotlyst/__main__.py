@@ -32,7 +32,7 @@ try:
     from src.main.python.plotlyst.resources import resource_registry
     from src.main.python.plotlyst.settings import settings
     from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
-    from src.main.python.plotlyst.worker.persistence import flush_or_fail
+    from src.main.python.plotlyst.service.persistence import flush_or_fail
 
     from PyQt5 import QtWidgets
     from PyQt5.QtCore import Qt

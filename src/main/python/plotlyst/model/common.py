@@ -28,8 +28,8 @@ from overrides import overrides
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import SelectionItem, Novel, Scene
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 def emit_column_changed_in_tree(model: TreeItemModel, column: int, parent: QModelIndex):
@@ -115,7 +115,7 @@ class SelectionItemsModel(QAbstractTableModel):
                 self.uncheckItem(item)
             else:
                 self.checkItem(item)
-            
+
             self.modelReset.emit()
 
     def uncheckAll(self):

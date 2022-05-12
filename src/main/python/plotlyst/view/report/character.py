@@ -27,13 +27,13 @@ from overrides import overrides
 from qthandy import clear_layout, vspacer, hbox, transparent, vbox
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, SceneType
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton
 from src.main.python.plotlyst.view.widget.chart import BaseChart
-from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class CharacterReport(AbstractReport, Ui_CharacterReport):

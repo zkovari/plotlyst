@@ -28,13 +28,13 @@ from src.main.python.plotlyst.core.domain import NovelDescriptor, Event
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
+from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import NovelCard
-from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
 
 class HomeView(AbstractView):
