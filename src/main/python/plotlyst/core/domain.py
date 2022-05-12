@@ -1001,8 +1001,14 @@ def default_tags() -> Dict[TagType, List[Tag]]:
 
 
 @dataclass
+class DocsPreferences:
+    grammar_check: bool = True
+
+
+@dataclass
 class NovelPreferences:
     active_stage_id: Optional[uuid.UUID] = None
+    docs: DocsPreferences = DocsPreferences()
 
 
 @dataclass
