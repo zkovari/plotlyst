@@ -1005,10 +1005,31 @@ class DocsPreferences:
     grammar_check: bool = True
 
 
+class NovelPanel(Enum):
+    OUTLINE = 'outline'
+    MANUSCRIPT = 'manuscript'
+    REPORTS = 'reports'
+
+
+class ScenesView(Enum):
+    NOVEL = 'novel'
+    CHARACTERS = 'characters'
+    SCENES = 'scenes'
+    LOCATIONS = 'locations'
+    DOCS = 'docs'
+
+
+@dataclass
+class PanelPreferences:
+    panel: NovelPanel = NovelPanel.OUTLINE
+    scenes_view: Optional[ScenesView] = None
+
+
 @dataclass
 class NovelPreferences:
     active_stage_id: Optional[uuid.UUID] = None
     docs: DocsPreferences = DocsPreferences()
+    panels: PanelPreferences = PanelPreferences()
 
 
 @dataclass
