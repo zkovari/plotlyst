@@ -22,7 +22,7 @@ from functools import partial
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPageSize, QTextDocument
 from PyQt5.QtPrintSupport import QPrintPreviewWidget, QPrinter
-from PyQt5.QtWidgets import QDialog, QTextEdit
+from PyQt5.QtWidgets import QDialog
 from qthandy import vbox
 
 from src.main.python.plotlyst.core.domain import Novel
@@ -42,14 +42,11 @@ class ManuscriptPreviewDialog(QDialog):
         if not novel:
             return
         document: QTextDocument = format_manuscript(novel)
-        textedit = QTextEdit()
-        textedit.insertHtml(document.toHtml())
-        textedit.setViewportMargins(0, 0, 0, 0)
-        self.printView.paintRequested.connect(partial(self._print, textedit))
+        self.printView.paintRequested.connect(partial(self._print, document))
         self.setWindowState(Qt.WindowMaximized)
         self.exec()
 
-    def _print(self, textedit: QTextEdit, device: QPrinter):
+    def _print(self, document: QTextDocument, device: QPrinter):
         device.setPageSize(QPageSize(QPageSize.A4))
         device.setPageMargins(0, 0, 0, 0, QPrinter.Inch)
-        textedit.print_(device)
+        document.print_(device)
