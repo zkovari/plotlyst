@@ -1141,3 +1141,7 @@ class Novel(NovelDescriptor):
         self.scenes.insert(i + 1, new_scene)
 
         return new_scene
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))

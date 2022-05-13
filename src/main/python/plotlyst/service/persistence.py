@@ -167,34 +167,48 @@ def flush_or_fail():
 
 def _persist_operations(operations: List[Operation]):
     updated_doc_cache: Set[Document] = set()
+    updated_novel_cache: Set[Novel] = set()
+    updated_scene_cache: Set[Scene] = set()
+    updated_character_cache: Set[Character] = set()
 
     for op in operations:
+        # scenes
         if op.scene and op.type == OperationType.UPDATE:
-            client.update_scene(op.scene)
+            if op.scene not in updated_scene_cache:
+                client.update_scene(op.scene)
+                updated_scene_cache.add(op.scene)
         elif op.scene and op.novel and op.type == OperationType.INSERT:
             client.insert_scene(op.novel, op.scene)
         elif op.scene and op.novel and op.type == OperationType.DELETE:
             client.delete_scene(op.novel, op.scene)
 
+        # characters
         elif op.character and op.type == OperationType.UPDATE:
-            client.update_character(op.character, op.update_image)
+            if op.character not in updated_character_cache:
+                client.update_character(op.character, op.update_image)
+                updated_character_cache.add(op.character)
         elif op.character and op.novel and op.type == OperationType.INSERT:
             client.insert_character(op.novel, op.character)
         elif op.character and op.novel and op.type == OperationType.DELETE:
             client.delete_character(op.novel, op.character)
 
-        elif op.doc and op.type == OperationType.UPDATE and op.doc not in updated_doc_cache:
-            json_client.save_document(op.novel, op.doc)
-            updated_doc_cache.add(op.doc)
+        # novel and document
+        elif op.doc and op.type == OperationType.UPDATE:
+            if op.doc not in updated_doc_cache:
+                json_client.save_document(op.novel, op.doc)
+                updated_doc_cache.add(op.doc)
         elif op.doc and op.type == OperationType.DELETE:
             json_client.delete_document(op.novel, op.doc)
         elif op.novel and op.type == OperationType.UPDATE:
-            client.update_novel(op.novel)
+            if op.novel not in updated_novel_cache:
+                client.update_novel(op.novel)
+                updated_novel_cache.add(op.novel)
         elif op.novel and op.type == OperationType.INSERT:
             client.insert_novel(op.novel)
         elif op.novel and op.type == OperationType.DELETE:
             client.delete_novel(op.novel)
 
+        # basic novel descriptor
         elif op.novel_descriptor and op.type == OperationType.UPDATE:
             client.update_project_novel(op.novel_descriptor)
 
