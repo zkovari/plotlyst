@@ -67,6 +67,7 @@ class SceneEditor(QObject):
             self._emoji_font = emoji_font(20)
 
         self.ui.btnAttributes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+        self.ui.btnAttributes.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
         self.ui.btnNotes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
         self.ui.btnBuilder.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
