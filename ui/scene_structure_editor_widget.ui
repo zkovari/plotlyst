@@ -53,31 +53,6 @@
          <property name="bottomMargin">
           <number>5</number>
          </property>
-         <item alignment="Qt::AlignTop">
-          <widget class="QToolButton" name="btnInventory">
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Toggle scene beats inventory&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="QFrame" name="wdgInventory">
            <property name="sizePolicy">
@@ -418,7 +393,7 @@ Clock</string>
          </property>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_13">
-           <item alignment="Qt::AlignRight">
+           <item>
             <widget class="QWidget" name="wdgTypes" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout_10">
               <property name="spacing">
@@ -439,10 +414,65 @@ Clock</string>
              </layout>
             </widget>
            </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="CharacterLinkWidget" name="wdgAgendaCharacter" native="true"/>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <property name="leftMargin">
+            <number>20</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="font">
+              <font>
+               <underline>true</underline>
+              </font>
+             </property>
+             <property name="text">
+              <string>Agenda character:</string>
+             </property>
+            </widget>
+           </item>
+           <item alignment="Qt::AlignLeft">
+            <widget class="CharacterLinkWidget" name="wdgAgendaCharacter" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QWidget" name="wdgGoalConflictContainer" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_11">
@@ -500,9 +530,6 @@ Clock</string>
              <property name="spacing">
               <number>1</number>
              </property>
-             <item>
-              <widget class="QWidget" name="wdgGoalConflictContainer" native="true"/>
-             </item>
              <item>
               <widget class="QWidget" name="wdgBeginningLabel_2" native="true">
                <layout class="QHBoxLayout" name="horizontalLayout_14">
@@ -888,22 +915,5 @@ Clock</string>
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>btnInventory</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>wdgInventory</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>30</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>13</x>
-     <y>52</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

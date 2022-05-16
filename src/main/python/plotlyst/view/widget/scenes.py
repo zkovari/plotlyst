@@ -591,7 +591,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.novel: Optional[Novel] = None
         self.scene: Optional[Scene] = None
 
-        self.btnInventory.setIcon(IconRegistry.from_name('mdi.file-tree-outline'))
+        self.wdgInventory.setHidden(True)
         decr_font(self.lblBeatsInventory)
         underline(self.lblBeatsInventory)
 
@@ -639,7 +639,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
-        self.wdgAgendaCharacter.setDefaultText('Agenda character')
+        self.wdgAgendaCharacter.setDefaultText('Select character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
         self.unsetCharacterSlot = None
 
@@ -654,7 +654,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._toggleCharacterStatus()
 
         self.reset()
-        self.btnInventory.setChecked(False)
 
         self._checkSceneType()
 
@@ -833,7 +832,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self.btnScene.setVisible(True)
             self.btnSequel.setChecked(False)
             self.btnSequel.setVisible(True)
-            self.btnInventory.setChecked(True)
 
     def _setEmotionColorChange(self):
         color_start = self.btnEmotionStart.color()
@@ -926,7 +924,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                                               placeholder='Describe the middle part of this scene')
             bottom = SceneStructureItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.BEAT),
                                               placeholder='Describe the ending of this scene')
-            self.btnInventory.setChecked(True)
             if self.btnScene.isHidden():
                 qtanim.fade_in(self.btnScene)
             if self.btnSequel.isHidden():
