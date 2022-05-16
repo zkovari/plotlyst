@@ -439,7 +439,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 class SceneGoalItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super(SceneGoalItemWidget, self).__init__(novel, scene_structure_item,
-                                                  placeholder='Goal of the character is clearly stated to the reader',
+                                                  placeholder='The character takes an action to achieve their goal',
                                                   parent=parent)
         self.btnIcon.setIcon(IconRegistry.goal_icon())
 
@@ -482,7 +482,7 @@ class DilemmaSceneItemWidget(SceneStructureItemWidget):
 class DecisionSceneItemWidget(SceneStructureItemWidget):
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super().__init__(novel, scene_structure_item,
-                         placeholder='The character comes up with a new goal and might act right away',
+                         placeholder='The character comes up with a new plan and might act right away',
                          parent=parent)
         self.btnIcon.setIcon(IconRegistry.decision_icon())
 
