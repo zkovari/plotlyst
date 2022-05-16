@@ -30,7 +30,7 @@ from PyQt5.QtGui import QDragEnterEvent, QDragLeaveEvent, \
     QResizeEvent, QCursor, QColor, QDragMoveEvent, QDropEvent, QMouseEvent
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QHBoxLayout, QSplitter, \
-    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit
+    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import busy, margins, vspacer
@@ -58,6 +58,7 @@ from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton
@@ -301,7 +302,7 @@ class SceneTagSelector(QWidget):
         flow(self.wdgTags)
         self.setStyleSheet('#wdgTags {background-color: white;}')
 
-        self.layout().addWidget(self.btnSelect, alignment=Qt.AlignTop)
+        self.layout().addWidget(group(self.btnSelect, QLabel('Tags:'), margin=0), alignment=Qt.AlignTop)
         self.layout().addWidget(self.wdgTags)
 
     def setScene(self, scene: Scene):
