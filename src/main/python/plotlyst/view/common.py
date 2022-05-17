@@ -28,7 +28,7 @@ from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QDrag
 from PyQt5.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QAbstractButton, \
-    QStackedWidget, QAbstractScrollArea, QLineEdit
+    QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import opaque
@@ -280,3 +280,11 @@ def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
 
 def pointy(widget):
     widget.setCursor(Qt.PointingHandCursor)
+
+
+def autoresize_col(view: QAbstractItemView, col: int):
+    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+
+
+def stretch_col(view: QAbstractItemView, col: int):
+    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.Stretch)
