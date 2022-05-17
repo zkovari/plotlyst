@@ -6,45 +6,53 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>370</width>
-    <height>138</height>
+    <width>200</width>
+    <height>150</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>160</width>
+    <height>150</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>200</width>
+    <height>150</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>3</number>
+    <number>0</number>
    </property>
    <property name="leftMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="topMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="rightMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <item>
-    <layout class="QHBoxLayout" name="layoutTop">
-     <property name="spacing">
-      <number>2</number>
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
-     <item>
-      <widget class="QToolButton" name="btnPlaceholder">
-       <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-    </layout>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>197</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item>
     <layout class="QHBoxLayout" name="layoutMiddle">
@@ -61,7 +69,7 @@
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>4</number>
+         <number>0</number>
         </property>
         <property name="rightMargin">
          <number>0</number>
@@ -69,55 +77,55 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
-        <item alignment="Qt::AlignTop">
-         <widget class="QToolButton" name="btnIcon">
+        <item>
+         <widget class="QTextEdit" name="text">
           <property name="styleSheet">
-           <string notr="true">border: 0px;</string>
+           <string notr="true"/>
           </property>
-          <property name="text">
-           <string/>
+          <property name="verticalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
          </widget>
         </item>
+        <item>
+         <layout class="QHBoxLayout" name="layoutTop">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item alignment="Qt::AlignRight">
+           <widget class="QToolButton" name="btnDelete">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Remove beat</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">border: 0px;</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>14</width>
+              <height>14</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
        </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="AutoAdjustableTextEdit" name="text"/>
-     </item>
-     <item alignment="Qt::AlignTop">
-      <widget class="QToolButton" name="btnDelete">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="toolTip">
-        <string>Remove beat</string>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>14</width>
-         <height>14</height>
-        </size>
-       </property>
       </widget>
      </item>
     </layout>
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>AutoAdjustableTextEdit</class>
-   <extends>QTextEdit</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
