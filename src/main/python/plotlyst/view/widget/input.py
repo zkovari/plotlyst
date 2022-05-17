@@ -719,6 +719,9 @@ class MenuWithDescription(QMenu):
         self._action.setDefaultWidget(self._tblActions)
         super().addAction(self._action)
 
+        self.aboutToShow.connect(lambda: self._model.unfreeze())
+        self.aboutToHide.connect(lambda: self._model.freeze())
+
     @overrides
     def addAction(self, action: QAction, description: str = ''):
         self._model.addAction(action, description)
@@ -734,6 +737,7 @@ class MenuWithDescription(QMenu):
         def __init__(self, parent=None):
             super().__init__(parent)
             self._actions: List[Tuple[QAction, str]] = []
+            self._frozen: bool = True
 
         @overrides
         def columnCount(self, parent: QModelIndex = ...) -> int:
@@ -745,6 +749,11 @@ class MenuWithDescription(QMenu):
 
         @overrides
         def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+            if self._frozen:
+                return
+            if not index.isValid():
+                return
+
             if role == Qt.DisplayRole:
                 if index.column() == 0:
                     return self._actions[index.row()][index.column()].text()
@@ -772,3 +781,10 @@ class MenuWithDescription(QMenu):
 
         def action(self, index: QModelIndex) -> QAction:
             return self._actions[index.row()][0]
+
+        def freeze(self):
+            self._frozen = True
+
+        def unfreeze(self):
+            self._frozen = False
+            self.modelReset.emit()
