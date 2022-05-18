@@ -67,6 +67,8 @@ from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
 
 
 class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
+    selected = pyqtSignal(SceneOutcome)
+
     def __init__(self, scene_structure_item: SceneStructureItem, parent=None):
         super(SceneOutcomeSelector, self).__init__(parent)
         self.scene_structure_item = scene_structure_item
@@ -91,6 +93,8 @@ class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
             self.scene_structure_item.outcome = SceneOutcome.RESOLUTION
         elif self.btnTradeOff.isChecked():
             self.scene_structure_item.outcome = SceneOutcome.TRADE_OFF
+
+        self.selected.emit(self.scene_structure_item.outcome)
 
 
 class ScenePlotValueChargeWidget(QWidget):
@@ -353,13 +357,13 @@ BeatDescriptions = {SceneStructureItemType.BEAT: 'General beat in this scene',
                     }
 
 
-def beat_icon(beat_type: SceneStructureItemType) -> QIcon:
+def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_off: bool = False) -> QIcon:
     if beat_type == SceneStructureItemType.GOAL:
         return IconRegistry.goal_icon()
     elif beat_type == SceneStructureItemType.CONFLICT:
         return IconRegistry.conflict_icon()
     elif beat_type == SceneStructureItemType.OUTCOME:
-        return IconRegistry.action_scene_icon()
+        return IconRegistry.action_scene_icon(resolved, trade_off)
     elif beat_type == SceneStructureItemType.REACTION:
         return IconRegistry.reaction_icon()
     elif beat_type == SceneStructureItemType.DILEMMA:
@@ -391,6 +395,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.beat = scene_structure_item
         self.setupUi(self)
         self._outcome = SceneOutcomeSelector(self.beat)
+        self._outcome.selected.connect(self._outcomeChanged)
         self.layoutTop.insertWidget(0, self._outcome)
 
         self.btnIcon = QToolButton(self)
@@ -419,9 +424,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         if self.beat.type != beatType:
             self.beat.type = beatType
             self._initStyle()
-        color = QColor(self._color())
-        qtanim.glow(self.btnIcon, color=color)
-        qtanim.glow(self.text, color=color)
+        self._glow()
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
@@ -438,11 +441,14 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     def _initStyle(self):
         self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
         self.text.setPlaceholderText(BeatDescriptions[self.beat.type])
-        self.btnIcon.setIcon(beat_icon(self.beat.type))
+        self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
+                                       trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
+
+        color = self._color()
         self.btnIcon.setStyleSheet(f'''
                     QToolButton {{
                                     background-color: white;
-                                    border: 2px solid {self._color()};
+                                    border: 2px solid {color};
                                     border-radius: 18px; padding: 4px;
                                 }}
                     QToolButton:pressed {{
@@ -451,7 +457,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
                     ''')
 
         self.text.setStyleSheet(f'''
-                    border: 2px solid {self._color()};
+                    border: 2px solid {color};
                     border-radius: 3px;
                     ''')
 
@@ -461,7 +467,12 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         elif self.beat.type == SceneStructureItemType.CONFLICT:
             return '#f3a712'
         elif self.beat.type == SceneStructureItemType.OUTCOME:
-            return '#fe4a49'
+            if self.beat.outcome == SceneOutcome.TRADE_OFF:
+                return '#832161'
+            elif self.beat.outcome == SceneOutcome.RESOLUTION:
+                return '#0b6e4f'
+            else:
+                return '#fe4a49'
         elif self.beat.type == SceneStructureItemType.DECISION:
             return '#3cdbd3'
         elif self.beat.type == SceneStructureItemType.HOOK:
@@ -488,6 +499,15 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     def __destroy(self):
         self.parent().layout().removeWidget(self)
         gc(self)
+
+    def _outcomeChanged(self):
+        self._initStyle()
+        self._glow()
+
+    def _glow(self):
+        color = QColor(self._color())
+        qtanim.glow(self.btnIcon, color=color)
+        qtanim.glow(self.text, color=color)
 
 
 class _SceneTypeButton(QPushButton):
