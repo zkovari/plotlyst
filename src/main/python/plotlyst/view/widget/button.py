@@ -156,6 +156,20 @@ class FadeOutButtonGroup(QButtonGroup):
     def setFadeInDuration(self, duration: int):
         self._fadeInDuration = duration
 
+    def toggle(self, btn: QAbstractButton):
+        btn.setChecked(not btn.isChecked())
+        for other_btn in self.buttons():
+            if other_btn is btn:
+                continue
+
+            if btn.isChecked():
+                other_btn.setChecked(False)
+                other_btn.setDisabled(True)
+                other_btn.setHidden(True)
+            else:
+                other_btn.setEnabled(True)
+                other_btn.setVisible(True)
+
     def _clicked(self, btn: QAbstractButton):
         for other_btn in self.buttons():
             if other_btn is btn:
@@ -163,7 +177,9 @@ class FadeOutButtonGroup(QButtonGroup):
 
             if btn.isChecked():
                 other_btn.setChecked(False)
+                other_btn.setDisabled(True)
                 qtanim.fade_out(other_btn)
             else:
+                other_btn.setEnabled(True)
                 anim = qtanim.fade_in(other_btn, duration=self._fadeInDuration)
                 anim.finished.connect(partial(opaque, other_btn, self._opacity))
