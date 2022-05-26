@@ -86,13 +86,25 @@
     </widget>
    </item>
    <item>
-    <widget class="MajorRoleIcon" name="btnMajor"/>
+    <widget class="MajorRoleIcon" name="btnMajor">
+     <property name="toolTip">
+      <string>Major characters</string>
+     </property>
+    </widget>
    </item>
    <item>
-    <widget class="SecondaryRoleIcon" name="btnSecondary"/>
+    <widget class="SecondaryRoleIcon" name="btnSecondary">
+     <property name="toolTip">
+      <string>Secondary characters</string>
+     </property>
+    </widget>
    </item>
    <item>
-    <widget class="MinorRoleIcon" name="btnMinor"/>
+    <widget class="MinorRoleIcon" name="btnMinor">
+     <property name="toolTip">
+      <string>Tertiary characters</string>
+     </property>
+    </widget>
    </item>
    <item>
     <spacer name="horizontalSpacer_2">
