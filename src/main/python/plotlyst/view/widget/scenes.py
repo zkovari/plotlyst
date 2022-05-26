@@ -29,7 +29,7 @@ from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QBrush, QIcon
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
-    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel
+    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QAbstractButton
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import busy, margins, vspacer, btn_popup_menu
@@ -58,8 +58,10 @@ from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui im
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton
+from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
+    FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
+from src.main.python.plotlyst.view.widget.chart import SceneStructureEmotionalArcChart
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
     PlotLabel, PlotValueLabel
@@ -388,6 +390,7 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
 
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     removed = pyqtSignal(object)
+    emotionChanged = pyqtSignal()
 
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super(SceneStructureItemWidget, self).__init__(parent)
@@ -410,8 +413,38 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnDelete.setIcon(IconRegistry.wrong_icon(color='black'))
         self.btnDelete.clicked.connect(self._remove)
         retain_when_hidden(self.btnDelete)
+        retain_when_hidden(self.wdgEmotions)
         self.btnDelete.installEventFilter(OpacityEventFilter(parent=self.btnDelete))
         self.btnDelete.setHidden(True)
+
+        self.btnGroupEmotions = FadeOutButtonGroup()
+        self.btnGroupEmotions.setFadeInDuration(150)
+        self.btnGroupEmotions.addButton(self.btnEmotionNeutral)
+        self.btnGroupEmotions.addButton(self.btnEmotionP1)
+        self.btnGroupEmotions.addButton(self.btnEmotionP2)
+        self.btnGroupEmotions.addButton(self.btnEmotionP3)
+        self.btnGroupEmotions.addButton(self.btnEmotionN1)
+        self.btnGroupEmotions.addButton(self.btnEmotionN2)
+        self.btnGroupEmotions.addButton(self.btnEmotionN3)
+
+        if self.beat.emotion is None:
+            self.wdgEmotions.setHidden(True)
+        elif self.beat.emotion == 0:
+            self.btnGroupEmotions.toggle(self.btnEmotionNeutral)
+        elif self.beat.emotion == 1:
+            self.btnGroupEmotions.toggle(self.btnEmotionP1)
+        elif self.beat.emotion == 2:
+            self.btnGroupEmotions.toggle(self.btnEmotionP2)
+        elif self.beat.emotion == 3:
+            self.btnGroupEmotions.toggle(self.btnEmotionP3)
+        elif self.beat.emotion == -1:
+            self.btnGroupEmotions.toggle(self.btnEmotionN1)
+        elif self.beat.emotion == -2:
+            self.btnGroupEmotions.toggle(self.btnEmotionN2)
+        elif self.beat.emotion == -3:
+            self.btnGroupEmotions.toggle(self.btnEmotionN3)
+
+        self.btnGroupEmotions.buttonClicked.connect(self._emotionClicked)
 
     def sceneStructureItem(self) -> SceneStructureItem:
         self.beat.text = self.text.toPlainText()
@@ -429,10 +462,13 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     @overrides
     def enterEvent(self, event: QEvent) -> None:
         self.btnDelete.setVisible(True)
+        self.wdgEmotions.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         self.btnDelete.setHidden(True)
+        if not self.btnGroupEmotions.checkedButton():
+            self.wdgEmotions.setHidden(True)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -489,6 +525,14 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
             return '#1ea896'
         else:
             return 'black'
+
+    def _emotionClicked(self, btn: QAbstractButton):
+        if btn.isChecked():
+            emotion: int = btn.property('emotion')
+            self.beat.emotion = emotion
+        else:
+            self.beat.emotion = None
+        self.emotionChanged.emit()
 
     def _remove(self):
         if self.parent():
@@ -566,7 +610,7 @@ class _SceneBeatPlaceholderButton(QToolButton):
         super(_SceneBeatPlaceholderButton, self).__init__(parent)
         self.setIcon(IconRegistry.plus_circle_icon('grey'))
         self.installEventFilter(OpacityEventFilter(0.5, 0.12, parent=self))
-        self.setIconSize(QSize(32, 32))
+        self.setIconSize(QSize(24, 24))
         self.setStyleSheet('''
             QToolButton {
                 border: 1px hidden black;
@@ -605,6 +649,9 @@ class _SceneBeatPlaceholderButton(QToolButton):
 
 
 class SceneStructureTimeline(QWidget):
+    emotionChanged = pyqtSignal()
+    timelineChanged = pyqtSignal()
+
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
         self.novel = app_env.novel
@@ -666,10 +713,10 @@ class SceneStructureTimeline(QWidget):
         self._addBeatWidget(item)
 
     def _addBeatWidget(self, item: SceneStructureItem):
-        widget = SceneStructureItemWidget(self.novel, item)
+        widget = self._newBeatWidget(item)
         self.layout().addWidget(widget, alignment=Qt.AlignTop)
         self._addPlaceholder()
-        widget.removed.connect(self._beatRemoved)
+        self.timelineChanged.emit()
 
     def _addPlaceholder(self):
         self.layout().addWidget(self._newPlaceholder())
@@ -681,12 +728,19 @@ class SceneStructureTimeline(QWidget):
 
     def _insertBeatWidget(self, placeholder: _SceneBeatPlaceholderButton, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
-        widget = SceneStructureItemWidget(self.novel, item)
-        widget.removed.connect(self._beatRemoved)
+        widget = self._newBeatWidget(item)
         widget.activate()
         i = self.layout().indexOf(placeholder)
         self.layout().insertWidget(i, self._newPlaceholder())
         self.layout().insertWidget(i + 1, widget, alignment=Qt.AlignTop)
+        self.timelineChanged.emit()
+
+    def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
+        widget = SceneStructureItemWidget(self.novel, item)
+        widget.removed.connect(self._beatRemoved)
+        widget.emotionChanged.connect(self.emotionChanged.emit)
+
+        return widget
 
     def _initBeatsFromType(self, sceneTyoe: SceneType):
         if sceneTyoe == SceneType.ACTION:
@@ -706,6 +760,7 @@ class SceneStructureTimeline(QWidget):
         i = self.layout().indexOf(wdg)
         item = self.layout().takeAt(i + 1)
         gc(item.widget())
+        self.timelineChanged.emit()
 
     def _beatWidgets(self) -> List[SceneStructureItemWidget]:
         widgets = []
@@ -736,12 +791,19 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.timeline = SceneStructureTimeline(self)
         self.wdgTimelineParent.layout().addWidget(self.timeline)
 
+        self._chartEmotionalArc = SceneStructureEmotionalArcChart()
+        self._chartEmotionalArc.setBackgroundBrush(QBrush(QColor("transparent")))
+        self.chartViewEmotionArc.setChart(self._chartEmotionalArc)
+        retain_when_hidden(self.chartViewEmotionArc)
+        self.timeline.emotionChanged.connect(self._updateChart)
+        self.timeline.timelineChanged.connect(self._updateChart)
+
         self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
-        self.wdgAgendaCharacter.setDefaultText('Select character')
+        self.wdgAgendaCharacter.setDefaultText('Focal character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
         self.unsetCharacterSlot = None
 
@@ -761,12 +823,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._checkSceneType()
 
         self.timeline.setAgenda(scene.agendas[0], self.scene.type)
-
-        #     self.btnEmotionStart.setValue(scene.agendas[0].beginning_emotion)
-        #     self.btnEmotionEnd.setValue(scene.agendas[0].ending_emotion)
-        # else:
-        #     self.btnEmotionStart.setValue(NEUTRAL)
-        #     self.btnEmotionEnd.setValue(NEUTRAL)
+        self._updateChart()
 
     def updateAvailableAgendaCharacters(self):
         chars = []
@@ -787,28 +844,26 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         # self.scene.agendas[0].beginning_emotion = self.btnEmotionStart.value()
         # self.scene.agendas[0].ending_emotion = self.btnEmotionEnd.value()
 
+    def _updateChart(self):
+        items = self.timeline.agendaItems()
+        if [x for x in items if x.emotion is not None]:
+            self.chartViewEmotionArc.setVisible(True)
+            self._chartEmotionalArc.refresh(items)
+        else:
+            self.chartViewEmotionArc.setHidden(True)
+
     def _toggleCharacterStatus(self):
         if self.scene.agendas[0].character_id:
-            # self.btnEmotionStart.setEnabled(True)
-            # self.btnEmotionEnd.setEnabled(True)
             self.wdgAgendaCharacter.setEnabled(True)
-            # self.btnEmotionStart.setToolTip('')
-            # self.btnEmotionEnd.setToolTip('')
             char = self.scene.agendas[0].character(self.novel)
             if char:
                 self.wdgAgendaCharacter.setCharacter(char)
         else:
-            # self.btnEmotionStart.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
-            # self.btnEmotionEnd.installEventFilter(DisabledClickEventFilter(self.unsetCharacterSlot, self))
             self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(
                 DisabledClickEventFilter(self.unsetCharacterSlot, self))
 
-            # self.btnEmotionStart.setDisabled(True)
-            # self.btnEmotionEnd.setDisabled(True)
             self.wdgAgendaCharacter.setDisabled(True)
             self.wdgAgendaCharacter.setToolTip('Select POV character first')
-            # self.btnEmotionStart.setToolTip('Select POV character first')
-            # self.btnEmotionEnd.setToolTip('Select POV character first')
 
     def _agendaCharacterSelected(self, character: Character):
         self.scene.agendas[0].set_character(character)

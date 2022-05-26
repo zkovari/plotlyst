@@ -258,7 +258,7 @@
                </size>
               </property>
               <property name="placeholderText">
-               <string>Title</string>
+               <string>Scene title</string>
               </property>
              </widget>
             </item>

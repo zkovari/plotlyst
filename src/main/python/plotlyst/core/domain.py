@@ -450,6 +450,7 @@ class SceneStructureItem:
     part: int = 1
     text: str = ''
     outcome: Optional[SceneOutcome] = None
+    emotion: Optional[int] = None
 
 
 @dataclass

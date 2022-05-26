@@ -214,7 +214,7 @@
            </item>
           </layout>
          </item>
-         <item>
+         <item alignment="Qt::AlignTop">
           <widget class="QScrollArea" name="scrollArea">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -240,7 +240,7 @@
               <x>0</x>
               <y>0</y>
               <width>765</width>
-              <height>213</height>
+              <height>220</height>
              </rect>
             </property>
             <property name="sizePolicy">
@@ -276,7 +276,13 @@
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>0</height>
+                 <height>220</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>220</height>
                 </size>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout">
@@ -303,17 +309,20 @@
           </widget>
          </item>
          <item>
-          <spacer name="verticalSpacer_5">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+          <widget class="ChartView" name="chartViewEmotionArc">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
-           <property name="sizeHint" stdset="0">
+           <property name="minimumSize">
             <size>
-             <width>20</width>
-             <height>10</height>
+             <width>73</width>
+             <height>40</height>
             </size>
            </property>
-          </spacer>
+          </widget>
          </item>
         </layout>
        </item>
@@ -324,6 +333,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>ChartView</class>
+   <extends>QGraphicsView</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
   <customwidget>
    <class>Icon</class>
    <extends>QToolButton</extends>
