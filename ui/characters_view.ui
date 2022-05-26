@@ -87,6 +87,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Cards view</string>
+            </property>
             <property name="styleSheet">
              <string notr="true"/>
             </property>
@@ -115,6 +118,9 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="toolTip">
+             <string>Table view</string>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -136,6 +142,9 @@
            <widget class="QToolButton" name="btnBackstoryView">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Backstory view</string>
             </property>
             <property name="text">
              <string/>
@@ -422,7 +431,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>890</width>
-                <height>633</height>
+                <height>631</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -569,15 +578,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CardsView</class>
-   <extends>QFrame</extends>
-   <header>src.main.python.plotlyst.view.widget.cards</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>CharacterSelectorButtons</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.characters</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CardsView</class>
+   <extends>QFrame</extends>
+   <header>src.main.python.plotlyst.view.widget.cards</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
