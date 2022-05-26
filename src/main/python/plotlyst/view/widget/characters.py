@@ -1417,11 +1417,13 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
                 }
             ''')
             btn.itemClicked.connect(self._roleClicked)
+            btn.itemDoubleClicked.connect(self._select)
 
         self._currentRole = protagonist_role
         self.btnItemProtagonist.click()
 
-        self.btnSelect.clicked.connect(lambda: self.roleSelected.emit(copy.deepcopy(self._currentRole)))
+        self.btnSelect.setIcon(IconRegistry.ok_icon('white'))
+        self.btnSelect.clicked.connect(self._select)
 
     @overrides
     def mouseReleaseEvent(self, a0: QMouseEvent) -> None:
@@ -1443,3 +1445,6 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
             self.iconSecondary.setEnabled(True)
         else:
             self.iconMinor.setEnabled(True)
+
+    def _select(self):
+        self.roleSelected.emit(copy.deepcopy(self._currentRole))

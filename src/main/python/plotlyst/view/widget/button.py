@@ -18,9 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
+from typing import Optional
 
 import qtanim
-from PyQt5.QtCore import pyqtSignal, Qt, pyqtProperty
+from PyQt5.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer
 from PyQt5.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup
 from overrides import overrides
 from qthandy import hbox, opaque
@@ -32,12 +33,18 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 class SelectionItemPushButton(QPushButton):
     itemClicked = pyqtSignal(SelectionItem)
+    itemDoubleClicked = pyqtSignal(SelectionItem)
 
     def __init__(self, parent=None):
         super(SelectionItemPushButton, self).__init__(parent)
         self.setCursor(Qt.PointingHandCursor)
+        self.item: Optional[SelectionItem] = None
+        self.timer = QTimer()
+        self.timer.setSingleShot(True)
+        self.clicked.connect(self._checkDoubleClick)
 
     def setSelectionItem(self, item: SelectionItem):
+        self.item = item
         self.setText(item.text)
         if item.icon:
             self.setIcon(IconRegistry.from_name(item.icon, item.icon_color))
@@ -49,6 +56,15 @@ class SelectionItemPushButton(QPushButton):
         font = self.font()
         font.setBold(checked)
         self.setFont(font)
+
+    def _checkDoubleClick(self):
+        if not self.item:
+            return
+        if self.timer.isActive():
+            self.itemDoubleClicked.emit(self.item)
+            self.timer.stop()
+        else:
+            self.timer.start(250)
 
 
 class _SecondaryActionButton(QAbstractButton):
