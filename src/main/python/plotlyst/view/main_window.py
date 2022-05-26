@@ -393,6 +393,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     @busy
     def _load_new_novel(self, novel: Novel):
         if self.novel and self.novel.id == novel.id:
+            self.outline_mode.setChecked(True)
             return
 
         self.outline_mode.setEnabled(True)
