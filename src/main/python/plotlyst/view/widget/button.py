@@ -56,12 +56,13 @@ class _SecondaryActionButton(QAbstractButton):
         super(_SecondaryActionButton, self).__init__(parent)
         self._iconName: str = ''
         self._iconColor: str = 'black'
+        self._checkedColor: str = 'black'
         self.initStyleSheet()
         self.setCursor(Qt.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
         self.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self))
 
-    def initStyleSheet(self, border_color: str = 'grey', border_color_checked: str = 'black'):
+    def initStyleSheet(self, border_color: str = 'grey'):
         self.setStyleSheet(f'''
                 {self.__class__.__name__} {{
                     border: 2px dashed {border_color};
@@ -73,7 +74,7 @@ class _SecondaryActionButton(QAbstractButton):
                     border: 2px solid {border_color};
                 }}
                 {self.__class__.__name__}:checked {{
-                    border: 2px solid {border_color_checked};
+                    border: 2px solid {self._checkedColor};
                 }}
             ''')
 
@@ -83,7 +84,7 @@ class _SecondaryActionButton(QAbstractButton):
 
     def _setIcon(self):
         if self._iconName:
-            self.setIcon(IconRegistry.from_name(self._iconName, self._iconColor))
+            self.setIcon(IconRegistry.from_name(self._iconName, self._iconColor, color_on=self._checkedColor))
 
 
 class SecondaryActionToolButton(QToolButton, _SecondaryActionButton):
@@ -105,6 +106,16 @@ class SecondaryActionToolButton(QToolButton, _SecondaryActionButton):
         self._iconColor = value
         self._setIcon()
 
+    @pyqtProperty(str)
+    def checkedColor(self):
+        return self._checkedColor
+
+    @checkedColor.setter
+    def checkedColor(self, value):
+        self._checkedColor = value
+        self.initStyleSheet()
+        self._setIcon()
+
 
 class SecondaryActionPushButton(QPushButton, _SecondaryActionButton):
     @pyqtProperty(str)
@@ -123,6 +134,16 @@ class SecondaryActionPushButton(QPushButton, _SecondaryActionButton):
     @iconColor.setter
     def iconColor(self, value):
         self._iconColor = value
+        self._setIcon()
+
+    @pyqtProperty(str)
+    def checkedColor(self):
+        return self._checkedColor
+
+    @checkedColor.setter
+    def checkedColor(self, value):
+        self._checkedColor = value
+        self.initStyleSheet()
         self._setIcon()
 
 
