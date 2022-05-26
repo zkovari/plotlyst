@@ -153,7 +153,7 @@ class OpacityEventFilter(QObject):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if self.ignoreCheckedButton and self._checkedButton(watched):
+        if self.ignoreCheckedButton and self._checkedButton(watched) or not watched.isEnabled():
             return super(OpacityEventFilter, self).eventFilter(watched, event)
         if event.type() == QEvent.Enter:
             opaque(watched, self.enterOpacity)
