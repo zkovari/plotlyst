@@ -21,7 +21,7 @@ from typing import List, Optional
 
 from PyQt5.QtCore import pyqtSignal
 from overrides import overrides
-from qthandy import ask_confirmation, FlowLayout, clear_layout
+from qthandy import ask_confirmation, clear_layout, flow
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Event
@@ -44,8 +44,7 @@ class HomeView(AbstractView):
         super(HomeView, self).__init__()
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
-        self._layout = FlowLayout(spacing=9)
-        self.ui.novels.setLayout(self._layout)
+        self._layout = flow(self.ui.novels, margin=5, spacing=9)
         self.novel_cards: List[NovelCard] = []
         self.selected_card: Optional[NovelCard] = None
         self.refresh()
