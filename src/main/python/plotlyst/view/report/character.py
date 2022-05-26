@@ -159,7 +159,6 @@ class CharacterArcChart(BaseChart):
         super().__init__(parent)
         self.novel = novel
         self.createDefaultAxes()
-        self.legend().hide()
         self.axis: Optional[QValueAxis] = None
 
     def refresh(self, character: Character):
