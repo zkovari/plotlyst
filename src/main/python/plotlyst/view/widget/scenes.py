@@ -477,8 +477,11 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     def _initStyle(self):
         self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
         self.text.setPlaceholderText(BeatDescriptions[self.beat.type])
-        self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
-                                       trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
+        if self.beat.type == SceneStructureItemType.BEAT:
+            self.btnIcon.setIcon(IconRegistry.empty_icon())
+        else:
+            self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
+                                           trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
 
         color = self._color()
         self.btnIcon.setStyleSheet(f'''
@@ -655,7 +658,7 @@ class SceneStructureTimeline(QWidget):
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
         self.novel = app_env.novel
-        hbox(self, margin=0)
+        hbox(self, margin=0, spacing=1)
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.reset()
