@@ -380,7 +380,7 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    characterization_title = TemplateField('Basic characterization', type=TemplateFieldType.DISPLAY_LABEL)
+    characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_LABEL)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_LABEL)
     fields = [ProfileElement(characterization_title, 0, 0, col_span=2),
               ProfileElement(enneagram_field, 1, 0, margins=Margins(left=15)),
