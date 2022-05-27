@@ -1028,7 +1028,8 @@ class CharacterTimelineWidget(QWidget):
         painter.end()
 
     def add(self, pos: int = -1):
-        backstory: Optional[BackstoryEvent] = BackstoryEditorDialog().display()
+        backstory: Optional[BackstoryEvent] = BackstoryEditorDialog(
+            showRelationOption=len(self.character.backstory) > 0).display()
         if backstory:
             card = CharacterBackstoryCard(backstory)
             card.deleteRequested.connect(self._remove)
