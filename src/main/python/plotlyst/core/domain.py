@@ -157,6 +157,8 @@ class Character:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     gender: str = ''
     role: Optional[Role] = None
+    age: Optional[int] = None
+    occupation: Optional[str] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)

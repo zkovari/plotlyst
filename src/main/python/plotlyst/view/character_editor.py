@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt5.QtWidgets import QWidget, QAbstractButton
+from PyQt5.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit
 from fbs_runtime import platform
-from qthandy import opaque, btn_popup
+from qthandy import opaque, btn_popup, incr_font, bold, italic
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem, \
@@ -84,6 +84,27 @@ class CharacterEditor:
         self._roleSelector = CharacterRoleSelector()
         self._roleSelector.roleSelected.connect(self._role_changed)
         btn_popup(self.ui.btnRole, self._roleSelector)
+
+        self._sbAge = QSpinBox()
+        self._sbAge.setMinimum(0)
+        self._sbAge.setMaximum(65000)
+        self._sbAge.valueChanged.connect(self._age_changed)
+        menu = btn_popup(self.ui.btnAge, self._sbAge)
+        menu.aboutToShow.connect(self._sbAge.setFocus)
+        self._sbAge.editingFinished.connect(menu.hide)
+
+        self._lineOccupation = QLineEdit()
+        self._lineOccupation.setPlaceholderText('Fill out occupation')
+        self._lineOccupation.textChanged.connect(self._occupation_changed)
+        menu = btn_popup(self.ui.btnOccupation, self._lineOccupation)
+        menu.aboutToShow.connect(self._lineOccupation.setFocus)
+        self._lineOccupation.editingFinished.connect(menu.hide)
+
+        if self.character.age:
+            self._sbAge.setValue(self.character.age)
+        if self.character.occupation:
+            self._lineOccupation.setText(self.character.occupation)
+
         if self.character.role:
             self._display_role()
 
@@ -158,6 +179,43 @@ class CharacterEditor:
         self._display_role()
         if self.character.prefs.avatar.use_role:
             self.ui.wdgAvatar.updateAvatar()
+
+    def _age_changed(self, age: int):
+        if self._sbAge.minimum() == 0:
+            self._sbAge.setMinimum(1)
+            incr_font(self.ui.btnAge, 2)
+            italic(self.ui.btnAge, False)
+            bold(self.ui.btnAge)
+            self.ui.btnAge.iconColor = '#343a40'
+            self.ui.btnAge.setStyleSheet('''
+                        QPushButton::menu-indicator {width:0px;}
+                        QPushButton {
+                            border: 1px hidden black;
+                            border-radius: 6px;
+                            color: #343a40;
+                            padding: 2px;
+                        }
+                    ''')
+        self.ui.btnAge.setText(str(age))
+        self.character.age = age
+
+    def _occupation_changed(self, occupation: str):
+        if self.ui.btnOccupation.font().italic():  # first setup
+            italic(self.ui.btnOccupation, False)
+            bold(self.ui.btnOccupation)
+            incr_font(self.ui.btnOccupation, 2)
+            self.ui.btnOccupation.iconColor = '#343a40'
+            self.ui.btnOccupation.setStyleSheet('''
+                                    QPushButton::menu-indicator {width:0px;}
+                                    QPushButton {
+                                        border: 1px hidden black;
+                                        border-radius: 6px;
+                                        color: #343a40;
+                                        padding: 2px;
+                                    }
+                                ''')
+        self.ui.btnOccupation.setText(occupation)
+        self.character.occupation = occupation
 
     def _display_role(self):
         self.ui.btnRole.setText(self.character.role.text)
