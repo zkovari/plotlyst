@@ -78,12 +78,12 @@ class _SecondaryActionButton(QAbstractButton):
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
         self.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self))
 
-    def initStyleSheet(self, border_color: str = 'grey'):
+    def initStyleSheet(self, border_color: str = 'grey', border_style: str = 'dashed', color: str = 'grey'):
         self.setStyleSheet(f'''
                 {self.__class__.__name__} {{
-                    border: 2px dashed {border_color};
+                    border: 2px {border_style} {border_color};
                     border-radius: 6px;
-                    color: grey;
+                    color: {color};
                     padding: 2px;
                 }}
                 {self.__class__.__name__}:pressed {{
@@ -92,6 +92,7 @@ class _SecondaryActionButton(QAbstractButton):
                 {self.__class__.__name__}:checked {{
                     border: 2px solid {self._checkedColor};
                 }}
+                {self.__class__.__name__}::menu-indicator {{width:0px;}}
             ''')
 
     def setBorderColor(self, color_name: str):
