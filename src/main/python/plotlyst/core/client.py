@@ -116,6 +116,8 @@ class CharacterInfo:
     id: uuid.UUID
     gender: str = ''
     role: Optional[Role] = None
+    age: Optional[int] = None
+    occupation: Optional[str] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
@@ -393,7 +395,8 @@ class JsonClient:
             with open(path, encoding='utf8') as json_file:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
-                character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role,
+                character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role, age=info.age,
+                                      occupation=info.occupation,
                                       template_values=info.template_values,
                                       backstory=info.backstory, goals=info.goals, document=info.document,
                                       journals=info.journals, prefs=info.prefs)
@@ -527,7 +530,8 @@ class JsonClient:
         self.__persist_info(self.novels_dir, novel_info)
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
-        char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role,
+        char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
+                                  occupation=char.occupation,
                                   template_values=char.template_values,
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,

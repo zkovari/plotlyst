@@ -806,7 +806,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
 
-        self.wdgAgendaCharacter.setDefaultText('Focal character')
+        self.wdgAgendaCharacter.setDefaultText('Select character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
         self.unsetCharacterSlot = None
 
