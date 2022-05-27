@@ -45,6 +45,7 @@ from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui impo
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -118,8 +119,7 @@ def _icon(item: SelectionItem) -> QIcon:
         return QIcon('')
 
 
-class TextSelectionWidget(QPushButton):
-    placeholder_text: str = 'Select...'
+class TextSelectionWidget(SecondaryActionPushButton):
     selectionChanged = pyqtSignal(object, object)
 
     def __init__(self, field: TemplateField, help: Dict[Any, str], parent=None):
@@ -127,7 +127,7 @@ class TextSelectionWidget(QPushButton):
         self.field = field
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
-        self.setText(self.placeholder_text)
+        self.setText(f'{self.field.name}...')
         self._popup = self.Popup(self.field, help)
         btn_popup(self, self._popup)
 
@@ -147,10 +147,12 @@ class TextSelectionWidget(QPushButton):
             self.setText(self._selected.text)
             if self._selected.icon:
                 self.setIcon(IconRegistry.from_name(self._selected.icon, self._selected.icon_color))
+                self.initStyleSheet(self._selected.icon_color, 'solid', 'black')
             else:
                 self.setIcon(IconRegistry.empty_icon())
+                self.initStyleSheet('black', 'solid', 'black')
         else:
-            self.setText(self.placeholder_text)
+            self.setText(f'{self.field.name}...')
             self.setIcon(IconRegistry.empty_icon())
 
     def _selection_changed(self, item: SelectionItem):

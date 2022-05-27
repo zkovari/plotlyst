@@ -187,7 +187,7 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                                 'fear': 'Loss, separation',
                                                                 'number': 9}
                                                           )],
-                                compact=True)
+                                compact=True, show_label=False)
 mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('bc5408a4-c2bd-4370-b46b-95f20018af01'),
                            selections=[SelectionItem('ISTJ', icon='mdi.magnify', icon_color='#2a9d8f'),  # green
@@ -210,7 +210,7 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                                        SelectionItem('ESFJ', icon='mdi6.cupcake', icon_color='#d00000'),
                                        SelectionItem('ENFJ', icon='mdi6.flower', icon_color='#d00000'),
                                        ],
-                           compact=True)
+                           compact=True, show_label=False)
 positive_traits = sorted([
     'Accessible', 'Active', 'Adaptive', 'Admirable', 'Adventurous', 'Agreeable', 'Alert', 'Ambitious', 'Appreciative',
     'Articulate', 'Aspiring', 'Assertive', 'Attentive', 'Balanced', 'Benevolent', 'Calm', 'Capable', 'Captivating',
@@ -383,10 +383,10 @@ def default_character_profiles() -> List[ProfileTemplate]:
     characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_LABEL)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_LABEL)
     fields = [ProfileElement(characterization_title, 0, 0, col_span=2),
-              ProfileElement(enneagram_field, 1, 0, margins=Margins(left=15)),
-              ProfileElement(mbti_field, 1, 1),
-              ProfileElement(core_desire_field, 2, 0, margins=Margins(left=15)),
-              ProfileElement(core_fear_field, 2, 1),
+              ProfileElement(enneagram_field, 1, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(mbti_field, 2, 0, col_span=2, margins=Margins(left=15)),
+              # ProfileElement(core_desire_field, 2, 0, margins=Margins(left=15)),
+              # ProfileElement(core_fear_field, 2, 1),
               ProfileElement(traits_field, 3, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(TemplateField('', type=TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2),
               ProfileElement(story_title, 5, 0, col_span=2),
