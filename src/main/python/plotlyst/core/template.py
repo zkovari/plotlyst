@@ -392,7 +392,7 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(story_title, 5, 0, col_span=2),
               ProfileElement(desire_field, 6, 0, margins=Margins(left=15)),
               ProfileElement(need_field, 6, 1),
-              ProfileElement(weaknesses_field, 7, 0, margins=Margins(left=15)),
+              ProfileElement(weaknesses_field, 7, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(values_field, 8, 0, col_span=2, margins=Margins(left=15))
               ]
     return [ProfileTemplate(title='Default character template',
