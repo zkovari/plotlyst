@@ -284,13 +284,6 @@ summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
                                 placeholder='The misbelief/lie the character believes in')
-core_fear_field = TemplateField('Basic core fear', type=TemplateFieldType.SMALL_TEXT,
-                                emoji=':face_screaming_in_fear:',
-                                placeholder='Basic fear (select Enneagram to autofill)',
-                                id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'))
-core_desire_field = TemplateField('Basic core desire', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face:',
-                                  placeholder='Basic desire (select Enneagram to autofill)',
-                                  id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'))
 
 desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want in the story?',
