@@ -289,7 +289,7 @@ core_desire_field = TemplateField('Basic core desire', type=TemplateFieldType.SM
 desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want in the story?',
                              id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
-need_field = TemplateField('Subconscious need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
+need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
                            placeholder='What does the character actually need in the story?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
 weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
