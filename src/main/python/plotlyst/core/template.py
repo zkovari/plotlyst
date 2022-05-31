@@ -295,6 +295,9 @@ need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':fa
 weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
                                  placeholder="What are the character's weaknesses or flaws in the story?",
                                  id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
+ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
+                            placeholder="What's the character's ghost from their past than haunt them?",
+                            id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hugging_face:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
@@ -393,7 +396,8 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(desire_field, 6, 0, margins=Margins(left=15)),
               ProfileElement(need_field, 6, 1),
               ProfileElement(weaknesses_field, 7, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(values_field, 8, 0, col_span=2, margins=Margins(left=15))
+              ProfileElement(ghost_field, 8, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(values_field, 9, 0, col_span=2, margins=Margins(left=15))
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
