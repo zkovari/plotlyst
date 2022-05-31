@@ -105,9 +105,6 @@ class CharacterEditor:
         if self.character.occupation:
             self._lineOccupation.setText(self.character.occupation)
 
-        if self.character.role:
-            self._display_role()
-
         if self.character.gender:
             self.ui.btnMoreGender.setHidden(True)
             if self.character.gender == MALE:
@@ -150,6 +147,9 @@ class CharacterEditor:
 
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
+
+        if self.character.role:
+            self._display_role()
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -235,6 +235,11 @@ class CharacterEditor:
             }}
         ''')
         self._btnRoleEventFilter.enterOpacity = 0.8
+
+        if self.character.is_minor():
+            self.profile.toggleRequiredHeaders(True)
+        else:
+            self.profile.toggleRequiredHeaders(False)
 
     def _gender_clicked(self, btn: QAbstractButton):
         self.ui.btnMoreGender.setHidden(True)

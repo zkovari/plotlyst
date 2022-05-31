@@ -382,8 +382,8 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER)
-    characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER)
+    summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
               ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),

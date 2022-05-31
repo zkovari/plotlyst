@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from abc import abstractmethod
 from functools import partial
-from typing import Optional, List, Any, Dict, Set
+from typing import Optional, List, Any, Dict, Set, Tuple
 
 import emoji
 import qtanim
@@ -74,7 +74,7 @@ class _ProfileTemplateBase(QWidget):
         self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
 
         self.widgets: List[TemplateWidgetBase] = []
-        self._header_rows: List[int] = []
+        self._headers: List[Tuple[int, TemplateField]] = []
         self._initGrid(editor_mode)
 
     def _initGrid(self, editor_mode: bool):
@@ -87,7 +87,7 @@ class _ProfileTemplateBase(QWidget):
                                       el.h_alignment.value | el.v_alignment.value)
 
             if isinstance(widget, HeaderTemplateDisplayWidget):
-                self._header_rows.append(el.row)
+                self._headers.append((el.row, el.field))
                 widget.collapsed.connect(partial(self._collapse, el.row))
 
         self._addSpacerToEnd()
@@ -99,7 +99,7 @@ class _ProfileTemplateBase(QWidget):
 
     def _collapse(self, row: int, collapsed: bool):
         last_row = self.gridLayout.rowCount() - 1
-        for header_row in self._header_rows:
+        for header_row, _ in self._headers:
             if header_row > row:
                 last_row = header_row
                 break
@@ -913,6 +913,7 @@ class CharacterProfileTemplateView(ProfileTemplateView):
     def __init__(self, character: Character, profile: ProfileTemplate):
         super().__init__(character.template_values, profile)
         self.character = character
+        self._required_headers_toggled: bool = False
         self._enneagram_widget: Optional[TextSelectionWidget] = None
         self._traits_widget: Optional[TraitSelectionWidget] = None
         self._goals_widget: Optional[TemplateFieldWidget] = None
@@ -924,6 +925,17 @@ class CharacterProfileTemplateView(ProfileTemplateView):
 
         if self._enneagram_widget:
             self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
+
+    def toggleRequiredHeaders(self, toggled: bool):
+        if self._required_headers_toggled == toggled:
+            return
+
+        self._required_headers_toggled = toggled
+        for row, header in self._headers:
+            if not header.required:
+                self._collapse(row, toggled)
+                item = self.gridLayout.itemAtPosition(row, 0)
+                item.widget().setHidden(toggled)
 
     def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
         if self._traits_widget:
