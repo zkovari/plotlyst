@@ -78,6 +78,7 @@ class TemplateFieldType(Enum):
     DISPLAY_SUBTITLE = 7
     DISPLAY_LABEL = 8
     DISPLAY_LINE = 9
+    DISPLAY_HEADER = 10
 
 
 class SelectionType(Enum):
@@ -383,15 +384,15 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_LABEL)
-    story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_LABEL)
+    characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER)
+    story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
     fields = [ProfileElement(characterization_title, 0, 0, col_span=2),
               ProfileElement(enneagram_field, 1, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(mbti_field, 2, 0, col_span=2, margins=Margins(left=15)),
               # ProfileElement(core_desire_field, 2, 0, margins=Margins(left=15)),
               # ProfileElement(core_fear_field, 2, 1),
               ProfileElement(traits_field, 3, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(TemplateField('', type=TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2),
+              # ProfileElement(TemplateField('', type=TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2),
               ProfileElement(story_title, 5, 0, col_span=2),
               ProfileElement(desire_field, 6, 0, margins=Margins(left=15)),
               ProfileElement(need_field, 6, 1),

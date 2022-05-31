@@ -19,18 +19,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from abc import abstractmethod
+from functools import partial
 from typing import Optional, List, Any, Dict, Set
 
 import emoji
 import qtawesome
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex
+from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
 from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
     QSpacerItem, QListView, QPushButton
 from overrides import overrides
-from qthandy import ask_confirmation, spacer, btn_popup, hbox, vbox, bold, line
+from qthandy import ask_confirmation, spacer, btn_popup, hbox, vbox, bold, line, underline, transparent
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
@@ -40,7 +41,7 @@ from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldT
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.common import emoji_font, pointy
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -70,6 +71,7 @@ class _ProfileTemplateBase(QWidget):
         self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
 
         self.widgets: List[TemplateWidgetBase] = []
+        self._header_rows: List[int] = []
         self._initGrid(editor_mode)
 
     def _initGrid(self, editor_mode: bool):
@@ -81,12 +83,29 @@ class _ProfileTemplateBase(QWidget):
             self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span,
                                       el.h_alignment.value | el.v_alignment.value)
 
+            if isinstance(widget, HeaderTemplateDisplayWidget):
+                self._header_rows.append(el.row)
+                widget.collapsed.connect(partial(self._collapse, el.row))
+
         self._addSpacerToEnd()
 
     def _addSpacerToEnd(self):
         self.gridLayout.addItem(self._spacer_item,
                                 self.gridLayout.rowCount(), 0)
         self.gridLayout.setRowStretch(self.gridLayout.rowCount() - 1, 1)
+
+    def _collapse(self, row: int, collapsed: bool):
+        last_row = self.gridLayout.rowCount() - 1
+        for header_row in self._header_rows:
+            if header_row > row:
+                last_row = header_row
+                break
+
+        for i in range(row + 1, last_row):
+            for j in range(0, 2):
+                item = self.gridLayout.itemAtPosition(i, j)
+                if item:
+                    item.widget().setHidden(collapsed)
 
 
 class _PlaceHolder(QFrame):
@@ -375,10 +394,38 @@ class LabelTemplateDisplayWidget(TemplateDisplayWidget):
         super(LabelTemplateDisplayWidget, self).__init__(field, parent)
         hbox(self)
         self.label = QLabel(self)
-        bold(self.label)
         self.label.setText(field.name)
         self.label.setToolTip(field.description)
         self.layout().addWidget(self.label)
+
+
+class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
+    collapsed = pyqtSignal(bool)
+
+    def __init__(self, field: TemplateField, parent=None):
+        super(HeaderTemplateDisplayWidget, self).__init__(field, parent)
+        hbox(self, margin=0, spacing=0)
+        self.btnHeader = QPushButton()
+        pointy(self.btnHeader)
+        self.btnHeader.setIconSize(QSize(16, 16))
+        self.btnHeader.setCheckable(True)
+        self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-down'))
+        transparent(self.btnHeader)
+        bold(self.btnHeader)
+        underline(self.btnHeader)
+        self.btnHeader.setText(field.name)
+        self.btnHeader.setToolTip(field.description)
+        self.layout().addWidget(self.btnHeader, alignment=Qt.AlignLeft)
+
+        self.btnHeader.clicked.connect(self._toggleCollapse)
+
+    def _toggleCollapse(self, checked: bool):
+        if checked:
+            self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-right'))
+        else:
+            self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-down'))
+
+        self.collapsed.emit(checked)
 
 
 class LineTemplateDisplayWidget(TemplateDisplayWidget):
@@ -566,6 +613,8 @@ class TemplateFieldWidgetFactory:
             return SubtitleTemplateDisplayWidget(field, parent)
         elif field.type == TemplateFieldType.DISPLAY_LABEL:
             return LabelTemplateDisplayWidget(field, parent)
+        elif field.type == TemplateFieldType.DISPLAY_HEADER:
+            return HeaderTemplateDisplayWidget(field, parent)
         elif field.type == TemplateFieldType.DISPLAY_LINE:
             return LineTemplateDisplayWidget(field, parent)
 
