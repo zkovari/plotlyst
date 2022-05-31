@@ -20,11 +20,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Dict
 
 from PyQt5.QtChart import QChartView, QPieSeries, QPieSlice
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPainter, QColor, QFont
+from PyQt5.QtCore import Qt, QSize, QPoint
+from PyQt5.QtGui import QPainter, QColor, QFont, QPaintEvent, QPen, QPainterPath
+from PyQt5.QtWidgets import QWidget, QSizePolicy
+from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
 from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.chart import BaseChart
 
 
@@ -32,7 +35,6 @@ class ProgressChartView(QChartView):
     def __init__(self, value: int, max: int, title_prefix: str = 'Progress', color=Qt.darkBlue, parent=None):
         super(ProgressChartView, self).__init__(parent)
         self.chart = BaseChart()
-        self.chart.legend().hide()
         font = QFont()
         font.setBold(True)
         self.chart.setTitleFont(font)
@@ -115,3 +117,47 @@ class SceneStageProgressCharts:
         else:
             for i, v in enumerate(values):
                 self._chartviews[i].refresh(v[0], v[1])
+
+
+class CircularProgressBar(QWidget):
+
+    def __init__(self, value: int = 0, maxValue: int = 1, radius: int = 8, parent=None):
+        super(CircularProgressBar, self).__init__(parent)
+        self._radius: int = radius
+        self._penWidth = 2
+        self._center = self._radius + self._penWidth
+        self._value = value
+        self._maxValue = maxValue
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self._tickPixmap = IconRegistry.ok_icon('#2a9d8f').pixmap(self._radius * 2 - 2, self._radius * 2 - 2)
+
+    def setValue(self, value: int):
+        self._value = value
+        self.update()
+
+    def setMaxValue(self, value: int):
+        self._maxValue = value
+
+    @overrides
+    def sizeHint(self) -> QSize:
+        return QSize(self._radius * 2 + self._penWidth * 2, self._radius * 2 + self._penWidth * 2)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(QPen(Qt.black, 1, Qt.DotLine))
+        painter.drawEllipse(QPoint(self._center, self._center), self._radius, self._radius)
+
+        path = QPainterPath()
+        path.moveTo(self._center, self._penWidth)
+        path.arcTo(self._penWidth, self._penWidth, self._radius * 2, self._radius * 2, 90,
+                   -360 * self._value / self._maxValue)
+        painter.setPen(QPen(QColor('#2a9d8f'), self._penWidth, Qt.SolidLine))
+        painter.drawPath(path)
+
+        if self._value == self._maxValue:
+            painter.drawPixmap(self._penWidth + 1, self._penWidth + 1,
+                               self._tickPixmap)
+
+        painter.end()
