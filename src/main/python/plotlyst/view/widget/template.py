@@ -505,7 +505,7 @@ class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
-        _layout = vbox(self)
+        _layout = vbox(self, margin=1)
         self.wdgEditor = AutoAdjustableTextEdit(height=60)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setPlaceholderText(field.placeholder)
