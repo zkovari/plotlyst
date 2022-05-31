@@ -23,6 +23,7 @@ from functools import partial
 from typing import Optional, List, Any, Dict, Set
 
 import emoji
+import qtanim
 import qtawesome
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
@@ -31,13 +32,15 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
     QSpacerItem, QListView, QPushButton
 from overrides import overrides
-from qthandy import ask_confirmation, spacer, btn_popup, hbox, vbox, bold, line, underline, transparent
+from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
+    decr_font
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Character
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, ProfileElement, SelectionItemType, \
-    enneagram_field, traits_field, core_desire_field, core_fear_field, HAlignment, VAlignment, mbti_field
+    enneagram_field, traits_field, HAlignment, VAlignment, mbti_field, \
+    enneagram_choices
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
@@ -47,7 +50,7 @@ from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.display import Subtitle
+from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 
@@ -548,6 +551,64 @@ class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setValue(value)
 
 
+class EnneagramFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(EnneagramFieldWidget, self).__init__(field, parent)
+        self.wdgEditor = TextSelectionWidget(field, enneagram_help)
+        _layout = vbox(self)
+        _layout.addWidget(self.wdgEditor)
+
+        emojiDesire = Emoji()
+        emojiDesire.setText(emoji.emojize(':smiling_face:'))
+        emojiDesire.setToolTip('Core desire')
+        emojiFear = Emoji()
+        emojiFear.setText(emoji.emojize(':face_screaming_in_fear:'))
+        emojiFear.setToolTip('Core fear')
+        self.lblDesire = QLabel('')
+        self.lblDesire.setToolTip('Core desire')
+        self.lblFear = QLabel('')
+        self.lblFear.setToolTip('Core fear')
+
+        decr_font(emojiDesire, 4)
+        decr_font(self.lblDesire, 2)
+        decr_font(emojiFear, 4)
+        decr_font(self.lblFear, 2)
+
+        self.wdgAttr = group(emojiDesire, self.lblDesire, emojiFear, self.lblFear, spacer())
+        margins(self.wdgAttr, left=10)
+        _layout.addWidget(self.wdgAttr)
+        self.wdgAttr.setHidden(True)
+
+        if self.field.compact:
+            _layout.addWidget(spacer())
+
+        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+        enneagram = enneagram_choices.get(value)
+        if enneagram:
+            self._selectionChanged(new=enneagram, animated=False)
+
+    def _selectionChanged(self, old: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
+                          animated: bool = True):
+        if not new:
+            self.wdgAttr.setHidden(True)
+            return
+
+        if animated:
+            qtanim.fade_in(self.wdgAttr)
+        else:
+            self.wdgAttr.setVisible(True)
+        self.lblDesire.setText(new.meta['desire'])
+        self.lblFear.setText(new.meta['fear'])
+
+
 class CustomTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, editor: QWidget, parent=None, vertical: bool = True):
         super(CustomTemplateFieldWidget, self).__init__(field, parent)
@@ -562,7 +623,7 @@ class CustomTemplateFieldWidget(TemplateFieldWidgetBase):
         _layout.addWidget(self.wdgEditor)
 
         if self.field.compact:
-            _layout.addWidget(spacer())
+            _layout.addWidget(spacer(vertical=vertical))
 
     @overrides
     def value(self) -> Any:
@@ -619,7 +680,7 @@ class TemplateFieldWidgetFactory:
             return LineTemplateDisplayWidget(field, parent)
 
         if field.id == enneagram_field.id:
-            return CustomTemplateFieldWidget(field, TextSelectionWidget(field, enneagram_help), parent, vertical=False)
+            return EnneagramFieldWidget(field, parent)
         elif field.id == mbti_field.id:
             return CustomTemplateFieldWidget(field, TextSelectionWidget(field, mbti_help), parent, vertical=False)
         elif field.id == traits_field.id:
@@ -853,17 +914,11 @@ class CharacterProfileTemplateView(ProfileTemplateView):
         super().__init__(character.template_values, profile)
         self.character = character
         self._enneagram_widget: Optional[TextSelectionWidget] = None
-        self._desire_widget: Optional[TemplateFieldWidget] = None
-        self._fear_widget: Optional[TemplateFieldWidget] = None
         self._traits_widget: Optional[TraitSelectionWidget] = None
         self._goals_widget: Optional[TemplateFieldWidget] = None
         for widget in self.widgets:
             if widget.field.id == enneagram_field.id:
                 self._enneagram_widget = widget.wdgEditor
-            elif widget.field.id == core_desire_field.id:
-                self._desire_widget = widget
-            elif widget.field.id == core_fear_field.id:
-                self._fear_widget = widget
             elif widget.field.id == traits_field.id:
                 self._traits_widget = widget.wdgEditor
 
@@ -871,24 +926,6 @@ class CharacterProfileTemplateView(ProfileTemplateView):
             self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
 
     def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
-        update_desire = False
-        update_fear = False
-        if self._desire_widget:
-            update_desire = True
-            if previous:
-                current_value = self._desire_widget.value()
-                if current_value and current_value != previous.meta['desire']:
-                    if not ask_confirmation("Do you want to update your character's DESIRE based on their Enneagram?"):
-                        update_desire = False
-
-        if self._fear_widget:
-            update_fear = True
-            if previous:
-                current_value = self._fear_widget.value()
-                if current_value and current_value != previous.meta['fear']:
-                    if not ask_confirmation("Do you want to update your character's FEAR based on their Enneagram?"):
-                        update_fear = False
-
         if self._traits_widget:
             traits: List[str] = self._traits_widget.value()
             if previous:
@@ -905,8 +942,3 @@ class CharacterProfileTemplateView(ProfileTemplateView):
                 if neg_trait not in traits:
                     traits.append(neg_trait)
             self._traits_widget.setValue(traits)
-
-        if update_desire:
-            self._desire_widget.setValue(current.meta['desire'])
-        if update_fear:
-            self._fear_widget.setValue(current.meta['fear'])

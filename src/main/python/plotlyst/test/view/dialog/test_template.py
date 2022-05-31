@@ -4,7 +4,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QMouseEvent
 
-from src.main.python.plotlyst.core.template import ProfileTemplate, core_fear_field, default_character_profiles
+from src.main.python.plotlyst.core.template import ProfileTemplate, default_character_profiles, enneagram_field
 from src.main.python.plotlyst.view.dialog.template import CharacterProfileEditorDialog
 
 
@@ -26,10 +26,10 @@ def test_drop(qtbot):
     template = ProfileTemplate(title='Test Template')
     diag = new_diag(qtbot, template)
 
-    for btn, field in [(diag.btnFear, core_fear_field)]:
+    for btn, field in [(diag.btnEnneagram, enneagram_field)]:
         diag._dragged = btn
         event = create_autospec(QMouseEvent)
-        event.pos.side_effect = lambda: diag.btnFear.pos()
+        event.pos.side_effect = lambda: btn.pos()
 
         QtCore.QTimer.singleShot(30, lambda: drop(qtbot, diag))
         diag.mouseMoveEvent(event)
