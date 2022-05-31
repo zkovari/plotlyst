@@ -276,6 +276,11 @@ def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
 enneagram_choices = get_selection_values(enneagram_field)
 mbti_choices = get_selection_values(mbti_field)
 
+summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
+                              id=uuid.UUID('90112538-2eca-45e8-81b4-e3c331204e31'),
+                              placeholder="Summarize your character's role in the story",
+                              show_label=False)
+
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
                                 placeholder='The misbelief/lie the character believes in')
@@ -384,21 +389,22 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
+    summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER)
     characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
-    fields = [ProfileElement(characterization_title, 0, 0, col_span=2),
-              ProfileElement(enneagram_field, 1, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(mbti_field, 2, 0, col_span=2, margins=Margins(left=15)),
-              # ProfileElement(core_desire_field, 2, 0, margins=Margins(left=15)),
-              # ProfileElement(core_fear_field, 2, 1),
-              ProfileElement(traits_field, 3, 0, col_span=2, margins=Margins(left=15)),
+    fields = [ProfileElement(summary_title, 0, 0, col_span=2),
+              ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(characterization_title, 2, 0, col_span=2),
+              ProfileElement(enneagram_field, 3, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(mbti_field, 4, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
               # ProfileElement(TemplateField('', type=TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2),
-              ProfileElement(story_title, 5, 0, col_span=2),
-              ProfileElement(desire_field, 6, 0, margins=Margins(left=15)),
-              ProfileElement(need_field, 6, 1),
-              ProfileElement(weaknesses_field, 7, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(ghost_field, 8, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(values_field, 9, 0, col_span=2, margins=Margins(left=15))
+              ProfileElement(story_title, 6, 0, col_span=2),
+              ProfileElement(desire_field, 7, 0, margins=Margins(left=15)),
+              ProfileElement(need_field, 7, 1),
+              ProfileElement(weaknesses_field, 8, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(ghost_field, 9, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(values_field, 10, 0, col_span=2, margins=Margins(left=15))
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
