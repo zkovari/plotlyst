@@ -185,6 +185,9 @@ class Character:
 
         return ''
 
+    def is_minor(self) -> bool:
+        return self.role and self.role.text in [tertiary_role.text, henchmen_role.text]
+
     def flatten_goals(self) -> List[CharacterGoal]:
         all_goals = []
         self.__traverse_goals(all_goals, self.goals)
@@ -1116,7 +1119,7 @@ class Novel(NovelDescriptor):
                                                antagonist_role.text, deuteragonist_role.text]]
 
     def minor_characters(self) -> List[Character]:
-        return [x for x in self.characters if x.role and x.role.text in [tertiary_role.text, henchmen_role.text]]
+        return [x for x in self.characters if x.is_minor()]
 
     @property
     def active_story_structure(self) -> StoryStructure:
