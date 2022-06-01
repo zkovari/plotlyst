@@ -53,6 +53,7 @@ from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButto
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
+from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
 
 
 class _ProfileTemplateBase(QWidget):
@@ -74,10 +75,13 @@ class _ProfileTemplateBase(QWidget):
         self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
 
         self.widgets: List[TemplateWidgetBase] = []
-        self._headers: List[Tuple[int, TemplateField]] = []
+        self._headers: List[Tuple[int, HeaderTemplateDisplayWidget]] = []
         self._initGrid(editor_mode)
 
     def _initGrid(self, editor_mode: bool):
+        self.widgets.clear()
+        self._headers.clear()
+
         for el in self._profile.elements:
             widget = TemplateFieldWidgetFactory.widget(el.field, self)
             if el.margins:
@@ -87,8 +91,13 @@ class _ProfileTemplateBase(QWidget):
                                       el.h_alignment.value | el.v_alignment.value)
 
             if isinstance(widget, HeaderTemplateDisplayWidget):
-                self._headers.append((el.row, el.field))
-                widget.collapsed.connect(partial(self._collapse, el.row))
+                self._headers.append((el.row, widget))
+            else:
+                if self._headers:
+                    self._headers[-1][1].attachWidget(widget)
+
+        for _, header in self._headers:
+            header.updateProgress()
 
         self._addSpacerToEnd()
 
@@ -97,18 +106,26 @@ class _ProfileTemplateBase(QWidget):
                                 self.gridLayout.rowCount(), 0)
         self.gridLayout.setRowStretch(self.gridLayout.rowCount() - 1, 1)
 
-    def _collapse(self, row: int, collapsed: bool):
-        last_row = self.gridLayout.rowCount() - 1
-        for header_row, _ in self._headers:
-            if header_row > row:
-                last_row = header_row
-                break
+    def values(self) -> List[TemplateValue]:
+        values: List[TemplateValue] = []
+        for widget in self.widgets:
+            if isinstance(widget, TemplateDisplayWidget):
+                continue
+            values.append(TemplateValue(id=widget.field.id, value=widget.value()))
 
-        for i in range(row + 1, last_row):
-            for j in range(0, 2):
-                item = self.gridLayout.itemAtPosition(i, j)
-                if item:
-                    item.widget().setHidden(collapsed)
+        return values
+
+    def setValues(self, values: List[TemplateValue]):
+        ids = {}
+        for value in values:
+            ids[str(value.id)] = value.value
+
+        for widget in self.widgets:
+            if isinstance(widget, TemplateDisplayWidget):
+                continue
+            if str(widget.field.id) in ids.keys():
+                value = ids[str(widget.field.id)]
+                widget.setValue(value)
 
 
 class _PlaceHolder(QFrame):
@@ -365,6 +382,9 @@ class ButtonSelectionWidget(QWidget):
 
 
 class TemplateWidgetBase(QFrame):
+    valueFilled = pyqtSignal()
+    valueReset = pyqtSignal()
+
     def __init__(self, field: TemplateField, parent=None):
         super(TemplateWidgetBase, self).__init__(parent)
         self.field = field
@@ -403,7 +423,6 @@ class LabelTemplateDisplayWidget(TemplateDisplayWidget):
 
 
 class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
-    collapsed = pyqtSignal(bool)
 
     def __init__(self, field: TemplateField, parent=None):
         super(HeaderTemplateDisplayWidget, self).__init__(field, parent)
@@ -418,17 +437,53 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         underline(self.btnHeader)
         self.btnHeader.setText(field.name)
         self.btnHeader.setToolTip(field.description)
-        self.layout().addWidget(self.btnHeader, alignment=Qt.AlignLeft)
+        self.layout().addWidget(self.btnHeader)
 
-        self.btnHeader.clicked.connect(self._toggleCollapse)
+        self.progress = CircularProgressBar()
+        self.layout().addWidget(self.progress, alignment=Qt.AlignVCenter)
+        self.layout().addWidget(spacer())
+
+        self.children: List[TemplateWidgetBase] = []
+        self.progressStatuses: Dict[TemplateWidgetBase] = {}
+
+        self.btnHeader.toggled.connect(self._toggleCollapse)
+
+    def attachWidget(self, widget: TemplateWidgetBase):
+        self.children.append(widget)
+        self.progressStatuses[widget] = False
+        widget.valueFilled.connect(partial(self._valueFilled, widget))
+        widget.valueReset.connect(partial(self._valueReset, widget))
+
+    def updateProgress(self):
+        self.progress.setMaxValue(len(self.children))
+        self.progress.update()
+
+    def collapse(self, collapsed: bool):
+        self.btnHeader.setChecked(collapsed)
 
     def _toggleCollapse(self, checked: bool):
+        for wdg in self.children:
+            wdg.setHidden(checked)
         if checked:
             self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-right'))
         else:
             self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-down'))
 
-        self.collapsed.emit(checked)
+    def _valueFilled(self, widget: TemplateWidgetBase):
+        if self.progressStatuses[widget]:
+            return
+
+        self.progressStatuses[widget] = True
+        value = self.progress.value()
+        self.progress.setValue(value + 1)
+
+    def _valueReset(self, widget: TemplateWidgetBase):
+        if not self.progressStatuses[widget]:
+            return
+
+        self.progressStatuses[widget] = False
+        value = self.progress.value()
+        self.progress.setValue(value - 1)
 
 
 class LineTemplateDisplayWidget(TemplateDisplayWidget):
@@ -496,6 +551,8 @@ class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
         if self.field.compact:
             _layout.addWidget(spacer())
 
+        self.wdgEditor.textChanged.connect(self._textChanged)
+
     @overrides
     def value(self) -> Any:
         return self.wdgEditor.text()
@@ -503,6 +560,12 @@ class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
     @overrides
     def setValue(self, value: Any):
         self.wdgEditor.setText(value)
+
+    def _textChanged(self, text: str):
+        if text:
+            self.valueFilled.emit()
+        else:
+            self.valueReset.emit()
 
 
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
@@ -516,6 +579,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
         _layout.addWidget(self.wdgEditor)
 
+        self.wdgEditor.textChanged.connect(self._textChanged)
+
     @overrides
     def value(self) -> Any:
         return self.wdgEditor.toPlainText()
@@ -523,6 +588,12 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
     @overrides
     def setValue(self, value: Any):
         self.wdgEditor.setText(value)
+
+    def _textChanged(self):
+        if self.wdgEditor.toPlainText():
+            self.valueFilled.emit()
+        else:
+            self.valueReset.emit()
 
 
 class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
@@ -542,6 +613,8 @@ class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
         if self.field.compact:
             _layout.addWidget(spacer())
 
+        self.wdgEditor.valueChanged.connect(self._valueChanged)
+
     @overrides
     def value(self) -> Any:
         return self.wdgEditor.value()
@@ -549,6 +622,12 @@ class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
     @overrides
     def setValue(self, value: Any):
         self.wdgEditor.setValue(value)
+
+    def _valueChanged(self, value: int):
+        if value:
+            self.valueFilled.emit()
+        else:
+            self.valueReset.emit()
 
 
 class EnneagramFieldWidget(TemplateFieldWidgetBase):
@@ -599,6 +678,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
                           animated: bool = True):
         if not new:
             self.wdgAttr.setHidden(True)
+            self.valueReset.emit()
             return
 
         if animated:
@@ -608,22 +688,50 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.lblDesire.setText(new.meta['desire'])
         self.lblFear.setText(new.meta['fear'])
 
+        self.valueFilled.emit()
 
-class CustomTemplateFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, editor: QWidget, parent=None, vertical: bool = True):
-        super(CustomTemplateFieldWidget, self).__init__(field, parent)
-        self.wdgEditor = editor
-        _layout = vbox(self) if vertical else hbox(self)
 
-        if vertical:
-            _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
-        else:
-            _layout.addWidget(self.lblEmoji)
-            _layout.addWidget(self.lblName)
+class MbtiFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(MbtiFieldWidget, self).__init__(field, parent)
+        self.wdgEditor = TextSelectionWidget(field, mbti_help)
+
+        _layout = vbox(self)
         _layout.addWidget(self.wdgEditor)
 
         if self.field.compact:
-            _layout.addWidget(spacer(vertical=vertical))
+            _layout.addWidget(spacer())
+
+        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+        if value:
+            self.valueFilled.emit()
+
+    def _selectionChanged(self, old: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
+                          animated: bool = True):
+        if not new:
+            self.valueReset.emit()
+            return
+
+        self.valueFilled.emit()
+
+
+class TraitsFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(TraitsFieldWidget, self).__init__(field, parent)
+        self.wdgEditor = TraitSelectionWidget(field, parent)
+        _layout = vbox(self)
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        _layout.addWidget(self.wdgEditor)
+
+        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
 
     @overrides
     def value(self) -> Any:
@@ -633,37 +741,36 @@ class CustomTemplateFieldWidget(TemplateFieldWidgetBase):
     def setValue(self, value: Any):
         self.wdgEditor.setValue(value)
 
-
-class TemplateFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, editor: QWidget, parent=None):
-        super(TemplateFieldWidget, self).__init__(field, parent)
-        self._layout = hbox(self)
-        self.wdgEditor = editor
-
-        if self.field.type in [TemplateFieldType.LABELS, TemplateFieldType.SMALL_TEXT]:
-            label_alignment = Qt.AlignTop
+    def _selectionChanged(self):
+        if self.wdgEditor.selectedItems():
+            self.valueFilled.emit()
         else:
-            label_alignment = Qt.AlignVCenter
-        self._layout.addWidget(self.lblName, alignment=label_alignment)
+            self.valueReset.emit()
 
-        self._layout.addWidget(self.wdgEditor)
 
-        if self.field.compact:
-            self._layout.addWidget(spacer())
+class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(LabelsTemplateFieldWidget, self).__init__(field, parent)
+        self.wdgEditor = LabelsSelectionWidget(field)
+        _layout = vbox(self)
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        _layout.addWidget(self.wdgEditor)
+
+        self.wdgEditor.selectionChanged.connect(self._selectionChanged)
 
     @overrides
     def value(self) -> Any:
-        if isinstance(self.wdgEditor, QComboBox):
-            return self.wdgEditor.currentText()
-        if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
-            return self.wdgEditor.value()
+        return self.wdgEditor.value()
 
     @overrides
     def setValue(self, value: Any):
-        if isinstance(self.wdgEditor, QComboBox):
-            self.wdgEditor.setCurrentText(value)
-        if isinstance(self.wdgEditor, (ButtonSelectionWidget, TextSelectionWidget, LabelsSelectionWidget)):
-            self.wdgEditor.setValue(value)
+        self.wdgEditor.setValue(value)
+
+    def _selectionChanged(self):
+        if self.wdgEditor.selectedItems():
+            self.valueFilled.emit()
+        else:
+            self.valueReset.emit()
 
 
 class TemplateFieldWidgetFactory:
@@ -682,9 +789,9 @@ class TemplateFieldWidgetFactory:
         if field.id == enneagram_field.id:
             return EnneagramFieldWidget(field, parent)
         elif field.id == mbti_field.id:
-            return CustomTemplateFieldWidget(field, TextSelectionWidget(field, mbti_help), parent, vertical=False)
+            return MbtiFieldWidget(field, parent)
         elif field.id == traits_field.id:
-            return CustomTemplateFieldWidget(field, TraitSelectionWidget(field, parent))
+            return TraitsFieldWidget(field)
         elif field.type == TemplateFieldType.NUMERIC:
             return NumericTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT_SELECTION:
@@ -703,11 +810,9 @@ class TemplateFieldWidgetFactory:
         elif field.type == TemplateFieldType.TEXT:
             return LineTextTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.LABELS:
-            return CustomTemplateFieldWidget(field, LabelsSelectionWidget(field), parent)
+            return LabelsTemplateFieldWidget(field, parent)
         else:
             raise ValueError('Unrecognized template field type %s', field.type)
-
-        return TemplateFieldWidget(field, widget)
 
 
 class ProfileTemplateEditor(_ProfileTemplateBase):
@@ -721,7 +826,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         super(ProfileTemplateEditor, self).__init__(profile, editor_mode=True)
         self.setAcceptDrops(True)
         self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
-        self._selected: Optional[TemplateFieldWidget] = None
+        self._selected: Optional[TemplateWidgetBase] = None
         self._target_to_drop: Optional[QWidget] = None
 
         for w in self.widgets:
@@ -870,7 +975,8 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
     def _installEventFilter(self, widget: TemplateWidgetBase):
         widget.installEventFilter(self)
-        if isinstance(TemplateWidgetBase, TemplateFieldWidget) and isinstance(widget.wdgEditor, TextSelectionWidget):
+        if isinstance(widget, TemplateWidgetBase) and not isinstance(widget, TemplateDisplayWidget) and isinstance(
+                widget.wdgEditor, TextSelectionWidget):
             widget.wdgEditor.installEventFilter(self)
 
     def _addPlaceholder(self, row: int, col: int):
@@ -888,26 +994,6 @@ class ProfileTemplateView(_ProfileTemplateBase):
         self.setProperty('mainFrame', True)
         self.setValues(values)
 
-    def values(self) -> List[TemplateValue]:
-        values: List[TemplateValue] = []
-        for widget in self.widgets:
-            if isinstance(widget, TemplateDisplayWidget):
-                continue
-            values.append(TemplateValue(id=widget.field.id, value=widget.value()))
-
-        return values
-
-    def setValues(self, values: List[TemplateValue]):
-        ids = {}
-        for value in values:
-            ids[str(value.id)] = value.value
-
-        for widget in self.widgets:
-            if isinstance(widget, TemplateDisplayWidget):
-                continue
-            if str(widget.field.id) in ids.keys():
-                widget.setValue(ids[str(widget.field.id)])
-
 
 class CharacterProfileTemplateView(ProfileTemplateView):
     def __init__(self, character: Character, profile: ProfileTemplate):
@@ -916,7 +1002,7 @@ class CharacterProfileTemplateView(ProfileTemplateView):
         self._required_headers_toggled: bool = False
         self._enneagram_widget: Optional[TextSelectionWidget] = None
         self._traits_widget: Optional[TraitSelectionWidget] = None
-        self._goals_widget: Optional[TemplateFieldWidget] = None
+        self._goals_widget: Optional[TemplateWidgetBase] = None
         for widget in self.widgets:
             if widget.field.id == enneagram_field.id:
                 self._enneagram_widget = widget.wdgEditor
@@ -932,10 +1018,9 @@ class CharacterProfileTemplateView(ProfileTemplateView):
 
         self._required_headers_toggled = toggled
         for row, header in self._headers:
-            if not header.required:
-                self._collapse(row, toggled)
-                item = self.gridLayout.itemAtPosition(row, 0)
-                item.widget().setHidden(toggled)
+            if not header.field.required:
+                header.collapse(toggled)
+                header.setHidden(toggled)
 
     def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
         if self._traits_widget:

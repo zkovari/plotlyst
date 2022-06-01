@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Dict
 
+import qtanim
 from PyQt5.QtChart import QChartView, QPieSeries, QPieSlice
 from PyQt5.QtCore import Qt, QSize, QPoint
 from PyQt5.QtGui import QPainter, QColor, QFont, QPaintEvent, QPen, QPainterPath
@@ -131,9 +132,17 @@ class CircularProgressBar(QWidget):
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         self._tickPixmap = IconRegistry.ok_icon('#2a9d8f').pixmap(self._radius * 2 - 2, self._radius * 2 - 2)
 
+    def value(self) -> int:
+        return self._value
+
     def setValue(self, value: int):
-        self._value = value
+        if value > 0:
+            self._value = value if value <= self._maxValue else self._maxValue
+        else:
+            self._value = 0
         self.update()
+        if self._value == self._maxValue and self.isVisible():
+            qtanim.glow(self, color=QColor('#2a9d8f'))
 
     def setMaxValue(self, value: int):
         self._maxValue = value
