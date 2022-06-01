@@ -106,6 +106,10 @@ class TemplateField:
     compact: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
 
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
 
 age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
                           id=uuid.UUID('7c8fccb8-9228-495a-8edd-3f991ebeed4b'), emoji=':birthday_cake:',
