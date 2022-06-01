@@ -134,7 +134,7 @@ class IconRegistry:
 
     @staticmethod
     def location_icon() -> QIcon:
-        return qtawesome.icon('fa5s.location-arrow', color_on='darkBlue')
+        return qtawesome.icon('fa5s.map-pin', color_on='darkBlue', options=[{'scale_factor': 1.1}])
 
     @staticmethod
     def scene_icon() -> QIcon:
