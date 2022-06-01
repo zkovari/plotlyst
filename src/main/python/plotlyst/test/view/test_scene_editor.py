@@ -24,10 +24,3 @@ def test_editor_with_new_scene(qtbot):
 
     assert view.ui.wdgPov.btnPov.text() == 'Select POV'
     assert view.ui.wdgPov.btnPov.toolButtonStyle() == Qt.ToolButtonTextUnderIcon
-
-
-def _test_display_scene_builder(qtbot):
-    novel = Novel('Test-novel')
-    view: SceneEditor = editor(qtbot, novel)
-
-    view.ui.btnBuilder.click()
