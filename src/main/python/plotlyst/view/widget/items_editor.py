@@ -43,6 +43,7 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
 
         self.bgColorFieldEnabled: bool = False
         self.askRemovalConfirmation: bool = False
+        self.removeAllEnabled: bool = True
         self.inlineEditionEnabled: bool = True
 
         self.btnAdd.setIcon(IconRegistry.plus_icon())
@@ -87,6 +88,10 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.btnAdd.setEnabled(enabled)
         self.btnAdd.setVisible(enabled)
 
+    def setRemoveAllEnabled(self, enabled: bool):
+        self.removeAllEnabled = enabled
+        self._item_selected()
+
     def refresh(self):
         self.model.modelReset.emit()
         self.btnEdit.setEnabled(False)
@@ -125,10 +130,17 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
             return
         self.model.remove(indexes[0])
 
+        self.btnEdit.setDisabled(True)
+        self.btnRemove.setDisabled(True)
+
     def _item_selected(self):
         selection = len(self.tableView.selectedIndexes()) > 0
         self.btnEdit.setEnabled(selection)
-        self.btnRemove.setEnabled(selection)
+        if selection:
+            if not self.removeAllEnabled and self.model.rowCount() == 1:
+                self.btnRemove.setDisabled(True)
+            else:
+                self.btnRemove.setEnabled(selection)
 
     def _item_clicked(self, index: QModelIndex):
         if index.column() == SelectionItemsModel.ColIcon:

@@ -434,6 +434,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _customize_stages(self):
         diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))
         diag.wdgItemsEditor.tableView.setColumnHidden(SelectionItemsModel.ColIcon, True)
+        diag.wdgItemsEditor.setRemoveAllEnabled(False)
         items = diag.display()
         if items:
             self.novel.stages.clear()
