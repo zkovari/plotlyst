@@ -1198,7 +1198,7 @@ class SceneStoryStructureWidget(QWidget):
             previous_beat = None
             next_beat_scene = None
             next_beat = None
-            for _scene in self.novel.scenes[0: index]:
+            for _scene in reversed(self.novel.scenes[0: index]):
                 previous_beat = _scene.beat(self.novel)
                 if previous_beat:
                     previous_beat_scene = _scene
@@ -1210,14 +1210,12 @@ class SceneStoryStructureWidget(QWidget):
                     break
 
             min_percentage = previous_beat.percentage if previous_beat else 1
-            if not next_beat:
-                return
-            max_percentage = next_beat.percentage
+            max_percentage = next_beat.percentage if next_beat else 99
             min_index = self.novel.scenes.index(previous_beat_scene) if previous_beat_scene else 0
             max_index = self.novel.scenes.index(next_beat_scene) if next_beat_scene else len(self.novel.scenes) - 1
 
-            self._currentScenePercentage = (max_percentage - min_percentage) / (max_index - min_index) * (
-                    index - min_index)
+            self._currentScenePercentage = min_percentage + (max_percentage - min_percentage) / (
+                    max_index - min_index) * (index - min_index)
 
             self.btnCurrentScene.setVisible(True)
             self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
