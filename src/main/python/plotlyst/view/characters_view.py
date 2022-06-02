@@ -90,6 +90,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
+        self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon())
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
 
@@ -113,7 +114,8 @@ class CharactersView(AbstractNovelView):
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
-                                                        (self.ui.btnBackstoryView, self.ui.pageBackstory)])
+                                                        (self.ui.btnBackstoryView, self.ui.pageBackstory),
+                                                        (self.ui.btnProgressView, self.ui.pageProgressView)])
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.cards.swapped.connect(self._characters_swapped)
