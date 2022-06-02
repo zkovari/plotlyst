@@ -435,6 +435,7 @@ class ScenesOutlineView(AbstractNovelView):
         diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))
         diag.wdgItemsEditor.tableView.setColumnHidden(SelectionItemsModel.ColIcon, True)
         diag.wdgItemsEditor.setRemoveAllEnabled(False)
+        diag.wdgItemsEditor.setInsertionEnabled(True)
         items = diag.display()
         if items:
             self.novel.stages.clear()

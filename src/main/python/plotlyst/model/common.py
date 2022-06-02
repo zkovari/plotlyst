@@ -133,8 +133,22 @@ class SelectionItemsModel(QAbstractTableModel):
 
         return index.row()
 
+    def insert(self, row: int):
+        index = self._insertItem(row)
+
+        item = self.item(index)
+        if self._checkable:
+            self._checked.add(item)
+            self.selection_changed.emit()
+
+        self.modelReset.emit()
+
     @abstractmethod
     def _newItem(self) -> QModelIndex:
+        pass
+
+    @abstractmethod
+    def _insertItem(self, row: int) -> QModelIndex:
         pass
 
     def remove(self, index: QModelIndex):
@@ -246,6 +260,11 @@ class DefaultSelectionItemsModel(SelectionItemsModel):
     def _newItem(self) -> QModelIndex:
         self._items.append(SelectionItem('new'))
         return self.index(self.rowCount() - 1, 0)
+
+    @overrides
+    def _insertItem(self, row: int) -> QModelIndex:
+        self._items.insert(row, SelectionItem(''))
+        return self.index(row, 0)
 
     @overrides
     def item(self, index: QModelIndex) -> SelectionItem:

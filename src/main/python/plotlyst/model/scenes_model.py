@@ -359,6 +359,10 @@ class SceneConflictsModel(SelectionItemsModel):
     @overrides
     def _newItem(self) -> QModelIndex:
         pass
+    
+    @overrides
+    def _insertItem(self, row: int) -> QModelIndex:
+        pass
 
     @overrides
     def item(self, index: QModelIndex) -> SelectionItem:

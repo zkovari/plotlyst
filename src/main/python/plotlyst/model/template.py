@@ -43,6 +43,11 @@ class TemplateFieldSelectionModel(SelectionItemsModel):
         return self.index(self.rowCount() - 1, 0)
 
     @overrides
+    def _insertItem(self, row: int) -> QModelIndex:
+        self._field.selections.insert(row, SelectionItem(''))
+        return self.insert(row, 0)
+
+    @overrides
     def remove(self, index: QModelIndex):
         super(TemplateFieldSelectionModel, self).remove(index)
         self._field.selections.pop(index.row())

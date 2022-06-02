@@ -47,6 +47,10 @@ class _NovelSelectionItemsModel(SelectionItemsModel):
     def _newItem(self) -> QModelIndex:
         pass
 
+    @overrides
+    def _insertItem(self, row: int) -> QModelIndex:
+        raise ValueError('Not supported operation')
+
     @abstractmethod
     @overrides
     def item(self, index: QModelIndex) -> SelectionItem:
