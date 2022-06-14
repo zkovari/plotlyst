@@ -144,6 +144,9 @@ class CircularProgressBar(QWidget):
         if self._value == self._maxValue and self.isVisible():
             qtanim.glow(self, color=QColor('#2a9d8f'))
 
+    def maxValue(self) -> int:
+        return self._maxValue
+
     def setMaxValue(self, value: int):
         self._maxValue = value
 

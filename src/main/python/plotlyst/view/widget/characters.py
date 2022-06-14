@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
+from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
 
@@ -41,7 +42,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, Con
     CharacterGoal, Goal, protagonist_role, GoalReference
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
-    tertiary_role, SelectionItem, Role
+    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -1459,6 +1460,15 @@ class CharactersProgressWidget(QWidget):
     RowRole: int = 4
     RowGender: int = 5
 
+    @dataclass
+    class Header:
+        header: TemplateField
+        row: int
+        max_value: int = 0
+
+        def __hash__(self):
+            return hash(str(self.header.id))
+
     def __init__(self, parent=None):
         super(CharactersProgressWidget, self).__init__(parent)
         self._layout = QGridLayout()
@@ -1485,11 +1495,26 @@ class CharactersProgressWidget(QWidget):
             self._layout.addWidget(btn, 0, i + 1)
         self._layout.addWidget(spacer(), 0, self._layout.columnCount())
 
-        self._addLabel(self.RowOverall, 'Overall', IconRegistry.progress_check_icon(), Qt.AlignLeft)
-        self._layout.addWidget(line(), self.RowOverall + 1, 0, 1, self._layout.columnCount() - 1)
+        self._addLabel(self.RowOverall, 'Overall', IconRegistry.progress_check_icon(), Qt.AlignCenter)
+        self._addLine()
         self._addLabel(self.RowName, 'Name', IconRegistry.character_icon())
         self._addLabel(self.RowRole, 'Role', IconRegistry.major_character_icon())
         self._addLabel(self.RowGender, 'Gender', IconRegistry.male_gender_icon())
+        self._addLine()
+
+        fields = {}
+        headers = {}
+        header = None
+        header_row = 0
+        for el in self.novel.character_profiles[0].elements:
+            if el.field.type == TemplateFieldType.DISPLAY_HEADER:
+                self._addLabel(self._layout.rowCount(), el.field.name)
+                header_row = self._layout.rowCount() - 1
+                header = self.Header(el.field, header_row)
+                headers[header] = 0
+            elif not el.field.type.name.startswith('DISPLAY') and header:
+                fields[str(el.field.id)] = header
+                header.max_value = header.max_value + 1
 
         for i, char in enumerate(self.novel.characters):
             name_progress = CircularProgressBar(parent=self)
@@ -1507,13 +1532,40 @@ class CharactersProgressWidget(QWidget):
                 gender_progress.setValue(1)
             self._addProgress(gender_progress, self.RowGender, i + 1)
 
+            for h in headers.keys():
+                headers[h] = 0  # reset char values
+
+            for value in char.template_values:
+                if str(value.id) not in fields.keys():
+                    continue
+
+                header = fields[str(value.id)]
+
+                if not header.header.required and char.is_minor():
+                    continue
+                if value.value:
+                    headers[header] = headers[header] + 1
+
             overall_progress = CircularProgressBar(parent=self)
             overall_progress.setMaxValue(2)
-            overall_value = (name_progress.value() + gender_progress.value()) // 2 + role_progress.value()
+            overall_value = 0
+
+            for h, v in headers.items():
+                if not h.header.required and char.is_minor():
+                    continue
+                value_progress = CircularProgressBar(v, h.max_value, parent=self)
+                self._addProgress(value_progress, h.row, i + 1)
+                overall_progress.setMaxValue(overall_progress.maxValue() + h.max_value)
+                overall_value += v
+
+            overall_value += (name_progress.value() + gender_progress.value()) // 2 + role_progress.value()
             overall_progress.setValue(overall_value)
             self._addProgress(overall_progress, self.RowOverall, i + 1)
 
         self._layout.addWidget(vspacer(), self._layout.rowCount(), 0)
+
+    def _addLine(self):
+        self._layout.addWidget(line(), self._layout.rowCount(), 0, 1, self._layout.columnCount() - 1)
 
     def _addLabel(self, row: int, text: str, icon=None, alignment=Qt.AlignRight):
         if icon:
@@ -1527,5 +1579,5 @@ class CharactersProgressWidget(QWidget):
 
     def _addProgress(self, progress: QWidget, row: int, col: int):
         if row > self.RowOverall:
-            opaque(progress)
+            progress.installEventFilter(OpacityEventFilter(parent=progress))
         self._layout.addWidget(progress, row, col, alignment=Qt.AlignCenter)

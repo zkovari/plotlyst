@@ -37,6 +37,10 @@ from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_emp
 class TemplateValue:
     id: uuid.UUID
     value: Any
+    
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 @dataclass
