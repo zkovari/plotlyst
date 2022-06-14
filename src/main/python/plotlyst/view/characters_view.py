@@ -25,6 +25,7 @@ from PyQt5.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import ask_confirmation, busy, gc, incr_font
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -39,7 +40,7 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -111,6 +112,12 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.setCardsWidth(142)
         self._update_cards()
 
+        self._progress = CharactersProgressWidget()
+        self.ui.scrollAreaProgress.layout().addWidget(self._progress)
+        self.ui.pageProgressView.setStyleSheet(f'#scrollAreaProgress {{background-color: {RELAXED_WHITE_COLOR};}}')
+        self._progress.setNovel(self.novel)
+        self._progress.refresh()
+
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
@@ -127,6 +134,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setDisabled(True)
 
         self._update_cards()
+        self._progress.refresh()
 
     @overrides
     def can_show_title(self) -> bool:

@@ -361,7 +361,7 @@
        <item>
         <widget class="QStackedWidget" name="stackCharacters">
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="pageTableView">
           <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -491,20 +491,79 @@
          <widget class="QWidget" name="pageProgressView">
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <property name="spacing">
-            <number>3</number>
+            <number>4</number>
            </property>
            <property name="leftMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
            <property name="topMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
            <property name="rightMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
            <property name="bottomMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
+           <item alignment="Qt::AlignHCenter">
+            <widget class="QLabel" name="label_6">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Characterization progress</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QScrollArea" name="scrollArea_3">
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="lineWidth">
+              <number>0</number>
+             </property>
+             <property name="widgetResizable">
+              <bool>true</bool>
+             </property>
+             <widget class="QWidget" name="scrollAreaProgress">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>896</width>
+                <height>629</height>
+               </rect>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_7">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+              </layout>
+             </widget>
+            </widget>
+           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="pageCardsView">
@@ -553,8 +612,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>876</width>
-                <height>650</height>
+                <width>80</width>
+                <height>30</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">

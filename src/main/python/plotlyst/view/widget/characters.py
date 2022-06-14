@@ -28,11 +28,11 @@ from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent,
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
     QPalette, QMouseEvent
 from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QScrollArea
+    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, busy, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, opaque
+    spacer, clear_layout, vbox, hbox, flow, opaque, margins
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
@@ -64,8 +64,10 @@ from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_Journal
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.cards import JournalCard
+from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
+from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
@@ -1449,3 +1451,81 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
     def _select(self):
         self.roleSelected.emit(copy.deepcopy(self._currentRole))
+
+
+class CharactersProgressWidget(QWidget):
+    RowOverall: int = 1
+    RowName: int = 3
+    RowRole: int = 4
+    RowGender: int = 5
+
+    def __init__(self, parent=None):
+        super(CharactersProgressWidget, self).__init__(parent)
+        self._layout = QGridLayout()
+        self.setLayout(self._layout)
+        margins(self, 2, 2, 2, 2)
+        self._layout.setSpacing(5)
+
+        self.novel: Optional[Novel] = None
+
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+
+    def refresh(self):
+        if not self.novel:
+            return
+
+        clear_layout(self)
+
+        for i, char in enumerate(self.novel.characters):
+            btn = QToolButton(self)
+            btn.setIconSize(QSize(45, 45))
+            transparent(btn)
+            btn.setIcon(avatars.avatar(char))
+            self._layout.addWidget(btn, 0, i + 1)
+        self._layout.addWidget(spacer(), 0, self._layout.columnCount())
+
+        self._addLabel(self.RowOverall, 'Overall', IconRegistry.progress_check_icon(), Qt.AlignLeft)
+        self._layout.addWidget(line(), self.RowOverall + 1, 0, 1, self._layout.columnCount() - 1)
+        self._addLabel(self.RowName, 'Name', IconRegistry.character_icon())
+        self._addLabel(self.RowRole, 'Role', IconRegistry.major_character_icon())
+        self._addLabel(self.RowGender, 'Gender', IconRegistry.male_gender_icon())
+
+        for i, char in enumerate(self.novel.characters):
+            name_progress = CircularProgressBar(parent=self)
+            if char.name:
+                name_progress.setValue(1)
+            self._addProgress(name_progress, self.RowName, i + 1)
+
+            role_progress = CircularProgressBar(parent=self)
+            if char.role:
+                role_progress.setValue(1)
+            self._addProgress(role_progress, self.RowRole, i + 1)
+
+            gender_progress = CircularProgressBar(parent=self)
+            if char.gender:
+                gender_progress.setValue(1)
+            self._addProgress(gender_progress, self.RowGender, i + 1)
+
+            overall_progress = CircularProgressBar(parent=self)
+            overall_progress.setMaxValue(2)
+            overall_value = (name_progress.value() + gender_progress.value()) // 2 + role_progress.value()
+            overall_progress.setValue(overall_value)
+            self._addProgress(overall_progress, self.RowOverall, i + 1)
+
+        self._layout.addWidget(vspacer(), self._layout.rowCount(), 0)
+
+    def _addLabel(self, row: int, text: str, icon=None, alignment=Qt.AlignRight):
+        if icon:
+            wdg = IconText(self)
+            wdg.setIcon(icon)
+        else:
+            wdg = QLabel(parent=self)
+        wdg.setText(text)
+
+        self._layout.addWidget(wdg, row, 0, alignment=alignment)
+
+    def _addProgress(self, progress: QWidget, row: int, col: int):
+        if row > self.RowOverall:
+            opaque(progress)
+        self._layout.addWidget(progress, row, col, alignment=Qt.AlignCenter)
