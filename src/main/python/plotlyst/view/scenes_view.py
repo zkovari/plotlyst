@@ -138,9 +138,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self._hide_chapters_toggled(self.ui.btnChaptersToggle.isChecked())
 
-        self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
-        self.ui.btnAct2.setIcon(IconRegistry.act_two_icon())
-        self.ui.btnAct3.setIcon(IconRegistry.act_three_icon())
+        self.ui.btnAct1.setIcon(IconRegistry.act_one_icon(color='grey'))
+        self.ui.btnAct2.setIcon(IconRegistry.act_two_icon(color='grey'))
+        self.ui.btnAct3.setIcon(IconRegistry.act_three_icon(color='grey'))
         self.ui.btnAct1.toggled.connect(partial(self._proxy.setActsFilter, 1))
         self.ui.btnAct2.toggled.connect(partial(self._proxy.setActsFilter, 2))
         self.ui.btnAct3.toggled.connect(partial(self._proxy.setActsFilter, 3))

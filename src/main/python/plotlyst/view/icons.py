@@ -220,16 +220,16 @@ class IconRegistry:
         return qtawesome.icon('ei.file-edit', color=color, color_on=color_on)
 
     @staticmethod
-    def act_one_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-1-circle', color=ACT_ONE_COLOR)
+    def act_one_icon(color=ACT_ONE_COLOR, color_on=ACT_ONE_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.numeric-1-circle', color=color, color_on=color_on)
 
     @staticmethod
-    def act_two_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-2-circle', color=ACT_TWO_COLOR)
+    def act_two_icon(color=ACT_TWO_COLOR, color_on=ACT_TWO_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.numeric-2-circle', color=color, color_on=color_on)
 
     @staticmethod
-    def act_three_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-3-circle', color=ACT_THREE_COLOR)
+    def act_three_icon(color=ACT_THREE_COLOR, color_on=ACT_THREE_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.numeric-3-circle', color=color, color_on=color_on)
 
     @staticmethod
     def table_icon() -> QIcon:
