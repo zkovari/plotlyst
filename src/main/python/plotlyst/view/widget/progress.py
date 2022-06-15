@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
 from typing import List, Dict
 
 import qtanim
@@ -120,6 +121,11 @@ class SceneStageProgressCharts:
                 self._chartviews[i].refresh(v[0], v[1])
 
 
+class ProgressTooltipMode(Enum):
+    NUMBERS = 0
+    PERCENTAGE = 1
+
+
 class CircularProgressBar(QWidget):
 
     def __init__(self, value: int = 0, maxValue: int = 1, radius: int = 8, parent=None):
@@ -131,6 +137,10 @@ class CircularProgressBar(QWidget):
         self._maxValue = maxValue
         self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         self._tickPixmap = IconRegistry.ok_icon('#2a9d8f').pixmap(self._radius * 2 - 2, self._radius * 2 - 2)
+
+        self._tooltipMode: ProgressTooltipMode = ProgressTooltipMode.NUMBERS
+
+        self._updateTooltip()
 
     def value(self) -> int:
         return self._value
@@ -144,8 +154,18 @@ class CircularProgressBar(QWidget):
         if self._value == self._maxValue and self.isVisible():
             qtanim.glow(self, color=QColor('#2a9d8f'))
 
+        self._updateTooltip()
+
+    def maxValue(self) -> int:
+        return self._maxValue
+
     def setMaxValue(self, value: int):
         self._maxValue = value
+        self._updateTooltip()
+
+    def setTooltipMode(self, mode: ProgressTooltipMode):
+        self._tooltipMode = mode
+        self._updateTooltip()
 
     @overrides
     def sizeHint(self) -> QSize:
@@ -170,3 +190,13 @@ class CircularProgressBar(QWidget):
                                self._tickPixmap)
 
         painter.end()
+
+    def _updateTooltip(self):
+        if not self.maxValue():
+            self.setToolTip('0%')
+        elif self.value() == self.maxValue():
+            self.setToolTip('100%')
+        elif self._tooltipMode == ProgressTooltipMode.NUMBERS:
+            self.setToolTip(f'{self.value()} out of {self.maxValue()}')
+        else:
+            self.setToolTip(f'{int(self.value() / self.maxValue() * 100)}%')

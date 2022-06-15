@@ -25,6 +25,7 @@ from PyQt5.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import ask_confirmation, busy, gc, incr_font
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -39,7 +40,7 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -90,6 +91,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
+        self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
 
@@ -110,10 +112,18 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.setCardsWidth(142)
         self._update_cards()
 
+        self._progress = CharactersProgressWidget()
+        self.ui.scrollAreaProgress.layout().addWidget(self._progress)
+        self.ui.pageProgressView.setStyleSheet(f'#scrollAreaProgress {{background-color: {RELAXED_WHITE_COLOR};}}')
+        self._progress.setNovel(self.novel)
+        self._progress.characterClicked.connect(self._edit_character)
+        self._progress.refresh()
+
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
-                                                        (self.ui.btnBackstoryView, self.ui.pageBackstory)])
+                                                        (self.ui.btnBackstoryView, self.ui.pageBackstory),
+                                                        (self.ui.btnProgressView, self.ui.pageProgressView)])
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.cards.swapped.connect(self._characters_swapped)
@@ -125,6 +135,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setDisabled(True)
 
         self._update_cards()
+        self._progress.refresh()
 
     @overrides
     def can_show_title(self) -> bool:
@@ -191,8 +202,12 @@ class CharactersView(AbstractNovelView):
             character = self.selected_card.character
 
         if character:
-            self.editor = CharacterEditor(self.novel, character)
-            self._switch_to_editor()
+            self._edit_character(character)
+
+    @busy
+    def _edit_character(self, character: Character):
+        self.editor = CharacterEditor(self.novel, character)
+        self._switch_to_editor()
 
     def _switch_to_editor(self):
         emit_event(ToggleOutlineViewTitle(self, visible=False))

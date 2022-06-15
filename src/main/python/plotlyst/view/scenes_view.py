@@ -148,7 +148,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on='darkBlue'))
-        self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
+        self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.transit-connection-horizontal', color_on='darkBlue'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())

@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
+from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
 
@@ -28,20 +29,20 @@ from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent,
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
     QPalette, QMouseEvent
 from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QScrollArea
+    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, busy, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, opaque
+    spacer, clear_layout, vbox, hbox, flow, opaque, margins
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal, protagonist_role, GoalReference
+    CharacterGoal, Goal, GoalReference
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
-    tertiary_role, SelectionItem, Role
+    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -51,7 +52,7 @@ from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
-    VisibilityToggleEventFilter, hmax, link_buttons_to_pages
+    VisibilityToggleEventFilter, hmax, link_buttons_to_pages, pointy
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
@@ -64,8 +65,10 @@ from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_Journal
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.cards import JournalCard
+from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
+from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
@@ -1449,3 +1452,152 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
     def _select(self):
         self.roleSelected.emit(copy.deepcopy(self._currentRole))
+
+
+class CharactersProgressWidget(QWidget):
+    characterClicked = pyqtSignal(Character)
+
+    RowOverall: int = 1
+    RowName: int = 3
+    RowRole: int = 4
+    RowGender: int = 5
+
+    @dataclass
+    class Header:
+        header: TemplateField
+        row: int
+        max_value: int = 0
+
+        def __hash__(self):
+            return hash(str(self.header.id))
+
+    def __init__(self, parent=None):
+        super(CharactersProgressWidget, self).__init__(parent)
+        self._layout = QGridLayout()
+        self.setLayout(self._layout)
+        margins(self, 2, 2, 2, 2)
+        self._layout.setSpacing(5)
+
+        self.novel: Optional[Novel] = None
+
+    def setNovel(self, novel: Novel):
+        self.novel = novel
+
+    def refresh(self):
+        if not self.novel:
+            return
+
+        clear_layout(self._layout)
+
+        for i, char in enumerate(self.novel.characters):
+            btn = QToolButton(self)
+            btn.setIconSize(QSize(45, 45))
+            btn.setStyleSheet('''
+                QToolButton {border: 0px;}
+                QToolButton:pressed {border: 1px solid grey; border-radius: 20px;}
+            ''')
+            btn.setIcon(avatars.avatar(char))
+            self._layout.addWidget(btn, 0, i + 1)
+            pointy(btn)
+            btn.installEventFilter(OpacityEventFilter(0.8, 1.0, parent=btn))
+            btn.clicked.connect(partial(self.characterClicked.emit, char))
+        self._layout.addWidget(spacer(), 0, self._layout.columnCount())
+
+        self._addLabel(self.RowOverall, 'Overall', IconRegistry.progress_check_icon(), Qt.AlignCenter)
+        self._addLine(self.RowOverall + 1)
+        self._addLabel(self.RowName, 'Name', IconRegistry.character_icon())
+        self._addLabel(self.RowRole, 'Role', IconRegistry.major_character_icon())
+        self._addLabel(self.RowGender, 'Gender', IconRegistry.male_gender_icon())
+        self._addLine(self.RowGender + 1)
+
+        fields = {}
+        headers = {}
+        header = None
+        row = self.RowGender + 1
+        for el in self.novel.character_profiles[0].elements:
+            if el.field.type == TemplateFieldType.DISPLAY_HEADER:
+                row += 1
+                self._addLabel(row, el.field.name)
+                header = self.Header(el.field, row)
+                headers[header] = 0
+            elif not el.field.type.name.startswith('DISPLAY') and header:
+                fields[str(el.field.id)] = header
+                header.max_value = header.max_value + 1
+
+        row += 1
+        self._addLine(row)
+        row += 1
+        self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
+
+        for i, char in enumerate(self.novel.characters):
+            name_progress = CircularProgressBar(parent=self)
+            if char.name:
+                name_progress.setValue(1)
+            self._addProgress(name_progress, self.RowName, i + 1)
+
+            role_progress = CircularProgressBar(parent=self)
+            if char.role:
+                role_progress.setValue(1)
+            self._addProgress(role_progress, self.RowRole, i + 1)
+
+            gender_progress = CircularProgressBar(parent=self)
+            if char.gender:
+                gender_progress.setValue(1)
+            self._addProgress(gender_progress, self.RowGender, i + 1)
+
+            for h in headers.keys():
+                headers[h] = 0  # reset char values
+
+            for value in char.template_values:
+                if str(value.id) not in fields.keys():
+                    continue
+
+                header = fields[str(value.id)]
+
+                if not header.header.required and char.is_minor():
+                    continue
+                if value.value:
+                    headers[header] = headers[header] + 1
+
+            overall_progress = CircularProgressBar(parent=self)
+            overall_progress.setTooltipMode(ProgressTooltipMode.PERCENTAGE)
+            overall_progress.setMaxValue(2)
+            overall_value = 0
+
+            for h, v in headers.items():
+                if not h.header.required and char.is_minor():
+                    continue
+                value_progress = CircularProgressBar(v, h.max_value, parent=self)
+                self._addProgress(value_progress, h.row, i + 1)
+                overall_progress.setMaxValue(overall_progress.maxValue() + h.max_value)
+                overall_value += v
+
+            if not char.is_minor():
+                backstory_progress = CircularProgressBar(parent=self)
+                backstory_progress.setMaxValue(5 if char.is_major() else 3)
+                backstory_progress.setValue(len(char.backstory))
+                self._addProgress(backstory_progress, row, i + 1)
+
+            overall_value += (name_progress.value() + gender_progress.value()) // 2 + role_progress.value()
+            overall_progress.setValue(overall_value)
+            self._addProgress(overall_progress, self.RowOverall, i + 1)
+
+        self._layout.addWidget(vspacer(), row + 1, 0)
+
+    def _addLine(self, row: int):
+        self._layout.addWidget(line(), row, 0, 1, self._layout.columnCount() - 1)
+
+    def _addLabel(self, row: int, text: str, icon=None, alignment=Qt.AlignRight):
+        if icon:
+            wdg = IconText(self)
+            wdg.setIcon(icon)
+        else:
+            wdg = QLabel(parent=self)
+        wdg.setText(text)
+
+        self._layout.addWidget(wdg, row, 0, alignment=alignment)
+
+    def _addProgress(self, progress: QWidget, row: int, col: int):
+        if row > self.RowOverall:
+            progress.installEventFilter(OpacityEventFilter(parent=progress))
+        self._layout.addWidget(progress, row, col, alignment=Qt.AlignCenter)

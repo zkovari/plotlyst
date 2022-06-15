@@ -25,8 +25,8 @@ from fbs_runtime import platform
 from qthandy import opaque, btn_popup, incr_font, bold, italic
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem, \
-    protagonist_role
+from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
+from src.main.python.plotlyst.core.template import protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter

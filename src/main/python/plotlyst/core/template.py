@@ -318,10 +318,10 @@ class Role(SelectionItem):
     importance: RoleImportance = RoleImportance.SECONDARY
 
     def is_major(self) -> bool:
-        return self.importance == RoleImportance.MAJOR
+        return self.importance == RoleImportance.MAJOR or self.promoted
 
     def is_secondary(self) -> bool:
-        return self.importance == RoleImportance.SECONDARY
+        return self.importance == RoleImportance.SECONDARY and not self.promoted
 
     def is_minor(self) -> bool:
         return self.importance == RoleImportance.MINOR

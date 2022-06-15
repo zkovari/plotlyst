@@ -28,8 +28,8 @@ from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
-    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, protagonist_role, \
-    antagonist_role, deuteragonist_role, tertiary_role, henchmen_role, enneagram_choices, mbti_choices, Role, \
+    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, mbti_choices, \
+    Role, \
     summary_field
 
 
@@ -37,6 +37,10 @@ from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_emp
 class TemplateValue:
     id: uuid.UUID
     value: Any
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 @dataclass
@@ -185,8 +189,14 @@ class Character:
 
         return ''
 
+    def is_major(self):
+        return self.role and self.role.is_major()
+
+    def is_secondary(self):
+        return self.role and self.role.is_secondary()
+
     def is_minor(self) -> bool:
-        return self.role and self.role.text in [tertiary_role.text, henchmen_role.text]
+        return self.role and self.role.is_minor()
 
     def flatten_goals(self) -> List[CharacterGoal]:
         all_goals = []
@@ -1109,13 +1119,10 @@ class Novel(NovelDescriptor):
         return chars
 
     def major_characters(self) -> List[Character]:
-        return [x for x in self.characters if x.role and x.role.text in [protagonist_role.text,
-                                                                         antagonist_role.text, deuteragonist_role.text]]
+        return [x for x in self.characters if x.is_major()]
 
     def secondary_characters(self) -> List[Character]:
-        return [x for x in self.characters if
-                x.role and x.role.text not in [tertiary_role.text, henchmen_role.text, protagonist_role.text,
-                                               antagonist_role.text, deuteragonist_role.text]]
+        return [x for x in self.characters if x.is_secondary()]
 
     def minor_characters(self) -> List[Character]:
         return [x for x in self.characters if x.is_minor()]
