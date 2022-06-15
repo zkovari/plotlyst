@@ -49,6 +49,8 @@ from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.widget.chart import ActDistributionChart
+from src.main.python.plotlyst.view.widget.display import ChartView
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
@@ -69,6 +71,12 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         opaque(self.btnScene, 0.6)
         opaque(self.btnSequel, 0.6)
 
+        self._chartDistribution = ActDistributionChart()
+        self._chartDistributionView = ChartView()
+        self._chartDistributionView.setMaximumSize(356, 356)
+        self._chartDistributionView.setChart(self._chartDistribution)
+
+        btn_popup(self.btnCount, self._chartDistributionView)
         self.refresh()
 
         event_dispatcher.register(self, SceneChangedEvent)
@@ -79,9 +87,11 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.refresh()
 
     def refresh(self):
-        self.lblCount.setText(f'#{len(self.novel.scenes)}')
+        self.btnCount.setText(f'#{len(self.novel.scenes)}')
         self.btnScene.setText(f'{len([x for x in self.novel.scenes if x.type == SceneType.ACTION])}')
         self.btnSequel.setText(f'{len([x for x in self.novel.scenes if x.type == SceneType.REACTION])}')
+
+        self._chartDistribution.refresh(self.novel)
 
 
 class ScenesOutlineView(AbstractNovelView):

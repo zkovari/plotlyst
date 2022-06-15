@@ -25,11 +25,13 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QCursor, QIcon
 from PyQt5.QtWidgets import QToolTip
 
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel, \
     SceneStructureItem
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
     secondary_role
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -264,3 +266,37 @@ class SceneStructureEmotionalArcChart(BaseChart):
         self.addSeries(series)
         self.setAxisY(axis, series)
         axis.setVisible(False)
+
+
+class ActDistributionChart(BaseChart):
+
+    def __init__(self, parent=None):
+        super(ActDistributionChart, self).__init__(parent)
+        self.setTitle('<b>Act distribution</b>')
+        self.legend().setVisible(True)
+        self.legend().setAlignment(Qt.AlignBottom)
+
+    def refresh(self, novel: Novel):
+        self.reset()
+
+        series = QPieSeries()
+
+        acts: Dict[int, int] = {}
+        for scene in novel.scenes:
+            act = acts_registry.act(scene)
+            if act not in acts.keys():
+                acts[act] = 0
+            acts[act] = acts[act] + 1
+
+        for k, v in acts.items():
+            slice_ = series.append(f'Act {k}', v)
+
+            if k == 1:
+                color = ACT_ONE_COLOR
+            elif k == 2:
+                color = ACT_TWO_COLOR
+            else:
+                color = ACT_THREE_COLOR
+            slice_.setColor(QColor(color))
+
+        self.addSeries(series)

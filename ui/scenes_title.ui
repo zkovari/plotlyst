@@ -80,12 +80,22 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="lblCount">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
+    <widget class="QToolButton" name="btnCount">
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QToolButton {
+	border: 1px hidden black;
+}
+
+QToolButton:hover {
+	border: 1px dashed black;
+}
+
+QToolButton:pressed {
+	border: 1px solid black;
+}</string>
      </property>
      <property name="text">
       <string/>
