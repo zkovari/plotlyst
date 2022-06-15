@@ -28,7 +28,7 @@ from PyQt5.QtCore import QTimer, QRunnable, QThreadPool, QObject
 from overrides import overrides
 
 from src.main.python.plotlyst.core.client import client, json_client
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot
 from src.main.python.plotlyst.env import app_env
 
 
@@ -214,3 +214,15 @@ def _persist_operations(operations: List[Operation]):
 
         else:
             logging.error('Unrecognized operation %s', op.type)
+
+
+def delete_plot(novel: Novel, plot: Plot):
+    novel.plots.remove(plot)
+    repo = RepositoryPersistenceManager.instance()
+    repo.update_novel(novel)
+
+    for scene in novel.scenes:
+        before = len(scene.plot_values)
+        scene.plot_values = [x for x in scene.plot_values if x.plot.id != plot.id]
+        if before != len(scene.plot_values):
+            repo.update_scene(scene)
