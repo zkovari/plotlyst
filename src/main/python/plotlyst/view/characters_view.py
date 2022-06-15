@@ -91,7 +91,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
-        self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon())
+        self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
 

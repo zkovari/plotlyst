@@ -39,10 +39,10 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal, protagonist_role, GoalReference
+    CharacterGoal, Goal, GoalReference
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
-    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField
+    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -1513,15 +1513,21 @@ class CharactersProgressWidget(QWidget):
         fields = {}
         headers = {}
         header = None
+        row = self.RowGender + 1
         for el in self.novel.character_profiles[0].elements:
             if el.field.type == TemplateFieldType.DISPLAY_HEADER:
-                self._addLabel(self._layout.rowCount(), el.field.name)
-                header_row = self._layout.rowCount() - 1
-                header = self.Header(el.field, header_row)
+                row += 1
+                self._addLabel(row, el.field.name)
+                header = self.Header(el.field, row)
                 headers[header] = 0
             elif not el.field.type.name.startswith('DISPLAY') and header:
                 fields[str(el.field.id)] = header
                 header.max_value = header.max_value + 1
+
+        row += 1
+        self._addLine(row)
+        row += 1
+        self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
 
         for i, char in enumerate(self.novel.characters):
             name_progress = CircularProgressBar(parent=self)
@@ -1566,11 +1572,17 @@ class CharactersProgressWidget(QWidget):
                 overall_progress.setMaxValue(overall_progress.maxValue() + h.max_value)
                 overall_value += v
 
+            if not char.is_minor():
+                backstory_progress = CircularProgressBar(parent=self)
+                backstory_progress.setMaxValue(5 if char.is_major() else 3)
+                backstory_progress.setValue(len(char.backstory))
+                self._addProgress(backstory_progress, row, i + 1)
+
             overall_value += (name_progress.value() + gender_progress.value()) // 2 + role_progress.value()
             overall_progress.setValue(overall_value)
             self._addProgress(overall_progress, self.RowOverall, i + 1)
 
-        self._layout.addWidget(vspacer(), self._layout.rowCount(), 0)
+        self._layout.addWidget(vspacer(), row + 1, 0)
 
     def _addLine(self, row: int):
         self._layout.addWidget(line(), row, 0, 1, self._layout.columnCount() - 1)

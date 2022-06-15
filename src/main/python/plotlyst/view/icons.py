@@ -317,8 +317,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.portrait')
 
     @staticmethod
-    def progress_check_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.progress-check', color='darkblue')
+    def progress_check_icon(color: str = 'darkBlue', color_on='darkBlue') -> QIcon:
+        return IconRegistry.from_name('mdi.progress-check', color=color, color_on=color_on)
 
     @staticmethod
     def customization_icon() -> QIcon:
@@ -532,6 +532,10 @@ class IconRegistry:
     @staticmethod
     def genderless_icon(color: str = 'black') -> QIcon:
         return IconRegistry.from_name('fa5s.genderless', color=color, color_on='#6c757d')
+
+    @staticmethod
+    def backstory_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.archive', '#9c6644')
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
