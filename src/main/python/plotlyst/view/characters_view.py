@@ -116,6 +116,7 @@ class CharactersView(AbstractNovelView):
         self.ui.scrollAreaProgress.layout().addWidget(self._progress)
         self.ui.pageProgressView.setStyleSheet(f'#scrollAreaProgress {{background-color: {RELAXED_WHITE_COLOR};}}')
         self._progress.setNovel(self.novel)
+        self._progress.characterClicked.connect(self._edit_character)
         self._progress.refresh()
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
@@ -201,8 +202,12 @@ class CharactersView(AbstractNovelView):
             character = self.selected_card.character
 
         if character:
-            self.editor = CharacterEditor(self.novel, character)
-            self._switch_to_editor()
+            self._edit_character(character)
+
+    @busy
+    def _edit_character(self, character: Character):
+        self.editor = CharacterEditor(self.novel, character)
+        self._switch_to_editor()
 
     def _switch_to_editor(self):
         emit_event(ToggleOutlineViewTitle(self, visible=False))

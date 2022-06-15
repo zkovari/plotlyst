@@ -52,7 +52,7 @@ from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
-    VisibilityToggleEventFilter, hmax, link_buttons_to_pages
+    VisibilityToggleEventFilter, hmax, link_buttons_to_pages, pointy
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
@@ -1455,6 +1455,8 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
 
 class CharactersProgressWidget(QWidget):
+    characterClicked = pyqtSignal(Character)
+
     RowOverall: int = 1
     RowName: int = 3
     RowRole: int = 4
@@ -1485,27 +1487,32 @@ class CharactersProgressWidget(QWidget):
         if not self.novel:
             return
 
-        clear_layout(self)
+        clear_layout(self._layout)
 
         for i, char in enumerate(self.novel.characters):
             btn = QToolButton(self)
             btn.setIconSize(QSize(45, 45))
-            transparent(btn)
+            btn.setStyleSheet('''
+                QToolButton {border: 0px;}
+                QToolButton:pressed {border: 1px solid grey; border-radius: 20px;}
+            ''')
             btn.setIcon(avatars.avatar(char))
             self._layout.addWidget(btn, 0, i + 1)
+            pointy(btn)
+            btn.installEventFilter(OpacityEventFilter(0.8, 1.0, parent=btn))
+            btn.clicked.connect(partial(self.characterClicked.emit, char))
         self._layout.addWidget(spacer(), 0, self._layout.columnCount())
 
         self._addLabel(self.RowOverall, 'Overall', IconRegistry.progress_check_icon(), Qt.AlignCenter)
-        self._addLine()
+        self._addLine(self.RowOverall + 1)
         self._addLabel(self.RowName, 'Name', IconRegistry.character_icon())
         self._addLabel(self.RowRole, 'Role', IconRegistry.major_character_icon())
         self._addLabel(self.RowGender, 'Gender', IconRegistry.male_gender_icon())
-        self._addLine()
+        self._addLine(self.RowGender + 1)
 
         fields = {}
         headers = {}
         header = None
-        header_row = 0
         for el in self.novel.character_profiles[0].elements:
             if el.field.type == TemplateFieldType.DISPLAY_HEADER:
                 self._addLabel(self._layout.rowCount(), el.field.name)
@@ -1565,8 +1572,8 @@ class CharactersProgressWidget(QWidget):
 
         self._layout.addWidget(vspacer(), self._layout.rowCount(), 0)
 
-    def _addLine(self):
-        self._layout.addWidget(line(), self._layout.rowCount(), 0, 1, self._layout.columnCount() - 1)
+    def _addLine(self, row: int):
+        self._layout.addWidget(line(), row, 0, 1, self._layout.columnCount() - 1)
 
     def _addLabel(self, row: int, text: str, icon=None, alignment=Qt.AlignRight):
         if icon:
