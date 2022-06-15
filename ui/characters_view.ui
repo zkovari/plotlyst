@@ -182,7 +182,7 @@
              <string/>
             </property>
             <property name="shortcut">
-             <string>3</string>
+             <string>4</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -462,8 +462,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>890</width>
-                <height>631</height>
+                <width>98</width>
+                <height>28</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -612,7 +612,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>80</width>
+                <width>100</width>
                 <height>30</height>
                </rect>
               </property>

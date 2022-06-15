@@ -68,7 +68,7 @@ from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
-from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
+from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
@@ -1547,6 +1547,7 @@ class CharactersProgressWidget(QWidget):
                     headers[header] = headers[header] + 1
 
             overall_progress = CircularProgressBar(parent=self)
+            overall_progress.setTooltipMode(ProgressTooltipMode.PERCENTAGE)
             overall_progress.setMaxValue(2)
             overall_value = 0
 
