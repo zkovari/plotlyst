@@ -190,10 +190,10 @@ class Character:
         return ''
 
     def is_major(self):
-        return self.role and (self.role.is_major() or self.role.promoted)
+        return self.role and self.role.is_major()
 
     def is_secondary(self):
-        return self.role and self.role.is_secondary() and not self.role.promoted
+        return self.role and self.role.is_secondary()
 
     def is_minor(self) -> bool:
         return self.role and self.role.is_minor()
