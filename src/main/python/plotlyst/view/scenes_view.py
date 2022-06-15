@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
 from functools import partial
-from typing import Optional, List
+from typing import Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt, QModelIndex, \
@@ -163,7 +163,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
 
-        self.scene_cards: List[SceneCard] = []
         self.selected_card: Optional[SceneCard] = None
         self.ui.btnAct1.toggled.connect(self._update_cards)
         self.ui.btnAct2.toggled.connect(self._update_cards)
@@ -333,7 +332,6 @@ class ScenesOutlineView(AbstractNovelView):
             builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
             builder.popup()
 
-        self.scene_cards.clear()
         self.selected_card = None
         self.ui.cards.clear()
 
@@ -346,7 +344,6 @@ class ScenesOutlineView(AbstractNovelView):
                 continue
             card = SceneCard(scene, self.novel, self.ui.cards)
             self.ui.cards.addCard(card)
-            self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
             card.cursorEntered.connect(partial(self.ui.wdgStoryStructure.highlightScene, card.scene))
