@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QLabel
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
-    CONFLICT_SELF_COLOR
+    CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
     Scene, SceneType, PlotType
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
@@ -122,15 +122,15 @@ class IconRegistry:
 
     @staticmethod
     def major_character_icon() -> QIcon:
-        return IconRegistry.from_name('mdi6.chess-king', '#00798c')
+        return IconRegistry.from_name('mdi6.chess-king', CHARACTER_MAJOR_COLOR)
 
     @staticmethod
     def secondary_character_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.chess-knight', '#619b8a')
+        return IconRegistry.from_name('fa5s.chess-knight', CHARACTER_SECONDARY_COLOR)
 
     @staticmethod
     def minor_character_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.chess-pawn', '#886f68')
+        return IconRegistry.from_name('mdi.chess-pawn', CHARACTER_MINOR_COLOR)
 
     @staticmethod
     def location_icon() -> QIcon:

@@ -113,8 +113,11 @@ class CharactersView(AbstractNovelView):
         self._update_cards()
 
         self._progress = CharactersProgressWidget()
-        self.ui.scrollAreaProgress.layout().addWidget(self._progress)
-        self.ui.pageProgressView.setStyleSheet(f'#scrollAreaProgress {{background-color: {RELAXED_WHITE_COLOR};}}')
+        self.ui.pageProgressView.layout().addWidget(self._progress)
+        self.ui.pageProgressView.setStyleSheet(f'''
+            #scrollAreaProgress {{background-color: {RELAXED_WHITE_COLOR};}}
+            #pageProgressView {{background-color: {RELAXED_WHITE_COLOR};}}
+            ''')
         self._progress.setNovel(self.novel)
         self._progress.characterClicked.connect(self._edit_character)
         self._progress.refresh()

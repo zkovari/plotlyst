@@ -21,48 +21,37 @@ from enum import Enum
 from typing import List, Dict
 
 import qtanim
-from PyQt5.QtChart import QChartView, QPieSeries, QPieSlice
+from PyQt5.QtChart import QPieSeries, QPieSlice
 from PyQt5.QtCore import Qt, QSize, QPoint
-from PyQt5.QtGui import QPainter, QColor, QFont, QPaintEvent, QPen, QPainterPath
+from PyQt5.QtGui import QPainter, QColor, QPaintEvent, QPen, QPainterPath, QFont, QBrush
 from PyQt5.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
 
+from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
+from src.main.python.plotlyst.core.template import RoleImportance
 from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.chart import BaseChart
+from src.main.python.plotlyst.view.widget.display import ChartView
 
 
-class ProgressChartView(QChartView):
-    def __init__(self, value: int, max: int, title_prefix: str = 'Progress', color=Qt.darkBlue, parent=None):
+class ProgressChartView(ChartView):
+    def __init__(self, value: int, maxValue: int, title_prefix: str = 'Progress', color=Qt.darkBlue, parent=None):
         super(ProgressChartView, self).__init__(parent)
-        self.chart = BaseChart()
-        font = QFont()
-        font.setBold(True)
-        self.chart.setTitleFont(font)
-        self._title_prefix = title_prefix
-        self._color = color
+        self.chart = ProgressChart(title_prefix=title_prefix, color=color)
 
         self.setChart(self.chart)
         self.setMaximumHeight(200)
         self.setMaximumWidth(250)
-        self.setRenderHint(QPainter.Antialiasing)
 
-        self.refresh(value, max)
+        self.refresh(value, maxValue)
 
-    def refresh(self, value: int, max: int):
-        self.chart.removeAllSeries()
-        series = QPieSeries()
-        series.setHoleSize(0.45)
-        percentage_slice = QPieSlice('Progress', value)
-        percentage_slice.setColor(QColor(self._color))
-        empty_slice = QPieSlice('', max - value)
-        empty_slice.setColor(Qt.white)
-        series.append(percentage_slice)
-        series.append(empty_slice)
-        self.chart.setTitle(self._title_prefix + " {:.1f}%".format(100 * percentage_slice.percentage()))
-
-        self.chart.addSeries(series)
+    def refresh(self, value: int, maxValue: int):
+        self.chart.setMaxValue(maxValue)
+        self.chart.setValue(value)
+        self.chart.refresh()
 
 
 class SceneStageProgressCharts:
@@ -119,6 +108,67 @@ class SceneStageProgressCharts:
         else:
             for i, v in enumerate(values):
                 self._chartviews[i].refresh(v[0], v[1])
+
+
+class ProgressChart(BaseChart):
+
+    def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=Qt.darkBlue,
+                 titleColor=Qt.black, parent=None):
+        super(ProgressChart, self).__init__(parent)
+        self._title_prefix = title_prefix
+        self._color = color
+        self._value = value
+        self._maxValue = maxValue
+
+        font = QFont()
+        font.setBold(True)
+        self.setTitleFont(font)
+        self.setTitleBrush(QBrush(QColor(titleColor)))
+
+    def value(self) -> int:
+        return self._value
+
+    def setValue(self, value: int):
+        if value > 0:
+            self._value = value if value <= self._maxValue else self._maxValue
+        else:
+            self._value = 0
+
+    def maxValue(self) -> int:
+        return self._maxValue
+
+    def setMaxValue(self, value: int):
+        self._maxValue = value
+
+    def refresh(self):
+        self.reset()
+
+        series = QPieSeries()
+        series.setHoleSize(0.45)
+        percentage_slice = QPieSlice('Progress', self._value)
+        percentage_slice.setColor(QColor(self._color))
+        empty_slice = QPieSlice('', self._maxValue - self._value)
+        empty_slice.setColor(Qt.white)
+        series.append(percentage_slice)
+        series.append(empty_slice)
+        self.setTitle(self._title_prefix + " {:.1f}%".format(100 * percentage_slice.percentage()))
+
+        self.addSeries(series)
+
+
+class CharacterRoleProgressChart(ProgressChart):
+    def __init__(self, role: RoleImportance, parent=None):
+        if role == RoleImportance.MAJOR:
+            color = CHARACTER_MAJOR_COLOR
+            title = icon_to_html_img(IconRegistry.major_character_icon())
+        elif role == RoleImportance.SECONDARY:
+            color = CHARACTER_SECONDARY_COLOR
+            title = icon_to_html_img(IconRegistry.secondary_character_icon())
+        else:
+            color = CHARACTER_MINOR_COLOR
+            title = icon_to_html_img(IconRegistry.minor_character_icon())
+        super(CharacterRoleProgressChart, self).__init__(title_prefix=title, color=color, titleColor=color,
+                                                         parent=parent)
 
 
 class ProgressTooltipMode(Enum):

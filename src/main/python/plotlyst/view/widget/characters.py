@@ -36,13 +36,14 @@ from qthandy import vspacer, ask_confirmation, busy, transparent, gc, line, btn_
     spacer, clear_layout, vbox, hbox, flow, opaque, margins
 from qthandy.filter import InstantTooltipEventFilter
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, Document, SceneStructureAgenda, ConflictReference, \
     CharacterGoal, Goal, GoalReference
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
-    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role
+    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -61,6 +62,7 @@ from src.main.python.plotlyst.view.generated.character_backstory_card_ui import 
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
+from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from src.main.python.plotlyst.view.generated.journal_widget_ui import Ui_JournalWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -68,7 +70,8 @@ from src.main.python.plotlyst.view.widget.cards import JournalCard
 from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
-from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode
+from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
+    CharacterRoleProgressChart
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
@@ -1454,7 +1457,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.roleSelected.emit(copy.deepcopy(self._currentRole))
 
 
-class CharactersProgressWidget(QWidget):
+class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
     characterClicked = pyqtSignal(Character)
 
     RowOverall: int = 1
@@ -1473,12 +1476,28 @@ class CharactersProgressWidget(QWidget):
 
     def __init__(self, parent=None):
         super(CharactersProgressWidget, self).__init__(parent)
+        self.setupUi(self)
         self._layout = QGridLayout()
-        self.setLayout(self._layout)
+        self.scrollAreaProgress.setLayout(self._layout)
         margins(self, 2, 2, 2, 2)
         self._layout.setSpacing(5)
 
         self.novel: Optional[Novel] = None
+
+        self._chartMajor = CharacterRoleProgressChart(RoleImportance.MAJOR)
+        self.chartViewMajor.setChart(self._chartMajor)
+        self._chartSecondary = CharacterRoleProgressChart(RoleImportance.SECONDARY)
+        self.chartViewSecondary.setChart(self._chartSecondary)
+        self._chartMinor = CharacterRoleProgressChart(RoleImportance.MINOR)
+        self.chartViewMinor.setChart(self._chartMinor)
+
+        self._chartMajor.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
+        self._chartSecondary.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
+        self._chartMinor.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
+
+        self._chartMajor.refresh()
+        self._chartSecondary.refresh()
+        self._chartMinor.refresh()
 
     def setNovel(self, novel: Novel):
         self.novel = novel
@@ -1582,7 +1601,21 @@ class CharactersProgressWidget(QWidget):
             overall_progress.setValue(overall_value)
             self._addProgress(overall_progress, self.RowOverall, i + 1)
 
+            if char.is_major():
+                self._chartMajor.setMaxValue(self._chartMajor.maxValue() + overall_progress.maxValue())
+                self._chartMajor.setValue(self._chartMajor.value() + overall_value)
+            elif char.is_secondary():
+                self._chartSecondary.setMaxValue(self._chartSecondary.maxValue() + overall_progress.maxValue())
+                self._chartSecondary.setValue(self._chartSecondary.value() + overall_value)
+            elif char.is_minor():
+                self._chartMinor.setMaxValue(self._chartMinor.maxValue() + overall_progress.maxValue())
+                self._chartMinor.setValue(self._chartMinor.value() + overall_value)
+
         self._layout.addWidget(vspacer(), row + 1, 0)
+
+        self._chartMajor.refresh()
+        self._chartSecondary.refresh()
+        self._chartMinor.refresh()
 
     def _addLine(self, row: int):
         self._layout.addWidget(line(), row, 0, 1, self._layout.columnCount() - 1)
