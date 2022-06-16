@@ -80,20 +80,20 @@
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="btnCount">
+    <widget class="QPushButton" name="btnCount">
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
      </property>
      <property name="styleSheet">
-      <string notr="true">QToolButton {
+      <string notr="true">QPushButton {
 	border: 1px hidden black;
 }
 
-QToolButton:hover {
+QPushButton:hover {
 	border: 1px dashed black;
 }
 
-QToolButton:pressed {
+QPushButton:pressed {
 	border: 1px solid black;
 }</string>
      </property>
