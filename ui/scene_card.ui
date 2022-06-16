@@ -344,7 +344,13 @@ background-color:rgba(0,0,0,0);</string>
            <cursorShape>PointingHandCursor</cursorShape>
           </property>
           <property name="styleSheet">
-           <string notr="true">border: 0px;</string>
+           <string notr="true">QToolButton {
+	border: 0px;
+}
+
+QToolButton::menu-indicator {
+	width: 0px;
+}</string>
           </property>
           <property name="text">
            <string/>
@@ -354,6 +360,9 @@ background-color:rgba(0,0,0,0);</string>
             <width>18</width>
             <height>18</height>
            </size>
+          </property>
+          <property name="popupMode">
+           <enum>QToolButton::InstantPopup</enum>
           </property>
          </widget>
         </item>
