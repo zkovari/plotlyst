@@ -95,6 +95,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
+    parser.add_argument('--clear', action='store_true')
     args = parser.parse_args()
     app_env.mode = args.mode
     while True:
@@ -108,6 +109,8 @@ if __name__ == '__main__':
 
         app.setStyleSheet(APP_STYLESHEET)
         settings.init_org()
+        if args.clear:
+            settings.clear()
         resource_registry.set_up(appctxt)
 
         workspace: Optional[str] = settings.workspace()
