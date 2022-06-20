@@ -31,9 +31,8 @@ try:
     from src.main.python.plotlyst.env import AppMode, app_env
     from src.main.python.plotlyst.resources import resource_registry
     from src.main.python.plotlyst.settings import settings
-    from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
     from src.main.python.plotlyst.service.persistence import flush_or_fail
-    from src.main.python.plotlyst.service.dir import select_new_project_directory
+    from src.main.python.plotlyst.service.dir import select_new_project_directory, get_default_directory
 
     from PyQt5 import QtWidgets
     from PyQt5.QtCore import Qt
@@ -119,8 +118,10 @@ if __name__ == '__main__':
         changed_dir = False
         while True:
             if not workspace:
+                workspace = get_default_directory()
+
+            if not workspace:
                 workspace = select_new_project_directory()
-                changed_dir = True
 
             if workspace:
                 settings.set_workspace(workspace)
