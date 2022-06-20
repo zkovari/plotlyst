@@ -18,9 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
+from pathlib import Path
 from typing import Optional
 
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
+
+from src.main.python.plotlyst.env import app_env
 
 
 def select_new_project_directory() -> Optional[str]:
@@ -40,3 +43,21 @@ def select_new_project_directory() -> Optional[str]:
                             f"The chosen directory cannot be written: {workspace}")
     else:
         return workspace
+
+
+def default_directory() -> Optional[str]:
+    home = Path.home()
+    if not home:
+        return None
+
+    if app_env.is_mac() or app_env.is_windows():
+        plotlyst = home.joinpath('Plotlyst')
+    else:
+        plotlyst = home.joinpath('plotlyst')
+
+    if plotlyst.exists() and plotlyst.is_file():
+        return None
+    if not os.access(str(plotlyst), os.W_OK):
+        return None
+
+    return str(plotlyst)
