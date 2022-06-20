@@ -582,6 +582,15 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuProject">
+     <property name="title">
+      <string>Project</string>
+     </property>
+     <addaction name="actionDirPlaceholder"/>
+     <addaction name="separator"/>
+     <addaction name="actionChangeDir"/>
+    </widget>
+    <addaction name="menuProject"/>
     <addaction name="actionRestart"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -713,6 +722,25 @@
   <action name="actionPreview">
    <property name="text">
     <string>Manuscript preview</string>
+   </property>
+  </action>
+  <action name="actionDirPlaceholder">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>dir</string>
+   </property>
+  </action>
+  <action name="actionChangeDir">
+   <property name="text">
+    <string>Change project directory...</string>
    </property>
   </action>
  </widget>

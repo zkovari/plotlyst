@@ -33,6 +33,7 @@ try:
     from src.main.python.plotlyst.settings import settings
     from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
     from src.main.python.plotlyst.service.persistence import flush_or_fail
+    from src.main.python.plotlyst.service.dir import select_new_project_directory
 
     from PyQt5 import QtWidgets
     from PyQt5.QtCore import Qt
@@ -118,28 +119,12 @@ if __name__ == '__main__':
         changed_dir = False
         while True:
             if not workspace:
-                picker = DirectoryPickerDialog()
-                picker.display()
-                workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
+                workspace = select_new_project_directory()
                 changed_dir = True
 
-            if not workspace:
-                exit(0)
-
-            if not os.path.exists(workspace):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen directory doesn't exist: {workspace}")
-            elif os.path.isfile(workspace):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen path should be a directory, not a file: {workspace}")
-            elif not os.access(workspace, os.W_OK):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen directory cannot be written: {workspace}")
-            else:
-                if changed_dir:
-                    settings.set_workspace(workspace)
+            if workspace:
+                settings.set_workspace(workspace)
                 break
-            workspace = None
 
         try:
             json_client.init(workspace)

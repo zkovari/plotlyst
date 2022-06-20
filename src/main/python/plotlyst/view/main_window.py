@@ -29,7 +29,7 @@ from qthandy import spacer, busy, gc, clear_layout
 from textstat import textstat
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
 from src.main.python.plotlyst.env import app_env
@@ -39,6 +39,7 @@ from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispat
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
 from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.service.dir import select_new_project_directory
 from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
@@ -276,6 +277,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionPaste.setIcon(IconRegistry.paste_icon())
         self.actionPaste.triggered.connect(self._paste_text)
 
+        self.actionDirPlaceholder.setText(settings.workspace())
+        self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
+        self.actionChangeDir.triggered.connect(self._change_project_dir)
+
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
@@ -369,6 +374,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _import_from_scrivener(self):
         self.home_mode.setChecked(True)
         self.home_view.import_from_scrivener()
+
+    def _change_project_dir(self):
+        workspace = select_new_project_directory()
+        if workspace:
+            self.home_mode.setChecked(True)
+            settings.set_workspace(workspace)
+            if self.novel:
+                self._clear_novel_views()
+                self.novel = None
+
+            json_client.init(workspace)
+            self.home_view.refresh()
+            self.actionDirPlaceholder.setText(settings.workspace())
 
     def _increase_font_size(self):
         current_font = QApplication.font()
