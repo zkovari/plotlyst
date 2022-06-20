@@ -271,7 +271,7 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
 def test_add_scene_comment(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
 
-    card = view.scene_cards[0]
+    card = view.ui.cards.cardAt(0)
     qtbot.mouseClick(card, Qt.LeftButton)
 
     filled_window.btnComments.click()
@@ -300,6 +300,6 @@ def test_scene_cards_resize(qtbot, filled_window: MainWindow):
 
     assert view.prefs_widget.sliderCards.value() == 125
     view.prefs_widget.sliderCards.setValue(200)
-    card = view.scene_cards[0]
+    card = view.ui.cards.cardAt(0)
     assert card.textSynopsis.isVisible()
     assert card.lineAfterTitle.isVisible()

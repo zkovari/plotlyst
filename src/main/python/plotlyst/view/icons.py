@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QLabel
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
-    CONFLICT_SELF_COLOR
+    CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
     Scene, SceneType, PlotType
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
@@ -122,19 +122,19 @@ class IconRegistry:
 
     @staticmethod
     def major_character_icon() -> QIcon:
-        return IconRegistry.from_name('mdi6.chess-king', '#00798c')
+        return IconRegistry.from_name('mdi6.chess-king', CHARACTER_MAJOR_COLOR)
 
     @staticmethod
     def secondary_character_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.chess-knight', '#619b8a')
+        return IconRegistry.from_name('fa5s.chess-knight', CHARACTER_SECONDARY_COLOR)
 
     @staticmethod
     def minor_character_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.chess-pawn', '#886f68')
+        return IconRegistry.from_name('mdi.chess-pawn', CHARACTER_MINOR_COLOR)
 
     @staticmethod
     def location_icon() -> QIcon:
-        return qtawesome.icon('fa5s.location-arrow', color_on='darkBlue')
+        return qtawesome.icon('fa5s.map-pin', color_on='darkBlue', options=[{'scale_factor': 1.1}])
 
     @staticmethod
     def scene_icon() -> QIcon:
@@ -220,16 +220,16 @@ class IconRegistry:
         return qtawesome.icon('ei.file-edit', color=color, color_on=color_on)
 
     @staticmethod
-    def act_one_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-1-circle', color=ACT_ONE_COLOR)
+    def act_one_icon(color=ACT_ONE_COLOR, color_on=ACT_ONE_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.numeric-1-circle', color=color, color_on=color_on)
 
     @staticmethod
-    def act_two_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-2-circle', color=ACT_TWO_COLOR)
+    def act_two_icon(color=ACT_TWO_COLOR, color_on=ACT_TWO_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.numeric-2-circle', color=color, color_on=color_on)
 
     @staticmethod
-    def act_three_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.numeric-3-circle', color=ACT_THREE_COLOR)
+    def act_three_icon(color=ACT_THREE_COLOR, color_on=ACT_THREE_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.numeric-3-circle', color=color, color_on=color_on)
 
     @staticmethod
     def table_icon() -> QIcon:
@@ -317,8 +317,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.portrait')
 
     @staticmethod
-    def progress_check_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.progress-check', color='darkblue')
+    def progress_check_icon(color: str = 'darkBlue', color_on='darkBlue') -> QIcon:
+        return IconRegistry.from_name('mdi.progress-check', color=color, color_on=color_on)
 
     @staticmethod
     def customization_icon() -> QIcon:
@@ -532,6 +532,10 @@ class IconRegistry:
     @staticmethod
     def genderless_icon(color: str = 'black') -> QIcon:
         return IconRegistry.from_name('fa5s.genderless', color=color, color_on='#6c757d')
+
+    @staticmethod
+    def backstory_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.archive', '#9c6644')
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:

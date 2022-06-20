@@ -29,14 +29,14 @@ from qthandy import ask_confirmation
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.template import age_field, \
-    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, core_fear_field, misbelief_field, \
-    core_desire_field, default_character_profiles, mbti_field, traits_field
+    enneagram_field, TemplateField, TemplateFieldType, ProfileTemplate, misbelief_field, \
+    default_character_profiles, mbti_field, traits_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
@@ -50,11 +50,9 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self._restore_requested: bool = False
 
         self.btnAge.setIcon(IconRegistry.from_name('mdi.numeric'))
-        self.btnFear.setIcon(IconRegistry.from_name('mdi.spider-thread'))
         self.btnEnneagram.setIcon(IconRegistry.from_name('mdi.numeric-9-box-outline'))
         self.btnMbti.setIcon(IconRegistry.from_name('ei.group-alt'))
         self.btnTraits.setIcon(IconRegistry.from_name('ei.adjust'))
-        self.btnDesire.setIcon(IconRegistry.from_name('fa5s.coins', color='#e1bc29'))
         self.btnMisbelief.setIcon(IconRegistry.error_icon())
         self.btnCustomText.setIcon(IconRegistry.from_name('mdi.format-text'))
         self.btnCustomNumber.setIcon(IconRegistry.from_name('mdi.numeric'))
@@ -85,11 +83,9 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.lineEmoji.textEdited.connect(self._emoji_edited)
 
         self.btnAge.installEventFilter(self)
-        self.btnFear.installEventFilter(self)
         self.btnEnneagram.installEventFilter(self)
         self.btnMbti.installEventFilter(self)
         self.btnTraits.installEventFilter(self)
-        self.btnDesire.installEventFilter(self)
         self.btnMisbelief.installEventFilter(self)
         self.btnCustomText.installEventFilter(self)
         self.btnCustomNumber.installEventFilter(self)
@@ -130,12 +126,8 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
                 field = mbti_field
             elif self._dragged is self.btnTraits:
                 field = traits_field
-            elif self._dragged is self.btnFear:
-                field = core_fear_field
             elif self._dragged is self.btnMisbelief:
                 field = misbelief_field
-            elif self._dragged is self.btnDesire:
-                field = core_desire_field
             elif self._dragged is self.btnCustomText:
                 field = TemplateField(name='Label', type=TemplateFieldType.TEXT, custom=True)
             elif self._dragged is self.btnCustomNumber:
@@ -178,10 +170,6 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
             self.btnMbti.setEnabled(enabled)
         elif field.id == traits_field.id:
             self.btnTraits.setEnabled(enabled)
-        elif field.id == core_fear_field.id:
-            self.btnFear.setEnabled(enabled)
-        elif field.id == core_desire_field.id:
-            self.btnDesire.setEnabled(enabled)
         elif field.id == misbelief_field.id:
             self.btnMisbelief.setEnabled(enabled)
 

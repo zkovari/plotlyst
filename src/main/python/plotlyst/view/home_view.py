@@ -21,20 +21,20 @@ from typing import List, Optional
 
 from PyQt5.QtCore import pyqtSignal
 from overrides import overrides
-from qthandy import ask_confirmation, FlowLayout, clear_layout
+from qthandy import ask_confirmation, clear_layout, flow
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Event
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
+from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import NovelCard
-from src.main.python.plotlyst.worker.persistence import flush_or_fail
 
 
 class HomeView(AbstractView):
@@ -44,8 +44,7 @@ class HomeView(AbstractView):
         super(HomeView, self).__init__()
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
-        self._layout = FlowLayout(spacing=9)
-        self.ui.novels.setLayout(self._layout)
+        self._layout = flow(self.ui.novels, margin=5, spacing=9)
         self.novel_cards: List[NovelCard] = []
         self.selected_card: Optional[NovelCard] = None
         self.refresh()

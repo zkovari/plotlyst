@@ -78,6 +78,7 @@ class TemplateFieldType(Enum):
     DISPLAY_SUBTITLE = 7
     DISPLAY_LABEL = 8
     DISPLAY_LINE = 9
+    DISPLAY_HEADER = 10
 
 
 class SelectionType(Enum):
@@ -104,6 +105,10 @@ class TemplateField:
     max_value = 2_147_483_647
     compact: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 age_field = TemplateField(name='Age', type=TemplateFieldType.NUMERIC,
@@ -187,7 +192,7 @@ enneagram_field = TemplateField(name='Enneagram', type=TemplateFieldType.TEXT_SE
                                                                 'fear': 'Loss, separation',
                                                                 'number': 9}
                                                           )],
-                                compact=True)
+                                compact=True, show_label=False)
 mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                            id=uuid.UUID('bc5408a4-c2bd-4370-b46b-95f20018af01'),
                            selections=[SelectionItem('ISTJ', icon='mdi.magnify', icon_color='#2a9d8f'),  # green
@@ -210,7 +215,7 @@ mbti_field = TemplateField(name='MBTI', type=TemplateFieldType.TEXT_SELECTION,
                                        SelectionItem('ESFJ', icon='mdi6.cupcake', icon_color='#d00000'),
                                        SelectionItem('ENFJ', icon='mdi6.flower', icon_color='#d00000'),
                                        ],
-                           compact=True)
+                           compact=True, show_label=False)
 positive_traits = sorted([
     'Accessible', 'Active', 'Adaptive', 'Admirable', 'Adventurous', 'Agreeable', 'Alert', 'Ambitious', 'Appreciative',
     'Articulate', 'Aspiring', 'Assertive', 'Attentive', 'Balanced', 'Benevolent', 'Calm', 'Capable', 'Captivating',
@@ -275,26 +280,27 @@ def get_selection_values(field: TemplateField) -> Dict[str, SelectionItem]:
 enneagram_choices = get_selection_values(enneagram_field)
 mbti_choices = get_selection_values(mbti_field)
 
+summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
+                              id=uuid.UUID('90112538-2eca-45e8-81b4-e3c331204e31'),
+                              placeholder="Summarize your character's role in the story",
+                              show_label=False)
+
 misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
                                 placeholder='The misbelief/lie the character believes in')
-core_fear_field = TemplateField('Basic core fear', type=TemplateFieldType.SMALL_TEXT,
-                                emoji=':face_screaming_in_fear:',
-                                placeholder='Basic fear (select Enneagram to autofill)',
-                                id=uuid.UUID('d03e91bf-bc58-441a-ae81-a7764c4d7e25'))
-core_desire_field = TemplateField('Basic core desire', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face:',
-                                  placeholder='Basic desire (select Enneagram to autofill)',
-                                  id=uuid.UUID('92729dda-ec8c-4a61-9ed3-039c12c10ba8'))
 
 desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want in the story?',
                              id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
-need_field = TemplateField('Subconscious need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
+need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
                            placeholder='What does the character actually need in the story?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
 weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
                                  placeholder="What are the character's weaknesses or flaws in the story?",
                                  id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
+ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
+                            placeholder="What's the character's ghost from their past than haunt them?",
+                            id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hugging_face:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
@@ -312,10 +318,10 @@ class Role(SelectionItem):
     importance: RoleImportance = RoleImportance.SECONDARY
 
     def is_major(self) -> bool:
-        return self.importance == RoleImportance.MAJOR
+        return self.importance == RoleImportance.MAJOR or self.promoted
 
     def is_secondary(self) -> bool:
-        return self.importance == RoleImportance.SECONDARY
+        return self.importance == RoleImportance.SECONDARY and not self.promoted
 
     def is_minor(self) -> bool:
         return self.importance == RoleImportance.MINOR
@@ -380,20 +386,22 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    characterization_title = TemplateField('Basic characterization', type=TemplateFieldType.DISPLAY_LABEL)
-    story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_LABEL)
-    fields = [ProfileElement(characterization_title, 0, 0, col_span=2),
-              ProfileElement(enneagram_field, 1, 0, margins=Margins(left=15)),
-              ProfileElement(mbti_field, 1, 1),
-              ProfileElement(core_desire_field, 2, 0, margins=Margins(left=15)),
-              ProfileElement(core_fear_field, 2, 1),
-              ProfileElement(traits_field, 3, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(TemplateField('', type=TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2),
-              ProfileElement(story_title, 5, 0, col_span=2),
-              ProfileElement(desire_field, 6, 0, margins=Margins(left=15)),
-              ProfileElement(need_field, 6, 1),
-              ProfileElement(weaknesses_field, 7, 0, margins=Margins(left=15)),
-              ProfileElement(values_field, 8, 0, col_span=2, margins=Margins(left=15))
+    summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
+    fields = [ProfileElement(summary_title, 0, 0, col_span=2),
+              ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(characterization_title, 2, 0, col_span=2),
+              ProfileElement(enneagram_field, 3, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(mbti_field, 4, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
+              # ProfileElement(TemplateField('', type=TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2),
+              ProfileElement(story_title, 6, 0, col_span=2),
+              ProfileElement(desire_field, 7, 0, margins=Margins(left=15)),
+              ProfileElement(need_field, 7, 1),
+              ProfileElement(weaknesses_field, 8, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(ghost_field, 9, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(values_field, 10, 0, col_span=2, margins=Margins(left=15))
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),

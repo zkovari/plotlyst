@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
 from functools import partial
-from typing import Optional, List
+from typing import Optional
 
 import qtawesome
 from PyQt5.QtCore import Qt, QModelIndex, \
@@ -37,6 +37,7 @@ from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, Sce
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import PopupMenuBuilder
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
@@ -48,12 +49,13 @@ from src.main.python.plotlyst.view.scene_editor import SceneEditor
 from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.widget.chart import ActDistributionChart
+from src.main.python.plotlyst.view.widget.display import ChartView
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.progress import SceneStageProgressCharts
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
     ScenesPreferencesWidget, StoryMap, StoryMapDisplayMode
 from src.main.python.plotlyst.view.widget.scenes import StoryLinesMapWidget
-from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
@@ -69,6 +71,12 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         opaque(self.btnScene, 0.6)
         opaque(self.btnSequel, 0.6)
 
+        self._chartDistribution = ActDistributionChart()
+        self._chartDistributionView = ChartView()
+        self._chartDistributionView.setMaximumSize(356, 356)
+        self._chartDistributionView.setChart(self._chartDistribution)
+
+        btn_popup(self.btnCount, self._chartDistributionView)
         self.refresh()
 
         event_dispatcher.register(self, SceneChangedEvent)
@@ -79,9 +87,11 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self.refresh()
 
     def refresh(self):
-        self.lblCount.setText(f'#{len(self.novel.scenes)}')
+        self.btnCount.setText(f'#{len(self.novel.scenes)}')
         self.btnScene.setText(f'{len([x for x in self.novel.scenes if x.type == SceneType.ACTION])}')
         self.btnSequel.setText(f'{len([x for x in self.novel.scenes if x.type == SceneType.REACTION])}')
+
+        self._chartDistribution.refresh(self.novel)
 
 
 class ScenesOutlineView(AbstractNovelView):
@@ -138,9 +148,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self._hide_chapters_toggled(self.ui.btnChaptersToggle.isChecked())
 
-        self.ui.btnAct1.setIcon(IconRegistry.act_one_icon())
-        self.ui.btnAct2.setIcon(IconRegistry.act_two_icon())
-        self.ui.btnAct3.setIcon(IconRegistry.act_three_icon())
+        self.ui.btnAct1.setIcon(IconRegistry.act_one_icon(color='grey'))
+        self.ui.btnAct2.setIcon(IconRegistry.act_two_icon(color='grey'))
+        self.ui.btnAct3.setIcon(IconRegistry.act_three_icon(color='grey'))
         self.ui.btnAct1.toggled.connect(partial(self._proxy.setActsFilter, 1))
         self.ui.btnAct2.toggled.connect(partial(self._proxy.setActsFilter, 2))
         self.ui.btnAct3.toggled.connect(partial(self._proxy.setActsFilter, 3))
@@ -148,7 +158,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on='darkBlue'))
-        self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon())
+        self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.transit-connection-horizontal', color_on='darkBlue'))
         self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
@@ -163,7 +173,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
         self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
 
-        self.scene_cards: List[SceneCard] = []
         self.selected_card: Optional[SceneCard] = None
         self.ui.btnAct1.toggled.connect(self._update_cards)
         self.ui.btnAct2.toggled.connect(self._update_cards)
@@ -333,7 +342,6 @@ class ScenesOutlineView(AbstractNovelView):
             builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
             builder.popup()
 
-        self.scene_cards.clear()
         self.selected_card = None
         self.ui.cards.clear()
 
@@ -346,7 +354,6 @@ class ScenesOutlineView(AbstractNovelView):
                 continue
             card = SceneCard(scene, self.novel, self.ui.cards)
             self.ui.cards.addCard(card)
-            self.scene_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
             card.cursorEntered.connect(partial(self.ui.wdgStoryStructure.highlightScene, card.scene))
@@ -434,6 +441,8 @@ class ScenesOutlineView(AbstractNovelView):
     def _customize_stages(self):
         diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))
         diag.wdgItemsEditor.tableView.setColumnHidden(SelectionItemsModel.ColIcon, True)
+        diag.wdgItemsEditor.setRemoveAllEnabled(False)
+        diag.wdgItemsEditor.setInsertionEnabled(True)
         items = diag.display()
         if items:
             self.novel.stages.clear()

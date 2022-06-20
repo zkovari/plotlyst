@@ -29,7 +29,7 @@ from qthandy import spacer, busy, gc, clear_layout
 from textstat import textstat
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
-from src.main.python.plotlyst.core.client import client
+from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
 from src.main.python.plotlyst.env import app_env
@@ -38,10 +38,16 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
+from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.service.dir import select_new_project_directory
+from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
+from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
+from src.main.python.plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSidebar
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
@@ -54,10 +60,6 @@ from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
-from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.download import NltkResourceDownloadWorker
-from src.main.python.plotlyst.worker.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager, flush_or_fail
 
 textstat.sentence_count = sentence_count
 
@@ -267,12 +269,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionIncreaseFontSize.triggered.connect(self._increase_font_size)
         self.actionDecreaseFontSize.setIcon(IconRegistry.decrease_font_size_icon())
         self.actionDecreaseFontSize.triggered.connect(self.decrease_font_size)
+        self.actionPreview.triggered.connect(lambda: ManuscriptPreviewDialog().display(app_env.novel))
         self.actionCut.setIcon(IconRegistry.cut_icon())
         self.actionCut.triggered.connect(self._cut_text)
         self.actionCopy.setIcon(IconRegistry.copy_icon())
         self.actionCopy.triggered.connect(self._copy_text)
         self.actionPaste.setIcon(IconRegistry.paste_icon())
         self.actionPaste.triggered.connect(self._paste_text)
+
+        self.actionDirPlaceholder.setText(settings.workspace())
+        self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
+        self.actionChangeDir.triggered.connect(self._change_project_dir)
 
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
@@ -368,6 +375,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.home_mode.setChecked(True)
         self.home_view.import_from_scrivener()
 
+    def _change_project_dir(self):
+        workspace = select_new_project_directory()
+        if workspace:
+            self.home_mode.setChecked(True)
+            settings.set_workspace(workspace)
+            if self.novel:
+                self._clear_novel_views()
+                self.novel = None
+
+            json_client.init(workspace)
+            self.home_view.refresh()
+            self.actionDirPlaceholder.setText(settings.workspace())
+
     def _increase_font_size(self):
         current_font = QApplication.font()
         self._set_font_size(current_font.pointSize() + 1)
@@ -391,6 +411,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     @busy
     def _load_new_novel(self, novel: Novel):
         if self.novel and self.novel.id == novel.id:
+            self.outline_mode.setChecked(True)
             return
 
         self.outline_mode.setEnabled(True)

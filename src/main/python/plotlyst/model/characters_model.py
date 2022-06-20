@@ -36,7 +36,7 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
     ColRole = 1
     ColEnneagram = 2
     ColMbti = 3
-    ColGoals = 4
+    ColSummary = 4
 
     def __init__(self, novel: Novel, parent=None):
         self._data: List[Character] = novel.characters
@@ -45,7 +45,7 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
         _headers[self.ColRole] = ''
         _headers[self.ColEnneagram] = ''
         _headers[self.ColMbti] = 'MBTI'
-        _headers[self.ColGoals] = 'Story goals'
+        _headers[self.ColSummary] = 'Summary'
         super().__init__(_headers, parent)
 
     @overrides
@@ -72,9 +72,9 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
             return self._dataForSelectionItem(enneagram, role, displayText=False)
         if index.column() == self.ColMbti:
             return self._dataForSelectionItem(character.mbti(), role)
-        # if index.column() == self.ColGoals:
-        #     if role == Qt.DisplayRole or role == self.SortRole:
-        #         return ', '.join(character.goals())
+        if index.column() == self.ColSummary:
+            if role == Qt.DisplayRole:
+                return character.summary()
 
     def _dataForSelectionItem(self, item: SelectionItem, role: int, displayText: bool = True, sortByText: bool = True):
         if item is None:

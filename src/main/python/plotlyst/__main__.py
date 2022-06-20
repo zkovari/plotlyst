@@ -31,13 +31,13 @@ try:
     from src.main.python.plotlyst.env import AppMode, app_env
     from src.main.python.plotlyst.resources import resource_registry
     from src.main.python.plotlyst.settings import settings
-    from src.main.python.plotlyst.view.dialog.dir import DirectoryPickerDialog
-    from src.main.python.plotlyst.worker.persistence import flush_or_fail
+    from src.main.python.plotlyst.service.persistence import flush_or_fail
+    from src.main.python.plotlyst.service.dir import select_new_project_directory, default_directory
 
     from PyQt5 import QtWidgets
     from PyQt5.QtCore import Qt
     from PyQt5.QtGui import QFont
-    from PyQt5.QtWidgets import QFileDialog, QApplication, QMessageBox
+    from PyQt5.QtWidgets import QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt5 import ApplicationContext
     from fbs_runtime import PUBLIC_SETTINGS, platform
     from fbs_runtime.application_context import cached_property, is_frozen
@@ -95,6 +95,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=lambda mode: AppMode[mode.upper()], choices=list(AppMode), default=AppMode.PROD)
+    parser.add_argument('--clear', action='store_true')
     args = parser.parse_args()
     app_env.mode = args.mode
     while True:
@@ -108,35 +109,22 @@ if __name__ == '__main__':
 
         app.setStyleSheet(APP_STYLESHEET)
         settings.init_org()
+        if args.clear:
+            settings.clear()
         resource_registry.set_up(appctxt)
 
         workspace: Optional[str] = settings.workspace()
+        if not workspace:
+            workspace = default_directory()
 
         changed_dir = False
         while True:
             if not workspace:
-                picker = DirectoryPickerDialog()
-                picker.display()
-                workspace = QFileDialog.getExistingDirectory(None, 'Choose directory')
-                changed_dir = True
+                workspace = select_new_project_directory()
 
-            if not workspace:
-                exit(0)
-
-            if not os.path.exists(workspace):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen directory doesn't exist: {workspace}")
-            elif os.path.isfile(workspace):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen path should be a directory, not a file: {workspace}")
-            elif not os.access(workspace, os.W_OK):
-                QMessageBox.warning(None, 'Invalid project directory',
-                                    f"The chosen directory cannot be written: {workspace}")
-            else:
-                if changed_dir:
-                    settings.set_workspace(workspace)
+            if workspace:
+                settings.set_workspace(workspace)
                 break
-            workspace = None
 
         try:
             json_client.init(workspace)

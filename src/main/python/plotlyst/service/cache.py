@@ -33,7 +33,7 @@ class NovelActsRegistry(EventListener):
         event_dispatcher.register(self, SceneChangedEvent)
         event_dispatcher.register(self, SceneDeletedEvent)
         self.novel: Optional[Novel] = None
-        self._acts_per_scenes: Dict[str, int] = {}
+        self._acts_per_scenes: Dict[Scene, int] = {}
         self._beats: Set[StoryBeat] = set()
         self._scenes_per_beats: Dict[StoryBeat, Scene] = {}
         self._acts_endings: Dict[int, int] = {}
@@ -57,18 +57,31 @@ class NovelActsRegistry(EventListener):
             beat = scene.beat(self.novel)
             if beat and beat.act == 1 and beat.ends_act:
                 self._acts_endings[1] = index
-                self._acts_per_scenes[str(scene.id)] = 1
+                self._acts_per_scenes[scene] = 1
             elif beat and beat.act == 2 and beat.ends_act:
                 self._acts_endings[2] = index
-                self._acts_per_scenes[str(scene.id)] = 2
+                self._acts_per_scenes[scene] = 2
             else:
-                self._acts_per_scenes[str(scene.id)] = len(self._acts_endings) + 1
+                self._acts_per_scenes[scene] = len(self._acts_endings) + 1
             if beat:
                 self._beats.add(beat)
                 self._scenes_per_beats[beat] = scene
 
+        for act in [1, 2, 3]:
+            if act in self._acts_endings.keys():
+                continue
+
+        last_act = 1
+        for index, scene in enumerate(self.novel.scenes):
+            beat = scene.beat(self.novel)
+            if beat and beat.act not in self._acts_endings.keys():
+                last_act = beat.act
+
+            if last_act > 1 and last_act not in self._acts_endings.keys():
+                self._acts_per_scenes[scene] = last_act
+
     def act(self, scene: Scene) -> int:
-        return self._acts_per_scenes.get(str(scene.id), 1)
+        return self._acts_per_scenes.get(scene, 1)
 
     def occupied_beats(self) -> Set[StoryBeat]:
         return self._beats

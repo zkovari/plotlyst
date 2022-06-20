@@ -30,14 +30,19 @@ from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
-    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, protagonist_role, \
-    antagonist_role, deuteragonist_role, tertiary_role, henchmen_role, enneagram_choices, mbti_choices, Role
+    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, mbti_choices, \
+    Role, \
+    summary_field
 
 
 @dataclass
 class TemplateValue:
     id: uuid.UUID
     value: Any
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
 
 
 @dataclass
@@ -159,6 +164,8 @@ class Character:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     gender: str = ''
     role: Optional[Role] = None
+    age: Optional[int] = None
+    occupation: Optional[str] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
@@ -176,6 +183,22 @@ class Character:
         for value in self.template_values:
             if value.id == mbti_field.id:
                 return mbti_choices.get(value.value)
+
+    def summary(self) -> str:
+        for value in self.template_values:
+            if value.id == summary_field.id:
+                return value.value
+
+        return ''
+
+    def is_major(self):
+        return self.role and self.role.is_major()
+
+    def is_secondary(self):
+        return self.role and self.role.is_secondary()
+
+    def is_minor(self) -> bool:
+        return self.role and self.role.is_minor()
 
     def flatten_goals(self) -> List[CharacterGoal]:
         all_goals = []
@@ -453,6 +476,7 @@ class SceneStructureItem:
     part: int = 1
     text: str = ''
     outcome: Optional[SceneOutcome] = None
+    emotion: Optional[int] = None
 
 
 @dataclass
@@ -938,11 +962,10 @@ class Document(CharacterBased):
 
 
 def default_documents() -> List[Document]:
-    return [Document('Story structure', id=uuid.UUID('ec2a62d9-fc00-41dd-8a6c-b121156b6cf4')),
-            Document('Characters', id=uuid.UUID('8fa16650-bed0-489b-baa1-d239e5198d47')),
-            Document('Scenes', id=uuid.UUID('75a552f4-037d-4179-860f-dd8400a7545b')),
-            Document('Worldbuilding', id=uuid.UUID('5faf7c16-f970-465d-bbcb-1bad56f3313c')),
-            Document('Brainstorming', id=uuid.UUID('f6df3a87-7054-40d6-a4b0-ad9917003136'))]
+    return [Document('Story', id=uuid.UUID('ec2a62d9-fc00-41dd-8a6c-b121156b6cf4'), icon='fa5s.book-open'),
+            Document('Characters', id=uuid.UUID('8fa16650-bed0-489b-baa1-d239e5198d47'), icon='fa5s.user'),
+            Document('Scenes', id=uuid.UUID('75a552f4-037d-4179-860f-dd8400a7545b'), icon='mdi.movie-open'),
+            Document('Locations', id=uuid.UUID('5faf7c16-f970-465d-bbcb-1bad56f3313c'), icon='fa5s.map-pin')]
 
 
 @dataclass
@@ -1109,16 +1132,13 @@ class Novel(NovelDescriptor):
         return chars
 
     def major_characters(self) -> List[Character]:
-        return [x for x in self.characters if x.role and x.role.text in [protagonist_role.text,
-                                                                         antagonist_role.text, deuteragonist_role.text]]
+        return [x for x in self.characters if x.is_major()]
 
     def secondary_characters(self) -> List[Character]:
-        return [x for x in self.characters if
-                x.role and x.role.text not in [tertiary_role.text, henchmen_role.text, protagonist_role.text,
-                                               antagonist_role.text, deuteragonist_role.text]]
+        return [x for x in self.characters if x.is_secondary()]
 
     def minor_characters(self) -> List[Character]:
-        return [x for x in self.characters if x.role and x.role.text in [tertiary_role.text, henchmen_role.text]]
+        return [x for x in self.characters if x.is_minor()]
 
     @property
     def active_story_structure(self) -> StoryStructure:
@@ -1154,3 +1174,7 @@ class Novel(NovelDescriptor):
         self.scenes.insert(i + 1, new_scene)
 
         return new_scene
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))

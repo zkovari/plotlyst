@@ -20,15 +20,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Dict
 
-from PyQt5.QtChart import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries
+from PyQt5.QtChart import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QSplineSeries
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QCursor, QIcon
 from PyQt5.QtWidgets import QToolTip
 
-from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
+from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel, \
+    SceneStructureItem
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
     secondary_role
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -41,6 +44,14 @@ class BaseChart(QChart):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.legend().hide()
         self.setBackgroundRoundness(0)
+
+    def reset(self):
+        if self.series():
+            self.removeAllSeries()
+        if self.axisX():
+            self.removeAxis(self.axisX())
+        if self.axisY():
+            self.removeAxis(self.axisY())
 
 
 class GenderCharacterChart(BaseChart):
@@ -208,12 +219,7 @@ class ManuscriptLengthChart(BaseChart):
         self.setTitle('<b>Manuscript length per chapters</b>')
 
     def refresh(self, novel: Novel):
-        if self.series():
-            self.removeAllSeries()
-        if self.axisX():
-            self.removeAxis(self.axisX())
-        if self.axisY():
-            self.removeAxis(self.axisY())
+        self.reset()
 
         self.setMinimumWidth(max(len(novel.chapters), 15) * 35)
 
@@ -240,3 +246,57 @@ class ManuscriptLengthChart(BaseChart):
         self.addSeries(series)
         series.attachAxis(axis_x)
         series.attachAxis(axis_y)
+
+
+class SceneStructureEmotionalArcChart(BaseChart):
+
+    def refresh(self, beats: List[SceneStructureItem]):
+        self.reset()
+
+        series = QSplineSeries()
+        arc_value: int = 0
+        series.append(0, 0)
+        for beat in beats:
+            if beat.emotion is not None:
+                arc_value = beat.emotion * 2
+            series.append(len(series), arc_value)
+
+        axis = QValueAxis()
+        axis.setRange(-8, 8)
+        self.addSeries(series)
+        self.setAxisY(axis, series)
+        axis.setVisible(False)
+
+
+class ActDistributionChart(BaseChart):
+
+    def __init__(self, parent=None):
+        super(ActDistributionChart, self).__init__(parent)
+        self.setTitle('<b>Act distribution</b>')
+        self.legend().setVisible(True)
+        self.legend().setAlignment(Qt.AlignBottom)
+
+    def refresh(self, novel: Novel):
+        self.reset()
+
+        series = QPieSeries()
+
+        acts: Dict[int, int] = {}
+        for scene in novel.scenes:
+            act = acts_registry.act(scene)
+            if act not in acts.keys():
+                acts[act] = 0
+            acts[act] = acts[act] + 1
+
+        for k, v in acts.items():
+            slice_ = series.append(f'Act {k}', v)
+
+            if k == 1:
+                color = ACT_ONE_COLOR
+            elif k == 2:
+                color = ACT_TWO_COLOR
+            else:
+                color = ACT_THREE_COLOR
+            slice_.setColor(QColor(color))
+
+        self.addSeries(series)

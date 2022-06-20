@@ -28,8 +28,8 @@ from overrides import overrides
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import SelectionItem, Novel, Scene
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.worker.cache import acts_registry
 
 
 def emit_column_changed_in_tree(model: TreeItemModel, column: int, parent: QModelIndex):
@@ -115,7 +115,7 @@ class SelectionItemsModel(QAbstractTableModel):
                 self.uncheckItem(item)
             else:
                 self.checkItem(item)
-            
+
             self.modelReset.emit()
 
     def uncheckAll(self):
@@ -133,8 +133,22 @@ class SelectionItemsModel(QAbstractTableModel):
 
         return index.row()
 
+    def insert(self, row: int):
+        index = self._insertItem(row)
+
+        item = self.item(index)
+        if self._checkable:
+            self._checked.add(item)
+            self.selection_changed.emit()
+
+        self.modelReset.emit()
+
     @abstractmethod
     def _newItem(self) -> QModelIndex:
+        pass
+
+    @abstractmethod
+    def _insertItem(self, row: int) -> QModelIndex:
         pass
 
     def remove(self, index: QModelIndex):
@@ -246,6 +260,11 @@ class DefaultSelectionItemsModel(SelectionItemsModel):
     def _newItem(self) -> QModelIndex:
         self._items.append(SelectionItem('new'))
         return self.index(self.rowCount() - 1, 0)
+
+    @overrides
+    def _insertItem(self, row: int) -> QModelIndex:
+        self._items.insert(row, SelectionItem(''))
+        return self.index(row, 0)
 
     @overrides
     def item(self, index: QModelIndex) -> SelectionItem:

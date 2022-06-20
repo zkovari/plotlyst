@@ -157,7 +157,7 @@
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <property name="spacing">
-             <number>6</number>
+             <number>3</number>
             </property>
             <item>
              <widget class="QLineEdit" name="lineName">
@@ -189,6 +189,12 @@ background-color: rgba(0,0,0,0);</string>
             </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <property name="leftMargin">
+               <number>3</number>
+              </property>
+              <property name="topMargin">
+               <number>3</number>
+              </property>
               <item alignment="Qt::AlignLeft">
                <widget class="QToolButton" name="btnMale">
                 <property name="cursor">
@@ -469,6 +475,65 @@ QToolButton:checked {
               </item>
              </layout>
             </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <property name="spacing">
+               <number>5</number>
+              </property>
+              <property name="leftMargin">
+               <number>5</number>
+              </property>
+              <item alignment="Qt::AlignLeft">
+               <widget class="SecondaryActionPushButton" name="btnAge">
+                <property name="font">
+                 <font>
+                  <italic>true</italic>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Age</string>
+                </property>
+                <property name="iconName" stdset="0">
+                 <string>fa5s.birthday-cake</string>
+                </property>
+                <property name="iconColor" stdset="0">
+                 <string>gray</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="SecondaryActionPushButton" name="btnOccupation">
+                <property name="font">
+                 <font>
+                  <italic>true</italic>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Occupation</string>
+                </property>
+                <property name="iconName" stdset="0">
+                 <string>fa5s.briefcase</string>
+                </property>
+                <property name="iconColor" stdset="0">
+                 <string>gray</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
            </layout>
           </item>
          </layout>
@@ -701,6 +766,11 @@ border: 0px;
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>SecondaryActionPushButton</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.button</header>
+  </customwidget>
   <customwidget>
    <class>CharacterAvatar</class>
    <extends>QWidget</extends>

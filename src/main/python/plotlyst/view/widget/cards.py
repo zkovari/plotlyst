@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from abc import abstractmethod
 from enum import Enum
+from functools import partial
 from typing import Optional, List
 
 import emoji
@@ -27,17 +28,18 @@ import qtanim
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
 from PyQt5.QtGui import QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor
-from PyQt5.QtWidgets import QFrame, QApplication, QAction
+from PyQt5.QtWidgets import QFrame, QApplication, QAction, QMenu
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import FlowLayout, clear_layout
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel, SceneStage
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import ActiveSceneStageChanged
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.events import ActiveSceneStageChanged, SceneStatusChangedEvent
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.view.common import emoji_font, action
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
@@ -293,10 +295,13 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
         self._setStyleSheet()
 
         event_dispatcher.register(self, ActiveSceneStageChanged)
+        event_dispatcher.register(self, SceneStatusChangedEvent)
+
+        self.repo = RepositoryPersistenceManager.instance()
 
     @overrides
     def event_received(self, event: Event):
-        if isinstance(event, ActiveSceneStageChanged):
+        if isinstance(event, (ActiveSceneStageChanged, SceneStatusChangedEvent)):
             self._updateStage()
 
     @overrides
@@ -307,15 +312,15 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
     def enterEvent(self, event: QEvent) -> None:
         super(SceneCard, self).enterEvent(event)
         self.wdgCharacters.setEnabled(True)
-        # if not self._stageOk:
-        #     self.btnStage.setVisible(True)
+        if not self._stageOk:
+            self.btnStage.setVisible(True)
         self.cursorEntered.emit()
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         self.wdgCharacters.setEnabled(False)
-        # if not self._stageOk:
-        #     self.btnStage.setHidden(True)
+        if not self._stageOk and not self.btnStage.menu().isVisible():
+            self.btnStage.setHidden(True)
 
     @overrides
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
@@ -354,12 +359,23 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
             if scene_stage_index >= active_stage_index:
                 self._stageOk = True
                 self.btnStage.setIcon(IconRegistry.ok_icon())
-            # else:
-            #     self.btnStage.setIcon(IconRegistry.progress_check_icon())
-        # else:
-        #     self.btnStage.setIcon(IconRegistry.progress_check_icon())
+
+        if not self._stageOk:
+            self.btnStage.setIcon(IconRegistry.progress_check_icon('grey'))
+
+        menu = QMenu(self.btnStage)
+        for stage in self.novel.stages:
+            act = action(stage.text, slot=partial(self._changeStage, stage), checkable=True, parent=menu)
+            act.setChecked(self.scene.stage == stage)
+            menu.addAction(act)
+        self.btnStage.setMenu(menu)
 
         self.btnStage.setVisible(self._stageOk)
+
+    def _changeStage(self, stage: SceneStage):
+        self.scene.stage = stage
+        self._updateStage()
+        self.repo.update_scene(self.scene)
 
 
 class CardSizeRatio(Enum):

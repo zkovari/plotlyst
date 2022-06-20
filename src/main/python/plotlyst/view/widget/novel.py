@@ -35,13 +35,14 @@ from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBea
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
-    NovelReloadRequestedEvent
+from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.locations_model import LocationsTreeModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
+from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import OpacityEventFilter, link_buttons_to_pages, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
@@ -61,8 +62,6 @@ from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, PlotValueLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
-from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class _StoryStructureButton(QPushButton):
@@ -692,9 +691,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
                 anim.finished.connect(partial(self.__destroy, widget))
 
     def __destroy(self, widget: PlotWidget):
-        self.novel.plots.remove(widget.plot)
-        self.repo.update_novel(self.novel)
+        delete_plot(self.novel, widget.plot)
+
         self.scrollAreaWidgetContents.layout().removeWidget(widget)
         gc(widget)
-
-        emit_event(NovelReloadRequestedEvent(self))

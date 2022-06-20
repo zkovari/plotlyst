@@ -36,6 +36,9 @@ class AppSettings:
         QCoreApplication.setApplicationName('Plotlyst')
         self._settings = QSettings()
 
+    def clear(self):
+        self._settings.clear()
+
     def workspace(self) -> Optional[str]:
         return self._settings.value(self.WORKSPACE)
 

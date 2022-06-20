@@ -22,8 +22,8 @@ from PyQt5.QtCore import Qt
 
 from src.main.python.plotlyst.core.domain import Location, Novel
 from src.main.python.plotlyst.core.template import location_name_field, ProfileTemplate
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.widget.template import ProfileTemplateView, LabelsSelectionWidget
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class LocationProfileTemplateView(ProfileTemplateView):

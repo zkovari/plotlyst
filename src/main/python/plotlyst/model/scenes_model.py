@@ -29,11 +29,13 @@ from overrides import overrides
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
     SelectionItem, SceneStage, SceneType, SceneStructureAgenda
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import SceneStatusChangedEvent
 from src.main.python.plotlyst.model.common import AbstractHorizontalHeaderBasedTableModel, SelectionItemsModel
+from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class BaseScenesTableModel:
@@ -319,13 +321,15 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
     def changeStage(self, index: QModelIndex):
         if index.column() == self.ColTitle:
             return
+        scene = self._scene(index)
         if index.column() == self.ColNoneStage:
-            self._scene(index).stage = None
+            scene.stage = None
         else:
-            self._scene(index).stage = self._stage(index)
+            scene.stage = self._stage(index)
 
-        RepositoryPersistenceManager.instance().update_scene(self._scene(index))
+        RepositoryPersistenceManager.instance().update_scene(scene)
         self.modelReset.emit()
+        emit_event(SceneStatusChangedEvent(self, scene))
 
     def setHighlightedStage(self, stage: SceneStage):
         self._highlighted_stage = stage
@@ -358,6 +362,10 @@ class SceneConflictsModel(SelectionItemsModel):
 
     @overrides
     def _newItem(self) -> QModelIndex:
+        pass
+
+    @overrides
+    def _insertItem(self, row: int) -> QModelIndex:
         pass
 
     @overrides

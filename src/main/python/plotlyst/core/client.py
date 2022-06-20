@@ -29,6 +29,7 @@ from PyQt5.QtCore import QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined, config
+from qthandy import busy
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneBuilderElement, \
     SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
@@ -115,6 +116,8 @@ class CharacterInfo:
     id: uuid.UUID
     gender: str = ''
     role: Optional[Role] = None
+    age: Optional[int] = None
+    occupation: Optional[str] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
     backstory: List[BackstoryEvent] = field(default_factory=list)
@@ -357,6 +360,12 @@ class JsonClient:
                 document.data = Causality.from_json(data_str)
         document.loaded = True
 
+    @busy
+    def load_manuscript(self, novel: Novel):
+        for scene in novel.scenes:
+            if scene.manuscript and not scene.manuscript.loaded:
+                self.load_document(novel, scene.manuscript)
+
     def save_document(self, novel: Novel, document: Document):
         self.__persist_doc(novel, document)
 
@@ -386,7 +395,8 @@ class JsonClient:
             with open(path, encoding='utf8') as json_file:
                 data = json_file.read()
                 info: CharacterInfo = CharacterInfo.from_json(data)
-                character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role,
+                character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role, age=info.age,
+                                      occupation=info.occupation,
                                       template_values=info.template_values,
                                       backstory=info.backstory, goals=info.goals, document=info.document,
                                       journals=info.journals, prefs=info.prefs)
@@ -520,7 +530,8 @@ class JsonClient:
         self.__persist_info(self.novels_dir, novel_info)
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
-        char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role,
+        char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
+                                  occupation=char.occupation,
                                   template_values=char.template_values,
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,

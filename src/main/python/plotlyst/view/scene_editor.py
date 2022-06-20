@@ -18,35 +18,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, List
+from typing import Optional
 
 import emoji
 import qtanim
 from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
-    QAbstractItemModel, Qt
-from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, QStyleOptionViewItem, QTextEdit, QLineEdit, QComboBox, \
-    QWidgetAction, QTableView, QMenu
+    Qt
+from PyQt5.QtWidgets import QWidget, QWidgetAction, QTableView, QMenu
 from fbs_runtime import platform
-from overrides import overrides
 from qthandy import flow, clear_layout
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, SceneBuilderElement, Document, StoryBeat, \
+from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotReference, TagReference
 from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
-from src.main.python.plotlyst.model.scene_builder_model import SceneBuilderInventoryTreeModel, \
-    SceneBuilderPaletteTreeModel, CharacterEntryNode, SceneInventoryNode, convert_to_element_type
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
+from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font
-from src.main.python.plotlyst.view.dialog.scene_builder_edition import SceneBuilderPreviewDialog
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
 from src.main.python.plotlyst.view.widget.scenes import ScenePlotSelector, SceneTagSelector
-from src.main.python.plotlyst.worker.cache import acts_registry
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class SceneEditor(QObject):
@@ -67,9 +62,9 @@ class SceneEditor(QObject):
             self._emoji_font = emoji_font(20)
 
         self.ui.btnAttributes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
+        self.ui.btnAttributes.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
         self.ui.btnNotes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.ui.btnBuilder.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
@@ -130,17 +125,6 @@ class SceneEditor(QObject):
         self.ui.btnNext.clicked.connect(self._on_next_scene)
 
         flow(self.ui.wdgPlotContainer)
-
-        self._scene_builder_inventory_model = SceneBuilderInventoryTreeModel()
-        self.ui.treeInventory.setModel(self._scene_builder_inventory_model)
-        self.ui.treeInventory.doubleClicked.connect(self._on_dclick_scene_builder_inventory)
-        self.ui.treeInventory.expandAll()
-
-        self.ui.btnDelete.setIcon(IconRegistry.minus_icon())
-        self.ui.btnDelete.clicked.connect(self._on_delete_scene_builder_element)
-        self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
-        self.ui.btnEdit.clicked.connect(self._on_edit_scene_builder_element)
-        self.ui.btnPreview.clicked.connect(self._on_preview_scene_builder)
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
 
@@ -213,25 +197,12 @@ class SceneEditor(QObject):
             else:
                 self.ui.btnNext.setEnabled(True)
 
-        self._scene_builder_palette_model = SceneBuilderPaletteTreeModel(self.scene)
-        self.ui.treeSceneBuilder.setModel(self._scene_builder_palette_model)
-        self.ui.treeSceneBuilder.selectionModel().selectionChanged.connect(self._on_scene_builder_selection_changed)
-        self._scene_builder_palette_model.modelReset.connect(self.ui.treeSceneBuilder.expandAll)
-        self.ui.treeSceneBuilder.setColumnWidth(0, 400)
-        self.ui.treeSceneBuilder.setColumnWidth(1, 40)
-        self.ui.treeSceneBuilder.setColumnWidth(2, 40)
-        self.ui.treeSceneBuilder.expandAll()
-        self.ui.treeSceneBuilder.setItemDelegate(ScenesBuilderDelegate(self, self.scene))
-        self._scene_builder_palette_model.setElements(self.scene.builder_elements)
-
     def _page_toggled(self):
         if self.ui.btnAttributes.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageStructure)
         elif self.ui.btnNotes.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageNotes)
             self._update_notes()
-        elif self.ui.btnBuilder.isChecked():
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageBuilder)
 
     def _beat_selected(self, beat: StoryBeat):
         if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:
@@ -322,19 +293,7 @@ class SceneEditor(QObject):
         self._new_scene = False
 
     def _on_close(self):
-        self.scene.builder_elements.clear()
-        self.scene.builder_elements.extend(self._scene_builder_elements())
         self._save_scene()
-
-    def __get_scene_builder_element(self, scene: Scene, node: SceneInventoryNode, seq: int) -> SceneBuilderElement:
-        children = []
-        for child_seq, child in enumerate(node.children):
-            children.append(self.__get_scene_builder_element(self.scene, child, child_seq))
-
-        return SceneBuilderElement(type=convert_to_element_type(node), text=node.name,
-                                   children=children,
-                                   character=node.character, has_suspense=node.suspense, has_tension=node.tension,
-                                   has_stakes=node.stakes)
 
     def _on_previous_scene(self):
         row = self.novel.scenes.index(self.scene) - 1
@@ -349,88 +308,7 @@ class SceneEditor(QObject):
         self._new_scene_selected(self.scenes_model.index(row, 0))
 
     def _new_scene_selected(self, index: QModelIndex):
-        self.scene.builder_elements.clear()
-        self.scene.builder_elements.extend(self._scene_builder_elements())
         self._save_scene()
 
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
         self._update_view(scene)
-
-    def _scene_builder_elements(self) -> List[SceneBuilderElement]:
-        elements: List[SceneBuilderElement] = []
-        for seq, node in enumerate(self._scene_builder_palette_model.root.children):
-            elements.append(self.__get_scene_builder_element(self.scene, node, seq))
-
-        return elements
-
-    def _on_dclick_scene_builder_inventory(self, index: QModelIndex):
-        node = index.data(SceneBuilderInventoryTreeModel.NodeRole)
-        if isinstance(node, SceneInventoryNode):
-            self._scene_builder_palette_model.insertNode(node)
-
-    def _on_scene_builder_selection_changed(self):
-        indexes = self.ui.treeSceneBuilder.selectedIndexes()
-        self.ui.btnDelete.setEnabled(bool(indexes))
-        self.ui.btnEdit.setEnabled(bool(indexes))
-
-    def _on_delete_scene_builder_element(self):
-        indexes = self.ui.treeSceneBuilder.selectedIndexes()
-        if not indexes:
-            return
-        self._scene_builder_palette_model.deleteItem(indexes[0])
-        self.ui.btnDelete.setDisabled(True)
-
-    def _on_preview_scene_builder(self):
-        SceneBuilderPreviewDialog().display(self._scene_builder_elements())
-
-    def _on_edit_scene_builder_element(self):
-        indexes = self.ui.treeSceneBuilder.selectedIndexes()
-        if not indexes:
-            return
-        self.ui.treeSceneBuilder.edit(indexes[0])
-
-
-class ScenesBuilderDelegate(QStyledItemDelegate):
-
-    def __init__(self, view: SceneEditor, scene: Scene, parent=None):
-        super(ScenesBuilderDelegate, self).__init__(parent)
-        self.scene = scene
-        self.view = view
-        self._close_shortcut = self.view.ui.btnClose.shortcut()
-
-    @overrides
-    def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
-        node = index.internalPointer()
-        if isinstance(node, CharacterEntryNode):
-            return QComboBox(parent)
-        lineedit = QLineEdit(parent)
-        lineedit.textEdited.connect(partial(self._on_text_edit, lineedit))
-        self.view.ui.btnClose.setShortcut('')
-        lineedit.destroyed.connect(lambda: self.view.ui.btnClose.setShortcut(self._close_shortcut))
-        return lineedit
-
-    @overrides
-    def setEditorData(self, editor: QWidget, index: QModelIndex):
-        if isinstance(editor, QTextEdit) or isinstance(editor, QLineEdit):
-            node = index.internalPointer()
-            editor.setText(node.name)
-        elif isinstance(editor, QComboBox):
-            for char in self.scene.characters:
-                editor.addItem(avatars.avatar(char), char.name, char)
-            editor.activated.connect(lambda: self._commit_and_close(editor))
-            editor.showPopup()
-
-    @overrides
-    def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
-        if isinstance(editor, QComboBox):
-            model.setData(index, editor.currentData(Qt.UserRole))
-        elif isinstance(editor, QLineEdit):
-            model.setData(index, editor.text())
-
-    def _on_text_edit(self, editor: QLineEdit, text: str):
-        if len(text) == 1:
-            editor.setText(text.upper())
-
-    def _commit_and_close(self, editor):
-        self.commitData.emit(editor)
-        self.closeEditor.emit(editor)

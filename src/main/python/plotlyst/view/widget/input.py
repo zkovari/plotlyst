@@ -19,15 +19,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from enum import Enum
 from functools import partial
-from typing import Optional
+from typing import Optional, Any, List, Tuple
 
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel
+from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel, \
+    QAbstractTableModel
 from PyQt5.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData, QIcon
 from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
-    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView
+    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QAction, QTableView, QSizePolicy, QAbstractItemView
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qthandy import transparent, hbox
@@ -42,12 +43,12 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
-from src.main.python.plotlyst.view.common import OpacityEventFilter, action
+from src.main.python.plotlyst.service.grammar import language_tool_proxy, dictionary
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.view.common import OpacityEventFilter, action, pointy, autoresize_col
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
-from src.main.python.plotlyst.worker.grammar import language_tool_proxy, dictionary
-from src.main.python.plotlyst.worker.persistence import RepositoryPersistenceManager
 
 
 class AutoAdjustableTextEdit(QTextEdit):
@@ -693,3 +694,109 @@ class RemovalButton(QToolButton):
 
         self.pressed.connect(lambda: self.setIcon(IconRegistry.close_icon('red')))
         self.released.connect(lambda: self.setIcon(IconRegistry.close_icon()))
+
+
+class MenuWithDescription(QMenu):
+    def __init__(self, parent=None):
+        super(MenuWithDescription, self).__init__(parent)
+        self._action = QWidgetAction(self)
+        self._tblActions = QTableView(self)
+        self._model = self.Model()
+
+        self._tblActions.verticalHeader().setMaximumSectionSize(20)
+        self._tblActions.setWordWrap(False)
+        self._tblActions.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._tblActions.setShowGrid(False)
+        self._tblActions.setModel(self._model)
+        self._tblActions.verticalHeader().setVisible(False)
+        self._tblActions.horizontalHeader().setVisible(False)
+        self._tblActions.horizontalHeader().setStretchLastSection(True)
+        self._tblActions.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self._tblActions.setAlternatingRowColors(True)
+        self._tblActions.setStyleSheet('''
+            QTableView::item:hover:!selected {
+                background-color: #D8D5D5;
+                border: 0px;
+            }
+        ''')
+
+        autoresize_col(self._tblActions, 0)
+        pointy(self._tblActions)
+        self._tblActions.clicked.connect(self._clicked)
+        self._tblActions.verticalHeader().setDefaultSectionSize(20)
+
+        self._action.setDefaultWidget(self._tblActions)
+        super().addAction(self._action)
+
+        self._model.freeze()
+        self.aboutToShow.connect(lambda: self._model.unfreeze())
+        self.aboutToHide.connect(lambda: self._model.freeze())
+
+    @overrides
+    def addAction(self, action: QAction, description: str = ''):
+        self._model.addAction(action, description)
+        self._tblActions.setMinimumHeight(self._model.rowCount() * 20 + 20)
+        minsize = max(len(description) * 10, self._tblActions.minimumWidth())
+        self._tblActions.setMinimumWidth(minsize)
+
+    def _clicked(self, index: QModelIndex):
+        action: QAction = self._model.action(index)
+        action.trigger()
+        self.hide()
+        self._tblActions.clearSelection()
+
+    class Model(QAbstractTableModel):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self._actions: List[Tuple[QAction, str]] = []
+            self._frozen: bool = False
+
+        @overrides
+        def columnCount(self, parent: QModelIndex = ...) -> int:
+            return 2
+
+        @overrides
+        def rowCount(self, parent: QModelIndex = ...) -> int:
+            return len(self._actions)
+
+        @overrides
+        def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+            if self._frozen:
+                return
+            if not index.isValid():
+                return
+
+            if role == Qt.DisplayRole:
+                if index.column() == 0:
+                    return self._actions[index.row()][index.column()].text()
+                elif index.column() == 1:
+                    return self._actions[index.row()][index.column()]
+
+            if role == Qt.DecorationRole and index.column() == 0:
+                return self._actions[index.row()][0].icon()
+
+            if role == Qt.FontRole:
+                font = QFont()
+                if index.column() == 0:
+                    font.setBold(True)
+                if index.column() == 1:
+                    ps = QApplication.font().pointSize()
+                    font.setPointSize(ps - 1)
+                return font
+
+            if role == Qt.ForegroundRole and index.column() == 1:
+                return QBrush(QColor('grey'))
+
+        def addAction(self, action: QAction, description: str = ''):
+            self._actions.append((action, description))
+            self.modelReset.emit()
+
+        def action(self, index: QModelIndex) -> QAction:
+            return self._actions[index.row()][0]
+
+        def freeze(self):
+            self._frozen = True
+
+        def unfreeze(self):
+            self._frozen = False
+            self.modelReset.emit()

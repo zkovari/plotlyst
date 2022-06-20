@@ -19,14 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal
+from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal, QPoint
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QAbstractItemView
 from qthandy import ask_confirmation
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import show_color_picker
+from src.main.python.plotlyst.view.common import show_color_picker, PopupMenuBuilder
 from src.main.python.plotlyst.view.delegates import TextItemDelegate
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.items_editor_widget_ui import Ui_ItemsEditorWidget
@@ -43,6 +43,8 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
 
         self.bgColorFieldEnabled: bool = False
         self.askRemovalConfirmation: bool = False
+        self.insertionEnabled: bool = False
+        self.removeAllEnabled: bool = True
         self.inlineEditionEnabled: bool = True
 
         self.btnAdd.setIcon(IconRegistry.plus_icon())
@@ -55,6 +57,9 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.btnRemove.clicked.connect(self._remove)
         self.btnRemove.setDisabled(True)
         self.btnRemove.setIcon(IconRegistry.minus_icon())
+
+        self.tableView.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tableView.customContextMenuRequested.connect(self._contextMenu)
 
     def setModel(self, model: SelectionItemsModel):
         self.model = model
@@ -87,6 +92,13 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.btnAdd.setEnabled(enabled)
         self.btnAdd.setVisible(enabled)
 
+    def setInsertionEnabled(self, enabled: bool):
+        self.insertionEnabled = enabled
+
+    def setRemoveAllEnabled(self, enabled: bool):
+        self.removeAllEnabled = enabled
+        self._item_selected()
+
     def refresh(self):
         self.model.modelReset.emit()
         self.btnEdit.setEnabled(False)
@@ -98,6 +110,9 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
             self.tableView.scrollToTop()
         else:
             self.tableView.scrollToBottom()
+        self._editAfterInsert(row)
+
+    def _editAfterInsert(self, row: int):
         default_editable_col = self.model.defaultEditableColumn()
         if default_editable_col >= 0:
             index = self.model.index(row, default_editable_col)
@@ -105,6 +120,15 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
                 self.tableView.edit(index)
             else:
                 self.editRequested.emit(self.model.item(index))
+
+    def _insert(self, row: int):
+        if row < 0:
+            row = 0
+        elif row >= self.model.rowCount():
+            return self._add()
+
+        self.model.insert(row)
+        self._editAfterInsert(row)
 
     def _edit(self):
         indexes = self.tableView.selectedIndexes()
@@ -125,10 +149,17 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
             return
         self.model.remove(indexes[0])
 
+        self.btnEdit.setDisabled(True)
+        self.btnRemove.setDisabled(True)
+
     def _item_selected(self):
         selection = len(self.tableView.selectedIndexes()) > 0
         self.btnEdit.setEnabled(selection)
-        self.btnRemove.setEnabled(selection)
+        if selection:
+            if not self.removeAllEnabled and self.model.rowCount() == 1:
+                self.btnRemove.setDisabled(True)
+            else:
+                self.btnRemove.setEnabled(selection)
 
     def _item_clicked(self, index: QModelIndex):
         if index.column() == SelectionItemsModel.ColIcon:
@@ -140,3 +171,16 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
             if color.isValid():
                 self.model.setData(index, color.name(), role=Qt.BackgroundRole)
             self.tableView.clearSelection()
+
+    def _contextMenu(self, pos: QPoint):
+        if not self.insertionEnabled:
+            return
+
+        index = self.tableView.selectedIndexes()[0]
+
+        builder = PopupMenuBuilder.from_widget_position(self.tableView, pos)
+        builder.add_action('Insert before', IconRegistry.from_name('mdi6.arrow-up-right'),
+                           lambda: self._insert(index.row()))
+        builder.add_action('Insert after', IconRegistry.from_name('mdi6.arrow-down-right'),
+                           lambda: self._insert(index.row() + 1))
+        builder.popup()
