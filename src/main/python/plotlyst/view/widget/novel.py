@@ -27,7 +27,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
-    margins, italic, btn_popup_menu, ask_confirmation
+    margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     three_act_structure, save_the_cat, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
@@ -116,13 +116,15 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.setupUi(self)
         self.beat = beat
         self.lblTitle.setText(self.beat.text)
-        self.lblDescription.setText(f'Description of this beat {self.beat.text}')
+        self.lblDescription.setText(self.beat.description)
         transparent(self.lblTitle)
         transparent(self.lblDescription)
         transparent(self.btnIcon)
         if beat.icon:
             self.btnIcon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
         self.lblTitle.setStyleSheet(f'color: {beat.icon_color};')
+
+        retain_when_hidden(self.cbToggle)
 
         self.cbToggle.setHidden(True)
         if not self._canBeToggled():
@@ -192,7 +194,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         return True
 
     def _beatToggled(self, toggled: bool):
-        opaque(self, 1 if toggled else 0.3)
+        opaque(self, 1 if toggled else 0.5)
         bold(self.lblTitle, toggled)
 
     def _beatClicked(self, checked: bool):
