@@ -194,7 +194,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         return True
 
     def _beatToggled(self, toggled: bool):
-        opaque(self, 1 if toggled else 0.3)
+        opaque(self, 1 if toggled else 0.5)
         bold(self.lblTitle, toggled)
 
     def _beatClicked(self, checked: bool):
