@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 import nltk
 import qtanim
@@ -31,12 +31,12 @@ from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout
+from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout, vbox
 from qttextedit import EnhancedTextEdit
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
@@ -416,6 +416,16 @@ class ManuscriptTextEditor(DocumentTextEditor):
         self.textEdit.setStyleSheet(f'QTextEdit {{border: 1px; background-color: {RELAXED_WHITE_COLOR};}}')
 
 
+class ManuscriptBatchEditor(QWidget):
+    def __init__(self, parent=None):
+        super(ManuscriptBatchEditor, self).__init__(parent)
+
+        vbox(self, 0, 0)
+
+    def setManuscripts(self, manuscripts: List[Document]):
+        pass
+
+
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
     def __init__(self, parent=None):
         super(ReadabilityWidget, self).__init__(parent)
@@ -519,9 +529,9 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
             self.wdgSprint.setVisible(True)
         else:
             self.wdgSprint.setHidden(True)
-        self.wdgDistractionFreeEditor.layout().addWidget(editor)
-        editor.textEdit.setFocus()
-        editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.wdgDistractionFreeEditor.layout().addWidget(self.editor)
+        self.editor.textEdit.setFocus()
+        self.editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.wdgBottom.setVisible(True)
         self.sliderDocWidth.setMaximum(self.width() / 3)
         if self.sliderDocWidth.value() <= 2:
