@@ -21,13 +21,14 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt5.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer
+from PyQt5.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup
 from overrides import overrides
-from qthandy import hbox, opaque
+from qthandy import hbox, opaque, bold, incr_font
 
 from src.main.python.plotlyst.core.domain import SelectionItem
-from src.main.python.plotlyst.view.common import OpacityEventFilter
+from src.main.python.plotlyst.view.common import OpacityEventFilter, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -221,3 +222,26 @@ class FadeOutButtonGroup(QButtonGroup):
                 other_btn.setEnabled(True)
                 anim = qtanim.fade_in(other_btn, duration=self._fadeInDuration)
                 anim.finished.connect(partial(opaque, other_btn, self._opacity))
+
+
+class ToolbarButton(QToolButton):
+    def __init__(self, parent=None):
+        super(ToolbarButton, self).__init__(parent)
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setCheckable(True)
+        pointy(self)
+
+        self.toggled.connect(lambda x: bold(self, x))
+
+        self.setStyleSheet('''
+            QToolButton:checked {
+                color: #240046;
+                background-color: #e2cfea;
+            }
+        ''')
+
+        incr_font(self, 1)
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        qtanim.colorize(self, color=QColor('#7B2CBF'))
