@@ -24,11 +24,11 @@ from typing import Optional, List
 import nltk
 import qtanim
 from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent
+from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QMargins
 from PyQt5.QtGui import QFont, QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent
+    QMouseEvent, QResizeEvent
 from PyQt5.QtMultimedia import QSoundEffect
-from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication
+from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication, QSizePolicy
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout, vbox
@@ -43,7 +43,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import scroll_to_top, spin, \
-    OpacityEventFilter
+    OpacityEventFilter, scrolled
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -357,10 +357,12 @@ class WordTagHighlighter(QSyntaxHighlighter):
 
 
 class ManuscriptTextEdit(TextEditBase):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, topBorder: bool = False):
         super(ManuscriptTextEdit, self).__init__(parent)
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
+        self._minHeight = 60
+        self._topBorder = topBorder
 
         self._sentenceHighlighter: Optional[SentenceHighlighter] = None
         self._nightModeHighlighter: Optional[NightModeHighlighter] = None
@@ -372,6 +374,21 @@ class ManuscriptTextEdit(TextEditBase):
             self.document().setDefaultFont(QFont(family, 16))
 
         self._setDefaultStyleSheet()
+        self.textChanged.connect(self.resizeToContent)
+
+    @overrides
+    def showEvent(self, a0: QtGui.QShowEvent) -> None:
+        self.resizeToContent()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent):
+        super(ManuscriptTextEdit, self).resizeEvent(event)
+        self.resizeToContent()
+
+    def resizeToContent(self):
+        margins: QMargins = self.viewportMargins()
+        self.setMinimumHeight(
+            max(self._minHeight, self.document().size().height()) + margins.top() + margins.bottom() + 5)
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.highlighter.setCheckEnabled(enabled)
@@ -411,7 +428,9 @@ class ManuscriptTextEdit(TextEditBase):
             self._wordTagHighlighter = WordTagHighlighter(self)
 
     def _setDefaultStyleSheet(self):
-        self.setStyleSheet(f'QTextEdit {{border: 1px; background-color: {RELAXED_WHITE_COLOR};}}')
+        border = 2 if self._topBorder else 0
+        self.setStyleSheet(
+            f'QTextEdit {{border-top: {border}px dashed grey; background-color: {RELAXED_WHITE_COLOR};}}')
 
 
 class ManuscriptTextEditor(QWidget):
@@ -421,6 +440,9 @@ class ManuscriptTextEditor(QWidget):
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
         vbox(self, 0, 0)
+        self._scrollArea, self._scrollWidget = scrolled(self, frameless=True)
+        self._scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        vbox(self._scrollWidget, 0, 0)
 
         self._editors: List[ManuscriptTextEdit] = []
 
@@ -439,30 +461,33 @@ class ManuscriptTextEditor(QWidget):
             editor.asyncCheckGrammer()
 
     def setScene(self, scene: Scene):
-        clear_layout(self.layout())
-        self._editors.clear()
-
+        self.clear()
         self._addScene(scene)
 
     def setChapterScenes(self, scenes: List[Scene]):
-        clear_layout(self.layout())
+        self.clear()
+        for i, scene in enumerate(scenes):
+            self._addScene(scene, topBorder=i > 0)
+
+    def clear(self):
+        clear_layout(self._scrollWidget.layout())
         self._editors.clear()
 
-        for scene in scenes:
-            self._addScene(scene)
-
-    def _addScene(self, scene):
+    def _addScene(self, scene, topBorder: bool = False):
         if not scene.manuscript.loaded:
             json_client.load_document(app_env.novel, scene.manuscript)
 
-        editor = ManuscriptTextEdit(self)
+        editor = ManuscriptTextEdit(self, topBorder=topBorder)
         editor.setText(scene.manuscript.content)
         editor.setFormat(130, textIndent=20)
         editor.setFontPointSize(16)
+        editor.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        editor.resizeToContent()
         editor.textChanged.connect(partial(self._textChanged, scene, editor))
         editor.selectionChanged.connect(partial(self.selectionChanged.emit, editor))
         self._editors.append(editor)
-        self.layout().addWidget(editor)
+        self._scrollWidget.layout().addWidget(editor)
 
     def documents(self) -> List[QTextDocument]:
         return [x.document() for x in self._editors]
@@ -501,8 +526,7 @@ class ManuscriptTextEditor(QWidget):
             self._editors[0].setFocus()
 
     def setVerticalScrollBarPolicy(self, policy):
-        for editor in self._editors:
-            editor.setVerticalScrollBarPolicy(policy)
+        self._scrollArea.setVerticalScrollBarPolicy(policy)
 
     def installEventFilterOnEditors(self, filter):
         for editor in self._editors:
