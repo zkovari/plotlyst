@@ -416,7 +416,7 @@ class ManuscriptTextEdit(TextEditBase):
 
 class ManuscriptTextEditor(QWidget):
     textChanged = pyqtSignal()
-    selectionChanged = pyqtSignal()
+    selectionChanged = pyqtSignal(ManuscriptTextEdit)
 
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
@@ -450,10 +450,14 @@ class ManuscriptTextEditor(QWidget):
         editor.setFormat(130, textIndent=20)
         editor.setFontPointSize(16)
         editor.textChanged.connect(partial(self._textChanged, scene, editor))
+        editor.selectionChanged.connect(partial(self.selectionChanged.emit, editor))
 
         self._editors.append(editor)
 
         self.layout().addWidget(editor)
+
+    def documents(self) -> List[QTextDocument]:
+        return [x.document() for x in self._editors]
 
     def statistics(self) -> TextStatistics:
         if self._editors:
@@ -517,10 +521,14 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         self.btnRefresh.installEventFilter(OpacityEventFilter(parent=self.btnRefresh))
         retain_when_hidden(self.btnRefresh)
         self.btnRefresh.setHidden(True)
-        self._updatedDoc: Optional[QTextDocument] = None
-        self.btnRefresh.clicked.connect(lambda: self.checkTextDocument(self._updatedDoc))
+        self._docs: List[QTextDocument] = []
+        self.btnRefresh.clicked.connect(lambda: self.checkTextDocuments(self._docs))
 
-    def checkTextDocument(self, doc: QTextDocument):
+    def checkTextDocuments(self, docs: List[QTextDocument]):
+        if not docs:
+            return
+
+        doc = docs[0]
         spin(self.btnResult)
 
         text = doc.toPlainText()
@@ -562,8 +570,11 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
 
         self.btnRefresh.setHidden(True)
 
-    def setTextDocumentUpdated(self, doc: QTextDocument, updated: bool = True):
-        self._updatedDoc = doc
+    def setTextDocumentsUpdated(self, docs: List[QTextDocument], updated: bool = True):
+        if not docs:
+            return
+        self._docs.clear()
+        self._docs.extend(docs)
         if updated:
             if not self.btnRefresh.isVisible():
                 anim = qtanim.fade_in(self.btnRefresh)

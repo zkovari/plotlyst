@@ -35,7 +35,8 @@ from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
-from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, DistractionFreeManuscriptEditor
+from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
+    DistractionFreeManuscriptEditor, ManuscriptTextEdit
 
 
 class ManuscriptView(AbstractNovelView):
@@ -170,7 +171,7 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.btnSceneType.setHidden(True)
 
             if self.ui.btnAnalysis.isChecked():
-                self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.textEdit.document())
+                self.ui.wdgReadability.checkTextDocuments(self.ui.textEdit.documents())
 
         elif isinstance(node, ChapterNode):
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
@@ -179,10 +180,10 @@ class ManuscriptView(AbstractNovelView):
         wc = self.ui.textEdit.statistics().word_count
         self.ui.lblWordCount.setWordCount(wc)
         self._update_story_goal()
-        # self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.textEdit.document())
+        self.ui.wdgReadability.setTextDocumentsUpdated(self.ui.textEdit.documents())
 
-    def _text_selection_changed(self):
-        fragment = self.ui.textEdit.textEdit.textCursor().selection()
+    def _text_selection_changed(self, editor: ManuscriptTextEdit):
+        fragment = editor.textCursor().selection()
         if fragment:
             self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
         else:
@@ -220,7 +221,7 @@ class ManuscriptView(AbstractNovelView):
         if not checked:
             return
 
-        self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.textEdit.document())
+        self.ui.wdgReadability.checkTextDocuments(self.ui.textEdit.documents())
 
     def _adverb_highlight_toggled(self, toggled: bool):
         if toggled:
