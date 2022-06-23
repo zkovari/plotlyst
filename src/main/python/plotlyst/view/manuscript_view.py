@@ -135,21 +135,15 @@ class ManuscriptView(AbstractNovelView):
 
     def _edit(self, index: QModelIndex):
         node = index.data(ChaptersTreeModel.NodeRole)
+        self.ui.textEdit.setGrammarCheckEnabled(False)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
+
         if isinstance(node, SceneNode):
             if not node.scene.manuscript:
                 node.scene.manuscript = Document('', scene_id=node.scene.id)
                 self.repo.update_scene(node.scene)
 
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
-            self.ui.textEdit.setGrammarCheckEnabled(False)
             self.ui.textEdit.setScene(node.scene)
-
-            self.ui.textEdit.setMargins(30, 30, 30, 30)
-            self._text_changed()
-
-            if self.ui.cbSpellCheck.isChecked():
-                self.ui.textEdit.setGrammarCheckEnabled(True)
-                self.ui.textEdit.asyncCheckGrammer()
 
             if node.scene.title:
                 self.ui.lineSceneTitle.setText(node.scene.title)
@@ -169,12 +163,31 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.btnSceneType.setVisible(True)
             else:
                 self.ui.btnSceneType.setHidden(True)
+        elif isinstance(node, ChapterNode):
+            scenes = self.novel.scenes_in_chapter(node.chapter)
+            for scene in scenes:
+                if not scene.manuscript:
+                    scene.manuscript = Document('', scene_id=scene.id)
+                    self.repo.update_scene(scene)
+            if scenes:
+                self.ui.textEdit.setChapterScenes(scenes)
+            else:
+                self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+
+            self.ui.lineSceneTitle.setText(node.chapter.title_index(self.novel))
+            self.ui.btnPov.setHidden(True)
+            self.ui.btnSceneType.setHidden(True)
+
+        if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
+            self.ui.textEdit.setMargins(30, 30, 30, 30)
+            self._text_changed()
+
+            if self.ui.cbSpellCheck.isChecked():
+                self.ui.textEdit.setGrammarCheckEnabled(True)
+                self.ui.textEdit.asyncCheckGrammer()
 
             if self.ui.btnAnalysis.isChecked():
                 self.ui.wdgReadability.checkTextDocuments(self.ui.textEdit.documents())
-
-        elif isinstance(node, ChapterNode):
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
     def _text_changed(self):
         wc = self.ui.textEdit.statistics().word_count

@@ -442,6 +442,16 @@ class ManuscriptTextEditor(QWidget):
         clear_layout(self.layout())
         self._editors.clear()
 
+        self._addScene(scene)
+
+    def setChapterScenes(self, scenes: List[Scene]):
+        clear_layout(self.layout())
+        self._editors.clear()
+
+        for scene in scenes:
+            self._addScene(scene)
+
+    def _addScene(self, scene):
         if not scene.manuscript.loaded:
             json_client.load_document(app_env.novel, scene.manuscript)
 
@@ -451,9 +461,7 @@ class ManuscriptTextEditor(QWidget):
         editor.setFontPointSize(16)
         editor.textChanged.connect(partial(self._textChanged, scene, editor))
         editor.selectionChanged.connect(partial(self.selectionChanged.emit, editor))
-
         self._editors.append(editor)
-
         self.layout().addWidget(editor)
 
     def documents(self) -> List[QTextDocument]:
@@ -464,8 +472,16 @@ class ManuscriptTextEditor(QWidget):
             return self._editors[0].statistics()
 
     def setMargins(self, left: int, top: int, right: int, bottom: int):
-        for editor in self._editors:
-            editor.setViewportMargins(left, top, right, bottom)
+        if not self._editors:
+            return
+
+        if len(self._editors) > 1:
+            for editor in self._editors:
+                editor.setViewportMargins(left, 0, right, 0)
+            self._editors[0].setViewportMargins(left, top, right, 0)
+            self._editors[-1].setViewportMargins(left, 0, right, bottom)
+        else:
+            self._editors[0].setViewportMargins(left, top, right, bottom)
 
     def setNightModeEnabled(self, enabled: bool):
         for editor in self._editors:
@@ -534,8 +550,7 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         text = doc.toPlainText()
         cleaned_text = clean_text(text)
         score = textstat.flesch_reading_ease(cleaned_text)
-        tooltip = f'Flesch–Kincaid readability score: {score}'
-        self.btnResult.setToolTip(tooltip)
+        self.btnResult.setToolTip(f'Flesch–Kincaid readability score: {score}')
 
         if score >= 80:
             self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-a-circle-outline', color='#2d6a4f'))
