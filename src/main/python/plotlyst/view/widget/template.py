@@ -294,10 +294,10 @@ class TraitSelectionWidget(LabelsSelectionWidget):
     def _addItems(self, items: Set[SelectionItem]):
         for item in items:
             if item.meta.get('positive', True):
-                self._wdgLabels.addLabel(TraitLabel(item.text))
+                self._wdgLabels.addLabel(TraitLabel(item.text, parent=self))
         for item in items:
             if not item.meta.get('positive', True):
-                self._wdgLabels.addLabel(TraitLabel(item.text, False))
+                self._wdgLabels.addLabel(TraitLabel(item.text, positive=False, parent=self))
 
     class Popup(QWidget, Ui_TraitSelectionWidget):
         def __init__(self, parent=None):
@@ -645,10 +645,8 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         emojiFear.setToolTip('Core fear')
         self.lblDesire = QLabel('')
         self.lblDesire.setToolTip('Core desire')
-        self.lblDesire.setWordWrap(True)
         self.lblFear = QLabel('')
         self.lblFear.setToolTip('Core fear')
-        self.lblFear.setWordWrap(True)
 
         decr_font(emojiDesire, 4)
         decr_font(self.lblDesire, 2)
