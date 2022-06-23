@@ -634,7 +634,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(EnneagramFieldWidget, self).__init__(field, parent)
         self.wdgEditor = TextSelectionWidget(field, enneagram_help)
-        _layout = vbox(self)
+        _layout = hbox(self)
         _layout.addWidget(self.wdgEditor)
 
         emojiDesire = Emoji()
@@ -645,8 +645,10 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         emojiFear.setToolTip('Core fear')
         self.lblDesire = QLabel('')
         self.lblDesire.setToolTip('Core desire')
+        self.lblDesire.setWordWrap(True)
         self.lblFear = QLabel('')
         self.lblFear.setToolTip('Core fear')
+        self.lblFear.setWordWrap(True)
 
         decr_font(emojiDesire, 4)
         decr_font(self.lblDesire, 2)
