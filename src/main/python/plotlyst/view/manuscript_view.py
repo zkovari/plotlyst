@@ -143,8 +143,6 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.setScene(node.scene)
 
             self.ui.textEdit.setMargins(30, 30, 30, 30)
-            # self.ui.textEdit.textEdit.setFormat(130, textIndent=20)
-            # self.ui.textEdit.textEdit.setFontPointSize(16)
             self._text_changed()
 
             if self.ui.cbSpellCheck.isChecked():

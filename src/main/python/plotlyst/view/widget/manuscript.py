@@ -362,10 +362,16 @@ class ManuscriptTextEdit(TextEditBase):
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
 
+        self._sentenceHighlighter: Optional[SentenceHighlighter] = None
+        self._nightModeHighlighter: Optional[NightModeHighlighter] = None
+        self._wordTagHighlighter: Optional[WordTagHighlighter] = None
+
         if app_env.is_mac():
             family = 'Palatino'
             self.setFontFamily(family)
             self.document().setDefaultFont(QFont(family, 16))
+
+        self._setDefaultStyleSheet()
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.highlighter.setCheckEnabled(enabled)
@@ -376,6 +382,37 @@ class ManuscriptTextEdit(TextEditBase):
     def asyncCheckGrammer(self):
         self.highlighter.asyncRehighlight()
 
+    def clearHighlights(self):
+        if self._sentenceHighlighter is not None:
+            self._sentenceHighlighter.deleteLater()
+            self._sentenceHighlighter = None
+        if self._nightModeHighlighter is not None:
+            self._nightModeHighlighter.deleteLater()
+            self._nightModeHighlighter = None
+            self._setDefaultStyleSheet()
+        if self._wordTagHighlighter is not None:
+            self._wordTagHighlighter.deleteLater()
+            self._wordTagHighlighter = None
+
+    def setNightModeEnabled(self, enabled: bool):
+        self.clearHighlights()
+        if enabled:
+            transparent(self)
+            self._nightModeHighlighter = NightModeHighlighter(self)
+
+    def setSentenceHighlighterEnabled(self, enabled: bool):
+        self.clearHighlights()
+        if enabled:
+            self._sentenceHighlighter = SentenceHighlighter(self)
+
+    def setWordTagHighlighterEnabled(self, enabled: bool):
+        self.clearHighlights()
+        if enabled:
+            self._wordTagHighlighter = WordTagHighlighter(self)
+
+    def _setDefaultStyleSheet(self):
+        self.setStyleSheet(f'QTextEdit {{border: 1px; background-color: {RELAXED_WHITE_COLOR};}}')
+
 
 class ManuscriptTextEditor(QWidget):
     textChanged = pyqtSignal()
@@ -385,18 +422,7 @@ class ManuscriptTextEditor(QWidget):
         super(ManuscriptTextEditor, self).__init__(parent)
         vbox(self, 0, 0)
 
-        self._sentenceHighlighter: Optional[SentenceHighlighter] = None
-        self._nightModeHighligter: Optional[NightModeHighlighter] = None
-        self._wordTagHighlighter: Optional[WordTagHighlighter] = None
-
         self._editors: List[ManuscriptTextEdit] = []
-
-        # if app_env.is_mac():
-        #     family = 'Palatino'
-        #     self.textEdit.setFontFamily(family)
-        #     self.textEdit.document().setDefaultFont(QFont(family, 16))
-
-        self._setDefaultStyleSheet()
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -438,35 +464,33 @@ class ManuscriptTextEditor(QWidget):
             editor.setViewportMargins(left, top, right, bottom)
 
     def setNightModeEnabled(self, enabled: bool):
-        self.clearHighlights()
-        if enabled:
-            transparent(self.textEdit)
-            self._nightModeHighligter = NightModeHighlighter(self.textEdit)
+        for editor in self._editors:
+            editor.setNightModeEnabled(enabled)
 
     def setSentenceHighlighterEnabled(self, enabled: bool):
-        self.clearHighlights()
-        if enabled:
-            self._sentenceHighlighter = SentenceHighlighter(self.textEdit)
+        for editor in self._editors:
+            editor.setSentenceHighlighterEnabled(enabled)
 
     def setWordTagHighlighterEnabled(self, enabled: bool):
-        self.clearHighlights()
-        if enabled:
-            self._wordTagHighlighter = WordTagHighlighter(self.textEdit)
+        for editor in self._editors:
+            editor.setWordTagHighlighterEnabled(enabled)
 
-    def clearHighlights(self):
-        if self._sentenceHighlighter is not None:
-            self._sentenceHighlighter.deleteLater()
-            self._sentenceHighlighter = None
-        if self._nightModeHighligter is not None:
-            self._nightModeHighligter.deleteLater()
-            self._nightModeHighligter = None
-            self._setDefaultStyleSheet()
-        if self._wordTagHighlighter is not None:
-            self._wordTagHighlighter.deleteLater()
-            self._wordTagHighlighter = None
+    @overrides
+    def setFocus(self):
+        if self._editors:
+            self._editors[0].setFocus()
 
-    def _setDefaultStyleSheet(self):
-        self.setStyleSheet(f'QTextEdit {{border: 1px; background-color: {RELAXED_WHITE_COLOR};}}')
+    def setVerticalScrollBarPolicy(self, policy):
+        for editor in self._editors:
+            editor.setVerticalScrollBarPolicy(policy)
+
+    def installEventFilterOnEditors(self, filter):
+        for editor in self._editors:
+            editor.installEventFilter(filter)
+
+    def removeEventFilterFromEditors(self, filter):
+        for editor in self._editors:
+            editor.removeEventFilter(filter)
 
     def _textChanged(self, scene: Scene, editor: ManuscriptTextEdit):
         wc = editor.statistics().word_count
@@ -580,7 +604,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
     def activate(self, editor: ManuscriptTextEditor, timer: Optional[TimerModel] = None):
         self.editor = editor
-        self.editor.textEdit.installEventFilter(self)
+        self.editor.installEventFilterOnEditors(self)
         clear_layout(self.wdgDistractionFreeEditor.layout())
         if timer and timer.isActive():
             self.wdgSprint.setModel(timer)
@@ -588,8 +612,9 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         else:
             self.wdgSprint.setHidden(True)
         self.wdgDistractionFreeEditor.layout().addWidget(self.editor)
-        self.editor.textEdit.setFocus()
-        self.editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.editor.setFocus()
+        self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
         self.wdgBottom.setVisible(True)
         self.sliderDocWidth.setMaximum(self.width() / 3)
         if self.sliderDocWidth.value() <= 2:
@@ -604,8 +629,8 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         QTimer.singleShot(3000, self._autoHideBottomBar)
 
     def deactivate(self):
-        self.editor.textEdit.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.editor.textEdit.removeEventFilter(self)
+        self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.editor.removeEventFilterFromEditors(self)
         self.editor.setMargins(30, 30, 30, 30)
         self._toggle_manuscript_focus(False)
         self._toggle_manuscript_night_mode(False)
