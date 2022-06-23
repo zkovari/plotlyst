@@ -32,15 +32,16 @@ from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout, vbox
-from qttextedit import EnhancedTextEdit
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Document
+from src.main.python.plotlyst.core.client import json_client
+from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import scroll_to_top, spin, \
     OpacityEventFilter
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
@@ -51,8 +52,7 @@ from src.main.python.plotlyst.view.generated.sprint_widget_ui import Ui_SprintWi
 from src.main.python.plotlyst.view.generated.timer_setup_widget_ui import Ui_TimerSetupWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import WordsDisplay
-from src.main.python.plotlyst.view.widget.input import DocumentTextEditor, GrammarHighlighter, GrammarHighlightStyle, \
-    TextEditBase
+from src.main.python.plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
 
 
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
@@ -357,32 +357,85 @@ class WordTagHighlighter(QSyntaxHighlighter):
 
 
 class ManuscriptTextEdit(TextEditBase):
-    pass
+    def __init__(self, parent=None):
+        super(ManuscriptTextEdit, self).__init__(parent)
+        self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
+                                              highlightStyle=GrammarHighlightStyle.BACKGOUND)
+
+        if app_env.is_mac():
+            family = 'Palatino'
+            self.setFontFamily(family)
+            self.document().setDefaultFont(QFont(family, 16))
+
+    def setGrammarCheckEnabled(self, enabled: bool):
+        self.highlighter.setCheckEnabled(enabled)
+
+    def checkGrammar(self):
+        self.highlighter.rehighlight()
+
+    def asyncCheckGrammer(self):
+        self.highlighter.asyncRehighlight()
 
 
-class ManuscriptTextEditor(DocumentTextEditor):
+class ManuscriptTextEditor(QWidget):
+    textChanged = pyqtSignal()
+    selectionChanged = pyqtSignal()
+
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
+        vbox(self, 0, 0)
 
         self._sentenceHighlighter: Optional[SentenceHighlighter] = None
         self._nightModeHighligter: Optional[NightModeHighlighter] = None
         self._wordTagHighlighter: Optional[WordTagHighlighter] = None
 
-        if app_env.is_mac():
-            family = 'Palatino'
-            self.textEdit.setFontFamily(family)
-            self.textEdit.document().setDefaultFont(QFont(family, 16))
+        self._editors: List[ManuscriptTextEdit] = []
+
+        # if app_env.is_mac():
+        #     family = 'Palatino'
+        #     self.textEdit.setFontFamily(family)
+        #     self.textEdit.document().setDefaultFont(QFont(family, 16))
 
         self._setDefaultStyleSheet()
 
-    @overrides
-    def _initTextEdit(self) -> EnhancedTextEdit:
-        return ManuscriptTextEdit(self)
+        self.repo = RepositoryPersistenceManager.instance()
 
-    @overrides
-    def _initHighlighter(self) -> QSyntaxHighlighter:
-        return GrammarHighlighter(self.textEdit.document(), checkEnabled=False,
-                                  highlightStyle=GrammarHighlightStyle.BACKGOUND)
+    def setGrammarCheckEnabled(self, enabled: bool):
+        for editor in self._editors:
+            editor.setGrammarCheckEnabled(enabled)
+
+    def checkGrammar(self):
+        for editor in self._editors:
+            editor.checkGrammar()
+
+    def asyncCheckGrammer(self):
+        for editor in self._editors:
+            editor.asyncCheckGrammer()
+
+    def setScene(self, scene: Scene):
+        clear_layout(self.layout())
+        self._editors.clear()
+
+        if not scene.manuscript.loaded:
+            json_client.load_document(app_env.novel, scene.manuscript)
+
+        editor = ManuscriptTextEdit(self)
+        editor.setText(scene.manuscript.content)
+        editor.setFormat(130, textIndent=20)
+        editor.setFontPointSize(16)
+        editor.textChanged.connect(partial(self._textChanged, scene, editor))
+
+        self._editors.append(editor)
+
+        self.layout().addWidget(editor)
+
+    def statistics(self) -> TextStatistics:
+        if self._editors:
+            return self._editors[0].statistics()
+
+    def setMargins(self, left: int, top: int, right: int, bottom: int):
+        for editor in self._editors:
+            editor.setViewportMargins(left, top, right, bottom)
 
     def setNightModeEnabled(self, enabled: bool):
         self.clearHighlights()
@@ -413,17 +466,22 @@ class ManuscriptTextEditor(DocumentTextEditor):
             self._wordTagHighlighter = None
 
     def _setDefaultStyleSheet(self):
-        self.textEdit.setStyleSheet(f'QTextEdit {{border: 1px; background-color: {RELAXED_WHITE_COLOR};}}')
+        self.setStyleSheet(f'QTextEdit {{border: 1px; background-color: {RELAXED_WHITE_COLOR};}}')
 
+    def _textChanged(self, scene: Scene, editor: ManuscriptTextEdit):
+        wc = editor.statistics().word_count
+        doc = scene.manuscript
+        if doc.statistics is None:
+            doc.statistics = DocumentStatistics()
 
-class ManuscriptBatchEditor(QWidget):
-    def __init__(self, parent=None):
-        super(ManuscriptBatchEditor, self).__init__(parent)
+        if doc.statistics.wc != wc:
+            doc.statistics.wc = wc
+            self.repo.update_scene(scene)
 
-        vbox(self, 0, 0)
+        scene.manuscript.content = editor.toHtml()
+        self.repo.update_doc(app_env.novel, scene.manuscript)
 
-    def setManuscripts(self, manuscripts: List[Document]):
-        pass
+        self.textChanged.emit()
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
