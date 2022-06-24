@@ -86,7 +86,7 @@ class DocumentsView(AbstractNovelView):
             doc.data_id = casuality.id
             self.repo.update_doc(self.novel, doc)
         elif doc_type == DocumentType.MICE:
-            doc.title = 'MICE threads'
+            doc.title = 'MICE Threads'
             doc.icon = 'mdi.rodent'
             doc.icon_color = '#6c757d'
             doc.data = MiceQuotient()
