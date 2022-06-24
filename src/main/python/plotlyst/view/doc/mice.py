@@ -63,6 +63,8 @@ class MiceThreadWidget(QWidget, Ui_MiceThread):
 
 
 class MiceQuotientDoc(QWidget, Ui_MiceQuotientDoc):
+    changed = pyqtSignal()
+
     def __init__(self, doc: Document, mice: MiceQuotient, parent=None):
         super(MiceQuotientDoc, self).__init__(parent)
         self.setupUi(self)
@@ -83,24 +85,33 @@ class MiceQuotientDoc(QWidget, Ui_MiceQuotientDoc):
         self.btnTitle.setText(self.doc.title)
         self.btnTitle.setIcon(IconRegistry.from_name(self.doc.icon, self.doc.icon_color))
 
-        self.btnMilieu.clicked.connect(lambda: self._addThread(MiceType.MILIEU))
-        self.btnInquiry.clicked.connect(lambda: self._addThread(MiceType.INQUIRY))
-        self.btnCharacter.clicked.connect(lambda: self._addThread(MiceType.CHARACTER))
-        self.btnEvent.clicked.connect(lambda: self._addThread(MiceType.EVENT))
+        self.btnMilieu.clicked.connect(lambda: self._addNewThread(MiceType.MILIEU))
+        self.btnInquiry.clicked.connect(lambda: self._addNewThread(MiceType.INQUIRY))
+        self.btnCharacter.clicked.connect(lambda: self._addNewThread(MiceType.CHARACTER))
+        self.btnEvent.clicked.connect(lambda: self._addNewThread(MiceType.EVENT))
 
         vbox(self.wdgThreads)
+        
+        for thread in self.mice.threads:
+            self._addThread(thread)
 
-    def _addThread(self, type: MiceType):
+    def _addNewThread(self, type: MiceType):
         thread = MiceThread(type)
         self.mice.threads.append(thread)
+
+        self._addThread(thread)
+
+    def _addThread(self, thread):
         widget = MiceThreadWidget(thread, self.wdgThreads)
         widget.removed.connect(self._removeThreadWidget)
-
         self.wdgThreads.layout().addWidget(widget)
-        anim = qtanim.glow(widget, color=QColor(mice_colors[type]))
-        anim.finished.connect(lambda: widget.setGraphicsEffect(None))
+        if self.isVisible():
+            anim = qtanim.glow(widget, color=QColor(mice_colors[thread.type]))
+            anim.finished.connect(lambda: widget.setGraphicsEffect(None))
+        self.changed.emit()
 
     def _removeThreadWidget(self, widget: MiceThreadWidget):
         self.mice.threads.remove(widget.thread)
         self.wdgThreads.layout().removeWidget(widget)
         gc(widget)
+        self.changed.emit()

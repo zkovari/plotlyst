@@ -155,20 +155,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-       <underline>false</underline>
-      </font>
-     </property>
-     <property name="text">
-      <string>Threads:</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QWidget" name="wdgThreads" native="true"/>
    </item>
    <item>

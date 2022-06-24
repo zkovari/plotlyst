@@ -205,6 +205,7 @@ class DocumentsView(AbstractNovelView):
                 widget.model.changed.connect(self._save)
             elif self._current_doc.type == DocumentType.MICE:
                 widget = MiceQuotientDoc(self._current_doc, self._current_doc.data)
+                widget.changed.connect(self._save)
             else:
                 return
             self.ui.customEditorPage.layout().addWidget(widget)
