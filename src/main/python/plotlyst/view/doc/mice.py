@@ -26,10 +26,12 @@ from PyQt5.QtWidgets import QWidget
 from qthandy import incr_font, vbox, retain_when_hidden, gc, vspacer
 
 from src.main.python.plotlyst.core.domain import MiceQuotient, Document, MiceThread, MiceType
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.generated.mice_doc_ui import Ui_MiceQuotientDoc
 from src.main.python.plotlyst.view.generated.mice_thread_ui import Ui_MiceThread
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.scenes import SceneSelector
 
 mice_colors: Dict[MiceType, str] = {MiceType.MILIEU: '#2d6a4f',
                                     MiceType.INQUIRY: '#7b2cbf',
@@ -58,6 +60,12 @@ class MiceThreadWidget(QWidget, Ui_MiceThread):
 
         retain_when_hidden(self.btnRemoval)
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemoval, parent=self))
+
+        self.beginningSceneSelector = SceneSelector(app_env.novel)
+        self.endingSceneSelector = SceneSelector(app_env.novel)
+
+        self.layout().insertWidget(2, self.beginningSceneSelector)
+        self.layout().insertWidget(3, self.endingSceneSelector)
 
         self.btnRemoval.clicked.connect(lambda: self.removed.emit(self))
 
