@@ -20,9 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict
 
 import qtanim
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget
-from qthandy import incr_font, vbox, retain_when_hidden
+from qthandy import incr_font, vbox, retain_when_hidden, gc
 
 from src.main.python.plotlyst.core.domain import MiceQuotient, Document, MiceThread, MiceType
 from src.main.python.plotlyst.view.common import VisibilityToggleEventFilter
@@ -37,6 +38,8 @@ mice_colors: Dict[MiceType, str] = {MiceType.MILIEU: '#2d6a4f',
 
 
 class MiceThreadWidget(QWidget, Ui_MiceThread):
+    removed = pyqtSignal(QWidget)
+
     def __init__(self, thread: MiceThread, parent=None):
         super(MiceThreadWidget, self).__init__(parent)
         self.setupUi(self)
@@ -55,6 +58,8 @@ class MiceThreadWidget(QWidget, Ui_MiceThread):
 
         retain_when_hidden(self.btnRemoval)
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemoval, parent=self))
+
+        self.btnRemoval.clicked.connect(lambda: self.removed.emit(self))
 
 
 class MiceQuotientDoc(QWidget, Ui_MiceQuotientDoc):
@@ -87,8 +92,15 @@ class MiceQuotientDoc(QWidget, Ui_MiceQuotientDoc):
 
     def _addThread(self, type: MiceType):
         thread = MiceThread(type)
+        self.mice.threads.append(thread)
         widget = MiceThreadWidget(thread, self.wdgThreads)
+        widget.removed.connect(self._removeThreadWidget)
 
         self.wdgThreads.layout().addWidget(widget)
         anim = qtanim.glow(widget, color=QColor(mice_colors[type]))
         anim.finished.connect(lambda: widget.setGraphicsEffect(None))
+
+    def _removeThreadWidget(self, widget: MiceThreadWidget):
+        self.mice.threads.remove(widget.thread)
+        self.wdgThreads.layout().removeWidget(widget)
+        gc(widget)
