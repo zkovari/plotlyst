@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt5.QtCore import QModelIndex, Qt, QSize
-from PyQt5.QtWidgets import QHeaderView, QWidgetAction, QListView, QWidget
+from PyQt5.QtWidgets import QHeaderView, QWidgetAction, QListView
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import vspacer, clear_layout
+from qthandy import clear_layout
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, Character, DocumentType, \
@@ -36,11 +36,10 @@ from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, Docume
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import PopupMenuBuilder
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
-from src.main.python.plotlyst.view.generated.docs_sidebar_widget_ui import Ui_DocumentsSidebarWidget
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
-from src.main.python.plotlyst.view.widget.input import RotatedButton, DocumentTextEditor
+from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 
 
 class DocumentsView(AbstractNovelView):
@@ -220,26 +219,3 @@ class DocumentsView(AbstractNovelView):
                 self._current_doc.title = new_title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
                 self.repo.update_novel(self.novel)
-
-
-class DocumentsSidebar(QWidget, AbstractNovelView, Ui_DocumentsSidebarWidget):
-
-    def __init__(self, novel: Novel, parent=None):
-        super(DocumentsSidebar, self).__init__(parent)
-        self.novel = novel
-        self.setupUi(self)
-        self._updateDocs()
-
-    @overrides
-    def refresh(self):
-        self._updateDocs()
-
-    def _updateDocs(self):
-        while self.scrollAreaWidgetContents.layout().count():
-            item = self.scrollAreaWidgetContents.layout().takeAt(0)
-            item.widget().deleteLater()
-        for doc in self.novel.documents:
-            btn = RotatedButton()
-            btn.setText(doc.title)
-            self.scrollAreaWidgetContents.layout().addWidget(btn)
-        self.scrollAreaWidgetContents.layout().addWidget(vspacer())
