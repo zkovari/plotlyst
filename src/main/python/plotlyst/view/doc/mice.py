@@ -23,7 +23,7 @@ import qtanim
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget
-from qthandy import incr_font, vbox, retain_when_hidden, gc
+from qthandy import incr_font, vbox, retain_when_hidden, gc, vspacer
 
 from src.main.python.plotlyst.core.domain import MiceQuotient, Document, MiceThread, MiceType
 from src.main.python.plotlyst.view.common import VisibilityToggleEventFilter
@@ -91,7 +91,8 @@ class MiceQuotientDoc(QWidget, Ui_MiceQuotientDoc):
         self.btnEvent.clicked.connect(lambda: self._addNewThread(MiceType.EVENT))
 
         vbox(self.wdgThreads)
-        
+        self.wdgThreads.layout().addWidget(vspacer())
+
         for thread in self.mice.threads:
             self._addThread(thread)
 
@@ -104,7 +105,7 @@ class MiceQuotientDoc(QWidget, Ui_MiceQuotientDoc):
     def _addThread(self, thread):
         widget = MiceThreadWidget(thread, self.wdgThreads)
         widget.removed.connect(self._removeThreadWidget)
-        self.wdgThreads.layout().addWidget(widget)
+        self.wdgThreads.layout().insertWidget(self.wdgThreads.layout().count() - 1, widget)
         if self.isVisible():
             anim = qtanim.glow(widget, color=QColor(mice_colors[thread.type]))
             anim.finished.connect(lambda: widget.setGraphicsEffect(None))
