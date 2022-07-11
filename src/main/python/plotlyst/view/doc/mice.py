@@ -25,7 +25,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget
 from qthandy import incr_font, vbox, retain_when_hidden, gc, vspacer
 
-from src.main.python.plotlyst.core.domain import MiceQuotient, Document, MiceThread, MiceType
+from src.main.python.plotlyst.core.domain import MiceQuotient, Document, MiceThread, MiceType, Scene
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.generated.mice_doc_ui import Ui_MiceQuotientDoc
@@ -41,11 +41,12 @@ mice_colors: Dict[MiceType, str] = {MiceType.MILIEU: '#2d6a4f',
 
 class MiceThreadWidget(QWidget, Ui_MiceThread):
     removed = pyqtSignal(QWidget)
+    changed = pyqtSignal()
 
     def __init__(self, thread: MiceThread, parent=None):
         super(MiceThreadWidget, self).__init__(parent)
         self.setupUi(self)
-        self.thread = thread
+        self.thread: MiceThread = thread
         if thread.type == MiceType.MILIEU:
             self.icon.setIcon(IconRegistry.from_name('fa5s.map-marked-alt', mice_colors[MiceType.MILIEU]))
         elif thread.type == MiceType.INQUIRY:
@@ -57,17 +58,39 @@ class MiceThreadWidget(QWidget, Ui_MiceThread):
 
         self.lineText.setStyleSheet(f'border: 1px solid {mice_colors[thread.type]}')
         self.lineText.setText(thread.text)
+        self.lineText.textEdited.connect(self._textChanged)
 
         retain_when_hidden(self.btnRemoval)
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemoval, parent=self))
 
-        self.beginningSceneSelector = SceneSelector(app_env.novel)
-        self.endingSceneSelector = SceneSelector(app_env.novel)
+        self.beginningSceneSelector = SceneSelector(app_env.novel, 'Beginning')
+        self.beginningSceneSelector.sceneSelected.connect(self._beginningChanged)
+        scene = self.thread.beginning_scene(app_env.novel)
+        if scene:
+            self.beginningSceneSelector.setScene(scene)
+
+        self.endingSceneSelector = SceneSelector(app_env.novel, 'Ending')
+        self.endingSceneSelector.sceneSelected.connect(self._endingChanged)
+        scene = self.thread.ending_scene(app_env.novel)
+        if scene:
+            self.endingSceneSelector.setScene(scene)
 
         self.layout().insertWidget(2, self.beginningSceneSelector)
-        self.layout().insertWidget(3, self.endingSceneSelector)
+        self.layout().insertWidget(4, self.endingSceneSelector)
 
         self.btnRemoval.clicked.connect(lambda: self.removed.emit(self))
+
+    def _textChanged(self, text: str):
+        self.thread.text = text
+        self.changed.emit()
+
+    def _beginningChanged(self, scene: Scene):
+        self.thread.beginning_scene_id = scene.id
+        self.changed.emit()
+
+    def _endingChanged(self, scene: Scene):
+        self.thread.ending_scene_id = scene.id
+        self.changed.emit()
 
 
 class MiceQuotientDoc(QWidget, Ui_MiceQuotientDoc):
@@ -112,6 +135,7 @@ class MiceQuotientDoc(QWidget, Ui_MiceQuotientDoc):
 
     def _addThread(self, thread):
         widget = MiceThreadWidget(thread, self.wdgThreads)
+        widget.changed.connect(self.changed.emit)
         widget.removed.connect(self._removeThreadWidget)
         self.wdgThreads.layout().insertWidget(self.wdgThreads.layout().count() - 1, widget)
         if self.isVisible():

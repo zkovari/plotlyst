@@ -59,6 +59,19 @@
     </widget>
    </item>
    <item>
+    <widget class="Icon" name="icon_2">
+     <property name="iconSize">
+      <size>
+       <width>20</width>
+       <height>20</height>
+      </size>
+     </property>
+     <property name="iconName" stdset="0">
+      <string>mdi.transfer-right</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="RemovalButton" name="btnRemoval"/>
    </item>
    <item>

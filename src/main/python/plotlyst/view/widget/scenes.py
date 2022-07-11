@@ -61,12 +61,12 @@ from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui i
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
-    FadeOutButtonGroup
+    FadeOutButtonGroup, SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.chart import SceneStructureEmotionalArcChart
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
-    PlotLabel, PlotValueLabel
+    PlotLabel, PlotValueLabel, SceneLabel
 from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
 
 
@@ -335,12 +335,19 @@ class SceneTagSelector(QWidget):
 
 
 class SceneSelector(QWidget):
-    def __init__(self, novel: Novel, parent=None):
+    sceneSelected = pyqtSignal(Scene)
+
+    def __init__(self, novel: Novel, text: str = '', parent=None):
         super(SceneSelector, self).__init__(parent)
         self.novel = novel
+        self.scene: Optional[Scene] = None
+
+        self.label: Optional[SceneLabel] = None
 
         hbox(self)
-        self.btnSelect = SecondaryActionToolButton(self)
+        self.btnSelect = SecondaryActionPushButton(self)
+        self.btnSelect.setText(text)
+        italic(self.btnSelect)
         self.btnSelect.setIcon(IconRegistry.scene_icon())
         self.layout().addWidget(self.btnSelect)
 
@@ -351,9 +358,21 @@ class SceneSelector(QWidget):
         self._lstScenes.horizontalHeader().setDefaultSectionSize(24)
         self._lstScenes.setShowGrid(False)
         self._lstScenes.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self._lstScenes.clicked.connect(self._selected)
         pointy(self._lstScenes)
         self.menu = btn_popup(self.btnSelect, self._lstScenes)
         self.menu.aboutToShow.connect(self._beforePopup)
+
+    def setScene(self, scene: Scene):
+        self.scene = scene
+        if self.label is None:
+            self.label = SceneLabel(self.scene)
+            self.layout().addWidget(self.label)
+            self.label.clicked.connect(self.menu.show)
+        else:
+            self.label.setScene(scene)
+
+        self.btnSelect.setHidden(True)
 
     @busy
     def _beforePopup(self):
@@ -368,6 +387,12 @@ class SceneSelector(QWidget):
         self._lstScenes.horizontalHeader().swapSections(ScenesTableModel.ColType, ScenesTableModel.ColTitle)
 
         stretch_col(self._lstScenes, ScenesTableModel.ColTitle)
+
+    def _selected(self, index: QModelIndex):
+        scene = index.data(ScenesTableModel.SceneRole)
+        self.setScene(scene)
+        self.btnSelect.menu().hide()
+        self.sceneSelected.emit(scene)
 
 
 class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):

@@ -949,6 +949,20 @@ class MiceThread:
     beginning_scene_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
     ending_scene_id: Optional[uuid.UUID] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
+    def beginning_scene(self, novel: 'Novel') -> Optional['Scene']:
+        if not self.beginning_scene_id:
+            return None
+        for s in novel.scenes:
+            if s.id == self.beginning_scene_id:
+                return s
+
+    def ending_scene(self, novel: 'Novel') -> Optional['Scene']:
+        if not self.ending_scene_id:
+            return None
+        for s in novel.scenes:
+            if s.id == self.ending_scene_id:
+                return s
+
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
