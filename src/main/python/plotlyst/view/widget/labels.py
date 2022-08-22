@@ -272,12 +272,7 @@ class SceneLabel(Label):
 
         self.setScene(scene)
 
-        self.setStyleSheet(f'''
-                            SceneLabel {{
-                                border: 1px solid black;
-                                border-radius: 8px; padding: 2px;
-                                }}
-                            ''')
+        self.setStyleSheet('SceneLabel {border: 1px solid black; border-radius: 8px; padding: 2px;}')
 
     def setScene(self, scene: Scene):
         self.btnTypeIcon.setIcon(IconRegistry.scene_type_icon(scene))
