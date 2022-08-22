@@ -35,6 +35,8 @@ class TimerModel(QObject):
         self._timer.timeout.connect(self._tick)
 
     def start(self, value: int):
+        if value == 3600:
+            value -= 1
         self.value = value
         self._timer.start()
 
