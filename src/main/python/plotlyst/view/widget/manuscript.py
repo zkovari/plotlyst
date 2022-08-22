@@ -55,6 +55,8 @@ from src.main.python.plotlyst.view.widget.display import WordsDisplay
 from src.main.python.plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
 
 
+# comment to trigger ci
+
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
     def __init__(self, parent=None):
         super(TimerSetupWidget, self).__init__(parent)
