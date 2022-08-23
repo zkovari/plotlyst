@@ -55,8 +55,6 @@ from src.main.python.plotlyst.view.widget.display import WordsDisplay
 from src.main.python.plotlyst.view.widget.input import TextEditBase, GrammarHighlighter, GrammarHighlightStyle
 
 
-# comment to trigger ci
-
 class TimerSetupWidget(QWidget, Ui_TimerSetupWidget):
     def __init__(self, parent=None):
         super(TimerSetupWidget, self).__init__(parent)
@@ -487,7 +485,7 @@ class ManuscriptTextEditor(QWidget):
         editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         editor.resizeToContent()
         editor.textChanged.connect(partial(self._textChanged, scene, editor))
-        editor.selectionChanged.connect(partial(self.selectionChanged.emit, editor))
+        editor.selectionChanged.connect(partial(self._selectionChanged, editor))
         self._editors.append(editor)
         self._scrollWidget.layout().addWidget(editor)
 
@@ -552,6 +550,14 @@ class ManuscriptTextEditor(QWidget):
         self.repo.update_doc(app_env.novel, scene.manuscript)
 
         self.textChanged.emit()
+
+    def _selectionChanged(self, editor: ManuscriptTextEdit):
+        for edt in self._editors:
+            cursor = edt.textCursor()
+            if edt != editor and cursor.hasSelection():
+                cursor.clearSelection()
+                edt.setTextCursor(cursor)
+        self.selectionChanged.emit(editor)
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
