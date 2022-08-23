@@ -493,8 +493,8 @@ class ManuscriptTextEditor(QWidget):
         return [x.document() for x in self._editors]
 
     def statistics(self) -> TextStatistics:
-        if self._editors:
-            return self._editors[0].statistics()
+        wc = sum([x.statistics().word_count for x in self._editors], 0)
+        return TextStatistics(wc)
 
     def setMargins(self, left: int, top: int, right: int, bottom: int):
         if not self._editors:
