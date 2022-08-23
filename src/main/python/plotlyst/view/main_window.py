@@ -49,7 +49,7 @@ from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
-from src.main.python.plotlyst.view.docs_view import DocumentsView, DocumentsSidebar
+from src.main.python.plotlyst.view.docs_view import DocumentsView
 from src.main.python.plotlyst.view.generated.main_window_ui import Ui_MainWindow
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -58,6 +58,7 @@ from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.widget.button import ToolbarButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 
@@ -193,9 +194,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
 
-        self.docs_view = DocumentsSidebar(self.novel)
-        self.wdgDocs.layout().addWidget(self.docs_view)
-
         self.notes_view = DocumentsView(self.novel)
 
         self.btnNovel.setIcon(IconRegistry.book_icon())
@@ -285,31 +283,22 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     def _init_toolbar(self):
         self.toolBar.setContextMenuPolicy(Qt.PreventContextMenu)
-        if platform.is_mac():
-            self.toolBar.setStyleSheet('font: 14px;')
-        self.home_mode = QToolButton(self.toolBar)
-        self.home_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+
+        self.home_mode = ToolbarButton(self.toolBar)
         self.home_mode.setText('Home')
-        self.home_mode.setCheckable(True)
-        self.home_mode.setIcon(IconRegistry.home_icon())
+        self.home_mode.setIcon(IconRegistry.home_icon(color_on='#240046'))
 
-        self.outline_mode = QToolButton(self.toolBar)
-        self.outline_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.outline_mode = ToolbarButton(self.toolBar)
         self.outline_mode.setText('Plan')
-        self.outline_mode.setCheckable(True)
-        self.outline_mode.setIcon(IconRegistry.decision_icon(color='black'))
+        self.outline_mode.setIcon(IconRegistry.decision_icon(color='black', color_on='#240046'))
 
-        self.manuscript_mode = QToolButton(self.toolBar)
-        self.manuscript_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.manuscript_mode = ToolbarButton(self.toolBar)
         self.manuscript_mode.setText('Write')
-        self.manuscript_mode.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
-        self.manuscript_mode.setCheckable(True)
+        self.manuscript_mode.setIcon(IconRegistry.edit_icon(color_on='#240046'))
 
-        self.reports_mode = QToolButton(self.toolBar)
-        self.reports_mode.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.reports_mode = ToolbarButton(self.toolBar)
         self.reports_mode.setText('Analyze')
-        self.reports_mode.setIcon(IconRegistry.reports_icon())
-        self.reports_mode.setCheckable(True)
+        self.reports_mode.setIcon(IconRegistry.reports_icon(color_on='#240046'))
 
         self._mode_btn_group = QButtonGroup()
         self._mode_btn_group.addButton(self.home_mode)

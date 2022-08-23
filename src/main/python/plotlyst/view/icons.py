@@ -208,8 +208,8 @@ class IconRegistry:
         return qtawesome.icon('mdi.chart-timeline-variant', color_on='darkBlue')
 
     @staticmethod
-    def reports_icon() -> QIcon:
-        return qtawesome.icon('fa5.chart-bar', color_on='darkBlue')
+    def reports_icon(color_on: str = 'darkBlue') -> QIcon:
+        return qtawesome.icon('fa5.chart-bar', color_on=color_on)
 
     @staticmethod
     def notes_icon() -> QIcon:
@@ -268,8 +268,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.balance-scale-left', color=color, color_on=color_on)
 
     @staticmethod
-    def home_icon() -> QIcon:
-        return qtawesome.icon('fa5s.home', color_on='darkBlue')
+    def home_icon(color_on: str = 'darkBlue') -> QIcon:
+        return qtawesome.icon('fa5s.home', color_on=color_on)
 
     @staticmethod
     def trash_can_icon(color: str = 'red') -> QIcon:

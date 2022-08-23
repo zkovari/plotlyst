@@ -41,10 +41,12 @@ jobs:
       - if: matrix.os == 'macos-10.15'
         name: Install fpm on Mac
         run: |
+          gem install public_suffix -v 4.0.7
           gem install --no-document fpm
       - if: matrix.os == 'windows-2019'
         name: Install fpm on Windows
         run: |
+          gem install public_suffix -v 4.0.7
           gem install --no-document fpm
 
       - name: Install Python dependencies
