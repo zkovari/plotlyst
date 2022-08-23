@@ -473,7 +473,7 @@ class ManuscriptTextEditor(QWidget):
         clear_layout(self._scrollWidget.layout())
         self._editors.clear()
 
-    def _addScene(self, scene, topBorder: bool = False):
+    def _addScene(self, scene: Scene, topBorder: bool = False):
         if not scene.manuscript.loaded:
             json_client.load_document(app_env.novel, scene.manuscript)
 
@@ -482,6 +482,7 @@ class ManuscriptTextEditor(QWidget):
         editor.setFormat(130, textIndent=20)
         editor.setFontPointSize(16)
         editor.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        editor.verticalScrollBar().setEnabled(False)
         editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         editor.resizeToContent()
         editor.textChanged.connect(partial(self._textChanged, scene, editor))
