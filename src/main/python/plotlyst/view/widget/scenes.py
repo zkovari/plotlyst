@@ -40,6 +40,7 @@ from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.common import truncate_string
+from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, StoryBeat, Conflict, \
     Character, Plot, ScenePlotReference, CharacterGoal, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge
@@ -64,7 +65,8 @@ from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, S
     FadeOutButtonGroup, SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.chart import SceneStructureEmotionalArcChart
-from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription
+from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription, \
+    DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
     PlotLabel, PlotValueLabel, SceneLabel
 from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
@@ -1905,3 +1907,29 @@ class StoryMap(QWidget):
         self._acts_filter[act] = filtered
         if self.novel:
             self.refresh(animated=False)
+
+
+class SceneNotesEditor(DocumentTextEditor):
+
+    def __init__(self, parent=None):
+        super(SceneNotesEditor, self).__init__(parent)
+        self._scene: Optional[Scene] = None
+        self.setTitleVisible(False)
+        self.setPlaceholderText('Scene notes')
+
+        self.textEdit.textChanged.connect(self._save)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        if not scene.document.loaded:
+            json_client.load_document(app_env.novel, scene.document)
+
+        self.setText(scene.document.content, '')
+
+    def _save(self):
+        if self._scene is None:
+            return
+        self._scene.document.content = self.textEdit.toHtml()
+        self.repo.update_doc(app_env.novel, self._scene.document)

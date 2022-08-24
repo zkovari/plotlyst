@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>557</width>
-    <height>332</height>
+    <width>639</width>
+    <height>389</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -469,7 +469,46 @@ background-color: rgb(39, 39, 39);
               <widget class="QWidget" name="wdgTopAnalysis" native="true"/>
              </item>
              <item>
-              <widget class="ManuscriptTextEditor" name="textEdit"/>
+              <widget class="QSplitter" name="splitterEditor">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <widget class="ManuscriptTextEditor" name="textEdit"/>
+               <widget class="QWidget" name="wdgAddon" native="true">
+                <layout class="QVBoxLayout" name="verticalLayout_8">
+                 <property name="spacing">
+                  <number>3</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>2</number>
+                 </property>
+                 <item alignment="Qt::AlignLeft">
+                  <widget class="IconText" name="icontext">
+                   <property name="font">
+                    <font>
+                     <underline>false</underline>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Notes</string>
+                   </property>
+                   <property name="iconName" stdset="0">
+                    <string>ei.file-edit</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </widget>
              </item>
              <item>
               <widget class="QWidget" name="wdgBottom" native="true">
@@ -494,7 +533,7 @@ background-color: rgb(39, 39, 39);
                </property>
                <layout class="QHBoxLayout" name="horizontalLayout_8">
                 <property name="spacing">
-                 <number>3</number>
+                 <number>0</number>
                 </property>
                 <property name="leftMargin">
                  <number>2</number>
@@ -508,6 +547,27 @@ background-color: rgb(39, 39, 39);
                 <property name="bottomMargin">
                  <number>2</number>
                 </property>
+                <item>
+                 <widget class="QToolButton" name="btnNotes">
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string>Notes</string>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QToolButton {
+	border: 0px hidden black;
+}
+QToolButton:pressed {
+	border: 1px solid white;
+}</string>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
                 <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
                  <widget class="WordsDisplay" name="lblWordCount">
                   <property name="font">
@@ -607,8 +667,8 @@ background-color: rgb(39, 39, 39);
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>342</width>
-             <height>294</height>
+             <width>98</width>
+             <height>68</height>
             </rect>
            </property>
            <property name="sizePolicy">
@@ -674,6 +734,11 @@ background-color: rgb(39, 39, 39);
    <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
+   <class>IconText</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
+  </customwidget>
+  <customwidget>
    <class>WordsDisplay</class>
    <extends>QLabel</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
@@ -720,22 +785,6 @@ background-color: rgb(39, 39, 39);
     <hint type="destinationlabel">
      <x>450</x>
      <y>201</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btnAnalysis</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>wdgTopAnalysis</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>477</x>
-     <y>51</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>283</x>
-     <y>95</y>
     </hint>
    </hints>
   </connection>

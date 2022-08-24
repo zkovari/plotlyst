@@ -445,8 +445,9 @@ class ManuscriptTextEditor(QWidget):
         super(ManuscriptTextEditor, self).__init__(parent)
         vbox(self, 0, 0)
         self._scrollArea, self._scrollWidget = scrolled(self, frameless=True)
+        self._scrollWidget.setObjectName('scrollWidget')
         self._scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self._scrollWidget.setStyleSheet('border: 0px; background-color: rgb(39, 39, 39);')
+        self._scrollWidget.setStyleSheet('#scrollWidget {border: 0px; background-color: rgb(39, 39, 39);}')
         vbox(self._scrollWidget, 0, 0)
 
         self._editors: List[ManuscriptTextEdit] = []

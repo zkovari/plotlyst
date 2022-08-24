@@ -37,6 +37,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, ManuscriptTextEdit
+from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 
 
 class ManuscriptView(AbstractNovelView):
@@ -46,6 +47,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
         self.ui.splitter.setSizes([100, 500])
+        self.ui.splitterEditor.setSizes([400, 150])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
 
         self.ui.btnTitle.setText(self.novel.title)
@@ -85,7 +87,6 @@ class ManuscriptView(AbstractNovelView):
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
-        self.ui.treeChapters.expandAll()
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
@@ -93,6 +94,13 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.wdgTopAnalysis.setHidden(True)
         self.ui.wdgSideAnalysis.setHidden(True)
+        self.ui.wdgAddon.setHidden(True)
+
+        self.notesEditor = SceneNotesEditor()
+        self.ui.wdgAddon.layout().addWidget(self.notesEditor)
+
+        self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
+        self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
 
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
@@ -125,7 +133,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgBottom.layout().addWidget(self.ui.lblWordCount, alignment=Qt.AlignCenter)
         self.ui.lblWordCount.setStyleSheet('color: black')
         self.ui.lblWordCount.setVisible(True)
-        self.ui.wdgEditor.layout().insertWidget(0, self.ui.textEdit)
+        self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)
         self.ui.wdgReadability.cbAdverbs.setChecked(False)
 
     def _update_story_goal(self):
@@ -163,6 +171,10 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.btnSceneType.setVisible(True)
             else:
                 self.ui.btnSceneType.setHidden(True)
+
+            self.notesEditor.setScene(node.scene)
+            self.ui.btnNotes.setEnabled(True)
+
         elif isinstance(node, ChapterNode):
             scenes = self.novel.scenes_in_chapter(node.chapter)
             for scene in scenes:
@@ -177,6 +189,8 @@ class ManuscriptView(AbstractNovelView):
             self.ui.lineSceneTitle.setText(node.chapter.title_index(self.novel))
             self.ui.btnPov.setHidden(True)
             self.ui.btnSceneType.setHidden(True)
+            self.ui.btnNotes.setChecked(False)
+            self.ui.btnNotes.setDisabled(True)
 
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
             self.ui.textEdit.setMargins(30, 30, 30, 30)
@@ -222,7 +236,7 @@ class ManuscriptView(AbstractNovelView):
             else:
                 self.ui.wdgReadability.cbAdverbs.setChecked(False)
                 self.ui.textEdit.setGrammarCheckEnabled(True)
-                self.ui.textEdit.asyncCheckGrammer()
+                QTimer.singleShot(50, self.ui.textEdit.asyncCheckGrammer)
         else:
             self.ui.textEdit.setGrammarCheckEnabled(False)
             self.ui.textEdit.checkGrammar()
