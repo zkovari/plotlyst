@@ -11,7 +11,7 @@ jobs:
   Build_distribution:
     strategy:
       matrix:
-        os: [ ubuntu-18.04, windows-2019, macos-10.15 ]
+        os: [ ubuntu-latest, windows-2019, macos-10.15 ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -34,7 +34,7 @@ jobs:
         with:
           ruby-version: 2.5.1
 
-      - if: matrix.os == 'ubuntu-18.04'
+      - if: matrix.os == 'ubuntu-latest'
         name: Install fpm on Linux
         run: |
           sudo gem install --no-document fpm
@@ -104,7 +104,7 @@ jobs:
           fbs installer
 
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'ubuntu-18.04'
+        if: matrix.os == 'ubuntu-latest'
         with:
           name: app-deb-artifact
           path: target/Plotlyst.deb
