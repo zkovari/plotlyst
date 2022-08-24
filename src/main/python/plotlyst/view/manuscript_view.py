@@ -135,7 +135,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgBottom.layout().addWidget(self.ui.lblWordCount, alignment=Qt.AlignCenter)
         self.ui.lblWordCount.setStyleSheet('color: black')
         self.ui.lblWordCount.setVisible(True)
-        self.ui.wdgEditor.layout().insertWidget(0, self.ui.textEdit)
+        self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)
         self.ui.wdgReadability.cbAdverbs.setChecked(False)
 
     def _update_story_goal(self):
@@ -240,7 +240,7 @@ class ManuscriptView(AbstractNovelView):
             else:
                 self.ui.wdgReadability.cbAdverbs.setChecked(False)
                 self.ui.textEdit.setGrammarCheckEnabled(True)
-                self.ui.textEdit.asyncCheckGrammer()
+                QTimer.singleShot(50, self.ui.textEdit.asyncCheckGrammer)
         else:
             self.ui.textEdit.setGrammarCheckEnabled(False)
             self.ui.textEdit.checkGrammar()
