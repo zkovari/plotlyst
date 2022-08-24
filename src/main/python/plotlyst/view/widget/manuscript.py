@@ -31,7 +31,7 @@ from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication, QSizePolicy
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, opaque, btn_popup, transparent, clear_layout, vbox
+from qthandy import retain_when_hidden, opaque, btn_popup, clear_layout, vbox
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -414,7 +414,7 @@ class ManuscriptTextEdit(TextEditBase):
     def setNightModeEnabled(self, enabled: bool):
         self.clearHighlights()
         if enabled:
-            transparent(self)
+            self._transparent()
             self._nightModeHighlighter = NightModeHighlighter(self)
 
     def setSentenceHighlighterEnabled(self, enabled: bool):
@@ -427,10 +427,14 @@ class ManuscriptTextEdit(TextEditBase):
         if enabled:
             self._wordTagHighlighter = WordTagHighlighter(self)
 
+    def _transparent(self):
+        border = 2 if self._topBorder else 0
+        self.setStyleSheet(f'border-top: {border}px dashed {RELAXED_WHITE_COLOR}; background-color: rgba(0, 0, 0, 0);')
+
     def _setDefaultStyleSheet(self):
         border = 2 if self._topBorder else 0
         self.setStyleSheet(
-            f'QTextEdit {{border-top: {border}px dashed grey; background-color: {RELAXED_WHITE_COLOR};}}')
+            f'ManuscriptTextEdit {{border-top: {border}px dashed grey; background-color: {RELAXED_WHITE_COLOR};}}')
 
 
 class ManuscriptTextEditor(QWidget):
@@ -442,6 +446,7 @@ class ManuscriptTextEditor(QWidget):
         vbox(self, 0, 0)
         self._scrollArea, self._scrollWidget = scrolled(self, frameless=True)
         self._scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self._scrollWidget.setStyleSheet('border: 0px; background-color: rgb(39, 39, 39);')
         vbox(self._scrollWidget, 0, 0)
 
         self._editors: List[ManuscriptTextEdit] = []
@@ -496,6 +501,9 @@ class ManuscriptTextEditor(QWidget):
     def statistics(self) -> TextStatistics:
         wc = sum([x.statistics().word_count for x in self._editors], 0)
         return TextStatistics(wc)
+
+    def setViewportMargins(self, left: int, top: int, right: int, bottom: int):
+        self._scrollArea.setViewportMargins(left, top, right, bottom)
 
     def setMargins(self, left: int, top: int, right: int, bottom: int):
         if not self._editors:
@@ -690,6 +698,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
     def deactivate(self):
         self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.editor.removeEventFilterFromEditors(self)
+        self.editor.setViewportMargins(0, 0, 0, 0)
         self.editor.setMargins(30, 30, 30, 30)
         self._toggle_manuscript_focus(False)
         self._toggle_manuscript_night_mode(False)
@@ -742,9 +751,9 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
     def _toggle_typewriter_mode(self, toggled: bool):
         if toggled:
-            self.editor.setMargins(30, 30, 30, QApplication.desktop().height() // 2)
+            self.editor.setViewportMargins(0, 0, 0, QApplication.desktop().height() // 2)
         else:
-            self.editor.setMargins(30, 30, 30, 30)
+            self.editor.setViewportMargins(0, 0, 0, 0)
 
     def _autoHideBottomBar(self):
         if not self.wdgBottom.underMouse():
