@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>639</width>
-    <height>366</height>
+    <height>389</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -506,9 +506,6 @@ background-color: rgb(39, 39, 39);
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <widget class="DocumentTextEditor" name="notesEditor"/>
-                 </item>
                 </layout>
                </widget>
               </widget>
@@ -670,7 +667,7 @@ QToolButton:pressed {
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>80</width>
+             <width>98</width>
              <height>68</height>
             </rect>
            </property>
@@ -749,11 +746,6 @@ QToolButton:pressed {
   <customwidget>
    <class>Toggle</class>
    <extends>QCheckBox</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
-   <class>DocumentTextEditor</class>
-   <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>

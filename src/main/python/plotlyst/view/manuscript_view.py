@@ -23,7 +23,6 @@ from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
 from qthandy import opaque, incr_font, bold, btn_popup, margins, transparent
 
-from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
@@ -38,6 +37,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, ManuscriptTextEdit
+from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 
 
 class ManuscriptView(AbstractNovelView):
@@ -87,7 +87,6 @@ class ManuscriptView(AbstractNovelView):
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
-        self.ui.treeChapters.expandAll()
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
@@ -97,9 +96,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgSideAnalysis.setHidden(True)
         self.ui.wdgAddon.setHidden(True)
 
-        self.ui.notesEditor.setTitleVisible(False)
-        self.ui.notesEditor.setToolbarVisible(True)
-        self.ui.notesEditor.setPlaceholderText('Scene notes')
+        self.notesEditor = SceneNotesEditor()
+        self.ui.wdgAddon.layout().addWidget(self.notesEditor)
 
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
         self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
@@ -174,9 +172,7 @@ class ManuscriptView(AbstractNovelView):
             else:
                 self.ui.btnSceneType.setHidden(True)
 
-            if not node.scene.document.loaded:
-                json_client.load_document(self.novel, node.scene.document)
-            self.ui.notesEditor.setText(node.scene.document.content, '')
+            self.notesEditor.setScene(node.scene)
             self.ui.btnNotes.setEnabled(True)
 
         elif isinstance(node, ChapterNode):
