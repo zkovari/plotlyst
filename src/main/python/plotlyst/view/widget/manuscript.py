@@ -585,11 +585,14 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         if not docs:
             return
 
-        doc = docs[0]
+        text = ''
+        cleaned_text = ''
+        for doc in docs:
+            _txt = doc.toPlainText()
+            cleaned_text += clean_text(_txt)
+            text += _txt
         spin(self.btnResult)
 
-        text = doc.toPlainText()
-        cleaned_text = clean_text(text)
         score = textstat.flesch_reading_ease(cleaned_text)
         self.btnResult.setToolTip(f'Flesch–Kincaid readability score: {score}')
 
@@ -612,11 +615,12 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
             self.lblResult.setText('<i style="color:#85182a">Very difficult to read</i>')
 
         sentences_count = 0
-        for i in range(doc.blockCount()):
-            block = doc.findBlockByNumber(i)
-            block_text = block.text()
-            if block_text:
-                sentences_count += sentence_count(block_text)
+        for doc in docs:
+            for i in range(doc.blockCount()):
+                block = doc.findBlockByNumber(i)
+                block_text = block.text()
+                if block_text:
+                    sentences_count += sentence_count(block_text)
 
         if not sentences_count:
             sentence_length = 0
