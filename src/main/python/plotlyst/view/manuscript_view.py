@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
 from qthandy import opaque, incr_font, bold, btn_popup, margins, transparent
 
+from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
@@ -101,7 +102,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.notesEditor.setPlaceholderText('Scene notes')
 
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.ui.btnNotes.clicked.connect(self.ui.wdgAddon.setVisible)
+        self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
 
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
@@ -173,7 +174,11 @@ class ManuscriptView(AbstractNovelView):
             else:
                 self.ui.btnSceneType.setHidden(True)
 
+            if not node.scene.document.loaded:
+                json_client.load_document(self.novel, node.scene.document)
+            self.ui.notesEditor.setText(node.scene.document.content, '')
             self.ui.btnNotes.setEnabled(True)
+
         elif isinstance(node, ChapterNode):
             scenes = self.novel.scenes_in_chapter(node.chapter)
             for scene in scenes:
@@ -188,6 +193,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.lineSceneTitle.setText(node.chapter.title_index(self.novel))
             self.ui.btnPov.setHidden(True)
             self.ui.btnSceneType.setHidden(True)
+            self.ui.btnNotes.setChecked(False)
             self.ui.btnNotes.setDisabled(True)
 
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
