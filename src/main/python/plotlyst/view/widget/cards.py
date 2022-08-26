@@ -286,7 +286,6 @@ class SceneCard(Ui_SceneCard, Card):
             self.lblType.clear()
 
         self.btnStage.setScene(self.scene)
-        self.btnStage.setVisible(self.btnStage.stageOk())
 
         self._setStyleSheet()
 
@@ -309,6 +308,10 @@ class SceneCard(Ui_SceneCard, Card):
         self.wdgCharacters.setEnabled(False)
         if not self.btnStage.stageOk() and not self.btnStage.menu().isVisible():
             self.btnStage.setHidden(True)
+
+    @overrides
+    def showEvent(self, event: QtGui.QShowEvent) -> None:
+        self.btnStage.setVisible(self.btnStage.stageOk())
 
     @overrides
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
