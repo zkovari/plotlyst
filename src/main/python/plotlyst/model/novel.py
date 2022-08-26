@@ -187,3 +187,8 @@ class NovelStagesModel(DefaultSelectionItemsModel):
     def _newItem(self) -> QModelIndex:
         self._items.append(SceneStage(''))
         return self.index(self.rowCount() - 1, 0)
+
+    @overrides
+    def _insertItem(self, row: int) -> QModelIndex:
+        self._items.insert(row, SceneStage(''))
+        return self.index(row, 0)
