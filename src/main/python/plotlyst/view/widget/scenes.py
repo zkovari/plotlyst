@@ -43,7 +43,8 @@ from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotReference, CharacterGoal, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge
+    Character, Plot, ScenePlotReference, CharacterGoal, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
+    SceneStage
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
@@ -1933,3 +1934,59 @@ class SceneNotesEditor(DocumentTextEditor):
             return
         self._scene.document.content = self.textEdit.toHtml()
         self.repo.update_doc(app_env.novel, self._scene.document)
+
+
+class SceneStageButton(QToolButton):
+    def __init__(self, parent=None):
+        super(SceneStageButton, self).__init__(parent)
+        self._scene: Optional[Scene] = None
+        self._novel: Optional[Novel] = None
+        self._stageOk: bool = False
+
+        self.setStyleSheet('''
+        QToolButton {
+            border: 0px;
+        }
+
+        QToolButton::menu-indicator {
+            width: 0px;
+        }
+        ''')
+        self.setPopupMode(QToolButton.InstantPopup)
+        pointy(self)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def setScene(self, scene: Scene):
+        self._scene = scene
+        self._novel = app_env.novel
+
+    def stageOk(self) -> bool:
+        return self._stageOk
+
+    def updateStage(self):
+        self._stageOk = False
+        active_stage = self._novel.active_stage
+        if self._scene.stage and active_stage:
+            active_stage_index = self._novel.stages.index(active_stage)
+            scene_stage_index = self._novel.stages.index(self._scene.stage)
+
+            if scene_stage_index >= active_stage_index:
+                self._stageOk = True
+                self.setIcon(IconRegistry.ok_icon())
+
+        if not self._stageOk:
+            self.setIcon(IconRegistry.progress_check_icon('grey'))
+
+        menu = QMenu(self)
+        for stage in self._novel.stages:
+            act = action(stage.text, slot=partial(self._changeStage, stage), checkable=True, parent=menu)
+            act.setChecked(self._scene.stage == stage)
+            menu.addAction(act)
+
+        btn_popup_menu(self, menu)
+
+    def _changeStage(self, stage: SceneStage):
+        self._scene.stage = stage
+        self.updateStage()
+        self.repo.update_scene(self._scene)

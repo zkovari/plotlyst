@@ -4,7 +4,7 @@ from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
 from overrides import overrides
 
 from plugins import PluginBase
-from src.main.python.plotlyst.view.widget.scenes import ScenesTreeView
+from src.main.python.plotlyst.view.widget.scenes import ScenesTreeView, SceneStageButton
 
 
 class ScenePluginBase(PluginBase):
@@ -25,3 +25,10 @@ class ScenesTreeViewPlugin(QPyDesignerCustomWidgetPlugin, ScenePluginBase):
     @overrides
     def classType(self):
         return ScenesTreeView
+
+
+class SceneStageButtonPlugin(QPyDesignerCustomWidgetPlugin, ScenePluginBase):
+
+    @overrides
+    def classType(self):
+        return SceneStageButton

@@ -339,32 +339,7 @@ background-color:rgba(0,0,0,0);</string>
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="btnStage">
-          <property name="cursor">
-           <cursorShape>PointingHandCursor</cursorShape>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QToolButton {
-	border: 0px;
-}
-
-QToolButton::menu-indicator {
-	width: 0px;
-}</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>18</width>
-            <height>18</height>
-           </size>
-          </property>
-          <property name="popupMode">
-           <enum>QToolButton::InstantPopup</enum>
-          </property>
-         </widget>
+         <widget class="SceneStageButton" name="btnStage"/>
         </item>
        </layout>
       </item>
@@ -374,6 +349,11 @@ QToolButton::menu-indicator {
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>SceneStageButton</class>
+   <extends>QToolButton</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
+  </customwidget>
   <customwidget>
    <class>LabelsWidget</class>
    <extends>QWidget</extends>
