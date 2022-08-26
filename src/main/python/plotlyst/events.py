@@ -76,6 +76,11 @@ class ActiveSceneStageChanged(Event):
 
 
 @dataclass
+class AvailableSceneStagesChanged(Event):
+    pass
+
+
+@dataclass
 class LocationChangedEvent(Event):
     location: Location
 

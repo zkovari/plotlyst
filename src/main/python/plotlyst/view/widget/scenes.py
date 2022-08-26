@@ -49,7 +49,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent, SceneStatusChangedEvent, \
-    ActiveSceneStageChanged
+    ActiveSceneStageChanged, AvailableSceneStagesChanged
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
@@ -1961,10 +1961,11 @@ class SceneStageButton(QToolButton, EventListener):
 
         event_dispatcher.register(self, ActiveSceneStageChanged)
         event_dispatcher.register(self, SceneStatusChangedEvent)
+        event_dispatcher.register(self, AvailableSceneStagesChanged)
 
     @overrides
     def event_received(self, event: Event):
-        if isinstance(event, ActiveSceneStageChanged):
+        if isinstance(event, (ActiveSceneStageChanged, AvailableSceneStagesChanged)):
             self.updateStage()
         elif isinstance(event, SceneStatusChangedEvent) and event.scene == self._scene:
             self.updateStage()

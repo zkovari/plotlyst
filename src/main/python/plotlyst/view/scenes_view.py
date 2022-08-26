@@ -32,7 +32,8 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneSta
 from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
-    SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, ChapterChangedEvent
+    SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, \
+    ChapterChangedEvent, AvailableSceneStagesChanged
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -455,6 +456,7 @@ class ScenesOutlineView(AbstractNovelView):
 
             self.repo.update_novel(self.novel)
             self._init_stages_view()
+            emit_event(AvailableSceneStagesChanged(self))
 
     def _init_stages_view(self):
         def change_stage(stage: SceneStage):
