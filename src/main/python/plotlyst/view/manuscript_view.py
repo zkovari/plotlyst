@@ -174,6 +174,8 @@ class ManuscriptView(AbstractNovelView):
 
             self.notesEditor.setScene(node.scene)
             self.ui.btnNotes.setEnabled(True)
+            self.ui.btnStage.setEnabled(True)
+            self.ui.btnStage.setScene(node.scene)
 
         elif isinstance(node, ChapterNode):
             scenes = self.novel.scenes_in_chapter(node.chapter)
@@ -191,6 +193,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.btnSceneType.setHidden(True)
             self.ui.btnNotes.setChecked(False)
             self.ui.btnNotes.setDisabled(True)
+            self.ui.btnStage.setDisabled(True)
 
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
             self.ui.textEdit.setMargins(30, 30, 30, 30)

@@ -46,8 +46,10 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     Character, Plot, ScenePlotReference, CharacterGoal, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
     SceneStage
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_critical, emit_event
-from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent
+from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent, SceneStatusChangedEvent, \
+    ActiveSceneStageChanged
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
@@ -1936,7 +1938,7 @@ class SceneNotesEditor(DocumentTextEditor):
         self.repo.update_doc(app_env.novel, self._scene.document)
 
 
-class SceneStageButton(QToolButton):
+class SceneStageButton(QToolButton, EventListener):
     def __init__(self, parent=None):
         super(SceneStageButton, self).__init__(parent)
         self._scene: Optional[Scene] = None
@@ -1957,9 +1959,20 @@ class SceneStageButton(QToolButton):
 
         self.repo = RepositoryPersistenceManager.instance()
 
+        event_dispatcher.register(self, ActiveSceneStageChanged)
+        event_dispatcher.register(self, SceneStatusChangedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, ActiveSceneStageChanged):
+            self.updateStage()
+        elif isinstance(event, SceneStatusChangedEvent) and event.scene == self._scene:
+            self.updateStage()
+
     def setScene(self, scene: Scene):
         self._scene = scene
         self._novel = app_env.novel
+        self.updateStage()
 
     def stageOk(self) -> bool:
         return self._stageOk
@@ -1990,3 +2003,5 @@ class SceneStageButton(QToolButton):
         self._scene.stage = stage
         self.updateStage()
         self.repo.update_scene(self._scene)
+
+        emit_event(SceneStatusChangedEvent(self, self._scene))

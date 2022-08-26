@@ -34,9 +34,6 @@ from qthandy import FlowLayout, clear_layout
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
-from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import ActiveSceneStageChanged, SceneStatusChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
@@ -235,7 +232,7 @@ class JournalCard(Card, Ui_JournalCard):
         self.textTitle.setText(self.journal.title)
 
 
-class SceneCard(Ui_SceneCard, Card, EventListener):
+class SceneCard(Ui_SceneCard, Card):
     cursorEntered = pyqtSignal()
 
     def __init__(self, scene: Scene, novel: Novel, parent=None):
@@ -289,20 +286,11 @@ class SceneCard(Ui_SceneCard, Card, EventListener):
             self.lblType.clear()
 
         self.btnStage.setScene(self.scene)
-        self.btnStage.updateStage()
         self.btnStage.setVisible(self.btnStage.stageOk())
 
         self._setStyleSheet()
 
-        event_dispatcher.register(self, ActiveSceneStageChanged)
-        event_dispatcher.register(self, SceneStatusChangedEvent)
-
         self.repo = RepositoryPersistenceManager.instance()
-
-    @overrides
-    def event_received(self, event: Event):
-        if isinstance(event, (ActiveSceneStageChanged, SceneStatusChangedEvent)):
-            self.btnStage.updateStage()
 
     @overrides
     def mimeType(self) -> str:
