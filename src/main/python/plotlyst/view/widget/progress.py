@@ -30,6 +30,9 @@ from overrides import overrides
 from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
 from src.main.python.plotlyst.core.template import RoleImportance
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import SceneStatusChangedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -54,7 +57,7 @@ class ProgressChartView(ChartView):
         self.chart.refresh()
 
 
-class SceneStageProgressCharts:
+class SceneStageProgressCharts(EventListener):
 
     def __init__(self, novel: Novel):
         self.novel = novel
@@ -67,6 +70,12 @@ class SceneStageProgressCharts:
         else:
             self._stage = None
         self._act_colors = {1: '#02bcd4', 2: '#1bbc9c', 3: '#ff7800'}
+
+        event_dispatcher.register(self, SceneStatusChangedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        self.refresh()
 
     def charts(self) -> List[ProgressChartView]:
         return self._chartviews

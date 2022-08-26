@@ -505,7 +505,6 @@ class ScenesOutlineView(AbstractNovelView):
 
             self.ui.tblSceneStages.clicked.connect(
                 lambda x: self.stagesModel.changeStage(self._stages_proxy.mapToSource(x)))
-            self.ui.tblSceneStages.clicked.connect(self.stagesProgress.refresh)
 
             self.ui.btnStageSelector.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
             self.ui.btnStageSelector.setIcon(IconRegistry.progress_check_icon())
