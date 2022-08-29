@@ -130,7 +130,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgTitle.setVisible(True)
         self.ui.treeChapters.setVisible(True)
 
-        self.ui.wdgBottom.layout().addWidget(self.ui.lblWordCount, alignment=Qt.AlignCenter)
+        self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignCenter)
         self.ui.lblWordCount.setStyleSheet('color: black')
         self.ui.lblWordCount.setVisible(True)
         self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)
