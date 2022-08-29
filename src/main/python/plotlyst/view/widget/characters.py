@@ -63,6 +63,7 @@ from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
@@ -461,6 +462,17 @@ class CharacterConflictSelector(QWidget):
         gc(self)
 
 
+class GoalStakesEditor(QWidget, Ui_GoalReferenceStakesEditor):
+    def __init__(self, goalRef: GoalReference, parent=None):
+        super(GoalStakesEditor, self).__init__(parent)
+        self.setupUi(self)
+        self.goalRef = goalRef
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        pass
+
+
 class CharacterGoalSelector(QWidget):
     goalSelected = pyqtSignal()
 
@@ -519,13 +531,6 @@ class CharacterGoalSelector(QWidget):
         self.layout().addWidget(self.label)
         self.btnLinkGoal.setHidden(True)
 
-    # def _plotValueClicked(self):
-    #     menu = QMenu(self.label)
-    #     action = QWidgetAction(menu)
-    #     action.setDefaultWidget(ScenePlotValueEditor(self.plotValue))
-    #     menu.addAction(action)
-    #     menu.popup(QCursor.pos())
-
     def _goalSelected(self, characterGoal: CharacterGoal):
         goal_ref = GoalReference(characterGoal.id)
         self.scene.agendas[0].goal_references.append(goal_ref)
@@ -537,7 +542,7 @@ class CharacterGoalSelector(QWidget):
     def _goalRefClicked(self):
         menu = QMenu(self.label)
         action = QWidgetAction(menu)
-        action.setDefaultWidget(QLabel('Test popup'))
+        action.setDefaultWidget(GoalStakesEditor(self.goalRef))
         menu.addAction(action)
         menu.popup(QCursor.pos())
 
