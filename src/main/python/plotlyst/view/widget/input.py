@@ -34,7 +34,6 @@ from overrides import overrides
 from qthandy import transparent, hbox
 from qttextedit import EnhancedTextEdit, RichTextEditor
 
-from src.main.python.plotlyst.common import EM_DASH, LEFT_QUOTATION_ENGLISH, RIGHT_QUOTATION_ENGLISH
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
@@ -504,23 +503,6 @@ class DocumentTextEditor(RichTextEditor):
                 if self.textEdit.textCursor().atBlockStart():
                     self._showCommands()
 
-            if cursor.atBlockEnd() and event.key() == Qt.Key_Space:
-                cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-                if cursor.selectedText() == ' ':
-                    self.textEdit.textCursor().deletePreviousChar()
-                    self.textEdit.textCursor().insertText('.')
-            elif cursor.atBlockEnd() and event.key() == Qt.Key_QuoteDbl:
-                self.textEdit.textCursor().insertText(LEFT_QUOTATION_ENGLISH)
-                self.textEdit.textCursor().insertText(RIGHT_QUOTATION_ENGLISH)
-                cursor.movePosition(QTextCursor.PreviousCharacter)
-                self.textEdit.setTextCursor(cursor)
-                return True
-            elif event.key() == Qt.Key_Minus:
-                cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-                if cursor.selectedText() == '-':
-                    self.textEdit.textCursor().deletePreviousChar()
-                    self.textEdit.textCursor().insertText(EM_DASH)
-                    return True
             # elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
             #     self._lblPlaceholder.setText(' said ')
             #     self._lblPlaceholder.show()

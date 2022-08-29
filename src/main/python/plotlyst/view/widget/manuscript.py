@@ -26,7 +26,7 @@ import qtanim
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QMargins
 from PyQt5.QtGui import QFont, QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QResizeEvent
+    QMouseEvent, QResizeEvent, QTextCursor
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication, QSizePolicy
 from nltk import WhitespaceTokenizer
@@ -34,7 +34,8 @@ from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, clear_layout, vbox
 from textstat import textstat
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, LEFT_QUOTATION_ENGLISH, RIGHT_QUOTATION_ENGLISH, \
+    EM_DASH
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
 from src.main.python.plotlyst.core.sprint import TimerModel
@@ -384,6 +385,28 @@ class ManuscriptTextEdit(TextEditBase):
     def resizeEvent(self, event: QResizeEvent):
         super(ManuscriptTextEdit, self).resizeEvent(event)
         self.resizeToContent()
+
+    @overrides
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        cursor: QTextCursor = self.textCursor()
+        if cursor.atBlockEnd() and event.key() == Qt.Key_Space:
+            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+            if cursor.selectedText() == ' ':
+                self.textCursor().deletePreviousChar()
+                self.textCursor().insertText('.')
+        elif cursor.atBlockEnd() and event.key() == Qt.Key_QuoteDbl:
+            self.textCursor().insertText(LEFT_QUOTATION_ENGLISH)
+            self.textCursor().insertText(RIGHT_QUOTATION_ENGLISH)
+            cursor.movePosition(QTextCursor.PreviousCharacter)
+            self.setTextCursor(cursor)
+            return
+        elif event.key() == Qt.Key_Minus:
+            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+            if cursor.selectedText() == '-':
+                self.textCursor().deletePreviousChar()
+                self.textCursor().insertText(EM_DASH)
+                return
+        super(ManuscriptTextEdit, self).keyPressEvent(event)
 
     def resizeToContent(self):
         margins: QMargins = self.viewportMargins()
