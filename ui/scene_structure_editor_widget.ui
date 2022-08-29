@@ -125,6 +125,13 @@
             </widget>
            </item>
            <item>
+            <widget class="Line" name="line">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QWidget" name="wdgGoalConflictContainer" native="true">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
@@ -319,7 +326,7 @@
            <property name="minimumSize">
             <size>
              <width>73</width>
-             <height>40</height>
+             <height>73</height>
             </size>
            </property>
           </widget>

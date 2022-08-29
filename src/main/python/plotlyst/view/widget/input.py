@@ -498,7 +498,6 @@ class DocumentTextEditor(RichTextEditor):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent) and event.type() == QEvent.KeyPress:
-            cursor: QTextCursor = self.textEdit.textCursor()
             if event.key() == Qt.Key_Slash:
                 if self.textEdit.textCursor().atBlockStart():
                     self._showCommands()
