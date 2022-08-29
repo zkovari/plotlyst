@@ -27,9 +27,9 @@ import qtanim
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QPalette, QMouseEvent
+    QPalette, QMouseEvent, QCursor
 from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout
+    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
@@ -469,6 +469,7 @@ class CharacterGoalSelector(QWidget):
         self.novel = novel
         self.scene = scene
         self.characterGoal: Optional[CharacterGoal] = None
+        self.goalRef: Optional[GoalReference] = None
         hbox(self)
 
         self.label: Optional[CharacterGoalLabel] = None
@@ -508,19 +509,37 @@ class CharacterGoalSelector(QWidget):
 
         self._goalSelector.goalSelected.connect(self._goalSelected)
 
-    def setGoal(self, characterGoal: CharacterGoal):
+    def setGoal(self, characterGoal: CharacterGoal, goalRef: GoalReference):
         self.characterGoal = characterGoal
-        self.label = CharacterGoalLabel(self.novel, self.characterGoal, removalEnabled=True)
+        self.goalRef = goalRef
+        self.label = CharacterGoalLabel(self.novel, self.characterGoal, self.goalRef, removalEnabled=True)
+        pointy(self.label)
+        self.label.clicked.connect(self._goalRefClicked)
         self.label.removalRequested.connect(self._remove)
         self.layout().addWidget(self.label)
         self.btnLinkGoal.setHidden(True)
 
+    # def _plotValueClicked(self):
+    #     menu = QMenu(self.label)
+    #     action = QWidgetAction(menu)
+    #     action.setDefaultWidget(ScenePlotValueEditor(self.plotValue))
+    #     menu.addAction(action)
+    #     menu.popup(QCursor.pos())
+
     def _goalSelected(self, characterGoal: CharacterGoal):
-        self.scene.agendas[0].goal_references.append(GoalReference(characterGoal.id))
+        goal_ref = GoalReference(characterGoal.id)
+        self.scene.agendas[0].goal_references.append(goal_ref)
 
         self.btnLinkGoal.menu().hide()
-        self.setGoal(characterGoal)
+        self.setGoal(characterGoal, goal_ref)
         self.goalSelected.emit()
+
+    def _goalRefClicked(self):
+        menu = QMenu(self.label)
+        action = QWidgetAction(menu)
+        action.setDefaultWidget(QLabel('Test popup'))
+        menu.addAction(action)
+        menu.popup(QCursor.pos())
 
     def _remove(self):
         if self.parent():

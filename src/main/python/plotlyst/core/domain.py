@@ -511,6 +511,11 @@ class GoalReference:
     character_goal_id: uuid.UUID
     message: str = ''
 
+    def goal(self, character: Character) -> CharacterGoal:
+        for goal_ in character.flatten_goals():
+            if goal_.id == self.character_goal_id:
+                return goal_
+
 
 @dataclass
 class TagReference:
