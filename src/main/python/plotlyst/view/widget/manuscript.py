@@ -594,6 +594,8 @@ class ManuscriptTextEditor(QWidget):
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
+    refreshed = pyqtSignal()
+
     def __init__(self, parent=None):
         super(ReadabilityWidget, self).__init__(parent)
         self.setupUi(self)
@@ -653,6 +655,8 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         self.lblAvgSentenceLength.setText("%.2f" % round(sentence_length, 1))
 
         self.btnRefresh.setHidden(True)
+
+        self.refreshed.emit()
 
     def setTextDocumentsUpdated(self, docs: List[QTextDocument], updated: bool = True):
         if not docs:

@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Dict
 
+import nltk
 from PyQt5.QtChart import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QSplineSeries
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QCursor, QIcon
@@ -31,6 +32,7 @@ from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSG
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
     secondary_role
+from src.main.python.plotlyst.core.text import clean_text, wc
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -300,3 +302,38 @@ class ActDistributionChart(BaseChart):
             slice_.setColor(QColor(color))
 
         self.addSeries(series)
+
+
+class SentenceVarietyChart(BaseChart):
+    def __init__(self, parent=None):
+        super(SentenceVarietyChart, self).__init__(parent)
+
+    def refresh(self, texts: List[str]):
+        self.reset()
+        if not texts:
+            return
+
+        # self.setMinimumWidth(max(len(novel.chapters), 15) * 35)
+
+        text = clean_text(texts[0])
+        sentences: List[str] = nltk.text.sent_tokenize(text)
+
+        set_ = QBarSet('Sentence')
+        for sent in sentences:
+            set_.append(wc(sent))
+
+        series = QBarSeries()
+        series.append(set_)
+
+        # axis_x = QBarCategoryAxis()
+        # axis_x_values = [*range(1, len(novel.chapters) + 1)]
+        # axis_x_values = [str(x) for x in axis_x_values]
+        # axis_x.append(axis_x_values)
+        # self.addAxis(axis_x, Qt.AlignBottom)
+        #
+        # axis_y = QValueAxis()
+        # self.addAxis(axis_y, Qt.AlignLeft)
+
+        self.addSeries(series)
+        # series.attachAxis(axis_x)
+        # series.attachAxis(axis_y)

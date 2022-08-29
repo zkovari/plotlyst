@@ -466,7 +466,28 @@ background-color: rgb(39, 39, 39);
               <number>2</number>
              </property>
              <item>
-              <widget class="QWidget" name="wdgTopAnalysis" native="true"/>
+              <widget class="QWidget" name="wdgTopAnalysis" native="true">
+               <layout class="QVBoxLayout" name="verticalLayout_9">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="ChartView" name="chartview"/>
+                </item>
+               </layout>
+              </widget>
              </item>
              <item>
               <widget class="QSplitter" name="splitterEditor">
@@ -670,7 +691,7 @@ QToolButton:pressed {
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>80</width>
+             <width>98</width>
              <height>68</height>
             </rect>
            </property>
@@ -787,12 +808,28 @@ QToolButton:pressed {
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>485</x>
-     <y>65</y>
+     <x>607</x>
+     <y>91</y>
     </hint>
     <hint type="destinationlabel">
-     <x>450</x>
-     <y>201</y>
+     <x>634</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnAnalysis</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>wdgTopAnalysis</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>578</x>
+     <y>74</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>346</x>
+     <y>132</y>
     </hint>
    </hints>
   </connection>

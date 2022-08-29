@@ -34,7 +34,7 @@ from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
+from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart, SentenceVarietyChart
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, ManuscriptTextEdit
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
@@ -59,6 +59,11 @@ class ManuscriptView(AbstractNovelView):
         self.chart_manuscript = ManuscriptLengthChart()
         self.ui.chartChaptersLength.setChart(self.chart_manuscript)
         self.chart_manuscript.refresh(self.novel)
+
+        self.chart_sentences = SentenceVarietyChart()
+        self.ui.chartview.setChart(self.chart_sentences)
+        self.ui.wdgReadability.refreshed.connect(
+            lambda: self.chart_sentences.refresh([x.toPlainText() for x in self.ui.textEdit.documents()]))
 
         bold(self.ui.lineSceneTitle)
         incr_font(self.ui.lineSceneTitle)
