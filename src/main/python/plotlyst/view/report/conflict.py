@@ -127,3 +127,12 @@ class ConflictTypeChart(BaseChart):
         elif conflictType == ConflictType.SELF:
             return CONFLICT_SELF_COLOR
         raise ValueError(f'Unrecognized conflict type {conflictType}')
+
+
+class ConflictIntensityChart(BaseChart):
+    def __init__(self, novel: Novel, parent=None):
+        super(ConflictIntensityChart, self).__init__(parent)
+        self.novel = novel
+
+    def refresh(self):
+        self.reset()
