@@ -25,13 +25,14 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
     PlotCreatedEvent
 from src.main.python.plotlyst.model.report import ReportsTreeModel, CharacterReportNode, CharacterArcReportNode, \
-    ConflictReportNode, PlotReportNode
+    ConflictReportNode, PlotReportNode, StakesReportNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.report.character import CharacterReport, CharacterArcReport
 from src.main.python.plotlyst.view.report.conflict import ConflictReport
 from src.main.python.plotlyst.view.report.plot import PlotReport
+from src.main.python.plotlyst.view.report.stakes import StakesReport
 
 
 class ReportsView(AbstractNovelView):
@@ -59,6 +60,9 @@ class ReportsView(AbstractNovelView):
     def displayArcReport(self):
         self._displayReport(CharacterArcReport(self.novel, self.ui.wdgReportContainer))
 
+    def displayStakesReport(self):
+        self._displayReport(StakesReport(self.novel, self.ui.wdgReportContainer))
+
     def displayConflictReport(self):
         self._displayReport(ConflictReport(self.novel, self.ui.wdgReportContainer))
 
@@ -77,6 +81,8 @@ class ReportsView(AbstractNovelView):
             self.displayCharactersReport()
         elif isinstance(node, CharacterArcReportNode):
             self.displayArcReport()
+        elif isinstance(node, StakesReportNode):
+            self.displayStakesReport()
         elif isinstance(node, ConflictReportNode):
             self.displayConflictReport()
         elif isinstance(node, PlotReportNode):
