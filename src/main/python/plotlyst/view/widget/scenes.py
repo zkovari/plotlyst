@@ -43,8 +43,8 @@ from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, StoryBeat, Conflict, \
-    Character, Plot, ScenePlotReference, CharacterGoal, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
-    SceneStage
+    Character, Plot, ScenePlotReference, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
+    SceneStage, GoalReference, CharacterGoal
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -256,7 +256,7 @@ class ScenePlotSelector(QWidget):
     def setPlot(self, plotValue: ScenePlotReference):
         self.plotValue = plotValue
         self.label = ScenePlotValueLabel(plotValue)
-        self.label.setCursor(Qt.PointingHandCursor)
+        pointy(self.label)
         self.label.clicked.connect(self._plotValueClicked)
 
         self.label.removalRequested.connect(self._remove)
@@ -990,8 +990,10 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             return
         clear_layout(self.wdgGoalConflictContainer)
         if self.scene.agendas[0].goal_references:
-            for char_goal in self.scene.agendas[0].goals(self.scene.agendas[0].character(self.novel)):
-                self._addGoalSelector(char_goal)
+            for goal_ref in self.scene.agendas[0].goal_references:
+                goal = goal_ref.goal(self.scene.agendas[0].character(self.novel))
+                if goal:
+                    self._addGoalSelector(goal, goal_ref)
             self._addGoalSelector()
         else:
             self._addGoalSelector()
@@ -1003,13 +1005,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         else:
             self._addConfictSelector()
 
-    def _addGoalSelector(self, charGoal: Optional[CharacterGoal] = None):
+    def _addGoalSelector(self, goal: Optional[CharacterGoal] = None, goalRef: Optional[GoalReference] = None):
         simplified = len(self.scene.agendas[0].goal_references) > 0
         selector = CharacterGoalSelector(self.novel, self.scene, simplified=simplified)
         self.wdgGoalConflictContainer.layout().addWidget(selector)
         selector.goalSelected.connect(self._initSelectors)
-        if charGoal:
-            selector.setGoal(charGoal)
+        if goal and goalRef:
+            selector.setGoal(goal, goalRef)
 
     def _addConfictSelector(self, conflict: Optional[Conflict] = None):
         simplified = len(self.scene.agendas[0].conflict_references) > 0

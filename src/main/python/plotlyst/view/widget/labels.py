@@ -28,7 +28,7 @@ from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent, bt
 
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
-    CharacterGoal, PlotValue, Scene
+    CharacterGoal, PlotValue, Scene, GoalReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.view.common import text_color_with_bg_color, VisibilityToggleEventFilter
@@ -248,8 +248,10 @@ class ScenePlotValueLabel(PlotLabel):
 
 
 class CharacterGoalLabel(SelectionItemLabel):
-    def __init__(self, novel: Novel, characterGoal: CharacterGoal, parent=None, removalEnabled: bool = False):
+    def __init__(self, novel: Novel, characterGoal: CharacterGoal, goalRef: GoalReference, parent=None,
+                 removalEnabled: bool = False):
         super(CharacterGoalLabel, self).__init__(characterGoal.goal(novel), parent, removalEnabled)
+        self.goalRef = goalRef
 
         self.lblGoal = QLabel()
         self.lblGoal.setPixmap(IconRegistry.goal_icon().pixmap(QSize(24, 24)))

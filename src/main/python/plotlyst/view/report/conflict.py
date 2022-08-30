@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, Dict
+from typing import Dict
 
 from PyQt5.QtChart import QPieSeries
 from PyQt5.QtGui import QColor, QCursor
@@ -28,6 +28,7 @@ from overrides import overrides
 from src.main.python.plotlyst.common import CONFLICT_CHARACTER_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_SUPERNATURAL_COLOR, CONFLICT_SELF_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, ConflictType
+from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.conflict_report_ui import Ui_ConflictReport
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -50,7 +51,6 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
         self.chartEnneagram = EnneagramChart()
         self.chartViewEnneagram.setChart(self.chartEnneagram)
 
-        self.character: Optional[Character] = None
         self.display()
 
     @overrides
@@ -60,8 +60,7 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
     def _characterChanged(self, character: Character, toggled: bool):
         if not toggled:
             return
-        self.character = character
-        self.chartType.refresh(self.character)
+        self.chartType.refresh(character)
 
         conflicting_characters = []
         for scene in self.novel.scenes:
@@ -82,7 +81,7 @@ class ConflictTypeChart(BaseChart):
         super(ConflictTypeChart, self).__init__(parent)
         self.novel = novel
         self.legend().hide()
-        self.setTitle('<b>Conflict types<b>')
+        self.setTitle(html('Conflict types').bold())
 
     def refresh(self, character: Character):
         conflicts: Dict[ConflictType, int] = {}
@@ -104,8 +103,7 @@ class ConflictTypeChart(BaseChart):
                 slice_.setColor(QColor(self._colorForType(k)))
                 slice_.hovered.connect(partial(self._hovered, k))
 
-        if self.series():
-            self.removeAllSeries()
+        self.reset()
         self.addSeries(series)
 
     def _hovered(self, conflictType: ConflictType, state: bool):

@@ -87,25 +87,19 @@ class PlotValuesArcChart(BaseChart):
         self.createDefaultAxes()
         self.legend().setMarkerShape(QLegend.MarkerShapeCircle)
         self.legend().show()
-        self.axisX: Optional[QValueAxis] = None
-        self.axisY: Optional[QValueAxis] = None
 
         self.setTitle('Plot value charges')
 
     def refresh(self, plots: List[Plot]):
-        self.removeAllSeries()
-        if self.axisX:
-            self.removeAxis(self.axisX)
-        if self.axisY:
-            self.removeAxis(self.axisY)
+        self.reset()
 
-        self.axisX = QValueAxis()
-        self.axisX.setRange(0, len(self.novel.scenes))
-        self.setAxisX(self.axisX)
-        self.axisX.setVisible(False)
+        axisX = QValueAxis()
+        axisX.setRange(0, len(self.novel.scenes))
+        self.setAxisX(axisX)
+        axisX.setVisible(False)
 
-        self.axisY = QValueAxis()
-        self.setAxisY(self.axisY)
+        axisY = QValueAxis()
+        self.setAxisY(axisY)
 
         min_ = 0
         max_ = 0
@@ -134,10 +128,10 @@ class PlotValuesArcChart(BaseChart):
                 max_ = max(max([x.y() for x in points]), max_)
 
                 self.addSeries(series)
-                series.attachAxis(self.axisX)
-                series.attachAxis(self.axisY)
+                series.attachAxis(axisX)
+                series.attachAxis(axisY)
 
         limit = max(abs(min_), max_)
 
-        self.axisY.setRange(-limit - 3, limit + 3)
-        self.axisY.setVisible(False)
+        axisY.setRange(-limit - 3, limit + 3)
+        axisY.setVisible(False)

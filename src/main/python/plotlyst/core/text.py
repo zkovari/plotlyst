@@ -115,3 +115,19 @@ def clean_text(text: str):
 def sentence_count(text: str) -> int:
     text = clean_text(text)
     return len(nltk.text.sent_tokenize(text))
+
+
+class HtmlString(str):
+    def __init__(self, text: str):
+        self.text = text
+
+    def bold(self) -> str:
+        self.text = f'<b>{self.text}</b>'
+        return self.text
+
+    def __str__(self):
+        return self.text
+
+
+def html(text: str) -> HtmlString:
+    return HtmlString(text)

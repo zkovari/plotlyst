@@ -23,7 +23,7 @@ from PyQt5.QtCore import QModelIndex, Qt
 from anytree import Node
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import VERY_UNHAPPY
+from src.main.python.plotlyst.core.domain import HAPPY
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -33,6 +33,10 @@ class CharacterReportNode(Node):
 
 
 class CharacterArcReportNode(Node):
+    pass
+
+
+class StakesReportNode(Node):
     pass
 
 
@@ -49,6 +53,7 @@ class ReportsTreeModel(TreeItemModel):
         super(ReportsTreeModel, self).__init__(parent)
         char_node = CharacterReportNode('Characters', self.root)
         CharacterArcReportNode('Emotional Arc', char_node)
+        StakesReportNode('Stakes', self.root)
         ConflictReportNode('Conflicts', self.root)
         PlotReportNode('Plot', self.root)
 
@@ -59,7 +64,9 @@ class ReportsTreeModel(TreeItemModel):
             if isinstance(node, CharacterReportNode):
                 return IconRegistry.character_icon()
             if isinstance(node, CharacterArcReportNode):
-                return IconRegistry.emotion_icon_from_feeling(VERY_UNHAPPY)
+                return IconRegistry.emotion_icon_from_feeling(HAPPY)
+            if isinstance(node, StakesReportNode):
+                return IconRegistry.from_name('mdi.gauge-full', '#ba181b')
             if isinstance(node, ConflictReportNode):
                 return IconRegistry.conflict_icon()
             if isinstance(node, PlotReportNode):

@@ -27,9 +27,9 @@ import qtanim
 from PyQt5 import QtCore
 from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QPalette, QMouseEvent
+    QPalette, QMouseEvent, QCursor
 from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout
+    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
@@ -39,7 +39,7 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal, GoalReference
+    CharacterGoal, Goal, GoalReference, Stake
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance
@@ -63,6 +63,7 @@ from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
+from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
@@ -461,6 +462,43 @@ class CharacterConflictSelector(QWidget):
         gc(self)
 
 
+class GoalStakesEditor(QWidget, Ui_GoalReferenceStakesEditor):
+    def __init__(self, goalRef: GoalReference, parent=None):
+        super(GoalStakesEditor, self).__init__(parent)
+        self.setupUi(self)
+        self.goalRef = goalRef
+        self.refresh()
+
+        self.sliderPhysiological.valueChanged.connect(partial(self._stakeChanged, Stake.PHYSIOLOGICAL))
+        self.sliderSecurity.valueChanged.connect(partial(self._stakeChanged, Stake.SAFETY))
+        self.sliderBelonging.valueChanged.connect(partial(self._stakeChanged, Stake.BELONGING))
+        self.sliderEsteem.valueChanged.connect(partial(self._stakeChanged, Stake.ESTEEM))
+        self.sliderActualization.valueChanged.connect(partial(self._stakeChanged, Stake.SELF_ACTUALIZATION))
+        self.sliderTranscendence.valueChanged.connect(partial(self._stakeChanged, Stake.SELF_TRANSCENDENCE))
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        pass
+
+    def refresh(self):
+        for k, v in self.goalRef.stakes.items():
+            if k == Stake.PHYSIOLOGICAL:
+                self.sliderPhysiological.setValue(v)
+            elif k == Stake.SAFETY:
+                self.sliderSecurity.setValue(v)
+            elif k == Stake.BELONGING:
+                self.sliderBelonging.setValue(v)
+            elif k == Stake.ESTEEM:
+                self.sliderEsteem.setValue(v)
+            elif k == Stake.SELF_ACTUALIZATION:
+                self.sliderActualization.setValue(v)
+            elif k == Stake.SELF_TRANSCENDENCE:
+                self.sliderTranscendence.setValue(v)
+
+    def _stakeChanged(self, stake: int, value: int):
+        self.goalRef.stakes[stake] = value
+
+
 class CharacterGoalSelector(QWidget):
     goalSelected = pyqtSignal()
 
@@ -469,6 +507,7 @@ class CharacterGoalSelector(QWidget):
         self.novel = novel
         self.scene = scene
         self.characterGoal: Optional[CharacterGoal] = None
+        self.goalRef: Optional[GoalReference] = None
         hbox(self)
 
         self.label: Optional[CharacterGoalLabel] = None
@@ -508,19 +547,30 @@ class CharacterGoalSelector(QWidget):
 
         self._goalSelector.goalSelected.connect(self._goalSelected)
 
-    def setGoal(self, characterGoal: CharacterGoal):
+    def setGoal(self, characterGoal: CharacterGoal, goalRef: GoalReference):
         self.characterGoal = characterGoal
-        self.label = CharacterGoalLabel(self.novel, self.characterGoal, removalEnabled=True)
+        self.goalRef = goalRef
+        self.label = CharacterGoalLabel(self.novel, self.characterGoal, self.goalRef, removalEnabled=True)
+        pointy(self.label)
+        self.label.clicked.connect(self._goalRefClicked)
         self.label.removalRequested.connect(self._remove)
         self.layout().addWidget(self.label)
         self.btnLinkGoal.setHidden(True)
 
     def _goalSelected(self, characterGoal: CharacterGoal):
-        self.scene.agendas[0].goal_references.append(GoalReference(characterGoal.id))
+        goal_ref = GoalReference(characterGoal.id)
+        self.scene.agendas[0].goal_references.append(goal_ref)
 
         self.btnLinkGoal.menu().hide()
-        self.setGoal(characterGoal)
+        self.setGoal(characterGoal, goal_ref)
         self.goalSelected.emit()
+
+    def _goalRefClicked(self):
+        menu = QMenu(self.label)
+        action = QWidgetAction(menu)
+        action.setDefaultWidget(GoalStakesEditor(self.goalRef))
+        menu.addAction(action)
+        menu.popup(QCursor.pos())
 
     def _remove(self):
         if self.parent():
