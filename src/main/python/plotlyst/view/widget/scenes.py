@@ -44,7 +44,7 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, StoryBeat, Conflict, \
     Character, Plot, ScenePlotReference, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
-    SceneStage, GoalReference, CharacterGoal
+    SceneStage, GoalReference, CharacterGoal, ConflictReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -999,8 +999,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self._addGoalSelector()
 
         if self.scene.agendas[0].conflict_references:
-            for conflict in self.scene.agendas[0].conflicts(self.novel):
-                self._addConfictSelector(conflict=conflict)
+            for conflict_ref in self.scene.agendas[0].conflict_references:
+                conflict = conflict_ref.conflict(self.novel)
+                if conflict:
+                    self._addConfictSelector(conflict, conflict_ref)
+
+            # for conflict in self.scene.agendas[0].conflicts(self.novel):
+            #     self._addConfictSelector(conflict=conflict)
             self._addConfictSelector()
         else:
             self._addConfictSelector()
@@ -1013,12 +1018,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         if goal and goalRef:
             selector.setGoal(goal, goalRef)
 
-    def _addConfictSelector(self, conflict: Optional[Conflict] = None):
+    def _addConfictSelector(self, conflict: Optional[Conflict] = None,
+                            conflict_ref: Optional[ConflictReference] = None):
         simplified = len(self.scene.agendas[0].conflict_references) > 0
         conflict_selector = CharacterConflictSelector(self.novel, self.scene, simplified=simplified,
                                                       parent=self.wdgGoalConflictContainer)
-        if conflict:
-            conflict_selector.setConflict(conflict)
+        if conflict and conflict_ref:
+            conflict_selector.setConflict(conflict, conflict_ref)
         self.wdgGoalConflictContainer.layout().addWidget(conflict_selector)
         conflict_selector.conflictSelected.connect(self._initSelectors)
 
