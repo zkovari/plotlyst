@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>306</width>
-    <height>146</height>
+    <height>165</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -68,7 +68,7 @@
       </widget>
      </item>
      <item alignment="Qt::AlignRight">
-      <widget class="QSlider" name="horizontalSlider_6">
+      <widget class="QSlider" name="sliderTranscendence">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -152,7 +152,7 @@ QSlider::sub-page:horizontal {
       </widget>
      </item>
      <item alignment="Qt::AlignRight">
-      <widget class="QSlider" name="horizontalSlider_5">
+      <widget class="QSlider" name="sliderActualization">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -236,7 +236,7 @@ QSlider::sub-page:horizontal {
       </widget>
      </item>
      <item alignment="Qt::AlignRight">
-      <widget class="QSlider" name="horizontalSlider_4">
+      <widget class="QSlider" name="sliderEsteem">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -320,7 +320,7 @@ QSlider::sub-page:horizontal {
       </widget>
      </item>
      <item alignment="Qt::AlignRight">
-      <widget class="QSlider" name="horizontalSlider_3">
+      <widget class="QSlider" name="sliderBelonging">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -407,7 +407,7 @@ QSlider::sub-page:horizontal {
       </widget>
      </item>
      <item alignment="Qt::AlignRight">
-      <widget class="QSlider" name="horizontalSlider_2">
+      <widget class="QSlider" name="sliderSecurity">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -497,7 +497,7 @@ QSlider::sub-page:horizontal {
       </widget>
      </item>
      <item alignment="Qt::AlignRight">
-      <widget class="QSlider" name="horizontalSlider">
+      <widget class="QSlider" name="sliderPhysiological">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>

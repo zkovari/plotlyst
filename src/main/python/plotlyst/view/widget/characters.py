@@ -39,7 +39,7 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal, GoalReference
+    CharacterGoal, Goal, GoalReference, Stake
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance
@@ -467,10 +467,36 @@ class GoalStakesEditor(QWidget, Ui_GoalReferenceStakesEditor):
         super(GoalStakesEditor, self).__init__(parent)
         self.setupUi(self)
         self.goalRef = goalRef
+        self.refresh()
+
+        self.sliderPhysiological.valueChanged.connect(partial(self._stakeChanged, Stake.PHYSIOLOGICAL))
+        self.sliderSecurity.valueChanged.connect(partial(self._stakeChanged, Stake.SAFETY))
+        self.sliderBelonging.valueChanged.connect(partial(self._stakeChanged, Stake.BELONGING))
+        self.sliderEsteem.valueChanged.connect(partial(self._stakeChanged, Stake.ESTEEM))
+        self.sliderActualization.valueChanged.connect(partial(self._stakeChanged, Stake.SELF_ACTUALIZATION))
+        self.sliderTranscendence.valueChanged.connect(partial(self._stakeChanged, Stake.SELF_TRANSCENDENCE))
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         pass
+
+    def refresh(self):
+        for k, v in self.goalRef.stakes.items():
+            if k == Stake.PHYSIOLOGICAL:
+                self.sliderPhysiological.setValue(v)
+            elif k == Stake.SAFETY:
+                self.sliderSecurity.setValue(v)
+            elif k == Stake.BELONGING:
+                self.sliderBelonging.setValue(v)
+            elif k == Stake.ESTEEM:
+                self.sliderEsteem.setValue(v)
+            elif k == Stake.SELF_ACTUALIZATION:
+                self.sliderActualization.setValue(v)
+            elif k == Stake.SELF_TRANSCENDENCE:
+                self.sliderTranscendence.setValue(v)
+
+    def _stakeChanged(self, stake: int, value: int):
+        self.goalRef.stakes[stake] = value
 
 
 class CharacterGoalSelector(QWidget):

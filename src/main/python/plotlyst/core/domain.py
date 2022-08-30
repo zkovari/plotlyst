@@ -506,10 +506,20 @@ class ConflictReference:
     intensity: int = 1
 
 
+class Stake:
+    PHYSIOLOGICAL = 0
+    SAFETY = 1
+    BELONGING = 2
+    ESTEEM = 3
+    SELF_ACTUALIZATION = 4
+    SELF_TRANSCENDENCE = 5
+
+
 @dataclass
 class GoalReference:
     character_goal_id: uuid.UUID
     message: str = ''
+    stakes: Dict[int, int] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
     def goal(self, character: Character) -> CharacterGoal:
         for goal_ in character.flatten_goals():
