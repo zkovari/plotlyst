@@ -74,11 +74,20 @@ class StakesChart(BaseChart):
         axisY.setVisible(False)
 
         splines: Dict[int, QSplineSeries] = {}
+        char_goals: Dict[str, Dict[int, int]] = {}
 
         for i, scene in enumerate(self.novel.scenes):
             if scene.agendas[0].character_id == character.id:
                 for goal_ref in scene.agendas[0].goal_references:
-                    for k, v in goal_ref.stakes.items():
+                    stakes = goal_ref.stakes
+                    if stakes.keys():
+                        char_goals[str(goal_ref.character_goal_id)] = stakes
+                    elif str(goal_ref.character_goal_id) in char_goals.keys():
+                        stakes = char_goals[str(goal_ref.character_goal_id)]
+
+                    for k, v in stakes.items():
+                        if v == 0:
+                            continue
                         self._spline(splines, k).append(i + 1, v)
 
         for series in splines.values():
