@@ -257,6 +257,10 @@ def scroll_to_top(scroll_area: QAbstractScrollArea):
     scroll_area.verticalScrollBar().setValue(0)
 
 
+def scroll_to_bottom(scroll_area: QAbstractScrollArea):
+    scroll_area.verticalScrollBar().setValue(scroll_area.verticalScrollBar().maximum())
+
+
 def hmax(widget: QWidget):
     vpol = widget.sizePolicy().verticalPolicy()
     widget.setSizePolicy(QSizePolicy.Maximum, vpol)

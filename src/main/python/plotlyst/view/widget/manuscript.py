@@ -44,7 +44,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import scroll_to_top, spin, \
-    OpacityEventFilter, scrolled
+    OpacityEventFilter, scrolled, scroll_to_bottom
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -468,9 +468,11 @@ class ManuscriptTextEditor(QWidget):
         super(ManuscriptTextEditor, self).__init__(parent)
         vbox(self, 0, 0)
         self._scrollArea, self._scrollWidget = scrolled(self, frameless=True)
+        self._previous_max_range: int = 0
         self._scrollWidget.setObjectName('scrollWidget')
         self._scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self._scrollWidget.setStyleSheet('#scrollWidget {border: 0px; background-color: rgb(39, 39, 39);}')
+        self._scrollArea.verticalScrollBar().rangeChanged.connect(self._rangeChanged)
         vbox(self._scrollWidget, 0, 0)
 
         self._editors: List[ManuscriptTextEdit] = []
@@ -591,6 +593,13 @@ class ManuscriptTextEditor(QWidget):
                 cursor.clearSelection()
                 edt.setTextCursor(cursor)
         self.selectionChanged.emit(editor)
+
+    def _rangeChanged(self, _: int, max_: int):
+        value = self._scrollArea.verticalScrollBar().value()
+        if value == self._previous_max_range and max_ > value:
+            scroll_to_bottom(self._scrollArea)
+
+        self._previous_max_range = max_
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
