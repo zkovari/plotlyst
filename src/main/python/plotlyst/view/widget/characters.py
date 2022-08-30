@@ -62,6 +62,7 @@ from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import
 from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
+from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import Ui_ConflictReferenceEditor
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
@@ -396,6 +397,25 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.conflictSelectionChanged.emit()
 
 
+class ConflictIntensityEditor(QWidget, Ui_ConflictReferenceEditor):
+    def __init__(self, conflict_ref: ConflictReference, parent=None):
+        super(ConflictIntensityEditor, self).__init__(parent)
+        self.conflict_ref = conflict_ref
+        self.setupUi(self)
+        self.sliderIntensity.setValue(self.conflict_ref.intensity)
+        self.sliderIntensity.valueChanged.connect(self._valueChanged)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        pass
+
+    def _valueChanged(self, value: int):
+        if value == 0:
+            self.sliderIntensity.setValue(1)
+            return
+        self.conflict_ref.intensity = value
+
+
 class CharacterConflictSelector(QWidget):
     conflictSelected = pyqtSignal()
 
@@ -404,6 +424,7 @@ class CharacterConflictSelector(QWidget):
         self.novel = novel
         self.scene = scene
         self.conflict: Optional[Conflict] = None
+        self.conflict_ref: Optional[ConflictReference] = None
         hbox(self)
 
         self.label: Optional[ConflictLabel] = None
@@ -437,19 +458,30 @@ class CharacterConflictSelector(QWidget):
 
         self.selectorWidget.conflictSelectionChanged.connect(self._conflictSelected)
 
-    def setConflict(self, conflict: Conflict):
+    def setConflict(self, conflict: Conflict, conflict_ref: ConflictReference):
         self.conflict = conflict
+        self.conflict_ref = conflict_ref
         self.label = ConflictLabel(self.novel, self.conflict)
+        pointy(self.label)
         self.label.removalRequested.connect(self._remove)
+        self.label.clicked.connect(self._conflictRefClicked)
         self.layout().addWidget(self.label)
         self.btnLinkConflict.setHidden(True)
 
     def _conflictSelected(self):
         new_conflict = self.scene.agendas[0].conflicts(self.novel)[-1]
+        new_conflict_ref = self.scene.agendas[0].conflict_references[-1]
         self.btnLinkConflict.menu().hide()
-        self.setConflict(new_conflict)
+        self.setConflict(new_conflict, new_conflict_ref)
 
         self.conflictSelected.emit()
+
+    def _conflictRefClicked(self):
+        menu = QMenu(self.label)
+        action = QWidgetAction(menu)
+        action.setDefaultWidget(ConflictIntensityEditor(self.conflict_ref))
+        menu.addAction(action)
+        menu.popup(QCursor.pos())
 
     def _remove(self):
         if self.parent():

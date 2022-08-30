@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Dict
 
-from PyQt5.QtChart import QPieSeries
-from PyQt5.QtGui import QColor, QCursor
+from PyQt5.QtChart import QPieSeries, QLineSeries, QValueAxis
+from PyQt5.QtGui import QColor, QCursor, QPen
 from PyQt5.QtWidgets import QToolTip
 from overrides import overrides
 
@@ -50,12 +50,17 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
         self.chartViewRole.setChart(self.chartRole)
         self.chartEnneagram = EnneagramChart()
         self.chartViewEnneagram.setChart(self.chartEnneagram)
+        self.chartIntensity = ConflictIntensityChart(self.novel)
+        self.chartViewIntensity.setChart(self.chartIntensity)
+
+        self.tabWidget.setCurrentWidget(self.tabTypes)
 
         self.display()
 
     @overrides
     def display(self):
         self.wdgCharacterSelector.setCharacters(self.novel.agenda_characters(), checkAll=False)
+        self.chartIntensity.refresh()
 
     def _characterChanged(self, character: Character, toggled: bool):
         if not toggled:
@@ -127,3 +132,38 @@ class ConflictTypeChart(BaseChart):
         elif conflictType == ConflictType.SELF:
             return CONFLICT_SELF_COLOR
         raise ValueError(f'Unrecognized conflict type {conflictType}')
+
+
+class ConflictIntensityChart(BaseChart):
+    def __init__(self, novel: Novel, parent=None):
+        super(ConflictIntensityChart, self).__init__(parent)
+        self.novel = novel
+        self.setTitle(html('Conflict intensity').bold())
+
+    def refresh(self):
+        self.reset()
+
+        axisX = QValueAxis()
+        axisX.setRange(0, len(self.novel.scenes))
+        self.setAxisX(axisX)
+        axisX.setVisible(False)
+
+        axisY = QValueAxis()
+        axisY.setRange(0, 10)
+        self.setAxisY(axisY)
+        axisY.setVisible(False)
+
+        series = QLineSeries()
+        pen = QPen()
+        pen.setColor(QColor('#f3a712'))
+        pen.setWidth(2)
+        series.setPen(pen)
+
+        for i, scene in enumerate(self.novel.scenes):
+            intensity = max([x.intensity for x in scene.agendas[0].conflict_references], default=0)
+            if intensity > 0:
+                series.append(i + 1, intensity)
+
+        self.addSeries(series)
+        series.attachAxis(axisX)
+        series.attachAxis(axisY)
