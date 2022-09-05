@@ -65,6 +65,8 @@ class SceneEditor(QObject):
         self.ui.btnAttributes.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
         self.ui.btnNotes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
+        self.ui.btnDrive.setIcon(IconRegistry.from_name('mdi.chemical-weapon'))
+        self.ui.btnDrive.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
@@ -203,6 +205,8 @@ class SceneEditor(QObject):
         elif self.ui.btnNotes.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageNotes)
             self._update_notes()
+        elif self.ui.btnDrive.isChecked():
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageDrive)
 
     def _beat_selected(self, beat: StoryBeat):
         if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:

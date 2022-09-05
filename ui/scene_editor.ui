@@ -657,6 +657,34 @@
            </spacer>
           </item>
           <item>
+           <widget class="RotatedButton" name="btnDrive">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>90</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Drive</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">btnGroupPages</string>
+            </attribute>
+           </widget>
+          </item>
+          <item>
            <spacer name="verticalSpacer_4">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -678,7 +706,7 @@
           <enum>Qt::NoFocus</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="pageStructure">
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -796,6 +824,7 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="pageDrive"/>
         </widget>
        </item>
       </layout>
@@ -821,6 +850,12 @@
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
+   <class>SceneStoryStructureWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>LabelsWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.labels</header>
@@ -828,12 +863,6 @@
   </customwidget>
   <customwidget>
    <class>SceneStructureWidget</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
    <container>1</container>
