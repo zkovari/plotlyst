@@ -5,7 +5,7 @@ from overrides import overrides
 
 from plugins import PluginBase
 from src.main.python.plotlyst.view.widget.input import Toggle, RotatedButton, DocumentTextEditor, \
-    AutoAdjustableTextEdit, RemovalButton
+    AutoAdjustableTextEdit, RemovalButton, PowerBar
 
 
 class InputPluginBase(PluginBase):
@@ -33,6 +33,13 @@ class RotatedButtonPlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
     @overrides
     def classType(self):
         return RotatedButton
+
+
+class PowerBarPlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
+
+    @overrides
+    def classType(self):
+        return PowerBar
 
 
 class DocumentTextEditorPlugin(QPyDesignerCustomWidgetPlugin, InputPluginBase):
