@@ -2021,6 +2021,33 @@ class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):
     def __init__(self, parent=None):
         super(SceneDriveTrackingEditor, self).__init__(parent)
         self.setupUi(self)
+        self.scene: Optional[Scene] = None
+
+        self.sliderWorld.valueChanged.connect(self._worldBuildingChanged)
+        self.sliderTension.valueChanged.connect(self._tensionChanged)
+
+    def reset(self):
+        self.scene = None
+        self.sliderWorld.setValue(0)
+        self.sliderTension.setValue(0)
 
     def setScene(self, scene: Scene):
-        pass
+        self.reset()
+        self.scene = scene
+
+        self.sliderWorld.setValue(self.scene.drive.worldbuilding)
+        self.sliderTension.setValue(self.scene.drive.tension)
+
+    def _worldBuildingChanged(self, value: int):
+        if value > 0 and self.sliderWorld.isVisible():
+            qtanim.glow(self.sliderWorld, radius=12, color=QColor('#40916c'))
+
+        if self.scene:
+            self.scene.drive.worldbuilding = value
+
+    def _tensionChanged(self, value: int):
+        if value > 0 and self.sliderTension.isVisible():
+            qtanim.glow(self.sliderTension, radius=12, color=QColor('#d00000'))
+
+        if self.scene:
+            self.scene.drive.tension = value

@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
     Location, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient
+    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive
 from src.main.python.plotlyst.core.template import Role, default_location_profiles, exclude_if_empty
 
 
@@ -171,6 +171,7 @@ class SceneInfo:
     tag_references: List[TagReference] = field(default_factory=list)
     document: Optional[Document] = None
     manuscript: Optional[Document] = None
+    drive: SceneDrive = SceneDrive()
 
 
 @dataclass
@@ -470,7 +471,7 @@ class JsonClient:
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
                               chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,
                               comments=info.comments, tag_references=info.tag_references,
-                              document=info.document, manuscript=info.manuscript)
+                              document=info.document, manuscript=info.manuscript, drive=info.drive)
                 scenes.append(scene)
 
         tag_types = novel_info.tag_types
@@ -553,7 +554,8 @@ class JsonClient:
                          scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
                          beats=scene.beats, comments=scene.comments,
-                         tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript)
+                         tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
+                         drive=scene.drive)
         self.__persist_info(self.scenes_dir, info)
 
     @staticmethod

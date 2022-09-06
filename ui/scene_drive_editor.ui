@@ -31,6 +31,12 @@
    </property>
    <item>
     <widget class="Subtitle" name="subtitle_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title" stdset="0">
       <string>Reader's knowledge</string>
      </property>
@@ -38,6 +44,9 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <property name="leftMargin">
+      <number>15</number>
+     </property>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
@@ -54,18 +63,33 @@
          <property name="iconName" stdset="0">
           <string>mdi.globe-model</string>
          </property>
+         <property name="iconColor" stdset="0">
+          <string>#1b4332</string>
+         </property>
         </widget>
        </item>
        <item>
-        <widget class="QSlider" name="verticalSlider">
+        <widget class="QSlider" name="sliderWorld">
          <property name="enabled">
           <bool>true</bool>
          </property>
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>200</height>
+          </size>
          </property>
          <property name="cursor">
           <cursorShape>PointingHandCursor</cursorShape>
@@ -87,11 +111,11 @@ QSlider::handle:vertical {
 }
 
 QSlider::add-page:vertical {
-    background: green;
+    background: #40916c;
 }
 
 QSlider::sub-page:vertical {
-    background: lightgray;
+    background: #d8f3dc;
 }</string>
          </property>
          <property name="maximum">
@@ -141,12 +165,15 @@ QSlider::sub-page:vertical {
            <property name="iconName" stdset="0">
             <string>fa5s.info</string>
            </property>
+           <property name="iconColor" stdset="0">
+            <string>#168aad</string>
+           </property>
           </widget>
          </item>
          <item row="1" column="0">
           <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+            <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -159,7 +186,7 @@ QSlider::sub-page:vertical {
          <item row="1" column="1">
           <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_2">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+            <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -237,6 +264,12 @@ QSlider::sub-page:vertical {
     <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
       <widget class="Subtitle" name="subtitle">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="title" stdset="0">
         <string>Anticipation</string>
        </property>
@@ -251,6 +284,9 @@ QSlider::sub-page:vertical {
      </item>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="leftMargin">
+        <number>15</number>
+       </property>
        <item alignment="Qt::AlignLeft">
         <widget class="IconText" name="icontext_3">
          <property name="font">
@@ -265,15 +301,18 @@ QSlider::sub-page:vertical {
          <property name="iconName" stdset="0">
           <string>mdi.battery-charging-50</string>
          </property>
+         <property name="iconColor" stdset="0">
+          <string>#d00000</string>
+         </property>
         </widget>
        </item>
        <item>
-        <widget class="QSlider" name="verticalSlider_2">
+        <widget class="QSlider" name="sliderTension">
          <property name="enabled">
           <bool>true</bool>
          </property>
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -281,7 +320,13 @@ QSlider::sub-page:vertical {
          <property name="minimumSize">
           <size>
            <width>100</width>
-           <height>0</height>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>200</height>
           </size>
          </property>
          <property name="cursor">
@@ -304,11 +349,11 @@ QSlider::handle:vertical {
 }
 
 QSlider::add-page:vertical {
-    background: qlineargradient(x1:0.5, y1:1, x2:0.5, y2:0, stop:0 orange, stop:1 red);;
+    background: qlineargradient(x1:0.5, y1:1, x2:0.5, y2:0, stop:0 #f48c06, stop:1 #d00000);;
 }
 
 QSlider::sub-page:vertical {
-    background: lightgray;
+    background: #ffccd5;
 }</string>
          </property>
          <property name="maximum">
@@ -329,6 +374,9 @@ QSlider::sub-page:vertical {
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="leftMargin">
+        <number>15</number>
+       </property>
        <item>
         <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_3">
          <property name="text">
@@ -385,6 +433,12 @@ QSlider::sub-page:vertical {
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
       <widget class="Subtitle" name="subtitle_3">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="title" stdset="0">
         <string>Payoff</string>
        </property>
@@ -399,6 +453,9 @@ QSlider::sub-page:vertical {
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="leftMargin">
+        <number>15</number>
+       </property>
        <item>
         <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_8">
          <property name="text">
@@ -436,6 +493,16 @@ QSlider::sub-page:vertical {
       </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
    </item>
    <item alignment="Qt::AlignRight">
     <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_11">

@@ -504,7 +504,7 @@ class ConflictReference:
     conflict_id: uuid.UUID
     message: str = ''
     intensity: int = 1
-    
+
     def conflict(self, novel: 'Novel') -> Optional[Conflict]:
         for conflict in novel.conflicts:
             if conflict.id == self.conflict_id:
@@ -596,6 +596,12 @@ class SceneStoryBeat:
 
 
 @dataclass
+class SceneDrive:
+    worldbuilding: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    tension: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+
+
+@dataclass
 class Scene:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -616,6 +622,7 @@ class Scene:
     tag_references: List[TagReference] = field(default_factory=list)
     document: Optional['Document'] = None
     manuscript: Optional['Document'] = None
+    drive: SceneDrive = SceneDrive()
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure

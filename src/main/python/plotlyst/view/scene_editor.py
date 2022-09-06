@@ -185,6 +185,8 @@ class SceneEditor(QObject):
         self._characters_model.setScene(self.scene)
         self._character_changed()
 
+        self.ui.wdgDriveEditor.setScene(self.scene)
+
         if self._new_scene:
             self.ui.btnPrevious.setDisabled(True)
             self.ui.btnPrevious.setHidden(True)
