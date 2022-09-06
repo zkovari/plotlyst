@@ -209,6 +209,13 @@ class FadeOutButtonGroup(QButtonGroup):
                 other_btn.setEnabled(True)
                 other_btn.setVisible(True)
 
+    def reset(self):
+        for btn in self.buttons():
+            btn.setEnabled(True)
+            btn.setChecked(False)
+            btn.setVisible(True)
+            opaque(btn, self._opacity)
+
     def _clicked(self, btn: QAbstractButton):
         for other_btn in self.buttons():
             if other_btn is btn:

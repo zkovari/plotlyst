@@ -44,7 +44,7 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, StoryBeat, Conflict, \
     Character, Plot, ScenePlotReference, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
-    SceneStage, GoalReference, CharacterGoal, ConflictReference
+    SceneStage, GoalReference, CharacterGoal, ConflictReference, ReaderPosition, InformationAcquisition
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -2026,10 +2026,33 @@ class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):
         self.sliderWorld.valueChanged.connect(self._worldBuildingChanged)
         self.sliderTension.valueChanged.connect(self._tensionChanged)
 
+        self.informationBtnGroup = FadeOutButtonGroup()
+        self.informationBtnGroup.addButton(self.btnDiscovery)
+        self.informationBtnGroup.addButton(self.btnRevelation)
+        self.informationBtnGroup.buttonClicked.connect(self._informationClicked)
+
+        self.readerPosBtnGroup = FadeOutButtonGroup()
+        self.readerPosBtnGroup.addButton(self.btnReaderSuperior)
+        self.readerPosBtnGroup.addButton(self.btnReaderInferior)
+        self.readerPosBtnGroup.buttonClicked.connect(self._readerPosClicked)
+
+        self.btnDeuxExMachina.clicked.connect(self._deusExClicked)
+
     def reset(self):
         self.scene = None
         self.sliderWorld.setValue(0)
         self.sliderTension.setValue(0)
+        self.readerPosBtnGroup.reset()
+        self.informationBtnGroup.reset()
+        # self.btnReaderSuperior.setChecked(False)
+        # self.btnReaderSuperior.setVisible(True)
+        # self.btnReaderInferior.setChecked(False)
+        # self.btnReaderInferior.setVisible(True)
+        # self.btnDiscovery.setChecked(False)
+        # self.btnDiscovery.setVisible(True)
+        # self.btnRevelation.setChecked(False)
+        # self.btnRevelation.setVisible(True)
+        self.btnDeuxExMachina.setChecked(False)
 
     def setScene(self, scene: Scene):
         self.reset()
@@ -2037,6 +2060,17 @@ class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):
 
         self.sliderWorld.setValue(self.scene.drive.worldbuilding)
         self.sliderTension.setValue(self.scene.drive.tension)
+        self.btnDeuxExMachina.setChecked(self.scene.drive.deus_ex_machina)
+
+        if self.scene.drive.new_information == InformationAcquisition.DISCOVERY:
+            self.informationBtnGroup.toggle(self.btnDiscovery)
+        elif self.scene.drive.new_information == InformationAcquisition.REVELATION:
+            self.informationBtnGroup.toggle(self.btnRevelation)
+
+        if self.scene.drive.reader_position == ReaderPosition.SUPERIOR:
+            self.readerPosBtnGroup.toggle(self.btnReaderSuperior)
+        elif self.scene.drive.reader_position == ReaderPosition.INFERIOR:
+            self.readerPosBtnGroup.toggle(self.btnReaderInferior)
 
     def _worldBuildingChanged(self, value: int):
         if value > 0 and self.sliderWorld.isVisible():
@@ -2051,3 +2085,18 @@ class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):
 
         if self.scene:
             self.scene.drive.tension = value
+
+    def _readerPosClicked(self):
+        if self.readerPosBtnGroup.checkedButton() == self.btnReaderSuperior:
+            self.scene.drive.reader_position = ReaderPosition.SUPERIOR
+        elif self.readerPosBtnGroup.checkedButton() == self.btnReaderInferior:
+            self.scene.drive.reader_position = ReaderPosition.INFERIOR
+
+    def _informationClicked(self):
+        if self.informationBtnGroup.checkedButton() == self.btnDiscovery:
+            self.scene.drive.new_information = InformationAcquisition.DISCOVERY
+        elif self.informationBtnGroup.checkedButton() == self.btnRevelation:
+            self.scene.drive.new_information = InformationAcquisition.REVELATION
+
+    def _deusExClicked(self, checked: bool):
+        self.scene.drive.deus_ex_machina = checked

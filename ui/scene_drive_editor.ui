@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>604</width>
-    <height>467</height>
+    <width>609</width>
+    <height>484</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -171,7 +171,7 @@ QSlider::sub-page:vertical {
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton">
+          <widget class="SecondaryActionPushButton" name="btnDiscovery">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
              <horstretch>0</horstretch>
@@ -181,10 +181,13 @@ QSlider::sub-page:vertical {
            <property name="text">
             <string>Discovery</string>
            </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_2">
+          <widget class="SecondaryActionPushButton" name="btnRevelation">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
              <horstretch>0</horstretch>
@@ -193,6 +196,9 @@ QSlider::sub-page:vertical {
            </property>
            <property name="text">
             <string>Revelation</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -382,12 +388,18 @@ QSlider::sub-page:vertical {
          <property name="text">
           <string>Suspense</string>
          </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
         <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_4">
          <property name="text">
           <string>Hope</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -396,6 +408,9 @@ QSlider::sub-page:vertical {
          <property name="text">
           <string>Curiosity</string>
          </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
@@ -403,12 +418,18 @@ QSlider::sub-page:vertical {
          <property name="text">
           <string>Promise</string>
          </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
         <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_7">
          <property name="text">
           <string>Worry</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -461,6 +482,9 @@ QSlider::sub-page:vertical {
          <property name="text">
           <string>Surprise</string>
          </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
@@ -468,12 +492,18 @@ QSlider::sub-page:vertical {
          <property name="text">
           <string>Amusement</string>
          </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
         <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_10">
          <property name="text">
           <string>Relief</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -505,7 +535,7 @@ QSlider::sub-page:vertical {
     </widget>
    </item>
    <item alignment="Qt::AlignRight">
-    <widget class="SecondaryActionPushButton" name="secondaryactionpushbutton_11">
+    <widget class="SecondaryActionPushButton" name="btnDeuxExMachina">
      <property name="font">
       <font>
        <italic>true</italic>
@@ -513,6 +543,9 @@ QSlider::sub-page:vertical {
      </property>
      <property name="text">
       <string>Deus ex machina</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
      </property>
      <property name="iconName" stdset="0">
       <string>mdi6.lightning-bolt-circle</string>
