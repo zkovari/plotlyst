@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>609</width>
-    <height>484</height>
+    <height>532</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -64,7 +64,7 @@
           <string>mdi.globe-model</string>
          </property>
          <property name="iconColor" stdset="0">
-          <string>#1b4332</string>
+          <string>#40916c</string>
          </property>
         </widget>
        </item>
