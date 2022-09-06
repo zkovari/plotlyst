@@ -2044,14 +2044,6 @@ class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):
         self.sliderTension.setValue(0)
         self.readerPosBtnGroup.reset()
         self.informationBtnGroup.reset()
-        # self.btnReaderSuperior.setChecked(False)
-        # self.btnReaderSuperior.setVisible(True)
-        # self.btnReaderInferior.setChecked(False)
-        # self.btnReaderInferior.setVisible(True)
-        # self.btnDiscovery.setChecked(False)
-        # self.btnDiscovery.setVisible(True)
-        # self.btnRevelation.setChecked(False)
-        # self.btnRevelation.setVisible(True)
         self.btnDeuxExMachina.setChecked(False)
 
     def setScene(self, scene: Scene):
