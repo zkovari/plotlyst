@@ -28,6 +28,7 @@ from PyQt5.QtWidgets import QWidget, QWidgetAction, QTableView, QMenu
 from fbs_runtime import platform
 from qthandy import flow, clear_layout
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotReference, TagReference
@@ -129,6 +130,7 @@ class SceneEditor(QObject):
         flow(self.ui.wdgPlotContainer)
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
+        self.ui.pageDrive.setStyleSheet(f'#pageDrive {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         self._update_view(scene)
 

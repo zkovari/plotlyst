@@ -26,7 +26,7 @@ from PyQt5.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, incr_font, opaque, btn_popup, clear_layout
+from qthandy import ask_confirmation, incr_font, opaque, btn_popup, clear_layout, busy
 
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.event.core import emit_event, EventListener
@@ -310,6 +310,7 @@ class ScenesOutlineView(AbstractNovelView):
             else:
                 return None
 
+    @busy
     def _switch_to_editor(self):
         emit_event(ToggleOutlineViewTitle(self, visible=False))
         self.ui.pageEditor.layout().addWidget(self.editor.widget)

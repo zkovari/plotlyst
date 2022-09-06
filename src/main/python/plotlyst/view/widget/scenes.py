@@ -58,6 +58,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder, \
     DragEventFilter, hmax, pointy, action, stretch_col
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
+from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
@@ -2014,3 +2015,12 @@ class SceneStageButton(QToolButton, EventListener):
         self.repo.update_scene(self._scene)
 
         emit_event(SceneStatusChangedEvent(self, self._scene))
+
+
+class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):
+    def __init__(self, parent=None):
+        super(SceneDriveTrackingEditor, self).__init__(parent)
+        self.setupUi(self)
+
+    def setScene(self, scene: Scene):
+        pass
