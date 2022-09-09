@@ -34,6 +34,7 @@ from overrides import overrides
 from qthandy import transparent, hbox
 from qttextedit import EnhancedTextEdit, RichTextEditor
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
@@ -579,6 +580,7 @@ class _PowerBar(QFrame):
         self.startColor = startColor
         self.endColor = endColor
         self.value: int = 0
+        self.setStyleSheet('border: 1px solid black; border-radius: 4px;')
 
     @overrides
     def sizeHint(self) -> QSize:
@@ -587,7 +589,8 @@ class _PowerBar(QFrame):
     @overrides
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         painter = QPainter(self)
-        painter.fillRect(self.rect(), Qt.white)
+        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
+
         gradient = QLinearGradient(0, 0, self.width(), self.height())
         gradient.setColorAt(0, QColor(self.startColor))
         gradient.setColorAt(1, QColor(self.endColor))
@@ -630,15 +633,16 @@ class PowerBar(QFrame):
         self.btnPlus.clicked.connect(self.increase)
 
         self._bar = _PowerBar(startColor='#e1ecf7', endColor='#2ec4b6')
-        self.layout().addWidget(self.btnMinus)
         self.layout().addWidget(self._bar)
+        self.layout().addWidget(self.btnMinus)
         self.layout().addWidget(self.btnPlus)
 
     def _styleButton(self, button: QToolButton):
-        button.setStyleSheet('border: 0px;')
+        transparent(button)
         button.installEventFilter(self)
-        button.setIconSize(QSize(14, 14))
-        button.setCursor(Qt.PointingHandCursor)
+        button.installEventFilter(OpacityEventFilter(parent=button))
+        button.setIconSize(QSize(15, 15))
+        pointy(button)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -646,7 +650,7 @@ class PowerBar(QFrame):
             if event.type() == QEvent.Enter:
                 watched.setIconSize(QSize(16, 16))
             elif event.type() == QEvent.Leave:
-                watched.setIconSize(QSize(14, 14))
+                watched.setIconSize(QSize(15, 15))
 
         return super(PowerBar, self).eventFilter(watched, event)
 
