@@ -25,8 +25,8 @@ import nltk
 import qtanim
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QMargins
-from PyQt5.QtGui import QFont, QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QResizeEvent, QTextCursor
+from PyQt5.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
+    QMouseEvent, QResizeEvent, QTextCursor, QFont
 from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication, QSizePolicy
 from nltk import WhitespaceTokenizer
@@ -34,8 +34,7 @@ from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, clear_layout, vbox
 from textstat import textstat
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, LEFT_QUOTATION_ENGLISH, RIGHT_QUOTATION_ENGLISH, \
-    EM_DASH
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, LEFT_QUOTATION_ENGLISH, RIGHT_QUOTATION_ENGLISH
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
 from src.main.python.plotlyst.core.sprint import TimerModel
@@ -369,10 +368,10 @@ class ManuscriptTextEdit(TextEditBase):
         self._nightModeHighlighter: Optional[NightModeHighlighter] = None
         self._wordTagHighlighter: Optional[WordTagHighlighter] = None
 
-        if app_env.is_mac():
-            family = 'Palatino'
-            self.setFontFamily(family)
-            self.document().setDefaultFont(QFont(family, 16))
+        if app_env.is_linux():
+            self.setFont(QFont('Noto Sans Mono'))
+        elif app_env.is_mac():
+            self.setFont(QFont('Palatino'))
 
         self._setDefaultStyleSheet()
         self.textChanged.connect(self.resizeToContent)
@@ -400,12 +399,6 @@ class ManuscriptTextEdit(TextEditBase):
             cursor.movePosition(QTextCursor.PreviousCharacter)
             self.setTextCursor(cursor)
             return
-        elif event.key() == Qt.Key_Minus:
-            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
-            if cursor.selectedText() == '-':
-                self.textCursor().deletePreviousChar()
-                self.textCursor().insertText(EM_DASH)
-                return
         super(ManuscriptTextEdit, self).keyPressEvent(event)
 
     def resizeToContent(self):
@@ -511,7 +504,7 @@ class ManuscriptTextEditor(QWidget):
         editor = ManuscriptTextEdit(self, topBorder=topBorder)
         editor.setText(scene.manuscript.content)
         editor.setFormat(130, textIndent=20)
-        editor.setFontPointSize(16)
+        editor.zoomIn(editor.font().pointSize() * 0.34)
         editor.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         editor.verticalScrollBar().setEnabled(False)
         editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

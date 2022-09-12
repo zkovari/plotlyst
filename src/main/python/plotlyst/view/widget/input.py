@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qthandy import transparent, hbox
-from qttextedit import EnhancedTextEdit, RichTextEditor
+from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode
 
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
@@ -255,6 +255,8 @@ class TextEditBase(EnhancedTextEdit):
     def __init__(self, parent=None):
         super(TextEditBase, self).__init__(parent)
         self._blockStatistics = BlockStatistics(self.document())
+        self.setDashInsertionMode(DashInsertionMode.INSERT_EM_DASH)
+        self.setAutoCapitalizationEnabled(True)
 
     def statistics(self) -> TextStatistics:
         wc = 0
@@ -421,9 +423,8 @@ class DocumentTextEditor(RichTextEditor):
         else:
             family = 'Helvetica'
         self.textEdit.setStyleSheet('QTextEdit {background: white; border: 0px;}')
-        self.textEdit.setFontFamily(family)
-        self.textEdit.document().setDefaultFont(QFont(family, 16))
-        self.textEdit.setFontPointSize(16)
+        self.textEdit.setFont(QFont(family))
+        self.textEdit.zoomIn(self.textEdit.font().pointSize() * 0.34)
         self.textEdit.setAutoFormatting(QTextEdit.AutoAll)
 
         # self._lblPlaceholder = QLabel(self.textEdit)
