@@ -34,7 +34,7 @@ from overrides import overrides
 from qthandy import retain_when_hidden, opaque, btn_popup, clear_layout, vbox
 from textstat import textstat
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, LEFT_QUOTATION_ENGLISH, RIGHT_QUOTATION_ENGLISH
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
 from src.main.python.plotlyst.core.sprint import TimerModel
@@ -393,12 +393,6 @@ class ManuscriptTextEdit(TextEditBase):
             if cursor.selectedText() == ' ':
                 self.textCursor().deletePreviousChar()
                 self.textCursor().insertText('.')
-        elif cursor.atBlockEnd() and event.key() == Qt.Key_QuoteDbl:
-            self.textCursor().insertText(LEFT_QUOTATION_ENGLISH)
-            self.textCursor().insertText(RIGHT_QUOTATION_ENGLISH)
-            cursor.movePosition(QTextCursor.PreviousCharacter)
-            self.setTextCursor(cursor)
-            return
         super(ManuscriptTextEdit, self).keyPressEvent(event)
 
     def resizeToContent(self):
