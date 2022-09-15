@@ -24,26 +24,27 @@ from typing import Optional, List
 import nltk
 import qtanim
 from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QMargins
+from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent
 from PyQt5.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QResizeEvent, QTextCursor, QFont
+    QMouseEvent, QTextCursor, QFont
 from PyQt5.QtMultimedia import QSoundEffect
-from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, opaque, btn_popup, clear_layout, vbox
+from qthandy import retain_when_hidden, opaque, btn_popup, clear_layout
+from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
+from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import scroll_to_top, spin, \
-    OpacityEventFilter, scrolled, scroll_to_bottom
+    OpacityEventFilter
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -357,12 +358,11 @@ class WordTagHighlighter(QSyntaxHighlighter):
 
 
 class ManuscriptTextEdit(TextEditBase):
-    def __init__(self, parent=None, topBorder: bool = False):
+    def __init__(self, parent=None):
         super(ManuscriptTextEdit, self).__init__(parent)
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
-        self._minHeight = 60
-        self._topBorder = topBorder
+        # self._minHeight = 60
 
         self._sentenceHighlighter: Optional[SentenceHighlighter] = None
         self._nightModeHighlighter: Optional[NightModeHighlighter] = None
@@ -374,16 +374,16 @@ class ManuscriptTextEdit(TextEditBase):
             self.setFont(QFont('Palatino'))
 
         self._setDefaultStyleSheet()
-        self.textChanged.connect(self.resizeToContent)
+        # self.textChanged.connect(self.resizeToContent)
 
-    @overrides
-    def showEvent(self, a0: QtGui.QShowEvent) -> None:
-        self.resizeToContent()
-
-    @overrides
-    def resizeEvent(self, event: QResizeEvent):
-        super(ManuscriptTextEdit, self).resizeEvent(event)
-        self.resizeToContent()
+    # @overrides
+    # def showEvent(self, a0: QtGui.QShowEvent) -> None:
+    #     self.resizeToContent()
+    #
+    # @overrides
+    # def resizeEvent(self, event: QResizeEvent):
+    #     super(ManuscriptTextEdit, self).resizeEvent(event)
+    #     self.resizeToContent()
 
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
@@ -395,10 +395,10 @@ class ManuscriptTextEdit(TextEditBase):
                 self.textCursor().insertText('.')
         super(ManuscriptTextEdit, self).keyPressEvent(event)
 
-    def resizeToContent(self):
-        margins: QMargins = self.viewportMargins()
-        self.setMinimumHeight(
-            max(self._minHeight, self.document().size().height()) + margins.top() + margins.bottom() + 5)
+    # def resizeToContent(self):
+    #     margins: QMargins = self.viewportMargins()
+    #     self.setMinimumHeight(
+    #         max(self._minHeight, self.document().size().height()) + margins.top() + margins.bottom() + 5)
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.highlighter.setCheckEnabled(enabled)
@@ -438,155 +438,137 @@ class ManuscriptTextEdit(TextEditBase):
             self._wordTagHighlighter = WordTagHighlighter(self)
 
     def _transparent(self):
-        border = 2 if self._topBorder else 0
+        border = 0
         self.setStyleSheet(f'border-top: {border}px dashed {RELAXED_WHITE_COLOR}; background-color: rgba(0, 0, 0, 0);')
 
     def _setDefaultStyleSheet(self):
-        border = 2 if self._topBorder else 0
+        border = 0
         self.setStyleSheet(
             f'ManuscriptTextEdit {{border-top: {border}px dashed grey; background-color: {RELAXED_WHITE_COLOR};}}')
 
 
-class ManuscriptTextEditor(QWidget):
+class ManuscriptTextEditor(RichTextEditor):
     textChanged = pyqtSignal()
-    selectionChanged = pyqtSignal(ManuscriptTextEdit)
+    selectionChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
-        vbox(self, 0, 0)
-        self._scrollArea, self._scrollWidget = scrolled(self, frameless=True)
-        self._previous_max_range: int = 0
-        self._scrollWidget.setObjectName('scrollWidget')
-        self._scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self._scrollWidget.setStyleSheet('#scrollWidget {border: 0px; background-color: rgb(39, 39, 39);}')
-        self._scrollArea.verticalScrollBar().rangeChanged.connect(self._rangeChanged)
-        vbox(self._scrollWidget, 0, 0)
-
-        self._editors: List[ManuscriptTextEdit] = []
-
+        self.toolbar.setVisible(False)
         self.repo = RepositoryPersistenceManager.instance()
 
+    @overrides
+    def _initTextEdit(self) -> EnhancedTextEdit:
+        _textedit = ManuscriptTextEdit()
+        _textedit.zoomIn(_textedit.font().pointSize() * 0.34)
+        _textedit.textChanged.connect(self._textChanged)
+        _textedit.selectionChanged.connect(self.selectionChanged.emit)
+        return _textedit
+
     def setGrammarCheckEnabled(self, enabled: bool):
-        for editor in self._editors:
-            editor.setGrammarCheckEnabled(enabled)
+        self.textEdit.setGrammarCheckEnabled(enabled)
 
     def checkGrammar(self):
-        for editor in self._editors:
-            editor.checkGrammar()
+        self.textEdit.checkGrammar()
 
     def asyncCheckGrammer(self):
-        for editor in self._editors:
-            editor.asyncCheckGrammer()
+        self.textEdit.asyncCheckGrammer()
 
     def setScene(self, scene: Scene):
         self.clear()
+        self.textEdit.setUneditableBlocksEnabled(False)
         self._addScene(scene)
+        self._format()
 
     def setChapterScenes(self, scenes: List[Scene]):
         self.clear()
+        self.textEdit.setUneditableBlocksEnabled(True)
         for i, scene in enumerate(scenes):
-            self._addScene(scene, topBorder=i > 0)
+            self._addScene(scene)
+            if i < len(scenes) - 1:
+                self.textEdit.textCursor().insertBlock()
+                self.textEdit.textCursor().insertText('----')
+                self.textEdit.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
+                self.textEdit.textCursor().insertBlock()
+        self._format()
 
     def clear(self):
-        clear_layout(self._scrollWidget.layout())
-        self._editors.clear()
+        self.textEdit.clear()
 
-    def _addScene(self, scene: Scene, topBorder: bool = False):
+    def _addScene(self, scene: Scene):
         if not scene.manuscript.loaded:
             json_client.load_document(app_env.novel, scene.manuscript)
 
-        editor = ManuscriptTextEdit(self, topBorder=topBorder)
-        editor.setText(scene.manuscript.content)
-        editor.setFormat(130, textIndent=20)
-        editor.zoomIn(editor.font().pointSize() * 0.34)
-        editor.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        editor.verticalScrollBar().setEnabled(False)
-        editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        editor.resizeToContent()
-        editor.textChanged.connect(partial(self._textChanged, scene, editor))
-        editor.selectionChanged.connect(partial(self._selectionChanged, editor))
-        self._editors.append(editor)
-        self._scrollWidget.layout().addWidget(editor)
+        self.textEdit.textCursor().insertHtml(scene.manuscript.content)
 
-    def documents(self) -> List[QTextDocument]:
-        return [x.document() for x in self._editors]
+    def _format(self):
+        self.textEdit.setFormat(130, textIndent=20)
+        # self._textedit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # self._textedit.textChanged.connect(partial(self._textChanged, scene, editor))
+        # self._textedit.selectionChanged.connect(partial(self._selectionChanged, editor))
+
+    def document(self) -> QTextDocument:
+        return self.textEdit.document()
 
     def statistics(self) -> TextStatistics:
-        wc = sum([x.statistics().word_count for x in self._editors], 0)
-        return TextStatistics(wc)
+        return self.textEdit.statistics()
 
     def setViewportMargins(self, left: int, top: int, right: int, bottom: int):
-        self._scrollArea.setViewportMargins(left, top, right, bottom)
+        self.textEdit.setViewportMargins(left, top, right, bottom)
 
     def setMargins(self, left: int, top: int, right: int, bottom: int):
-        if not self._editors:
-            return
-
-        if len(self._editors) > 1:
-            for editor in self._editors:
-                editor.setViewportMargins(left, 0, right, 0)
-            self._editors[0].setViewportMargins(left, top, right, 0)
-            self._editors[-1].setViewportMargins(left, 0, right, bottom)
-        else:
-            self._editors[0].setViewportMargins(left, top, right, bottom)
+        self.textEdit.setViewportMargins(left, top, right, bottom)
 
     def setNightModeEnabled(self, enabled: bool):
-        for editor in self._editors:
-            editor.setNightModeEnabled(enabled)
+        self.textEdit.setNightModeEnabled(enabled)
 
     def setSentenceHighlighterEnabled(self, enabled: bool):
-        for editor in self._editors:
-            editor.setSentenceHighlighterEnabled(enabled)
+        self.textEdit.setSentenceHighlighterEnabled(enabled)
 
     def setWordTagHighlighterEnabled(self, enabled: bool):
-        for editor in self._editors:
-            editor.setWordTagHighlighterEnabled(enabled)
+        self.textEdit.setWordTagHighlighterEnabled(enabled)
 
     @overrides
     def setFocus(self):
-        if self._editors:
-            self._editors[0].setFocus()
+        self.textEdit.setFocus()
 
     def setVerticalScrollBarPolicy(self, policy):
-        self._scrollArea.setVerticalScrollBarPolicy(policy)
+        self.textEdit.setVerticalScrollBarPolicy(policy)
 
     def installEventFilterOnEditors(self, filter):
-        for editor in self._editors:
-            editor.installEventFilter(filter)
+        self.textEdit.installEventFilter(filter)
 
     def removeEventFilterFromEditors(self, filter):
-        for editor in self._editors:
-            editor.removeEventFilter(filter)
+        self.textEdit.removeEventFilter(filter)
 
-    def _textChanged(self, scene: Scene, editor: ManuscriptTextEdit):
-        wc = editor.statistics().word_count
-        doc = scene.manuscript
-        if doc.statistics is None:
-            doc.statistics = DocumentStatistics()
-
-        if doc.statistics.wc != wc:
-            doc.statistics.wc = wc
-            self.repo.update_scene(scene)
-
-        scene.manuscript.content = editor.toHtml()
-        self.repo.update_doc(app_env.novel, scene.manuscript)
+    def _textChanged(self):
+        # wc = editor.statistics().word_count
+        # doc = scene.manuscript
+        # if doc.statistics is None:
+        #     doc.statistics = DocumentStatistics()
+        #
+        # if doc.statistics.wc != wc:
+        #     doc.statistics.wc = wc
+        #     self.repo.update_scene(scene)
+        #
+        # scene.manuscript.content = editor.toHtml()
+        # self.repo.update_doc(app_env.novel, scene.manuscript)
 
         self.textChanged.emit()
 
-    def _selectionChanged(self, editor: ManuscriptTextEdit):
-        for edt in self._editors:
-            cursor = edt.textCursor()
-            if edt != editor and cursor.hasSelection():
-                cursor.clearSelection()
-                edt.setTextCursor(cursor)
-        self.selectionChanged.emit(editor)
-
-    def _rangeChanged(self, _: int, max_: int):
-        value = self._scrollArea.verticalScrollBar().value()
-        if value == self._previous_max_range and max_ > value:
-            scroll_to_bottom(self._scrollArea)
-
-        self._previous_max_range = max_
+    # def _selectionChanged(self, editor: ManuscriptTextEdit):
+    #     for edt in self._editors:
+    #         cursor = edt.textCursor()
+    #         if edt != editor and cursor.hasSelection():
+    #             cursor.clearSelection()
+    #             edt.setTextCursor(cursor)
+    #     self.selectionChanged.emit(editor)
+    #
+    # def _rangeChanged(self, _: int, max_: int):
+    #     value = self._scrollArea.verticalScrollBar().value()
+    #     if value == self._previous_max_range and max_ > value:
+    #         scroll_to_bottom(self._scrollArea)
+    #
+    #     self._previous_max_range = max_
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
@@ -598,19 +580,20 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         self.btnRefresh.installEventFilter(OpacityEventFilter(parent=self.btnRefresh))
         retain_when_hidden(self.btnRefresh)
         self.btnRefresh.setHidden(True)
-        self._docs: List[QTextDocument] = []
-        self.btnRefresh.clicked.connect(lambda: self.checkTextDocuments(self._docs))
+        # self._docs: List[QTextDocument] = []
+        self._updatedDoc: Optional[QTextDocument] = None
+        self.btnRefresh.clicked.connect(lambda: self.checkTextDocument(self._updatedDoc))
 
-    def checkTextDocuments(self, docs: List[QTextDocument]):
-        if not docs:
-            return
+    def checkTextDocument(self, doc: QTextDocument):
+        # if not docs:
+        #     return
 
-        text = ''
-        cleaned_text = ''
-        for doc in docs:
-            _txt = doc.toPlainText()
-            cleaned_text += clean_text(_txt)
-            text += _txt
+        # text = ''
+        # cleaned_text = ''
+        # for doc in docs:
+        text = doc.toPlainText()
+        cleaned_text = clean_text(text)
+        # text += _txt
         spin(self.btnResult)
 
         score = textstat.flesch_reading_ease(cleaned_text)
@@ -635,12 +618,11 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
             self.lblResult.setText('<i style="color:#85182a">Very difficult to read</i>')
 
         sentences_count = 0
-        for doc in docs:
-            for i in range(doc.blockCount()):
-                block = doc.findBlockByNumber(i)
-                block_text = block.text()
-                if block_text:
-                    sentences_count += sentence_count(block_text)
+        for i in range(doc.blockCount()):
+            block = doc.findBlockByNumber(i)
+            block_text = block.text()
+            if block_text:
+                sentences_count += sentence_count(block_text)
 
         if not sentences_count:
             sentence_length = 0
@@ -650,11 +632,12 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
 
         self.btnRefresh.setHidden(True)
 
-    def setTextDocumentsUpdated(self, docs: List[QTextDocument], updated: bool = True):
-        if not docs:
-            return
-        self._docs.clear()
-        self._docs.extend(docs)
+    def setTextDocumentUpdated(self, doc: QTextDocument, updated: bool = True):
+        self._updatedDoc = doc
+        # if not docs:
+        #     return
+        # self._docs.clear()
+        # self._docs.extend(docs)
         if updated:
             if not self.btnRefresh.isVisible():
                 anim = qtanim.fade_in(self.btnRefresh)

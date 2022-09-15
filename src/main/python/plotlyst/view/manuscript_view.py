@@ -36,7 +36,7 @@ from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_Manusc
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, ManuscriptTextEdit
+    DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 
 
@@ -204,16 +204,16 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.textEdit.asyncCheckGrammer()
 
             if self.ui.btnAnalysis.isChecked():
-                self.ui.wdgReadability.checkTextDocuments(self.ui.textEdit.documents())
+                self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _text_changed(self):
         wc = self.ui.textEdit.statistics().word_count
         self.ui.lblWordCount.setWordCount(wc)
         self._update_story_goal()
-        self.ui.wdgReadability.setTextDocumentsUpdated(self.ui.textEdit.documents())
+        self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
 
-    def _text_selection_changed(self, editor: ManuscriptTextEdit):
-        fragment = editor.textCursor().selection()
+    def _text_selection_changed(self):
+        fragment = self.ui.textEdit.textEdit.textCursor().selection()
         if fragment:
             self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
         else:
@@ -251,7 +251,7 @@ class ManuscriptView(AbstractNovelView):
         if not checked:
             return
 
-        self.ui.wdgReadability.checkTextDocuments(self.ui.textEdit.documents())
+        self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _adverb_highlight_toggled(self, toggled: bool):
         if toggled:
