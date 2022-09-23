@@ -85,12 +85,6 @@ class SceneEditor(QObject):
         self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
-        self._povMenu = QMenu(self.ui.wdgPov.btnPov)
-        for char in self.novel.characters:
-            self._povMenu.addAction(avatars.avatar(char), char.name, partial(self._on_pov_changed, char))
-        self.ui.wdgPov.btnPov.setMenu(self._povMenu)
-        self.ui.wdgPov.btnPov.setText('Select POV')
-
         self.ui.textNotes.setTitleVisible(False)
 
         self.tblCharacters = QTableView()
@@ -136,6 +130,12 @@ class SceneEditor(QObject):
         self.ui.btnAttributes.setChecked(True)
 
     def refresh(self, scene: Optional[Scene] = None):
+        _povMenu = QMenu(self.ui.wdgPov.btnPov)
+        for char in self.novel.characters:
+            _povMenu.addAction(avatars.avatar(char), char.name, partial(self._on_pov_changed, char))
+        self.ui.wdgPov.btnPov.setMenu(_povMenu)
+        self.ui.wdgPov.btnPov.setText('Select POV')
+
         if scene:
             self.scene = scene
             self._new_scene = False

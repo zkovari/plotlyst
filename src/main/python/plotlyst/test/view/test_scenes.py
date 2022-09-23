@@ -77,13 +77,11 @@ def test_scene_edition(qtbot, filled_window: MainWindow):
     assert view.ui.btnEdit.isEnabled()
 
     view.ui.btnEdit.click()
-    assert view.editor
 
     title = 'New scene title'
     view.editor.ui.lineTitle.clear()
     qtbot.keyClicks(view.editor.ui.lineTitle, title)
     view.editor.ui.btnClose.click()
-    assert not view.editor
 
     assert_data(view.tblModel, title, 0, ScenesTableModel.ColTitle)
 
