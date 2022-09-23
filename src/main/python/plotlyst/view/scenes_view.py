@@ -26,7 +26,7 @@ from PyQt5.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, incr_font, opaque, btn_popup, clear_layout
+from qthandy import ask_confirmation, incr_font, opaque, btn_popup, clear_layout, busy
 
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.event.core import emit_event, EventListener
@@ -104,7 +104,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.title = ScenesTitle(self.novel)
 
-        self.editor: Optional[SceneEditor] = None
+        self.editor: SceneEditor = SceneEditor(self.novel)
         self.storymap_view: Optional[StoryLinesMapWidget] = None
         self.timeline_view: Optional[TimelineView] = None
         self.stagesModel: Optional[ScenesStageTableModel] = None
@@ -286,8 +286,8 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_edit(self):
         scene: Optional[Scene] = self._selected_scene()
         if scene:
-            self.editor = SceneEditor(self.novel, scene)
             self._switch_to_editor()
+            self.editor.refresh(scene)
 
     def _selected_scene(self) -> Optional[Scene]:
         if self.ui.btnCardsView.isChecked() and self.selected_card:
@@ -310,6 +310,7 @@ class ScenesOutlineView(AbstractNovelView):
             else:
                 return None
 
+    @busy
     def _switch_to_editor(self):
         emit_event(ToggleOutlineViewTitle(self, visible=False))
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
@@ -318,20 +319,17 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
 
     def _on_close_editor(self):
-        self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         if self.editor.scene.pov and self.editor.scene.pov not in self._scene_filter.povFilter.characters():
             self._scene_filter.povFilter.addCharacter(self.editor.scene.pov)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
-        self.editor.widget.deleteLater()
-        self.editor = None
 
         emit_event(SceneChangedEvent(self))
         emit_event(ToggleOutlineViewTitle(self, visible=True))
         self.refresh()
 
     def _new_scene(self):
-        self.editor = SceneEditor(self.novel)
         self._switch_to_editor()
+        self.editor.refresh()
 
     def _update_cards(self):
         def custom_menu(card: SceneCard, pos: QPoint):
