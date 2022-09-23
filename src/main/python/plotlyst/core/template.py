@@ -292,6 +292,8 @@ misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
 desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want in the story?',
                              id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
+motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT,
+                                 id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'))
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
                            placeholder='What does the character actually need in the story?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
