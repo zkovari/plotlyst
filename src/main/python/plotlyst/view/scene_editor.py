@@ -128,19 +128,18 @@ class SceneEditor(QObject):
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
 
-        self.refresh(scene)
+        self._update_view(scene)
 
         self.ui.btnGroupPages.buttonToggled.connect(self._page_toggled)
 
         self.repo = RepositoryPersistenceManager.instance()
         self.ui.btnAttributes.setChecked(True)
 
-    def refresh(self, scene: Optional[Scene] = None):
+    def _update_view(self, scene: Optional[Scene] = None):
         if scene:
             self.scene = scene
             self._new_scene = False
             index = self.scenes_model.index(self.novel.scenes.index(scene), ScenesTableModel.ColTitle)
-            self.ui.lstScenes.clearSelection()
             self.ui.lstScenes.selectionModel().select(index, QItemSelectionModel.Select)
         else:
             self.scene = Scene('')
@@ -312,4 +311,4 @@ class SceneEditor(QObject):
         self._save_scene()
 
         scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
-        self.refresh(scene)
+        self._update_view(scene)
