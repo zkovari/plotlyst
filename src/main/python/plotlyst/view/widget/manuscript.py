@@ -37,7 +37,7 @@ from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics
+from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
 from src.main.python.plotlyst.core.sprint import TimerModel
 from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
@@ -454,6 +454,7 @@ class ManuscriptTextEditor(RichTextEditor):
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
         self.toolbar.setVisible(False)
+        self._scenes: List[Scene] = []
         self.repo = RepositoryPersistenceManager.instance()
 
     @overrides
@@ -476,12 +477,36 @@ class ManuscriptTextEditor(RichTextEditor):
     def setScene(self, scene: Scene):
         self.clear()
         self.textEdit.setUneditableBlocksEnabled(False)
+
         self._addScene(scene)
+        # block = self.textEdit.document().begin()
+        # cursor = QTextCursor(block)
+        # cursor.select(QTextCursor.BlockUnderCursor)
+        # cursor.removeSelectedText()
+        # cursor.deleteChar()
+        # block = self.textEdit.document().begin()
+        # cursor = QTextCursor(block)
+        # cursor.select(QTextCursor.BlockUnderCursor)
+        # cursor.removeSelectedText()
+        # cursor.deleteChar()
+        # block = self.textEdit.document().end()
+        # cursor = QTextCursor(block)
+        # cursor.select(QTextCursor.BlockUnderCursor)
+        # cursor.removeSelectedText()
+        # cursor.deleteChar()
+
         self._format()
+        self.textEdit.document().clearUndoRedoStacks()
+        self._scenes.append(scene)
 
     def setChapterScenes(self, scenes: List[Scene]):
         self.clear()
         self.textEdit.setUneditableBlocksEnabled(True)
+        block = self.textEdit.document().begin()
+        cursor = QTextCursor(block)
+        cursor.select(QTextCursor.BlockUnderCursor)
+        cursor.deleteChar()
+        # cursor.deletePreviousChar()
         for i, scene in enumerate(scenes):
             self._addScene(scene)
             if i < len(scenes) - 1:
@@ -489,9 +514,14 @@ class ManuscriptTextEditor(RichTextEditor):
                 self.textEdit.textCursor().insertText('----')
                 self.textEdit.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
                 self.textEdit.textCursor().insertBlock()
+        self._scenes.extend(scenes)
+
         self._format()
+        self.textEdit.document().clearUndoRedoStacks()
 
     def clear(self):
+        self._scenes.clear()
+        self.textEdit.document().clear()
         self.textEdit.clear()
 
     def _addScene(self, scene: Scene):
@@ -502,9 +532,6 @@ class ManuscriptTextEditor(RichTextEditor):
 
     def _format(self):
         self.textEdit.setFormat(130, textIndent=20)
-        # self._textedit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        # self._textedit.textChanged.connect(partial(self._textChanged, scene, editor))
-        # self._textedit.selectionChanged.connect(partial(self._selectionChanged, editor))
 
     def document(self) -> QTextDocument:
         return self.textEdit.document()
@@ -541,17 +568,31 @@ class ManuscriptTextEditor(RichTextEditor):
         self.textEdit.removeEventFilter(filter)
 
     def _textChanged(self):
-        # wc = editor.statistics().word_count
-        # doc = scene.manuscript
-        # if doc.statistics is None:
-        #     doc.statistics = DocumentStatistics()
-        #
-        # if doc.statistics.wc != wc:
-        #     doc.statistics.wc = wc
-        #     self.repo.update_scene(scene)
-        #
-        # scene.manuscript.content = editor.toHtml()
-        # self.repo.update_doc(app_env.novel, scene.manuscript)
+        if not self._scenes:
+            return
+
+        for scene in self._scenes:
+            if scene.manuscript.statistics is None:
+                scene.manuscript.statistics = DocumentStatistics()
+
+        if len(self._scenes) == 1:
+            wc = self.textEdit.statistics().word_count
+            scene = self._scenes[0]
+            if scene.manuscript.statistics.wc != wc:
+                scene.manuscript.statistics.wc = wc
+                self.repo.update_scene(scene)
+            scene.manuscript.content = self.textEdit.toHtml()
+        else:
+            scene_i = 0
+            block: QTextBlock = self.textEdit.document().begin()
+            while block.isValid():
+                if block.userState() == TextBlockState.UNEDITABLE.value:
+                    scene = self._scenes[scene_i]
+                    scene_i += 1
+                block = block.next()
+
+        for scene in self._scenes:
+            self.repo.update_doc(app_env.novel, scene.manuscript)
 
         self.textChanged.emit()
 
