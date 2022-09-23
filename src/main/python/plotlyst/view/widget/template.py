@@ -498,9 +498,11 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
         super(TemplateFieldWidgetBase, self).__init__(field, parent)
         self.lblEmoji = QLabel(self)
         self.lblEmoji.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.lblEmoji.setToolTip(field.description if field.description else field.placeholder)
         self.lblName = QLabel(self)
         self.lblName.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.lblName.setText(self.field.name)
+        self.lblName.setToolTip(field.description if field.description else field.placeholder)
 
         if self.field.emoji:
             self.updateEmoji(emoji.emojize(self.field.emoji))
@@ -575,6 +577,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor = AutoAdjustableTextEdit(height=60)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setPlaceholderText(field.placeholder)
+        self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
+        self.wdgEditor.setMaximumWidth(600)
 
         _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
         _layout.addWidget(self.wdgEditor)

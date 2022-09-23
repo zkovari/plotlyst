@@ -292,6 +292,31 @@ misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
 desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want in the story?',
                              id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
+
+goal_field = TemplateField('Goal', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
+                           placeholder="What external goal does the character want to accomplish?",
+                           id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'))
+internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMALL_TEXT,
+                                    placeholder="What emotional state does the character want to achieve?",
+                                    id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'))
+motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':right-facing_fist:',
+                                 placeholder='Why does the character want to accomplish their goal?',
+                                 id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'))
+internal_motivation_field = TemplateField('Internal motivation', type=TemplateFieldType.SMALL_TEXT,
+                                          placeholder='Why does the character want to feel that way?',
+                                          id=uuid.UUID('6388368e-6d52-4259-b1e2-1d9c1aa5c89d'))
+conflict_field = TemplateField('Conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':anguished_face:',
+                               placeholder='What external force is stopping the character from their goal?',
+                               id=uuid.UUID('c7e39f6d-4b94-4060-b3a6-d2604247ca80'))
+internal_conflict_field = TemplateField('Internal conflict', type=TemplateFieldType.SMALL_TEXT,
+                                        placeholder='What stops the character from their desired emotional state?',
+                                        id=uuid.UUID('8dcf6ce1-6679-4100-b332-8898ee2a2e3c'))
+stakes_field = TemplateField('Stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':money_bag:',
+                             placeholder="What's at stake if the character fails to reach their goal?",
+                             id=uuid.UUID('15770e28-b801-44c4-a6e6-ddba33935bc4'))
+internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.SMALL_TEXT,
+                                      placeholder="What's at stake if the character fails to achieve that emotional state?",
+                                      id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'))
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
                            placeholder='What does the character actually need in the story?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
@@ -299,7 +324,7 @@ weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.
                                  placeholder="What are the character's weaknesses or flaws in the story?",
                                  id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
 ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
-                            placeholder="What's the character's ghost from their past than haunt them?",
+                            placeholder="What's the character's ghost from their past that haunts them?",
                             id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hugging_face:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
@@ -395,13 +420,20 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(enneagram_field, 3, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(mbti_field, 4, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
-              # ProfileElement(TemplateField('', type=TemplateFieldType.DISPLAY_LINE), 4, 0, col_span=2),
+
               ProfileElement(story_title, 6, 0, col_span=2),
-              ProfileElement(desire_field, 7, 0, margins=Margins(left=15)),
-              ProfileElement(need_field, 7, 1),
-              ProfileElement(weaknesses_field, 8, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(ghost_field, 9, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(values_field, 10, 0, col_span=2, margins=Margins(left=15))
+              ProfileElement(goal_field, 7, 0, margins=Margins(left=15)),
+              ProfileElement(internal_goal_field, 7, 1),
+              ProfileElement(motivation_field, 8, 0, margins=Margins(left=15)),
+              ProfileElement(internal_motivation_field, 8, 1),
+              ProfileElement(conflict_field, 9, 0, margins=Margins(left=15)),
+              ProfileElement(internal_conflict_field, 9, 1),
+              ProfileElement(stakes_field, 10, 0, margins=Margins(left=15)),
+              ProfileElement(internal_stakes_field, 10, 1),
+              ProfileElement(need_field, 11, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(weaknesses_field, 12, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(ghost_field, 13, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(values_field, 14, 0, col_span=2, margins=Margins(left=15))
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
