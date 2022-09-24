@@ -460,6 +460,10 @@ class IconRegistry:
         return IconRegistry.from_name('fa5.image', '#1ea896')
 
     @staticmethod
+    def beat_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.lightning-bolt-outline')
+
+    @staticmethod
     def timer_icon() -> QIcon:
         return IconRegistry.from_name('mdi.timer-outline')
 

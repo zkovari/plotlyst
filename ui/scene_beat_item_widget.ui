@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>205</width>
-    <height>200</height>
+    <width>208</width>
+    <height>180</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,13 +19,13 @@
   <property name="minimumSize">
    <size>
     <width>180</width>
-    <height>200</height>
+    <height>180</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>233</width>
-    <height>200</height>
+    <height>180</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -104,177 +104,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="wdgEmotions" native="true">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <property name="spacing">
-          <number>1</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item alignment="Qt::AlignLeft">
-          <widget class="SecondaryActionToolButton" name="btnEmotionN3">
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="iconName" stdset="0">
-            <string>ri.emotion-unhappy-line</string>
-           </property>
-           <property name="checkedColor" stdset="0">
-            <string>#ef0000</string>
-           </property>
-           <property name="emotion" stdset="0">
-            <number>-3</number>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="SecondaryActionToolButton" name="btnEmotionN2">
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="iconName" stdset="0">
-            <string>mdi6.emoticon-sad-outline</string>
-           </property>
-           <property name="checkedColor" stdset="0">
-            <string>#ff8e2b</string>
-           </property>
-           <property name="emotion" stdset="0">
-            <number>-2</number>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="SecondaryActionToolButton" name="btnEmotionN1">
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="iconName" stdset="0">
-            <string>mdi.emoticon-confused-outline</string>
-           </property>
-           <property name="emotion" stdset="0">
-            <number>-1</number>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="SecondaryActionToolButton" name="btnEmotionNeutral">
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="iconName" stdset="0">
-            <string>mdi.emoticon-neutral-outline</string>
-           </property>
-           <property name="emotion" stdset="0">
-            <number>0</number>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="SecondaryActionToolButton" name="btnEmotionP1">
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="iconName" stdset="0">
-            <string>mdi6.emoticon-happy-outline</string>
-           </property>
-           <property name="emotion" stdset="0">
-            <number>1</number>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="SecondaryActionToolButton" name="btnEmotionP2">
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="iconName" stdset="0">
-            <string>ri.emotion-happy-line</string>
-           </property>
-           <property name="checkedColor" stdset="0">
-            <string>#93e5ab</string>
-           </property>
-           <property name="emotion" stdset="0">
-            <number>2</number>
-           </property>
-          </widget>
-         </item>
-         <item alignment="Qt::AlignLeft">
-          <widget class="SecondaryActionToolButton" name="btnEmotionP3">
-           <property name="iconSize">
-            <size>
-             <width>20</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-           <property name="iconName" stdset="0">
-            <string>mdi6.emoticon-excited-outline</string>
-           </property>
-           <property name="checkedColor" stdset="0">
-            <string>#00ca94</string>
-           </property>
-           <property name="emotion" stdset="0">
-            <number>3</number>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
        <layout class="QHBoxLayout" name="layoutTop">
         <property name="spacing">
          <number>2</number>
         </property>
-        <item alignment="Qt::AlignRight">
+        <item alignment="Qt::AlignRight|Qt::AlignTop">
          <widget class="QToolButton" name="btnDelete">
           <property name="cursor">
            <cursorShape>PointingHandCursor</cursorShape>
@@ -303,13 +137,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>SecondaryActionToolButton</class>
-   <extends>QToolButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

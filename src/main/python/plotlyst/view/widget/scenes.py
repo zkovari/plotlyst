@@ -29,8 +29,8 @@ from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QBrush, QIcon
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
-    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QAbstractButton, QTableView, \
-    QAbstractItemView
+    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
+    QAbstractItemView, QLayoutItem
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import busy, margins, vspacer, btn_popup_menu
@@ -65,7 +65,7 @@ from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui i
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
-    FadeOutButtonGroup, SecondaryActionPushButton
+    SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
 from src.main.python.plotlyst.view.widget.chart import SceneStructureEmotionalArcChart
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription, \
@@ -82,18 +82,22 @@ class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
         super(SceneOutcomeSelector, self).__init__(parent)
         self.scene_structure_item = scene_structure_item
         self.setupUi(self)
+        self.btnDisaster.setChecked(True)
         self.btnDisaster.setIcon(IconRegistry.disaster_icon(color='grey'))
         self.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
         self.btnTradeOff.setIcon(IconRegistry.tradeoff_icon(color='grey'))
 
+        self.refresh()
+
+        self.btnGroupOutcome.buttonClicked.connect(self._clicked)
+
+    def refresh(self):
         if self.scene_structure_item.outcome == SceneOutcome.DISASTER:
             self.btnDisaster.setChecked(True)
         elif self.scene_structure_item.outcome == SceneOutcome.RESOLUTION:
             self.btnResolution.setChecked(True)
         elif self.scene_structure_item.outcome == SceneOutcome.TRADE_OFF:
             self.btnTradeOff.setChecked(True)
-
-        self.btnGroupOutcome.buttonClicked.connect(self._clicked)
 
     def _clicked(self):
         if self.btnDisaster.isChecked():
@@ -411,17 +415,17 @@ class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabPov), IconRegistry.character_icon())
 
 
-BeatDescriptions = {SceneStructureItemType.BEAT: 'General beat in this scene',
+BeatDescriptions = {SceneStructureItemType.BEAT: 'Beat: a new action, reaction, thought, or emotion in this scene',
                     SceneStructureItemType.GOAL: 'The character takes an action to achieve their goal',
                     SceneStructureItemType.CONFLICT: "Conflict arises that hinders the character's goals",
                     SceneStructureItemType.OUTCOME: 'Outcome of the scene, typically ending with disaster',
-                    SceneStructureItemType.REACTION: 'Initial reaction to a previous conflict',
+                    SceneStructureItemType.REACTION: "Initial reaction to a previous scene's outcome",
                     SceneStructureItemType.DILEMMA: 'Dilemma throughout the scene. What to do next?',
-                    SceneStructureItemType.DECISION: 'The character comes up with a new plan and might act right away',
+                    SceneStructureItemType.DECISION: 'The character makes a decision and might act right away',
                     SceneStructureItemType.HOOK: 'Initial hook of the scene to raise curiosity',
                     SceneStructureItemType.INCITING_INCIDENT: 'An inciting incident that triggers events in this scene',
-                    SceneStructureItemType.TICKING_CLOCK: 'Ticking clock is activated to increase tension',
-                    SceneStructureItemType.RISING_ACTION: 'Increasing tension or suspense throughout the scene',
+                    SceneStructureItemType.TICKING_CLOCK: 'Ticking clock is activated to add urgency',
+                    SceneStructureItemType.RISING_ACTION: 'Increasing complication throughout the scene',
                     SceneStructureItemType.CRISIS: 'The impossible decision between two equally good or bad outcomes',
                     SceneStructureItemType.EXPOSITION: 'Exposition beat with character or imaginary exposition',
                     }
@@ -452,6 +456,8 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.crisis_icon()
     elif beat_type == SceneStructureItemType.EXPOSITION:
         return IconRegistry.exposition_icon()
+    elif beat_type == SceneStructureItemType.BEAT:
+        return IconRegistry.beat_icon()
     else:
         return IconRegistry.circle_icon()
 
@@ -474,6 +480,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnIcon.installEventFilter(OpacityEventFilter(parent=self.btnIcon, enterOpacity=0.9, leaveOpacity=1.0))
         pointy(self.btnIcon)
 
+        decr_font(self.text, 2)
         self.text.setText(self.beat.text)
 
         self._initStyle()
@@ -481,38 +488,8 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnDelete.setIcon(IconRegistry.wrong_icon(color='black'))
         self.btnDelete.clicked.connect(self._remove)
         retain_when_hidden(self.btnDelete)
-        retain_when_hidden(self.wdgEmotions)
         self.btnDelete.installEventFilter(OpacityEventFilter(parent=self.btnDelete))
         self.btnDelete.setHidden(True)
-
-        self.btnGroupEmotions = FadeOutButtonGroup()
-        self.btnGroupEmotions.setFadeInDuration(150)
-        self.btnGroupEmotions.addButton(self.btnEmotionNeutral)
-        self.btnGroupEmotions.addButton(self.btnEmotionP1)
-        self.btnGroupEmotions.addButton(self.btnEmotionP2)
-        self.btnGroupEmotions.addButton(self.btnEmotionP3)
-        self.btnGroupEmotions.addButton(self.btnEmotionN1)
-        self.btnGroupEmotions.addButton(self.btnEmotionN2)
-        self.btnGroupEmotions.addButton(self.btnEmotionN3)
-
-        if self.beat.emotion is None:
-            self.wdgEmotions.setHidden(True)
-        elif self.beat.emotion == 0:
-            self.btnGroupEmotions.toggle(self.btnEmotionNeutral)
-        elif self.beat.emotion == 1:
-            self.btnGroupEmotions.toggle(self.btnEmotionP1)
-        elif self.beat.emotion == 2:
-            self.btnGroupEmotions.toggle(self.btnEmotionP2)
-        elif self.beat.emotion == 3:
-            self.btnGroupEmotions.toggle(self.btnEmotionP3)
-        elif self.beat.emotion == -1:
-            self.btnGroupEmotions.toggle(self.btnEmotionN1)
-        elif self.beat.emotion == -2:
-            self.btnGroupEmotions.toggle(self.btnEmotionN2)
-        elif self.beat.emotion == -3:
-            self.btnGroupEmotions.toggle(self.btnEmotionN3)
-
-        self.btnGroupEmotions.buttonClicked.connect(self._emotionClicked)
 
     def sceneStructureItem(self) -> SceneStructureItem:
         self.beat.text = self.text.toPlainText()
@@ -524,19 +501,18 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     def swap(self, beatType: SceneStructureItemType):
         if self.beat.type != beatType:
             self.beat.type = beatType
+            if self.beat.type == SceneStructureItemType.OUTCOME:
+                self._outcome.refresh()
             self._initStyle()
         self._glow()
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
         self.btnDelete.setVisible(True)
-        self.wdgEmotions.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         self.btnDelete.setHidden(True)
-        if not self.btnGroupEmotions.checkedButton():
-            self.wdgEmotions.setHidden(True)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -545,11 +521,8 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     def _initStyle(self):
         self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
         self.text.setPlaceholderText(BeatDescriptions[self.beat.type])
-        if self.beat.type == SceneStructureItemType.BEAT:
-            self.btnIcon.setIcon(IconRegistry.empty_icon())
-        else:
-            self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
-                                           trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
+        self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
+                                       trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
 
         color = self._color()
         self.btnIcon.setStyleSheet(f'''
@@ -597,13 +570,13 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         else:
             return 'black'
 
-    def _emotionClicked(self, btn: QAbstractButton):
-        if btn.isChecked():
-            emotion: int = btn.property('emotion')
-            self.beat.emotion = emotion
-        else:
-            self.beat.emotion = None
-        self.emotionChanged.emit()
+    # def _emotionClicked(self, btn: QAbstractButton):
+    #     if btn.isChecked():
+    #         emotion: int = btn.property('emotion')
+    #         self.beat.emotion = emotion
+    #     else:
+    #         self.beat.emotion = None
+    #     self.emotionChanged.emit()
 
     def _remove(self):
         if self.parent():
@@ -726,7 +699,7 @@ class SceneStructureTimeline(QWidget):
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
         self.novel = app_env.novel
-        hbox(self, margin=0, spacing=1)
+        flow(self, margin=0, spacing=1)
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.reset()
@@ -785,7 +758,9 @@ class SceneStructureTimeline(QWidget):
 
     def _addBeatWidget(self, item: SceneStructureItem):
         widget = self._newBeatWidget(item)
-        self.layout().addWidget(widget, alignment=Qt.AlignTop)
+        self.layout().addWidget(widget)
+        item: QLayoutItem = self.layout().itemAt(self.layout().count() - 1)
+        item.setAlignment(Qt.AlignRight)
         self._addPlaceholder()
         self.timelineChanged.emit()
 
