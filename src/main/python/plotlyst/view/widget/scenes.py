@@ -67,7 +67,6 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
     SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
-from src.main.python.plotlyst.view.widget.chart import SceneStructureEmotionalArcChart
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription, \
     DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
@@ -473,14 +472,14 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.setupUi(self)
         self._outcome = SceneOutcomeSelector(self.beat)
         self._outcome.selected.connect(self._outcomeChanged)
-        self.layoutTop.insertWidget(0, self._outcome)
+        self.layoutTop.insertWidget(0, self._outcome, alignment=Qt.AlignCenter)
 
         self.btnIcon = QToolButton(self)
         self.btnIcon.setIconSize(QSize(24, 24))
         self.btnIcon.installEventFilter(OpacityEventFilter(parent=self.btnIcon, enterOpacity=0.9, leaveOpacity=1.0))
         pointy(self.btnIcon)
 
-        decr_font(self.text, 2)
+        decr_font(self.text)
         self.text.setText(self.beat.text)
 
         self._initStyle()
@@ -699,7 +698,7 @@ class SceneStructureTimeline(QWidget):
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
         self.novel = app_env.novel
-        flow(self, margin=0, spacing=1)
+        hbox(self, margin=0, spacing=1)
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.reset()
@@ -745,12 +744,23 @@ class SceneStructureTimeline(QWidget):
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
+        width = event.rect().width()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setBrush(QBrush(QColor('#1d3557')))
-        painter.drawRect(0, 11, self.width(), 11)
+        painter.setPen(QPen(QColor('lightgrey'), 10, Qt.SolidLine))
+        painter.setBrush(QBrush(QColor('lightgrey')))
+        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
+        # painter.drawRect(0, 11, self.width(), 11)
+
+        y = 50
+        painter.drawEllipse(15, y - 15, 30, 30)
+        self._drawLine(painter, width, y)
+        painter.drawEllipse(width - 70, y - 15, 30, 30)
 
         painter.end()
+
+    def _drawLine(self, painter: QPainter, width: int, y: int):
+        painter.drawLine(50, y, width - 70, y)
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
@@ -837,13 +847,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.timeline = SceneStructureTimeline(self)
         self.wdgTimelineParent.layout().addWidget(self.timeline)
 
-        self._chartEmotionalArc = SceneStructureEmotionalArcChart()
-        self._chartEmotionalArc.setBackgroundBrush(QBrush(QColor("transparent")))
-        self.chartViewEmotionArc.setChart(self._chartEmotionalArc)
-        retain_when_hidden(self.chartViewEmotionArc)
-        self.timeline.emotionChanged.connect(self._updateChart)
-        self.timeline.timelineChanged.connect(self._updateChart)
-
         self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
@@ -869,7 +872,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._checkSceneType()
 
         self.timeline.setAgenda(scene.agendas[0], self.scene.type)
-        self._updateChart()
 
     def updateAvailableAgendaCharacters(self):
         chars = []
@@ -889,14 +891,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.scene.agendas[0].items.extend(self.timeline.agendaItems())
         # self.scene.agendas[0].beginning_emotion = self.btnEmotionStart.value()
         # self.scene.agendas[0].ending_emotion = self.btnEmotionEnd.value()
-
-    def _updateChart(self):
-        items = self.timeline.agendaItems()
-        if [x for x in items if x.emotion is not None]:
-            self.chartViewEmotionArc.setVisible(True)
-            self._chartEmotionalArc.refresh(items)
-        else:
-            self.chartViewEmotionArc.setHidden(True)
 
     def _toggleCharacterStatus(self):
         if self.scene.agendas[0].character_id:

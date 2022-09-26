@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>771</width>
-    <height>510</height>
+    <width>773</width>
+    <height>507</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -221,23 +221,8 @@
            </item>
           </layout>
          </item>
-         <item alignment="Qt::AlignTop">
+         <item>
           <widget class="QScrollArea" name="scrollArea">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="lineWidth">
-            <number>0</number>
-           </property>
-           <property name="verticalScrollBarPolicy">
-            <enum>Qt::ScrollBarAlwaysOff</enum>
-           </property>
            <property name="widgetResizable">
             <bool>true</bool>
            </property>
@@ -247,14 +232,8 @@
               <x>0</x>
               <y>0</y>
               <width>765</width>
-              <height>220</height>
+              <height>422</height>
              </rect>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_2">
              <property name="spacing">
@@ -283,13 +262,13 @@
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>220</height>
+                 <height>0</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>220</height>
+                 <height>16777215</height>
                 </size>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout">
@@ -315,22 +294,6 @@
            </widget>
           </widget>
          </item>
-         <item>
-          <widget class="ChartView" name="chartViewEmotionArc">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>73</width>
-             <height>73</height>
-            </size>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
       </layout>
@@ -340,11 +303,6 @@
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>ChartView</class>
-   <extends>QGraphicsView</extends>
-   <header>src.main.python.plotlyst.view.widget.display</header>
-  </customwidget>
   <customwidget>
    <class>Icon</class>
    <extends>QToolButton</extends>
