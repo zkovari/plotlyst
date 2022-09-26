@@ -24,9 +24,10 @@ from typing import Dict, Optional
 from typing import List
 
 import qtanim
-from PyQt5.QtCore import QPoint, QTimeLine
+from PyQt5.QtCore import QPoint, QTimeLine, QRectF
 from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
-from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QBrush, QIcon
+from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QIcon, \
+    QLinearGradient
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
@@ -699,6 +700,42 @@ class SceneStructureTimeline(QWidget):
         super(SceneStructureTimeline, self).__init__(parent)
         self.novel = app_env.novel
         hbox(self, margin=0, spacing=1)
+        self._margin = 80
+        self._lineDistance = 120
+        self._arcWidth = 80
+        self._arcHeight = 120
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        width = event.rect().width()
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
+
+        gradient = QLinearGradient(0, self._lineDistance, width - self._margin, self._lineDistance * 2)
+        gradient.setColorAt(0, Qt.lightGray)
+        gradient.setColorAt(1, Qt.red)
+        pen = QPen(gradient, 10, Qt.SolidLine)
+        painter.setPen(pen)
+        path = QPainterPath()
+
+        y = self._lineDistance
+        path.moveTo(0, y)
+        path.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
+        curves = self._curves()
+        for i in range(curves):
+            if i > 0:
+                self._drawLine(path, width, y, True)
+            self._drawArc(path, width, y, True)
+            y += self._lineDistance
+            self._drawLine(path, width, y, False)
+            self._drawArc(path, width, y, False)
+            y += self._lineDistance
+
+        path.lineTo(width - 10, y)
+        painter.drawPath(path)
+
+        painter.end()
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.reset()
@@ -742,25 +779,22 @@ class SceneStructureTimeline(QWidget):
     def reset(self):
         clear_layout(self)
 
-    @overrides
-    def paintEvent(self, event: QPaintEvent) -> None:
-        width = event.rect().width()
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor('lightgrey'), 10, Qt.SolidLine))
-        painter.setBrush(QBrush(QColor('lightgrey')))
-        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
-        # painter.drawRect(0, 11, self.width(), 11)
+    def _curves(self) -> int:
+        return 2
 
-        y = 50
-        painter.drawEllipse(15, y - 15, 30, 30)
-        self._drawLine(painter, width, y)
-        painter.drawEllipse(width - 70, y - 15, 30, 30)
+    def _drawLine(self, path: QPainterPath, width: int, y: int, forward: bool):
+        if forward:
+            path.lineTo(width - self._margin - self._arcWidth, y)
+        else:
+            path.lineTo(self._margin + self._arcWidth + 5, y)
 
-        painter.end()
-
-    def _drawLine(self, painter: QPainter, width: int, y: int):
-        painter.drawLine(50, y, width - 70, y)
+    def _drawArc(self, path: QPainterPath, width: int, y: int, forward: bool):
+        if forward:
+            path.arcTo(QRectF(width - self._margin - self._arcWidth, y, self._arcWidth, self._arcHeight), 90,
+                       -180)
+        else:
+            path.arcTo(QRectF(self._margin, y, self._arcWidth, self._arcHeight), -270,
+                       180)
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
