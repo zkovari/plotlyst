@@ -724,33 +724,16 @@ class SceneStructureTimeline(QWidget):
         pen = QPen(gradient, 10, Qt.SolidLine)
         painter.setPen(pen)
         path = QPainterPath()
-        trackedPath = QPainterPath()
 
         y = self._lineDistance
         path.moveTo(0, y)
-        path.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
-        trackedPath.moveTo(self._margin + self._beatWidth // 2, y)
-        trackedPath.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
-        curves = self._curves()
-        for i in range(curves):
-            if i > 0:
-                self._drawLine(path, width, y, True)
-                self._drawLine(trackedPath, width, y, True)
-            self._drawArc(path, width, y, True)
-            self._drawArc(trackedPath, width, y, True)
-            y += self._lineDistance
-            self._drawLine(path, width, y, False)
-            self._drawLine(trackedPath, width, y, False)
-            self._drawArc(path, width, y, False)
-            self._drawArc(trackedPath, width, y, False)
-            y += self._lineDistance
-
-        path.lineTo(width - 10, y)
-        trackedPath.lineTo(width - 10 - self._margin, y)
+        path.lineTo(self._path.pointAtPercent(0))
+        if self._path:
+            path.connectPath(self._path)
+            pos = path.currentPosition()
+            path.lineTo(width - 10, pos.y())
         painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
         painter.drawPath(path)
-
-        self._path = trackedPath
 
         painter.end()
 
@@ -761,8 +744,6 @@ class SceneStructureTimeline(QWidget):
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.reset()
 
-        # self._addPlaceholder()
-
         for item in agenda.items:
             self._addBeatWidget(item)
 
@@ -772,29 +753,26 @@ class SceneStructureTimeline(QWidget):
         self._rearrangeBeats()
 
     def setSceneType(self, sceneTyoe: SceneType):
-        widgets = self._beatWidgets()
-        if not widgets:
+        if not self._beatWidgets:
             self._initBeatsFromType(sceneTyoe)
             return
 
-        if len(widgets) < 3:
-            for _ in range(3 - len(widgets)):
+        if len(self._beatWidgets) < 3:
+            for _ in range(3 - len(self._beatWidgets)):
                 self._addBeat(SceneStructureItemType.BEAT)
 
-        widgets = self._beatWidgets()
-
         if sceneTyoe == SceneType.ACTION:
-            widgets[0].swap(SceneStructureItemType.GOAL)
-            widgets[1].swap(SceneStructureItemType.CONFLICT)
-            widgets[-1].swap(SceneStructureItemType.OUTCOME)
+            self._beatWidgets[0].swap(SceneStructureItemType.GOAL)
+            self._beatWidgets[1].swap(SceneStructureItemType.CONFLICT)
+            self._beatWidgets[-1].swap(SceneStructureItemType.OUTCOME)
         elif sceneTyoe == SceneType.REACTION:
-            widgets[0].swap(SceneStructureItemType.REACTION)
-            widgets[1].swap(SceneStructureItemType.DILEMMA)
-            widgets[-1].swap(SceneStructureItemType.DECISION)
+            self._beatWidgets[0].swap(SceneStructureItemType.REACTION)
+            self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
+            self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
         else:
-            widgets[0].swap(SceneStructureItemType.BEAT)
-            widgets[1].swap(SceneStructureItemType.BEAT)
-            widgets[-1].swap(SceneStructureItemType.BEAT)
+            self._beatWidgets[0].swap(SceneStructureItemType.BEAT)
+            self._beatWidgets[1].swap(SceneStructureItemType.BEAT)
+            self._beatWidgets[-1].swap(SceneStructureItemType.BEAT)
 
     def agendaItems(self) -> List[SceneStructureItem]:
         return [x.sceneStructureItem() for x in self._beatWidgets]
@@ -831,19 +809,38 @@ class SceneStructureTimeline(QWidget):
                             wdg.minimumWidth(),
                             wdg.minimumHeight())
 
-        y = self._lineDistance - 15
+        width = self.width()
+        if not width:
+            return
+        trackedPath = QPainterPath()
+
+        y = self._lineDistance
+        trackedPath.moveTo(self._margin + self._beatWidth // 2, y)
+        trackedPath.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
         curves = self._curves()
+        for i in range(curves):
+            if i > 0:
+                self._drawLine(trackedPath, width, y, True)
+            self._drawArc(trackedPath, width, y, True)
+            y += self._lineDistance
+            self._drawLine(trackedPath, width, y, False)
+            self._drawArc(trackedPath, width, y, False)
+            y += self._lineDistance
+
+        trackedPath.lineTo(width - 10 - self._margin, y)
+
+        self._path = trackedPath
 
         if not self._beatWidgets:
             return
 
-        if len(self._beatWidgets) == 1:
-            wdg = self._beatWidgets[0]
-            if wdg.outcomeVisible():
-                _arrangeLastBeat(wdg, curves)
-            else:
-                wdg.setGeometry(self._margin, y, wdg.minimumWidth(), wdg.minimumHeight())
-            return
+        # if len(self._beatWidgets) == 1:
+        #     wdg = self._beatWidgets[0]
+        #     if wdg.outcomeVisible():
+        #         _arrangeLastBeat(wdg, curves)
+        #     else:
+        #         wdg.setGeometry(self._margin, y, wdg.minimumWidth(), wdg.minimumHeight())
+        #     return
 
         # firstWdg = self._beatWidgets[0]
         # firstWdg.setGeometry(self._margin, y, firstWdg.minimumWidth(), firstWdg.minimumHeight())
@@ -856,7 +853,7 @@ class SceneStructureTimeline(QWidget):
                 # perc = 1 / len(self._beatWidgets) * (i + 1)
                 perc = percentages[i]
                 point = self._path.pointAtPercent(perc)
-                print(f'perc {perc} point {point}')
+                # print(f'perc {perc} point {point}')
                 wdg.setGeometry(point.x() - wdg.minimumWidth() // 2, point.y() - 15, wdg.minimumWidth(),
                                 wdg.minimumHeight())
 
