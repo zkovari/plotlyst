@@ -31,7 +31,7 @@ from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEve
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
-    QAbstractItemView
+    QAbstractItemView, QApplication
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import busy, margins, vspacer, btn_popup_menu
@@ -656,17 +656,18 @@ class _SceneBeatPlaceholderButton(QToolButton):
     def __init__(self, parent=None):
         super(_SceneBeatPlaceholderButton, self).__init__(parent)
         self.setIcon(IconRegistry.plus_circle_icon('grey'))
-        self.installEventFilter(OpacityEventFilter(0.5, 0.12, parent=self))
+        # self.installEventFilter(OpacityEventFilter(0.5, 0.12, parent=self))
         self.setIconSize(QSize(24, 24))
-        self.setStyleSheet('''
-            QToolButton {
-                border: 1px hidden black;
-                border-radius: 19px; padding: 2px;
-            }
-            QToolButton:pressed {
-                border: 1px solid grey;
-            }
-            ''')
+        transparent(self)
+        # self.setStyleSheet('''
+        #     QToolButton {
+        #         border: 1px hidden black;
+        #         border-radius: 19px; padding: 2px;
+        #     }
+        #     QToolButton:pressed {
+        #         border: 1px solid grey;
+        #     }
+        #     ''')
         pointy(self)
         self.setToolTip('Insert new beat')
 
@@ -702,7 +703,6 @@ class SceneStructureTimeline(QWidget):
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
         self.novel = app_env.novel
-        hbox(self, margin=0, spacing=1)
         self._margin = 80
         self._lineDistance = 120
         self._arcWidth = 80
@@ -711,35 +711,10 @@ class SceneStructureTimeline(QWidget):
         self._beatWidth: int = 180
 
         self._beatWidgets: List[SceneStructureItemWidget] = []
+        self._placeholder = _SceneBeatPlaceholderButton(self)
+        self._placeholder.setVisible(False)
 
-    @overrides
-    def paintEvent(self, event: QPaintEvent) -> None:
-        width = event.rect().width()
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-
-        gradient = QLinearGradient(0, self._lineDistance, width - self._margin, self._lineDistance * 2)
-        gradient.setColorAt(0, Qt.lightGray)
-        gradient.setColorAt(1, Qt.red)
-        pen = QPen(gradient, 10, Qt.SolidLine)
-        painter.setPen(pen)
-        path = QPainterPath()
-
-        y = self._lineDistance
-        path.moveTo(0, y)
-        path.lineTo(self._path.pointAtPercent(0))
-        if self._path:
-            path.connectPath(self._path)
-            pos = path.currentPosition()
-            path.lineTo(width - 10, pos.y())
-        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
-        painter.drawPath(path)
-
-        painter.end()
-
-    @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self._rearrangeBeats()
+        self.setMouseTracking(True)
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.reset()
@@ -789,6 +764,82 @@ class SceneStructureTimeline(QWidget):
     def reset(self):
         clear_layout(self)
         self._beatWidgets.clear()
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        width = event.rect().width()
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        gradient = QLinearGradient(0, self._lineDistance, width - self._margin, self._lineDistance * 2)
+        gradient.setColorAt(0, Qt.lightGray)
+        gradient.setColorAt(1, Qt.red)
+        pen = QPen(gradient, 10, Qt.SolidLine)
+        painter.setPen(pen)
+        path = QPainterPath()
+
+        y = self._lineDistance
+        path.moveTo(0, y)
+        first_el = self._path.elementAt(0)
+        path.lineTo(first_el.x, first_el.y)
+        if self._path:
+            path.connectPath(self._path)
+            pos = path.currentPosition()
+            path.lineTo(width - 10, pos.y())
+        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
+        painter.drawPath(path)
+
+        painter.end()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self._rearrangeBeats()
+
+    @overrides
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        if self._contains(event.pos()) and self._intersects(event.pos()):
+            if not QApplication.overrideCursor():
+                QApplication.setOverrideCursor(Qt.PointingHandCursor)
+            self._placeholder.setVisible(True)
+            self._placeholder.setGeometry(event.pos().x() - 12, event.pos().y() - 12, 24, 24)
+            self.update()
+            return
+
+        if QApplication.overrideCursor():
+            self._placeholder.setVisible(False)
+            self.update()
+            QApplication.restoreOverrideCursor()
+
+    def _contains(self, pos: QPoint) -> bool:
+        if not self._path:
+            return False
+        return self._path.intersects(QRectF(pos.x(), pos.y(), 1, 1))
+
+    def _intersects(self, pos: QPoint) -> bool:
+        for i in range(self._path.elementCount()):
+            el = self._path.elementAt(i)
+            if el.y - 10 < pos.y() < el.y + 10:
+                if el.isLineTo():
+                    return True
+        return False
+
+    def _percentage(self, pos: QPoint) -> float:
+        length = 0
+        for i in range(self._path.elementCount()):
+            el = self._path.elementAt(i)
+            if i > 0:
+                prev_el = self._path.elementAt(i - 1)
+                if prev_el.y == el.y:
+                    length += abs(el.x - prev_el.x)
+            if el.y - 5 < pos.y() < el.y + 5:
+                if pos.x() <= el.x:
+                    length += abs(el.x - pos.x())
+                if pos.x() >= el.x:
+                    length += abs(pos.x() - el.x)
+
+                return self._path.percentAtLength(length)
+
+        return -1
 
     def _curves(self) -> int:
         if not self.width():
@@ -853,7 +904,7 @@ class SceneStructureTimeline(QWidget):
     def _addBeatWidget(self, item: SceneStructureItem):
         widget = self._newBeatWidget(item)
         self._beatWidgets.append(widget)
-        self.layout().addWidget(widget)
+        widget.setVisible(True)
         self.timelineChanged.emit()
 
     def _addPlaceholder(self):
