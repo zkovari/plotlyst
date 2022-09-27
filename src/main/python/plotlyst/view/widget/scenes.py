@@ -31,7 +31,7 @@ from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEve
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
-    QAbstractItemView, QLayoutItem
+    QAbstractItemView
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import busy, margins, vspacer, btn_popup_menu
@@ -491,6 +491,9 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnDelete.installEventFilter(OpacityEventFilter(parent=self.btnDelete))
         self.btnDelete.setHidden(True)
 
+    def outcomeVisible(self) -> bool:
+        return self._outcome.isVisible()
+
     def sceneStructureItem(self) -> SceneStructureItem:
         self.beat.text = self.text.toPlainText()
         return self.beat
@@ -704,13 +707,16 @@ class SceneStructureTimeline(QWidget):
         self._lineDistance = 120
         self._arcWidth = 80
         self._arcHeight = 120
+        self._path: Optional[QPainterPath] = None
+        self._beatWidth: int = 180
+
+        self._beatWidgets: List[SceneStructureItemWidget] = []
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         width = event.rect().width()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
 
         gradient = QLinearGradient(0, self._lineDistance, width - self._margin, self._lineDistance * 2)
         gradient.setColorAt(0, Qt.lightGray)
@@ -718,35 +724,52 @@ class SceneStructureTimeline(QWidget):
         pen = QPen(gradient, 10, Qt.SolidLine)
         painter.setPen(pen)
         path = QPainterPath()
+        trackedPath = QPainterPath()
 
         y = self._lineDistance
         path.moveTo(0, y)
         path.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
+        trackedPath.moveTo(self._margin + self._beatWidth // 2, y)
+        trackedPath.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
         curves = self._curves()
         for i in range(curves):
             if i > 0:
                 self._drawLine(path, width, y, True)
+                self._drawLine(trackedPath, width, y, True)
             self._drawArc(path, width, y, True)
+            self._drawArc(trackedPath, width, y, True)
             y += self._lineDistance
             self._drawLine(path, width, y, False)
+            self._drawLine(trackedPath, width, y, False)
             self._drawArc(path, width, y, False)
+            self._drawArc(trackedPath, width, y, False)
             y += self._lineDistance
 
         path.lineTo(width - 10, y)
+        trackedPath.lineTo(width - 10 - self._margin, y)
+        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
         painter.drawPath(path)
 
+        self._path = trackedPath
+
         painter.end()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self._rearrangeBeats()
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.reset()
 
-        self._addPlaceholder()
+        # self._addPlaceholder()
 
         for item in agenda.items:
             self._addBeatWidget(item)
 
         if not agenda.items:
             self._initBeatsFromType(sceneTyoe)
+
+        self._rearrangeBeats()
 
     def setSceneType(self, sceneTyoe: SceneType):
         widgets = self._beatWidgets()
@@ -774,13 +797,20 @@ class SceneStructureTimeline(QWidget):
             widgets[-1].swap(SceneStructureItemType.BEAT)
 
     def agendaItems(self) -> List[SceneStructureItem]:
-        return [x.sceneStructureItem() for x in self._beatWidgets()]
+        return [x.sceneStructureItem() for x in self._beatWidgets]
 
     def reset(self):
         clear_layout(self)
+        self._beatWidgets.clear()
 
     def _curves(self) -> int:
-        return 2
+        if not self.width():
+            return 0
+        w = self.width() - self._margin * 2
+        return max(sum([x.maximumWidth() for x in self._beatWidgets]) // w, 0)
+
+    def _beatPerCurve(self) -> int:
+        return 1
 
     def _drawLine(self, path: QPainterPath, width: int, y: int, forward: bool):
         if forward:
@@ -790,11 +820,45 @@ class SceneStructureTimeline(QWidget):
 
     def _drawArc(self, path: QPainterPath, width: int, y: int, forward: bool):
         if forward:
-            path.arcTo(QRectF(width - self._margin - self._arcWidth, y, self._arcWidth, self._arcHeight), 90,
-                       -180)
+            path.arcTo(QRectF(width - self._margin - self._arcWidth, y, self._arcWidth, self._arcHeight), 90, -180)
         else:
-            path.arcTo(QRectF(self._margin, y, self._arcWidth, self._arcHeight), -270,
-                       180)
+            path.arcTo(QRectF(self._margin, y, self._arcWidth, self._arcHeight), -270, 180)
+
+    def _rearrangeBeats(self):
+        def _arrangeLastBeat(wdg: SceneStructureItemWidget, curves: int):
+            wdg.setGeometry(self.width() - self._margin - wdg.minimumWidth(),
+                            self._lineDistance - 15 + curves * self._lineDistance * 2,
+                            wdg.minimumWidth(),
+                            wdg.minimumHeight())
+
+        y = self._lineDistance - 15
+        curves = self._curves()
+
+        if not self._beatWidgets:
+            return
+
+        if len(self._beatWidgets) == 1:
+            wdg = self._beatWidgets[0]
+            if wdg.outcomeVisible():
+                _arrangeLastBeat(wdg, curves)
+            else:
+                wdg.setGeometry(self._margin, y, wdg.minimumWidth(), wdg.minimumHeight())
+            return
+
+        # firstWdg = self._beatWidgets[0]
+        # firstWdg.setGeometry(self._margin, y, firstWdg.minimumWidth(), firstWdg.minimumHeight())
+        # _arrangeLastBeat(self._beatWidgets[-1], curves)
+
+        percentages = [0, 0.3, 0.6, 0.9]
+        if self._path:
+            for i in range(len(self._beatWidgets)):
+                wdg = self._beatWidgets[i]
+                # perc = 1 / len(self._beatWidgets) * (i + 1)
+                perc = percentages[i]
+                point = self._path.pointAtPercent(perc)
+                print(f'perc {perc} point {point}')
+                wdg.setGeometry(point.x() - wdg.minimumWidth() // 2, point.y() - 15, wdg.minimumWidth(),
+                                wdg.minimumHeight())
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
@@ -802,10 +866,8 @@ class SceneStructureTimeline(QWidget):
 
     def _addBeatWidget(self, item: SceneStructureItem):
         widget = self._newBeatWidget(item)
+        self._beatWidgets.append(widget)
         self.layout().addWidget(widget)
-        item: QLayoutItem = self.layout().itemAt(self.layout().count() - 1)
-        item.setAlignment(Qt.AlignRight)
-        self._addPlaceholder()
         self.timelineChanged.emit()
 
     def _addPlaceholder(self):
@@ -826,7 +888,7 @@ class SceneStructureTimeline(QWidget):
         self.timelineChanged.emit()
 
     def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
-        widget = SceneStructureItemWidget(self.novel, item)
+        widget = SceneStructureItemWidget(self.novel, item, parent=self)
         widget.removed.connect(self._beatRemoved)
         widget.emotionChanged.connect(self.emotionChanged.emit)
 
@@ -852,13 +914,13 @@ class SceneStructureTimeline(QWidget):
         gc(item.widget())
         self.timelineChanged.emit()
 
-    def _beatWidgets(self) -> List[SceneStructureItemWidget]:
-        widgets = []
-        for i in range(self.layout().count()):
-            item = self.layout().itemAt(i)
-            if isinstance(item.widget(), SceneStructureItemWidget):
-                widgets.append(item.widget())
-        return widgets
+    # def _beatWidgets(self) -> List[SceneStructureItemWidget]:
+    #     widgets = []
+    #     for i in range(self.layout().count()):
+    #         item = self.layout().itemAt(i)
+    #         if isinstance(item.widget(), SceneStructureItemWidget):
+    #             widgets.append(item.widget())
+    #     return widgets
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
