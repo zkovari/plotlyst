@@ -493,8 +493,8 @@ class SceneOutcome(Enum):
 @dataclass
 class SceneStructureItem:
     type: SceneStructureItemType
-    part: int = 1
     text: str = ''
+    percentage: float = 0.0
     outcome: Optional[SceneOutcome] = None
     emotion: Optional[int] = None
 
@@ -504,7 +504,7 @@ class ConflictReference:
     conflict_id: uuid.UUID
     message: str = ''
     intensity: int = 1
-    
+
     def conflict(self, novel: 'Novel') -> Optional[Conflict]:
         for conflict in novel.conflicts:
             if conflict.id == self.conflict_id:

@@ -747,6 +747,15 @@ class SceneStructureTimeline(QWidget):
         for item in agenda.items:
             self._addBeatWidget(item)
 
+        if len(agenda.items) > 1:
+            for i in range(1, len(agenda.items) - 1):
+                beat = agenda.items[i]
+                if beat.percentage == 0.0:
+                    beat.percentage = i * (0.9 / (len(agenda.items) - 1))
+            last_beat = agenda.items[-1]
+            if last_beat.percentage == 0.0:
+                last_beat.percentage = 0.9
+
         if not agenda.items:
             self._initBeatsFromType(sceneTyoe)
 
@@ -826,34 +835,14 @@ class SceneStructureTimeline(QWidget):
             self._drawLine(trackedPath, width, y, False)
             self._drawArc(trackedPath, width, y, False)
             y += self._lineDistance
-
         trackedPath.lineTo(width - 10 - self._margin, y)
 
         self._path = trackedPath
 
-        if not self._beatWidgets:
-            return
-
-        # if len(self._beatWidgets) == 1:
-        #     wdg = self._beatWidgets[0]
-        #     if wdg.outcomeVisible():
-        #         _arrangeLastBeat(wdg, curves)
-        #     else:
-        #         wdg.setGeometry(self._margin, y, wdg.minimumWidth(), wdg.minimumHeight())
-        #     return
-
-        # firstWdg = self._beatWidgets[0]
-        # firstWdg.setGeometry(self._margin, y, firstWdg.minimumWidth(), firstWdg.minimumHeight())
-        # _arrangeLastBeat(self._beatWidgets[-1], curves)
-
-        percentages = [0, 0.3, 0.6, 0.9]
         if self._path:
             for i in range(len(self._beatWidgets)):
                 wdg = self._beatWidgets[i]
-                # perc = 1 / len(self._beatWidgets) * (i + 1)
-                perc = percentages[i]
-                point = self._path.pointAtPercent(perc)
-                # print(f'perc {perc} point {point}')
+                point = self._path.pointAtPercent(wdg.beat.percentage)
                 wdg.setGeometry(point.x() - wdg.minimumWidth() // 2, point.y() - 15, wdg.minimumWidth(),
                                 wdg.minimumHeight())
 
