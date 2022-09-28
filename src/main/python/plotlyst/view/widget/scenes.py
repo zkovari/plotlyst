@@ -484,10 +484,8 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
         self._initStyle()
 
-        self.btnDelete.setIcon(IconRegistry.wrong_icon(color='black'))
         self.btnDelete.clicked.connect(self._remove)
         retain_when_hidden(self.btnDelete)
-        self.btnDelete.installEventFilter(OpacityEventFilter(parent=self.btnDelete))
         self.btnDelete.setHidden(True)
 
     def outcomeVisible(self) -> bool:

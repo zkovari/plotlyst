@@ -109,26 +109,7 @@
          <number>2</number>
         </property>
         <item alignment="Qt::AlignRight|Qt::AlignTop">
-         <widget class="QToolButton" name="btnDelete">
-          <property name="cursor">
-           <cursorShape>PointingHandCursor</cursorShape>
-          </property>
-          <property name="toolTip">
-           <string>Remove beat</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">border: 0px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>14</width>
-            <height>14</height>
-           </size>
-          </property>
-         </widget>
+         <widget class="RemovalButton" name="btnDelete"/>
         </item>
        </layout>
       </item>
@@ -137,6 +118,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RemovalButton</class>
+   <extends>QToolButton</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
