@@ -1149,6 +1149,7 @@ class CharacterEmotionButton(QToolButton):
         self._color = self.NEUTRAL_COLOR
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setFixedSize(32, 32)
+        pointy(self)
 
         self.setStyleSheet('''
                 QToolButton {

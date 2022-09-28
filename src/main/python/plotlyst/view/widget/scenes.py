@@ -66,7 +66,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
     SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector
+from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector, \
+    CharacterEmotionButton
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription, \
     DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
@@ -710,14 +711,21 @@ class SceneStructureTimeline(QWidget):
         self._margin = 80
         self._lineDistance = 140
         self._arcWidth = 80
-        self._path: Optional[QPainterPath] = None
         self._beatWidth: int = 180
+        self._emotionSize: int = 32
+        self._path: Optional[QPainterPath] = None
         self._agenda: Optional[SceneStructureAgenda] = None
         self._beatWidgets: List[SceneStructureItemWidget] = []
         self._placeholder = _SceneBeatPlaceholderButton(self)
         self._placeholder.setVisible(False)
         self._placeholder.menu().aboutToHide.connect(lambda: self._placeholder.setVisible(False))
         self._placeholder.selected.connect(self._insertBeatWidget)
+        self._emotionStart = CharacterEmotionButton(self)
+        self._emotionStart.setVisible(False)
+        self._emotionStart.emotionChanged.connect(self._emotionChanged)
+        self._emotionEnd = CharacterEmotionButton(self)
+        self._emotionEnd.setVisible(False)
+        self._emotionEnd.emotionChanged.connect(self._emotionChanged)
 
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
@@ -728,6 +736,10 @@ class SceneStructureTimeline(QWidget):
         self._agenda = agenda
         for item in agenda.items:
             self._addBeatWidget(item)
+        self._emotionStart.setValue(agenda.beginning_emotion)
+        self._emotionStart.setVisible(True)
+        self._emotionEnd.setValue(agenda.ending_emotion)
+        self._emotionEnd.setVisible(True)
 
         if len(agenda.items) > 1:
             for i in range(1, len(agenda.items) - 1):
@@ -925,13 +937,14 @@ class SceneStructureTimeline(QWidget):
 
         self._path = trackedPath
 
-        if self._path:
-            for i in range(len(self._beatWidgets)):
-                wdg = self._beatWidgets[i]
-                point = self._path.pointAtPercent(wdg.beat.percentage)
-                wdg.setGeometry(point.x() - wdg.minimumWidth() // 2, point.y() - 15, wdg.minimumWidth(),
-                                wdg.minimumHeight())
+        for i in range(len(self._beatWidgets)):
+            wdg = self._beatWidgets[i]
+            point = self._path.pointAtPercent(wdg.beat.percentage)
+            wdg.setGeometry(point.x() - wdg.minimumWidth() // 2, point.y() - 15, wdg.minimumWidth(),
+                            wdg.minimumHeight())
 
+        self._emotionStart.setGeometry(10, 25, self._emotionSize, self._emotionSize)
+        self._emotionEnd.setGeometry(width - 30, y + 5, self._emotionSize, self._emotionSize)
         self.setMinimumHeight(y + 150)
 
     def _addBeat(self, beatType: SceneStructureItemType):
@@ -985,6 +998,12 @@ class SceneStructureTimeline(QWidget):
             self._addBeat(SceneStructureItemType.BEAT)
             self._addBeat(SceneStructureItemType.BEAT)
             self._addBeat(SceneStructureItemType.BEAT)
+
+    def _emotionChanged(self):
+        self._agenda.beginning_emotion = self._emotionStart.value()
+        self._agenda.ending_emotion = self._emotionEnd.value()
+
+        self.update()
 
     def _beatRemoved(self, wdg: SceneStructureItemWidget):
         self._agenda.items.remove(wdg.beat)
