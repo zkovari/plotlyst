@@ -33,7 +33,6 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QApplication
 from overrides import overrides
-from qtanim import fade_out
 from qthandy import busy, margins, vspacer, btn_popup_menu
 from qthandy import decr_font, gc, transparent, retain_when_hidden, opaque, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
@@ -583,9 +582,8 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
     def _remove(self):
         if self.parent():
-            anim = fade_out(self, duration=150)
-            # anim.finished.connect(self.__destroy)
-            self.removed.emit(self)
+            anim = qtanim.fade_out(self, duration=150)
+            anim.finished.connect(lambda: self.removed.emit(self))
 
     # def __destroy(self):
     #     self.parent().layout().removeWidget(self)
@@ -781,9 +779,8 @@ class SceneStructureTimeline(QWidget):
         painter.setPen(pen)
         path = QPainterPath()
 
-        y = self._lineDistance
-        path.moveTo(0, y)
         first_el = self._path.elementAt(0)
+        path.moveTo(0, first_el.y)
         path.lineTo(first_el.x, first_el.y)
         if self._path:
             path.connectPath(self._path)
@@ -876,7 +873,7 @@ class SceneStructureTimeline(QWidget):
             return
         trackedPath = QPainterPath()
 
-        y = self._lineDistance
+        y = 20
         trackedPath.moveTo(self._margin + self._beatWidth // 2, y)
         trackedPath.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
         curves = self._curves()
@@ -898,6 +895,8 @@ class SceneStructureTimeline(QWidget):
                 point = self._path.pointAtPercent(wdg.beat.percentage)
                 wdg.setGeometry(point.x() - wdg.minimumWidth() // 2, point.y() - 15, wdg.minimumWidth(),
                                 wdg.minimumHeight())
+
+        self.setMinimumHeight(y + 150)
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
@@ -979,7 +978,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         flow(self.wdgGoalConflictContainer)
 
         self.timeline = SceneStructureTimeline(self)
-        self.wdgTimelineParent.layout().addWidget(self.timeline)
+        self.timeline.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.scrollAreaWidgetContents.layout().addWidget(self.timeline)
 
         self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
