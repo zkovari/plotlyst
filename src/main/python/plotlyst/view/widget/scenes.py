@@ -472,7 +472,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.setupUi(self)
         self._outcome = SceneOutcomeSelector(self.beat)
         self._outcome.selected.connect(self._outcomeChanged)
-        self.layoutTop.insertWidget(0, self._outcome, alignment=Qt.AlignCenter)
+        self.wdgBottom.layout().addWidget(self._outcome, alignment=Qt.AlignCenter)
 
         self.btnIcon = QToolButton(self)
         self.btnIcon.setIconSize(QSize(24, 24))
@@ -486,7 +486,9 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
         self.btnDelete.clicked.connect(self._remove)
         retain_when_hidden(self.btnDelete)
+        retain_when_hidden(self.btnDrag)
         self.btnDelete.setHidden(True)
+        self.btnDrag.setHidden(True)
 
     def outcomeVisible(self) -> bool:
         return self._outcome.isVisible()
@@ -509,10 +511,12 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     @overrides
     def enterEvent(self, event: QEvent) -> None:
         self.btnDelete.setVisible(True)
+        self.btnDrag.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         self.btnDelete.setHidden(True)
+        self.btnDrag.setHidden(True)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -521,6 +525,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     def _initStyle(self):
         self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
         self.text.setPlaceholderText(BeatDescriptions[self.beat.type])
+        self.btnName.setText(self.beat.type.name)
         self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
                                        trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
 
@@ -583,17 +588,13 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
             anim = qtanim.fade_out(self, duration=150)
             anim.finished.connect(lambda: self.removed.emit(self))
 
-    # def __destroy(self):
-    #     self.parent().layout().removeWidget(self)
-    #     gc(self)
-
     def _outcomeChanged(self):
         self._initStyle()
         self._glow()
 
     def _glow(self):
         color = QColor(self._color())
-        qtanim.glow(self.btnIcon, color=color)
+        qtanim.glow(self.btnName, color=color)
         qtanim.glow(self.text, color=color)
 
 
@@ -700,9 +701,8 @@ class SceneStructureTimeline(QWidget):
         super(SceneStructureTimeline, self).__init__(parent)
         self.novel = app_env.novel
         self._margin = 80
-        self._lineDistance = 120
+        self._lineDistance = 140
         self._arcWidth = 80
-        self._arcHeight = 120
         self._path: Optional[QPainterPath] = None
         self._beatWidth: int = 180
         self._agenda: Optional[SceneStructureAgenda] = None
@@ -830,7 +830,7 @@ class SceneStructureTimeline(QWidget):
                 if prev_el.y == el.y:
                     length += abs(el.x - prev_el.x)
                 elif prev_el.isCurveTo():
-                    length += self._arcHeight / 2
+                    length += self._lineDistance / 2
             if el.y - 10 < pos.y() < el.y + 10:
                 if pos.x() <= el.x:
                     length += abs(el.x - pos.x())
@@ -855,9 +855,9 @@ class SceneStructureTimeline(QWidget):
 
     def _drawArc(self, path: QPainterPath, width: int, y: int, forward: bool):
         if forward:
-            path.arcTo(QRectF(width - self._margin - self._arcWidth, y, self._arcWidth, self._arcHeight), 90, -180)
+            path.arcTo(QRectF(width - self._margin - self._arcWidth, y, self._arcWidth, self._lineDistance), 90, -180)
         else:
-            path.arcTo(QRectF(self._margin, y, self._arcWidth, self._arcHeight), -270, 180)
+            path.arcTo(QRectF(self._margin, y, self._arcWidth, self._lineDistance), -270, 180)
 
     def _rearrangeBeats(self):
         def _arrangeLastBeat(wdg: SceneStructureItemWidget, curves: int):
