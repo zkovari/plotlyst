@@ -215,11 +215,12 @@ class DisabledClickEventFilter(QObject):
 
 
 class DragEventFilter(QObject):
-    def __init__(self, watched, mimeType: str, dataFunc):
+    def __init__(self, watched, mimeType: str, dataFunc, grabbed=None):
         super(DragEventFilter, self).__init__(watched)
         self._pressed: bool = False
         self.mimeType = mimeType
         self.dataFunc = dataFunc
+        self.grabbed = grabbed
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -229,7 +230,10 @@ class DragEventFilter(QObject):
             self._pressed = False
         elif event.type() == QEvent.MouseMove and self._pressed:
             drag = QDrag(watched)
-            pix = watched.grab()
+            if self.grabbed:
+                pix = self.grabbed.grab()
+            else:
+                pix = watched.grab()
             mimedata = QMimeData()
             mimedata.setData(self.mimeType, QByteArray(pickle.dumps(self.dataFunc(watched))))
             drag.setMimeData(mimedata)

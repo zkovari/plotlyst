@@ -27,7 +27,7 @@ import qtanim
 from PyQt5.QtCore import QPoint, QTimeLine, QRectF
 from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QIcon, \
-    QLinearGradient
+    QLinearGradient, QDragMoveEvent
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
@@ -461,143 +461,6 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.circle_icon()
 
 
-class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
-    removed = pyqtSignal(object)
-    emotionChanged = pyqtSignal()
-
-    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneStructureItemWidget, self).__init__(parent)
-        self.novel = novel
-        self.beat = scene_structure_item
-        self.setupUi(self)
-        self._outcome = SceneOutcomeSelector(self.beat)
-        self._outcome.selected.connect(self._outcomeChanged)
-        self.wdgBottom.layout().addWidget(self._outcome, alignment=Qt.AlignCenter)
-
-        self.btnIcon = QToolButton(self)
-        self.btnIcon.setIconSize(QSize(24, 24))
-        self.btnIcon.installEventFilter(OpacityEventFilter(parent=self.btnIcon, enterOpacity=0.9, leaveOpacity=1.0))
-        pointy(self.btnIcon)
-
-        decr_font(self.text)
-        self.text.setText(self.beat.text)
-
-        self._initStyle()
-
-        self.btnDelete.clicked.connect(self._remove)
-        retain_when_hidden(self.btnDelete)
-        retain_when_hidden(self.btnDrag)
-        self.btnDelete.setHidden(True)
-        self.btnDrag.setHidden(True)
-
-    def outcomeVisible(self) -> bool:
-        return self._outcome.isVisible()
-
-    def sceneStructureItem(self) -> SceneStructureItem:
-        self.beat.text = self.text.toPlainText()
-        return self.beat
-
-    def activate(self):
-        self.text.setFocus()
-
-    def swap(self, beatType: SceneStructureItemType):
-        if self.beat.type != beatType:
-            self.beat.type = beatType
-            if self.beat.type == SceneStructureItemType.OUTCOME:
-                self._outcome.refresh()
-            self._initStyle()
-        self._glow()
-
-    @overrides
-    def enterEvent(self, event: QEvent) -> None:
-        self.btnDelete.setVisible(True)
-        self.btnDrag.setVisible(True)
-
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        self.btnDelete.setHidden(True)
-        self.btnDrag.setHidden(True)
-
-    @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self.btnIcon.setGeometry(self.width() // 2 - 18, 0, 36, 36)
-
-    def _initStyle(self):
-        self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
-        self.text.setPlaceholderText(BeatDescriptions[self.beat.type])
-        self.btnName.setText(self.beat.type.name)
-        self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
-                                       trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
-
-        color = self._color()
-        self.btnIcon.setStyleSheet(f'''
-                    QToolButton {{
-                                    background-color: white;
-                                    border: 2px solid {color};
-                                    border-radius: 18px; padding: 4px;
-                                }}
-                    QToolButton:pressed {{
-                        border: 2px solid white;
-                    }}
-                    ''')
-
-        self.text.setStyleSheet(f'''
-                    border: 2px solid {color};
-                    border-radius: 3px;
-                    ''')
-
-    def _color(self) -> str:
-        if self.beat.type == SceneStructureItemType.GOAL:
-            return 'darkBlue'
-        elif self.beat.type == SceneStructureItemType.CONFLICT:
-            return '#f3a712'
-        elif self.beat.type == SceneStructureItemType.OUTCOME:
-            if self.beat.outcome == SceneOutcome.TRADE_OFF:
-                return '#832161'
-            elif self.beat.outcome == SceneOutcome.RESOLUTION:
-                return '#0b6e4f'
-            else:
-                return '#fe4a49'
-        elif self.beat.type == SceneStructureItemType.DECISION:
-            return '#3cdbd3'
-        elif self.beat.type == SceneStructureItemType.HOOK:
-            return '#829399'
-        elif self.beat.type == SceneStructureItemType.INCITING_INCIDENT:
-            return '#a2ad59'
-        elif self.beat.type == SceneStructureItemType.TICKING_CLOCK:
-            return '#f7cb15'
-        elif self.beat.type == SceneStructureItemType.RISING_ACTION:
-            return '#08605f'
-        elif self.beat.type == SceneStructureItemType.CRISIS:
-            return '#ce2d4f'
-        elif self.beat.type == SceneStructureItemType.EXPOSITION:
-            return '#1ea896'
-        else:
-            return 'black'
-
-    # def _emotionClicked(self, btn: QAbstractButton):
-    #     if btn.isChecked():
-    #         emotion: int = btn.property('emotion')
-    #         self.beat.emotion = emotion
-    #     else:
-    #         self.beat.emotion = None
-    #     self.emotionChanged.emit()
-
-    def _remove(self):
-        if self.parent():
-            anim = qtanim.fade_out(self, duration=150)
-            anim.finished.connect(lambda: self.removed.emit(self))
-
-    def _outcomeChanged(self):
-        self._initStyle()
-        self._glow()
-
-    def _glow(self):
-        color = QColor(self._color())
-        qtanim.glow(self.btnName, color=color)
-        qtanim.glow(self.text, color=color)
-
-
 class _SceneTypeButton(QPushButton):
     def __init__(self, type: SceneType, parent=None):
         super(_SceneTypeButton, self).__init__(parent)
@@ -693,6 +556,150 @@ class _SceneBeatPlaceholderButton(QToolButton):
                              description)
 
 
+class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
+    removed = pyqtSignal(object)
+    emotionChanged = pyqtSignal()
+
+    SceneBeatMimeType: str = 'application/scene-beat'
+
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(SceneStructureItemWidget, self).__init__(parent)
+        self.novel = novel
+        self.beat = scene_structure_item
+        self.setupUi(self)
+        self._outcome = SceneOutcomeSelector(self.beat)
+        self._outcome.selected.connect(self._outcomeChanged)
+        self.wdgBottom.layout().addWidget(self._outcome, alignment=Qt.AlignCenter)
+
+        self.btnIcon = QToolButton(self)
+        self.btnIcon.setIconSize(QSize(24, 24))
+        self.btnIcon.installEventFilter(OpacityEventFilter(parent=self.btnIcon, enterOpacity=0.9, leaveOpacity=1.0))
+        pointy(self.btnIcon)
+
+        decr_font(self.text)
+        self.text.setText(self.beat.text)
+
+        self._initStyle()
+
+        self.btnDelete.clicked.connect(self._remove)
+        self.btnDrag.installEventFilter(
+            DragEventFilter(self.btnDrag, self.SceneBeatMimeType, self._beatDataFunc, grabbed=self.btnIcon))
+        retain_when_hidden(self.btnDelete)
+        retain_when_hidden(self.btnDrag)
+        self.btnDelete.setHidden(True)
+        self.btnDrag.setHidden(True)
+
+    def outcomeVisible(self) -> bool:
+        return self._outcome.isVisible()
+
+    def sceneStructureItem(self) -> SceneStructureItem:
+        self.beat.text = self.text.toPlainText()
+        return self.beat
+
+    def activate(self):
+        self.text.setFocus()
+
+    def swap(self, beatType: SceneStructureItemType):
+        if self.beat.type != beatType:
+            self.beat.type = beatType
+            if self.beat.type == SceneStructureItemType.OUTCOME:
+                self._outcome.refresh()
+            self._initStyle()
+        self._glow()
+
+    @overrides
+    def enterEvent(self, event: QEvent) -> None:
+        self.btnDelete.setVisible(True)
+        self.btnDrag.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.btnDelete.setHidden(True)
+        self.btnDrag.setHidden(True)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.btnIcon.setGeometry(self.width() // 2 - 18, 0, 36, 36)
+
+    def _beatDataFunc(self, btn):
+        return id(self)
+
+    def _initStyle(self):
+        self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
+        self.text.setPlaceholderText(BeatDescriptions[self.beat.type])
+        self.btnName.setText(self.beat.type.name)
+        self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
+                                       trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
+
+        color = self._color()
+        self.btnIcon.setStyleSheet(f'''
+                    QToolButton {{
+                                    background-color: white;
+                                    border: 2px solid {color};
+                                    border-radius: 18px; padding: 4px;
+                                }}
+                    QToolButton:pressed {{
+                        border: 2px solid white;
+                    }}
+                    ''')
+
+        self.text.setStyleSheet(f'''
+                    border: 2px solid {color};
+                    border-radius: 3px;
+                    ''')
+
+    def _color(self) -> str:
+        if self.beat.type == SceneStructureItemType.GOAL:
+            return 'darkBlue'
+        elif self.beat.type == SceneStructureItemType.CONFLICT:
+            return '#f3a712'
+        elif self.beat.type == SceneStructureItemType.OUTCOME:
+            if self.beat.outcome == SceneOutcome.TRADE_OFF:
+                return '#832161'
+            elif self.beat.outcome == SceneOutcome.RESOLUTION:
+                return '#0b6e4f'
+            else:
+                return '#fe4a49'
+        elif self.beat.type == SceneStructureItemType.DECISION:
+            return '#3cdbd3'
+        elif self.beat.type == SceneStructureItemType.HOOK:
+            return '#829399'
+        elif self.beat.type == SceneStructureItemType.INCITING_INCIDENT:
+            return '#a2ad59'
+        elif self.beat.type == SceneStructureItemType.TICKING_CLOCK:
+            return '#f7cb15'
+        elif self.beat.type == SceneStructureItemType.RISING_ACTION:
+            return '#08605f'
+        elif self.beat.type == SceneStructureItemType.CRISIS:
+            return '#ce2d4f'
+        elif self.beat.type == SceneStructureItemType.EXPOSITION:
+            return '#1ea896'
+        else:
+            return 'black'
+
+    # def _emotionClicked(self, btn: QAbstractButton):
+    #     if btn.isChecked():
+    #         emotion: int = btn.property('emotion')
+    #         self.beat.emotion = emotion
+    #     else:
+    #         self.beat.emotion = None
+    #     self.emotionChanged.emit()
+
+    def _remove(self):
+        if self.parent():
+            anim = qtanim.fade_out(self, duration=150)
+            anim.finished.connect(lambda: self.removed.emit(self))
+
+    def _outcomeChanged(self):
+        self._initStyle()
+        self._glow()
+
+    def _glow(self):
+        color = QColor(self._color())
+        qtanim.glow(self.btnName, color=color)
+        qtanim.glow(self.text, color=color)
+
+
 class SceneStructureTimeline(QWidget):
     emotionChanged = pyqtSignal()
     timelineChanged = pyqtSignal()
@@ -713,6 +720,7 @@ class SceneStructureTimeline(QWidget):
         self._placeholder.selected.connect(self._insertBeatWidget)
 
         self.setMouseTracking(True)
+        self.setAcceptDrops(True)
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.reset()
@@ -792,6 +800,36 @@ class SceneStructureTimeline(QWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         self._rearrangeBeats()
+
+    @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType):
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType) and self._contains(
+                event.pos()) and self._intersects(event.pos()):
+            event.accept()
+        else:
+            event.ignore()
+
+    @overrides
+    def dropEvent(self, event: QDropEvent) -> None:
+        id_ = pickle.loads(event.mimeData().data(SceneStructureItemWidget.SceneBeatMimeType))
+
+        for wdg in self._beatWidgets:
+            if id(wdg) == id_:
+                wdg.beat.percentage = self._percentage(event.pos())
+                break
+
+        sorted(self._agenda.items, key=lambda x: x.percentage)
+        sorted(self._beatWidgets, key=lambda x: x.beat.percentage)
+
+        self._rearrangeBeats()
+        self.update()
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
