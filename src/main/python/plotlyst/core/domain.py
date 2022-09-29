@@ -469,7 +469,7 @@ class SceneType(Enum):
 
 
 class SceneStructureItemType(Enum):
-    GOAL = 0
+    ACTION = 0
     CONFLICT = 1
     OUTCOME = 2
     REACTION = 3

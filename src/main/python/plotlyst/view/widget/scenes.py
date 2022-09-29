@@ -417,7 +417,7 @@ class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):
 
 
 BeatDescriptions = {SceneStructureItemType.BEAT: 'Beat: a new action, reaction, thought, or emotion in this scene',
-                    SceneStructureItemType.GOAL: 'The character takes an action to achieve their goal',
+                    SceneStructureItemType.ACTION: 'The character takes an action to achieve their goal',
                     SceneStructureItemType.CONFLICT: "Conflict arises that hinders the character's goals",
                     SceneStructureItemType.OUTCOME: 'Outcome of the scene, typically ending with disaster',
                     SceneStructureItemType.REACTION: "Initial reaction to a previous scene's outcome",
@@ -433,7 +433,7 @@ BeatDescriptions = {SceneStructureItemType.BEAT: 'Beat: a new action, reaction, 
 
 
 def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_off: bool = False) -> QIcon:
-    if beat_type == SceneStructureItemType.GOAL:
+    if beat_type == SceneStructureItemType.ACTION:
         return IconRegistry.goal_icon()
     elif beat_type == SceneStructureItemType.CONFLICT:
         return IconRegistry.conflict_icon()
@@ -534,7 +534,7 @@ class _SceneBeatPlaceholderButton(QToolButton):
         self.setToolTip('Insert new beat')
 
         self._menu = MenuWithDescription(self)
-        self._addAction('Goal', SceneStructureItemType.GOAL, description='')
+        self._addAction('Goal', SceneStructureItemType.ACTION, description='')
         self._addAction('Conflict', SceneStructureItemType.CONFLICT, description='')
         self._addAction('Outcome', SceneStructureItemType.OUTCOME, description='')
         self._addAction('Reaction', SceneStructureItemType.REACTION, description='')
@@ -648,7 +648,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
                     ''')
 
     def _color(self) -> str:
-        if self.beat.type == SceneStructureItemType.GOAL:
+        if self.beat.type == SceneStructureItemType.ACTION:
             return 'darkBlue'
         elif self.beat.type == SceneStructureItemType.CONFLICT:
             return '#f3a712'
@@ -755,7 +755,7 @@ class SceneStructureTimeline(QWidget):
                 self._addBeat(SceneStructureItemType.BEAT)
 
         if sceneTyoe == SceneType.ACTION:
-            self._beatWidgets[0].swap(SceneStructureItemType.GOAL)
+            self._beatWidgets[0].swap(SceneStructureItemType.ACTION)
             self._beatWidgets[1].swap(SceneStructureItemType.CONFLICT)
             self._beatWidgets[-1].swap(SceneStructureItemType.OUTCOME)
         elif sceneTyoe == SceneType.REACTION:
@@ -981,7 +981,7 @@ class SceneStructureTimeline(QWidget):
 
     def _initBeatsFromType(self, sceneTyoe: SceneType):
         if sceneTyoe == SceneType.ACTION:
-            self._addBeat(SceneStructureItemType.GOAL)
+            self._addBeat(SceneStructureItemType.ACTION)
             self._addBeat(SceneStructureItemType.CONFLICT)
             self._addBeat(SceneStructureItemType.OUTCOME)
         elif sceneTyoe == SceneType.REACTION:
