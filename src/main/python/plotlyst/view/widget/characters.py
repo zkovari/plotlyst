@@ -36,7 +36,7 @@ from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup,
     spacer, clear_layout, vbox, hbox, flow, opaque, margins
 from qthandy.filter import InstantTooltipEventFilter
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, SceneStructureAgenda, ConflictReference, \
     CharacterGoal, Goal, GoalReference, Stake
@@ -1140,13 +1140,12 @@ class CharacterTimelineWidget(QWidget):
 
 
 class CharacterEmotionButton(QToolButton):
-    NEUTRAL_COLOR: str = '#ababab'
     emotionChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         super(CharacterEmotionButton, self).__init__(parent)
         self._value = NEUTRAL
-        self._color = self.NEUTRAL_COLOR
+        self._color = NEUTRAL_EMOTION_COLOR
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setFixedSize(32, 32)
         pointy(self)
@@ -1182,19 +1181,16 @@ class CharacterEmotionButton(QToolButton):
     def setValue(self, value: int):
         if value == VERY_UNHAPPY:
             self.setText(emoji.emojize(":fearful_face:"))
-            self._color = '#ef0000'
         elif value == UNHAPPY:
             self.setText(emoji.emojize(":worried_face:"))
-            self._color = '#ff8e2b'
         elif value == NEUTRAL:
             self.setText(emoji.emojize(":neutral_face:"))
-            self._color = self.NEUTRAL_COLOR
         elif value == HAPPY:
             self.setText(emoji.emojize(":slightly_smiling_face:"))
-            self._color = '#93e5ab'
         elif value == VERY_HAPPY:
             self.setText(emoji.emojize(":smiling_face_with_smiling_eyes:"))
-            self._color = '#00ca94'
+
+        self._color = emotion_color(value)
 
         self._value = value
         if self._setAlready:

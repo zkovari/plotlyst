@@ -27,7 +27,7 @@ import qtanim
 from PyQt5.QtCore import QPoint, QTimeLine, QRectF
 from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QIcon, \
-    QLinearGradient, QDragMoveEvent
+    QDragMoveEvent, QLinearGradient
 from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
@@ -38,7 +38,8 @@ from qthandy import decr_font, gc, transparent, retain_when_hidden, opaque, unde
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter
 
-from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR, \
+    emotion_color
 from src.main.python.plotlyst.common import truncate_string
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
@@ -790,14 +791,19 @@ class SceneStructureTimeline(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        gradient = QLinearGradient(0, self._lineDistance, width - self._margin, self._lineDistance * 2)
-        gradient.setColorAt(0, Qt.lightGray)
-        gradient.setColorAt(1, Qt.red)
+        first_el = self._path.elementAt(0)
+        last_el = self._path.elementAt(self._path.elementCount() - 1)
+
+        if self._curves():
+            gradient = QLinearGradient(width // 2, 0, width // 2, last_el.y)
+        else:
+            gradient = QLinearGradient(0, first_el.y, last_el.x, last_el.y)
+        gradient.setColorAt(0, QColor(emotion_color(self._agenda.beginning_emotion)))
+        gradient.setColorAt(1, QColor(emotion_color(self._agenda.ending_emotion)))
         pen = QPen(gradient, 10, Qt.SolidLine)
         painter.setPen(pen)
         path = QPainterPath()
 
-        first_el = self._path.elementAt(0)
         path.moveTo(0, first_el.y)
         path.lineTo(first_el.x, first_el.y)
         if self._path:
