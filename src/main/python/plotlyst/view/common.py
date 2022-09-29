@@ -24,7 +24,7 @@ from typing import Optional, Tuple, List
 
 import qtawesome
 from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent, QBuffer, QIODevice, QSize, QMimeData, \
-    QByteArray
+    QByteArray, pyqtSignal
 from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QDrag
 from PyQt5.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAction, QAbstractButton, \
@@ -215,6 +215,9 @@ class DisabledClickEventFilter(QObject):
 
 
 class DragEventFilter(QObject):
+    dragStarted = pyqtSignal()
+    dragFinished = pyqtSignal()
+
     def __init__(self, watched, mimeType: str, dataFunc, grabbed=None):
         super(DragEventFilter, self).__init__(watched)
         self._pressed: bool = False
@@ -239,6 +242,8 @@ class DragEventFilter(QObject):
             drag.setMimeData(mimedata)
             drag.setPixmap(pix)
             drag.setHotSpot(event.pos())
+            drag.destroyed.connect(self.dragFinished.emit)
+            self.dragStarted.emit()
             drag.exec_()
         return super(DragEventFilter, self).eventFilter(watched, event)
 

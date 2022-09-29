@@ -587,6 +587,8 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
         self._dragFilter = DragEventFilter(self.btnDrag, self.SceneBeatMimeType, self._beatDataFunc,
                                            grabbed=self.btnIcon)
+        self._dragFilter.dragStarted.connect(lambda: self.setHidden(True))
+        self._dragFilter.dragFinished.connect(lambda: self.setVisible(True))
         self.btnDrag.installEventFilter(self._dragFilter)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, parent=self))
         retain_when_hidden(self.btnDelete)
