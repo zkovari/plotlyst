@@ -57,7 +57,7 @@ from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder, \
-    DragEventFilter, hmax, pointy, action, stretch_col
+    DragEventFilter, hmax, pointy, action, stretch_col, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
@@ -584,12 +584,13 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self._initStyle()
 
         self.btnDelete.clicked.connect(self._remove)
-        self.btnDrag.installEventFilter(
-            DragEventFilter(self.btnDrag, self.SceneBeatMimeType, self._beatDataFunc, grabbed=self.btnIcon))
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
+        self._dragFilter = DragEventFilter(self.btnDrag, self.SceneBeatMimeType, self._beatDataFunc,
+                                           grabbed=self.btnIcon)
+        self.btnDrag.installEventFilter(self._dragFilter)
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, parent=self))
         retain_when_hidden(self.btnDelete)
         retain_when_hidden(self.btnDrag)
-        self.btnDelete.setHidden(True)
-        self.btnDrag.setHidden(True)
 
     def outcomeVisible(self) -> bool:
         return self._outcome.isVisible()
@@ -608,16 +609,6 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
                 self._outcome.refresh()
             self._initStyle()
         self._glow()
-
-    @overrides
-    def enterEvent(self, event: QEvent) -> None:
-        self.btnDelete.setVisible(True)
-        self.btnDrag.setVisible(True)
-
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        self.btnDelete.setHidden(True)
-        self.btnDrag.setHidden(True)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
