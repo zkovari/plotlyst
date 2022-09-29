@@ -683,14 +683,6 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         else:
             return 'black'
 
-    # def _emotionClicked(self, btn: QAbstractButton):
-    #     if btn.isChecked():
-    #         emotion: int = btn.property('emotion')
-    #         self.beat.emotion = emotion
-    #     else:
-    #         self.beat.emotion = None
-    #     self.emotionChanged.emit()
-
     def _remove(self):
         if self.parent():
             anim = qtanim.fade_out(self, duration=150)
@@ -832,8 +824,7 @@ class SceneStructureTimeline(QWidget):
 
     @overrides
     def dragMoveEvent(self, event: QDragMoveEvent) -> None:
-        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType) and self._contains(
-                event.pos()) and self._intersects(event.pos()):
+        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType) and self._intersects(event.pos()):
             event.accept()
         else:
             event.ignore()
