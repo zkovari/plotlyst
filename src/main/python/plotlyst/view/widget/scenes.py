@@ -628,7 +628,11 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
     def _initStyle(self):
         self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
-        self.text.setPlaceholderText(BeatDescriptions[self.beat.type])
+        desc = BeatDescriptions[self.beat.type]
+        self.text.setPlaceholderText(desc)
+        self.btnName.setToolTip(desc)
+        self.text.setToolTip(desc)
+        self.btnIcon.setToolTip(desc)
         self.btnName.setText(self.beat.type.name.lower().capitalize().replace('_', ' '))
         self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
                                        trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
@@ -644,7 +648,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
                         border: 2px solid white;
                     }}
                     ''')
-        self.btnName.setStyleSheet(f'border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};')
+        self.btnName.setStyleSheet(f'QPushButton {{border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};}}')
         self.text.setStyleSheet(f'''
                     border: 2px solid {color};
                     border-radius: 3px;
