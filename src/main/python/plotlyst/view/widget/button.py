@@ -25,7 +25,7 @@ from PyQt5.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup
 from overrides import overrides
-from qthandy import hbox, opaque, bold, incr_font
+from qthandy import hbox, translucent, bold, incr_font
 
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.view.common import OpacityEventFilter, pointy
@@ -221,7 +221,7 @@ class FadeOutButtonGroup(QButtonGroup):
             else:
                 other_btn.setEnabled(True)
                 anim = qtanim.fade_in(other_btn, duration=self._fadeInDuration)
-                anim.finished.connect(partial(opaque, other_btn, self._opacity))
+                anim.finished.connect(partial(translucent, other_btn, self._opacity))
 
 
 class ToolbarButton(QToolButton):

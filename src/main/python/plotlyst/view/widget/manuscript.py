@@ -31,7 +31,7 @@ from PyQt5.QtMultimedia import QSoundEffect
 from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication, QSizePolicy
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, opaque, btn_popup, clear_layout, vbox
+from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout, vbox
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -658,7 +658,7 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         if updated:
             if not self.btnRefresh.isVisible():
                 anim = qtanim.fade_in(self.btnRefresh)
-                anim.finished.connect(lambda: opaque(self.btnRefresh, 0.4))
+                anim.finished.connect(lambda: translucent(self.btnRefresh, 0.4))
         else:
             if self.btnRefresh.isVisible():
                 qtanim.fade_out(self.btnRefresh)
