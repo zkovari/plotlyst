@@ -488,6 +488,12 @@ class SceneOutcome(Enum):
     DISASTER = 0
     RESOLUTION = 1
     TRADE_OFF = 2
+    
+    @staticmethod
+    def to_str(outcome: 'SceneOutcome') -> str:
+        if outcome == SceneOutcome.TRADE_OFF:
+            return 'Trade-off'
+        return outcome.name.lower().capitalize()
 
 
 @dataclass

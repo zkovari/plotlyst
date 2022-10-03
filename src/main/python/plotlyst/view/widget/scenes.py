@@ -626,7 +626,11 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnName.setToolTip(desc)
         self.text.setToolTip(desc)
         self.btnIcon.setToolTip(desc)
-        self.btnName.setText(self.beat.type.name.lower().capitalize().replace('_', ' '))
+        if self.beat.type == SceneStructureItemType.OUTCOME:
+            name = SceneOutcome.to_str(self.beat.outcome)
+        else:
+            name = self.beat.type.name
+        self.btnName.setText(name.lower().capitalize().replace('_', ' '))
         self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
                                        trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
 
