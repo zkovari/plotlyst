@@ -34,7 +34,7 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
 from overrides import overrides
 from qtanim import fade_out
 from qthandy import busy, margins, vspacer, btn_popup_menu
-from qthandy import decr_font, gc, transparent, retain_when_hidden, opaque, underline, flow, \
+from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter
 
@@ -668,7 +668,7 @@ class _SceneTypeButton(QPushButton):
         self.toggled.connect(self._toggled)
 
     def _toggled(self, toggled: bool):
-        opaque(self, 1.0 if toggled else 0.5)
+        translucent(self, 1.0 if toggled else 0.5)
         font = self.font()
         font.setBold(toggled)
         self.setFont(font)
@@ -1109,7 +1109,7 @@ class SceneStoryStructureWidget(QWidget):
                     QPushButton {{border-top:2px dashed {beat.icon_color}; color: {beat.icon_color};}}
                 ''')
                 italic(btn)
-                opaque(btn)
+                translucent(btn)
             else:
                 btn = QToolButton(self)
                 self._beats[beat] = btn
@@ -1177,9 +1177,9 @@ class SceneStoryStructureWidget(QWidget):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(watched, QToolButton) and watched.isCheckable() and not watched.isChecked():
             if event.type() == QEvent.Enter:
-                opaque(watched)
+                translucent(watched)
             elif event.type() == QEvent.Leave:
-                opaque(watched, 0.2)
+                translucent(watched, 0.2)
         return super(SceneStoryStructureWidget, self).eventFilter(watched, event)
 
     @overrides
@@ -1357,10 +1357,10 @@ class SceneStoryStructureWidget(QWidget):
         return act
 
     def _actToggled(self, btn: QToolButton, toggled: bool):
-        opaque(btn, 1.0 if toggled else 0.2)
+        translucent(btn, 1.0 if toggled else 0.2)
 
     def _beatToggled(self, btn: QToolButton, toggled: bool):
-        opaque(btn, 1.0 if toggled else 0.2)
+        translucent(btn, 1.0 if toggled else 0.2)
 
     def _beatClicked(self, beat: StoryBeat, btn: QToolButton):
         if btn.isCheckable() and btn.isChecked():

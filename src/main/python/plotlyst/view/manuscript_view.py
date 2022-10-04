@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt5.QtCore import QModelIndex, QTimer, Qt
 from PyQt5.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
-from qthandy import opaque, incr_font, bold, btn_popup, margins, transparent
+from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
 
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
@@ -229,7 +229,7 @@ class ManuscriptView(AbstractNovelView):
         self.chart_manuscript.refresh(self.novel)
 
     def _spellcheck_toggled(self, toggled: bool):
-        opaque(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
+        translucent(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
 
     def _spellcheck_clicked(self, checked: bool):
         if checked:
@@ -245,7 +245,7 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.checkGrammar()
 
     def _analysis_toggled(self, toggled: bool):
-        opaque(self.ui.btnAnalysisIcon, 1 if toggled else 0.4)
+        translucent(self.ui.btnAnalysisIcon, 1 if toggled else 0.4)
 
     def _analysis_clicked(self, checked: bool):
         if not checked:

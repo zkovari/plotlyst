@@ -26,7 +26,7 @@ from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import vspacer, spacer, opaque, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
+from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
@@ -101,7 +101,7 @@ class _StoryStructureButton(QPushButton):
         return self._structure
 
     def _toggled(self, toggled: bool):
-        opaque(self, 1.0 if toggled else 0.5)
+        translucent(self, 1.0 if toggled else 0.5)
         font = self.font()
         font.setBold(toggled)
         self.setFont(font)
@@ -194,7 +194,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         return True
 
     def _beatToggled(self, toggled: bool):
-        opaque(self, 1 if toggled else 0.5)
+        translucent(self, 1 if toggled else 0.5)
         bold(self.lblTitle, toggled)
 
     def _beatClicked(self, checked: bool):

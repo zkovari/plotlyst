@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import opaque, hbox
+from qthandy import translucent, hbox
 
 from src.main.python.plotlyst.env import app_env
 
@@ -147,7 +147,7 @@ class OpacityEventFilter(QObject):
         self.ignoreCheckedButton = ignoreCheckedButton
         self._parent = parent
         if not ignoreCheckedButton or not self._checkedButton(parent):
-            opaque(parent, leaveOpacity)
+            translucent(parent, leaveOpacity)
         if parent and isinstance(parent, QAbstractButton):
             parent.toggled.connect(self._btnToggled)
 
@@ -156,9 +156,9 @@ class OpacityEventFilter(QObject):
         if self.ignoreCheckedButton and self._checkedButton(watched) or not watched.isEnabled():
             return super(OpacityEventFilter, self).eventFilter(watched, event)
         if event.type() == QEvent.Enter:
-            opaque(watched, self.enterOpacity)
+            translucent(watched, self.enterOpacity)
         elif event.type() == QEvent.Leave:
-            opaque(watched, self.leaveOpacity)
+            translucent(watched, self.leaveOpacity)
 
         return super(OpacityEventFilter, self).eventFilter(watched, event)
 
@@ -167,9 +167,9 @@ class OpacityEventFilter(QObject):
 
     def _btnToggled(self, toggled: bool):
         if toggled:
-            opaque(self._parent, self.enterOpacity)
+            translucent(self._parent, self.enterOpacity)
         else:
-            opaque(self._parent, self.leaveOpacity)
+            translucent(self._parent, self.leaveOpacity)
 
 
 class VisibilityToggleEventFilter(QObject):

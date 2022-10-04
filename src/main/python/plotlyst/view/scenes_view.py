@@ -26,7 +26,7 @@ from PyQt5.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, incr_font, opaque, btn_popup, clear_layout
+from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout
 
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.event.core import emit_event, EventListener
@@ -69,8 +69,8 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         incr_font(self.lblTitle)
         self.btnScene.setIcon(IconRegistry.action_scene_icon())
         self.btnSequel.setIcon(IconRegistry.reaction_scene_icon())
-        opaque(self.btnScene, 0.6)
-        opaque(self.btnSequel, 0.6)
+        translucent(self.btnScene, 0.6)
+        translucent(self.btnSequel, 0.6)
 
         self._chartDistribution = ActDistributionChart()
         self._chartDistributionView = ChartView()

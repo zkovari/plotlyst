@@ -33,7 +33,7 @@ from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, Q
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, opaque, margins
+    spacer, clear_layout, vbox, hbox, flow, translucent, margins
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -1467,9 +1467,9 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.btnItemTertiary.setSelectionItem(tertiary_role)
         self.btnItemHenchmen.setSelectionItem(henchmen_role)
 
-        opaque(self.iconMajor, 0.7)
-        opaque(self.iconSecondary, 0.7)
-        opaque(self.iconMinor, 0.7)
+        translucent(self.iconMajor, 0.7)
+        translucent(self.iconSecondary, 0.7)
+        translucent(self.iconMinor, 0.7)
 
         incr_font(self.lblRole, 2)
         self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey'))
