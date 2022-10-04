@@ -76,7 +76,7 @@ class _SecondaryActionButton(QAbstractButton):
         self._checkedColor: str = 'black'
         self.initStyleSheet()
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Policy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
         self.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self))
 
     def initStyleSheet(self, border_color: str = 'grey', border_style: str = 'dashed', color: str = 'grey'):
@@ -173,7 +173,7 @@ class WordWrappedPushButton(QPushButton):
         self.label.setTextInteractionFlags(Qt.NoTextInteraction)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hbox(self, 0, 0).addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Policy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
 
     @overrides
     def setText(self, text: str):

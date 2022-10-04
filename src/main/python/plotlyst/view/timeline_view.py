@@ -45,7 +45,8 @@ class TimelineView(AbstractNovelView):
         self.ui.tblScenes.showColumn(ScenesTableModel.ColTitle)
         self.ui.tblScenes.showColumn(ScenesTableModel.ColTime)
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColTime, 40)
-        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Stretch)
+        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle,
+                                                                  QHeaderView.ResizeMode.Stretch)
         self._delegate = ScenesViewDelegate()
 
         self.timeline_widget = TimelineWidget(self.novel)

@@ -94,7 +94,7 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self._scenes_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._scenes_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._scenes_proxy.setSortRole(CharactersScenesDistributionTableModel.SortRole)
-        self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.DescendingOrder)
+        self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.SortOrder.DescendingOrder)
         self.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
         self.tblSceneDistribution.setModel(self._scenes_proxy)
         self.tblSceneDistribution.hideColumn(0)
@@ -324,9 +324,9 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.tblConflicts.setModel(self._model)
         self.tblConflicts.horizontalHeader().hideSection(SceneConflictsModel.ColBgColor)
         self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColIcon,
-                                                                  QHeaderView.ResizeToContents)
+                                                                  QHeaderView.ResizeMode.ResizeToContents)
         self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColName,
-                                                                  QHeaderView.Stretch)
+                                                                  QHeaderView.ResizeMode.Stretch)
         self._update_characters()
         self.btnAddNew.setIcon(IconRegistry.ok_icon())
         self.btnAddNew.installEventFilter(DisabledClickEventFilter(lambda: qtanim.shake(self.lineKey), self))
@@ -573,7 +573,7 @@ class CharacterGoalSelector(QWidget):
         self._goalSelector = _GoalSelectionObject()
         self.selectorWidget = CharacterGoalsEditor(self.novel, self.scene.agendas[0].character(self.novel),
                                                    selector=self._goalSelector)
-        scrollArea.setBackgroundRole(QPalette.Light)
+        scrollArea.setBackgroundRole(QPalette.ColorRole.Light)
         scrollArea.setWidget(self.selectorWidget)
         btn_popup(self.btnLinkGoal, scrollArea)
 
@@ -1083,8 +1083,10 @@ class CharacterTimelineWidget(QWidget):
                 alignment = Qt.AlignmentFlag.AlignRight
             elif backstory.follow_up and prev_alignment:
                 alignment = prev_alignment
+            elif prev_alignment == Qt.AlignmentFlag.AlignLeft:
+                alignment = Qt.AlignmentFlag.AlignRight
             else:
-                alignment = Qt.AlignmentFlag.AlignRight if prev_alignment == Qt.AlignmentFlag.AlignLeft else Qt.AlignmentFlag.AlignLeft
+                alignment = Qt.AlignmentFlag.AlignLeft
             prev_alignment = alignment
             event = CharacterBackstoryEvent(backstory, alignment, first=i == 0, parent=self)
             event.card.deleteRequested.connect(self._remove)
@@ -1148,7 +1150,7 @@ class CharacterEmotionButton(QToolButton):
         super(CharacterEmotionButton, self).__init__(parent)
         self._value = NEUTRAL
         self._color = self.NEUTRAL_COLOR
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setFixedSize(32, 32)
 
         self.setStyleSheet('''
@@ -1161,7 +1163,7 @@ class CharacterEmotionButton(QToolButton):
         menu = QMenu(self)
         self.setMenu(menu)
         menu.setMaximumWidth(64)
-        self.setPopupMode(QToolButton.InstantPopup)
+        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
         else:
@@ -1422,7 +1424,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
         self.updateAvatar()
 
     def updateAvatar(self):
-        self.btnPov.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         if self._character.prefs.avatar.use_role or self._character.prefs.avatar.use_custom_icon:
             self.btnPov.setIconSize(QSize(132, 132))
         else:
@@ -1436,7 +1438,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
     def reset(self):
         self.btnPov.setIconSize(QSize(118, 118))
         self.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
-        self.btnPov.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
     def avatarUpdated(self) -> bool:
         return self._updated

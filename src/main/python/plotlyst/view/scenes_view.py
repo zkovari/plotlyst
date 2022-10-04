@@ -496,7 +496,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
 
         for col in range(1, self.stagesModel.columnCount()):
-            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
             w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
             self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
             self.ui.tblSceneStages.setColumnWidth(col, w + 10)

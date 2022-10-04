@@ -532,7 +532,7 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
             self._chaptersModel = ChaptersTreeModel(novel)
             self.treeChapters.setModel(self._chaptersModel)
             self.treeChapters.expandAll()
-            self.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
             self.treeChapters.hideColumn(ChaptersTreeModel.ColPlus)
             if not self.btnLocations.isChecked():
                 self.btnScenes.setChecked(True)

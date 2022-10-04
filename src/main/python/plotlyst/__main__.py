@@ -34,8 +34,6 @@ try:
     from src.main.python.plotlyst.service.persistence import flush_or_fail
     from src.main.python.plotlyst.service.dir import select_new_project_directory, default_directory
 
-    from PyQt6 import QtWidgets
-    from PyQt6.QtCore import Qt
     from PyQt6.QtGui import QFont
     from PyQt6.QtWidgets import QApplication, QMessageBox
     from fbs_runtime.application_context.PyQt6 import ApplicationContext

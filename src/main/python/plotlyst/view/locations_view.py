@@ -42,7 +42,7 @@ class LocationsView(AbstractNovelView):
 
         self.model = LocationsTreeModel(self.novel)
         self.ui.treeLocations.setModel(self.model)
-        self.ui.treeLocations.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeLocations.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.ui.treeLocations.setColumnWidth(1, 20)
         self.ui.treeLocations.clicked.connect(self._location_clicked)
         self.ui.treeLocations.expandAll()

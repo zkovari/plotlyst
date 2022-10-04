@@ -312,7 +312,7 @@ class SentenceHighlighter(QSyntaxHighlighter):
         self.setFormat(0, len(text), self._hidden_format)
         if self._editor.textCursor().block() == self.currentBlock():
             text = self._editor.textCursor().block().text()
-            finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
+            finder = QTextBoundaryFinder(QTextBoundaryFinder.BoundaryType.Sentence, text)
             pos = self._editor.textCursor().positionInBlock()
             boundary = finder.toNextBoundary()
             prev_boundary = 0
@@ -388,8 +388,8 @@ class ManuscriptTextEdit(TextEditBase):
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         cursor: QTextCursor = self.textCursor()
-        if cursor.atBlockEnd() and event.key() == Qt.Key_Space:
-            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+        if cursor.atBlockEnd() and event.key() == Qt.Key.Key_Space:
+            cursor.movePosition(QTextCursor.MoveOperation.PreviousCharacter, QTextCursor.MoveMode.KeepAnchor)
             if cursor.selectedText() == ' ':
                 self.textCursor().deletePreviousChar()
                 self.textCursor().insertText('.')
@@ -747,7 +747,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             if self.editor is not None:
                 self.exitRequested.emit()
         event.accept()

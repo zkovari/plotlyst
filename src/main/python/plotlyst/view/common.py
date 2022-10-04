@@ -287,11 +287,11 @@ def pointy(widget):
 
 
 def autoresize_col(view: QAbstractItemView, col: int):
-    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
 
 
 def stretch_col(view: QAbstractItemView, col: int):
-    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.Stretch)
+    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
 
 
 def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWidget]:

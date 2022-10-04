@@ -55,7 +55,7 @@ class DocumentsView(AbstractNovelView):
 
         self.model = DocumentsTreeModel(self.novel)
         self.ui.treeDocuments.setModel(self.model)
-        self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColMenu, 20)
         self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColPlus, 24)
         self.ui.treeDocuments.clicked.connect(self._doc_clicked)

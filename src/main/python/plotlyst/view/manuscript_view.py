@@ -88,7 +88,7 @@ class ManuscriptView(AbstractNovelView):
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
-        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.clicked.connect(self._edit)
 

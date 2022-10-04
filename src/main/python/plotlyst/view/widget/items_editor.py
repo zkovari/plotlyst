@@ -83,9 +83,10 @@ class ItemsEditorWidget(QWidget, Ui_ItemsEditorWidget):
         self.inlineEditionEnabled = enabled
 
         if self.inlineEditionEnabled:
-            self.tableView.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.AnyKeyPressed)
+            self.tableView.setEditTriggers(
+                QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.AnyKeyPressed)
         else:
-            self.tableView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.tableView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.tableView.doubleClicked.connect(self._edit)
 
     def setAdditionEnabled(self, enabled: bool):

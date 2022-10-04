@@ -123,7 +123,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self._proxy = proxy(self.model)
         self._proxy.setFilterRole(self._Model.IconTypeRole)
         self.lstIcons.setModel(self._proxy)
-        self.lstIcons.setViewMode(QListView.IconMode)
+        self.lstIcons.setViewMode(QListView.ViewMode.IconMode)
         self.lstIcons.clicked.connect(self._iconClicked)
 
         self.lineFilter.textChanged.connect(self._textChanged)

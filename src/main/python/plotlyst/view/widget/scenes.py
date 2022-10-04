@@ -1333,7 +1333,7 @@ class SceneStoryStructureWidget(QWidget):
     def _actButton(self, text: str, color: str, left: bool = False, right: bool = False) -> QPushButton:
         act = QPushButton(self)
         act.setText(text)
-        act.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Fixed)
+        act.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         act.setFixedHeight(self._lineHeight)
         act.setCursor(Qt.CursorShape.PointingHandCursor)
         act.setCheckable(True)
@@ -1413,7 +1413,7 @@ class ScenesTreeView(ActionBasedTreeView):
     def setModel(self, model: ChaptersTreeModel) -> None:
         super(ScenesTreeView, self).setModel(model)
         self.expandAll()
-        self.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         model.orderChanged.connect(self._on_scene_moved)
         model.modelReset.connect(self.expandAll)
@@ -1566,7 +1566,7 @@ class StoryLinesMapWidget(QWidget):
             previous_x = 0
             y = self._story_line_y(sl_i)
             path = QPainterPath()
-            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.PenStyle.SolidLine))
             path.moveTo(0, y)
             painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
             path.lineTo(5, y)
@@ -1609,9 +1609,9 @@ class StoryLinesMapWidget(QWidget):
         base_y = y
         for sl_i, plot in enumerate(self.novel.plots):
             y = 50 * (sl_i + 1) + 25 + base_y
-            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.PenStyle.SolidLine))
             painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
-            painter.setPen(QPen(Qt.GlobalColor.black, 5, Qt.SolidLine))
+            painter.setPen(QPen(Qt.GlobalColor.black, 5, Qt.PenStyle.SolidLine))
             painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
             painter.drawText(26, y - 15, plot.text)
 
@@ -1625,16 +1625,16 @@ class StoryLinesMapWidget(QWidget):
         if scene.plot_values:
             pen = Qt.red if scene is self._clicked_scene else Qt.GlobalColor.black
             if len(scene.plot_values) == 1:
-                painter.setPen(QPen(pen, 3, Qt.SolidLine))
+                painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
                 painter.setBrush(Qt.GlobalColor.black)
                 painter.drawEllipse(x, y - 7, 14, 14)
             else:
-                painter.setPen(QPen(pen, 3, Qt.SolidLine))
+                painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
                 painter.setBrush(Qt.GlobalColor.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
         else:
             pen = Qt.red if scene is self._clicked_scene else Qt.gray
-            painter.setPen(QPen(pen, 3, Qt.SolidLine))
+            painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
             painter.setBrush(Qt.gray)
             painter.drawEllipse(x, y, 14, 14)
 
@@ -1784,7 +1784,7 @@ class _ScenePlotAssociationsWidget(QWidget):
             self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignTop)
 
             line.setFixedWidth(self.LineSize)
-            line.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Policy.Expanding)
+            line.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
             hmax(self)
         else:
             vbox(self, 0, 0)
@@ -1793,7 +1793,7 @@ class _ScenePlotAssociationsWidget(QWidget):
             self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignLeft)
 
             line.setFixedHeight(self.LineSize)
-            line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Fixed)
+            line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         btnPlot.setText(self.plot.text)
         if self.plot.icon:
@@ -1962,7 +1962,7 @@ class SceneStageButton(QToolButton, EventListener):
             width: 0px;
         }
         ''')
-        self.setPopupMode(QToolButton.InstantPopup)
+        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         pointy(self)
 
         self.repo = RepositoryPersistenceManager.instance()
