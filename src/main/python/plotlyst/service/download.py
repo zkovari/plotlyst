@@ -22,7 +22,7 @@ import zipfile
 from typing import List
 
 import requests
-from PyQt5.QtCore import QRunnable
+from PyQt6.QtCore import QRunnable
 from overrides import overrides
 
 from src.main.python.plotlyst.env import app_env

@@ -19,9 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any
 
-from PyQt5.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
+from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
 from overrides import overrides
 from qthandy import flow
 
@@ -43,7 +43,7 @@ class ColorPicker(QWidget):
     def __init__(self, parent=None):
         super(ColorPicker, self).__init__(parent)
         flow(self)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
 
         self.btnGroup = QButtonGroup(self)
         self.btnGroup.setExclusive(True)
@@ -54,7 +54,7 @@ class ColorPicker(QWidget):
             btn = ColorButton(color, self)
             btn.setIconSize(QSize(22, 22))
             btn.setCheckable(True)
-            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(f'''
             QToolButton {{
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
@@ -77,7 +77,7 @@ class ColorPicker(QWidget):
         if btn:
             return QColor(btn.color)
         else:
-            return QColor(Qt.black)
+            return QColor(Qt.GlobalColor.black)
 
     def _clicked(self, btn: ColorButton):
         self.colorPicked.emit(QColor(btn.color))
@@ -139,7 +139,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
     def _textChanged(self, text: str):
         self.btnAll.setChecked(True)
         self._proxy.setFilterRole(self._Model.IconAliasRole)
-        self._proxy.setFilterRegExp(text)
+        self._proxy.setFilterRegularExpression(text)
 
     def _filterToggled(self):
         self.lineFilter.clear()
@@ -174,8 +174,8 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
 
     class _Model(QAbstractListModel):
 
-        IconAliasRole = Qt.UserRole + 1
-        IconTypeRole = Qt.UserRole + 2
+        IconAliasRole = Qt.ItemDataRole.UserRole + 1
+        IconTypeRole = Qt.ItemDataRole.UserRole + 2
 
         def __init__(self, icons):
             super().__init__()
@@ -192,10 +192,10 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
                 return self.icons[index.row()].name
             if role == self.IconTypeRole:
                 return self.icons[index.row()].type
-            if role == Qt.DecorationRole:
+            if role == Qt.ItemDataRole.DecorationRole:
                 return IconRegistry.from_name(self.icons[index.row()].name, self.color)
 
-            if role == Qt.ToolTipRole:
+            if role == Qt.ItemDataRole.ToolTipRole:
                 return self.icons[index.row()].name.split('.')[1].replace('-', ' ').capitalize()
 
         def setColor(self, color: QColor):

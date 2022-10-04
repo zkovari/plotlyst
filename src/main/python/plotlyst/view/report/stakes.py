@@ -19,8 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Dict
 
-from PyQt5.QtChart import QLegend, QValueAxis, QSplineSeries
-from PyQt5.QtGui import QPen, QColor
+from PyQt6.QtCharts import QLegend, QValueAxis, QSplineSeries
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPen, QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Stake
@@ -56,7 +57,7 @@ class StakesChart(BaseChart):
     def __init__(self, novel: Novel, parent=None):
         super(StakesChart, self).__init__(parent)
         self.novel = novel
-        self.legend().setMarkerShape(QLegend.MarkerShapeCircle)
+        self.legend().setMarkerShape(QLegend.MarkerShape.MarkerShapeCircle)
         self.legend().show()
         self.setTitle(html('Stakes').bold())
 
@@ -65,12 +66,12 @@ class StakesChart(BaseChart):
 
         axisX = QValueAxis()
         axisX.setRange(0, len(self.novel.scenes))
-        self.setAxisX(axisX)
+        self.addAxis(axisX, Qt.AlignmentFlag.AlignBottom)
         axisX.setVisible(False)
 
         axisY = QValueAxis()
         axisY.setRange(0, 10)
-        self.setAxisY(axisY)
+        self.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
         axisY.setVisible(False)
 
         splines: Dict[int, QSplineSeries] = {}

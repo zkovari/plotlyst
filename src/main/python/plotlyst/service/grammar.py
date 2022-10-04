@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, Set
 
 import language_tool_python
-from PyQt5.QtCore import QRunnable
+from PyQt6.QtCore import QRunnable
 from language_tool_python import LanguageTool
 from overrides import overrides
 

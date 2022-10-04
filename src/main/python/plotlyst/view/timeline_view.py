@@ -17,8 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QHeaderView
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QHeaderView
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel
@@ -31,7 +31,7 @@ from src.main.python.plotlyst.view.widget.timeline import TimelineWidget
 
 
 class TimelineView(AbstractNovelView):
-    colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.darkBlue, Qt.darkGreen]
+    colors = [Qt.red, Qt.blue, Qt.green, Qt.magenta, Qt.GlobalColor.darkBlue, Qt.GlobalColor.darkGreen]
 
     def __init__(self, novel: Novel):
         super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent])

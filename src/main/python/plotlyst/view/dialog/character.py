@@ -21,8 +21,8 @@ from typing import Optional, Dict, Tuple
 
 import emoji
 import qtanim
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QDialog, QToolButton, QButtonGroup, QDialogButtonBox
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtWidgets import QDialog, QToolButton, QButtonGroup, QDialogButtonBox
 from fbs_runtime import platform
 from qthandy import FlowLayout
 from qthandy.filter import InstantTooltipEventFilter
@@ -74,7 +74,7 @@ class _BackstoryEventTypeButton(QToolButton):
         self.setToolTip(f'<html><b style="color: {self.color}">{type.name}</b></html>')
 
         self.setCheckable(True)
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setIconSize(QSize(24, 24))
 
         self.installEventFilter(InstantTooltipEventFilter(self))

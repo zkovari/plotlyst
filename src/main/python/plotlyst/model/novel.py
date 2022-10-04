@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from abc import abstractmethod
 from typing import Any, List
 
-from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal
+from PyQt6.QtGui import QFont
 from anytree import Node
 from overrides import overrides
 
@@ -57,9 +57,9 @@ class _NovelSelectionItemsModel(SelectionItemsModel):
         pass
 
     @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.DisplayRole) -> bool:
         updated = super().setData(index, value, role)
-        if updated and role != Qt.CheckStateRole:
+        if updated and role != Qt.ItemDataRole.CheckStateRole:
             self.repo.update_novel(self.novel)
         return updated
 
@@ -122,20 +122,20 @@ class NovelTagsTreeModel(TreeItemModel):
         self._checked = set()
 
     @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         node = index.internalPointer()
-        if isinstance(node, TagTypeNode) and role == Qt.DecorationRole and node.tag_type.icon:
+        if isinstance(node, TagTypeNode) and role == Qt.ItemDataRole.DecorationRole and node.tag_type.icon:
             return IconRegistry.from_name(node.tag_type.icon, node.tag_type.icon_color)
         elif isinstance(node, TagNode):
-            if role == Qt.DecorationRole and node.tag.icon:
+            if role == Qt.ItemDataRole.DecorationRole and node.tag.icon:
                 if node.tag.color_hexa and node.tag.color_hexa.lower() != '#ffffff':
                     color = node.tag.color_hexa
                 else:
                     color = node.tag.icon_color
                 return IconRegistry.from_name(node.tag.icon, color)
-            if role == Qt.CheckStateRole:
+            if role == Qt.ItemDataRole.CheckStateRole:
                 return Qt.Checked if node.tag in self._checked else Qt.Unchecked
-            if role == Qt.FontRole and node.tag in self._checked:
+            if role == Qt.ItemDataRole.FontRole and node.tag in self._checked:
                 font = QFont()
                 font.setBold(True)
                 return font
@@ -146,7 +146,7 @@ class NovelTagsTreeModel(TreeItemModel):
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
         node = index.internalPointer()
         if isinstance(node, TagNode):
-            if role == Qt.CheckStateRole:
+            if role == Qt.ItemDataRole.CheckStateRole:
                 if value == Qt.Checked:
                     self._checked.add(node.tag)
                 elif value == Qt.Unchecked:

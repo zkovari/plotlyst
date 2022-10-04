@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from abc import abstractmethod
 from typing import Union, List, Iterable, Set
 
-from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from PyQt5.QtGui import QIcon, QMouseEvent
-from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
+from PyQt6.QtCore import QSize, Qt, pyqtSignal
+from PyQt6.QtGui import QIcon, QMouseEvent
+from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
 from overrides import overrides
 from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent, btn_popup
 
@@ -282,13 +282,13 @@ class SceneLabel(Label):
 
 
 class LabelsEditorWidget(QFrame):
-    def __init__(self, alignment=Qt.Horizontal, checkable: bool = True, parent=None):
+    def __init__(self, alignment=Qt.Orientation.Horizontal, checkable: bool = True, parent=None):
         super(LabelsEditorWidget, self).__init__(parent)
         self.checkable = checkable
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Box)
         self.setStyleSheet('LabelsEditorWidget {background: white;}')
-        if alignment == Qt.Horizontal:
+        if alignment == Qt.Orientation.Horizontal:
             hbox(self, 2, 1)
         else:
             vbox(self, 2, 1)
@@ -306,11 +306,11 @@ class LabelsEditorWidget(QFrame):
         self._model.selection_changed.connect(self._selectionChanged)
 
         btn_popup(self.btnEdit, self._popup)
-        self.layout().addWidget(self.btnEdit, alignment=Qt.AlignTop)
+        self.layout().addWidget(self.btnEdit, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgLabels = LabelsWidget()
         self._wdgLabels.setStyleSheet('LabelsWidget {border: 1px solid black;}')
-        self._wdgLabels.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self._wdgLabels.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.layout().addWidget(self._wdgLabels)
 
     def clear(self):

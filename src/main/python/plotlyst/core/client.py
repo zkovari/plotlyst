@@ -25,8 +25,8 @@ from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import List, Optional, Any, Dict, Set
 
-from PyQt5.QtCore import QByteArray, QBuffer, QIODevice
-from PyQt5.QtGui import QImage, QImageReader
+from PyQt6.QtCore import QByteArray, QBuffer, QIODevice
+from PyQt6.QtGui import QImage, QImageReader
 from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined, config
 from qthandy import busy

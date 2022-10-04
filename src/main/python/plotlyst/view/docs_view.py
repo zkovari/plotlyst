@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtCore import QModelIndex, Qt, QSize
-from PyQt5.QtWidgets import QHeaderView, QWidgetAction, QListView
+from PyQt6.QtCore import QModelIndex, Qt, QSize
+from PyQt6.QtWidgets import QHeaderView, QWidgetAction, QListView
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import clear_layout
@@ -147,7 +147,7 @@ class DocumentsView(AbstractNovelView):
 
         character_menu = builder.add_submenu('Characters', IconRegistry.character_icon())
         _view = QListView()
-        _view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        _view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         _view.clicked.connect(add_character)
         _view.setModel(CharactersTableModel(self.novel))
         action = QWidgetAction(character_menu)
