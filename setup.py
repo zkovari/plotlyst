@@ -31,7 +31,6 @@ REQUIREMENTS: dict = {
         'pytest-randomly==3.11.0',
     ],
     'dev': [
-        'pyqt5ac',
     ],
     'doc': [
     ],

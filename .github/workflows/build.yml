@@ -57,13 +57,14 @@ jobs:
           pip install fbs.tar.gz
           pip install pyqt5ac
           pip install -e .
+          pip install git+https://github.com/plotlyst/qt-uic.git
           pip install git+https://github.com/plotlyst/qt-anim.git
           pip install git+https://github.com/plotlyst/qt-textedit.git
           pip install git+https://github.com/plotlyst/qt-handy.git
           pip install git+https://github.com/plotlyst/language_tool_python.git@feature/macos-awt-flag
       - name: Generate code
         run: |
-          pyqt5ac --config .pyqt5ac.yml
+          python uic_gen.py
 
       - name: fbs
         run: |
