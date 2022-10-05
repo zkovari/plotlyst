@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt5.QtCore import QObject, QEvent, Qt
-from PyQt5.QtGui import QFont
+from PyQt6.QtCore import QObject, QEvent, Qt
+from PyQt6.QtGui import QFont
 from overrides import overrides
 from qthandy import retain_when_hidden, transparent
 
@@ -60,7 +60,7 @@ class NovelView(AbstractNovelView):
         self.ui.textPremise.textEdit.setPlaceholderText('Premise')
         self.ui.textPremise.textEdit.setFontFamily('Helvetica')
         self.ui.textPremise.textEdit.setFontPointSize(16)
-        self.ui.textPremise.textEdit.setAlignment(Qt.AlignCenter)
+        self.ui.textPremise.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ui.textPremise.textEdit.setFontWeight(QFont.Bold)
 
         self.ui.lblTitle.setText(self.novel.title)
@@ -121,9 +121,9 @@ class NovelView(AbstractNovelView):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Enter:
+        if event.type() == QEvent.Type.Enter:
             self.ui.btnEditNovel.setVisible(True)
-        elif event.type() == QEvent.Leave:
+        elif event.type() == QEvent.Type.Leave:
             self.ui.btnEditNovel.setHidden(True)
 
         return super(NovelView, self).eventFilter(watched, event)

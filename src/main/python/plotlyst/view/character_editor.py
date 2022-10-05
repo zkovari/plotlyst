@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt5.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit
+from PyQt6.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit
 from fbs_runtime import platform
 from qthandy import translucent, btn_popup, incr_font, bold, italic
 

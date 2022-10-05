@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt5.QtCore import QModelIndex, QTimer, Qt
-from PyQt5.QtWidgets import QHeaderView, QApplication
+from PyQt6.QtCore import QModelIndex, QTimer, Qt
+from PyQt6.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
 from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
 
@@ -88,7 +88,7 @@ class ManuscriptView(AbstractNovelView):
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
-        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.clicked.connect(self._edit)
 
@@ -130,7 +130,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgTitle.setVisible(True)
         self.ui.treeChapters.setVisible(True)
 
-        self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignCenter)
+        self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setStyleSheet('color: black')
         self.ui.lblWordCount.setVisible(True)
         self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)

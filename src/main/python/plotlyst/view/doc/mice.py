@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict
 
 import qtanim
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QWidget
 from qthandy import incr_font, vbox, retain_when_hidden, gc, vspacer
 
 from src.main.python.plotlyst.core.domain import MiceQuotient, Document, MiceThread, MiceType, Scene

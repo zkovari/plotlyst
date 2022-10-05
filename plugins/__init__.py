@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from PyQt5.QtGui import QIcon
+from PyQt6.QtGui import QIcon
 
 
 class PluginBase:

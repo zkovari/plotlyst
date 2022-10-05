@@ -24,11 +24,11 @@ from typing import Dict, Optional
 from typing import List
 
 import qtanim
-from PyQt5.QtCore import QPoint, QTimeLine
-from PyQt5.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
-from PyQt5.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QBrush, QIcon
-from PyQt5.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
+from PyQt6.QtCore import QPoint, QTimeLine
+from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
+from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QBrush, QIcon
+from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QPainterPath
+from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QAbstractButton, QTableView, \
     QAbstractItemView
 from overrides import overrides
@@ -139,7 +139,7 @@ class ScenePlotValueChargeWidget(QWidget):
         retain_when_hidden(self.negCharge)
 
         self.layout().addWidget(self.chargeIcon)
-        self.layout().addWidget(lbl, alignment=Qt.AlignLeft)
+        self.layout().addWidget(lbl, alignment=Qt.AlignmentFlag.AlignLeft)
         self.layout().addWidget(spacer())
         self.layout().addWidget(self.negCharge)
         self.layout().addWidget(self.posCharge)
@@ -220,7 +220,7 @@ class ScenePlotSelector(QWidget):
         else:
             self.btnLinkPlot.setText('Associate plot')
         self.layout().addWidget(self.btnLinkPlot)
-        self.btnLinkPlot.setCursor(Qt.PointingHandCursor)
+        self.btnLinkPlot.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btnLinkPlot.setStyleSheet('''
                                 QPushButton {
                                     border: 2px dotted darkGrey;
@@ -297,12 +297,12 @@ class SceneTagSelector(QWidget):
         hbox(self)
         self.btnSelect = QToolButton(self)
         self.btnSelect.setIcon(IconRegistry.tag_plus_icon())
-        self.btnSelect.setCursor(Qt.PointingHandCursor)
+        self.btnSelect.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self._tagsModel = NovelTagsTreeModel(self.novel)
         self._tagsModel.selectionChanged.connect(self._selectionChanged)
         self._treeSelectorView = QTreeView()
-        self._treeSelectorView.setCursor(Qt.PointingHandCursor)
+        self._treeSelectorView.setCursor(Qt.CursorShape.PointingHandCursor)
         self._treeSelectorView.setModel(self._tagsModel)
         self._treeSelectorView.setHeaderHidden(True)
         self._treeSelectorView.clicked.connect(self._toggle)
@@ -314,7 +314,7 @@ class SceneTagSelector(QWidget):
         flow(self.wdgTags)
         self.setStyleSheet('#wdgTags {background-color: white;}')
 
-        self.layout().addWidget(group(self.btnSelect, QLabel('Tags:'), margin=0), alignment=Qt.AlignTop)
+        self.layout().addWidget(group(self.btnSelect, QLabel('Tags:'), margin=0), alignment=Qt.AlignmentFlag.AlignTop)
         self.layout().addWidget(self.wdgTags)
 
     def setScene(self, scene: Scene):
@@ -630,8 +630,8 @@ class _SceneTypeButton(QPushButton):
         super(_SceneTypeButton, self).__init__(parent)
         self.type = type
         self.setCheckable(True)
-        self.setCursor(Qt.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
         if type == SceneType.ACTION:
             bgColor = '#eae4e9'
@@ -773,7 +773,7 @@ class SceneStructureTimeline(QWidget):
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QBrush(QColor('#1d3557')))
         painter.drawRect(0, 11, self.width(), 11)
 
@@ -785,7 +785,7 @@ class SceneStructureTimeline(QWidget):
 
     def _addBeatWidget(self, item: SceneStructureItem):
         widget = self._newBeatWidget(item)
-        self.layout().addWidget(widget, alignment=Qt.AlignTop)
+        self.layout().addWidget(widget, alignment=Qt.AlignmentFlag.AlignTop)
         self._addPlaceholder()
         self.timelineChanged.emit()
 
@@ -803,7 +803,7 @@ class SceneStructureTimeline(QWidget):
         widget.activate()
         i = self.layout().indexOf(placeholder)
         self.layout().insertWidget(i, self._newPlaceholder())
-        self.layout().insertWidget(i + 1, widget, alignment=Qt.AlignTop)
+        self.layout().insertWidget(i + 1, widget, alignment=Qt.AlignmentFlag.AlignTop)
         self.timelineChanged.emit()
 
     def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
@@ -1039,7 +1039,7 @@ class SceneStoryStructureWidget(QWidget):
 
     def __init__(self, parent=None):
         super(SceneStoryStructureWidget, self).__init__(parent)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
 
         self._checkOccupiedBeats: bool = True
         self._beatsCheckable: bool = False
@@ -1047,7 +1047,7 @@ class SceneStoryStructureWidget(QWidget):
         self._removalContextMenuEnabled: bool = False
         self._actsClickable: bool = False
         self._actsResizeable: bool = False
-        self._beatCursor = Qt.PointingHandCursor
+        self._beatCursor = Qt.CursorShape.PointingHandCursor
         self.novel: Optional[Novel] = None
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
@@ -1176,9 +1176,9 @@ class SceneStoryStructureWidget(QWidget):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(watched, QToolButton) and watched.isCheckable() and not watched.isChecked():
-            if event.type() == QEvent.Enter:
+            if event.type() == QEvent.Type.Enter:
                 translucent(watched)
-            elif event.type() == QEvent.Leave:
+            elif event.type() == QEvent.Type.Leave:
                 translucent(watched, 0.2)
         return super(SceneStoryStructureWidget, self).eventFilter(watched, event)
 
@@ -1316,7 +1316,7 @@ class SceneStoryStructureWidget(QWidget):
         if toggled:
             btn.setCheckable(False)
         else:
-            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setCheckable(True)
             self._beatToggled(btn, False)
 
@@ -1333,9 +1333,9 @@ class SceneStoryStructureWidget(QWidget):
     def _actButton(self, text: str, color: str, left: bool = False, right: bool = False) -> QPushButton:
         act = QPushButton(self)
         act.setText(text)
-        act.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        act.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         act.setFixedHeight(self._lineHeight)
-        act.setCursor(Qt.PointingHandCursor)
+        act.setCursor(Qt.CursorShape.PointingHandCursor)
         act.setCheckable(True)
         act.setStyleSheet(f'''
         QPushButton {{
@@ -1413,7 +1413,7 @@ class ScenesTreeView(ActionBasedTreeView):
     def setModel(self, model: ChaptersTreeModel) -> None:
         super(ScenesTreeView, self).setModel(model)
         self.expandAll()
-        self.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         model.orderChanged.connect(self._on_scene_moved)
         model.modelReset.connect(self.expandAll)
@@ -1497,7 +1497,7 @@ class StoryLinesMapWidget(QWidget):
         self._line_height = 50
         self._first_paint_triggered: bool = False
 
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu_requested)
 
     def setNovel(self, novel: Novel, animated: bool = True):
@@ -1549,7 +1549,7 @@ class StoryLinesMapWidget(QWidget):
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
 
         if not self._first_paint_triggered:
@@ -1566,7 +1566,7 @@ class StoryLinesMapWidget(QWidget):
             previous_x = 0
             y = self._story_line_y(sl_i)
             path = QPainterPath()
-            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.PenStyle.SolidLine))
             path.moveTo(0, y)
             painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
             path.lineTo(5, y)
@@ -1609,9 +1609,9 @@ class StoryLinesMapWidget(QWidget):
         base_y = y
         for sl_i, plot in enumerate(self.novel.plots):
             y = 50 * (sl_i + 1) + 25 + base_y
-            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.SolidLine))
+            painter.setPen(QPen(QColor(plot.icon_color), 4, Qt.PenStyle.SolidLine))
             painter.drawLine(0, y, last_sc_x.get(sl_i, 15), y)
-            painter.setPen(QPen(Qt.black, 5, Qt.SolidLine))
+            painter.setPen(QPen(Qt.GlobalColor.black, 5, Qt.PenStyle.SolidLine))
             painter.drawPixmap(0, y - 35, IconRegistry.from_name(plot.icon, plot.icon_color).pixmap(24, 24))
             painter.drawText(26, y - 15, plot.text)
 
@@ -1623,18 +1623,18 @@ class StoryLinesMapWidget(QWidget):
 
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
         if scene.plot_values:
-            pen = Qt.red if scene is self._clicked_scene else Qt.black
+            pen = Qt.red if scene is self._clicked_scene else Qt.GlobalColor.black
             if len(scene.plot_values) == 1:
-                painter.setPen(QPen(pen, 3, Qt.SolidLine))
-                painter.setBrush(Qt.black)
+                painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
+                painter.setBrush(Qt.GlobalColor.black)
                 painter.drawEllipse(x, y - 7, 14, 14)
             else:
-                painter.setPen(QPen(pen, 3, Qt.SolidLine))
-                painter.setBrush(Qt.white)
+                painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
+                painter.setBrush(Qt.GlobalColor.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
         else:
             pen = Qt.red if scene is self._clicked_scene else Qt.gray
-            painter.setPen(QPen(pen, 3, Qt.SolidLine))
+            painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
             painter.setBrush(Qt.gray)
             painter.drawEllipse(x, y, 14, 14)
 
@@ -1781,19 +1781,19 @@ class _ScenePlotAssociationsWidget(QWidget):
             btnPlot = RotatedButton()
             btnPlot.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
             hmax(btnPlot)
-            self.layout().addWidget(btnPlot, alignment=Qt.AlignTop)
+            self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignTop)
 
             line.setFixedWidth(self.LineSize)
-            line.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+            line.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
             hmax(self)
         else:
             vbox(self, 0, 0)
             hbox(self.wdgReferences, margin=0)
             btnPlot = QPushButton()
-            self.layout().addWidget(btnPlot, alignment=Qt.AlignLeft)
+            self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignLeft)
 
             line.setFixedHeight(self.LineSize)
-            line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         btnPlot.setText(self.plot.text)
         if self.plot.icon:
@@ -1840,10 +1840,10 @@ class StoryMap(QWidget):
         super(StoryMap, self).__init__(parent)
         self.novel: Optional[Novel] = None
         self._display_mode: StoryMapDisplayMode = StoryMapDisplayMode.DOTS
-        self._orientation: int = Qt.Horizontal
+        self._orientation: int = Qt.Orientation.Horizontal
         self._acts_filter: Dict[int, bool] = {}
         vbox(self, spacing=0)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
@@ -1858,7 +1858,7 @@ class StoryMap(QWidget):
 
         if self._display_mode == StoryMapDisplayMode.DETAILED:
             wdgScenePlotParent = QWidget(self)
-            if self._orientation == Qt.Horizontal:
+            if self._orientation == Qt.Orientation.Horizontal:
                 vbox(wdgScenePlotParent, spacing=0)
             else:
                 hbox(wdgScenePlotParent, spacing=0)
@@ -1871,7 +1871,7 @@ class StoryMap(QWidget):
                                                    vertical=self._orientation == Qt.Vertical)
                 wdgScenePlotParent.layout().addWidget(wdg)
 
-            if self._orientation == Qt.Horizontal:
+            if self._orientation == Qt.Orientation.Horizontal:
                 wdgScenePlotParent.layout().addWidget(vspacer())
             else:
                 wdgScenePlotParent.layout().addWidget(spacer())
@@ -1883,7 +1883,7 @@ class StoryMap(QWidget):
             wdg.setNovel(self.novel, animated=animated)
             if self._display_mode == StoryMapDisplayMode.TITLE:
                 titles = QWidget(self)
-                titles.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+                titles.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
                 titles.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
                 hbox(titles, 0, 0)
                 margins(titles, left=70)
@@ -1962,7 +1962,7 @@ class SceneStageButton(QToolButton, EventListener):
             width: 0px;
         }
         ''')
-        self.setPopupMode(QToolButton.InstantPopup)
+        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         pointy(self)
 
         self.repo = RepositoryPersistenceManager.instance()

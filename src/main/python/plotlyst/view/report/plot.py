@@ -19,9 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt5.QtChart import QSplineSeries, QValueAxis, QLegend
-from PyQt5.QtGui import QPen, QColor
-from PyQt5.QtWidgets import QPushButton, QButtonGroup
+from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPen, QColor
+from PyQt6.QtWidgets import QPushButton, QButtonGroup
 from overrides import overrides
 from qthandy import flow, clear_layout
 
@@ -85,7 +86,7 @@ class PlotValuesArcChart(BaseChart):
         super().__init__(parent)
         self.novel = novel
         self.createDefaultAxes()
-        self.legend().setMarkerShape(QLegend.MarkerShapeCircle)
+        self.legend().setMarkerShape(QLegend.MarkerShape.MarkerShapeCircle)
         self.legend().show()
 
         self.setTitle('Plot value charges')
@@ -95,11 +96,11 @@ class PlotValuesArcChart(BaseChart):
 
         axisX = QValueAxis()
         axisX.setRange(0, len(self.novel.scenes))
-        self.setAxisX(axisX)
+        self.addAxis(axisX, Qt.AlignmentFlag.AlignBottom)
         axisX.setVisible(False)
 
         axisY = QValueAxis()
-        self.setAxisY(axisY)
+        self.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
 
         min_ = 0
         max_ = 0
@@ -123,13 +124,13 @@ class PlotValuesArcChart(BaseChart):
                                 charge += scene_p_value.charge
                                 series.append(i + 1, charge)
 
-                points = series.pointsVector()
-                min_ = min(min([x.y() for x in points]), min_)
-                max_ = max(max([x.y() for x in points]), max_)
+                # points = series.point
+                # min_ = min(min([x.y() for x in points]), min_)
+                # max_ = max(max([x.y() for x in points]), max_)
 
                 self.addSeries(series)
-                series.attachAxis(axisX)
-                series.attachAxis(axisY)
+                # series.attachAxis(axisX)
+                # series.attachAxis(axisY)
 
         limit = max(abs(min_), max_)
 

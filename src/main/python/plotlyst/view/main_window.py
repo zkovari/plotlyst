@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt, QThreadPool
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
+from PyQt6.QtCore import Qt, QThreadPool
+from PyQt6.QtGui import QCloseEvent
+from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc, clear_layout

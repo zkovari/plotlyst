@@ -20,9 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Dict
 
-from PyQt5.QtChart import QPieSeries, QLineSeries, QValueAxis
-from PyQt5.QtGui import QColor, QCursor, QPen
-from PyQt5.QtWidgets import QToolTip
+from PyQt6.QtCharts import QPieSeries, QLineSeries, QValueAxis
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QCursor, QPen
+from PyQt6.QtWidgets import QToolTip
 from overrides import overrides
 
 from src.main.python.plotlyst.common import CONFLICT_CHARACTER_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, \
@@ -145,12 +146,12 @@ class ConflictIntensityChart(BaseChart):
 
         axisX = QValueAxis()
         axisX.setRange(0, len(self.novel.scenes))
-        self.setAxisX(axisX)
+        self.addAxis(axisX, Qt.AlignmentFlag.AlignBottom)
         axisX.setVisible(False)
 
         axisY = QValueAxis()
         axisY.setRange(0, 10)
-        self.setAxisY(axisY)
+        self.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
         axisY.setVisible(False)
 
         series = QLineSeries()

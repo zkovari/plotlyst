@@ -21,9 +21,9 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt5.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup
+from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup
 from overrides import overrides
 from qthandy import hbox, translucent, bold, incr_font
 
@@ -38,7 +38,7 @@ class SelectionItemPushButton(QPushButton):
 
     def __init__(self, parent=None):
         super(SelectionItemPushButton, self).__init__(parent)
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.item: Optional[SelectionItem] = None
         self.timer = QTimer()
         self.timer.setSingleShot(True)
@@ -75,8 +75,8 @@ class _SecondaryActionButton(QAbstractButton):
         self._iconColor: str = 'black'
         self._checkedColor: str = 'black'
         self.initStyleSheet()
-        self.setCursor(Qt.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
         self.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self))
 
     def initStyleSheet(self, border_color: str = 'grey', border_style: str = 'dashed', color: str = 'grey'):
@@ -171,9 +171,9 @@ class WordWrappedPushButton(QPushButton):
         self.label = QLabel(self)
         self.label.setWordWrap(True)
         self.label.setTextInteractionFlags(Qt.NoTextInteraction)
-        self.label.setAlignment(Qt.AlignCenter)
-        hbox(self, 0, 0).addWidget(self.label, alignment=Qt.AlignCenter)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        hbox(self, 0, 0).addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
 
     @overrides
     def setText(self, text: str):

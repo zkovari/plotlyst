@@ -22,10 +22,10 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt5.QtChart import QChartView
-from PyQt5.QtCore import QPropertyAnimation, pyqtProperty, QSize
-from PyQt5.QtGui import QPainter, QShowEvent, QColor
-from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
+from PyQt6.QtCharts import QChartView
+from PyQt6.QtCore import QPropertyAnimation, pyqtProperty, QSize
+from PyQt6.QtGui import QPainter, QShowEvent, QColor
+from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox
@@ -74,7 +74,7 @@ class ToggleHelp(QPushButton):
 class ChartView(QChartView):
     def __init__(self, parent=None):
         super(ChartView, self).__init__(parent)
-        self.setRenderHint(QPainter.Antialiasing)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
 
 
 class Subtitle(QWidget):
@@ -94,7 +94,7 @@ class Subtitle(QWidget):
 
         self.lblDescription.setStyleSheet('color: #8d99ae;')
         self.lblDescription.setWordWrap(True)
-        self.lblDescription.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.lblDescription.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.layout().addWidget(group(self.icon, self.lblTitle, parent=self))
         self.layout().addWidget(group(self._descSpacer, self.lblDescription, parent=self))
 

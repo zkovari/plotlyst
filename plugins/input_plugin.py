@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
+from PyQt6.QtDesigner import QPyDesignerCustomWidgetPlugin
 from overrides import overrides
 
 from plugins import PluginBase

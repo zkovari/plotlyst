@@ -24,10 +24,10 @@ from typing import Optional, List
 
 import emoji
 import qtanim
-from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
-from PyQt5.QtGui import QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor
-from PyQt5.QtWidgets import QFrame, QApplication, QAction
+from PyQt6 import QtGui
+from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
+from PyQt6.QtGui import QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor, QAction
+from PyQt6.QtWidgets import QFrame, QApplication
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import FlowLayout, clear_layout
@@ -57,7 +57,7 @@ class Card(QFrame):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.select)
         self.dragStartPosition: Optional[QPoint] = None
         self._dragEnabled: bool = True
@@ -75,7 +75,7 @@ class Card(QFrame):
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if self._dragEnabled and event.button() == Qt.LeftButton:
+        if self._dragEnabled and event.button() == Qt.MouseButton.LeftButton:
             self.dragStartPosition = event.pos()
         else:
             self.dragStartPosition = None
@@ -85,7 +85,7 @@ class Card(QFrame):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if not self._dragEnabled:
             return
-        if not event.buttons() & Qt.LeftButton:
+        if not event.buttons() & Qt.MouseButton.LeftButton:
             return
         if not self.dragStartPosition:
             return
@@ -174,7 +174,7 @@ class NovelCard(Ui_NovelCard, Card):
 
     def refresh(self):
         self.textName.setText(self.novel.title)
-        self.textName.setAlignment(Qt.AlignCenter)
+        self.textName.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     @overrides
     def mimeType(self) -> str:
@@ -190,7 +190,7 @@ class CharacterCard(Ui_CharacterCard, Card):
         self.textName.setContentsMargins(0, 0, 0, 0)
         self.textName.document().setDocumentMargin(0)
         self.textName.setText(self.character.name)
-        self.textName.setAlignment(Qt.AlignCenter)
+        self.textName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         set_avatar(self.lblPic, self.character, size=118)
 
         enneagram = self.character.enneagram()
@@ -219,7 +219,7 @@ class JournalCard(Card, Ui_JournalCard):
         self.journal = journal
 
         self.refresh()
-        self.textTitle.setAlignment(Qt.AlignCenter)
+        self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._setStyleSheet()
         self.setDragEnabled(False)
@@ -245,9 +245,9 @@ class SceneCard(Ui_SceneCard, Card):
 
         self.textTitle.setFontPointSize(QApplication.font().pointSize() + 1)
         self.textTitle.setText(self.scene.title_or_index(self.novel))
-        self.textTitle.setAlignment(Qt.AlignCenter)
+        self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.textSynopsis.setAlignment(Qt.AlignCenter)
+        self.textSynopsis.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.textSynopsis.setText(scene.synopsis)
 
         self.btnPov.clicked.connect(self.select)
