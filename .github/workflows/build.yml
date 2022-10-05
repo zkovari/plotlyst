@@ -36,6 +36,11 @@ jobs:
           ruby-version: 2.5.1
 
       - if: matrix.os == 'ubuntu-latest'
+        name: Install libEgl libraries for Linux
+        run: |
+          sudo apt update
+          sudo apt install -y libpulse-mainloop-glib0 libegl1-mesa-dev libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev
+      - if: matrix.os == 'ubuntu-latest'
         name: Install fpm on Linux
         run: |
           sudo gem install --no-document fpm
