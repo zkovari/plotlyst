@@ -73,3 +73,8 @@ punkt_nltk_resource = NltkResource('punkt', 'tokenizers',
                                    'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip')
 avg_tagger_url = 'https://github.com/nltk/nltk_data/raw/gh-pages/packages/taggers/averaged_perceptron_tagger.zip'
 avg_tagger_nltk_resource = NltkResource('averaged_perceptron_tagger', 'taggers', avg_tagger_url)
+
+
+class ResourceManager:
+    def has_nltk_resource(self) -> bool:
+        pass
