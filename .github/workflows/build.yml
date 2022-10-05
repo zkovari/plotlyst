@@ -56,7 +56,6 @@ jobs:
           pip install gdown
           gdown ${{secrets.FBS_PROXY_URL}} -q -O fbs.tar.gz
           pip install fbs.tar.gz
-          pip install pyqt5ac
           pip install -e .
           pip install git+https://github.com/plotlyst/qt-uic.git
           pip install git+https://github.com/plotlyst/qt-anim.git
