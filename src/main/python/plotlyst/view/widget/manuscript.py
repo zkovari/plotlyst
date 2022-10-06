@@ -495,7 +495,7 @@ class ManuscriptTextEditor(RichTextEditor):
             self._addScene(scene)
             if i < len(scenes) - 1:
                 self.textEdit.textCursor().insertBlock()
-                self.textEdit.textCursor().insertText('----')
+                self.textEdit.textCursor().insertText('-' * 15)
                 self.textEdit.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
                 self.textEdit.textCursor().insertBlock()
         self._scenes.extend(scenes)
