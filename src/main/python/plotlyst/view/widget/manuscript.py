@@ -362,7 +362,6 @@ class ManuscriptTextEdit(TextEditBase):
         super(ManuscriptTextEdit, self).__init__(parent)
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
                                               highlightStyle=GrammarHighlightStyle.BACKGOUND)
-        # self._minHeight = 60
 
         self._sentenceHighlighter: Optional[SentenceHighlighter] = None
         self._nightModeHighlighter: Optional[NightModeHighlighter] = None
@@ -374,16 +373,6 @@ class ManuscriptTextEdit(TextEditBase):
             self.setFont(QFont('Palatino'))
 
         self._setDefaultStyleSheet()
-        # self.textChanged.connect(self.resizeToContent)
-
-    # @overrides
-    # def showEvent(self, a0: QtGui.QShowEvent) -> None:
-    #     self.resizeToContent()
-    #
-    # @overrides
-    # def resizeEvent(self, event: QResizeEvent):
-    #     super(ManuscriptTextEdit, self).resizeEvent(event)
-    #     self.resizeToContent()
 
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
@@ -394,11 +383,6 @@ class ManuscriptTextEdit(TextEditBase):
                 self.textCursor().deletePreviousChar()
                 self.textCursor().insertText('.')
         super(ManuscriptTextEdit, self).keyPressEvent(event)
-
-    # def resizeToContent(self):
-    #     margins: QMargins = self.viewportMargins()
-    #     self.setMinimumHeight(
-    #         max(self._minHeight, self.document().size().height()) + margins.top() + margins.bottom() + 5)
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.highlighter.setCheckEnabled(enabled)
@@ -607,20 +591,12 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         self.btnRefresh.installEventFilter(OpacityEventFilter(parent=self.btnRefresh))
         retain_when_hidden(self.btnRefresh)
         self.btnRefresh.setHidden(True)
-        # self._docs: List[QTextDocument] = []
         self._updatedDoc: Optional[QTextDocument] = None
         self.btnRefresh.clicked.connect(lambda: self.checkTextDocument(self._updatedDoc))
 
     def checkTextDocument(self, doc: QTextDocument):
-        # if not docs:
-        #     return
-
-        # text = ''
-        # cleaned_text = ''
-        # for doc in docs:
         text = doc.toPlainText()
         cleaned_text = clean_text(text)
-        # text += _txt
         spin(self.btnResult)
 
         score = textstat.flesch_reading_ease(cleaned_text)
@@ -661,10 +637,6 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
 
     def setTextDocumentUpdated(self, doc: QTextDocument, updated: bool = True):
         self._updatedDoc = doc
-        # if not docs:
-        #     return
-        # self._docs.clear()
-        # self._docs.extend(docs)
         if updated:
             if not self.btnRefresh.isVisible():
                 anim = qtanim.fade_in(self.btnRefresh)
