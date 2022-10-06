@@ -479,21 +479,6 @@ class ManuscriptTextEditor(RichTextEditor):
         self.textEdit.setUneditableBlocksEnabled(False)
 
         self._addScene(scene)
-        # block = self.textEdit.document().begin()
-        # cursor = QTextCursor(block)
-        # cursor.select(QTextCursor.BlockUnderCursor)
-        # cursor.removeSelectedText()
-        # cursor.deleteChar()
-        # block = self.textEdit.document().begin()
-        # cursor = QTextCursor(block)
-        # cursor.select(QTextCursor.BlockUnderCursor)
-        # cursor.removeSelectedText()
-        # cursor.deleteChar()
-        # block = self.textEdit.document().end()
-        # cursor = QTextCursor(block)
-        # cursor.select(QTextCursor.BlockUnderCursor)
-        # cursor.removeSelectedText()
-        # cursor.deleteChar()
 
         self._format()
         self.textEdit.document().clearUndoRedoStacks()
@@ -506,7 +491,6 @@ class ManuscriptTextEditor(RichTextEditor):
         cursor = QTextCursor(block)
         cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
         cursor.deleteChar()
-        # cursor.deletePreviousChar()
         for i, scene in enumerate(scenes):
             self._addScene(scene)
             if i < len(scenes) - 1:
@@ -606,6 +590,10 @@ class ManuscriptTextEditor(RichTextEditor):
                             blockNumber - first_scene_block.blockNumber())
         cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
         scene.manuscript.content = cursor.selection().toHtml()
+        wc_ = wc(cursor.selection().toPlainText())
+        if scene.manuscript.statistics.wc != wc_:
+            scene.manuscript.statistics.wc = wc_
+            self.repo.update_scene(scene)
 
         self.repo.update_doc(app_env.novel, scene.manuscript)
 
