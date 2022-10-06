@@ -162,7 +162,9 @@ class ResourceManager(EventListener):
         if resource_type.name.startswith('NLTK'):
             return _nltk_resources[resource_type]
         if resource_type == ResourceType.JRE_8:
-            url = 'https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jre_x64_linux_hotspot_8u345b01.tar.gz'
+            version = 'jdk8u345-b01'
+            distr = 'OpenJDK8U-jre_x64_linux_hotspot_8u345b01.tar.gz'
+            url = f'https://github.com/adoptium/temurin8-binaries/releases/download/{version}/{distr}'
             return ResourceDescriptor('jre', 'jre', url, extension='tar.gz')
 
     def nltk_resource_types(self) -> List[ResourceType]:
