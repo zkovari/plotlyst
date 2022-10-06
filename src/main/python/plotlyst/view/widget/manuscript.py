@@ -23,16 +23,15 @@ from typing import Optional, List
 
 import nltk
 import qtanim
-
 from PyQt6 import QtGui
-from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QMargins
+from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QResizeEvent, QTextCursor, QFont
+    QMouseEvent, QTextCursor, QFont
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout, vbox
+from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout
 from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState
 from textstat import textstat
 
@@ -505,7 +504,7 @@ class ManuscriptTextEditor(RichTextEditor):
         self.textEdit.setUneditableBlocksEnabled(True)
         block = self.textEdit.document().begin()
         cursor = QTextCursor(block)
-        cursor.select(QTextCursor.BlockUnderCursor)
+        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
         cursor.deleteChar()
         # cursor.deletePreviousChar()
         for i, scene in enumerate(scenes):
