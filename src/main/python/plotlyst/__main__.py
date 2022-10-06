@@ -29,7 +29,7 @@ try:
     from overrides import overrides
 
     from src.main.python.plotlyst.env import AppMode, app_env
-    from src.main.python.plotlyst.resources import resource_registry
+    from src.main.python.plotlyst.resources import resource_registry, resource_manager
     from src.main.python.plotlyst.settings import settings
     from src.main.python.plotlyst.service.persistence import flush_or_fail
     from src.main.python.plotlyst.service.dir import select_new_project_directory, default_directory
@@ -107,6 +107,7 @@ if __name__ == '__main__':
         if args.clear:
             settings.clear()
         resource_registry.set_up(appctxt)
+        resource_manager.init()
 
         workspace: Optional[str] = settings.workspace()
         if not workspace:

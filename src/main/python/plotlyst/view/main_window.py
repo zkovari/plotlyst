@@ -22,7 +22,8 @@ from typing import Optional
 import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
 from PyQt6.QtGui import QCloseEvent
-from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup
+from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
+    QProgressDialog
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc, clear_layout
@@ -73,7 +74,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if app_env.is_dev():
             self.resize(1200, 830)
         if app_env.is_prod():
-            self.setWindowState(Qt.WindowMaximized)
+            self.setWindowState(Qt.WindowState.WindowMaximized)
         self.novel = None
         self._current_text_widget = None
         self.manuscript_view: Optional[ManuscriptView] = None
@@ -112,9 +113,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._threadpool = QThreadPool()
         language_tool_setup_worker = LanguageToolServerSetupWorker()
-        download_worker = NltkResourceDownloadWorker()
+        nltk_download_worker = NltkResourceDownloadWorker()
+        # jre_download_worker = JreResourceDownloadWorker()
         if not app_env.test_env():
-            self._threadpool.start(download_worker)
+            self._threadpool.start(nltk_download_worker)
+            # self._threadpool.start(jre_download_worker)
 
         if self.novel:
             language_tool_setup_worker.lang = self.novel.lang_settings.lang
@@ -131,6 +134,24 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.novel:
             self._persist_last_novel_state()
+
+        if self._threadpool.activeThreadCount():
+            max_ = self._threadpool.activeThreadCount()
+            progress = QProgressDialog('Wait until background tasks are done...', 'Shut down anyway', 0,
+                                       self._threadpool.activeThreadCount(), parent=self.centralwidget)
+            progress.forceShow()
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            while True:
+                self._threadpool.waitForDone(500)
+                count = self._threadpool.activeThreadCount()
+                progress.setValue(max_ - count)
+                if count == 0:
+                    break
+                if progress.wasCanceled():
+                    break
+
+            if language_tool_proxy.is_set():
+                language_tool_proxy.tool.close()
 
     @overrides
     def event_received(self, event: Event):
@@ -254,7 +275,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.wdgTitle.setHidden(True)
 
     def _init_menubar(self):
-        self.menubar.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.menubar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
         if app_env.is_prod():
             self.menuFile.removeAction(self.actionRestart)
         else:
@@ -282,7 +303,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
-        self.toolBar.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.toolBar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
 
         self.home_mode = ToolbarButton(self.toolBar)
         self.home_mode.setText('Home')
@@ -359,10 +380,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.reports_view = ReportsView(self.novel)
                 self.pageReports.layout().addWidget(self.reports_view.widget)
             self.reports_view.activate()
-
-    def _import_from_scrivener(self):
-        self.home_mode.setChecked(True)
-        self.home_view.import_from_scrivener()
 
     def _change_project_dir(self):
         workspace = select_new_project_directory()
