@@ -140,7 +140,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             progress.forceShow()
             progress.setWindowModality(Qt.WindowModality.WindowModal)
             while True:
-                self._threadpool.waitForDone(1000)
+                self._threadpool.waitForDone(500)
                 count = self._threadpool.activeThreadCount()
                 progress.setValue(max_ - count)
                 if count == 0:
