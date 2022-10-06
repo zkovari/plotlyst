@@ -21,9 +21,9 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QDialog, QPushButton, QDialogButtonBox
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox
 from qthandy import flow
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue
@@ -69,7 +69,7 @@ class _TemplatePlotValueButton(QPushButton):
             }}
         ''')
         self.installEventFilter(OpacityEventFilter(leaveOpacity=0.5, parent=self))
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
 class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):

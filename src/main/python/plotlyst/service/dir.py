@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from PyQt5.QtWidgets import QMessageBox, QFileDialog
+from PyQt6.QtWidgets import QMessageBox, QFileDialog
 
 from src.main.python.plotlyst.env import app_env
 

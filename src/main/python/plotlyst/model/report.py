@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any
 
-from PyQt5.QtCore import QModelIndex, Qt
+from PyQt6.QtCore import QModelIndex, Qt
 from anytree import Node
 from overrides import overrides
 
@@ -58,9 +58,9 @@ class ReportsTreeModel(TreeItemModel):
         PlotReportNode('Plot', self.root)
 
     @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         node = index.internalPointer()
-        if role == Qt.DecorationRole:
+        if role == Qt.ItemDataRole.DecorationRole:
             if isinstance(node, CharacterReportNode):
                 return IconRegistry.character_icon()
             if isinstance(node, CharacterArcReportNode):

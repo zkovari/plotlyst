@@ -23,15 +23,16 @@ from typing import Optional, List
 
 import nltk
 import qtanim
-from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent
-from PyQt5.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QTextCursor, QFont
-from PyQt5.QtMultimedia import QSoundEffect
-from PyQt5.QtWidgets import QWidget, QTextEdit, QApplication
+
+from PyQt6 import QtGui
+from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QMargins
+from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
+    QMouseEvent, QResizeEvent, QTextCursor, QFont
+from PyQt6.QtMultimedia import QSoundEffect
+from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QSizePolicy
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, opaque, btn_popup, clear_layout
+from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout, vbox
 from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState
 from textstat import textstat
 
@@ -303,7 +304,7 @@ class SentenceHighlighter(QSyntaxHighlighter):
         self._hidden_format.setForeground(QColor('#dee2e6'))
 
         self._visible_format = QTextCharFormat()
-        self._visible_format.setForeground(Qt.black)
+        self._visible_format.setForeground(Qt.GlobalColor.black)
 
         self._prevBlock: Optional[QTextBlock] = None
         self._editor.cursorPositionChanged.connect(self.rehighlight)
@@ -313,7 +314,7 @@ class SentenceHighlighter(QSyntaxHighlighter):
         self.setFormat(0, len(text), self._hidden_format)
         if self._editor.textCursor().block() == self.currentBlock():
             text = self._editor.textCursor().block().text()
-            finder = QTextBoundaryFinder(QTextBoundaryFinder.Sentence, text)
+            finder = QTextBoundaryFinder(QTextBoundaryFinder.BoundaryType.Sentence, text)
             pos = self._editor.textCursor().positionInBlock()
             boundary = finder.toNextBoundary()
             prev_boundary = 0
@@ -388,8 +389,8 @@ class ManuscriptTextEdit(TextEditBase):
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         cursor: QTextCursor = self.textCursor()
-        if cursor.atBlockEnd() and event.key() == Qt.Key_Space:
-            cursor.movePosition(QTextCursor.PreviousCharacter, QTextCursor.KeepAnchor)
+        if cursor.atBlockEnd() and event.key() == Qt.Key.Key_Space:
+            cursor.movePosition(QTextCursor.MoveOperation.PreviousCharacter, QTextCursor.MoveMode.KeepAnchor)
             if cursor.selectedText() == ' ':
                 self.textCursor().deletePreviousChar()
                 self.textCursor().insertText('.')
@@ -682,7 +683,7 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         if updated:
             if not self.btnRefresh.isVisible():
                 anim = qtanim.fade_in(self.btnRefresh)
-                anim.finished.connect(lambda: opaque(self.btnRefresh, 0.4))
+                anim.finished.connect(lambda: translucent(self.btnRefresh, 0.4))
         else:
             if self.btnRefresh.isVisible():
                 qtanim.fade_out(self.btnRefresh)
@@ -702,7 +703,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
                                                                                 self.width() / 3 - x, 0))
         self.wdgSprint = SprintWidget(self)
         self.wdgSprint.setCompactMode(True)
-        self.wdgHeader.layout().insertWidget(0, self.wdgSprint, alignment=Qt.AlignLeft)
+        self.wdgHeader.layout().insertWidget(0, self.wdgSprint, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.wdgDistractionFreeEditor.installEventFilter(self)
         self.wdgBottom.installEventFilter(self)
@@ -728,7 +729,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
             self.wdgSprint.setHidden(True)
         self.wdgDistractionFreeEditor.layout().addWidget(self.editor)
         self.editor.setFocus()
-        self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self.wdgBottom.setVisible(True)
         self.sliderDocWidth.setMaximum(self.width() / 3)
@@ -744,7 +745,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         QTimer.singleShot(3000, self._autoHideBottomBar)
 
     def deactivate(self):
-        self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.editor.removeEventFilterFromEditors(self)
         self.editor.setViewportMargins(0, 0, 0, 0)
         self.editor.setMargins(30, 30, 30, 30)
@@ -756,22 +757,22 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
     def setWordDisplay(self, words: WordsDisplay):
         self.lblWords = words
-        self.wdgHeader.layout().addWidget(self.lblWords, alignment=Qt.AlignRight)
+        self.wdgHeader.layout().addWidget(self.lblWords, alignment=Qt.AlignmentFlag.AlignRight)
         self.lblWords.setStyleSheet(f'color: {RELAXED_WHITE_COLOR}')
         self._wordCountClicked(self.btnWordCount.isChecked())
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if watched is self.wdgBottom and event.type() == QEvent.Leave:
+        if watched is self.wdgBottom and event.type() == QEvent.Type.Leave:
             self.wdgBottom.setHidden(True)
-        if event.type() == QEvent.MouseMove and isinstance(event, QMouseEvent):
+        if event.type() == QEvent.Type.MouseMove and isinstance(event, QMouseEvent):
             if self.wdgBottom.isHidden() and event.pos().y() > self.height() - 15:
                 self.wdgBottom.setVisible(True)
         return super().eventFilter(watched, event)
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             if self.editor is not None:
                 self.exitRequested.emit()
         event.accept()

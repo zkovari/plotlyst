@@ -29,16 +29,14 @@ try:
     from overrides import overrides
 
     from src.main.python.plotlyst.env import AppMode, app_env
-    from src.main.python.plotlyst.resources import resource_registry
+    from src.main.python.plotlyst.resources import resource_registry, resource_manager
     from src.main.python.plotlyst.settings import settings
     from src.main.python.plotlyst.service.persistence import flush_or_fail
     from src.main.python.plotlyst.service.dir import select_new_project_directory, default_directory
 
-    from PyQt5 import QtWidgets
-    from PyQt5.QtCore import Qt
-    from PyQt5.QtGui import QFont
-    from PyQt5.QtWidgets import QApplication, QMessageBox
-    from fbs_runtime.application_context.PyQt5 import ApplicationContext
+    from PyQt6.QtGui import QFont
+    from PyQt6.QtWidgets import QApplication, QMessageBox
+    from fbs_runtime.application_context.PyQt6 import ApplicationContext
     from fbs_runtime import PUBLIC_SETTINGS, platform
     from fbs_runtime.application_context import cached_property, is_frozen
     from fbs_runtime.excepthook.sentry import SentryExceptionHandler
@@ -53,9 +51,6 @@ except Exception as ex:
     appctxt = ApplicationContext()
     QMessageBox.critical(None, 'Could not launch application', traceback.format_exc())
     raise ex
-
-QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
-QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
 
 class AppContext(ApplicationContext):
@@ -112,6 +107,7 @@ if __name__ == '__main__':
         if args.clear:
             settings.clear()
         resource_registry.set_up(appctxt)
+        resource_manager.init()
 
         workspace: Optional[str] = settings.workspace()
         if not workspace:

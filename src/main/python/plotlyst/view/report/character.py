@@ -19,10 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt5.QtChart import QChart, QPieSeries
-from PyQt5.QtChart import QValueAxis, QSplineSeries
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QLabel, QWidget, QToolButton
+from PyQt6.QtCharts import QChart, QPieSeries
+from PyQt6.QtCharts import QValueAxis, QSplineSeries
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QLabel, QWidget, QToolButton
 from overrides import overrides
 from qthandy import clear_layout, vspacer, hbox, transparent, vbox
 
@@ -54,7 +54,7 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         self.chart.legend().hide()
         self._updateCharactersChart()
         self.chart.createDefaultAxes()
-        self.chart.setAnimationOptions(QChart.SeriesAnimations)
+        self.chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
         self.chart.setTitle("POV Distribution")
 
         self.chartView.setChart(self.chart)
@@ -176,18 +176,17 @@ class CharacterArcChart(BaseChart):
             arc_value += scene.agendas[0].ending_emotion
             series.append(len(series), arc_value)
 
-        points = series.pointsVector()
-        if not points:
-            return
+        # if not series.count():
+        #     return
 
-        min_ = min([x.y() for x in points])
-        max_ = max([x.y() for x in points])
-        limit = max(abs(min_), max_)
-        self.axis = QValueAxis()
-        self.axis.setRange(-limit - 3, limit + 3)
+        # min_ = min([x.y() for x in points])
+        # max_ = max([x.y() for x in points])
+        # limit = max(abs(min_), max_)
+        # self.axis = QValueAxis()
+        # self.axis.setRange(-limit - 3, limit + 3)
         self.addSeries(series)
-        self.setAxisY(self.axis, series)
-        self.axis.setVisible(False)
+        # self.addAxis(self.axis, Qt.AlignmentFlag.AlignLeft)
+        # self.axis.setVisible(False)
 
 # class StorylinesDistribution(QChartView):
 #     def __init__(self, novel: Novel, parent=None):
@@ -195,10 +194,10 @@ class CharacterArcChart(BaseChart):
 #         self.novel = novel
 #         arc_chart = QChart()
 #         arc_chart.createDefaultAxes()
-#         arc_chart.setAnimationOptions(QChart.SeriesAnimations)
+#         arc_chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
 #         arc_chart.setTitle('Storylines and characters distribution')
 #         self.setChart(arc_chart)
-#         self.setRenderHint(QPainter.Antialiasing)
+#         self.setRenderHint(QPainter.RenderHint.Antialiasing)
 #         self.axis: Optional[QBarCategoryAxis] = None
 #
 #         self.refresh()
@@ -225,6 +224,6 @@ class CharacterArcChart(BaseChart):
 #             series.append(set)
 #         self.axis = QBarCategoryAxis()
 #         self.axis.append(character_names)
-#         self.chart().addAxis(self.axis, Qt.AlignBottom)
+#         self.chart().addAxis(self.axis, Qt.AlignmentFlag.AlignBottom)
 #         series.attachAxis(self.axis)
 #         self.chart().addSeries(series)

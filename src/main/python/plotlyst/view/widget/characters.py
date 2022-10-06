@@ -24,16 +24,16 @@ from typing import Iterable, List, Optional, Dict, Union
 
 import emoji
 import qtanim
-from PyQt5 import QtCore
-from PyQt5.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
-from PyQt5.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
+from PyQt6 import QtCore
+from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
+from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
     QPalette, QMouseEvent, QCursor
-from PyQt5.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
+from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
     QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, opaque, margins
+    spacer, clear_layout, vbox, hbox, flow, translucent, margins
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -91,10 +91,10 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self._model = CharactersScenesDistributionTableModel(self.novel)
         self._scenes_proxy = DistributionFilterProxyModel()
         self._scenes_proxy.setSourceModel(self._model)
-        self._scenes_proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
-        self._scenes_proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self._scenes_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._scenes_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._scenes_proxy.setSortRole(CharactersScenesDistributionTableModel.SortRole)
-        self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.DescendingOrder)
+        self._scenes_proxy.sort(CharactersScenesDistributionTableModel.IndexTags, Qt.SortOrder.DescendingOrder)
         self.tblSceneDistribution.horizontalHeader().setDefaultSectionSize(26)
         self.tblSceneDistribution.setModel(self._scenes_proxy)
         self.tblSceneDistribution.hideColumn(0)
@@ -202,7 +202,7 @@ class CharacterToolButton(QToolButton):
         self.setToolTip(character.name)
         self.setIcon(avatars.avatar(self.character))
         self.setCheckable(True)
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
 class CharacterSelectorButtons(QWidget):
@@ -213,7 +213,7 @@ class CharacterSelectorButtons(QWidget):
         super(CharacterSelectorButtons, self).__init__(parent)
         hbox(self)
         self.container = QWidget()
-        self.container.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        self.container.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Maximum)
 
         self._layout = flow(self.container)
 
@@ -324,9 +324,9 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.tblConflicts.setModel(self._model)
         self.tblConflicts.horizontalHeader().hideSection(SceneConflictsModel.ColBgColor)
         self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColIcon,
-                                                                  QHeaderView.ResizeToContents)
+                                                                  QHeaderView.ResizeMode.ResizeToContents)
         self.tblConflicts.horizontalHeader().setSectionResizeMode(SceneConflictsModel.ColName,
-                                                                  QHeaderView.Stretch)
+                                                                  QHeaderView.ResizeMode.Stretch)
         self._update_characters()
         self.btnAddNew.setIcon(IconRegistry.ok_icon())
         self.btnAddNew.installEventFilter(DisabledClickEventFilter(lambda: qtanim.shake(self.lineKey), self))
@@ -434,7 +434,7 @@ class CharacterConflictSelector(QWidget):
             self.btnLinkConflict.setText('Track conflict')
         self.layout().addWidget(self.btnLinkConflict)
         self.btnLinkConflict.setIcon(IconRegistry.conflict_icon())
-        self.btnLinkConflict.setCursor(Qt.PointingHandCursor)
+        self.btnLinkConflict.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btnLinkConflict.setStyleSheet('''
                         QPushButton {
                             border: 2px dotted grey;
@@ -549,7 +549,7 @@ class CharacterGoalSelector(QWidget):
             self.btnLinkGoal.setText('Track goal')
         self.layout().addWidget(self.btnLinkGoal)
         self.btnLinkGoal.setIcon(IconRegistry.goal_icon())
-        self.btnLinkGoal.setCursor(Qt.PointingHandCursor)
+        self.btnLinkGoal.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btnLinkGoal.setStyleSheet('''
                 QPushButton {
                     border: 2px dotted grey;
@@ -573,7 +573,7 @@ class CharacterGoalSelector(QWidget):
         self._goalSelector = _GoalSelectionObject()
         self.selectorWidget = CharacterGoalsEditor(self.novel, self.scene.agendas[0].character(self.novel),
                                                    selector=self._goalSelector)
-        scrollArea.setBackgroundRole(QPalette.Light)
+        scrollArea.setBackgroundRole(QPalette.ColorRole.Light)
         scrollArea.setWidget(self.selectorWidget)
         btn_popup(self.btnLinkGoal, scrollArea)
 
@@ -628,7 +628,7 @@ class CharacterLinkWidget(QWidget):
         self.btnLinkCharacter = QPushButton(self)
         self.layout().addWidget(self.btnLinkCharacter)
         self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
-        self.btnLinkCharacter.setCursor(Qt.PointingHandCursor)
+        self.btnLinkCharacter.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btnLinkCharacter.setStyleSheet('''
                 QPushButton {
                     border: 2px dotted grey;
@@ -659,7 +659,7 @@ class CharacterLinkWidget(QWidget):
         self.label = CharacterLabel(self.character)
         self.label.setToolTip(f'<html>Agenda character: <b>{character.name}</b>')
         self.label.installEventFilter(OpacityEventFilter(enterOpacity=0.7, leaveOpacity=1.0, parent=self.label))
-        self.label.setCursor(Qt.PointingHandCursor)
+        self.label.setCursor(Qt.CursorShape.PointingHandCursor)
         self.label.clicked.connect(self.btnLinkCharacter.showMenu)
         self.layout().addWidget(self.label)
         self.btnLinkCharacter.setHidden(True)
@@ -735,9 +735,9 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if self._filtersFrozen:
             return super().eventFilter(watched, event)
-        if event.type() == QEvent.Enter:
+        if event.type() == QEvent.Type.Enter:
             self.wdgTop.setStyleSheet('background-color: #D8D5D5;')
-        elif event.type() == QEvent.Leave:
+        elif event.type() == QEvent.Type.Leave:
             self.wdgTop.setStyleSheet('background-color: rgba(0,0,0,0);')
 
         return super().eventFilter(watched, event)
@@ -816,7 +816,7 @@ class CharacterGoalsEditor(QWidget):
         self.repo = RepositoryPersistenceManager.instance()
 
         vbox(self)
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
 
         for goal in self.character.goals:
             wdg = CharacterGoalWidget(self.novel, self.character, goal, parent=self, selector=self._goalSelector)
@@ -824,7 +824,7 @@ class CharacterGoalsEditor(QWidget):
         self.layout().addWidget(line())
 
         self.btnAdd = QPushButton('Add new main story goal', self)
-        self.btnAdd.setCursor(Qt.PointingHandCursor)
+        self.btnAdd.setCursor(Qt.CursorShape.PointingHandCursor)
         self._styleAddButton()
         self.btnAdd.clicked.connect(self._newGoal)
         hmax(self.btnAdd)
@@ -968,7 +968,8 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
 
 
 class CharacterBackstoryEvent(QWidget):
-    def __init__(self, backstory: BackstoryEvent, alignment: int = Qt.AlignRight, first: bool = False, parent=None):
+    def __init__(self, backstory: BackstoryEvent, alignment: int = Qt.AlignmentFlag.AlignRight, first: bool = False,
+                 parent=None):
         super(CharacterBackstoryEvent, self).__init__(parent)
         self.alignment = alignment
         self.card = CharacterBackstoryCard(backstory, first)
@@ -976,26 +977,26 @@ class CharacterBackstoryEvent(QWidget):
         self._layout = hbox(self, 0, 3)
         self.spacer = spacer()
         self.spacer.setFixedWidth(self.width() // 2 + 3)
-        if self.alignment == Qt.AlignRight:
+        if self.alignment == Qt.AlignmentFlag.AlignRight:
             self.layout().addWidget(self.spacer)
-            self._layout.addWidget(self.card, alignment=Qt.AlignLeft)
-        elif self.alignment == Qt.AlignLeft:
-            self._layout.addWidget(self.card, alignment=Qt.AlignRight)
+            self._layout.addWidget(self.card, alignment=Qt.AlignmentFlag.AlignLeft)
+        elif self.alignment == Qt.AlignmentFlag.AlignLeft:
+            self._layout.addWidget(self.card, alignment=Qt.AlignmentFlag.AlignRight)
             self.layout().addWidget(self.spacer)
         else:
             self.layout().addWidget(self.card)
 
     def toggleAlignment(self):
-        if self.alignment == Qt.AlignLeft:
-            self.alignment = Qt.AlignRight
+        if self.alignment == Qt.AlignmentFlag.AlignLeft:
+            self.alignment = Qt.AlignmentFlag.AlignRight
             self._layout.takeAt(0)
             self._layout.addWidget(self.spacer)
-            self._layout.setAlignment(self.card, Qt.AlignRight)
+            self._layout.setAlignment(self.card, Qt.AlignmentFlag.AlignRight)
         else:
-            self.alignment = Qt.AlignLeft
+            self.alignment = Qt.AlignmentFlag.AlignLeft
             self._layout.takeAt(1)
             self._layout.insertWidget(0, self.spacer)
-            self._layout.setAlignment(self.card, Qt.AlignLeft)
+            self._layout.setAlignment(self.card, Qt.AlignmentFlag.AlignLeft)
 
 
 class _ControlButtons(QWidget):
@@ -1026,17 +1027,17 @@ class _ControlButtons(QWidget):
                         border-radius: 13px; padding: 2px;}}
                 QToolButton:pressed {{background-color: grey;}}
             ''')
-            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.installEventFilter(self)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Enter:
+        if event.type() == QEvent.Type.Enter:
             self.btnPlaceholderCircle.setHidden(True)
             self.btnPlus.setVisible(True)
             self.btnSeparator.setVisible(True)
-        elif event.type() == QEvent.Leave:
+        elif event.type() == QEvent.Type.Leave:
             self.btnPlaceholderCircle.setVisible(True)
             self.btnPlus.setHidden(True)
             self.btnSeparator.setHidden(True)
@@ -1052,7 +1053,7 @@ class CharacterTimelineWidget(QWidget):
         super(CharacterTimelineWidget, self).__init__(parent)
         self.character: Optional[Character] = None
         self._layout = vbox(self, spacing=0)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def setCharacter(self, character: Character):
         self.character = character
@@ -1070,20 +1071,22 @@ class CharacterTimelineWidget(QWidget):
         clear_layout(self.layout())
 
         lblCharacter = QLabel(self)
-        lblCharacter.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        lblCharacter.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         transparent(lblCharacter)
         set_avatar(lblCharacter, self.character, 64)
 
-        self._layout.addWidget(lblCharacter, alignment=Qt.AlignHCenter | Qt.AlignTop)
+        self._layout.addWidget(lblCharacter, alignment=Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
 
         prev_alignment = None
         for i, backstory in enumerate(self.character.backstory):
             if prev_alignment is None:
-                alignment = Qt.AlignRight
+                alignment = Qt.AlignmentFlag.AlignRight
             elif backstory.follow_up and prev_alignment:
                 alignment = prev_alignment
+            elif prev_alignment == Qt.AlignmentFlag.AlignLeft:
+                alignment = Qt.AlignmentFlag.AlignRight
             else:
-                alignment = Qt.AlignRight if prev_alignment == Qt.AlignLeft else Qt.AlignLeft
+                alignment = Qt.AlignmentFlag.AlignLeft
             prev_alignment = alignment
             event = CharacterBackstoryEvent(backstory, alignment, first=i == 0, parent=self)
             event.card.deleteRequested.connect(self._remove)
@@ -1106,7 +1109,7 @@ class CharacterTimelineWidget(QWidget):
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QBrush(QColor('#1d3557')))
         painter.drawRect(self.width() / 2 - 3, 64, 6, self.height() - 64)
 
@@ -1136,7 +1139,7 @@ class CharacterTimelineWidget(QWidget):
     def _addControlButtons(self, pos: int):
         control = _ControlButtons(self)
         control.btnPlus.clicked.connect(partial(self.add, pos))
-        self._layout.addWidget(control, alignment=Qt.AlignHCenter)
+        self._layout.addWidget(control, alignment=Qt.AlignmentFlag.AlignHCenter)
 
 
 class CharacterEmotionButton(QToolButton):
@@ -1147,7 +1150,7 @@ class CharacterEmotionButton(QToolButton):
         super(CharacterEmotionButton, self).__init__(parent)
         self._value = NEUTRAL
         self._color = self.NEUTRAL_COLOR
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setFixedSize(32, 32)
 
         self.setStyleSheet('''
@@ -1160,7 +1163,7 @@ class CharacterEmotionButton(QToolButton):
         menu = QMenu(self)
         self.setMenu(menu)
         menu.setMaximumWidth(64)
-        self.setPopupMode(QToolButton.InstantPopup)
+        self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         if platform.is_windows():
             self._emoji_font = emoji_font(14)
         else:
@@ -1421,7 +1424,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
         self.updateAvatar()
 
     def updateAvatar(self):
-        self.btnPov.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
         if self._character.prefs.avatar.use_role or self._character.prefs.avatar.use_custom_icon:
             self.btnPov.setIconSize(QSize(132, 132))
         else:
@@ -1435,7 +1438,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
     def reset(self):
         self.btnPov.setIconSize(QSize(118, 118))
         self.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
-        self.btnPov.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
     def avatarUpdated(self) -> bool:
         return self._updated
@@ -1467,9 +1470,9 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.btnItemTertiary.setSelectionItem(tertiary_role)
         self.btnItemHenchmen.setSelectionItem(henchmen_role)
 
-        opaque(self.iconMajor, 0.7)
-        opaque(self.iconSecondary, 0.7)
-        opaque(self.iconMinor, 0.7)
+        translucent(self.iconMajor, 0.7)
+        translucent(self.iconSecondary, 0.7)
+        translucent(self.iconMinor, 0.7)
 
         incr_font(self.lblRole, 2)
         self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey'))
@@ -1601,7 +1604,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
             btn.clicked.connect(partial(self.characterClicked.emit, char))
         self._layout.addWidget(spacer(), 0, self._layout.columnCount())
 
-        self._addLabel(self.RowOverall, 'Overall', IconRegistry.progress_check_icon(), Qt.AlignCenter)
+        self._addLabel(self.RowOverall, 'Overall', IconRegistry.progress_check_icon(), Qt.AlignmentFlag.AlignCenter)
         self._addLine(self.RowOverall + 1)
         self._addLabel(self.RowName, 'Name', IconRegistry.character_icon())
         self._addLabel(self.RowRole, 'Role', IconRegistry.major_character_icon())
@@ -1699,7 +1702,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
     def _addLine(self, row: int):
         self._layout.addWidget(line(), row, 0, 1, self._layout.columnCount() - 1)
 
-    def _addLabel(self, row: int, text: str, icon=None, alignment=Qt.AlignRight):
+    def _addLabel(self, row: int, text: str, icon=None, alignment=Qt.AlignmentFlag.AlignRight):
         if icon:
             wdg = IconText(self)
             wdg.setIcon(icon)
@@ -1712,4 +1715,4 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
     def _addProgress(self, progress: QWidget, row: int, col: int):
         if row > self.RowOverall:
             progress.installEventFilter(OpacityEventFilter(parent=progress))
-        self._layout.addWidget(progress, row, col, alignment=Qt.AlignCenter)
+        self._layout.addWidget(progress, row, col, alignment=Qt.AlignmentFlag.AlignCenter)

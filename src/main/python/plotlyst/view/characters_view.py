@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Optional
 
-from PyQt5.QtCore import QItemSelection, QPoint
-from PyQt5.QtWidgets import QWidget
+from PyQt6.QtCore import QItemSelection, QPoint
+from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import ask_confirmation, busy, gc, incr_font
 
