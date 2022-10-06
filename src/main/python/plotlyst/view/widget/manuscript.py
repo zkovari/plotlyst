@@ -585,31 +585,29 @@ class ManuscriptTextEditor(RichTextEditor):
         else:
             scene_i = 0
             block: QTextBlock = self.textEdit.document().begin()
+            first_scene_block = block
             while block.isValid():
                 if block.userState() == TextBlockState.UNEDITABLE.value:
                     scene = self._scenes[scene_i]
+                    self._updateSceneManuscript(scene, first_scene_block, block.blockNumber() - 1)
+
                     scene_i += 1
+                    first_scene_block = block.next()
                 block = block.next()
 
-        for scene in self._scenes:
-            self.repo.update_doc(app_env.novel, scene.manuscript)
+            # update last scene
+            self._updateSceneManuscript(self._scenes[scene_i], first_scene_block, self.textEdit.document().blockCount())
 
         self.textChanged.emit()
 
-    # def _selectionChanged(self, editor: ManuscriptTextEdit):
-    #     for edt in self._editors:
-    #         cursor = edt.textCursor()
-    #         if edt != editor and cursor.hasSelection():
-    #             cursor.clearSelection()
-    #             edt.setTextCursor(cursor)
-    #     self.selectionChanged.emit(editor)
-    #
-    # def _rangeChanged(self, _: int, max_: int):
-    #     value = self._scrollArea.verticalScrollBar().value()
-    #     if value == self._previous_max_range and max_ > value:
-    #         scroll_to_bottom(self._scrollArea)
-    #
-    #     self._previous_max_range = max_
+    def _updateSceneManuscript(self, scene: Scene, first_scene_block: QTextBlock, blockNumber: int):
+        cursor = QTextCursor(first_scene_block)
+        cursor.movePosition(QTextCursor.MoveOperation.NextBlock, QTextCursor.MoveMode.KeepAnchor,
+                            blockNumber - first_scene_block.blockNumber())
+        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+        scene.manuscript.content = cursor.selection().toHtml()
+
+        self.repo.update_doc(app_env.novel, scene.manuscript)
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
