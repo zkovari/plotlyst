@@ -298,7 +298,7 @@ def test_add_scene_comment(qtbot, filled_window: MainWindow):
 def test_scene_cards_resize(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
 
-    assert view.prefs_widget.sliderCards.value() == 125
+    assert view.prefs_widget.sliderCards.value() == 175
     view.prefs_widget.sliderCards.setValue(200)
     card = view.ui.cards.cardAt(0)
     assert card.textSynopsis.isVisible()

@@ -157,10 +157,10 @@ class Card(QFrame):
         return '#dec3c3' if selected else '#f9f4f4'
 
     def _borderSize(self, selected: bool = False) -> int:
-        return 4 if selected else 2
+        return 4 if selected else 1
 
     def _borderColor(self, selected: bool = False) -> str:
-        return '#2a4d69' if selected else '#adcbe3'
+        return '#2a4d69' if selected else 'lightgrey'
 
 
 class NovelCard(Ui_NovelCard, Card):

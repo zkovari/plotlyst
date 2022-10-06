@@ -3,7 +3,6 @@
 # exit when any command fails
 set -e
 
-echo "Re-generate PyQt code..."
 # generate UI > Python code first
 ./gen.sh
 

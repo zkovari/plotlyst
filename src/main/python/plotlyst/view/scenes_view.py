@@ -38,6 +38,7 @@ from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, Sce
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
+from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import PopupMenuBuilder
@@ -136,6 +137,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
+        self.widget.setStyleSheet(
+            f'''#cards {{background-image: url({resource_registry.cover1});}}''')
+
         self.ui.splitterLeft.setSizes([100, 500])
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
@@ -193,6 +197,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.prefs_widget = ScenesPreferencesWidget()
         btn_popup(self.ui.btnPreferences, self.prefs_widget)
         self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
+        self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
 
         self._scene_filter = SceneFilterWidget(self.novel)
         btn_popup(self.ui.btnFilter, self._scene_filter)
