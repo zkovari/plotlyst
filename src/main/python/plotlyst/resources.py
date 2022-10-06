@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass, field
+from datetime import date
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, List
@@ -75,6 +76,7 @@ resource_registry = ResourceRegistry()
 class ResourceType(str, Enum):
     NLTK_PUNKT_TOKENIZER = 'nltk_punkt_tokenizer'
     NLTK_AVERAGED_PERCEPTRON_TAGGER = 'nltk_averaged_perceptron_tagger'
+    JRE_8 = 'jre_8'
 
 
 @dataclass
@@ -82,17 +84,21 @@ class ResourceDescriptor:
     name: str
     folder: str
     web_url: str
+    extension: str = 'zip'
     description: str = ''
 
+    def filename(self) -> str:
+        return f'{self.name}.{self.extension}'
 
-punkt_nltk_resource = ResourceDescriptor('punkt', 'tokenizers',
-                                         'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip')
+
+_punkt_nltk_resource = ResourceDescriptor('punkt', 'tokenizers',
+                                          'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip')
 __avg_tagger_url = 'https://github.com/nltk/nltk_data/raw/gh-pages/packages/taggers/averaged_perceptron_tagger.zip'
-avg_tagger_nltk_resource = ResourceDescriptor('averaged_perceptron_tagger', 'taggers', __avg_tagger_url)
+_avg_tagger_nltk_resource = ResourceDescriptor('averaged_perceptron_tagger', 'taggers', __avg_tagger_url)
 
 _nltk_resources: Dict[ResourceType, ResourceDescriptor] = {
-    ResourceType.NLTK_PUNKT_TOKENIZER: punkt_nltk_resource,
-    ResourceType.NLTK_AVERAGED_PERCEPTRON_TAGGER: avg_tagger_nltk_resource
+    ResourceType.NLTK_PUNKT_TOKENIZER: _punkt_nltk_resource,
+    ResourceType.NLTK_AVERAGED_PERCEPTRON_TAGGER: _avg_tagger_nltk_resource
 }
 
 
@@ -111,6 +117,7 @@ class ResourceStatus(Enum):
 class ResourceInfo:
     resource: ResourceDescriptor
     status: ResourceStatus = ResourceStatus.MISSING
+    version: str = str(date.today())
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -120,7 +127,6 @@ class ResourcesConfig:
 
 
 class ResourceManager(EventListener):
-
     def __init__(self):
         self._resources_config: Optional[ResourcesConfig] = None
         self._path = None
@@ -155,6 +161,9 @@ class ResourceManager(EventListener):
     def resource(self, resource_type: ResourceType) -> ResourceDescriptor:
         if resource_type.name.startswith('NLTK'):
             return _nltk_resources[resource_type]
+        if resource_type == ResourceType.JRE_8:
+            url = 'https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jre_x64_linux_hotspot_8u345b01.tar.gz'
+            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz')
 
     def nltk_resource_types(self) -> List[ResourceType]:
         return [x for x in ResourceType if x.name.startswith('NLTK')]

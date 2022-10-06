@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
+import tarfile
 import zipfile
 from typing import List
 
@@ -55,10 +56,33 @@ class NltkResourceDownloadWorker(QRunnable):
 
             os.makedirs(resource_path, exist_ok=True)
 
-            resource_zip_path = os.path.join(resource_path, f'{resource.name}.zip')
+            resource_zip_path = os.path.join(resource_path, resource.filename())
             download_file(resource.web_url, resource_zip_path)
             with zipfile.ZipFile(resource_zip_path) as zip_ref:
                 zip_ref.extractall(resource_path)
 
             emit_event(ResourceDownloadedEvent(self, resource_type))
             print(f'Resource {resource.name} was successfully downloaded')
+
+
+class JreResourceDownloadWorker(QRunnable):
+
+    def __init__(self):
+        super(JreResourceDownloadWorker, self).__init__()
+        self._type = ResourceType.JRE_8
+
+    @overrides
+    def run(self) -> None:
+        if resource_manager.has_resource(self._type):
+            return
+        resource = resource_manager.resource(self._type)
+        resource_path = os.path.join(app_env.nltk_data, resource.folder)
+        os.makedirs(resource_path, exist_ok=True)
+
+        resource_tar_path = os.path.join(resource_path, resource.filename())
+        download_file(resource.web_url, resource_tar_path)
+
+        with tarfile.open(resource_tar_path) as tar_ref:
+            tar_ref.extractall(resource_path)
+
+        emit_event(ResourceDownloadedEvent(self, self._type))
