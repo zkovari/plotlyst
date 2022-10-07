@@ -24,13 +24,12 @@ from typing import Dict, Optional
 from typing import List
 
 import qtanim
-
 from PyQt6.QtCore import QPoint, QTimeLine, QRectF
 from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
-from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QBrush, QIcon, \
-    QDragMoveEvent, QLinearGradient
+from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QIcon, \
+    QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
-    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QAbstractButton, QTableView, \
+    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QApplication
 from overrides import overrides
 from qthandy import busy, margins, vspacer, btn_popup_menu
@@ -367,7 +366,7 @@ class SceneSelector(QWidget):
         self._lstScenes.verticalHeader().setDefaultSectionSize(20)
         self._lstScenes.horizontalHeader().setDefaultSectionSize(24)
         self._lstScenes.setShowGrid(False)
-        self._lstScenes.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self._lstScenes.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._lstScenes.clicked.connect(self._selected)
         pointy(self._lstScenes)
         self.menu = btn_popup(self.btnSelect, self._lstScenes)
@@ -468,8 +467,8 @@ class _SceneTypeButton(QPushButton):
         super(_SceneTypeButton, self).__init__(parent)
         self.type = type
         self.setCheckable(True)
-        self.setCursor(Qt.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
         if type == SceneType.ACTION:
             bgColor = '#eae4e9'
@@ -571,7 +570,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.setupUi(self)
         self._outcome = SceneOutcomeSelector(self.beat)
         self._outcome.selected.connect(self._outcomeChanged)
-        self.wdgBottom.layout().addWidget(self._outcome, alignment=Qt.AlignCenter)
+        self.wdgBottom.layout().addWidget(self._outcome, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.btnIcon = QToolButton(self)
         self.btnIcon.setIconSize(QSize(24, 24))
@@ -695,100 +694,6 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         qtanim.glow(self.text, color=color)
 
 
-class _SceneTypeButton(QPushButton):
-    def __init__(self, type: SceneType, parent=None):
-        super(_SceneTypeButton, self).__init__(parent)
-        self.type = type
-        self.setCheckable(True)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-
-        if type == SceneType.ACTION:
-            bgColor = '#eae4e9'
-            borderColor = '#f94144'
-            bgColorChecked = '#f4978e'
-            borderColorChecked = '#fb5607'
-            self.setText('Scene (action)')
-            self.setIcon(IconRegistry.action_scene_icon())
-        else:
-            bgColor = '#bee1e6'
-            borderColor = '#168aad'
-            bgColorChecked = '#89c2d9'
-            borderColorChecked = '#1a759f'
-            self.setText('Sequel (reaction)')
-            self.setIcon(IconRegistry.reaction_scene_icon())
-
-        self.setStyleSheet(f'''
-            QPushButton {{
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
-                                      stop: 0 {bgColor};);
-                border: 2px dashed {borderColor};
-                border-radius: 8px;
-                padding: 2px;
-            }}
-            QPushButton:checked {{
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
-                                      stop: 0 {bgColorChecked});
-                border: 3px solid {borderColorChecked};
-                padding: 1px;
-            }}
-            ''')
-        self._toggled(self.isChecked())
-        self.installEventFilter(OpacityEventFilter(0.7, 0.5, self, ignoreCheckedButton=True))
-        self.toggled.connect(self._toggled)
-
-    def _toggled(self, toggled: bool):
-        translucent(self, 1.0 if toggled else 0.5)
-        font = self.font()
-        font.setBold(toggled)
-        self.setFont(font)
-
-
-class _SceneBeatPlaceholderButton(QToolButton):
-    selected = pyqtSignal(SceneStructureItemType)
-
-    def __init__(self, parent=None):
-        super(_SceneBeatPlaceholderButton, self).__init__(parent)
-        self.setIcon(IconRegistry.plus_circle_icon('grey'))
-        self.installEventFilter(OpacityEventFilter(0.5, 0.12, parent=self))
-        self.setIconSize(QSize(24, 24))
-        self.setStyleSheet('''
-            QToolButton {
-                border: 1px hidden black;
-                border-radius: 19px; padding: 2px;
-            }
-            QToolButton:pressed {
-                border: 1px solid grey;
-            }
-            ''')
-        pointy(self)
-        self.setToolTip('Insert new beat')
-
-        self._menu = MenuWithDescription(self)
-        self._addAction('Goal', SceneStructureItemType.GOAL, description='')
-        self._addAction('Conflict', SceneStructureItemType.CONFLICT, description='')
-        self._addAction('Outcome', SceneStructureItemType.OUTCOME, description='')
-        self._addAction('Reaction', SceneStructureItemType.REACTION, description='')
-        self._addAction('Dilemma', SceneStructureItemType.DILEMMA, description='')
-        self._addAction('Decision', SceneStructureItemType.DECISION, description='')
-        self._addAction('Hook', SceneStructureItemType.HOOK, description='')
-        self._addAction('Inciting incident', SceneStructureItemType.INCITING_INCIDENT,
-                        description='')
-        self._addAction('Rising action', SceneStructureItemType.RISING_ACTION, description='')
-        self._addAction('Ticking clock', SceneStructureItemType.TICKING_CLOCK, description='')
-        self._addAction('Crisis', SceneStructureItemType.CRISIS, description='')
-        self._addAction('Exposition', SceneStructureItemType.EXPOSITION, description='')
-        self._addAction('Beat', SceneStructureItemType.BEAT, description='')
-
-        btn_popup_menu(self, self._menu)
-
-    def _addAction(self, text: str, beat_type: SceneStructureItemType, description: str):
-        if not description:
-            description = BeatDescriptions[beat_type]
-        self._menu.addAction(action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type)),
-                             description)
-
-
 class SceneStructureTimeline(QWidget):
     emotionChanged = pyqtSignal()
     timelineChanged = pyqtSignal()
@@ -876,7 +781,7 @@ class SceneStructureTimeline(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:
         width = event.rect().width()
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         first_el = self._path.elementAt(0)
         last_el = self._path.elementAt(self._path.elementCount() - 1)
@@ -887,7 +792,7 @@ class SceneStructureTimeline(QWidget):
             gradient = QLinearGradient(0, first_el.y, last_el.x, last_el.y)
         gradient.setColorAt(0, QColor(emotion_color(self._agenda.beginning_emotion)))
         gradient.setColorAt(1, QColor(emotion_color(self._agenda.ending_emotion)))
-        pen = QPen(gradient, 10, Qt.SolidLine)
+        pen = QPen(gradient, 10, Qt.PenStyle.SolidLine)
         painter.setPen(pen)
         path = QPainterPath()
 
@@ -915,7 +820,8 @@ class SceneStructureTimeline(QWidget):
 
     @overrides
     def dragMoveEvent(self, event: QDragMoveEvent) -> None:
-        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType) and self._intersects(event.pos()):
+        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType) and self._intersects(
+                event.position()):
             event.accept()
         else:
             event.ignore()
@@ -926,7 +832,7 @@ class SceneStructureTimeline(QWidget):
 
         for wdg in self._beatWidgets:
             if id(wdg) == id_:
-                wdg.beat.percentage = self._percentage(event.pos())
+                wdg.beat.percentage = self._percentage(event.position())
                 break
 
         sorted(self._agenda.items, key=lambda x: x.percentage)
@@ -939,7 +845,7 @@ class SceneStructureTimeline(QWidget):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if self._contains(event.pos()) and self._intersects(event.pos()):
             if not QApplication.overrideCursor():
-                QApplication.setOverrideCursor(Qt.PointingHandCursor)
+                QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
             self._placeholder.setVisible(True)
             self._placeholder.setGeometry(event.pos().x() - 12, event.pos().y() - 12, 24, 24)
             self.update()
@@ -1041,6 +947,8 @@ class SceneStructureTimeline(QWidget):
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
+        if beatType == SceneStructureItemType.OUTCOME:
+            item.outcome = SceneOutcome.DISASTER
         self._addBeatWidget(item)
 
     def _addBeatWidget(self, item: SceneStructureItem):
@@ -1125,7 +1033,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         flow(self.wdgGoalConflictContainer)
 
         self.timeline = SceneStructureTimeline(self)
-        self.timeline.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.timeline.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.scrollAreaWidgetContents.layout().addWidget(self.timeline)
 
         self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
@@ -1376,7 +1284,7 @@ class SceneStoryStructureWidget(QWidget):
                 btn.installEventFilter(self)
                 if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
                     btn.installEventFilter(DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat)))
-                    btn.setCursor(Qt.DragMoveCursor)
+                    btn.setCursor(Qt.CursorShape.DragMoveCursor)
                 else:
                     btn.setCursor(self._beatCursor)
                 if self._checkOccupiedBeats and beat not in occupied_beats:
@@ -1445,7 +1353,7 @@ class SceneStoryStructureWidget(QWidget):
 
         for beat in self._beats.keys():
             if beat == dropped_beat:
-                beat.percentage = self._percentageForX(event.pos().x() - self._beatHeight // 2)
+                beat.percentage = self._percentageForX(event.position().x() - self._beatHeight // 2)
                 self._rearrangeBeats()
                 event.accept()
                 self.beatMoved.emit(beat)
@@ -1778,7 +1686,7 @@ class StoryLinesMapWidget(QWidget):
 
     @overrides
     def event(self, event: QEvent) -> bool:
-        if event.type() == QEvent.ToolTip:
+        if event.type() == QEvent.Type.ToolTip:
             index = self._index_from_pos(event.pos())
             scenes = self.scenes()
             if index < len(scenes):
@@ -1873,7 +1781,7 @@ class StoryLinesMapWidget(QWidget):
 
     def _draw_scene_ellipse(self, painter: QPainter, scene: Scene, x: int, y: int):
         if scene.plot_values:
-            pen = Qt.red if scene is self._clicked_scene else Qt.GlobalColor.black
+            pen = Qt.GlobalColor.red if scene is self._clicked_scene else Qt.GlobalColor.black
             if len(scene.plot_values) == 1:
                 painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
                 painter.setBrush(Qt.GlobalColor.black)
@@ -1883,9 +1791,9 @@ class StoryLinesMapWidget(QWidget):
                 painter.setBrush(Qt.GlobalColor.white)
                 painter.drawEllipse(x, y - 10, 20, 20)
         else:
-            pen = Qt.red if scene is self._clicked_scene else Qt.gray
+            pen = Qt.GlobalColor.red if scene is self._clicked_scene else Qt.GlobalColor.gray
             painter.setPen(QPen(pen, 3, Qt.PenStyle.SolidLine))
-            painter.setBrush(Qt.gray)
+            painter.setBrush(Qt.GlobalColor.gray)
             painter.drawEllipse(x, y, 14, 14)
 
     def _story_line_y(self, index: int) -> int:
@@ -2113,12 +2021,12 @@ class StoryMap(QWidget):
             else:
                 hbox(wdgScenePlotParent, spacing=0)
 
-            wdgScenes = _ScenesLineWidget(self.novel, vertical=self._orientation == Qt.Vertical)
+            wdgScenes = _ScenesLineWidget(self.novel, vertical=self._orientation == Qt.Orientation.Vertical)
             wdgScenePlotParent.layout().addWidget(wdgScenes)
 
             for plot in self.novel.plots:
                 wdg = _ScenePlotAssociationsWidget(self.novel, plot, parent=self,
-                                                   vertical=self._orientation == Qt.Vertical)
+                                                   vertical=self._orientation == Qt.Orientation.Vertical)
                 wdgScenePlotParent.layout().addWidget(wdg)
 
             if self._orientation == Qt.Orientation.Horizontal:
