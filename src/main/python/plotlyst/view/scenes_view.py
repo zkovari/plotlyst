@@ -22,9 +22,9 @@ from functools import partial
 from typing import Optional
 
 import qtawesome
-from PyQt5.QtCore import Qt, QModelIndex, \
+from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
-from PyQt5.QtWidgets import QWidget, QHeaderView, QMenu
+from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout
 
@@ -38,6 +38,7 @@ from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, Sce
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
+from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import PopupMenuBuilder
@@ -117,8 +118,8 @@ class ScenesOutlineView(AbstractNovelView):
                                  ScenesTableModel.ColSynopsis]
         self._proxy = ScenesFilterProxyModel()
         self._proxy.setSourceModel(self.tblModel)
-        self._proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
-        self._proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.ui.tblScenes.setModel(self._proxy)
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Fixed)
         self.ui.tblScenes.horizontalHeader().setFixedHeight(30)
@@ -135,6 +136,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
+
+        self.widget.setStyleSheet(
+            f'''#cards {{background-image: url({resource_registry.cover1});}}''')
 
         self.ui.splitterLeft.setSizes([100, 500])
 
@@ -193,6 +197,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.prefs_widget = ScenesPreferencesWidget()
         btn_popup(self.ui.btnPreferences, self.prefs_widget)
         self.prefs_widget.sliderCards.valueChanged.connect(self.ui.cards.setCardsWidth)
+        self.ui.cards.setCardsWidth(self.prefs_widget.sliderCards.value())
 
         self._scene_filter = SceneFilterWidget(self.novel)
         btn_popup(self.ui.btnFilter, self._scene_filter)
@@ -201,7 +206,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         self._update_cards()
 
-        self.ui.tblScenes.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.tblScenes.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.ui.tblScenes.customContextMenuRequested.connect(self._on_custom_menu_requested)
 
         self.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
@@ -394,7 +399,8 @@ class ScenesOutlineView(AbstractNovelView):
                 self.ui.rbDots.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DOTS))
                 self.ui.rbTitles.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.TITLE))
                 self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
-                self.ui.rbHorizontal.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Horizontal))
+                self.ui.rbHorizontal.clicked.connect(
+                    lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
                 self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Vertical))
                 self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
                 self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
@@ -478,8 +484,8 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesModel = ScenesStageTableModel(self.novel)
             self._stages_proxy = ScenesFilterProxyModel()
             self._stages_proxy.setSourceModel(self.stagesModel)
-            self._stages_proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
-            self._stages_proxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self._stages_proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+            self._stages_proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.ui.tblSceneStages.setModel(self._stages_proxy)
             self.ui.btnAct1.toggled.connect(partial(self._stages_proxy.setActsFilter, 1))
             self.ui.btnAct2.toggled.connect(partial(self._stages_proxy.setActsFilter, 2))
@@ -495,7 +501,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
 
         for col in range(1, self.stagesModel.columnCount()):
-            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
             w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
             self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
             self.ui.tblSceneStages.setColumnWidth(col, w + 10)

@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict, Optional
 
 import qtawesome
-from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QLabel
+from PyQt6.QtCore import QSize
+from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtWidgets import QLabel
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \

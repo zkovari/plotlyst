@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any
 
-from PyQt5.QtCore import QModelIndex, Qt, QSortFilterProxyModel
-from PyQt5.QtGui import QBrush, QColor
+from PyQt6.QtCore import QModelIndex, Qt, QSortFilterProxyModel
+from PyQt6.QtGui import QBrush, QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem
@@ -58,12 +58,12 @@ class TemplateFieldSelectionModel(SelectionItemsModel):
 
 
 class TraitsFieldItemsSelectionModel(TemplateFieldSelectionModel):
-    PositivityRole = Qt.UserRole + 2
+    PositivityRole = Qt.ItemDataRole.UserRole + 2
 
     @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         item = self._field.selections[index.row()]
-        if role == Qt.ForegroundRole:
+        if role == Qt.ItemDataRole.ForegroundRole:
             brush = QBrush()
             if item.meta.get('positive', True):
                 brush.setColor(QColor('#519872'))
@@ -75,13 +75,13 @@ class TraitsFieldItemsSelectionModel(TemplateFieldSelectionModel):
         return super(TraitsFieldItemsSelectionModel, self).data(index, role)
 
     @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.DisplayRole) -> bool:
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.DisplayRole) -> bool:
         super_set = super(TraitsFieldItemsSelectionModel, self).setData(index, value, role)
         self.layoutChanged.emit()
         return super_set
 
     @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         return Qt.ItemIsEnabled
 
 

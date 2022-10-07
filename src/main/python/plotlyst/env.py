@@ -58,6 +58,10 @@ class AppEnvironment:
         self._novel = novel
 
     @property
+    def cache_dir(self) -> str:
+        return self._plotlyst_cache_dir
+
+    @property
     def nltk_data(self) -> str:
         return self._nltk_data
 

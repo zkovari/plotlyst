@@ -1,6 +1,6 @@
 from functools import partial
 
-from PyQt5.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QComboBox
 
 from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, NEUTRAL, VERY_HAPPY, HAPPY
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel

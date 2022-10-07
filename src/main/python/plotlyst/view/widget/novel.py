@@ -22,9 +22,9 @@ from functools import partial
 from typing import Optional, List
 
 import qtanim
-from PyQt5.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu
+from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
@@ -71,8 +71,8 @@ class _StoryStructureButton(QPushButton):
         self.novel = novel
         self.setText(structure.title)
         self.setCheckable(True)
-        self.setCursor(Qt.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Maximum)
         if self._structure.character_id:
             self.setIcon(avatars.avatar(self._structure.character(self.novel)))
         elif self._structure.icon:
@@ -170,12 +170,12 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Enter:
+        if event.type() == QEvent.Type.Enter:
             if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setVisible(True)
             self.setStyleSheet('.BeatWidget {background-color: #DBF5FA;}')
             self.beatHighlighted.emit(self.beat)
-        elif event.type() == QEvent.Leave:
+        elif event.type() == QEvent.Type.Leave:
             if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setHidden(True)
             self.setStyleSheet('.BeatWidget {background-color: white;}')
@@ -311,7 +311,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Leave:
+        if event.type() == QEvent.Type.Leave:
             self.wdgPreview.unhighlightBeats()
 
         return super(StoryStructureEditor, self).eventFilter(watched, event)
@@ -532,7 +532,7 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
             self._chaptersModel = ChaptersTreeModel(novel)
             self.treeChapters.setModel(self._chaptersModel)
             self.treeChapters.expandAll()
-            self.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
             self.treeChapters.hideColumn(ChaptersTreeModel.ColPlus)
             if not self.btnLocations.isChecked():
                 self.btnScenes.setChecked(True)
@@ -576,14 +576,14 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Enter:
+        if event.type() == QEvent.Type.Enter:
             self.setStyleSheet(f'''
             .PlotWidget {{
                 background-color: #dee2e6;
                 border-radius: 6px;
                 border-left: 8px solid {self.plot.icon_color};
             }}''')
-        elif event.type() == QEvent.Leave:
+        elif event.type() == QEvent.Type.Leave:
             self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border-left: 8px solid {self.plot.icon_color};}}')
 
         return super(PlotWidget, self).eventFilter(watched, event)

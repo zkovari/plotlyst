@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtanim
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from qthandy import incr_font
 
 from src.main.python.plotlyst.core.client import client

@@ -22,9 +22,9 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt5.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
+from PyQt6.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
     Qt
-from PyQt5.QtWidgets import QWidget, QWidgetAction, QTableView, QMenu
+from PyQt6.QtWidgets import QWidget, QWidgetAction, QTableView, QMenu
 from fbs_runtime import platform
 from qthandy import flow, clear_layout
 
@@ -98,7 +98,7 @@ class SceneEditor(QObject):
         self.tblCharacters.verticalHeader().setVisible(False)
         self.tblCharacters.horizontalHeader().setVisible(False)
         self.tblCharacters.horizontalHeader().setDefaultSectionSize(200)
-        self.tblCharacters.setCursor(Qt.PointingHandCursor)
+        self.tblCharacters.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self._characters_model = CharactersSceneAssociationTableModel(self.novel)
         self._characters_model.selection_changed.connect(self._character_changed)

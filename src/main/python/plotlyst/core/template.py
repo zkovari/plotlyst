@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Any, Dict, Optional
 
-from PyQt5.QtCore import Qt
+from PyQt6.QtCore import Qt
 from dataclasses_json import config
 from overrides import overrides
 
@@ -419,16 +419,16 @@ tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68', im
 
 class HAlignment(Enum):
     DEFAULT = 0
-    LEFT = Qt.AlignLeft
-    RIGHT = Qt.AlignRight
-    CENTER = Qt.AlignHCenter
-    JUSTIFY = Qt.AlignJustify
+    LEFT = Qt.AlignmentFlag.AlignLeft
+    RIGHT = Qt.AlignmentFlag.AlignRight
+    CENTER = Qt.AlignmentFlag.AlignHCenter
+    JUSTIFY = Qt.AlignmentFlag.AlignJustify
 
 
 class VAlignment(Enum):
-    TOP = Qt.AlignTop
-    BOTTOM = Qt.AlignBottom
-    CENTER = Qt.AlignVCenter
+    TOP = Qt.AlignmentFlag.AlignTop
+    BOTTOM = Qt.AlignmentFlag.AlignBottom
+    CENTER = Qt.AlignmentFlag.AlignVCenter
 
 
 @dataclass

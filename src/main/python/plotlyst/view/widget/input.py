@@ -21,14 +21,14 @@ from enum import Enum
 from functools import partial
 from typing import Optional, Any, List, Tuple
 
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel, \
+from PyQt6 import QtGui
+from PyQt6.QtCore import Qt, QObject, QEvent, QTimer, QPoint, QSize, pyqtSignal, QModelIndex, QItemSelectionModel, \
     QAbstractTableModel
-from PyQt5.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
+from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEvent, QPainter, QBrush, QLinearGradient, \
     QColor, QSyntaxHighlighter, \
-    QTextDocument, QTextBlockUserData, QIcon
-from PyQt5.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
-    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QAction, QTableView, QSizePolicy, QAbstractItemView
+    QTextDocument, QTextBlockUserData, QIcon, QAction
+from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
+    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QTableView, QSizePolicy, QAbstractItemView
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qthandy import transparent, hbox
@@ -57,7 +57,7 @@ class AutoAdjustableTextEdit(QTextEdit):
         self._minHeight = height
         self.setAcceptRichText(False)
         self.setFixedHeight(self._minHeight)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     @overrides
     def setText(self, text: str) -> None:
@@ -123,19 +123,19 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         self._misspelling_format.setUnderlineColor(QColor('#d90429'))
         if highlightStyle == GrammarHighlightStyle.BACKGOUND:
             self._misspelling_format.setBackground(QBrush(QColor('#fbe0dd')))
-        self._misspelling_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
+        self._misspelling_format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.SingleUnderline)
 
         self._style_format = QTextCharFormat()
         self._style_format.setUnderlineColor(QColor('#5a189a'))
         if highlightStyle == GrammarHighlightStyle.BACKGOUND:
             self._style_format.setBackground(QBrush(QColor('#dec9e9')))
-        self._style_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
+        self._style_format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.SingleUnderline)
 
         self._grammar_format = QTextCharFormat()
         self._grammar_format.setUnderlineColor(QColor('#ffc300'))
         if highlightStyle == GrammarHighlightStyle.BACKGOUND:
             self._grammar_format.setBackground(QBrush(QColor('#fffae6')))
-        self._grammar_format.setUnderlineStyle(QTextCharFormat.SingleUnderline)
+        self._grammar_format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.SingleUnderline)
 
         self._formats_per_issue = {'misspelling': self._misspelling_format, 'style': self._style_format}
 
@@ -216,7 +216,7 @@ class CharacterContentAssistMenu(QMenu):
         self.lstCharacters = QListView(self)
         self.model = CharactersTableModel(self.novel)
         self._proxy = proxy(self.model)
-        self.lstCharacters.setCursor(Qt.PointingHandCursor)
+        self.lstCharacters.setCursor(Qt.CursorShape.PointingHandCursor)
         self.lstCharacters.clicked.connect(self._clicked)
         self.lstCharacters.setModel(self._proxy)
 
@@ -240,7 +240,7 @@ class CharacterContentAssistMenu(QMenu):
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         super(CharacterContentAssistMenu, self).keyPressEvent(event)
-        if event.key() == Qt.Key_Return:
+        if event.key() == Qt.Key.Key_Return:
             indexes = self.lstCharacters.selectedIndexes()
             if indexes:
                 self._clicked(indexes[0])
@@ -271,10 +271,10 @@ class TextEditBase(EnhancedTextEdit):
     @overrides
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         super(TextEditBase, self).keyPressEvent(event)
-        if event.key() == Qt.Key_Space and event.modifiers() & Qt.ControlModifier:
+        if event.key() == Qt.Key.Key_Space and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             menu = CharacterContentAssistMenu(self)
             cursor = self.textCursor()
-            cursor.select(QTextCursor.WordUnderCursor)
+            cursor.select(QTextCursor.SelectionType.WordUnderCursor)
             menu.init(cursor.selectedText())
             menu.characterSelected.connect(self._insertCharacterName)
             menu.characterSelected.connect(menu.hide)
@@ -292,7 +292,7 @@ class TextEditBase(EnhancedTextEdit):
         for start, length, replacements, msg, style in self._errors(cursor):
             if start <= cursor.positionInBlock() <= start + length:
                 if QApplication.overrideCursor() is None:
-                    QApplication.setOverrideCursor(Qt.PointingHandCursor)
+                    QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
                 return
         QApplication.restoreOverrideCursor()
 
@@ -328,11 +328,11 @@ class TextEditBase(EnhancedTextEdit):
     # def paintEvent(self, event: QtGui.QPaintEvent) -> None:
     #     super(_TextEditor, self).paintEvent(event)
     #     painter = QPainter(self.viewport())
-    #     painter.setRenderHint(QPainter.Antialiasing)
-    #     painter.setPen(QPen(QColor('#02bcd4'), 20, Qt.SolidLine))
+    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    #     painter.setPen(QPen(QColor('#02bcd4'), 20, Qt.PenStyle.SolidLine))
     #     painter.setBrush(QColor('#02bcd4'))
     #     # painter.begin()
-    #     # painter.setPen(QPen(Qt.black), 12, Qt.SolidLine)
+    #     # painter.setPen(QPen(Qt.GlobalColor.black), 12, Qt.PenStyle.SolidLine)
     #     self.textCursor().position()
     #     rect = self.cursorRect(self.textCursor())
     #     painter.drawText(rect.x(), rect.y(), 'Painted text')
@@ -340,8 +340,8 @@ class TextEditBase(EnhancedTextEdit):
 
     def _replaceWord(self, cursor: QTextCursor, start: int, length: int, replacement: str):
         block_pos = cursor.block().position()
-        cursor.setPosition(block_pos + start, QTextCursor.MoveAnchor)
-        cursor.setPosition(block_pos + start + length, QTextCursor.KeepAnchor)
+        cursor.setPosition(block_pos + start, QTextCursor.MoveMode.MoveAnchor)
+        cursor.setPosition(block_pos + start + length, QTextCursor.MoveMode.KeepAnchor)
         cursor.beginEditBlock()
         cursor.removeSelectedText()
         cursor.insertText(replacement)
@@ -351,7 +351,7 @@ class TextEditBase(EnhancedTextEdit):
     def _insertCharacterName(self, character: Character):
         cursor = self.textCursor()
         cursor.beginEditBlock()
-        cursor.select(QTextCursor.WordUnderCursor)
+        cursor.select(QTextCursor.SelectionType.WordUnderCursor)
         cursor.removeSelectedText()
         cursor.insertText(character.name)
         cursor.endEditBlock()
@@ -375,7 +375,7 @@ class CapitalizationEventFilter(QObject):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if isinstance(event, QKeyEvent) and event.type() == QEvent.KeyPress:
+        if isinstance(event, QKeyEvent) and event.type() == QEvent.Type.KeyPress:
             if event.text().isalpha() and self._empty(watched) and 'filter' not in watched.objectName().lower():
                 inserted = self._insert(watched, event.text().upper())
                 if inserted:
@@ -425,7 +425,7 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setStyleSheet('QTextEdit {background: white; border: 0px;}')
         self.textEdit.setFont(QFont(family))
         self.textEdit.zoomIn(self.textEdit.font().pointSize() * 0.34)
-        self.textEdit.setAutoFormatting(QTextEdit.AutoAll)
+        self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
 
         # self._lblPlaceholder = QLabel(self.textEdit)
         # font = QFont(family)
@@ -454,7 +454,7 @@ class DocumentTextEditor(RichTextEditor):
         textedit.grammarCheckToggled.connect(grammarCheckToggled)
         return textedit
 
-    def _initHighlighter(self) -> QSyntaxHighlighter:
+    def _initHighlighter(self) -> GrammarHighlighter:
         return GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
 
     def setText(self, content: str, title: str = '', icon: Optional[QIcon] = None, title_read_only: bool = False):
@@ -462,10 +462,10 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setFocus()
         self.textTitle.setText(title)
         self.textTitle.setReadOnly(title_read_only)
-        self.textTitle.addAction(icon, QLineEdit.LeadingPosition)
+        self.textTitle.addAction(icon, QLineEdit.ActionPosition.LeadingPosition)
 
     def setTitleIcon(self, icon: Optional[QIcon] = None):
-        self.textTitle.addAction(icon, QLineEdit.LeadingPosition)
+        self.textTitle.addAction(icon, QLineEdit.ActionPosition.LeadingPosition)
         self.textTitle.update()
 
     def setPlaceholderText(self, text: str):
@@ -498,12 +498,12 @@ class DocumentTextEditor(RichTextEditor):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if isinstance(event, QKeyEvent) and event.type() == QEvent.KeyPress:
-            if event.key() == Qt.Key_Slash:
+        if isinstance(event, QKeyEvent) and event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Slash:
                 if self.textEdit.textCursor().atBlockStart():
                     self._showCommands()
 
-            # elif event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
+            # elif event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key_Tab:
             #     self._lblPlaceholder.setText(' said ')
             #     self._lblPlaceholder.show()
             #     rect = self.textEdit.cursorRect(cursor)
@@ -555,7 +555,7 @@ class RotatedButton(QPushButton):
             painter.rotate(-90)
             painter.translate(-1 * self.height(), 0)
         option.rect = option.rect.transposed()
-        painter.drawControl(QStyle.CE_PushButton, option)
+        painter.drawControl(QStyle.ControlElement.CE_PushButton, option)
 
         painter.end()
 
@@ -569,7 +569,7 @@ class RotatedButton(QPushButton):
 class Toggle(AnimatedToggle):
     def __init__(self, parent=None):
         super(Toggle, self).__init__(parent=parent)
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumWidth(50)
 
 
@@ -588,7 +588,7 @@ class _PowerBar(QFrame):
     @overrides
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         painter = QPainter(self)
-        painter.fillRect(self.rect(), Qt.white)
+        painter.fillRect(self.rect(), Qt.GlobalColor.white)
         gradient = QLinearGradient(0, 0, self.width(), self.height())
         gradient.setColorAt(0, QColor(self.startColor))
         gradient.setColorAt(1, QColor(self.endColor))
@@ -619,7 +619,7 @@ class PowerBar(QFrame):
     def __init__(self, parent=None):
         super(PowerBar, self).__init__(parent)
 
-        self.setFrameStyle(QFrame.Box)
+        self.setFrameStyle(QFrame.Shape.Box)
         hbox(self, 0)
         self.btnMinus = QToolButton()
         self.btnMinus.setIcon(IconRegistry.minus_icon(self.MINUS_COLOR_IDLE))
@@ -639,14 +639,14 @@ class PowerBar(QFrame):
         button.setStyleSheet('border: 0px;')
         button.installEventFilter(self)
         button.setIconSize(QSize(14, 14))
-        button.setCursor(Qt.PointingHandCursor)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(watched, QToolButton):
-            if event.type() == QEvent.Enter:
+            if event.type() == QEvent.Type.Enter:
                 watched.setIconSize(QSize(16, 16))
-            elif event.type() == QEvent.Leave:
+            elif event.type() == QEvent.Type.Leave:
                 watched.setIconSize(QSize(14, 14))
 
         return super(PowerBar, self).eventFilter(watched, event)
@@ -669,7 +669,7 @@ class RemovalButton(QToolButton):
     def __init__(self, parent=None):
         super(RemovalButton, self).__init__(parent)
         self.setIcon(IconRegistry.close_icon())
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.installEventFilter(OpacityEventFilter(parent=self))
         self.setIconSize(QSize(14, 14))
         transparent(self)
@@ -687,13 +687,13 @@ class MenuWithDescription(QMenu):
 
         self._tblActions.verticalHeader().setMaximumSectionSize(20)
         self._tblActions.setWordWrap(False)
-        self._tblActions.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._tblActions.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._tblActions.setShowGrid(False)
         self._tblActions.setModel(self._model)
         self._tblActions.verticalHeader().setVisible(False)
         self._tblActions.horizontalHeader().setVisible(False)
         self._tblActions.horizontalHeader().setStretchLastSection(True)
-        self._tblActions.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self._tblActions.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._tblActions.setAlternatingRowColors(True)
         self._tblActions.setStyleSheet('''
             QTableView::item:hover:!selected {
@@ -742,22 +742,22 @@ class MenuWithDescription(QMenu):
             return len(self._actions)
 
         @overrides
-        def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+        def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
             if self._frozen:
                 return
             if not index.isValid():
                 return
 
-            if role == Qt.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
                 if index.column() == 0:
                     return self._actions[index.row()][index.column()].text()
                 elif index.column() == 1:
                     return self._actions[index.row()][index.column()]
 
-            if role == Qt.DecorationRole and index.column() == 0:
+            if role == Qt.ItemDataRole.DecorationRole and index.column() == 0:
                 return self._actions[index.row()][0].icon()
 
-            if role == Qt.FontRole:
+            if role == Qt.ItemDataRole.FontRole:
                 font = QFont()
                 if index.column() == 0:
                     font.setBold(True)
@@ -766,7 +766,7 @@ class MenuWithDescription(QMenu):
                     font.setPointSize(ps - 1)
                 return font
 
-            if role == Qt.ForegroundRole and index.column() == 1:
+            if role == Qt.ItemDataRole.ForegroundRole and index.column() == 1:
                 return QBrush(QColor('grey'))
 
         def addAction(self, action: QAction, description: str = ''):

@@ -21,10 +21,10 @@ from enum import Enum
 from typing import List, Dict
 
 import qtanim
-from PyQt5.QtChart import QPieSeries, QPieSlice
-from PyQt5.QtCore import Qt, QSize, QPoint
-from PyQt5.QtGui import QPainter, QColor, QPaintEvent, QPen, QPainterPath, QFont, QBrush
-from PyQt5.QtWidgets import QWidget, QSizePolicy
+from PyQt6.QtCharts import QPieSeries, QPieSlice
+from PyQt6.QtCore import Qt, QSize, QPoint
+from PyQt6.QtGui import QPainter, QColor, QPaintEvent, QPen, QPainterPath, QFont, QBrush
+from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
 
 from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR
@@ -41,7 +41,8 @@ from src.main.python.plotlyst.view.widget.display import ChartView
 
 
 class ProgressChartView(ChartView):
-    def __init__(self, value: int, maxValue: int, title_prefix: str = 'Progress', color=Qt.darkBlue, parent=None):
+    def __init__(self, value: int, maxValue: int, title_prefix: str = 'Progress', color=Qt.GlobalColor.darkBlue,
+                 parent=None):
         super(ProgressChartView, self).__init__(parent)
         self.chart = ProgressChart(title_prefix=title_prefix, color=color)
 
@@ -112,7 +113,7 @@ class SceneStageProgressCharts(EventListener):
 
             for i in range(1, 4):
                 act = ProgressChartView(values[i][0], values[i][1], f'Act {i}:',
-                                        color=self._act_colors.get(i, Qt.darkBlue))
+                                        color=self._act_colors.get(i, Qt.GlobalColor.darkBlue))
                 self._chartviews.append(act)
         else:
             for i, v in enumerate(values):
@@ -121,8 +122,8 @@ class SceneStageProgressCharts(EventListener):
 
 class ProgressChart(BaseChart):
 
-    def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=Qt.darkBlue,
-                 titleColor=Qt.black, parent=None):
+    def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=Qt.GlobalColor.darkBlue,
+                 titleColor=Qt.GlobalColor.black, parent=None):
         super(ProgressChart, self).__init__(parent)
         self._title_prefix = title_prefix
         self._color = color
@@ -157,7 +158,7 @@ class ProgressChart(BaseChart):
         percentage_slice = QPieSlice('Progress', self._value)
         percentage_slice.setColor(QColor(self._color))
         empty_slice = QPieSlice('', self._maxValue - self._value)
-        empty_slice.setColor(Qt.white)
+        empty_slice.setColor(Qt.GlobalColor.white)
         series.append(percentage_slice)
         series.append(empty_slice)
         self.setTitle(self._title_prefix + " {:.1f}%".format(100 * percentage_slice.percentage()))
@@ -194,7 +195,7 @@ class CircularProgressBar(QWidget):
         self._center = self._radius + self._penWidth
         self._value = value
         self._maxValue = maxValue
-        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         self._tickPixmap = IconRegistry.ok_icon('#2a9d8f').pixmap(self._radius * 2 - 2, self._radius * 2 - 2)
 
         self._tooltipMode: ProgressTooltipMode = ProgressTooltipMode.NUMBERS
@@ -233,15 +234,15 @@ class CircularProgressBar(QWidget):
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(Qt.black, 1, Qt.DotLine))
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(QPen(Qt.GlobalColor.black, 1, Qt.PenStyle.DotLine))
         painter.drawEllipse(QPoint(self._center, self._center), self._radius, self._radius)
 
         path = QPainterPath()
         path.moveTo(self._center, self._penWidth)
         path.arcTo(self._penWidth, self._penWidth, self._radius * 2, self._radius * 2, 90,
                    -360 * self._value / self._maxValue)
-        painter.setPen(QPen(QColor('#2a9d8f'), self._penWidth, Qt.SolidLine))
+        painter.setPen(QPen(QColor('#2a9d8f'), self._penWidth, Qt.PenStyle.SolidLine))
         painter.drawPath(path)
 
         if self._value == self._maxValue:

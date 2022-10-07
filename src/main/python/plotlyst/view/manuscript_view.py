@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt5.QtCore import QModelIndex, QTimer, Qt
-from PyQt5.QtWidgets import QHeaderView, QApplication
+from PyQt6.QtCore import QModelIndex, QTimer, Qt
+from PyQt6.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
 from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
 
@@ -36,7 +36,7 @@ from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_Manusc
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, ManuscriptTextEdit
+    DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 
 
@@ -88,7 +88,7 @@ class ManuscriptView(AbstractNovelView):
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
         self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
-        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
         self.ui.treeChapters.clicked.connect(self._edit)
 
@@ -130,7 +130,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgTitle.setVisible(True)
         self.ui.treeChapters.setVisible(True)
 
-        self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignCenter)
+        self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setStyleSheet('color: black')
         self.ui.lblWordCount.setVisible(True)
         self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)
@@ -204,16 +204,16 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.textEdit.asyncCheckGrammer()
 
             if self.ui.btnAnalysis.isChecked():
-                self.ui.wdgReadability.checkTextDocuments(self.ui.textEdit.documents())
+                self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _text_changed(self):
         wc = self.ui.textEdit.statistics().word_count
         self.ui.lblWordCount.setWordCount(wc)
         self._update_story_goal()
-        self.ui.wdgReadability.setTextDocumentsUpdated(self.ui.textEdit.documents())
+        self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
 
-    def _text_selection_changed(self, editor: ManuscriptTextEdit):
-        fragment = editor.textCursor().selection()
+    def _text_selection_changed(self):
+        fragment = self.ui.textEdit.textEdit.textCursor().selection()
         if fragment:
             self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
         else:
@@ -251,7 +251,7 @@ class ManuscriptView(AbstractNovelView):
         if not checked:
             return
 
-        self.ui.wdgReadability.checkTextDocuments(self.ui.textEdit.documents())
+        self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _adverb_highlight_toggled(self, toggled: bool):
         if toggled:

@@ -17,8 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
@@ -30,10 +30,10 @@ def format_manuscript(novel: Novel) -> QTextDocument:
     font = QFont('Times New Roman', 12)
 
     chapter_title_block_format = QTextBlockFormat()
-    chapter_title_block_format.setAlignment(Qt.AlignCenter)
+    chapter_title_block_format.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     block_format = QTextBlockFormat()
-    block_format.setAlignment(Qt.AlignLeft)
+    block_format.setAlignment(Qt.AlignmentFlag.AlignLeft)
     block_format.setTextIndent(20)
     block_format.setTopMargin(0)
     block_format.setBottomMargin(0)
