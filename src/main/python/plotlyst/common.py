@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 
 EXIT_CODE_RESTART = 10
 
@@ -37,6 +38,26 @@ CONFLICT_SELF_COLOR: str = '#94b0da'
 CHARACTER_MAJOR_COLOR: str = '#00798c'
 CHARACTER_SECONDARY_COLOR: str = '#619b8a'
 CHARACTER_MINOR_COLOR: str = '#886f68'
+
+NEUTRAL_EMOTION_COLOR: str = '#ababab'
+VERY_UNHAPPY_EMOTION_COLOR: str = '#ef0000'
+UNHAPPY_EMOTION_COLOR: str = '#ff8e2b'
+HAPPY_EMOTION_COLOR: str = '#93e5ab'
+VERY_HAPPY_EMOTION_COLOR: str = '#00ca94'
+
+
+def emotion_color(emotion_value: int) -> str:
+    if emotion_value == VERY_UNHAPPY:
+        return VERY_UNHAPPY_EMOTION_COLOR
+    elif emotion_value == UNHAPPY:
+        return UNHAPPY_EMOTION_COLOR
+    elif emotion_value == HAPPY:
+        return HAPPY_EMOTION_COLOR
+    elif emotion_value == VERY_HAPPY:
+        return VERY_HAPPY_EMOTION_COLOR
+    else:
+        return NEUTRAL_EMOTION_COLOR
+
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
 

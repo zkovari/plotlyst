@@ -469,7 +469,7 @@ class SceneType(Enum):
 
 
 class SceneStructureItemType(Enum):
-    GOAL = 0
+    ACTION = 0
     CONFLICT = 1
     OUTCOME = 2
     REACTION = 3
@@ -488,13 +488,19 @@ class SceneOutcome(Enum):
     DISASTER = 0
     RESOLUTION = 1
     TRADE_OFF = 2
+    
+    @staticmethod
+    def to_str(outcome: 'SceneOutcome') -> str:
+        if outcome == SceneOutcome.TRADE_OFF:
+            return 'Trade-off'
+        return outcome.name.lower().capitalize()
 
 
 @dataclass
 class SceneStructureItem:
     type: SceneStructureItemType
-    part: int = 1
     text: str = ''
+    percentage: float = 0.0
     outcome: Optional[SceneOutcome] = None
     emotion: Optional[int] = None
 
@@ -504,7 +510,7 @@ class ConflictReference:
     conflict_id: uuid.UUID
     message: str = ''
     intensity: int = 1
-    
+
     def conflict(self, novel: 'Novel') -> Optional[Conflict]:
         for conflict in novel.conflicts:
             if conflict.id == self.conflict_id:
