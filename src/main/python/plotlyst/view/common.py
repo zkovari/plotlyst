@@ -23,7 +23,6 @@ from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-
 from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent, QBuffer, QIODevice, QSize, QMimeData, \
     QByteArray, pyqtSignal
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QDrag, QAction
@@ -245,7 +244,7 @@ class DragEventFilter(QObject):
             drag.setHotSpot(event.pos())
             drag.destroyed.connect(self.dragFinished.emit)
             self.dragStarted.emit()
-            drag.exec_()
+            drag.exec()
         return super(DragEventFilter, self).eventFilter(watched, event)
 
 
