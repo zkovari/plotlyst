@@ -170,7 +170,7 @@ class WordWrappedPushButton(QPushButton):
         super(WordWrappedPushButton, self).__init__(parent)
         self.label = QLabel(self)
         self.label.setWordWrap(True)
-        self.label.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hbox(self, 0, 0).addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
@@ -214,7 +214,7 @@ class FadeOutButtonGroup(QButtonGroup):
             btn.setEnabled(True)
             btn.setChecked(False)
             btn.setVisible(True)
-            opaque(btn, self._opacity)
+            translucent(btn, self._opacity)
 
     def _clicked(self, btn: QAbstractButton):
         for other_btn in self.buttons():
@@ -234,7 +234,7 @@ class FadeOutButtonGroup(QButtonGroup):
 class ToolbarButton(QToolButton):
     def __init__(self, parent=None):
         super(ToolbarButton, self).__init__(parent)
-        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.setCheckable(True)
         pointy(self)
 

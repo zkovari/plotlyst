@@ -17,8 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt5.QtChart import QValueAxis, QBarSeries, QBarSet
-from PyQt5.QtGui import QColor
+from PyQt6.QtCharts import QValueAxis, QBarSeries, QBarSet
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel
@@ -45,19 +46,19 @@ class WorldBuildingRevelationChart(BaseChart):
     def __init__(self, novel: Novel, parent=None):
         super(WorldBuildingRevelationChart, self).__init__(parent)
         self.novel = novel
-        self.setTitle(html('World building revelation').bold())
+        self.setTitle(html('World building').bold())
 
     def refresh(self):
         self.reset()
 
         axisX = QValueAxis()
         axisX.setRange(0, len(self.novel.scenes))
-        self.setAxisX(axisX)
+        self.addAxis(axisX, Qt.AlignmentFlag.AlignBottom)
         axisX.setVisible(False)
 
         axisY = QValueAxis()
         axisY.setRange(0, 5)
-        self.setAxisY(axisY)
+        self.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
         axisY.setVisible(False)
 
         set_ = QBarSet('World')

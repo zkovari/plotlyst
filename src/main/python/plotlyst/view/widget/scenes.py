@@ -66,7 +66,7 @@ from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui i
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
-    SecondaryActionPushButton
+    SecondaryActionPushButton, FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector, \
     CharacterEmotionButton
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription, \
