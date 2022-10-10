@@ -403,7 +403,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
     def __initWdgPReview(self):
         self.wdgPreview.setCheckOccupiedBeats(False)
-        self.wdgPreview.setBeatCursor(Qt.ArrowCursor)
+        self.wdgPreview.setBeatCursor(Qt.CursorShape.ArrowCursor)
         self.wdgPreview.setBeatsMoveable(True)
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)

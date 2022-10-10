@@ -65,7 +65,7 @@ class EventLogHandler:
     def _handle_highlighted_event(self, event: EventLog, severity: Severity):
         if not event.highlighted:
             return
-        QApplication.setOverrideCursor(QCursor(Qt.ArrowCursor))
+        QApplication.setOverrideCursor(QCursor(Qt.CursorShape.ArrowCursor))
         if severity == Severity.INFO:
             QMessageBox.information(self.parent, 'Information', event.message)
         if severity == Severity.WARNING:

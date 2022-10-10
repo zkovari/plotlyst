@@ -121,7 +121,8 @@ class ScenesOutlineView(AbstractNovelView):
         self._proxy.setSortCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.ui.tblScenes.setModel(self._proxy)
-        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle, QHeaderView.Fixed)
+        self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle,
+                                                                  QHeaderView.ResizeMode.Fixed)
         self.ui.tblScenes.horizontalHeader().setFixedHeight(30)
         self.ui.tblScenes.verticalHeader().setStyleSheet(
             '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
@@ -188,7 +189,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.wdgStoryStructureParent.setHidden(True)
-        self.ui.wdgStoryStructure.setBeatCursor(Qt.ArrowCursor)
+        self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
         self.ui.wdgStoryStructure.setNovel(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
 
@@ -232,7 +233,7 @@ class ScenesOutlineView(AbstractNovelView):
         if self.ui.wdgStoryStructure.novel is not None:
             clear_layout(self.ui.wdgStoryStructureParent)
             self.ui.wdgStoryStructure = SceneStoryStructureWidget(self.ui.wdgStoryStructureParent)
-            self.ui.wdgStoryStructure.setBeatCursor(Qt.ArrowCursor)
+            self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
             self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
         self.ui.wdgStoryStructure.setNovel(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
@@ -402,7 +403,7 @@ class ScenesOutlineView(AbstractNovelView):
                 self.ui.rbDetailed.clicked.connect(lambda: self.storymap_view.setMode(StoryMapDisplayMode.DETAILED))
                 self.ui.rbHorizontal.clicked.connect(
                     lambda: self.storymap_view.setOrientation(Qt.Orientation.Horizontal))
-                self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Vertical))
+                self.ui.rbVertical.clicked.connect(lambda: self.storymap_view.setOrientation(Qt.Orientation.Vertical))
                 self.ui.btnAct1.toggled.connect(partial(self.storymap_view.setActsFilter, 1))
                 self.ui.btnAct2.toggled.connect(partial(self.storymap_view.setActsFilter, 2))
                 self.ui.btnAct3.toggled.connect(partial(self.storymap_view.setActsFilter, 3))
@@ -504,7 +505,7 @@ class ScenesOutlineView(AbstractNovelView):
         for col in range(1, self.stagesModel.columnCount()):
             self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
             w = self.ui.tblSceneStages.horizontalHeader().sectionSize(col)
-            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.Interactive)
+            self.ui.tblSceneStages.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)
             self.ui.tblSceneStages.setColumnWidth(col, w + 10)
 
         if not self.stagesProgress:
