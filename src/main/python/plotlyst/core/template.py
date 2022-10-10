@@ -106,6 +106,7 @@ class TemplateField:
     max_value = 2_147_483_647
     compact: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
+    color: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __hash__(self):
@@ -464,26 +465,34 @@ def default_character_profiles() -> List[ProfileTemplate]:
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
+    arrow_field = TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON, color='darkBlue')
+    internal_arrow_field = TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON,
+                                         color='#94b0da')
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
               ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(characterization_title, 2, 0, col_span=2),
               ProfileElement(enneagram_field, 3, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(mbti_field, 4, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
-
               ProfileElement(story_title, 6, 0, col_span=2),
               ProfileElement(goal_field, 7, 0, margins=Margins(left=15)),
               ProfileElement(internal_goal_field, 7, 1, margins=Margins(left=10)),
-              ProfileElement(motivation_field, 8, 0, margins=Margins(left=15)),
-              ProfileElement(internal_motivation_field, 8, 1, margins=Margins(left=10)),
-              ProfileElement(conflict_field, 9, 0, margins=Margins(left=15)),
-              ProfileElement(internal_conflict_field, 9, 1, margins=Margins(left=10)),
-              ProfileElement(stakes_field, 10, 0, margins=Margins(left=15)),
-              ProfileElement(internal_stakes_field, 10, 1, margins=Margins(left=10)),
-              ProfileElement(need_field, 11, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(weaknesses_field, 12, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(ghost_field, 13, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(values_field, 14, 0, col_span=2, margins=Margins(left=15))
+              ProfileElement(arrow_field, 8, 0),
+              ProfileElement(internal_arrow_field, 8, 1),
+              ProfileElement(motivation_field, 9, 0, margins=Margins(left=15)),
+              ProfileElement(internal_motivation_field, 9, 1, margins=Margins(left=10)),
+              ProfileElement(arrow_field, 10, 0),
+              ProfileElement(internal_arrow_field, 10, 1),
+              ProfileElement(conflict_field, 11, 0, margins=Margins(left=15)),
+              ProfileElement(internal_conflict_field, 11, 1, margins=Margins(left=10)),
+              ProfileElement(arrow_field, 12, 0),
+              ProfileElement(internal_arrow_field, 12, 1),
+              ProfileElement(stakes_field, 13, 0, margins=Margins(left=15)),
+              ProfileElement(internal_stakes_field, 13, 1, margins=Margins(left=10)),
+              ProfileElement(need_field, 14, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(weaknesses_field, 15, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(ghost_field, 16, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(values_field, 17, 0, col_span=2, margins=Margins(left=15))
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),

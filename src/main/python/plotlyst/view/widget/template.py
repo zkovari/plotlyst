@@ -50,7 +50,7 @@ from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji
+from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
@@ -422,6 +422,16 @@ class LabelTemplateDisplayWidget(TemplateDisplayWidget):
         self.layout().addWidget(self.label)
 
 
+class IconTemplateDisplayWidget(TemplateDisplayWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super(IconTemplateDisplayWidget, self).__init__(field, parent)
+        self.icon = Icon(self)
+        self.icon.iconName = field.name
+        if field.color:
+            self.icon.iconColor = field.color
+        vbox(self, 0, 0).addWidget(self.icon, alignment=Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+
+
 class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
 
     def __init__(self, field: TemplateField, parent=None):
@@ -789,6 +799,8 @@ class TemplateFieldWidgetFactory:
             return HeaderTemplateDisplayWidget(field, parent)
         elif field.type == TemplateFieldType.DISPLAY_LINE:
             return LineTemplateDisplayWidget(field, parent)
+        elif field.type == TemplateFieldType.DISPLAY_ICON:
+            return IconTemplateDisplayWidget(field, parent)
 
         if field.id == enneagram_field.id:
             return EnneagramFieldWidget(field, parent)
