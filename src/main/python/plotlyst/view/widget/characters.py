@@ -34,7 +34,7 @@ from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins
-from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter
+from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
@@ -52,7 +52,7 @@ from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, \
-    VisibilityToggleEventFilter, hmax, link_buttons_to_pages, pointy
+    hmax, link_buttons_to_pages, pointy
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
@@ -712,12 +712,8 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         self.btnAddChildGoal.installEventFilter(OpacityEventFilter(leaveOpacity=0.65, parent=self.btnAddChildGoal))
         self.btnContext.installEventFilter(OpacityEventFilter(leaveOpacity=0.65, parent=self.btnContext))
         filter = VisibilityToggleEventFilter(self.btnAddChildGoal, self)
-        menu.aboutToShow.connect(filter.freeze)
-        menu.aboutToHide.connect(filter.resume)
         self.wdgTop.installEventFilter(filter)
         filter = VisibilityToggleEventFilter(self.btnContext, self)
-        menu.aboutToShow.connect(filter.freeze)
-        menu.aboutToHide.connect(filter.resume)
         self.wdgTop.installEventFilter(filter)
         self.wdgTop.installEventFilter(self)
         self.btnAddChildGoal.clicked.connect(self._addChild)

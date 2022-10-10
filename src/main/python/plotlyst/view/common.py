@@ -172,34 +172,6 @@ class OpacityEventFilter(QObject):
             translucent(self._parent, self.leaveOpacity)
 
 
-class VisibilityToggleEventFilter(QObject):
-
-    def __init__(self, target: QWidget, parent: QWidget = None, reverse: bool = False):
-        super(VisibilityToggleEventFilter, self).__init__(parent)
-        self.target = target
-        self.reverse = reverse
-        self.target.setHidden(True)
-        self._frozen: bool = False
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if self._frozen:
-            return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
-        if event.type() == QEvent.Type.Enter:
-            self.target.setVisible(True if not self.reverse else False)
-        elif event.type() == QEvent.Type.Leave:
-            self.target.setHidden(True if not self.reverse else False)
-
-        return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
-
-    def freeze(self):
-        self._frozen = True
-
-    def resume(self):
-        self._frozen = False
-        self.target.setHidden(True if not self.reverse else False)
-
-
 class DragEventFilter(QObject):
     dragStarted = pyqtSignal()
     dragFinished = pyqtSignal()
