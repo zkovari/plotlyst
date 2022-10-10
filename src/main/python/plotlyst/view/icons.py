@@ -28,7 +28,7 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_TH
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
-    Scene, SceneType, PlotType
+    Scene, SceneType, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
 
@@ -532,6 +532,19 @@ class IconRegistry:
     @staticmethod
     def genderless_icon(color: str = 'black') -> QIcon:
         return IconRegistry.from_name('fa5s.genderless', color=color, color_on='#6c757d')
+
+    @staticmethod
+    def gender_icon(gender: str):
+        if gender == MALE:
+            return IconRegistry.male_gender_icon('#067bc2')
+        if gender == FEMALE:
+            return IconRegistry.female_gender_icon('#832161')
+        if gender == TRANSGENDER:
+            return IconRegistry.transgender_icon('#f4a261')
+        if gender == NON_BINARY:
+            return IconRegistry.non_binary_gender_icon('#7209b7')
+        if gender == GENDERLESS:
+            return IconRegistry.genderless_icon('#6c757d')
 
     @staticmethod
     def backstory_icon() -> QIcon:

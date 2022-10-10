@@ -67,7 +67,7 @@ from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import 
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
-from src.main.python.plotlyst.view.widget.display import IconText
+from src.main.python.plotlyst.view.widget.display import IconText, Icon
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
@@ -1583,6 +1583,12 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
             return
 
         clear_layout(self._layout)
+        self._chartMajor.setValue(0)
+        self._chartMajor.setMaxValue(0)
+        self._chartSecondary.setValue(0)
+        self._chartSecondary.setMaxValue(0)
+        self._chartMinor.setValue(0)
+        self._chartMinor.setMaxValue(0)
 
         for i, char in enumerate(self.novel.characters):
             btn = QToolButton(self)
@@ -1628,17 +1634,23 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
             name_progress = CircularProgressBar(parent=self)
             if char.name:
                 name_progress.setValue(1)
-            self._addProgress(name_progress, self.RowName, i + 1)
+            self._addWidget(name_progress, self.RowName, i + 1)
 
             role_progress = CircularProgressBar(parent=self)
             if char.role:
                 role_progress.setValue(1)
-            self._addProgress(role_progress, self.RowRole, i + 1)
+                self._addItem(char.role, self.RowRole, i + 1)
+                role_progress.setHidden(True)
+            else:
+                self._addWidget(role_progress, self.RowRole, i + 1)
 
             gender_progress = CircularProgressBar(parent=self)
             if char.gender:
                 gender_progress.setValue(1)
-            self._addProgress(gender_progress, self.RowGender, i + 1)
+                self._addIcon(IconRegistry.gender_icon(char.gender), self.RowGender, i + 1)
+                gender_progress.setHidden(True)
+            else:
+                self._addWidget(gender_progress, self.RowGender, i + 1)
 
             for h in headers.keys():
                 headers[h] = 0  # reset char values
@@ -1663,7 +1675,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
                 if not h.header.required and char.is_minor():
                     continue
                 value_progress = CircularProgressBar(v, h.max_value, parent=self)
-                self._addProgress(value_progress, h.row, i + 1)
+                self._addWidget(value_progress, h.row, i + 1)
                 overall_progress.setMaxValue(overall_progress.maxValue() + h.max_value)
                 overall_value += v
 
@@ -1671,11 +1683,11 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
                 backstory_progress = CircularProgressBar(parent=self)
                 backstory_progress.setMaxValue(5 if char.is_major() else 3)
                 backstory_progress.setValue(len(char.backstory))
-                self._addProgress(backstory_progress, row, i + 1)
+                self._addWidget(backstory_progress, row, i + 1)
 
             overall_value += (name_progress.value() + gender_progress.value()) // 2 + role_progress.value()
             overall_progress.setValue(overall_value)
-            self._addProgress(overall_progress, self.RowOverall, i + 1)
+            self._addWidget(overall_progress, self.RowOverall, i + 1)
 
             if char.is_major():
                 self._chartMajor.setMaxValue(self._chartMajor.maxValue() + overall_progress.maxValue())
@@ -1706,7 +1718,19 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
 
         self._layout.addWidget(wdg, row, 0, alignment=alignment)
 
-    def _addProgress(self, progress: QWidget, row: int, col: int):
+    def _addWidget(self, progress: QWidget, row: int, col: int):
         if row > self.RowOverall:
             progress.installEventFilter(OpacityEventFilter(parent=progress))
         self._layout.addWidget(progress, row, col, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def _addIcon(self, icon: QIcon, row: int, col: int):
+        _icon = Icon()
+        _icon.setIcon(icon)
+        self._addWidget(_icon, row, col)
+
+    def _addItem(self, item: SelectionItem, row: int, col: int):
+        icon = Icon()
+        icon.iconName = item.icon
+        icon.iconColor = item.icon_color
+        icon.setToolTip(item.text)
+        self._addWidget(icon, row, col)
