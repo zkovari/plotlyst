@@ -21,9 +21,9 @@ import pickle
 from typing import List, Any, Dict, Optional
 
 import emoji
-from PyQt5.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMimeData, QByteArray, pyqtSignal, \
+from PyQt6.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMimeData, QByteArray, pyqtSignal, \
     QAbstractTableModel
-from PyQt5.QtGui import QFont, QBrush, QColor
+from PyQt6.QtGui import QFont, QBrush, QColor
 from overrides import overrides
 
 from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
@@ -40,17 +40,17 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 
 class BaseScenesTableModel:
 
-    def verticalHeaderData(self, section: int, role: int = Qt.DisplayRole):
-        if role == Qt.DisplayRole:
+    def verticalHeaderData(self, section: int, role: int = Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.DisplayRole:
             return str(section + 1)
-        if role == Qt.DecorationRole:
+        if role == Qt.ItemDataRole.DecorationRole:
             return IconRegistry.hashtag_icon()
 
 
 class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableModel):
     orderChanged = pyqtSignal()
     valueChanged = pyqtSignal(QModelIndex)
-    SceneRole = Qt.UserRole + 1
+    SceneRole = Qt.ItemDataRole.UserRole + 1
 
     MimeType: str = 'application/scene'
 
@@ -84,36 +84,36 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._pivotal_brush = QBrush(QColor(PIVOTAL_COLOR))
 
     @overrides
-    def rowCount(self, parent: QModelIndex = Qt.DisplayRole) -> int:
+    def rowCount(self, parent: QModelIndex = Qt.ItemDataRole.DisplayRole) -> int:
         return len(self._data)
 
     @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         if not index.isValid():
             return QVariant()
 
         scene: Scene = self._data[index.row()]
         if role == self.SceneRole:
             return scene
-        elif role == Qt.FontRole:
+        elif role == Qt.ItemDataRole.FontRole:
             if scene.wip or not scene.title:
                 font = QFont()
                 font.setItalic(True)
                 return font
-        elif role == Qt.BackgroundRole:
+        elif role == Qt.ItemDataRole.BackgroundRole:
             if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
                 if scene.wip:
                     return self._wip_brush
                 elif scene.beat(self.novel):
                     return self._pivotal_brush
-        elif role == Qt.DisplayRole:
+        elif role == Qt.ItemDataRole.DisplayRole:
             if index.column() == self.ColTitle:
                 return scene.title_or_index(self.novel)
             if index.column() == self.ColSynopsis:
                 return scene.synopsis
             if index.column() == self.ColTime:
                 return scene.day
-        elif role == Qt.DecorationRole:
+        elif role == Qt.ItemDataRole.DecorationRole:
             if index.column() == self.ColType:
                 if scene.wip:
                     return IconRegistry.wip_icon()
@@ -128,23 +128,23 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
             elif index.column() == self.ColPov:
                 if scene.pov:
                     return avatars.avatar(scene.pov)
-        elif role == Qt.ToolTipRole:
+        elif role == Qt.ItemDataRole.ToolTipRole:
             if index.column() == self.ColPov:
                 return scene.pov.name if scene.pov else ''
             elif index.column() == self.ColSynopsis:
                 return scene.synopsis
 
     @overrides
-    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
-        if orientation == Qt.Horizontal:
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+        if orientation == Qt.Orientation.Horizontal:
             return super(ScenesTableModel, self).headerData(section, orientation, role)
         else:
             return self.verticalHeaderData(section, role)
 
     @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         flags = super().flags(index)
-        flags = flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+        flags = flags | Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsDropEnabled
         if index.column() == self.ColSynopsis:
             return flags | Qt.ItemIsEditable
         if index.column() == self.ColArc:
@@ -260,7 +260,7 @@ class ScenesFilterProxyModel(QSortFilterProxyModel):
 
 
 class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
-    SceneRole: int = Qt.UserRole + 1
+    SceneRole: int = Qt.ItemDataRole.UserRole + 1
 
     ColTitle: int = 0
     ColNoneStage: int = 1
@@ -279,37 +279,37 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
         return len(self.novel.stages) + 2  # stages + title + None stage
 
     @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == self.SceneRole:
             return self._scene(index)
-        if role == Qt.DecorationRole:
+        if role == Qt.ItemDataRole.DecorationRole:
             if not self._scene(index).stage and index.column() == self.ColNoneStage:
                 return IconRegistry.wip_icon()
-        if role == Qt.FontRole:
+        if role == Qt.ItemDataRole.FontRole:
             if index.column() > self.ColNoneStage:
                 return emoji_font()
         if role == Qt.TextAlignmentRole:
             if index.column() > self.ColNoneStage:
-                return Qt.AlignCenter
-        if role == Qt.DisplayRole and index.column() > 1:
+                return Qt.AlignmentFlag.AlignCenter
+        if role == Qt.ItemDataRole.DisplayRole and index.column() > 1:
             if self._scene(index).stage and self._scene(index).stage.id == self._stage(index).id:
                 return emoji.emojize(':check_mark:')
-        if role == Qt.BackgroundRole and index.column() > self.ColNoneStage and self._highlighted_stage:
+        if role == Qt.ItemDataRole.BackgroundRole and index.column() > self.ColNoneStage and self._highlighted_stage:
             if self.novel.stages[index.column() - 2] == self._highlighted_stage:
                 return QBrush(QColor('#c1e0f7'))
-        if role == Qt.DisplayRole and index.column() == self.ColTitle:
+        if role == Qt.ItemDataRole.DisplayRole and index.column() == self.ColTitle:
             return self._scene(index).title
 
     @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         if index.column() == self.ColTitle:
             return Qt.ItemIsEnabled
         return super(ScenesStageTableModel, self).flags(index)
 
     @overrides
-    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.DisplayRole) -> Any:
-        if orientation == Qt.Horizontal:
-            if role == Qt.DisplayRole:
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+        if orientation == Qt.Orientation.Horizontal:
+            if role == Qt.ItemDataRole.DisplayRole:
                 if section == self.ColTitle:
                     return 'Title'
                 if section == self.ColNoneStage:
@@ -373,10 +373,10 @@ class SceneConflictsModel(SelectionItemsModel):
         return self._conflicts[index.row()]
 
     @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         conflict = self._conflicts[index.row()]
         if index.column() == self.ColIcon:
-            if role == Qt.DecorationRole:
+            if role == Qt.ItemDataRole.DecorationRole:
                 if conflict.conflicting_character(self.novel):
                     return avatars.avatar(conflict.conflicting_character(self.novel))
                 else:

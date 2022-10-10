@@ -20,10 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Dict
 
-from PyQt5.QtChart import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QSplineSeries
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QCursor, QIcon
-from PyQt5.QtWidgets import QToolTip
+from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QSplineSeries
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QCursor, QIcon
+from PyQt6.QtWidgets import QToolTip
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel, \
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 class BaseChart(QChart):
     def __init__(self, parent=None):
         super(BaseChart, self).__init__(parent)
-        self.setAnimationOptions(QChart.SeriesAnimations)
+        self.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
         self.setAnimationDuration(500)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.legend().hide()
@@ -48,10 +48,12 @@ class BaseChart(QChart):
     def reset(self):
         if self.series():
             self.removeAllSeries()
-        if self.axisX():
-            self.removeAxis(self.axisX())
-        if self.axisY():
-            self.removeAxis(self.axisY())
+        h_axis = self.axes(Qt.Orientation.Horizontal)
+        if h_axis:
+            self.removeAxis(h_axis[0])
+        y_axis = self.axes(Qt.Orientation.Vertical)
+        if y_axis:
+            self.removeAxis(y_axis[0])
 
 
 class GenderCharacterChart(BaseChart):
@@ -238,10 +240,10 @@ class ManuscriptLengthChart(BaseChart):
         axis_x_values = [*range(1, len(novel.chapters) + 1)]
         axis_x_values = [str(x) for x in axis_x_values]
         axis_x.append(axis_x_values)
-        self.addAxis(axis_x, Qt.AlignBottom)
+        self.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
 
         axis_y = QValueAxis()
-        self.addAxis(axis_y, Qt.AlignLeft)
+        self.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
 
         self.addSeries(series)
         series.attachAxis(axis_x)
@@ -274,7 +276,7 @@ class ActDistributionChart(BaseChart):
         super(ActDistributionChart, self).__init__(parent)
         self.setTitle('<b>Act distribution</b>')
         self.legend().setVisible(True)
-        self.legend().setAlignment(Qt.AlignBottom)
+        self.legend().setAlignment(Qt.AlignmentFlag.AlignBottom)
 
     def refresh(self, novel: Novel):
         self.reset()

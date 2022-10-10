@@ -22,8 +22,8 @@ from enum import Enum
 from typing import Optional
 
 import qtanim
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QFrame, QPushButton, QApplication, QLabel
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QWidget, QFrame, QPushButton, QApplication, QLabel
 from overrides import overrides
 from qthandy import vbox, ask_confirmation, busy, bold, incr_font
 
@@ -100,9 +100,9 @@ class HintWidget(QFrame):
             self.btnAction.setText('Okay, understood')
             self.btnAction.setIcon(IconRegistry.from_name('fa5s.thumbs-up', '#7209b7'))
         self.btnAction.setProperty('base', True)
-        self.btnAction.setCursor(Qt.PointingHandCursor)
+        self.btnAction.setCursor(Qt.CursorShape.PointingHandCursor)
         hmax(self.btnAction)
-        self.layout().addWidget(self.btnAction, alignment=Qt.AlignRight)
+        self.layout().addWidget(self.btnAction, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.btnRemoval.clicked.connect(self._action)
         self.btnAction.clicked.connect(self._action)

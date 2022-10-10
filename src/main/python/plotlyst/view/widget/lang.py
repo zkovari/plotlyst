@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List
 
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QWidget, QMenu, QWidgetAction, QPushButton
+from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtWidgets import QWidget, QMenu, QWidgetAction, QPushButton
 from qthandy import decr_font, FlowLayout
 
 from src.main.python.plotlyst.view.common import OpacityEventFilter
@@ -55,7 +55,7 @@ class GrammarPopup(QWidget, Ui_GrammarPopup):
 
     def _button(self, replacement: str) -> QPushButton:
         btn = QPushButton(replacement, self)
-        btn.setCursor(Qt.PointingHandCursor)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn.setStyleSheet('''
             QPushButton {
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,

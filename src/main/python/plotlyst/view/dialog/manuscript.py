@@ -19,10 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPageSize, QTextDocument
-from PyQt5.QtPrintSupport import QPrintPreviewWidget, QPrinter
-from PyQt5.QtWidgets import QDialog
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPageSize, QTextDocument
+from PyQt6.QtPrintSupport import QPrintPreviewWidget, QPrinter
+from PyQt6.QtWidgets import QDialog
 from qthandy import vbox
 
 from src.main.python.plotlyst.core.domain import Novel

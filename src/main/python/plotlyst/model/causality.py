@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any
 
-from PyQt5.QtCore import Qt, QModelIndex, pyqtSignal
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
 from anytree import Node
 from overrides import overrides
 
@@ -48,7 +48,7 @@ class CaualityTreeModel(TreeItemModel):
             _initNodes(item, self.root)
 
     @overrides
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         return super().flags(index) | Qt.ItemIsEditable
 
     @overrides
@@ -61,9 +61,9 @@ class CaualityTreeModel(TreeItemModel):
         return False
 
     @overrides
-    def data(self, index: QModelIndex, role: int = Qt.DisplayRole) -> Any:
+    def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         node: _CausalityNode = index.internalPointer()
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             return node.item.text
         return super().data(index, role)
 
@@ -83,6 +83,6 @@ class CaualityTreeModel(TreeItemModel):
         if parent_node:
             parent_node.item.links.remove(node.item)
             node.parent = None
-            
+
             self.changed.emit()
             self.modelReset.emit()

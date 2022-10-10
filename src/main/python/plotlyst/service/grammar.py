@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, Set
 
 import language_tool_python
-from PyQt5.QtCore import QRunnable
+from PyQt6.QtCore import QRunnable
 from language_tool_python import LanguageTool
 from overrides import overrides
 
@@ -39,7 +39,7 @@ class LanguageToolServerSetupWorker(QRunnable):
     @overrides
     def run(self) -> None:
         try:
-            tool = language_tool_python.LanguageTool(self.lang)
+            tool = language_tool_python.LanguageTool(self.lang, config={'cacheSize': 1000, 'pipelineCaching': True})
             tool.check('Test sentence.')
             language_tool_proxy.set(tool)
         except Exception as e:

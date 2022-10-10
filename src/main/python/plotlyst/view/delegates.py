@@ -18,11 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, QModelIndex, \
+from PyQt6 import QtGui
+from PyQt6.QtCore import Qt, QModelIndex, \
     QAbstractItemModel, QSize
-from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QWidget, QStyledItemDelegate, \
+from PyQt6.QtGui import QPainter
+from PyQt6.QtWidgets import QWidget, QStyledItemDelegate, \
     QStyleOptionViewItem, QTextEdit, QComboBox, QLineEdit, QSpinBox
 from overrides import overrides
 
@@ -39,7 +39,7 @@ class ScenesViewDelegate(QStyledItemDelegate):
     @overrides
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QModelIndex) -> None:
         super(ScenesViewDelegate, self).paint(painter, option, index)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         if index.column() == ScenesTableModel.ColCharacters:
             scene: Scene = index.data(ScenesTableModel.SceneRole)
             x = 3
@@ -71,7 +71,7 @@ class ScenesViewDelegate(QStyledItemDelegate):
     def setEditorData(self, editor: QWidget, index: QModelIndex):
         edit_data = index.data(Qt.EditRole)
         if not edit_data:
-            edit_data = index.data(Qt.DisplayRole)
+            edit_data = index.data(Qt.ItemDataRole.DisplayRole)
         if isinstance(editor, QTextEdit) or isinstance(editor, QLineEdit):
             editor.setText(str(edit_data))
         elif isinstance(editor, QSpinBox):
@@ -100,7 +100,7 @@ class ScenesViewDelegate(QStyledItemDelegate):
     @overrides
     def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex):
         if isinstance(editor, QComboBox):
-            model.setData(index, editor.currentData(Qt.UserRole))
+            model.setData(index, editor.currentData(Qt.ItemDataRole.UserRole))
         elif isinstance(editor, QSpinBox):
             model.setData(index, editor.value())
         else:

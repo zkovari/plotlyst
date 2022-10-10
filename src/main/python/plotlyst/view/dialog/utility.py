@@ -25,11 +25,11 @@ from enum import Enum
 from functools import partial
 from typing import Optional, Tuple
 
-from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, Qt, QSize, QObject, QEvent, QPoint, QRect, pyqtSignal
-from PyQt5.QtGui import QColor, QPixmap, QIcon, QDesktopServices, QPainter
-from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-from PyQt5.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
+from PyQt6 import QtGui
+from PyQt6.QtCore import QUrl, Qt, QSize, QObject, QEvent, QPoint, QRect, pyqtSignal
+from PyQt6.QtGui import QColor, QPixmap, QIcon, QDesktopServices, QPainter
+from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
+from PyQt6.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
 from overrides import overrides
 from qthandy import hbox, FlowLayout
 from qthandy.filter import InstantTooltipEventFilter
@@ -81,7 +81,7 @@ class _AvatarButton(QToolButton):
     def __init__(self, pixmap: QPixmap, parent=None):
         super(_AvatarButton, self).__init__(parent)
         self.pixmap = pixmap
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._size = 128
         self.setIconSize(QSize(self._size, self._size))
         self.setIcon(QIcon(pixmap.scaled(self._size, self._size, Qt.KeepAspectRatio, Qt.SmoothTransformation)))
@@ -123,9 +123,9 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(watched, QToolButton):
-            if event.type() == QEvent.Enter:
+            if event.type() == QEvent.Type.Enter:
                 watched.setStyleSheet('border: 2px dashed darkBlue;')
-            elif event.type() == QEvent.Leave:
+            elif event.type() == QEvent.Type.Leave:
                 watched.setStyleSheet('border: 1px solid black;')
 
         return super(ArtbreederDialog, self).eventFilter(watched, event)
@@ -211,7 +211,7 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         self.cropped = QPixmap(self.frame.width(), self.frame.height())
 
         painter = QPainter(self.cropped)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         cropped_rect = self.scaled.rect()
         cropped_rect.setX(self.frame.pos().x())
         cropped_rect.setY(self.frame.pos().y())

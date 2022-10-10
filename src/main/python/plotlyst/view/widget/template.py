@@ -25,10 +25,10 @@ from typing import Optional, List, Any, Dict, Set, Tuple
 import emoji
 import qtanim
 import qtawesome
-from PyQt5 import QtGui
-from PyQt5.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
-from PyQt5.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
+from PyQt6 import QtGui
+from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
+from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
     QSpacerItem, QListView, QPushButton
 from overrides import overrides
@@ -64,7 +64,7 @@ class _ProfileTemplateBase(QWidget):
         self.layout = QVBoxLayout(self)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setFocusPolicy(Qt.NoFocus)
+        self.scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.scrollAreaWidgetContents = QWidget()
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setSpacing(1)
@@ -72,7 +72,7 @@ class _ProfileTemplateBase(QWidget):
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.layout.addWidget(self.scrollArea)
 
-        self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Preferred, QSizePolicy.Expanding)
+        self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
 
         self.widgets: List[TemplateWidgetBase] = []
         self._headers: List[Tuple[int, HeaderTemplateDisplayWidget]] = []
@@ -139,7 +139,7 @@ class _PlaceHolder(QFrame):
         self.btn = QToolButton()
         self.btn.setIcon(qtawesome.icon('ei.plus-sign', color='lightgrey'))
         self.btn.setText('<Drop here>')
-        self.btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        self.btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.btn.setStyleSheet('''
                 background-color: rgb(255, 255, 255);
                 border: 0px;
@@ -164,7 +164,7 @@ class TextSelectionWidget(SecondaryActionPushButton):
     def __init__(self, field: TemplateField, help: Dict[Any, str], parent=None):
         super(TextSelectionWidget, self).__init__(parent)
         self.field = field
-        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
 
         self.setText(f'{self.field.name}...')
         self._popup = self.Popup(self.field, help)
@@ -206,7 +206,7 @@ class TextSelectionWidget(SecondaryActionPushButton):
         def __init__(self, field: TemplateField, help_: Dict[Any, str], parent=None):
             super().__init__(parent)
             self.setupUi(self)
-            self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+            self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
 
             self.field = field
             self.help = help_
@@ -312,21 +312,21 @@ class TraitSelectionWidget(LabelsSelectionWidget):
         def setModel(self, model: TraitsFieldItemsSelectionModel):
             self._model = model
 
-            self.positiveProxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self.positiveProxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.positiveProxy.setSourceModel(model)
             self.positiveProxy.setFilterKeyColumn(TemplateFieldSelectionModel.ColName)
             self.lstPositiveTraitsView.setModel(self.positiveProxy)
-            self.filterPositive.textChanged.connect(self.positiveProxy.setFilterRegExp)
+            self.filterPositive.textChanged.connect(self.positiveProxy.setFilterRegularExpression)
 
-            self.negativeProxy.setFilterCaseSensitivity(Qt.CaseInsensitive)
+            self.negativeProxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.negativeProxy.setSourceModel(model)
             self.negativeProxy.setFilterKeyColumn(TemplateFieldSelectionModel.ColName)
             self.lstNegativeTraitsView.setModel(self.negativeProxy)
-            self.filterNegative.textChanged.connect(self.negativeProxy.setFilterRegExp)
+            self.filterNegative.textChanged.connect(self.negativeProxy.setFilterRegularExpression)
 
             for lst in [self.lstPositiveTraitsView, self.lstNegativeTraitsView]:
                 lst.setModelColumn(TemplateFieldSelectionModel.ColName)
-                lst.setViewMode(QListView.IconMode)
+                lst.setViewMode(QListView.ViewMode.IconMode)
                 lst.setFixedSize(300, 300)
 
         @overrides
@@ -358,7 +358,7 @@ class ButtonSelectionWidget(QWidget):
             btn.setIcon(_icon(item))
             btn.setToolTip(item.text)
             btn.setCheckable(True)
-            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
             self.buttons.append(btn)
             self.layout.addWidget(btn)
             self.group.addButton(btn, i)
@@ -440,7 +440,7 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         self.layout().addWidget(self.btnHeader)
 
         self.progress = CircularProgressBar()
-        self.layout().addWidget(self.progress, alignment=Qt.AlignVCenter)
+        self.layout().addWidget(self.progress, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.layout().addWidget(spacer())
 
         self.children: List[TemplateWidgetBase] = []
@@ -497,10 +497,12 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(TemplateFieldWidgetBase, self).__init__(field, parent)
         self.lblEmoji = QLabel(self)
-        self.lblEmoji.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.lblEmoji.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self.lblEmoji.setToolTip(field.description if field.description else field.placeholder)
         self.lblName = QLabel(self)
-        self.lblName.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.lblName.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.lblName.setText(self.field.name)
+        self.lblName.setToolTip(field.description if field.description else field.placeholder)
 
         if self.field.emoji:
             self.updateEmoji(emoji.emojize(self.field.emoji))
@@ -575,6 +577,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor = AutoAdjustableTextEdit(height=60)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setPlaceholderText(field.placeholder)
+        self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
+        self.wdgEditor.setMaximumWidth(600)
 
         _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
         _layout.addWidget(self.wdgEditor)
@@ -847,20 +851,20 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             if item and isinstance(item.widget(), TemplateFieldWidgetBase):
                 pos = self.gridLayout.getItemPosition(i)
                 item = self.gridLayout.itemAtPosition(pos[0], pos[1])
-                if item.alignment() & Qt.AlignRight:
+                if item.alignment() & Qt.AlignmentFlag.AlignRight:
                     h_alignment = HAlignment.RIGHT
-                elif item.alignment() & Qt.AlignLeft:
+                elif item.alignment() & Qt.AlignmentFlag.AlignLeft:
                     h_alignment = HAlignment.LEFT
-                elif item.alignment() & Qt.AlignHCenter:
+                elif item.alignment() & Qt.AlignmentFlag.AlignHCenter:
                     h_alignment = HAlignment.CENTER
-                elif item.alignment() & Qt.AlignJustify:
+                elif item.alignment() & Qt.AlignmentFlag.AlignJustify:
                     h_alignment = HAlignment.JUSTIFY
                 else:
                     h_alignment = HAlignment.DEFAULT
 
-                if item.alignment() & Qt.AlignTop:
+                if item.alignment() & Qt.AlignmentFlag.AlignTop:
                     v_alignment = VAlignment.TOP
-                elif item.alignment() & Qt.AlignBottom:
+                elif item.alignment() & Qt.AlignmentFlag.AlignBottom:
                     v_alignment = VAlignment.BOTTOM
                 else:
                     v_alignment = VAlignment.CENTER
@@ -927,15 +931,15 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.MouseButtonRelease:
+        if event.type() == QEvent.Type.MouseButtonRelease:
             if isinstance(watched, (QToolButton, QPushButton)):
                 self._select(watched.parent())
             else:
                 self._select(watched)
-        elif event.type() == QEvent.DragEnter:
+        elif event.type() == QEvent.Type.DragEnter:
             self._target_to_drop = watched
             self.dragMoveEvent(event)
-        elif event.type() == QEvent.Drop:
+        elif event.type() == QEvent.Type.Drop:
             self.dropEvent(event)
             self._target_to_drop = None
         return super().eventFilter(watched, event)

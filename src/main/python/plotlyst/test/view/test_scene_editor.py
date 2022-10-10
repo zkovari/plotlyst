@@ -1,6 +1,6 @@
 from typing import Optional
 
-from PyQt5.QtCore import Qt
+from PyQt6.QtCore import Qt
 
 from src.main.python.plotlyst.core.domain import Novel, Scene, default_story_structures
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
@@ -23,4 +23,4 @@ def test_editor_with_new_scene(qtbot):
     view: SceneEditor = editor(qtbot, novel)
 
     assert view.ui.wdgPov.btnPov.text() == 'Select POV'
-    assert view.ui.wdgPov.btnPov.toolButtonStyle() == Qt.ToolButtonTextUnderIcon
+    assert view.ui.wdgPov.btnPov.toolButtonStyle() == Qt.ToolButtonStyle.ToolButtonTextUnderIcon

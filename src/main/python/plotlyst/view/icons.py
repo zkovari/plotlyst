@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict, Optional
 
 import qtawesome
-from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QLabel
+from PyQt6.QtCore import QSize
+from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtWidgets import QLabel
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
@@ -256,16 +256,16 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.sword-cross', color=color)
 
     @staticmethod
-    def success_icon(color: str = '#6ba368', color_on: str = '#6ba368') -> QIcon:
-        return qtawesome.icon('fa5s.trophy', color=color, color_on=color_on)
+    def success_icon(color: str = '#0b6e4f', color_on: str = '#0b6e4f') -> QIcon:
+        return IconRegistry.from_name('mdi.bullseye-arrow', color=color, color_on=color_on)
 
     @staticmethod
     def tradeoff_icon(color: str = '#832161', color_on: str = '#832161') -> QIcon:
-        return qtawesome.icon('fa5s.balance-scale-left', color=color, color_on=color_on)
+        return IconRegistry.from_name('fa5s.balance-scale-left', color=color, color_on=color_on)
 
     @staticmethod
     def home_icon(color_on: str = 'darkBlue') -> QIcon:
-        return qtawesome.icon('fa5s.home', color_on=color_on)
+        return IconRegistry.from_name('fa5s.home', color_on=color_on)
 
     @staticmethod
     def trash_can_icon(color: str = 'red') -> QIcon:
@@ -458,6 +458,10 @@ class IconRegistry:
     @staticmethod
     def exposition_icon() -> QIcon:
         return IconRegistry.from_name('fa5.image', '#1ea896')
+
+    @staticmethod
+    def beat_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.lightning-bolt-outline')
 
     @staticmethod
     def timer_icon() -> QIcon:

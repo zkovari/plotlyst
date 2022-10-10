@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
 
-from PyQt5.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager

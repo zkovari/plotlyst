@@ -23,15 +23,15 @@ from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-from PyQt5.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent, QBuffer, QIODevice, QSize, QMimeData, \
-    QByteArray
-from PyQt5.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QDrag
-from PyQt5.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
-    QMenu, QAction, QAbstractButton, \
+from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent, QBuffer, QIODevice, QSize, QMimeData, \
+    QByteArray, pyqtSignal
+from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QDrag, QAction
+from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
+    QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import opaque, hbox
+from qthandy import translucent, hbox
 
 from src.main.python.plotlyst.env import app_env
 
@@ -40,14 +40,14 @@ def rounded_pixmap(original: QPixmap) -> QPixmap:
     size = min(original.width(), original.height())
 
     rounded = QPixmap(size, size)
-    rounded.fill(Qt.transparent)
+    rounded.fill(Qt.GlobalColor.transparent)
 
     path = QPainterPath()
     path.addEllipse(QRectF(rounded.rect()))
     painter = QPainter(rounded)
-    painter.setRenderHint(QPainter.Antialiasing)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     painter.setClipPath(path)
-    painter.fillRect(rounded.rect(), Qt.black)
+    painter.fillRect(rounded.rect(), Qt.GlobalColor.black)
 
     painter.drawPixmap(0, 0, original.width(), original.height(), original)
     painter.end()
@@ -147,7 +147,7 @@ class OpacityEventFilter(QObject):
         self.ignoreCheckedButton = ignoreCheckedButton
         self._parent = parent
         if not ignoreCheckedButton or not self._checkedButton(parent):
-            opaque(parent, leaveOpacity)
+            translucent(parent, leaveOpacity)
         if parent and isinstance(parent, QAbstractButton):
             parent.toggled.connect(self._btnToggled)
 
@@ -155,10 +155,10 @@ class OpacityEventFilter(QObject):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if self.ignoreCheckedButton and self._checkedButton(watched) or not watched.isEnabled():
             return super(OpacityEventFilter, self).eventFilter(watched, event)
-        if event.type() == QEvent.Enter:
-            opaque(watched, self.enterOpacity)
-        elif event.type() == QEvent.Leave:
-            opaque(watched, self.leaveOpacity)
+        if event.type() == QEvent.Type.Enter:
+            translucent(watched, self.enterOpacity)
+        elif event.type() == QEvent.Type.Leave:
+            translucent(watched, self.leaveOpacity)
 
         return super(OpacityEventFilter, self).eventFilter(watched, event)
 
@@ -167,9 +167,9 @@ class OpacityEventFilter(QObject):
 
     def _btnToggled(self, toggled: bool):
         if toggled:
-            opaque(self._parent, self.enterOpacity)
+            translucent(self._parent, self.enterOpacity)
         else:
-            opaque(self._parent, self.leaveOpacity)
+            translucent(self._parent, self.leaveOpacity)
 
 
 class VisibilityToggleEventFilter(QObject):
@@ -185,9 +185,9 @@ class VisibilityToggleEventFilter(QObject):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if self._frozen:
             return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
-        if event.type() == QEvent.Enter:
+        if event.type() == QEvent.Type.Enter:
             self.target.setVisible(True if not self.reverse else False)
-        elif event.type() == QEvent.Leave:
+        elif event.type() == QEvent.Type.Leave:
             self.target.setHidden(True if not self.reverse else False)
 
         return super(VisibilityToggleEventFilter, self).eventFilter(watched, event)
@@ -208,34 +208,43 @@ class DisabledClickEventFilter(QObject):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.MouseButtonRelease and not watched.isEnabled():
+        if event.type() == QEvent.Type.MouseButtonRelease and not watched.isEnabled():
             self._slot()
 
         return super(DisabledClickEventFilter, self).eventFilter(watched, event)
 
 
 class DragEventFilter(QObject):
-    def __init__(self, watched, mimeType: str, dataFunc):
+    dragStarted = pyqtSignal()
+    dragFinished = pyqtSignal()
+
+    def __init__(self, watched, mimeType: str, dataFunc, grabbed=None):
         super(DragEventFilter, self).__init__(watched)
         self._pressed: bool = False
         self.mimeType = mimeType
         self.dataFunc = dataFunc
+        self.grabbed = grabbed
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.MouseButtonPress:
+        if event.type() == QEvent.Type.MouseButtonPress:
             self._pressed = True
-        elif event.type() == QEvent.MouseButtonRelease:
+        elif event.type() == QEvent.Type.MouseButtonRelease:
             self._pressed = False
-        elif event.type() == QEvent.MouseMove and self._pressed:
+        elif event.type() == QEvent.Type.MouseMove and self._pressed:
             drag = QDrag(watched)
-            pix = watched.grab()
+            if self.grabbed:
+                pix = self.grabbed.grab()
+            else:
+                pix = watched.grab()
             mimedata = QMimeData()
             mimedata.setData(self.mimeType, QByteArray(pickle.dumps(self.dataFunc(watched))))
             drag.setMimeData(mimedata)
             drag.setPixmap(pix)
             drag.setHotSpot(event.pos())
-            drag.exec_()
+            drag.destroyed.connect(self.dragFinished.emit)
+            self.dragStarted.emit()
+            drag.exec()
         return super(DragEventFilter, self).eventFilter(watched, event)
 
 
@@ -263,7 +272,7 @@ def scroll_to_bottom(scroll_area: QAbstractScrollArea):
 
 def hmax(widget: QWidget):
     vpol = widget.sizePolicy().verticalPolicy()
-    widget.setSizePolicy(QSizePolicy.Maximum, vpol)
+    widget.setSizePolicy(QSizePolicy.Policy.Maximum, vpol)
 
 
 def spin(btn: QAbstractButton, color: str = 'black'):
@@ -283,15 +292,15 @@ def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
 
 
 def pointy(widget):
-    widget.setCursor(Qt.PointingHandCursor)
+    widget.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
 def autoresize_col(view: QAbstractItemView, col: int):
-    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeToContents)
+    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
 
 
 def stretch_col(view: QAbstractItemView, col: int):
-    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.Stretch)
+    view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
 
 
 def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWidget]:

@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt5.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit
+from PyQt6.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit
 from fbs_runtime import platform
-from qthandy import opaque, btn_popup, incr_font, bold, italic
+from qthandy import translucent, btn_popup, incr_font, bold, italic
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
@@ -253,7 +253,7 @@ class CharacterEditor:
                 qtanim.fade_out(other_btn)
             else:
                 anim = qtanim.fade_in(other_btn)
-                anim.finished.connect(partial(opaque, other_btn, 0.4))
+                anim.finished.connect(partial(translucent, other_btn, 0.4))
 
         if len(self.ui.btnGroupGender.buttons()) == 2:
             self.ui.btnMoreGender.setHidden(btn.isChecked())
@@ -262,7 +262,7 @@ class CharacterEditor:
         for btn in [self.ui.btnTransgender, self.ui.btnNonBinary, self.ui.btnGenderless]:
             self.ui.btnGroupGender.addButton(btn)
             anim = qtanim.fade_in(btn)
-            anim.finished.connect(partial(opaque, btn, 0.4))
+            anim.finished.connect(partial(translucent, btn, 0.4))
 
         self.ui.btnMoreGender.setHidden(True)
 
