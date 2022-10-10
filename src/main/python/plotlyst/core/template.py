@@ -471,7 +471,7 @@ def default_character_profiles() -> List[ProfileTemplate]:
 
               ProfileElement(story_title, 6, 0, col_span=2),
               ProfileElement(goal_field, 7, 0, margins=Margins(left=15)),
-              ProfileElement(internal_goal_field, 7, 1),
+              ProfileElement(internal_goal_field, 7, 1, margins=Margins(left=10)),
               ProfileElement(motivation_field, 8, 0, margins=Margins(left=15)),
               ProfileElement(internal_motivation_field, 8, 1),
               ProfileElement(conflict_field, 9, 0, margins=Margins(left=15)),
