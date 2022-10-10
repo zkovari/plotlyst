@@ -32,7 +32,7 @@ from overrides import overrides
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
     mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, mbti_choices, \
     Role, \
-    summary_field
+    summary_field, exclude_if_false
 
 
 @dataclass
@@ -601,6 +601,25 @@ class SceneStoryBeat:
         return SceneStoryBeat(structure.id, beat.id, structure.character_id)
 
 
+class ReaderPosition(Enum):
+    SUPERIOR = 0
+    INFERIOR = 1
+
+
+class InformationAcquisition(Enum):
+    DISCOVERY = 0
+    REVELATION = 1
+
+
+@dataclass
+class SceneDrive:
+    worldbuilding: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    tension: int = field(default=0, metadata=config(exclude=exclude_if_empty))
+    new_information: Optional[InformationAcquisition] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    reader_position: Optional[ReaderPosition] = field(default=None, metadata=config(exclude=exclude_if_empty))
+    deus_ex_machina: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+
+
 @dataclass
 class Scene:
     title: str
@@ -622,6 +641,7 @@ class Scene:
     tag_references: List[TagReference] = field(default_factory=list)
     document: Optional['Document'] = None
     manuscript: Optional['Document'] = None
+    drive: SceneDrive = SceneDrive()
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure

@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import Dict
 
-from PyQt6.QtCharts import QPieSeries, QLineSeries, QValueAxis
+from PyQt6.QtCharts import QPieSeries, QLineSeries, QValueAxis, QSplineSeries
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QCursor, QPen
 from PyQt6.QtWidgets import QToolTip
@@ -53,6 +53,8 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
         self.chartViewEnneagram.setChart(self.chartEnneagram)
         self.chartIntensity = ConflictIntensityChart(self.novel)
         self.chartViewIntensity.setChart(self.chartIntensity)
+        self.chartTension = TensionChart(self.novel)
+        self.chartViewTension.setChart(self.chartTension)
 
         self.tabWidget.setCurrentWidget(self.tabTypes)
 
@@ -62,6 +64,7 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
     def display(self):
         self.wdgCharacterSelector.setCharacters(self.novel.agenda_characters(), checkAll=False)
         self.chartIntensity.refresh()
+        self.chartTension.refresh()
 
     def _characterChanged(self, character: Character, toggled: bool):
         if not toggled:
@@ -164,6 +167,40 @@ class ConflictIntensityChart(BaseChart):
             intensity = max([x.intensity for x in scene.agendas[0].conflict_references], default=0)
             if intensity > 0:
                 series.append(i + 1, intensity)
+
+        self.addSeries(series)
+        series.attachAxis(axisX)
+        series.attachAxis(axisY)
+
+
+class TensionChart(BaseChart):
+    def __init__(self, novel: Novel, parent=None):
+        super(TensionChart, self).__init__(parent)
+        self.novel = novel
+        self.setTitle(html('Tension').bold())
+
+    def refresh(self):
+        self.reset()
+
+        axisX = QValueAxis()
+        axisX.setRange(0, len(self.novel.scenes))
+        self.addAxis(axisX, Qt.AlignmentFlag.AlignBottom)
+        axisX.setVisible(False)
+
+        axisY = QValueAxis()
+        axisY.setRange(0, 8)
+        self.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
+        axisY.setVisible(False)
+
+        series = QSplineSeries()
+        pen = QPen()
+        pen.setColor(QColor('red'))
+        pen.setWidth(2)
+        series.setPen(pen)
+
+        for i, scene in enumerate(self.novel.scenes):
+            tension = scene.drive.tension
+            series.append(i + 1, tension if tension else 0.1)
 
         self.addSeries(series)
         series.attachAxis(axisX)

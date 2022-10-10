@@ -44,7 +44,7 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, StoryBeat, Conflict, \
     Character, Plot, ScenePlotReference, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
-    SceneStage, GoalReference, CharacterGoal, ConflictReference
+    SceneStage, GoalReference, CharacterGoal, ConflictReference, ReaderPosition, InformationAcquisition
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -58,6 +58,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder, \
     DragEventFilter, hmax, pointy, action, stretch_col, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
+from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
@@ -65,7 +66,7 @@ from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui i
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
-    SecondaryActionPushButton
+    SecondaryActionPushButton, FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector, \
     CharacterEmotionButton
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription, \
@@ -2172,3 +2173,80 @@ class SceneStageButton(QToolButton, EventListener):
         self.repo.update_scene(self._scene)
 
         emit_event(SceneStatusChangedEvent(self, self._scene))
+
+
+class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):
+    def __init__(self, parent=None):
+        super(SceneDriveTrackingEditor, self).__init__(parent)
+        self.setupUi(self)
+        self.scene: Optional[Scene] = None
+
+        self.sliderWorld.valueChanged.connect(self._worldBuildingChanged)
+        self.sliderTension.valueChanged.connect(self._tensionChanged)
+
+        self.informationBtnGroup = FadeOutButtonGroup()
+        self.informationBtnGroup.addButton(self.btnDiscovery)
+        self.informationBtnGroup.addButton(self.btnRevelation)
+        self.informationBtnGroup.buttonClicked.connect(self._informationClicked)
+
+        self.readerPosBtnGroup = FadeOutButtonGroup()
+        self.readerPosBtnGroup.addButton(self.btnReaderSuperior)
+        self.readerPosBtnGroup.addButton(self.btnReaderInferior)
+        self.readerPosBtnGroup.buttonClicked.connect(self._readerPosClicked)
+
+        self.btnDeuxExMachina.clicked.connect(self._deusExClicked)
+
+    def reset(self):
+        self.scene = None
+        self.sliderWorld.setValue(0)
+        self.sliderTension.setValue(0)
+        self.readerPosBtnGroup.reset()
+        self.informationBtnGroup.reset()
+        self.btnDeuxExMachina.setChecked(False)
+
+    def setScene(self, scene: Scene):
+        self.reset()
+        self.scene = scene
+
+        self.sliderWorld.setValue(self.scene.drive.worldbuilding)
+        self.sliderTension.setValue(self.scene.drive.tension)
+        self.btnDeuxExMachina.setChecked(self.scene.drive.deus_ex_machina)
+
+        if self.scene.drive.new_information == InformationAcquisition.DISCOVERY:
+            self.informationBtnGroup.toggle(self.btnDiscovery)
+        elif self.scene.drive.new_information == InformationAcquisition.REVELATION:
+            self.informationBtnGroup.toggle(self.btnRevelation)
+
+        if self.scene.drive.reader_position == ReaderPosition.SUPERIOR:
+            self.readerPosBtnGroup.toggle(self.btnReaderSuperior)
+        elif self.scene.drive.reader_position == ReaderPosition.INFERIOR:
+            self.readerPosBtnGroup.toggle(self.btnReaderInferior)
+
+    def _worldBuildingChanged(self, value: int):
+        if value > 0 and self.sliderWorld.isVisible():
+            qtanim.glow(self.sliderWorld, radius=12, color=QColor('#40916c'))
+
+        if self.scene:
+            self.scene.drive.worldbuilding = value
+
+    def _tensionChanged(self, value: int):
+        if value > 0 and self.sliderTension.isVisible():
+            qtanim.glow(self.sliderTension, radius=12, color=QColor('#d00000'))
+
+        if self.scene:
+            self.scene.drive.tension = value
+
+    def _readerPosClicked(self):
+        if self.readerPosBtnGroup.checkedButton() == self.btnReaderSuperior:
+            self.scene.drive.reader_position = ReaderPosition.SUPERIOR
+        elif self.readerPosBtnGroup.checkedButton() == self.btnReaderInferior:
+            self.scene.drive.reader_position = ReaderPosition.INFERIOR
+
+    def _informationClicked(self):
+        if self.informationBtnGroup.checkedButton() == self.btnDiscovery:
+            self.scene.drive.new_information = InformationAcquisition.DISCOVERY
+        elif self.informationBtnGroup.checkedButton() == self.btnRevelation:
+            self.scene.drive.new_information = InformationAcquisition.REVELATION
+
+    def _deusExClicked(self, checked: bool):
+        self.scene.drive.deus_ex_machina = checked

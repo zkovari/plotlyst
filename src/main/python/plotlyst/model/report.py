@@ -48,6 +48,10 @@ class PlotReportNode(Node):
     pass
 
 
+class WorldBuildingReportNode(Node):
+    pass
+
+
 class ReportsTreeModel(TreeItemModel):
     def __init__(self, parent=None):
         super(ReportsTreeModel, self).__init__(parent)
@@ -56,6 +60,7 @@ class ReportsTreeModel(TreeItemModel):
         StakesReportNode('Stakes', self.root)
         ConflictReportNode('Conflicts', self.root)
         PlotReportNode('Plot', self.root)
+        WorldBuildingReportNode('World building', self.root)
 
     @overrides
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
@@ -71,5 +76,7 @@ class ReportsTreeModel(TreeItemModel):
                 return IconRegistry.conflict_icon()
             if isinstance(node, PlotReportNode):
                 return IconRegistry.plot_icon()
+            if isinstance(node, WorldBuildingReportNode):
+                return IconRegistry.from_name('mdi.globe-model', '#40916c')
 
         return super(ReportsTreeModel, self).data(index, role)

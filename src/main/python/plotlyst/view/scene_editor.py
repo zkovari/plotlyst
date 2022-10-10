@@ -28,6 +28,7 @@ from PyQt6.QtWidgets import QWidget, QWidgetAction, QTableView, QMenu
 from fbs_runtime import platform
 from qthandy import flow, clear_layout
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotReference, TagReference
@@ -65,6 +66,8 @@ class SceneEditor(QObject):
         self.ui.btnAttributes.setIcon(IconRegistry.from_name('fa5s.yin-yang'))
         self.ui.btnNotes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
+        self.ui.btnDrive.setIcon(IconRegistry.from_name('mdi.chemical-weapon'))
+        self.ui.btnDrive.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
@@ -127,6 +130,7 @@ class SceneEditor(QObject):
         flow(self.ui.wdgPlotContainer)
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
+        self.ui.pageDrive.setStyleSheet(f'#pageDrive {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         self._update_view(scene)
 
@@ -181,6 +185,8 @@ class SceneEditor(QObject):
         self._characters_model.setScene(self.scene)
         self._character_changed()
 
+        self.ui.wdgDriveEditor.setScene(self.scene)
+
         if self._new_scene:
             self.ui.btnPrevious.setDisabled(True)
             self.ui.btnPrevious.setHidden(True)
@@ -203,6 +209,8 @@ class SceneEditor(QObject):
         elif self.ui.btnNotes.isChecked():
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageNotes)
             self._update_notes()
+        elif self.ui.btnDrive.isChecked():
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageDrive)
 
     def _beat_selected(self, beat: StoryBeat):
         if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:

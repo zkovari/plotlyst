@@ -25,7 +25,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
     PlotCreatedEvent
 from src.main.python.plotlyst.model.report import ReportsTreeModel, CharacterReportNode, CharacterArcReportNode, \
-    ConflictReportNode, PlotReportNode, StakesReportNode
+    ConflictReportNode, PlotReportNode, StakesReportNode, WorldBuildingReportNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
 from src.main.python.plotlyst.view.report import AbstractReport
@@ -33,6 +33,7 @@ from src.main.python.plotlyst.view.report.character import CharacterReport, Char
 from src.main.python.plotlyst.view.report.conflict import ConflictReport
 from src.main.python.plotlyst.view.report.plot import PlotReport
 from src.main.python.plotlyst.view.report.stakes import StakesReport
+from src.main.python.plotlyst.view.report.world_building import WorldBuildingReport
 
 
 class ReportsView(AbstractNovelView):
@@ -69,6 +70,9 @@ class ReportsView(AbstractNovelView):
     def displayPlotReport(self):
         self._displayReport(PlotReport(self.novel, self.ui.wdgReportContainer))
 
+    def displayWorldBuildingReport(self):
+        self._displayReport(WorldBuildingReport(self.novel, self.ui.wdgReportContainer))
+
     def _displayReport(self, report: AbstractReport):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageReport)
         clear_layout(self.ui.wdgReportContainer.layout())
@@ -87,5 +91,7 @@ class ReportsView(AbstractNovelView):
             self.displayConflictReport()
         elif isinstance(node, PlotReportNode):
             self.displayPlotReport()
+        elif isinstance(node, WorldBuildingReportNode):
+            self.displayWorldBuildingReport()
         else:
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
