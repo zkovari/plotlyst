@@ -71,7 +71,7 @@
         </widget>
        </item>
        <item>
-        <widget class="Subtitle" name="subtitle">
+        <widget class="Subtitle" name="subtitle" native="true">
          <property name="title" stdset="0">
           <string>Personal conflicts</string>
          </property>
@@ -147,6 +147,31 @@
        </property>
        <item>
         <widget class="ChartView" name="chartViewIntensity"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Tension</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
+       <item>
+        <widget class="ChartView" name="chartViewTension"/>
        </item>
       </layout>
      </widget>
