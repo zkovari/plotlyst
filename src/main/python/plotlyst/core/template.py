@@ -462,13 +462,16 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
+    def arrow_field():
+        return TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON, color='darkBlue')
+
+    def internal_arrow_field():
+        return TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON, color='#94b0da')
+
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
-    arrow_field_func = lambda: TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON,
-                                             color='darkBlue')
-    internal_arrow_field_func = lambda: TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON,
-                                                      color='#94b0da')
+
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
               ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(characterization_title, 2, 0, col_span=2),
@@ -478,16 +481,16 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(story_title, 6, 0, col_span=2),
               ProfileElement(goal_field, 7, 0, margins=Margins(left=15)),
               ProfileElement(internal_goal_field, 7, 1, margins=Margins(left=10)),
-              ProfileElement(arrow_field_func(), 8, 0),
-              ProfileElement(internal_arrow_field_func(), 8, 1),
+              ProfileElement(arrow_field(), 8, 0),
+              ProfileElement(internal_arrow_field(), 8, 1),
               ProfileElement(motivation_field, 9, 0, margins=Margins(left=15)),
               ProfileElement(internal_motivation_field, 9, 1, margins=Margins(left=10)),
-              ProfileElement(arrow_field_func(), 10, 0),
-              ProfileElement(internal_arrow_field_func(), 10, 1),
+              ProfileElement(arrow_field(), 10, 0),
+              ProfileElement(internal_arrow_field(), 10, 1),
               ProfileElement(conflict_field, 11, 0, margins=Margins(left=15)),
               ProfileElement(internal_conflict_field, 11, 1, margins=Margins(left=10)),
-              ProfileElement(arrow_field_func(), 12, 0),
-              ProfileElement(internal_arrow_field_func(), 12, 1),
+              ProfileElement(arrow_field(), 12, 0),
+              ProfileElement(internal_arrow_field(), 12, 1),
               ProfileElement(stakes_field, 13, 0, margins=Margins(left=15)),
               ProfileElement(internal_stakes_field, 13, 1, margins=Margins(left=10)),
               ProfileElement(need_field, 14, 0, col_span=2, margins=Margins(left=15)),
