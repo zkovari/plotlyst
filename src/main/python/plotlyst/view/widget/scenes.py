@@ -585,11 +585,8 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
         self.btnDelete.clicked.connect(self._remove)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
-        self._dragFilter = DragEventFilter(self.btnDrag, self.SceneBeatMimeType, self._beatDataFunc,
-                                           grabbed=self.btnIcon)
-        self._dragFilter.dragStarted.connect(lambda: self.setHidden(True))
-        self._dragFilter.dragFinished.connect(lambda: self.setVisible(True))
-        self.btnDrag.installEventFilter(self._dragFilter)
+        self.btnDrag.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
+                                                        grabbed=self.btnIcon, hideParent=True))
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, parent=self))
         retain_when_hidden(self.btnDelete)
         retain_when_hidden(self.btnDrag)
@@ -1284,7 +1281,8 @@ class SceneStoryStructureWidget(QWidget):
                 btn.clicked.connect(partial(self._beatClicked, beat, btn))
                 btn.installEventFilter(self)
                 if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
-                    btn.installEventFilter(DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat)))
+                    btn.installEventFilter(
+                        DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat), hideParent=True))
                     btn.setCursor(Qt.CursorShape.DragMoveCursor)
                 else:
                     btn.setCursor(self._beatCursor)
