@@ -34,7 +34,7 @@ from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
@@ -51,7 +51,7 @@ from src.main.python.plotlyst.model.distribution import CharactersScenesDistribu
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, DisabledClickEventFilter, \
+from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, \
     VisibilityToggleEventFilter, hmax, link_buttons_to_pages, pointy
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
@@ -329,7 +329,7 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
                                                                   QHeaderView.ResizeMode.Stretch)
         self._update_characters()
         self.btnAddNew.setIcon(IconRegistry.ok_icon())
-        self.btnAddNew.installEventFilter(DisabledClickEventFilter(lambda: qtanim.shake(self.lineKey), self))
+        self.btnAddNew.installEventFilter(DisabledClickEventFilter(self, lambda: qtanim.shake(self.lineKey)))
         self.btnAddNew.setDisabled(True)
 
         self.lineKey.textChanged.connect(self._keyphrase_edited)

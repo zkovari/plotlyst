@@ -25,11 +25,11 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import QDialog, QToolButton, QButtonGroup, QDialogButtonBox
 from fbs_runtime import platform
 from qthandy import FlowLayout
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter
 
 from src.main.python.plotlyst.core.domain import BackstoryEvent, NEUTRAL, VERY_HAPPY, VERY_UNHAPPY, UNHAPPY, HAPPY, \
     BackstoryEventType
-from src.main.python.plotlyst.view.common import emoji_font, DisabledClickEventFilter
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.backstory_editor_dialog_ui import Ui_BackstoryEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -114,9 +114,9 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
 
         self.lineKeyphrase.textChanged.connect(lambda x: self.btnSave.setEnabled(len(x) > 0))
 
-        self.btnSave = self.buttonBox.button(QDialogButtonBox.Ok)
+        self.btnSave = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
 
-        self.btnSave.installEventFilter(DisabledClickEventFilter(lambda: qtanim.shake(self.lineKeyphrase), self))
+        self.btnSave.installEventFilter(DisabledClickEventFilter(self, lambda: qtanim.shake(self.lineKeyphrase)))
         self.btnSave.setDisabled(True)
 
         self._typeButtons[BackstoryEventType.Event].setChecked(True)
@@ -145,7 +145,7 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
 
     def display(self) -> Optional[BackstoryEvent]:
         result = self.exec()
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return None
 
         emotion = NEUTRAL

@@ -200,20 +200,6 @@ class VisibilityToggleEventFilter(QObject):
         self.target.setHidden(True if not self.reverse else False)
 
 
-class DisabledClickEventFilter(QObject):
-
-    def __init__(self, slot, parent: QWidget = None):
-        super(DisabledClickEventFilter, self).__init__(parent)
-        self._slot = slot
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.MouseButtonRelease and not watched.isEnabled():
-            self._slot()
-
-        return super(DisabledClickEventFilter, self).eventFilter(watched, event)
-
-
 class DragEventFilter(QObject):
     dragStarted = pyqtSignal()
     dragFinished = pyqtSignal()

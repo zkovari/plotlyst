@@ -35,6 +35,6 @@ class ItemsEditorDialog(QDialog, Ui_ItemsEditorDialog):
 
     def display(self, ) -> List[SelectionItem]:
         result = self.exec()
-        if result == QDialog.Accepted:
+        if result == QDialog.DialogCode.Accepted:
             return self.model.items()
         return []

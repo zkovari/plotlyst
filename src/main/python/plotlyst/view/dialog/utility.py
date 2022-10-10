@@ -62,7 +62,7 @@ class IconSelectorDialog(QDialog):
         if color:
             self.selector.setColor(color)
         result = self.exec()
-        if result == QDialog.Accepted and self._icon:
+        if result == QDialog.DialogCode.Accepted and self._icon:
             return self._icon, self._color
 
     @overrides
@@ -110,7 +110,7 @@ class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
         self._step = 0
         self.fetch()
         result = self.exec()
-        if result == QDialog.Accepted:
+        if result == QDialog.DialogCode.Accepted:
             return self._pixmap
 
     def fetch(self):
@@ -204,7 +204,7 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         self._updatePreview()
         result = self.exec()
         QApplication.restoreOverrideCursor()
-        if result == QDialog.Accepted:
+        if result == QDialog.DialogCode.Accepted:
             return self.cropped
 
     def _updatePreview(self):

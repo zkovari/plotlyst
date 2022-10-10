@@ -147,7 +147,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
     def display(self) -> Optional[ProfileTemplate]:
         result = self.exec()
 
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return None
         if self._restore_requested:
             return default_character_profiles()[0]

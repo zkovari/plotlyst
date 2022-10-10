@@ -25,9 +25,10 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox
 from qthandy import flow
+from qthandy.filter import DisabledClickEventFilter
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue
-from src.main.python.plotlyst.view.common import OpacityEventFilter, link_editor_to_btn, DisabledClickEventFilter
+from src.main.python.plotlyst.view.common import OpacityEventFilter, link_editor_to_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from src.main.python.plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
@@ -43,7 +44,7 @@ class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
         if novel:
             self.lineTitle.setText(novel.title)
         result = self.exec()
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return None
         return self.lineTitle.text()
 
@@ -105,14 +106,14 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
             self.wdgTemplates.layout().addWidget(btn)
             btn.clicked.connect(partial(self._fillTemplate, value))
 
-        btnOk = self.buttonBox.button(QDialogButtonBox.Ok)
+        btnOk = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         btnOk.setEnabled(False)
-        btnOk.installEventFilter(DisabledClickEventFilter(lambda: qtanim.shake(self.linePositive), parent=btnOk))
+        btnOk.installEventFilter(DisabledClickEventFilter(btnOk, lambda: qtanim.shake(self.linePositive)))
         link_editor_to_btn(self.linePositive, btnOk)
 
     def display(self) -> Optional[PlotValue]:
         result = self.exec()
-        if result == QDialog.Accepted:
+        if result == QDialog.DialogCode.Accepted:
             self._value.text = self.linePositive.text()
             self._value.negative = self.lineNegative.text()
             return self._value

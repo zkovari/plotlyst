@@ -35,7 +35,7 @@ from overrides import overrides
 from qthandy import busy, margins, vspacer, btn_popup_menu
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR, \
     emotion_color
@@ -55,7 +55,7 @@ from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import OpacityEventFilter, DisabledClickEventFilter, PopupMenuBuilder, \
+from src.main.python.plotlyst.view.common import OpacityEventFilter, PopupMenuBuilder, \
     DragEventFilter, hmax, pointy, action, stretch_col, VisibilityToggleEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
@@ -1090,7 +1090,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                 self.wdgAgendaCharacter.setCharacter(char)
         else:
             self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(
-                DisabledClickEventFilter(self.unsetCharacterSlot, self))
+                DisabledClickEventFilter(self, self.unsetCharacterSlot))
 
             self.wdgAgendaCharacter.setDisabled(True)
             self.wdgAgendaCharacter.setToolTip('Select POV character first')

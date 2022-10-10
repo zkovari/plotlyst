@@ -23,6 +23,7 @@ import qtanim
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from qthandy import incr_font
+from qthandy.filter import DisabledClickEventFilter
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, ImportOrigin, ImportOriginType
@@ -30,7 +31,7 @@ from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, DisabledClickEventFilter, link_editor_to_btn, \
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, \
     OpacityEventFilter
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -53,16 +54,16 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         incr_font(self.btnNewStory)
         incr_font(self.btnScrivener)
 
-        self.btnSaveNewStory = self.btnBoxStoryCreation.button(QDialogButtonBox.Ok)
+        self.btnSaveNewStory = self.btnBoxStoryCreation.button(QDialogButtonBox.StandardButton.Ok)
         self.btnSaveNewStory.setDisabled(True)
         self.btnSaveNewStory.installEventFilter(
-            DisabledClickEventFilter(lambda: qtanim.shake(self.lineTitle), self.btnSaveNewStory))
+            DisabledClickEventFilter(self.btnSaveNewStory, lambda: qtanim.shake(self.lineTitle)))
         link_editor_to_btn(self.lineTitle, self.btnSaveNewStory)
 
-        self.btnSaveScrivener = self.btnBoxScrivener.button(QDialogButtonBox.Ok)
+        self.btnSaveScrivener = self.btnBoxScrivener.button(QDialogButtonBox.StandardButton.Ok)
         self.btnSaveScrivener.setDisabled(True)
         self.btnSaveScrivener.installEventFilter(
-            DisabledClickEventFilter(lambda: qtanim.shake(self.btnLoadScrivener), self.btnSaveScrivener))
+            DisabledClickEventFilter(self.btnSaveScrivener, lambda: qtanim.shake(self.btnLoadScrivener)))
         for btn in [self.btnNewStory, self.btnScrivener]:
             btn.setStyleSheet('''
             QPushButton {
@@ -88,7 +89,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
 
     def display(self) -> Optional[Novel]:
         result = self.exec()
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return None
 
         if self.stackedWidget.currentWidget() == self.pageNewStory:
