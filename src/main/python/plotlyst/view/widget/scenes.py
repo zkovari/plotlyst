@@ -36,7 +36,7 @@ from qthandy import busy, margins, vspacer, btn_popup_menu
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
-    OpacityEventFilter
+    OpacityEventFilter, DragEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR, \
     emotion_color
@@ -56,7 +56,7 @@ from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, DragEventFilter, hmax, pointy, action, stretch_col
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, pointy, action, stretch_col
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget

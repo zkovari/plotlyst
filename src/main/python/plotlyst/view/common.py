@@ -18,19 +18,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
-import pickle
 from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QObject, QEvent, QBuffer, QIODevice, QSize, QMimeData, \
-    QByteArray, pyqtSignal
-from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QDrag, QAction
+from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize
+from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame
 from fbs_runtime import platform
-from overrides import overrides
 from qthandy import hbox
 
 from src.main.python.plotlyst.env import app_env
@@ -135,40 +132,6 @@ class PopupMenuBuilder:
 
     def popup(self):
         self.menu.popup(self._viewport.mapToGlobal(self.pos))
-
-
-class DragEventFilter(QObject):
-    dragStarted = pyqtSignal()
-    dragFinished = pyqtSignal()
-
-    def __init__(self, watched, mimeType: str, dataFunc, grabbed=None):
-        super(DragEventFilter, self).__init__(watched)
-        self._pressed: bool = False
-        self.mimeType = mimeType
-        self.dataFunc = dataFunc
-        self.grabbed = grabbed
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.MouseButtonPress:
-            self._pressed = True
-        elif event.type() == QEvent.Type.MouseButtonRelease:
-            self._pressed = False
-        elif event.type() == QEvent.Type.MouseMove and self._pressed:
-            drag = QDrag(watched)
-            if self.grabbed:
-                pix = self.grabbed.grab()
-            else:
-                pix = watched.grab()
-            mimedata = QMimeData()
-            mimedata.setData(self.mimeType, QByteArray(pickle.dumps(self.dataFunc(watched))))
-            drag.setMimeData(mimedata)
-            drag.setPixmap(pix)
-            drag.setHotSpot(event.pos())
-            drag.destroyed.connect(self.dragFinished.emit)
-            self.dragStarted.emit()
-            drag.exec()
-        return super(DragEventFilter, self).eventFilter(watched, event)
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
