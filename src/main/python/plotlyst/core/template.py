@@ -79,6 +79,7 @@ class TemplateFieldType(Enum):
     DISPLAY_LABEL = 8
     DISPLAY_LINE = 9
     DISPLAY_HEADER = 10
+    DISPLAY_ICON = 11
 
 
 class SelectionType(Enum):
@@ -293,28 +294,29 @@ desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TE
                              placeholder='What does the character want in the story?',
                              id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
 
-goal_field = TemplateField('Goal', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
+goal_field = TemplateField('External goal', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
                            placeholder="What external goal does the character want to accomplish?",
                            id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'))
 internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMALL_TEXT,
+                                    emoji=':smiling_face_with_hearts:',
                                     placeholder="What emotional state does the character want to achieve?",
                                     id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'))
 motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':right-facing_fist:',
                                  placeholder='Why does the character want to accomplish their goal?',
                                  id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'))
-internal_motivation_field = TemplateField('Internal motivation', type=TemplateFieldType.SMALL_TEXT,
+internal_motivation_field = TemplateField('Internal motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':red_heart:',
                                           placeholder='Why does the character want to feel that way?',
                                           id=uuid.UUID('6388368e-6d52-4259-b1e2-1d9c1aa5c89d'))
-conflict_field = TemplateField('Conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':anguished_face:',
+conflict_field = TemplateField('Conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':crossed_swords:',
                                placeholder='What external force is stopping the character from their goal?',
                                id=uuid.UUID('c7e39f6d-4b94-4060-b3a6-d2604247ca80'))
-internal_conflict_field = TemplateField('Internal conflict', type=TemplateFieldType.SMALL_TEXT,
+internal_conflict_field = TemplateField('Internal conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
                                         placeholder='What stops the character from their desired emotional state?',
                                         id=uuid.UUID('8dcf6ce1-6679-4100-b332-8898ee2a2e3c'))
-stakes_field = TemplateField('Stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':money_bag:',
+stakes_field = TemplateField('Stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':skull:',
                              placeholder="What's at stake if the character fails to reach their goal?",
                              id=uuid.UUID('15770e28-b801-44c4-a6e6-ddba33935bc4'))
-internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.SMALL_TEXT,
+internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
                                       placeholder="What's at stake if the character fails to achieve that emotional state?",
                                       id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'))
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
@@ -447,7 +449,7 @@ class ProfileElement:
     row_span: int = 1
     col_span: int = 1
     h_alignment: HAlignment = HAlignment.DEFAULT
-    v_alignment: VAlignment = VAlignment.CENTER
+    v_alignment: VAlignment = VAlignment.TOP
     margins: Optional[Margins] = None
 
 
@@ -473,11 +475,11 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(goal_field, 7, 0, margins=Margins(left=15)),
               ProfileElement(internal_goal_field, 7, 1, margins=Margins(left=10)),
               ProfileElement(motivation_field, 8, 0, margins=Margins(left=15)),
-              ProfileElement(internal_motivation_field, 8, 1),
+              ProfileElement(internal_motivation_field, 8, 1, margins=Margins(left=10)),
               ProfileElement(conflict_field, 9, 0, margins=Margins(left=15)),
-              ProfileElement(internal_conflict_field, 9, 1),
+              ProfileElement(internal_conflict_field, 9, 1, margins=Margins(left=10)),
               ProfileElement(stakes_field, 10, 0, margins=Margins(left=15)),
-              ProfileElement(internal_stakes_field, 10, 1),
+              ProfileElement(internal_stakes_field, 10, 1, margins=Margins(left=10)),
               ProfileElement(need_field, 11, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(weaknesses_field, 12, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(ghost_field, 13, 0, col_span=2, margins=Margins(left=15)),
