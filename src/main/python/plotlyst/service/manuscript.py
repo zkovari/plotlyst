@@ -39,10 +39,10 @@ def format_manuscript(novel: Novel) -> QTextDocument:
     block_format.setBottomMargin(0)
     block_format.setLeftMargin(0)
     block_format.setRightMargin(0)
-    block_format.setLineHeight(150, QTextBlockFormat.ProportionalHeight)
+    block_format.setLineHeight(150, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)
 
     page_break_format = QTextBlockFormat()
-    page_break_format.setPageBreakPolicy(QTextFormat.PageBreak_AlwaysAfter)
+    page_break_format.setPageBreakPolicy(QTextFormat.PageBreakFlag.PageBreak_AlwaysAfter)
 
     char_format = QTextCharFormat()
     char_format.setFont(font)
@@ -79,7 +79,7 @@ def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocumen
     text_doc.setHtml(doc.content)
 
     cursor: QTextCursor = text_doc.rootFrame().firstCursorPosition()
-    cursor.select(QTextCursor.Document)
+    cursor.select(QTextCursor.SelectionType.Document)
     cursor.mergeCharFormat(char_format)
     cursor.clearSelection()
 

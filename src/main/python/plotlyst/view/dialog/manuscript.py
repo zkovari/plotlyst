@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QMarginsF
 from PyQt6.QtGui import QPageSize, QTextDocument
 from PyQt6.QtPrintSupport import QPrintPreviewWidget, QPrinter
 from PyQt6.QtWidgets import QDialog
@@ -43,10 +43,10 @@ class ManuscriptPreviewDialog(QDialog):
             return
         document: QTextDocument = format_manuscript(novel)
         self.printView.paintRequested.connect(partial(self._print, document))
-        self.setWindowState(Qt.WindowMaximized)
+        self.setWindowState(Qt.WindowState.WindowMaximized)
         self.exec()
 
     def _print(self, document: QTextDocument, device: QPrinter):
-        device.setPageSize(QPageSize(QPageSize.A4))
-        device.setPageMargins(0, 0, 0, 0, QPrinter.Inch)
-        document.print_(device)
+        device.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
+        device.setPageMargins(QMarginsF(0, 0, 0, 0))
+        document.print(device)
