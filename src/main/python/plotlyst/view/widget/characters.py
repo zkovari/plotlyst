@@ -34,7 +34,8 @@ from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins
-from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter
+from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
+    OpacityEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
@@ -51,7 +52,7 @@ from src.main.python.plotlyst.model.distribution import CharactersScenesDistribu
 from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter, \
+from src.main.python.plotlyst.view.common import emoji_font, \
     hmax, link_buttons_to_pages, pointy
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
@@ -658,7 +659,7 @@ class CharacterLinkWidget(QWidget):
             self.label = None
         self.label = CharacterLabel(self.character)
         self.label.setToolTip(f'<html>Agenda character: <b>{character.name}</b>')
-        self.label.installEventFilter(OpacityEventFilter(enterOpacity=0.7, leaveOpacity=1.0, parent=self.label))
+        self.label.installEventFilter(OpacityEventFilter(self.label, enterOpacity=0.7, leaveOpacity=1.0))
         self.label.setCursor(Qt.CursorShape.PointingHandCursor)
         self.label.clicked.connect(self.btnLinkCharacter.showMenu)
         self.layout().addWidget(self.label)
@@ -709,8 +710,8 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
         btn_popup_menu(self.btnContext, menu)
 
         self.btnAddChildGoal.setIcon(IconRegistry.plus_icon('grey'))
-        self.btnAddChildGoal.installEventFilter(OpacityEventFilter(leaveOpacity=0.65, parent=self.btnAddChildGoal))
-        self.btnContext.installEventFilter(OpacityEventFilter(leaveOpacity=0.65, parent=self.btnContext))
+        self.btnAddChildGoal.installEventFilter(OpacityEventFilter(parent=self.btnAddChildGoal, leaveOpacity=0.65))
+        self.btnContext.installEventFilter(OpacityEventFilter(parent=self.btnContext, leaveOpacity=0.65))
         filter = VisibilityToggleEventFilter(self.btnAddChildGoal, self)
         self.wdgTop.installEventFilter(filter)
         filter = VisibilityToggleEventFilter(self.btnContext, self)
@@ -1396,7 +1397,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
             f'''#wdgPovFrame {{background-image: url({resource_registry.circular_frame1});}}
                                                            ''')
         self.wdgPovFrame.setFixedSize(190, 190)
-        self.btnPov.installEventFilter(OpacityEventFilter(enterOpacity=0.7, leaveOpacity=1.0, parent=self.btnPov))
+        self.btnPov.installEventFilter(OpacityEventFilter(parent=self.btnPov, enterOpacity=0.7, leaveOpacity=1.0))
 
         self._character: Optional[Character] = None
         self._updated: bool = False
@@ -1593,7 +1594,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
             btn.setIcon(avatars.avatar(char))
             self._layout.addWidget(btn, 0, i + 1)
             pointy(btn)
-            btn.installEventFilter(OpacityEventFilter(0.8, 1.0, parent=btn))
+            btn.installEventFilter(OpacityEventFilter(btn, 0.8, 1.0))
             btn.clicked.connect(partial(self.characterClicked.emit, char))
         self._layout.addWidget(spacer(), 0, self._layout.columnCount())
 

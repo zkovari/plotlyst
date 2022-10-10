@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import translucent, hbox
+from qthandy import hbox
 
 from src.main.python.plotlyst.env import app_env
 
@@ -135,41 +135,6 @@ class PopupMenuBuilder:
 
     def popup(self):
         self.menu.popup(self._viewport.mapToGlobal(self.pos))
-
-
-class OpacityEventFilter(QObject):
-
-    def __init__(self, enterOpacity: float = 1.0, leaveOpacity: float = 0.4,
-                 parent: QWidget = None, ignoreCheckedButton: bool = False):
-        super(OpacityEventFilter, self).__init__(parent)
-        self.enterOpacity = enterOpacity
-        self.leaveOpacity = leaveOpacity
-        self.ignoreCheckedButton = ignoreCheckedButton
-        self._parent = parent
-        if not ignoreCheckedButton or not self._checkedButton(parent):
-            translucent(parent, leaveOpacity)
-        if parent and isinstance(parent, QAbstractButton):
-            parent.toggled.connect(self._btnToggled)
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if self.ignoreCheckedButton and self._checkedButton(watched) or not watched.isEnabled():
-            return super(OpacityEventFilter, self).eventFilter(watched, event)
-        if event.type() == QEvent.Type.Enter:
-            translucent(watched, self.enterOpacity)
-        elif event.type() == QEvent.Type.Leave:
-            translucent(watched, self.leaveOpacity)
-
-        return super(OpacityEventFilter, self).eventFilter(watched, event)
-
-    def _checkedButton(self, obj: QObject) -> bool:
-        return isinstance(obj, QAbstractButton) and obj.isChecked()
-
-    def _btnToggled(self, toggled: bool):
-        if toggled:
-            translucent(self._parent, self.enterOpacity)
-        else:
-            translucent(self._parent, self.leaveOpacity)
 
 
 class DragEventFilter(QObject):

@@ -22,6 +22,7 @@ from PyQt6.QtCore import QModelIndex, QTimer, Qt
 from PyQt6.QtWidgets import QHeaderView, QApplication
 from overrides import overrides
 from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
@@ -31,7 +32,6 @@ from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, Sce
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
@@ -69,7 +69,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
         self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
         self.ui.btnContext.setIcon(IconRegistry.context_icon())
-        self.ui.btnContext.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self.ui.btnContext))
+        self.ui.btnContext.installEventFilter(OpacityEventFilter(self.ui.btnContext, leaveOpacity=0.7))
         self._contextMenuWidget = ManuscriptContextMenuWidget(novel, self.widget)
         btn_popup(self.ui.btnContext, self._contextMenuWidget)
         self._contextMenuWidget.languageChanged.connect(self._language_changed)

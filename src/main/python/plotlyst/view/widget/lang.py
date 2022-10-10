@@ -22,8 +22,8 @@ from typing import List
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QMenu, QWidgetAction, QPushButton
 from qthandy import decr_font, FlowLayout
+from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.view.common import OpacityEventFilter
 from src.main.python.plotlyst.view.generated.grammar_popup_ui import Ui_GrammarPopup
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -34,7 +34,7 @@ class GrammarPopup(QWidget, Ui_GrammarPopup):
     def __init__(self, parent):
         super().__init__(parent)
         self.setupUi(self)
-        self.wdgReplacements.setLayout(FlowLayout(margin=3, spacing=3))
+        self.wdgReplacements.setLayout(FlowLayout(margin=3))
         self.btnClose.setIcon(IconRegistry.close_icon())
         self.btnClose.installEventFilter(OpacityEventFilter(parent=self.btnClose))
 

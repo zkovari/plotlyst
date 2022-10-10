@@ -35,7 +35,8 @@ from overrides import overrides
 from qthandy import busy, margins, vspacer, btn_popup_menu
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
-from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter
+from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
+    OpacityEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR, \
     emotion_color
@@ -55,8 +56,7 @@ from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import OpacityEventFilter, PopupMenuBuilder, \
-    DragEventFilter, hmax, pointy, action, stretch_col
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, DragEventFilter, hmax, pointy, action, stretch_col
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
@@ -243,7 +243,7 @@ class ScenePlotSelector(QWidget):
                             ''')
 
         self.btnLinkPlot.installEventFilter(
-            OpacityEventFilter(leaveOpacity=0.4 if simplified else 0.7, parent=self.btnLinkPlot))
+            OpacityEventFilter(parent=self.btnLinkPlot, leaveOpacity=0.4 if simplified else 0.7))
 
         self.selectorWidget = QWidget()
         vbox(self.selectorWidget)
@@ -252,7 +252,7 @@ class ScenePlotSelector(QWidget):
             if plot.id in occupied_plot_ids:
                 continue
             label = PlotLabel(plot)
-            label.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=label))
+            label.installEventFilter(OpacityEventFilter(parent=label, leaveOpacity=0.7))
             label.clicked.connect(partial(self._plotSelected, plot))
             self.selectorWidget.layout().addWidget(label)
 
@@ -502,7 +502,7 @@ class _SceneTypeButton(QPushButton):
             }}
             ''')
         self._toggled(self.isChecked())
-        self.installEventFilter(OpacityEventFilter(0.7, 0.5, self, ignoreCheckedButton=True))
+        self.installEventFilter(OpacityEventFilter(self, 0.7, 0.5, ignoreCheckedButton=True))
         self.toggled.connect(self._toggled)
 
     def _toggled(self, toggled: bool):
@@ -518,7 +518,7 @@ class _SceneBeatPlaceholderButton(QToolButton):
     def __init__(self, parent=None):
         super(_SceneBeatPlaceholderButton, self).__init__(parent)
         self.setIcon(IconRegistry.plus_circle_icon('grey'))
-        # self.installEventFilter(OpacityEventFilter(0.5, 0.12, parent=self))
+        # self.installEventFilter(OpacityEventFilter(parent=self, 0.5, 0.12))
         self.setIconSize(QSize(24, 24))
         transparent(self)
         # self.setStyleSheet('''

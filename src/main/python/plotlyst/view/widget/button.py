@@ -26,9 +26,10 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup
 from overrides import overrides
 from qthandy import hbox, translucent, bold, incr_font
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import SelectionItem
-from src.main.python.plotlyst.view.common import OpacityEventFilter, pointy
+from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -77,7 +78,7 @@ class _SecondaryActionButton(QAbstractButton):
         self.initStyleSheet()
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
-        self.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=self))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
 
     def initStyleSheet(self, border_color: str = 'grey', border_style: str = 'dashed', color: str = 'grey'):
         self.setStyleSheet(f'''

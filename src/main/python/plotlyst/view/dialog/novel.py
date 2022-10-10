@@ -25,10 +25,10 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox
 from qthandy import flow
-from qthandy.filter import DisabledClickEventFilter
+from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue
-from src.main.python.plotlyst.view.common import OpacityEventFilter, link_editor_to_btn
+from src.main.python.plotlyst.view.common import link_editor_to_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from src.main.python.plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
@@ -69,7 +69,7 @@ class _TemplatePlotValueButton(QPushButton):
                 border: 3px solid black;
             }}
         ''')
-        self.installEventFilter(OpacityEventFilter(leaveOpacity=0.5, parent=self))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.5))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
 

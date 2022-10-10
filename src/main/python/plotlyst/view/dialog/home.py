@@ -23,7 +23,7 @@ import qtanim
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from qthandy import incr_font
-from qthandy.filter import DisabledClickEventFilter
+from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, ImportOrigin, ImportOriginType
@@ -31,8 +31,7 @@ from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, \
-    OpacityEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 

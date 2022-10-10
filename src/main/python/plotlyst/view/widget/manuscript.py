@@ -32,6 +32,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout
+from qthandy.filter import OpacityEventFilter
 from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState
 from textstat import textstat
 
@@ -43,8 +44,7 @@ from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import scroll_to_top, spin, \
-    OpacityEventFilter
+from src.main.python.plotlyst.view.common import scroll_to_top, spin
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget

@@ -23,13 +23,14 @@ import qtanim
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit
 from fbs_runtime import platform
 from qthandy import translucent, btn_popup, incr_font, bold, italic
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
 from src.main.python.plotlyst.core.template import protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, OpacityEventFilter
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -78,7 +79,7 @@ class CharacterEditor:
         self.ui.btnMoreGender.clicked.connect(self._display_more_gender_clicked)
 
         self.ui.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))
-        self._btnRoleEventFilter = OpacityEventFilter(leaveOpacity=0.7, parent=self.ui.btnRole,
+        self._btnRoleEventFilter = OpacityEventFilter(parent=self.ui.btnRole, leaveOpacity=0.7,
                                                       ignoreCheckedButton=True)
         self.ui.btnRole.installEventFilter(self._btnRoleEventFilter)
         self._roleSelector = CharacterRoleSelector()

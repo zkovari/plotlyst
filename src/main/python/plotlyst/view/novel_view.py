@@ -22,6 +22,7 @@ from PyQt6.QtCore import QObject, QEvent, Qt
 from PyQt6.QtGui import QFont
 from overrides import overrides
 from qthandy import retain_when_hidden, transparent
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
@@ -30,7 +31,7 @@ from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, OpacityEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -61,7 +62,7 @@ class NovelView(AbstractNovelView):
         self.ui.textPremise.textEdit.setFontFamily('Helvetica')
         self.ui.textPremise.textEdit.setFontPointSize(16)
         self.ui.textPremise.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.ui.textPremise.textEdit.setFontWeight(QFont.Bold)
+        self.ui.textPremise.textEdit.setFontWeight(QFont.Weight.Bold)
 
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
@@ -113,7 +114,7 @@ class NovelView(AbstractNovelView):
                 border: 2px solid #013a63;
             }
             ''')
-            btn.installEventFilter(OpacityEventFilter(leaveOpacity=0.7, parent=btn, ignoreCheckedButton=True))
+            btn.installEventFilter(OpacityEventFilter(parent=btn, leaveOpacity=0.7, ignoreCheckedButton=True))
 
     @overrides
     def refresh(self):
@@ -139,7 +140,7 @@ class NovelView(AbstractNovelView):
     def _premise_changed(self):
         text = self.ui.textPremise.textEdit.toPlainText()
         if not text:
-            self.ui.textPremise.textEdit.setFontWeight(QFont.Bold)
+            self.ui.textPremise.textEdit.setFontWeight(QFont.Weight.Bold)
             self.ui.textPremise.textEdit.setStyleSheet(
                 'border: 1px dashed darkBlue; border-radius: 6px; background-color: rgba(0, 0, 0, 0);')
         elif not self.novel.premise:
