@@ -27,7 +27,8 @@ from PyQt6.QtGui import QPainter, QColor, QPaintEvent, QPen, QPainterPath, QFont
 from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
 
-from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR
+from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
+    RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
 from src.main.python.plotlyst.core.template import RoleImportance
 from src.main.python.plotlyst.event.core import EventListener, Event
@@ -123,10 +124,11 @@ class SceneStageProgressCharts(EventListener):
 class ProgressChart(BaseChart):
 
     def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=Qt.GlobalColor.darkBlue,
-                 titleColor=Qt.GlobalColor.black, parent=None):
+                 titleColor=Qt.GlobalColor.black, emptySliceColor=Qt.GlobalColor.white, parent=None):
         super(ProgressChart, self).__init__(parent)
         self._title_prefix = title_prefix
         self._color = color
+        self._empty_slice_color = emptySliceColor
         self._value = value
         self._maxValue = maxValue
 
@@ -158,7 +160,7 @@ class ProgressChart(BaseChart):
         percentage_slice = QPieSlice('Progress', self._value)
         percentage_slice.setColor(QColor(self._color))
         empty_slice = QPieSlice('', self._maxValue - self._value)
-        empty_slice.setColor(Qt.GlobalColor.white)
+        empty_slice.setColor(QColor(self._empty_slice_color))
         series.append(percentage_slice)
         series.append(empty_slice)
         self.setTitle(self._title_prefix + " {:.1f}%".format(100 * percentage_slice.percentage()))
@@ -178,6 +180,7 @@ class CharacterRoleProgressChart(ProgressChart):
             color = CHARACTER_MINOR_COLOR
             title = icon_to_html_img(IconRegistry.minor_character_icon())
         super(CharacterRoleProgressChart, self).__init__(title_prefix=title, color=color, titleColor=color,
+                                                         emptySliceColor=RELAXED_WHITE_COLOR,
                                                          parent=parent)
 
 
