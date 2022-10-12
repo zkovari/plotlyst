@@ -40,7 +40,7 @@ from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal, GoalReference, Stake
+    CharacterGoal, Goal, GoalReference, Stake, Topic, TemplateValue
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance
@@ -1753,3 +1753,5 @@ class CharacterTopicsEditor(QWidget):
 
     def setCharacter(self, character: Character):
         self._character = character
+        topic = Topic('Family', icon='mdi.card-account-details-star-outline')
+        self._wdgTopics.addTopic(topic, TemplateValue(topic.id, 'Text'))

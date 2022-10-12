@@ -68,6 +68,7 @@ class Topic:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    description: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __hash__(self):
