@@ -72,6 +72,7 @@ from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
+from src.main.python.plotlyst.view.widget.template import TopicsEditor
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
@@ -1734,3 +1735,21 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         icon.iconColor = item.icon_color
         icon.setToolTip(item.text)
         self._addWidget(icon, row, col)
+
+
+class CharacterTopicsEditor(QWidget):
+    def __init__(self, parent=None):
+        super(CharacterTopicsEditor, self).__init__(parent)
+        self._character: Optional[Character] = None
+
+        self._btnAdd = QToolButton(self)
+        self._btnAdd.setIcon(IconRegistry.plus_icon())
+        self._wdgTopics = TopicsEditor(self)
+
+        layout_ = vbox(self)
+        layout_.addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignRight)
+        layout_.addWidget(self._wdgTopics)
+        layout_.addWidget(vspacer())
+
+    def setCharacter(self, character: Character):
+        self._character = character

@@ -713,6 +713,31 @@ border: 0px;
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tabTopics">
+       <attribute name="title">
+        <string>Topics</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <property name="spacing">
+         <number>3</number>
+        </property>
+        <property name="leftMargin">
+         <number>2</number>
+        </property>
+        <property name="topMargin">
+         <number>2</number>
+        </property>
+        <property name="rightMargin">
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
+        </property>
+        <item>
+         <widget class="CharacterTopicsEditor" name="wdgTopicsEditor" native="true"/>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tabGoals">
        <attribute name="title">
         <string>Agency</string>
@@ -783,6 +808,12 @@ border: 0px;
   </customwidget>
   <customwidget>
    <class>CharacterTimelineWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.characters</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CharacterTopicsEditor</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.characters</header>
    <container>1</container>

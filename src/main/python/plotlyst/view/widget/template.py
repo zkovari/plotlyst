@@ -1055,3 +1055,8 @@ class CharacterProfileTemplateView(ProfileTemplateView):
                 if neg_trait not in traits:
                     traits.append(neg_trait)
             self._traits_widget.setValue(traits)
+
+
+class TopicsEditor(QWidget):
+    def __init__(self, parent=None):
+        super(TopicsEditor, self).__init__(parent)

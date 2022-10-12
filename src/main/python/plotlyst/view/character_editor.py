@@ -135,6 +135,8 @@ class CharacterEditor:
         self._character_goals = CharacterGoalsEditor(self.novel, self.character)
         self.ui.tabGoals.layout().addWidget(self._character_goals)
 
+        self.ui.wdgTopicsEditor.setCharacter(self.character)
+
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
