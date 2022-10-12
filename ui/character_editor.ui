@@ -145,7 +145,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="CharacterAvatar" name="wdgAvatar">
+           <widget class="CharacterAvatar" name="wdgAvatar" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
               <horstretch>0</horstretch>
@@ -665,8 +665,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>368</width>
-             <height>503</height>
+             <width>376</width>
+             <height>508</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -715,7 +715,7 @@ border: 0px;
       </widget>
       <widget class="QWidget" name="tabGoals">
        <attribute name="title">
-        <string>Story goals</string>
+        <string>Agency</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <property name="spacing">
@@ -756,7 +756,7 @@ border: 0px;
          <number>3</number>
         </property>
         <item>
-         <widget class="DocumentTextEditor" name="textEdit"/>
+         <widget class="DocumentTextEditor" name="textEdit" native="true"/>
         </item>
        </layout>
       </widget>
