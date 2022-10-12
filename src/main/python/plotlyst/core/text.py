@@ -18,12 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import re
-from typing import List, Optional
 
 import nltk
 from textstat import textstat
 
-from src.main.python.plotlyst.core.domain import SceneBuilderElement, SceneBuilderElementType, StoryStructure
+from src.main.python.plotlyst.core.domain import StoryStructure
 
 
 class TextBuilder:
@@ -50,36 +49,6 @@ class TextBuilder:
         self.text += new_text
 
         self._last_is_nl = False
-
-
-def generate_text_from_scene_builder(elements: List[SceneBuilderElement]) -> str:
-    text_builder = TextBuilder()
-    for el in elements:
-        _parse_to_text(el, text_builder)
-    return text_builder.text
-
-
-def _parse_to_text(el: SceneBuilderElement, text: TextBuilder, previous: Optional[SceneBuilderElement] = None):
-    if el.type == SceneBuilderElementType.CHARACTER_ENTRY:
-        text.nl()
-        text.append(f'{el.character.name} enters the scene.')
-        if el.text:
-            text.append(el.text)
-    elif el.type == SceneBuilderElementType.REACTION:
-        text.nl()
-    elif el.type in [SceneBuilderElementType.REFLEX, SceneBuilderElementType.FEELING, SceneBuilderElementType.MONOLOG]:
-        text.append(el.text)
-    elif el.type == SceneBuilderElementType.SPEECH:
-        text.nl()
-        text.append(f'"{el.text}"')
-    elif el.type == SceneBuilderElementType.ACTION_BEAT:
-        text.append(el.text)
-    else:
-        text.nl()
-        text.append(el.text)
-
-    for child in el.children:
-        _parse_to_text(child, text, el)
 
 
 def parse_structure_to_richtext(structure: StoryStructure):

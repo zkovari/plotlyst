@@ -31,8 +31,8 @@ from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined, config
 from qthandy import busy
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneBuilderElement, \
-    SceneBuilderElementType, NpcCharacter, SceneStage, default_stages, StoryStructure, \
+from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
+    default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
@@ -134,17 +134,6 @@ class CharacterArcInfo:
 
 
 @dataclass
-class SceneBuilderElementInfo:
-    type: SceneBuilderElementType
-    text: str = ''
-    children: List['SceneBuilderElementInfo'] = field(default_factory=list)
-    character: Optional[uuid.UUID] = None
-    has_suspense: bool = False
-    has_tension: bool = False
-    has_stakes: bool = False
-
-
-@dataclass
 class ScenePlotReferenceInfo:
     plot_id: uuid.UUID
     data: ScenePlotReferenceData = ScenePlotReferenceData()
@@ -164,7 +153,6 @@ class SceneInfo:
     plots: List[ScenePlotReferenceInfo] = field(default_factory=list)
     day: int = 1
     chapter: Optional[uuid.UUID] = None
-    scene_builder_elements: List[SceneBuilderElementInfo] = field(default_factory=list)
     stage: Optional[uuid.UUID] = None
     beats: List[SceneStoryBeat] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
@@ -456,10 +444,6 @@ class JsonClient:
                 else:
                     chapter = None
 
-                builder_elements: List[SceneBuilderElement] = []
-                for builder_info in info.scene_builder_elements:
-                    builder_elements.append(self.__get_scene_builder_element(builder_info, characters_ids))
-
                 stage = None
                 if info.stage:
                     match = [x for x in novel_info.stages if x.id == info.stage]
@@ -469,7 +453,7 @@ class JsonClient:
                 scene = Scene(title=info.title, id=info.id, synopsis=info.synopsis, type=info.type,
                               wip=info.wip, day=info.day,
                               plot_values=scene_plots, pov=pov, characters=scene_characters, agendas=info.agendas,
-                              chapter=chapter, builder_elements=builder_elements, stage=stage, beats=info.beats,
+                              chapter=chapter, stage=stage, beats=info.beats,
                               comments=info.comments, tag_references=info.tag_references,
                               document=info.document, manuscript=info.manuscript, drive=info.drive)
                 scenes.append(scene)
@@ -544,14 +528,11 @@ class JsonClient:
     def _persist_scene(self, scene: Scene):
         plots = [ScenePlotReferenceInfo(x.plot.id, x.data) for x in scene.plot_values]
         characters = [x.id for x in scene.characters]
-        builder_elements = [self.__get_scene_builder_element_info(x) for x in
-                            scene.builder_elements]
         info = SceneInfo(id=scene.id, title=scene.title, synopsis=scene.synopsis, type=scene.type,
                          wip=scene.wip, day=scene.day,
                          pov=self.__id_or_none(scene.pov), plots=plots, characters=characters,
                          agendas=scene.agendas,
                          chapter=self.__id_or_none(scene.chapter),
-                         scene_builder_elements=builder_elements,
                          stage=self.__id_or_none(scene.stage),
                          beats=scene.beats, comments=scene.comments,
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
@@ -566,30 +547,6 @@ class JsonClient:
         for goal in goals:
             goal_ids.add(str(goal.goal_id))
             self.__collect_goal_ids(goal_ids, goal.children)
-
-    def __get_scene_builder_element_info(self, el: SceneBuilderElement) -> SceneBuilderElementInfo:
-        info = SceneBuilderElementInfo(type=el.type, text=el.text, character=el.character.id if el.character else None,
-                                       has_suspense=el.has_suspense, has_stakes=el.has_stakes,
-                                       has_tension=el.has_tension)
-        for child in el.children:
-            info.children.append(self.__get_scene_builder_element_info(child))
-
-        return info
-
-    def __get_scene_builder_element(self, info: SceneBuilderElementInfo,
-                                    characters_ids: Dict[str, Character]) -> SceneBuilderElement:
-        el = SceneBuilderElement(type=info.type, text=info.text,
-                                 has_suspense=info.has_suspense, has_stakes=info.has_stakes,
-                                 has_tension=info.has_tension)
-        if info.character and str(info.character) in characters_ids.keys():
-            el.character = characters_ids[str(info.character)]
-        elif el.type == SceneBuilderElementType.SPEECH or el.type == SceneBuilderElementType.CHARACTER_ENTRY:
-            el.character = NpcCharacter('Other')
-
-        for child in info.children:
-            el.children.append(self.__get_scene_builder_element(child, characters_ids))
-
-        return el
 
     def __json_file(self, uuid: uuid.UUID) -> str:
         return f'{uuid}.json'

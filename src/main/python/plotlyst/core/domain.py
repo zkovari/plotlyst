@@ -266,17 +266,6 @@ class SceneBuilderElementType(Enum):
     ENDING = 'ending'
 
 
-@dataclass
-class SceneBuilderElement:
-    type: SceneBuilderElementType
-    text: str = ''
-    children: List['SceneBuilderElement'] = field(default_factory=list)
-    character: Optional[Character] = None
-    has_suspense: bool = False
-    has_tension: bool = False
-    has_stakes: bool = False
-
-
 class StoryBeatType(Enum):
     BEAT = 'beat'
     CONTAINER = 'container'
@@ -488,7 +477,7 @@ class SceneOutcome(Enum):
     DISASTER = 0
     RESOLUTION = 1
     TRADE_OFF = 2
-    
+
     @staticmethod
     def to_str(outcome: 'SceneOutcome') -> str:
         if outcome == SceneOutcome.TRADE_OFF:
@@ -634,7 +623,6 @@ class Scene:
     day: int = 1
     chapter: Optional[Chapter] = None
     arcs: List[CharacterArc] = field(default_factory=list)
-    builder_elements: List[SceneBuilderElement] = field(default_factory=list)
     stage: Optional[SceneStage] = None
     beats: List[SceneStoryBeat] = field(default_factory=list)
     comments: List[Comment] = field(default_factory=list)
