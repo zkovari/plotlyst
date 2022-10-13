@@ -45,7 +45,7 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, StoryBeat, Conflict, \
     Character, Plot, ScenePlotReference, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
-    SceneStage, GoalReference, CharacterGoal, ConflictReference, ReaderPosition, InformationAcquisition
+    SceneStage, GoalReference, CharacterGoal, ConflictReference, ReaderPosition, InformationAcquisition, Document
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -2091,6 +2091,9 @@ class SceneNotesEditor(DocumentTextEditor):
 
     def setScene(self, scene: Scene):
         self._scene = scene
+        if self._scene.document is None:
+            self._scene.document = Document('', scene_id=self._scene.id)
+            self._scene.document.loaded = True
         if not scene.document.loaded:
             json_client.load_document(app_env.novel, scene.document)
 
