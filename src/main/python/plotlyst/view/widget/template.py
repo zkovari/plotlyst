@@ -649,7 +649,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         super(EnneagramFieldWidget, self).__init__(field, parent)
         self.wdgEditor = TextSelectionWidget(field, enneagram_help)
         _layout = hbox(self)
-        _layout.addWidget(self.wdgEditor)
+        _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
 
         emojiDesire = Emoji()
         emojiDesire.setText(emoji.emojize(':smiling_face:'))
@@ -662,12 +662,15 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.lblFear = QLabel('')
         self.lblFear.setToolTip('Core fear')
 
-        decr_font(emojiDesire, 4)
-        decr_font(self.lblDesire, 2)
-        decr_font(emojiFear, 4)
-        decr_font(self.lblFear, 2)
+        decr_font(emojiDesire, 3)
+        decr_font(self.lblDesire)
+        decr_font(emojiFear, 3)
+        decr_font(self.lblFear)
 
-        self.wdgAttr = group(emojiDesire, self.lblDesire, emojiFear, self.lblFear, spacer())
+        self.wdgAttr = group(
+            group(emojiDesire, self.lblDesire, spacer()),
+            group(emojiFear, self.lblFear, spacer()),
+            vertical=False)
         margins(self.wdgAttr, left=10)
         _layout.addWidget(self.wdgAttr)
         self.wdgAttr.setHidden(True)
@@ -828,7 +831,7 @@ class TemplateFieldWidgetFactory:
         elif field.type == TemplateFieldType.LABELS:
             return LabelsTemplateFieldWidget(field, parent)
         else:
-            raise ValueError('Unrecognized template field type %s', field.type)
+            return SmallTextTemplateFieldWidget(field, parent)
 
 
 class ProfileTemplateEditor(_ProfileTemplateBase):
