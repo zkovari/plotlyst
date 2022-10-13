@@ -1585,12 +1585,9 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
             return
 
         clear_layout(self._layout)
-        self._chartMajor.setValue(0)
-        self._chartMajor.setMaxValue(0)
-        self._chartSecondary.setValue(0)
-        self._chartSecondary.setMaxValue(0)
-        self._chartMinor.setValue(0)
-        self._chartMinor.setMaxValue(0)
+        for chart_ in [self._chartMajor, self._chartSecondary, self._chartMinor]:
+            chart_.setValue(0)
+            chart_.setMaxValue(0)
 
         for i, char in enumerate(self.novel.characters):
             btn = QToolButton(self)
@@ -1600,6 +1597,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
                 QToolButton:pressed {border: 1px solid grey; border-radius: 20px;}
             ''')
             btn.setIcon(avatars.avatar(char))
+            btn.setToolTip(char.name)
             self._layout.addWidget(btn, 0, i + 1)
             pointy(btn)
             btn.installEventFilter(OpacityEventFilter(btn, 0.8, 1.0))
@@ -1630,82 +1628,86 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         row += 1
         self._addLine(row)
         row += 1
+        for col, char in enumerate(self.novel.characters):
+            self._updateForCharacter(char, fields, headers, row, col)
+
         self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
-
-        for i, char in enumerate(self.novel.characters):
-            name_progress = CircularProgressBar(parent=self)
-            if char.name:
-                name_progress.setValue(1)
-            self._addWidget(name_progress, self.RowName, i + 1)
-
-            role_progress = CircularProgressBar(parent=self)
-            if char.role:
-                role_progress.setValue(1)
-                self._addItem(char.role, self.RowRole, i + 1)
-                role_progress.setHidden(True)
-            else:
-                self._addWidget(role_progress, self.RowRole, i + 1)
-
-            gender_progress = CircularProgressBar(parent=self)
-            if char.gender:
-                gender_progress.setValue(1)
-                self._addIcon(IconRegistry.gender_icon(char.gender), self.RowGender, i + 1)
-                gender_progress.setHidden(True)
-            else:
-                self._addWidget(gender_progress, self.RowGender, i + 1)
-
-            for h in headers.keys():
-                headers[h] = 0  # reset char values
-
-            for value in char.template_values:
-                if str(value.id) not in fields.keys():
-                    continue
-
-                header = fields[str(value.id)]
-
-                if not header.header.required and char.is_minor():
-                    continue
-                if value.value:
-                    headers[header] = headers[header] + 1
-
-            overall_progress = CircularProgressBar(parent=self)
-            overall_progress.setTooltipMode(ProgressTooltipMode.PERCENTAGE)
-            overall_progress.setMaxValue(2)
-            overall_value = 0
-
-            for h, v in headers.items():
-                if not h.header.required and char.is_minor():
-                    continue
-                value_progress = CircularProgressBar(v, h.max_value, parent=self)
-                self._addWidget(value_progress, h.row, i + 1)
-                overall_progress.setMaxValue(overall_progress.maxValue() + h.max_value)
-                overall_value += v
-
-            if not char.is_minor():
-                backstory_progress = CircularProgressBar(parent=self)
-                backstory_progress.setMaxValue(5 if char.is_major() else 3)
-                backstory_progress.setValue(len(char.backstory))
-                self._addWidget(backstory_progress, row, i + 1)
-
-            overall_value += (name_progress.value() + gender_progress.value()) // 2 + role_progress.value()
-            overall_progress.setValue(overall_value)
-            self._addWidget(overall_progress, self.RowOverall, i + 1)
-
-            if char.is_major():
-                self._chartMajor.setMaxValue(self._chartMajor.maxValue() + overall_progress.maxValue())
-                self._chartMajor.setValue(self._chartMajor.value() + overall_value)
-            elif char.is_secondary():
-                self._chartSecondary.setMaxValue(self._chartSecondary.maxValue() + overall_progress.maxValue())
-                self._chartSecondary.setValue(self._chartSecondary.value() + overall_value)
-            elif char.is_minor():
-                self._chartMinor.setMaxValue(self._chartMinor.maxValue() + overall_progress.maxValue())
-                self._chartMinor.setValue(self._chartMinor.value() + overall_value)
-
-        self._layout.addWidget(vspacer(), row + 1, 0)
+        self._addLabel(row + 1, 'Topics', IconRegistry.topics_icon())
+        self._layout.addWidget(vspacer(), row + 2, 0)
 
         self._chartMajor.refresh()
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
+
+    def _updateForCharacter(self, char, fields, headers, row, col):
+        name_progress = CircularProgressBar(parent=self)
+        if char.name:
+            name_progress.setValue(1)
+        self._addWidget(name_progress, self.RowName, col + 1)
+
+        role_value = 0
+        if char.role:
+            role_value = 1
+            self._addItem(char.role, self.RowRole, col + 1)
+        else:
+            self._addWidget(CircularProgressBar(parent=self), self.RowRole, col + 1)
+
+        gender_value = 0
+        if char.gender:
+            gender_value = 1
+            self._addIcon(IconRegistry.gender_icon(char.gender), self.RowGender, col + 1)
+        else:
+            self._addWidget(CircularProgressBar(parent=self), self.RowGender, col + 1)
+
+        for h in headers.keys():
+            headers[h] = 0  # reset char values
+        for value in char.template_values:
+            if str(value.id) not in fields.keys():
+                continue
+            header = fields[str(value.id)]
+            if not header.header.required and char.is_minor():
+                continue
+            if value.value:
+                headers[header] = headers[header] + 1
+
+        overall_progress = CircularProgressBar(maxValue=2, parent=self)
+        overall_progress.setTooltipMode(ProgressTooltipMode.PERCENTAGE)
+        overall_progress.setValue((name_progress.value() + gender_value) // 2 + role_value)
+
+        for h, v in headers.items():
+            if not h.header.required and char.is_minor():
+                continue
+            value_progress = CircularProgressBar(v, h.max_value, parent=self)
+            self._addWidget(value_progress, h.row, col + 1)
+            overall_progress.addMaxValue(h.max_value)
+            overall_progress.addValue(v)
+        if not char.is_minor():
+            backstory_progress = CircularProgressBar(parent=self)
+            backstory_progress.setMaxValue(5 if char.is_major() else 3)
+            backstory_progress.setValue(len(char.backstory))
+            overall_progress.addMaxValue(backstory_progress.maxValue())
+            overall_progress.addValue(backstory_progress.value())
+            self._addWidget(backstory_progress, row, col + 1)
+
+        if char.topics:
+            topics_progress = CircularProgressBar(parent=self)
+            topics_progress.setMaxValue(len(char.topics))
+            topics_progress.setValue(len([x for x in char.topics if x.value]))
+            overall_progress.addMaxValue(topics_progress.maxValue())
+            overall_progress.addValue(topics_progress.value())
+            self._addWidget(topics_progress, row + 1, col + 1)
+
+        self._addWidget(overall_progress, self.RowOverall, col + 1)
+
+        if char.is_major():
+            self._chartMajor.setMaxValue(self._chartMajor.maxValue() + overall_progress.maxValue())
+            self._chartMajor.setValue(self._chartMajor.value() + overall_progress.value())
+        elif char.is_secondary():
+            self._chartSecondary.setMaxValue(self._chartSecondary.maxValue() + overall_progress.maxValue())
+            self._chartSecondary.setValue(self._chartSecondary.value() + overall_progress.value())
+        elif char.is_minor():
+            self._chartMinor.setMaxValue(self._chartMinor.maxValue() + overall_progress.maxValue())
+            self._chartMinor.setValue(self._chartMinor.value() + overall_progress.value())
 
     def _addLine(self, row: int):
         self._layout.addWidget(line(), row, 0, 1, self._layout.columnCount() - 1)

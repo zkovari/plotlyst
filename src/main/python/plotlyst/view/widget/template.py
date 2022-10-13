@@ -30,7 +30,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QListView, QPushButton
+    QSpacerItem, QListView, QPushButton, QTextEdit
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
     decr_font
@@ -1081,6 +1081,7 @@ class TopicWidget(QWidget):
         bold(self.btnHeader)
 
         self.textEdit = AutoAdjustableTextEdit(height=100)
+        self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setMarkdown(value.value)
         self.textEdit.textChanged.connect(self._textChanged)
 
@@ -1118,4 +1119,3 @@ class TopicsEditor(QWidget):
     def addTopic(self, topic: Topic, value: TemplateValue):
         wdg = TopicWidget(topic, value, self)
         self.layout().addWidget(wdg)
-       
