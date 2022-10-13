@@ -27,7 +27,7 @@ import qtanim
 import qtawesome
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
-from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
+from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QPalette, QColor
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
     QSpacerItem, QListView, QPushButton, QTextEdit
@@ -1089,7 +1089,9 @@ class TopicWidget(QWidget):
         layout_ = vbox(self)
         layout_.addWidget(top, alignment=Qt.AlignmentFlag.AlignLeft)
 
-        middle = group(line(), margin=0, spacing=0)
+        line_ = line()
+        line_.setPalette(QPalette(QColor(topic.icon_color)))
+        middle = group(line_, margin=0, spacing=0)
         margins(middle, left=20)
         layout_.addWidget(middle)
 
