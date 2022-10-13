@@ -125,6 +125,8 @@ class CharacterEditor:
 
         set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory, IconRegistry.backstory_icon('black'))
         set_tab_icon(self.ui.tabAttributes, self.ui.tabTopics, IconRegistry.topics_icon())
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabBigFive,
+                     IconRegistry.from_name('ph.number-square-five-bold', color_on='#7209b7'))
         set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
         set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black'))
 
