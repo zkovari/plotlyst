@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>456</width>
+    <height>306</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,10 +35,32 @@
       <number>0</number>
      </property>
      <property name="leftMargin">
-      <number>15</number>
+      <number>0</number>
      </property>
      <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Preferred</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="ChartView" name="chartViewMajor">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
          <width>200</width>
@@ -49,6 +71,12 @@
      </item>
      <item>
       <widget class="ChartView" name="chartViewSecondary">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
          <width>200</width>
@@ -59,6 +87,12 @@
      </item>
      <item>
       <widget class="ChartView" name="chartViewMinor">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
          <width>200</width>
@@ -98,8 +132,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>396</width>
-        <height>148</height>
+        <width>452</width>
+        <height>108</height>
        </rect>
       </property>
       <property name="sizePolicy">
