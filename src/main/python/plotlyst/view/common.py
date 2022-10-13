@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODev
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
-    QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame
+    QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget
 from fbs_runtime import platform
 from qthandy import hbox
 
@@ -63,7 +63,7 @@ def emoji_font(size: int = 13) -> QFont:
 def show_color_picker(default_color: QColor = QColor('white')) -> QColor:
     if platform.is_linux():
         color: QColor = QColorDialog.getColor(QColor(default_color),
-                                              options=QColorDialog.DontUseNativeDialog)
+                                              options=QColorDialog.ColorDialogOption.DontUseNativeDialog)
     else:
         color = QColorDialog.getColor(QColor(default_color))
 
@@ -191,7 +191,7 @@ def stretch_col(view: QAbstractItemView, col: int):
 
 def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWidget]:
     scrollArea = QScrollArea(parent)
-    scrollArea.setFocusPolicy(Qt.NoFocus)
+    scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     scrollArea.setWidgetResizable(True)
 
     widget = QWidget(scrollArea)
@@ -201,6 +201,11 @@ def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWi
     parent.layout().addWidget(scrollArea)
 
     if frameless:
-        scrollArea.setFrameStyle(QFrame.NoFrame)
+        scrollArea.setFrameStyle(QFrame.Shape.NoFrame)
 
     return scrollArea, widget
+
+
+def set_tab_icon(tabs: QTabWidget, widget: QWidget, icon: QIcon):
+    i = tabs.indexOf(widget)
+    tabs.setTabIcon(i, icon)
