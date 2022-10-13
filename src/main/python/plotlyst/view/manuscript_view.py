@@ -32,6 +32,7 @@ from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, Sce
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.common import scroll_to_top
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
@@ -105,6 +106,10 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
+
+        if self.chaptersModel.rowCount(self.chaptersModel.rootIndex()):
+            self._edit(self.chaptersModel.index(0, 0, self.chaptersModel.rootIndex()))
+            scroll_to_top(self.ui.textEdit.textEdit)
 
         self._update_story_goal()
 
