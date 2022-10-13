@@ -62,6 +62,19 @@ class Comment:
     character: Optional['Character'] = None
 
 
+@dataclass
+class Topic:
+    text: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    description: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
 class AgePeriod(Enum):
     BABY = 0
     CHILD = 1
@@ -173,6 +186,7 @@ class Character:
     document: Optional['Document'] = None
     journals: List['Document'] = field(default_factory=list)
     prefs: CharacterPreferences = CharacterPreferences()
+    topics: List[TemplateValue] = field(default_factory=list)
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
@@ -1171,6 +1185,7 @@ class Novel(NovelDescriptor):
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
+    character_topics: List[Topic] = field(default_factory=list)
     location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[Goal] = field(default_factory=list)

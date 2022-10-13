@@ -27,15 +27,15 @@ import qtanim
 import qtawesome
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
-from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent
+from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QPalette, QColor
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QListView, QPushButton
+    QSpacerItem, QListView, QPushButton, QTextEdit
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
     decr_font
 
-from src.main.python.plotlyst.core.domain import TemplateValue, Character
+from src.main.python.plotlyst.core.domain import TemplateValue, Character, Topic
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, SelectionItem, \
     ProfileTemplate, ProfileElement, SelectionItemType, \
@@ -1055,3 +1055,69 @@ class CharacterProfileTemplateView(ProfileTemplateView):
                 if neg_trait not in traits:
                     traits.append(neg_trait)
             self._traits_widget.setValue(traits)
+
+
+class TopicWidget(QWidget):
+    def __init__(self, topic: Topic, value: TemplateValue, parent=None):
+        super(TopicWidget, self).__init__(parent)
+
+        self._value = value
+
+        self.btnHeader = QPushButton()
+        self.btnHeader.setCheckable(True)
+        self.btnHeader.setText(topic.text)
+        self.btnHeader.setToolTip(topic.description)
+        if topic.icon:
+            self.btnHeader.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
+
+        self.btnCollapse = QToolButton()
+        self.btnCollapse.setIconSize(QSize(16, 16))
+        self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-down'))
+
+        pointy(self.btnHeader)
+        pointy(self.btnCollapse)
+        transparent(self.btnHeader)
+        transparent(self.btnCollapse)
+        bold(self.btnHeader)
+
+        self.textEdit = AutoAdjustableTextEdit(height=100)
+        self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
+        self.textEdit.setMarkdown(value.value)
+        self.textEdit.textChanged.connect(self._textChanged)
+
+        top = group(self.btnCollapse, self.btnHeader, margin=0, spacing=1)
+        layout_ = vbox(self)
+        layout_.addWidget(top, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        line_ = line()
+        line_.setPalette(QPalette(QColor(topic.icon_color)))
+        middle = group(line_, margin=0, spacing=0)
+        margins(middle, left=20)
+        layout_.addWidget(middle)
+
+        bottom = group(self.textEdit, vertical=False, margin=0, spacing=0)
+        margins(bottom, left=20)
+        layout_.addWidget(bottom, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self.btnHeader.toggled.connect(self._toggleCollapse)
+        self.btnCollapse.clicked.connect(self.btnHeader.toggle)
+
+    def _textChanged(self):
+        self._value.value = self.textEdit.toMarkdown()
+
+    def _toggleCollapse(self, checked: bool):
+        self.textEdit.setHidden(checked)
+        if checked:
+            self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-right'))
+        else:
+            self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-down'))
+
+
+class TopicsEditor(QWidget):
+    def __init__(self, parent=None):
+        super(TopicsEditor, self).__init__(parent)
+        vbox(self)
+
+    def addTopic(self, topic: Topic, value: TemplateValue):
+        wdg = TopicWidget(topic, value, self)
+        self.layout().addWidget(wdg)

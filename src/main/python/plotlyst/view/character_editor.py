@@ -30,7 +30,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Document, MAL
 from src.main.python.plotlyst.core.template import protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -123,6 +123,11 @@ class CharacterEditor:
                 if not btn.isChecked():
                     btn.setHidden(True)
 
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory, IconRegistry.backstory_icon('black'))
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabTopics, IconRegistry.topics_icon())
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black'))
+
         self.ui.wdgAvatar.btnPov.setToolTip('Character avatar. Click to add an image')
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
@@ -134,6 +139,8 @@ class CharacterEditor:
 
         self._character_goals = CharacterGoalsEditor(self.novel, self.character)
         self.ui.tabGoals.layout().addWidget(self._character_goals)
+
+        self.ui.wdgTopicsEditor.setCharacter(self.character)
 
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
         self.ui.wdgProfile.layout().addWidget(self.profile)
@@ -151,6 +158,8 @@ class CharacterEditor:
 
         if self.character.role:
             self._display_role()
+
+        self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
 
         self.repo = RepositoryPersistenceManager.instance()
 

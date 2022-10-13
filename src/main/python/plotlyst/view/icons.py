@@ -232,8 +232,8 @@ class IconRegistry:
         return qtawesome.icon('fa5.list-alt', color_on='darkBlue')
 
     @staticmethod
-    def goal_icon(color: str = 'darkBlue') -> QIcon:
-        return IconRegistry.from_name('mdi.target', color=color)
+    def goal_icon(color: str = 'darkBlue', color_on: str = 'darkBlue') -> QIcon:
+        return IconRegistry.from_name('mdi.target', color=color, color_on=color_on)
 
     @staticmethod
     def decision_icon(color: str = '#3cdbd3', color_on='darkBlue') -> QIcon:
@@ -547,8 +547,12 @@ class IconRegistry:
             return IconRegistry.genderless_icon('#6c757d')
 
     @staticmethod
-    def backstory_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.archive', '#9c6644')
+    def backstory_icon(color: str = '#9c6644', color_on='#9c6644') -> QIcon:
+        return IconRegistry.from_name('fa5s.archive', color, color_on)
+
+    @staticmethod
+    def topics_icon(color: str = 'black', color_on='darkBlue') -> QIcon:
+        return IconRegistry.from_name('mdi.card-account-details-star-outline', color, color_on)
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:

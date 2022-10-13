@@ -581,6 +581,48 @@ border: 0px;
       <property name="currentIndex">
        <number>0</number>
       </property>
+      <widget class="QWidget" name="tabTopics">
+       <attribute name="title">
+        <string>Topics</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_6">
+        <property name="spacing">
+         <number>3</number>
+        </property>
+        <property name="leftMargin">
+         <number>2</number>
+        </property>
+        <property name="topMargin">
+         <number>2</number>
+        </property>
+        <property name="rightMargin">
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scrollArea_2">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="CharacterTopicsEditor" name="wdgTopicsEditor">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>380</width>
+             <height>551</height>
+            </rect>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tabBackstory">
        <attribute name="title">
         <string>Backstory</string>
@@ -783,6 +825,12 @@ border: 0px;
   </customwidget>
   <customwidget>
    <class>CharacterTimelineWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.characters</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CharacterTopicsEditor</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.characters</header>
    <container>1</container>

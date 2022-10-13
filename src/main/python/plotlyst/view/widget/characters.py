@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
+import uuid
 from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
@@ -27,7 +28,7 @@ import qtanim
 from PyQt6 import QtCore
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QPalette, QMouseEvent, QCursor
+    QPalette, QMouseEvent, QCursor, QAction
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
     QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
 from fbs_runtime import platform
@@ -40,7 +41,7 @@ from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal, GoalReference, Stake
+    CharacterGoal, Goal, GoalReference, Stake, Topic, TemplateValue
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance
@@ -72,6 +73,7 @@ from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
+from src.main.python.plotlyst.view.widget.template import TopicsEditor
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
@@ -1583,12 +1585,9 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
             return
 
         clear_layout(self._layout)
-        self._chartMajor.setValue(0)
-        self._chartMajor.setMaxValue(0)
-        self._chartSecondary.setValue(0)
-        self._chartSecondary.setMaxValue(0)
-        self._chartMinor.setValue(0)
-        self._chartMinor.setMaxValue(0)
+        for chart_ in [self._chartMajor, self._chartSecondary, self._chartMinor]:
+            chart_.setValue(0)
+            chart_.setMaxValue(0)
 
         for i, char in enumerate(self.novel.characters):
             btn = QToolButton(self)
@@ -1598,6 +1597,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
                 QToolButton:pressed {border: 1px solid grey; border-radius: 20px;}
             ''')
             btn.setIcon(avatars.avatar(char))
+            btn.setToolTip(char.name)
             self._layout.addWidget(btn, 0, i + 1)
             pointy(btn)
             btn.installEventFilter(OpacityEventFilter(btn, 0.8, 1.0))
@@ -1628,82 +1628,86 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         row += 1
         self._addLine(row)
         row += 1
+        for col, char in enumerate(self.novel.characters):
+            self._updateForCharacter(char, fields, headers, row, col)
+
         self._addLabel(row, 'Backstory', IconRegistry.backstory_icon())
-
-        for i, char in enumerate(self.novel.characters):
-            name_progress = CircularProgressBar(parent=self)
-            if char.name:
-                name_progress.setValue(1)
-            self._addWidget(name_progress, self.RowName, i + 1)
-
-            role_progress = CircularProgressBar(parent=self)
-            if char.role:
-                role_progress.setValue(1)
-                self._addItem(char.role, self.RowRole, i + 1)
-                role_progress.setHidden(True)
-            else:
-                self._addWidget(role_progress, self.RowRole, i + 1)
-
-            gender_progress = CircularProgressBar(parent=self)
-            if char.gender:
-                gender_progress.setValue(1)
-                self._addIcon(IconRegistry.gender_icon(char.gender), self.RowGender, i + 1)
-                gender_progress.setHidden(True)
-            else:
-                self._addWidget(gender_progress, self.RowGender, i + 1)
-
-            for h in headers.keys():
-                headers[h] = 0  # reset char values
-
-            for value in char.template_values:
-                if str(value.id) not in fields.keys():
-                    continue
-
-                header = fields[str(value.id)]
-
-                if not header.header.required and char.is_minor():
-                    continue
-                if value.value:
-                    headers[header] = headers[header] + 1
-
-            overall_progress = CircularProgressBar(parent=self)
-            overall_progress.setTooltipMode(ProgressTooltipMode.PERCENTAGE)
-            overall_progress.setMaxValue(2)
-            overall_value = 0
-
-            for h, v in headers.items():
-                if not h.header.required and char.is_minor():
-                    continue
-                value_progress = CircularProgressBar(v, h.max_value, parent=self)
-                self._addWidget(value_progress, h.row, i + 1)
-                overall_progress.setMaxValue(overall_progress.maxValue() + h.max_value)
-                overall_value += v
-
-            if not char.is_minor():
-                backstory_progress = CircularProgressBar(parent=self)
-                backstory_progress.setMaxValue(5 if char.is_major() else 3)
-                backstory_progress.setValue(len(char.backstory))
-                self._addWidget(backstory_progress, row, i + 1)
-
-            overall_value += (name_progress.value() + gender_progress.value()) // 2 + role_progress.value()
-            overall_progress.setValue(overall_value)
-            self._addWidget(overall_progress, self.RowOverall, i + 1)
-
-            if char.is_major():
-                self._chartMajor.setMaxValue(self._chartMajor.maxValue() + overall_progress.maxValue())
-                self._chartMajor.setValue(self._chartMajor.value() + overall_value)
-            elif char.is_secondary():
-                self._chartSecondary.setMaxValue(self._chartSecondary.maxValue() + overall_progress.maxValue())
-                self._chartSecondary.setValue(self._chartSecondary.value() + overall_value)
-            elif char.is_minor():
-                self._chartMinor.setMaxValue(self._chartMinor.maxValue() + overall_progress.maxValue())
-                self._chartMinor.setValue(self._chartMinor.value() + overall_value)
-
-        self._layout.addWidget(vspacer(), row + 1, 0)
+        self._addLabel(row + 1, 'Topics', IconRegistry.topics_icon())
+        self._layout.addWidget(vspacer(), row + 2, 0)
 
         self._chartMajor.refresh()
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
+
+    def _updateForCharacter(self, char, fields, headers, row, col):
+        name_progress = CircularProgressBar(parent=self)
+        if char.name:
+            name_progress.setValue(1)
+        self._addWidget(name_progress, self.RowName, col + 1)
+
+        role_value = 0
+        if char.role:
+            role_value = 1
+            self._addItem(char.role, self.RowRole, col + 1)
+        else:
+            self._addWidget(CircularProgressBar(parent=self), self.RowRole, col + 1)
+
+        gender_value = 0
+        if char.gender:
+            gender_value = 1
+            self._addIcon(IconRegistry.gender_icon(char.gender), self.RowGender, col + 1)
+        else:
+            self._addWidget(CircularProgressBar(parent=self), self.RowGender, col + 1)
+
+        for h in headers.keys():
+            headers[h] = 0  # reset char values
+        for value in char.template_values:
+            if str(value.id) not in fields.keys():
+                continue
+            header = fields[str(value.id)]
+            if not header.header.required and char.is_minor():
+                continue
+            if value.value:
+                headers[header] = headers[header] + 1
+
+        overall_progress = CircularProgressBar(maxValue=2, parent=self)
+        overall_progress.setTooltipMode(ProgressTooltipMode.PERCENTAGE)
+        overall_progress.setValue((name_progress.value() + gender_value) // 2 + role_value)
+
+        for h, v in headers.items():
+            if not h.header.required and char.is_minor():
+                continue
+            value_progress = CircularProgressBar(v, h.max_value, parent=self)
+            self._addWidget(value_progress, h.row, col + 1)
+            overall_progress.addMaxValue(h.max_value)
+            overall_progress.addValue(v)
+        if not char.is_minor():
+            backstory_progress = CircularProgressBar(parent=self)
+            backstory_progress.setMaxValue(5 if char.is_major() else 3)
+            backstory_progress.setValue(len(char.backstory))
+            overall_progress.addMaxValue(backstory_progress.maxValue())
+            overall_progress.addValue(backstory_progress.value())
+            self._addWidget(backstory_progress, row, col + 1)
+
+        if char.topics:
+            topics_progress = CircularProgressBar(parent=self)
+            topics_progress.setMaxValue(len(char.topics))
+            topics_progress.setValue(len([x for x in char.topics if x.value]))
+            overall_progress.addMaxValue(topics_progress.maxValue())
+            overall_progress.addValue(topics_progress.value())
+            self._addWidget(topics_progress, row + 1, col + 1)
+
+        self._addWidget(overall_progress, self.RowOverall, col + 1)
+
+        if char.is_major():
+            self._chartMajor.setMaxValue(self._chartMajor.maxValue() + overall_progress.maxValue())
+            self._chartMajor.setValue(self._chartMajor.value() + overall_progress.value())
+        elif char.is_secondary():
+            self._chartSecondary.setMaxValue(self._chartSecondary.maxValue() + overall_progress.maxValue())
+            self._chartSecondary.setValue(self._chartSecondary.value() + overall_progress.value())
+        elif char.is_minor():
+            self._chartMinor.setMaxValue(self._chartMinor.maxValue() + overall_progress.maxValue())
+            self._chartMinor.setValue(self._chartMinor.value() + overall_progress.value())
 
     def _addLine(self, row: int):
         self._layout.addWidget(line(), row, 0, 1, self._layout.columnCount() - 1)
@@ -1734,3 +1738,92 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         icon.iconColor = item.icon_color
         icon.setToolTip(item.text)
         self._addWidget(icon, row, col)
+
+
+default_topics: List[Topic] = [
+    Topic('Family', uuid.UUID('2ce9c3b4-1dd9-4f88-a16e-b8dc507633b7'), 'mdi6.human-male-female-child', '#457b9d'),
+    Topic('Job', uuid.UUID('19d9bfe9-5432-42d8-a444-0bd849720b2d'), 'fa5s.briefcase', '9c6644'),
+    Topic('Education', uuid.UUID('01e9ef93-7a71-4b2d-af88-53b30d3947cb'), 'fa5s.graduation-cap'),
+    Topic('Hometown', uuid.UUID('1ac1eec9-7953-419c-a265-88a0723a64ea'), 'ei.home-alt', '#4c334d'),
+    Topic('Physical appearance', uuid.UUID('3c1a00d2-5085-47f0-8fe5-6d253e708999'), 'ri.body-scan-fill', ''),
+    Topic('Scars, injuries', uuid.UUID('088ae5e0-99f8-4308-9d77-3daa624ca7a3'), 'mdi.bandage', ''),
+    Topic('Clothing', uuid.UUID('4572a00f-9039-43a1-8eb9-8abd39fbec32'), 'fa5s.tshirt', ''),
+    Topic('Accessories', uuid.UUID('eaab9129-576a-4042-9dfc-eedce3f6f3ab'), 'fa5s.glasses', ''),
+    Topic('Health', uuid.UUID('ec218ea4-d8f9-4eb7-9850-1ce0e7eff5e6'), 'mdi.hospital-box', ''),
+    Topic('Handwriting', uuid.UUID('65a43dc8-ee8d-4a4a-adb9-ee8a0e246e33'), 'mdi.signature-freehand', ''),
+    Topic('Gait', uuid.UUID('26bdeb49-116a-470a-8427-2e5c061243a8'), 'mdi.motion-sensor', ''),
+
+    Topic('Friends', uuid.UUID('d6d78fc4-d9d4-497b-8b61-cca465d5e8e7'), 'fa5s.user-friends', '#457b9d'),
+    Topic('Relationships', uuid.UUID('62f5e2b6-ac35-4b6e-ae3b-bfd5b083b026'), 'ei.heart', '#e63946'),
+
+    Topic('Faith', uuid.UUID('c4df6cdb-c92d-421b-8a2e-77598fc475a3'), 'fa5s.hands', ''),
+    Topic('Spirituality', uuid.UUID('01f750eb-c6e1-4efb-b32c-76cb1d7a33f6'), 'mdi6.meditation', ''),
+
+    Topic('Sport', uuid.UUID('d1e898d3-f9cc-4f65-8cfa-cc1a0c8cd8a2'), 'fa5.futbol', '#0096c7'),
+    Topic('Fitness', uuid.UUID('0e3e6e19-b284-4f7d-85ef-ce2ba047743c'), 'mdi.dumbbell', ''),
+    Topic('Hobby', uuid.UUID('97c66076-e97d-4f11-a20d-1ae6ff6ba246'), 'fa5s.book-reader', ''),
+    Topic('Art', uuid.UUID('ed6749da-d1b0-49cd-becf-c7ddc67725d2'), 'ei.picture', ''),
+]
+
+
+class CharacterTopicsEditor(QWidget):
+    def __init__(self, parent=None):
+        super(CharacterTopicsEditor, self).__init__(parent)
+        self._character: Optional[Character] = None
+
+        self._btnAdd = QToolButton(self)
+        self._btnAdd.setIcon(IconRegistry.plus_icon())
+
+        self._wdgTopics = TopicsEditor(self)
+
+        layout_ = vbox(self)
+        layout_.addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignRight)
+        layout_.addWidget(self._wdgTopics)
+        layout_.addWidget(vspacer())
+
+    def setCharacter(self, character: Character):
+        self._character = character
+        topic_ids = {}
+        char_topic_ids = set([str(x.id) for x in character.topics])
+
+        menu = QMenu(self._btnAdd)
+        for topic in default_topics:
+            topic_ids[str(topic.id)] = topic
+            action_ = self._Action(topic, menu)
+            action_.triggered.connect(partial(self._addTopic, action_, topic))
+            if str(topic.id) in char_topic_ids:
+                action_.setDisabled(True)
+            menu.addAction(action_)
+
+        # menu.addSeparator()
+        # menu.addSection('Section')
+        # new_topic_action = action('New topic', IconRegistry.topics_icon(),
+        #                           slot=self._newTopic, parent=menu)
+        # menu.addAction(new_topic_action)
+        btn_popup_menu(self._btnAdd, menu)
+
+        for tc in character.topics:
+            topic = topic_ids.get(str(tc.id))
+            if topic:
+                self._wdgTopics.addTopic(topic, tc)
+
+    def _addTopic(self, action_: QAction, topic: Topic):
+        if self._character is None:
+            return
+        value = TemplateValue(topic.id, '')
+        self._character.topics.append(value)
+        self._wdgTopics.addTopic(topic, value)
+
+        action_.setDisabled(True)
+
+    def _newTopic(self):
+        pass
+
+    class _Action(QAction):
+        def __init__(self, topic: Topic, parent=None):
+            super().__init__(parent)
+            self.topic = topic
+            if topic.icon:
+                self.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
+            self.setText(topic.text)
+            self.setToolTip(topic.description)

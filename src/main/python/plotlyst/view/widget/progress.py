@@ -219,11 +219,18 @@ class CircularProgressBar(QWidget):
 
         self._updateTooltip()
 
+    def addValue(self, value: int):
+        self.setValue(self.value() + value)
+
     def maxValue(self) -> int:
         return self._maxValue
 
     def setMaxValue(self, value: int):
         self._maxValue = value
+        self._updateTooltip()
+
+    def addMaxValue(self, value: int):
+        self._maxValue += value
         self._updateTooltip()
 
     def setTooltipMode(self, mode: ProgressTooltipMode):
