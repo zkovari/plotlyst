@@ -151,6 +151,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
         self.ui.btnChaptersToggle.setIcon(IconRegistry.chapter_icon())
+        self.ui.btnChaptersToggle.setChecked(self.novel.prefs.panels.scene_chapters_sidebar_toggled)
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
         self._hide_chapters_toggled(self.ui.btnChaptersToggle.isChecked())
 
@@ -288,6 +289,10 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.btnNew.setMenu(menu)
         else:
             self.ui.btnNew.setMenu(None)
+
+        if self.novel.prefs.panels.scene_chapters_sidebar_toggled != toggled:
+            self.novel.prefs.panels.scene_chapters_sidebar_toggled = toggled
+            self.repo.update_novel(self.novel)
 
     def _on_edit(self):
         scene: Optional[Scene] = self._selected_scene()

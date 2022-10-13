@@ -1166,6 +1166,7 @@ class ScenesView(Enum):
 class PanelPreferences:
     panel: NovelPanel = NovelPanel.OUTLINE
     scenes_view: Optional[ScenesView] = None
+    scene_chapters_sidebar_toggled: bool = False
 
 
 @dataclass
