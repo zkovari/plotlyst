@@ -1118,3 +1118,4 @@ class TopicsEditor(QWidget):
     def addTopic(self, topic: Topic, value: TemplateValue):
         wdg = TopicWidget(topic, value, self)
         self.layout().addWidget(wdg)
+       

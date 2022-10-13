@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
+import uuid
 from dataclasses import dataclass
 from functools import partial
 from typing import Iterable, List, Optional, Dict, Union
@@ -27,7 +28,7 @@ import qtanim
 from PyQt6 import QtCore
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QPalette, QMouseEvent, QCursor
+    QPalette, QMouseEvent, QCursor, QAction
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
     QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
 from fbs_runtime import platform
@@ -1737,6 +1738,32 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         self._addWidget(icon, row, col)
 
 
+default_topics: List[Topic] = [
+    Topic('Family', uuid.UUID('2ce9c3b4-1dd9-4f88-a16e-b8dc507633b7'), 'mdi6.human-male-female-child', '#457b9d'),
+    Topic('Job', uuid.UUID('19d9bfe9-5432-42d8-a444-0bd849720b2d'), 'fa5s.briefcase', '9c6644'),
+    Topic('Education', uuid.UUID('01e9ef93-7a71-4b2d-af88-53b30d3947cb'), 'fa5s.graduation-cap'),
+    Topic('Hometown', uuid.UUID('1ac1eec9-7953-419c-a265-88a0723a64ea'), 'ei.home-alt', '#4c334d'),
+    Topic('Physical appearance', uuid.UUID('3c1a00d2-5085-47f0-8fe5-6d253e708999'), 'ri.body-scan-fill', ''),
+    Topic('Scars, injuries', uuid.UUID('088ae5e0-99f8-4308-9d77-3daa624ca7a3'), 'mdi.bandage', ''),
+    Topic('Clothing', uuid.UUID('4572a00f-9039-43a1-8eb9-8abd39fbec32'), 'fa5s.tshirt', ''),
+    Topic('Accessories', uuid.UUID('eaab9129-576a-4042-9dfc-eedce3f6f3ab'), 'fa5s.glasses', ''),
+    Topic('Health', uuid.UUID('ec218ea4-d8f9-4eb7-9850-1ce0e7eff5e6'), 'mdi.hospital-box', ''),
+    Topic('Handwriting', uuid.UUID('65a43dc8-ee8d-4a4a-adb9-ee8a0e246e33'), 'mdi.signature-freehand', ''),
+    Topic('Gait', uuid.UUID('26bdeb49-116a-470a-8427-2e5c061243a8'), 'mdi.motion-sensor', ''),
+
+    Topic('Friends', uuid.UUID('d6d78fc4-d9d4-497b-8b61-cca465d5e8e7'), 'fa5s.user-friends', '#457b9d'),
+    Topic('Relationships', uuid.UUID('62f5e2b6-ac35-4b6e-ae3b-bfd5b083b026'), 'ei.heart', '#e63946'),
+
+    Topic('Faith', uuid.UUID('c4df6cdb-c92d-421b-8a2e-77598fc475a3'), 'fa5s.hands', ''),
+    Topic('Spirituality', uuid.UUID('01f750eb-c6e1-4efb-b32c-76cb1d7a33f6'), 'mdi6.meditation', ''),
+
+    Topic('Sport', uuid.UUID('d1e898d3-f9cc-4f65-8cfa-cc1a0c8cd8a2'), 'fa5.futbol', '#0096c7'),
+    Topic('Fitness', uuid.UUID('0e3e6e19-b284-4f7d-85ef-ce2ba047743c'), 'mdi.dumbbell', ''),
+    Topic('Hobby', uuid.UUID('97c66076-e97d-4f11-a20d-1ae6ff6ba246'), 'fa5s.book-reader', ''),
+    Topic('Art', uuid.UUID('ed6749da-d1b0-49cd-becf-c7ddc67725d2'), 'ei.picture', ''),
+]
+
+
 class CharacterTopicsEditor(QWidget):
     def __init__(self, parent=None):
         super(CharacterTopicsEditor, self).__init__(parent)
@@ -1744,6 +1771,7 @@ class CharacterTopicsEditor(QWidget):
 
         self._btnAdd = QToolButton(self)
         self._btnAdd.setIcon(IconRegistry.plus_icon())
+
         self._wdgTopics = TopicsEditor(self)
 
         layout_ = vbox(self)
@@ -1753,5 +1781,47 @@ class CharacterTopicsEditor(QWidget):
 
     def setCharacter(self, character: Character):
         self._character = character
-        topic = Topic('Family', icon='mdi.card-account-details-star-outline')
-        self._wdgTopics.addTopic(topic, TemplateValue(topic.id, 'Text'))
+        topic_ids = {}
+        char_topic_ids = set([str(x.id) for x in character.topics])
+
+        menu = QMenu(self._btnAdd)
+        for topic in default_topics:
+            topic_ids[str(topic.id)] = topic
+            action_ = self._Action(topic, menu)
+            action_.triggered.connect(partial(self._addTopic, action_, topic))
+            if str(topic.id) in char_topic_ids:
+                action_.setDisabled(True)
+            menu.addAction(action_)
+
+        # menu.addSeparator()
+        # menu.addSection('Section')
+        # new_topic_action = action('New topic', IconRegistry.topics_icon(),
+        #                           slot=self._newTopic, parent=menu)
+        # menu.addAction(new_topic_action)
+        btn_popup_menu(self._btnAdd, menu)
+
+        for tc in character.topics:
+            topic = topic_ids.get(str(tc.id))
+            if topic:
+                self._wdgTopics.addTopic(topic, tc)
+
+    def _addTopic(self, action_: QAction, topic: Topic):
+        if self._character is None:
+            return
+        value = TemplateValue(topic.id, '')
+        self._character.topics.append(value)
+        self._wdgTopics.addTopic(topic, value)
+
+        action_.setDisabled(True)
+
+    def _newTopic(self):
+        pass
+
+    class _Action(QAction):
+        def __init__(self, topic: Topic, parent=None):
+            super().__init__(parent)
+            self.topic = topic
+            if topic.icon:
+                self.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
+            self.setText(topic.text)
+            self.setToolTip(topic.description)
