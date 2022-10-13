@@ -1065,7 +1065,7 @@ class TopicWidget(QWidget):
 
         self.btnHeader = QPushButton()
         self.btnHeader.setCheckable(True)
-        self.btnHeader.setText(topic.title)
+        self.btnHeader.setText(topic.text)
         self.btnHeader.setToolTip(topic.description)
         if topic.icon:
             self.btnHeader.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
