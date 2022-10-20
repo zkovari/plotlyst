@@ -40,13 +40,13 @@
         <number>0</number>
        </property>
        <property name="leftMargin">
-        <number>0</number>
+        <number>10</number>
        </property>
        <property name="topMargin">
         <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>0</number>
+        <number>10</number>
        </property>
        <property name="bottomMargin">
         <number>0</number>
@@ -266,16 +266,16 @@
            <number>4</number>
           </property>
           <property name="leftMargin">
-           <number>6</number>
+           <number>0</number>
           </property>
           <property name="topMargin">
-           <number>3</number>
+           <number>2</number>
           </property>
           <property name="rightMargin">
-           <number>6</number>
+           <number>0</number>
           </property>
           <property name="bottomMargin">
-           <number>3</number>
+           <number>2</number>
           </property>
           <item>
            <widget class="QPushButton" name="btnChaptersToggle">
@@ -680,7 +680,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>4</number>
+              <number>5</number>
              </property>
              <widget class="QWidget" name="pageCards">
               <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -709,8 +709,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>98</width>
-                    <height>28</height>
+                    <width>466</width>
+                    <height>582</height>
                    </rect>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -944,6 +944,9 @@
                <property name="leftMargin">
                 <number>0</number>
                </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
                <property name="rightMargin">
                 <number>0</number>
                </property>
@@ -1112,8 +1115,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>441</width>
-                    <height>555</height>
+                    <width>466</width>
+                    <height>560</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -1196,6 +1199,12 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>CardsView</class>
+   <extends>QFrame</extends>
+   <header>src.main.python.plotlyst.view.widget.cards</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>RotatedButton</class>
    <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
@@ -1204,12 +1213,6 @@
    <class>ScenesTreeView</class>
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
-  </customwidget>
-  <customwidget>
-   <class>CardsView</class>
-   <extends>QFrame</extends>
-   <header>src.main.python.plotlyst.view.widget.cards</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>SceneStoryStructureWidget</class>
@@ -1270,7 +1273,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupStoryMapView"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupStoryMapView"/>
  </buttongroups>
 </ui>
