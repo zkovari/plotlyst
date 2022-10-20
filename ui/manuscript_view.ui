@@ -570,12 +570,6 @@ QToolButton:pressed {
                 </item>
                 <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
                  <widget class="WordsDisplay" name="lblWordCount">
-                  <property name="font">
-                   <font>
-                    <weight>75</weight>
-                    <bold>true</bold>
-                   </font>
-                  </property>
                   <property name="text">
                    <string>wc</string>
                   </property>

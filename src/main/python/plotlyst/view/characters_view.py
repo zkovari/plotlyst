@@ -23,7 +23,7 @@ from typing import Optional
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import ask_confirmation, busy, gc, incr_font
+from qthandy import ask_confirmation, busy, gc, incr_font, bold
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character
@@ -51,6 +51,7 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
         self.setupUi(self)
         self.btnCharacter.setIcon(IconRegistry.character_icon())
         incr_font(self.lblTitle)
+        bold(self.lblTitle)
 
         self.refresh()
 

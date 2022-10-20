@@ -66,6 +66,8 @@ class ManuscriptView(AbstractNovelView):
         transparent(self.ui.lineSceneTitle)
         self.ui.lineSceneTitle.textEdited.connect(self._scene_title_edited)
 
+        bold(self.ui.lblWordCount)
+
         self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
         self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
