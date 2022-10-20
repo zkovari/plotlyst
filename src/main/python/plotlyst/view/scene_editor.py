@@ -95,6 +95,7 @@ class SceneEditor(QObject):
         self.ui.wdgPov.btnPov.setText('Select POV')
 
         self.ui.textNotes.setTitleVisible(False)
+        self.ui.textNotes.setPlaceholderText("Scene notes")
 
         self.tblCharacters = QTableView()
         self.tblCharacters.setShowGrid(False)

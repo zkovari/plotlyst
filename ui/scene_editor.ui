@@ -465,7 +465,7 @@
          </layout>
         </item>
         <item>
-         <widget class="CharacterAvatar" name="wdgPov"/>
+         <widget class="CharacterAvatar" name="wdgPov" native="true"/>
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -706,7 +706,7 @@
           <enum>Qt::NoFocus</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="pageStructure">
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -782,11 +782,7 @@
             <number>2</number>
            </property>
            <item>
-            <widget class="DocumentTextEditor" name="textNotes">
-             <property name="placeholderText" stdset="0">
-              <string>Scene notes or type '/' for commands</string>
-             </property>
-            </widget>
+            <widget class="DocumentTextEditor" name="textNotes" native="true"/>
            </item>
           </layout>
          </widget>
