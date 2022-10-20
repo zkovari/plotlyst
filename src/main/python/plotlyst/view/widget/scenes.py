@@ -605,6 +605,8 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         if self.beat.type != beatType:
             self.beat.type = beatType
             if self.beat.type == SceneStructureItemType.OUTCOME:
+                if self.beat.outcome is None:
+                    self.beat.outcome = SceneOutcome.DISASTER
                 self._outcome.refresh()
             self._initStyle()
         self._glow()
