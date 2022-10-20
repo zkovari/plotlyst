@@ -58,8 +58,11 @@
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
+        <property name="toolTip">
+         <string>Open story</string>
+        </property>
         <property name="text">
-         <string>Browse</string>
+         <string>Open</string>
         </property>
         <property name="highlighted" stdset="0">
          <bool>true</bool>
@@ -96,6 +99,9 @@
        <widget class="QPushButton" name="btnAdd">
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="toolTip">
+         <string>Add new story</string>
         </property>
         <property name="text">
          <string/>
@@ -138,6 +144,9 @@
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
+        <property name="toolTip">
+         <string>Edit story title</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -175,6 +184,9 @@
         </property>
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="toolTip">
+         <string>Delete story</string>
         </property>
         <property name="text">
          <string/>
