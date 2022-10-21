@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt6.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit
+from PyQt6.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit, QCompleter
 from fbs_runtime import platform
 from qthandy import translucent, btn_popup, incr_font, bold, italic
 from qthandy.filter import OpacityEventFilter
@@ -97,6 +97,9 @@ class CharacterEditor:
         self._lineOccupation = QLineEdit()
         self._lineOccupation.setPlaceholderText('Fill out occupation')
         self._lineOccupation.textChanged.connect(self._occupation_changed)
+        occupations = set([x.occupation for x in self.novel.characters])
+        if occupations:
+            self._lineOccupation.setCompleter(QCompleter(occupations))
         menu = btn_popup(self.ui.btnOccupation, self._lineOccupation)
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
