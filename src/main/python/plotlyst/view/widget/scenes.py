@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QApplication
 from overrides import overrides
-from qthandy import busy, margins, vspacer, btn_popup_menu
+from qthandy import busy, margins, vspacer, btn_popup_menu, bold
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
@@ -578,6 +578,8 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnIcon.installEventFilter(OpacityEventFilter(parent=self.btnIcon, enterOpacity=0.9, leaveOpacity=1.0))
         pointy(self.btnIcon)
 
+        bold(self.btnName)
+
         decr_font(self.text)
         self.text.setText(self.beat.text)
 
@@ -1025,6 +1027,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.wdgTypes.layout().addWidget(self.btnSequel)
 
         flow(self.wdgGoalConflictContainer)
+
+        bold(self.iconBeginning)
 
         self.timeline = SceneStructureTimeline(self)
         self.timeline.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
