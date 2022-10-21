@@ -734,17 +734,16 @@ class SceneStructureTimeline(QWidget):
         self._emotionEnd.setValue(agenda.ending_emotion)
         self._emotionEnd.setVisible(True)
 
-        if len(agenda.items) > 1:
-            for i in range(1, len(agenda.items) - 1):
-                beat = agenda.items[i]
-                if beat.percentage == 0.0:
-                    beat.percentage = i * (0.9 / (len(agenda.items) - 1))
-            last_beat = agenda.items[-1]
-            if last_beat.percentage == 0.0:
-                last_beat.percentage = 0.9
-
         if not agenda.items:
             self._initBeatsFromType(sceneTyoe)
+
+        for i in range(1, len(agenda.items) - 1):
+            beat = agenda.items[i]
+            if beat.percentage == 0.0:
+                beat.percentage = i * (0.9 / (len(agenda.items) - 1))
+        last_beat = agenda.items[-1]
+        if last_beat.percentage == 0.0:
+            last_beat.percentage = 0.9
 
         self._rearrangeBeats()
 
@@ -908,12 +907,6 @@ class SceneStructureTimeline(QWidget):
             path.arcTo(QRectF(self._margin, y, self._arcWidth, self._lineDistance), -270, 180)
 
     def _rearrangeBeats(self):
-        def _arrangeLastBeat(wdg: SceneStructureItemWidget, curves: int):
-            wdg.setGeometry(self.width() - self._margin - wdg.minimumWidth(),
-                            self._lineDistance - 15 + curves * self._lineDistance * 2,
-                            wdg.minimumWidth(),
-                            wdg.minimumHeight())
-
         width = self.width()
         if not width:
             return
@@ -949,6 +942,7 @@ class SceneStructureTimeline(QWidget):
         item = SceneStructureItem(beatType)
         if beatType == SceneStructureItemType.OUTCOME:
             item.outcome = SceneOutcome.DISASTER
+        self._agenda.items.append(item)
         self._addBeatWidget(item)
 
     def _addBeatWidget(self, item: SceneStructureItem):
