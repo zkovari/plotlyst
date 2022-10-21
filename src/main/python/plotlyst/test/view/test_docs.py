@@ -21,6 +21,7 @@ def test_add_new_doc(qtbot, filled_window: MainWindow):
     previous_size = len(view.novel.documents)
 
     view.ui.btnAdd.click()
+    qtbot.wait(10)  # settings OP fails otherwise
     click_on_item(qtbot, view.ui.treeDocuments, 0, 2, QModelIndex())
     trigger_action_on_popup(qtbot, 'Document')
 
