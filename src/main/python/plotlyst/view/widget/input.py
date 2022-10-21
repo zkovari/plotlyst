@@ -476,7 +476,7 @@ class DocumentTextEditor(RichTextEditor):
         self.textTitle.setVisible(visible)
 
     def setToolbarVisible(self, visible: bool):
-        self.toolbar.setVisible(visible)
+        self.toolbar().setVisible(visible)
 
     def setMargins(self, left: int, top: int, right: int, bottom: int):
         self.textEdit.setViewportMargins(left, top, right, bottom)

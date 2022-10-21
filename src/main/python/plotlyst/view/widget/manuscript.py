@@ -437,7 +437,7 @@ class ManuscriptTextEditor(RichTextEditor):
 
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
-        self.toolbar.setVisible(False)
+        self.toolbar().setVisible(False)
         self._scenes: List[Scene] = []
         self.repo = RepositoryPersistenceManager.instance()
 
