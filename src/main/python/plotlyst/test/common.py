@@ -34,7 +34,6 @@ from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.timeline_view import TimelineView
 
 
 def show_widget(qtbot, widget):
@@ -145,11 +144,6 @@ def go_to_home(window: MainWindow) -> HomeView:
 def go_to_reports(window: MainWindow) -> ReportsView:
     window.reports_mode.setChecked(True)
     return window.reports_view
-
-
-def go_to_timeline(window: MainWindow) -> TimelineView:
-    window.btnTimeline.setChecked(True)
-    return window.timeline_view
 
 
 def go_to_docs(window: MainWindow) -> DocumentsView:

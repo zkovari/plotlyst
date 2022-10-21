@@ -204,10 +204,6 @@ class IconRegistry:
         return qtawesome.icon('fa5s.tasks')
 
     @staticmethod
-    def timeline_icon() -> QIcon:
-        return qtawesome.icon('mdi.chart-timeline-variant', color_on='darkBlue')
-
-    @staticmethod
     def reports_icon(color_on: str = 'darkBlue') -> QIcon:
         return qtawesome.icon('fa5.chart-bar', color_on=color_on)
 

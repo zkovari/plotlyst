@@ -48,7 +48,6 @@ from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTit
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
-from src.main.python.plotlyst.view.timeline_view import TimelineView
 from src.main.python.plotlyst.view.widget.cards import SceneCard
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.chart import ActDistributionChart
@@ -108,7 +107,6 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.editor: Optional[SceneEditor] = None
         self.storymap_view: Optional[StoryLinesMapWidget] = None
-        self.timeline_view: Optional[TimelineView] = None
         self.stagesModel: Optional[ScenesStageTableModel] = None
         self.stagesProgress: Optional[SceneStageProgressCharts] = None
         self.characters_distribution: Optional[CharactersScenesDistributionWidget] = None
@@ -168,7 +166,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.transit-connection-horizontal', color_on='darkBlue'))
-        self.ui.btnTimelineView.setIcon(IconRegistry.timeline_icon())
 
         self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
         self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
@@ -243,8 +240,6 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesModel.modelReset.emit()
         if self.stagesProgress:
             self.stagesProgress.refresh()
-        if self.timeline_view:
-            self.timeline_view.refresh()
         if self.characters_distribution:
             self.characters_distribution.refresh()
 
@@ -255,10 +250,7 @@ class ScenesOutlineView(AbstractNovelView):
         return self.ui.stackedWidget.currentWidget() is self.ui.pageView
 
     def _on_scene_selected(self):
-        if self.ui.btnTimelineView.isChecked():
-            indexes = self.timeline_view.ui.tblScenes.selectedIndexes()
-        else:
-            indexes = self.ui.tblScenes.selectedIndexes()
+        indexes = self.ui.tblScenes.selectedIndexes()
         selection = len(indexes) > 0
         self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
@@ -313,8 +305,6 @@ class ScenesOutlineView(AbstractNovelView):
             indexes = None
             if self.ui.btnTableView.isChecked():
                 indexes = self.ui.tblScenes.selectedIndexes()
-            elif self.ui.btnTimelineView.isChecked():
-                indexes = self.timeline_view.ui.tblScenes.selectedIndexes()
 
             if indexes:
                 return indexes[0].data(role=ScenesTableModel.SceneRole)
@@ -417,14 +407,6 @@ class ScenesOutlineView(AbstractNovelView):
                 self.storymap_view.setActsFilter(3, self.ui.btnAct3.isChecked())
                 self.storymap_view.sceneSelected.connect(self.ui.wdgStoryStructure.highlightScene)
                 self.storymap_view.setNovel(self.novel)
-        elif self.ui.btnTimelineView.isChecked():
-            self.ui.stackScenes.setCurrentWidget(self.ui.pageTimeline)
-            self.ui.tblScenes.clearSelection()
-            self.ui.tblSceneStages.clearSelection()
-            if not self.timeline_view:
-                self.timeline_view = TimelineView(self.novel)
-                self.ui.pageTimeline.layout().addWidget(self.timeline_view.widget)
-                self.timeline_view.ui.tblScenes.selectionModel().selectionChanged.connect(self._on_scene_selected)
         elif self.ui.btnCharactersDistributionView.isChecked():
             self.ui.stackScenes.setCurrentWidget(self.ui.pageCharactersDistribution)
             self.ui.tblScenes.clearSelection()
