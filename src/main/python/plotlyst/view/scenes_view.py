@@ -28,6 +28,7 @@ from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout, busy, bold
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -38,7 +39,6 @@ from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, Sce
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
-from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import PopupMenuBuilder
@@ -139,8 +139,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
 
-        self.widget.setStyleSheet(
-            f'''#cards {{background-image: url({resource_registry.cover1});}}''')
+        self.widget.setStyleSheet(f'#cards {{background: {RELAXED_WHITE_COLOR};}}')
 
         self.ui.splitterLeft.setSizes([100, 500])
 
