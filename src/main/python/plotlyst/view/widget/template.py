@@ -1086,6 +1086,7 @@ class TopicWidget(QWidget):
         self.textEdit = AutoAdjustableTextEdit(height=100)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setMarkdown(value.value)
+        self.textEdit.setPlaceholderText(f'Write about {topic.text.lower()}')
         self.textEdit.textChanged.connect(self._textChanged)
 
         top = group(self.btnCollapse, self.btnHeader, margin=0, spacing=1)
