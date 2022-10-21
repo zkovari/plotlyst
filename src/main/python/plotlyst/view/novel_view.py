@@ -68,6 +68,8 @@ class NovelView(AbstractNovelView):
         self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
         self.ui.textPremise.textEdit.textChanged.connect(self._premise_changed)
         self._premise_changed()
+        self.ui.textSynopsis.setPlaceholderText("Write down your story's main events")
+        self.ui.textSynopsis.setMargins(0, 10, 0, 10)
         self.ui.textSynopsis.setGrammarCheckEnabled(True)
         self.ui.textPremise.setGrammarCheckEnabled(True)
 
