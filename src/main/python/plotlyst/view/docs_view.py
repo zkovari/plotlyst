@@ -124,7 +124,7 @@ class DocumentsView(AbstractNovelView):
         self.textEditor = DocumentTextEditor(self.ui.docEditorPage)
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
         self.textEditor.textEdit.textChanged.connect(self._save)
-        self.textEditor.textTitle.textChanged.connect(self._title_changed)
+        self.textEditor.titleChanged.connect(self._title_changed)
 
     def _clear_text_editor(self):
         clear_layout(self.ui.docEditorPage.layout())
@@ -226,10 +226,9 @@ class DocumentsView(AbstractNovelView):
             self._current_doc.content = self.textEditor.textEdit.toHtml()
         self.repo.update_doc(self.novel, self._current_doc)
 
-    def _title_changed(self):
+    def _title_changed(self, title: str):
         if self._current_doc:
-            new_title = self.textEditor.textTitle.text()
-            if new_title and new_title != self._current_doc.title:
-                self._current_doc.title = new_title
+            if title and title != self._current_doc.title:
+                self._current_doc.title = title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
                 self.repo.update_novel(self.novel)

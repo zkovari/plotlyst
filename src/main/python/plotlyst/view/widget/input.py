@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QTableView, QSizePolicy, QAbstractItemView
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox
+from qthandy import transparent, hbox, margins, vspacer
 from qthandy.filter import OpacityEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode
 
@@ -47,7 +47,9 @@ from src.main.python.plotlyst.service.grammar import language_tool_proxy, dictio
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import action, pointy, autoresize_col
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
+from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 
 
@@ -401,17 +403,26 @@ class CapitalizationEventFilter(QObject):
 
 
 class DocumentTextEditor(RichTextEditor):
+    titleChanged = pyqtSignal(str)
+
     def __init__(self, parent=None):
         super(DocumentTextEditor, self).__init__(parent)
-        self.textTitle = QLineEdit()
-        self.textTitle.setStyleSheet('border: 0px; icon-size: 40px;')
-        self.textTitle.setFrame(False)
-        title_font = self.textTitle.font()
+        self._btnIcon = Icon()
+        self._btnIcon.setIconSize(QSize(40, 40))
+        self._textTitle = QLineEdit()
+        self._textTitle.setStyleSheet('border: 0px; icon-size: 40px;')
+        self._textTitle.setFrame(False)
+        title_font = self._textTitle.font()
         title_font.setBold(True)
         title_font.setPointSize(40)
         title_font.setFamily('Arial')
-        self.textTitle.setFont(title_font)
-        self.textTitle.returnPressed.connect(self.textEdit.setFocus)
+        self._textTitle.setFont(title_font)
+        self._textTitle.returnPressed.connect(self.textEdit.setFocus)
+        self._textTitle.textChanged.connect(self.titleChanged.emit)
+
+        self._wdgTitle = group(self._btnIcon, self._textTitle, margin=0, spacing=0)
+        self._wdgTitle.setStyleSheet('background: white;')
+        self.setStyleSheet('DocumentTextEditor {background: white;}')
 
         self.textEdit.setViewportMargins(5, 5, 5, 5)
 
@@ -427,6 +438,7 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setFont(QFont(family))
         self.textEdit.zoomIn(self.textEdit.font().pointSize() * 0.34)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
+        self.textEdit.setPlaceholderText('Write your notes...')
 
         # self._lblPlaceholder = QLabel(self.textEdit)
         # font = QFont(family)
@@ -435,9 +447,12 @@ class DocumentTextEditor(RichTextEditor):
         # self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
         self.textEdit.installEventFilter(self)
-        self.setMargins(3, 3, 3, 3)
+        self.setWidthPercentage(90)
 
-        self.layout().insertWidget(1, self.textTitle)
+        self.layout().insertWidget(1, self._wdgTitle)
+        spacer = vspacer(max_height=5)
+        spacer.setStyleSheet('background: white;')
+        self.layout().insertWidget(2, spacer)
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
@@ -455,25 +470,31 @@ class DocumentTextEditor(RichTextEditor):
         textedit.grammarCheckToggled.connect(grammarCheckToggled)
         return textedit
 
+    @overrides
+    def _resize(self):
+        super(DocumentTextEditor, self)._resize()
+        margins(self._wdgTitle, left=self.textEdit.viewportMargins().left())
+
     def _initHighlighter(self) -> GrammarHighlighter:
         return GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
 
     def setText(self, content: str, title: str = '', icon: Optional[QIcon] = None, title_read_only: bool = False):
         self.textEdit.setHtml(content)
         self.textEdit.setFocus()
-        self.textTitle.setText(title)
-        self.textTitle.setReadOnly(title_read_only)
-        self.textTitle.addAction(icon, QLineEdit.ActionPosition.LeadingPosition)
+        self._textTitle.setText(title)
+        self._textTitle.setReadOnly(title_read_only)
+        self.setTitleIcon(icon)
 
     def setTitleIcon(self, icon: Optional[QIcon] = None):
-        self.textTitle.addAction(icon, QLineEdit.ActionPosition.LeadingPosition)
-        self.textTitle.update()
+        self._btnIcon.setVisible(icon is not None)
+        if icon:
+            self._btnIcon.setIcon(icon)
 
     def setPlaceholderText(self, text: str):
         self.textEdit.setPlaceholderText(text)
 
     def setTitleVisible(self, visible: bool):
-        self.textTitle.setVisible(visible)
+        self._textTitle.setVisible(visible)
 
     def setToolbarVisible(self, visible: bool):
         self.toolbar().setVisible(visible)
@@ -492,7 +513,7 @@ class DocumentTextEditor(RichTextEditor):
 
     def clear(self):
         self.textEdit.clear()
-        self.textTitle.clear()
+        self._textTitle.clear()
 
     def statistics(self) -> TextStatistics:
         return self.textEdit.statistics()
