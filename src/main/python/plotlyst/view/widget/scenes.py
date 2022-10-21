@@ -2147,6 +2147,8 @@ class SceneStageButton(QToolButton, EventListener):
         return self._stageOk
 
     def updateStage(self):
+        if self._scene is None:
+            return
         self._stageOk = False
         active_stage = self._novel.active_stage
         if self._scene.stage and active_stage:
