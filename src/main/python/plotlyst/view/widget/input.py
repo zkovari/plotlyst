@@ -494,7 +494,7 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setPlaceholderText(text)
 
     def setTitleVisible(self, visible: bool):
-        self._textTitle.setVisible(visible)
+        self._wdgTitle.setVisible(visible)
 
     def setToolbarVisible(self, visible: bool):
         self.toolbar().setVisible(visible)
