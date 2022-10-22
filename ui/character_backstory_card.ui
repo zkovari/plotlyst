@@ -88,12 +88,6 @@
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QLabel" name="lblKeyphrase">
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
           <property name="text">
            <string>Keyphrase</string>
           </property>

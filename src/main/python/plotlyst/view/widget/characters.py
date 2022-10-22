@@ -34,7 +34,7 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, Q
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, translucent, margins
+    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
     OpacityEventFilter
 
@@ -891,6 +891,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.btnType.setIconSize(QSize(24, 24))
 
         incr_font(self.lblKeyphrase, 2)
+        bold(self.lblKeyphrase)
 
         self.setMinimumWidth(30)
         self.refresh()
@@ -1391,6 +1392,7 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
 
 
 class CharacterAvatar(QWidget, Ui_CharacterAvatar):
+    avatarUpdated = pyqtSignal()
 
     def __init__(self, parent=None):
         super(CharacterAvatar, self).__init__(parent)
@@ -1402,7 +1404,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
         self.btnPov.installEventFilter(OpacityEventFilter(parent=self.btnPov, enterOpacity=0.7, leaveOpacity=1.0))
 
         self._character: Optional[Character] = None
-        self._updated: bool = False
+        self._uploaded: bool = False
         self._uploadSelectorsEnabled: bool = False
 
         self.reset()
@@ -1430,17 +1432,18 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
             self.btnPov.setIcon(avatar)
         else:
             self.reset()
+        self.avatarUpdated.emit()
 
     def reset(self):
         self.btnPov.setIconSize(QSize(118, 118))
         self.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
         self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
-    def avatarUpdated(self) -> bool:
-        return self._updated
+    def imageUploaded(self) -> bool:
+        return self._uploaded
 
     def _uploadedAvatar(self):
-        self._updated = True
+        self._uploaded = True
         avatars.update_image(self._character)
         self.updateAvatar()
 
