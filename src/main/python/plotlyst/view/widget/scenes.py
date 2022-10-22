@@ -839,6 +839,8 @@ class SceneStructureTimeline(QWidget):
         sorted(self._agenda.items, key=lambda x: x.percentage)
         sorted(self._beatWidgets, key=lambda x: x.beat.percentage)
 
+        event.accept()
+
         self._rearrangeBeats()
         self.update()
 
