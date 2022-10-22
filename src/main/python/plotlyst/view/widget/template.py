@@ -522,7 +522,12 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
         if not field.show_label:
             self.lblName.setHidden(True)
 
-        self._boxSpacing = 1 if app_env.is_mac() else 3
+        if app_env.is_mac():
+            self._boxSpacing = 1
+            self._boxMargin = 0
+        else:
+            self._boxSpacing = 3
+            self._boxMargin = 1
 
     @overrides
     def setEnabled(self, enabled: bool):
@@ -585,7 +590,7 @@ class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
-        _layout = vbox(self, margin=1, spacing=self._boxSpacing)
+        _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
         self.wdgEditor = AutoAdjustableTextEdit(height=60)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setPlaceholderText(field.placeholder)
