@@ -384,8 +384,8 @@ class IconRegistry:
         return IconRegistry.from_name('ei.adult')
 
     @staticmethod
-    def cog_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.cog')
+    def cog_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.cog', color=color)
 
     @staticmethod
     def cause_icon(color: str = 'black') -> QIcon:

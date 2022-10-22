@@ -283,6 +283,34 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="btnSettings">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="cursor">
+        <cursorShape>ForbiddenCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>Settings</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="base" stdset="0">
+        <bool>false</bool>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">buttonGroup</string>
+       </attribute>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_11">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -313,7 +341,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -578,8 +606,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>98</width>
-            <height>28</height>
+            <width>640</width>
+            <height>440</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -591,6 +619,25 @@
          </widget>
         </widget>
        </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageSettings">
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <property name="spacing">
+        <number>3</number>
+       </property>
+       <property name="leftMargin">
+        <number>2</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="rightMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
       </layout>
      </widget>
     </widget>
