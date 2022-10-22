@@ -134,6 +134,7 @@ class CharacterEditor:
         self.ui.wdgAvatar.btnPov.setToolTip('Character avatar. Click to add an image')
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
+        # self.ui.wdgAvatar.avatarUpdated.connect()
 
         self.ui.splitter.setSizes([400, 400])
 
@@ -294,7 +295,7 @@ class CharacterEditor:
         self.character.name = self.ui.lineName.text()
         self.character.template_values = self.profile.values()
 
-        self.repo.update_character(self.character, self.ui.wdgAvatar.avatarUpdated())
+        self.repo.update_character(self.character, self.ui.wdgAvatar.imageUploaded())
         self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
 
         if not self.character.document:
