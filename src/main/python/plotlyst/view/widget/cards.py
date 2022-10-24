@@ -206,6 +206,7 @@ class CharacterCard(Ui_CharacterCard, Card):
         self.iconRole.setHidden(self.character.prefs.avatar.use_role)
         if self.character.role and not self.character.prefs.avatar.use_role:
             self.iconRole.setRole(self.character.role)
+            self.iconRole.setToolTip(self.character.role.text)
         self._setStyleSheet()
 
     @overrides
