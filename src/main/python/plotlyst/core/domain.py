@@ -1160,6 +1160,7 @@ class ScenesView(Enum):
     CHARACTERS = 'characters'
     SCENES = 'scenes'
     LOCATIONS = 'locations'
+    WORLD_BUILDING = 'world_building'
     DOCS = 'docs'
 
 
