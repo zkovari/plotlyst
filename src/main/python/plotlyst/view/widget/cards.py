@@ -202,7 +202,9 @@ class CharacterCard(Ui_CharacterCard, Card):
             self.btnMbti.setStyleSheet(f'color: {mbti.icon_color};border:0px;')
             self.btnMbti.setText(mbti.text)
             self.btnMbti.setIcon(IconRegistry.from_name(mbti.icon, mbti.icon_color))
-        if self.character.role:
+
+        self.iconRole.setHidden(self.character.prefs.avatar.use_role)
+        if self.character.role and not self.character.prefs.avatar.use_role:
             self.iconRole.setRole(self.character.role)
         self._setStyleSheet()
 
