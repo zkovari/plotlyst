@@ -78,7 +78,7 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         self._chartDistributionView.setMaximumSize(356, 356)
         self._chartDistributionView.setChart(self._chartDistribution)
 
-        btn_popup(self.btnCount, self._chartDistributionView)
+        btn_popup(self.btnCount, self._chartDistributionView, show_menu_icon=True)
         self.refresh()
 
         event_dispatcher.register(self, SceneChangedEvent)

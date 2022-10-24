@@ -80,7 +80,8 @@
      <property name="styleSheet">
       <string notr="true">QToolButton {
 	border: 1px hidden black;
-    padding: 2px;
+    padding: 1px;
+    margin: 2px;
 }
 
 QToolButton:hover {
@@ -93,6 +94,9 @@ QToolButton:pressed {
      </property>
      <property name="text">
       <string/>
+     </property>
+     <property name="popupMode">
+      <enum>QToolButton::InstantPopup</enum>
      </property>
     </widget>
    </item>
