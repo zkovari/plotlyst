@@ -1,0 +1,75 @@
+"""
+Plotlyst
+Copyright (C) 2021-2022  Zsolt Kovari
+
+This file is part of Plotlyst.
+
+Plotlyst is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Plotlyst is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QMouseEvent, QWheelEvent
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene
+from overrides import overrides
+
+
+class WorldBuildingEditor(QGraphicsView):
+    def __init__(self, parent=None):
+        super(WorldBuildingEditor, self).__init__(parent)
+        self._moveOriginX = 0
+        self._moveOriginY = 0
+
+        self._scene = QGraphicsScene()
+
+        self._scene.addRect(0, 0, 200, 50)
+        self._scene.addRect(250, 0, 200, 50)
+        self._scene.addRect(500, 0, 200, 50)
+
+        first = self._scene.addRect(250, 100, 200, 50)
+        self._scene.addRect(250, 200, 200, 50)
+        self._scene.addRect(250, 300, 200, 50)
+        self._scene.addRect(250, 400, 200, 50)
+        self._scene.addRect(250, 500, 200, 50)
+        self._scene.addRect(250, 600, 200, 50)
+
+        self.setScene(self._scene)
+        self.centerOn(first)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
+
+        text_item = self._scene.addText('Test')
+        text_item.setPos(600, 10)
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.MiddleButton:
+            self._moveOriginX = event.pos().x()
+            self._moveOriginY = event.pos().y()
+
+    @overrides
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        if event.buttons() & Qt.MouseButton.MiddleButton:
+            oldPoint = self.mapToScene(self._moveOriginX, self._moveOriginY)
+            newPoint = self.mapToScene(event.pos())
+            translation = newPoint - oldPoint
+            self.translate(translation.x(), translation.y())
+
+            self._moveOriginX = event.pos().x()
+            self._moveOriginY = event.pos().y()
+
+    @overrides
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        super(WorldBuildingEditor, self).wheelEvent(event)
+        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            diff = event.angleDelta().y()
+            scale = (diff // 120) / 10
+            self.scale(1 + scale, 1 + scale)

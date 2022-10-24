@@ -17,12 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtWidgets import QWidget, QLabel
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPalette
+from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import vbox
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.widget.world_building import WorldBuildingEditor
 
 
 class WorldBuildingView(AbstractNovelView):
@@ -31,8 +34,11 @@ class WorldBuildingView(AbstractNovelView):
         super().__init__(novel)
 
         self.widget = QWidget()
-        vbox(self.widget)
-        self.widget.layout().addWidget(QLabel('Test'))
+        self.widget.setPalette(QPalette(Qt.GlobalColor.white))
+        vbox(self.widget, 10)
+
+        self._editor = WorldBuildingEditor()
+        self.widget.layout().addWidget(self._editor)
 
     @overrides
     def refresh(self):
