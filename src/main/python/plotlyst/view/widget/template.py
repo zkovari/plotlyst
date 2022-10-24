@@ -33,7 +33,9 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
     QSpacerItem, QListView, QPushButton, QTextEdit
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font
+    decr_font, retain_when_hidden, translucent
+from qthandy.filter import VisibilityToggleEventFilter
+from qttextedit import EnhancedTextEdit
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Character, Topic
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
@@ -111,21 +113,23 @@ class _ProfileTemplateBase(QWidget):
         for widget in self.widgets:
             if isinstance(widget, TemplateDisplayWidget):
                 continue
-            values.append(TemplateValue(id=widget.field.id, value=widget.value()))
+            values.append(TemplateValue(id=widget.field.id, value=widget.value(), notes=widget.notes()))
 
         return values
 
     def setValues(self, values: List[TemplateValue]):
         ids = {}
         for value in values:
-            ids[str(value.id)] = value.value
+            ids[str(value.id)] = value
 
         for widget in self.widgets:
             if isinstance(widget, TemplateDisplayWidget):
                 continue
             if str(widget.field.id) in ids.keys():
                 value = ids[str(widget.field.id)]
-                widget.setValue(value)
+                widget.setValue(value.value)
+                if value.notes:
+                    widget.setNotes(value.notes)
 
 
 class _PlaceHolder(QFrame):
@@ -556,6 +560,15 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
     def setValue(self, value: Any):
         pass
 
+    def notes(self) -> str:
+        if self.field.has_notes:
+            return self._notesEditor.toMarkdown()
+        return ''
+
+    def setNotes(self, notes: str):
+        if self.field.has_notes:
+            self._notesEditor.setMarkdown(notes)
+
 
 class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
@@ -595,12 +608,31 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setPlaceholderText(field.placeholder)
         self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
-        self.wdgEditor.setMaximumWidth(600)
+        self.setMaximumWidth(600)
 
-        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        self.btnNotes = QToolButton()
+
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer(), self.btnNotes))
         _layout.addWidget(self.wdgEditor)
 
         self.wdgEditor.textChanged.connect(self._textChanged)
+        if field.has_notes:
+            self.btnNotes.setIcon(IconRegistry.from_name('mdi6.note-plus-outline'))
+            pointy(self.btnNotes)
+            transparent(self.btnNotes)
+            translucent(self.btnNotes)
+            self._notesEditor = EnhancedTextEdit()
+            self._notesEditor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            self._notesEditor.setMinimumSize(400, 300)
+            self._notesEditor.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
+            self._notesEditor.setPlaceholderText(f'Add notes to {field.name}')
+            self._notesEditor.setViewportMargins(5, 5, 5, 5)
+            menu = btn_popup(self.btnNotes, self._notesEditor)
+            menu.aboutToShow.connect(self._notesEditor.setFocus)
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnNotes, self))
+            retain_when_hidden(self.btnNotes)
+        else:
+            self.btnNotes.setHidden(True)
 
     @overrides
     def value(self) -> Any:

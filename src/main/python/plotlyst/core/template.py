@@ -107,6 +107,7 @@ class TemplateField:
     compact: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    has_notes: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     @overrides
     def __hash__(self):
@@ -297,29 +298,29 @@ desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TE
 
 goal_field = TemplateField('External goal', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
                            placeholder="What external goal does the character want to accomplish?",
-                           id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'))
+                           id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'), has_notes=True)
 internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMALL_TEXT,
                                     emoji=':smiling_face_with_hearts:',
                                     placeholder="What emotional state does the character want to achieve?",
-                                    id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'))
+                                    id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'), has_notes=True)
 motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':right-facing_fist:',
                                  placeholder='Why does the character want to accomplish their goal?',
-                                 id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'))
+                                 id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'), has_notes=True)
 internal_motivation_field = TemplateField('Internal motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':red_heart:',
                                           placeholder='Why does the character want to feel that way?',
-                                          id=uuid.UUID('6388368e-6d52-4259-b1e2-1d9c1aa5c89d'))
+                                          id=uuid.UUID('6388368e-6d52-4259-b1e2-1d9c1aa5c89d'), has_notes=True)
 conflict_field = TemplateField('Conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':crossed_swords:',
                                placeholder='What external force is stopping the character from their goal?',
-                               id=uuid.UUID('c7e39f6d-4b94-4060-b3a6-d2604247ca80'))
+                               id=uuid.UUID('c7e39f6d-4b94-4060-b3a6-d2604247ca80'), has_notes=True)
 internal_conflict_field = TemplateField('Internal conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
                                         placeholder='What stops the character from their desired emotional state?',
-                                        id=uuid.UUID('8dcf6ce1-6679-4100-b332-8898ee2a2e3c'))
+                                        id=uuid.UUID('8dcf6ce1-6679-4100-b332-8898ee2a2e3c'), has_notes=True)
 stakes_field = TemplateField('Stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':skull:',
                              placeholder="What's at stake if the character fails to reach their goal?",
-                             id=uuid.UUID('15770e28-b801-44c4-a6e6-ddba33935bc4'))
+                             id=uuid.UUID('15770e28-b801-44c4-a6e6-ddba33935bc4'), has_notes=True)
 internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
                                       placeholder="What's at stake if the character fails to achieve that emotional state?",
-                                      id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'))
+                                      id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'), has_notes=True)
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
                            placeholder='What does the character actually need in the story?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
