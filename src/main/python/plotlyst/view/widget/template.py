@@ -298,10 +298,10 @@ class TraitSelectionWidget(LabelsSelectionWidget):
     def _addItems(self, items: Set[SelectionItem]):
         for item in items:
             if item.meta.get('positive', True):
-                self._wdgLabels.addLabel(TraitLabel(item.text, parent=self))
+                self._wdgLabels.addLabel(TraitLabel(item.text))
         for item in items:
             if not item.meta.get('positive', True):
-                self._wdgLabels.addLabel(TraitLabel(item.text, positive=False, parent=self))
+                self._wdgLabels.addLabel(TraitLabel(item.text, positive=False))
 
     class Popup(QWidget, Ui_TraitSelectionWidget):
         def __init__(self, parent=None):
