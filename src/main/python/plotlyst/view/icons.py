@@ -137,6 +137,10 @@ class IconRegistry:
         return qtawesome.icon('fa5s.map-pin', color_on='darkBlue', options=[{'scale_factor': 1.1}])
 
     @staticmethod
+    def world_building_icon():
+        return IconRegistry.from_name('mdi.globe-model', color_on='#40916c')
+
+    @staticmethod
     def scene_icon() -> QIcon:
         return IconRegistry.from_name('mdi.movie-open', color_on='darkBlue', mdi_scale=1.1)
 
