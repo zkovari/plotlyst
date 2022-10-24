@@ -1064,6 +1064,13 @@ class CharacterTimelineWidget(QWidget):
         for sp in self._spacers:
             sp.setFixedWidth(self.width() // 2 + 3)
 
+    def refreshCharacter(self):
+        item = self._layout.itemAt(0)
+        if item:
+            wdg = item.widget()
+            if isinstance(wdg, QLabel):
+                set_avatar(wdg, self.character, 64)
+
     def refresh(self):
         if self.character is None:
             return

@@ -134,7 +134,7 @@ class CharacterEditor:
         self.ui.wdgAvatar.btnPov.setToolTip('Character avatar. Click to add an image')
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
-        # self.ui.wdgAvatar.avatarUpdated.connect()
+        self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)
 
         self.ui.splitter.setSizes([400, 400])
 
