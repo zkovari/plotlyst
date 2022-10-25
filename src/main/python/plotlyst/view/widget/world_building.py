@@ -21,8 +21,8 @@ from typing import Optional
 
 from PyQt6.QtCore import Qt, QRectF, QRect
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon
-from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
-    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem
+from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
+    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneHoverEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -39,6 +39,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._rect = QRect(0, 0, 1, 1)
         self._recalculateRect()
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.setAcceptHoverEvents(True)
 
     def setText(self, text: str):
         self._text = text
@@ -86,6 +87,44 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
         painter.end()
 
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self.setSelected(True)
+
+
+class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
+    def __init__(self, parent=None):
+        super(WorldBuildingItemGroup, self).__init__(parent)
+        self._item = WorldBuildingItem()
+        self._item.setIcon(IconRegistry.book_icon('white'))
+        self._item.setPos(0, 0)
+
+        self._plusItem = QGraphicsPixmapItem(self)
+        plusIcon = IconRegistry.plus_circle_icon('lightgrey')
+        self._plusItem.setPixmap(plusIcon.pixmap(25, 25))
+        self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 5,
+                              self._item.boundingRect().y() + 13)
+
+        self._plusItem.setVisible(False)
+        self._item.setParentItem(self)
+        self.setAcceptHoverEvents(True)
+
+    @overrides
+    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
+        self._plusItem.setVisible(True)
+
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._plusItem.setVisible(False)
+
+    @overrides
+    def boundingRect(self):
+        rect_f = QRectF(self._item.boundingRect())
+        rect_f.setWidth(rect_f.width() + 40)
+        return rect_f
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        pass
+
 
 class WorldBuildingEditorScene(QGraphicsScene):
 
@@ -105,13 +144,16 @@ class WorldBuildingEditor(QGraphicsView):
 
         self._scene = WorldBuildingEditorScene()
 
-        item = WorldBuildingItem()
-        item.setIcon(IconRegistry.book_icon('white'))
-        self._scene.addItem(item)
+        item = WorldBuildingItemGroup()
+        item.setPos(0, 0)
 
-        # rect_item = self._scene.addRect(400, 200, 50, 50, Qt.GlobalColor.red)
-        # rect_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
-        # rect_item.setSelected(True)
+        self._scene.addLine(item.boundingRect().x() + item.boundingRect().width() - 40, item.boundingRect().y() + 15,
+                            400, 400, QPen(Qt.GlobalColor.red, 4))
+
+        self._scene.addItem(item)
+        item = WorldBuildingItemGroup()
+        item.setPos(50, 300)
+        self._scene.addItem(item)
 
         self.setScene(self._scene)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
@@ -121,6 +163,7 @@ class WorldBuildingEditor(QGraphicsView):
         if event.button() == Qt.MouseButton.MiddleButton:
             self._moveOriginX = event.pos().x()
             self._moveOriginY = event.pos().y()
+        super(WorldBuildingEditor, self).mousePressEvent(event)
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -132,6 +175,8 @@ class WorldBuildingEditor(QGraphicsView):
 
             self._moveOriginX = event.pos().x()
             self._moveOriginY = event.pos().y()
+        else:
+            super(WorldBuildingEditor, self).mouseMoveEvent(event)
 
     @overrides
     def wheelEvent(self, event: QWheelEvent) -> None:
