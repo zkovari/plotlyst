@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtCore import Qt, QRectF, QRect
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget
@@ -33,6 +33,15 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._text = 'My new world'
         self._font = QFont('Helvetica', 14)
         self._metrics = QFontMetrics(self._font)
+        self._rect = QRect(0, 0, 1, 1)
+        self._recalculateRect()
+
+    def setText(self, text: str):
+        self._text = text
+        self._recalculateRect()
+        self.update()
+
+    def _recalculateRect(self):
         self._rect = self._metrics.boundingRect(self._text)
         self._rect.setX(self._rect.x() - 10)
         self._rect.setWidth(self._rect.width() + 10)
@@ -65,27 +74,11 @@ class WorldBuildingEditor(QGraphicsView):
 
         self._scene = QGraphicsScene()
 
-        # self._scene.addRect(0, 0, 200, 50)
-        # self._scene.addRect(250, 0, 200, 50)
-        # self._scene.addRect(500, 0, 200, 50)
-
-        first = self._scene.addRect(250, 100, 200, 50)
         item = WorldBuildingItem()
         self._scene.addItem(item)
-        item.setPos(100, 199)
-        # self._scene.addRect(250, 200, 200, 50)
-        # self._scene.addRect(250, 300, 200, 50)
-        # self._scene.addRect(250, 400, 200, 50)
-        # self._scene.addRect(250, 500, 200, 50)
-        # self._scene.addRect(250, 600, 200, 50)
 
         self.setScene(self._scene)
-        # self.centerOn(first)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
-
-        text_item = self._scene.addText('Test')
-        text_item.setParentItem(first)
-        # text_item.setPos(600, 10)
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
