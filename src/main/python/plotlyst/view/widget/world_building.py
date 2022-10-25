@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import Qt, QRectF, QRect
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
-    QWidget
+    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem
 from overrides import overrides
 
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -38,6 +38,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._metrics = QFontMetrics(self._font)
         self._rect = QRect(0, 0, 1, 1)
         self._recalculateRect()
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
 
     def setText(self, text: str):
         self._text = text
@@ -67,6 +68,11 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
+
+        if self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.black, 1, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(self._rect, 2, 2)
+
         painter.setBrush(QColor('#219ebc'))
         pen = QPen(QColor('#219ebc'), 1)
         painter.setPen(pen)
@@ -77,7 +83,18 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         painter.drawText(0, 0, self._text)
         if self._icon:
             self._icon.paint(painter, -30, -18, 25, 25)
+
         painter.end()
+
+
+class WorldBuildingEditorScene(QGraphicsScene):
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        items = self.items(event.scenePos())
+        if items:
+            items[0].setSelected(True)
+        else:
+            self.clearSelection()
 
 
 class WorldBuildingEditor(QGraphicsView):
@@ -86,11 +103,15 @@ class WorldBuildingEditor(QGraphicsView):
         self._moveOriginX = 0
         self._moveOriginY = 0
 
-        self._scene = QGraphicsScene()
+        self._scene = WorldBuildingEditorScene()
 
         item = WorldBuildingItem()
         item.setIcon(IconRegistry.book_icon('white'))
         self._scene.addItem(item)
+
+        # rect_item = self._scene.addRect(400, 200, 50, 50, Qt.GlobalColor.red)
+        # rect_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        # rect_item.setSelected(True)
 
         self.setScene(self._scene)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
