@@ -85,8 +85,6 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         if self._icon:
             self._icon.paint(painter, -30, -18, 25, 25)
 
-        painter.end()
-
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         self.setSelected(True)
 
