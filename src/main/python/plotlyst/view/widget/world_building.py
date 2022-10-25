@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import Qt, QRectF, QRect
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
-    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent
+    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit
 from overrides import overrides
 
 from src.main.python.plotlyst.view.common import pointy
@@ -60,8 +60,10 @@ class PlusItem(QAbstractGraphicsShapeItem):
 
 
 class EditItem(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+
+    def __init__(self, parent: 'WorldBuildingItem'):
         super(EditItem, self).__init__(parent)
+        self._parent = parent
         self._editIcon = IconRegistry.edit_icon('white')
         self._hovered = False
         self._pressed = False
@@ -80,9 +82,9 @@ class EditItem(QAbstractGraphicsShapeItem):
 
         painter.setPen(Qt.GlobalColor.white)
         if self._hovered:
-            color = '#52b788'
+            color = '#b100e8'
         else:
-            color = '#2d6a4f'
+            color = '#7209b7'
         painter.setBrush(QColor(color))
         if self._pressed:
             painter.drawEllipse(0, 0, 19, 19)
@@ -100,6 +102,7 @@ class EditItem(QAbstractGraphicsShapeItem):
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         self._pressed = False
         self.update()
+        self._edit()
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -110,6 +113,12 @@ class EditItem(QAbstractGraphicsShapeItem):
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hovered = False
         self.update()
+
+    def _edit(self):
+        text, ok = QInputDialog.getText(self.scene().views()[0], 'Edit', 'Edit text', QLineEdit.EchoMode.Normal,
+                                        self._parent.text())
+        if ok:
+            self._parent.setText(text)
 
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
@@ -126,18 +135,28 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self.setAcceptHoverEvents(True)
 
         self._editItem = EditItem(self)
-        self._editItem.setPos(self._rect.x() + self._rect.width() - 20, self._rect.y() - 5)
-        self._editItem.setVisible(False)
+        self.update()
+
+    def text(self) -> str:
+        return self._text
 
     def setText(self, text: str):
         self._text = text
         self._recalculateRect()
+        self.prepareGeometryChange()
+        self.parentItem().update()
         self.update()
 
     def setIcon(self, icon: QIcon):
         self._icon = icon
         self._recalculateRect()
         self.update()
+
+    @overrides
+    def update(self, rect: QRectF = ...) -> None:
+        self._editItem.setPos(self._rect.x() + self._rect.width() - 20, self._rect.y() - 5)
+        self._editItem.setVisible(False)
+        super(WorldBuildingItem, self).update()
 
     def _recalculateRect(self):
         self._rect = self._metrics.boundingRect(self._text)
@@ -194,11 +213,14 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._item.setPos(0, 0)
 
         self._plusItem = PlusItem(self)
+        self.update()
+        self.setAcceptHoverEvents(True)
+
+    @overrides
+    def update(self, rect: QRectF = ...) -> None:
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 10,
                               self._item.boundingRect().y() + 10)
-
         self._plusItem.setVisible(False)
-        self.setAcceptHoverEvents(True)
 
     @overrides
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
