@@ -22,10 +22,29 @@ from typing import Optional
 from PyQt6.QtCore import Qt, QRectF, QRect
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
-    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsSceneHoverEvent
+    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent
 from overrides import overrides
 
 from src.main.python.plotlyst.view.icons import IconRegistry
+
+
+class PlusItem(QAbstractGraphicsShapeItem):
+    def __init__(self, parent=None):
+        super(PlusItem, self).__init__(parent)
+        self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
+        self.setAcceptHoverEvents(True)
+
+    @overrides
+    def boundingRect(self):
+        return QRectF(0, 0, 25, 25)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
+
+        self._plusIcon.paint(painter, 0, 0, 25, 25)
 
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
@@ -92,18 +111,15 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super(WorldBuildingItemGroup, self).__init__(parent)
-        self._item = WorldBuildingItem()
+        self._item = WorldBuildingItem(self)
         self._item.setIcon(IconRegistry.book_icon('white'))
         self._item.setPos(0, 0)
 
-        self._plusItem = QGraphicsPixmapItem(self)
-        plusIcon = IconRegistry.plus_circle_icon('lightgrey')
-        self._plusItem.setPixmap(plusIcon.pixmap(25, 25))
+        self._plusItem = PlusItem(self)
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 5,
                               self._item.boundingRect().y() + 13)
 
         self._plusItem.setVisible(False)
-        self._item.setParentItem(self)
         self.setAcceptHoverEvents(True)
 
     @overrides
