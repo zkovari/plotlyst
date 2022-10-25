@@ -20,10 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt6.QtCore import Qt, QRectF, QRect
-from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont
+from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget
 from overrides import overrides
+
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
@@ -31,6 +33,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
     def __init__(self, parent=None):
         super(WorldBuildingItem, self).__init__(parent)
         self._text = 'My new world'
+        self._icon: Optional[QIcon] = None
         self._font = QFont('Helvetica', 14)
         self._metrics = QFontMetrics(self._font)
         self._rect = QRect(0, 0, 1, 1)
@@ -41,10 +44,17 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._recalculateRect()
         self.update()
 
+    def setIcon(self, icon: QIcon):
+        self._icon = icon
+        self._recalculateRect()
+        self.update()
+
     def _recalculateRect(self):
         self._rect = self._metrics.boundingRect(self._text)
-        self._rect.setX(self._rect.x() - 10)
-        self._rect.setWidth(self._rect.width() + 10)
+        x_diff = 10
+        icon_diff = 40 if self._icon else 0
+        self._rect.setX(self._rect.x() - x_diff - icon_diff)
+        self._rect.setWidth(self._rect.width() + x_diff)
         self._rect.setY(self._rect.y() - 5)
         self._rect.setHeight(self._rect.height() + 10)
 
@@ -55,6 +65,8 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
         painter.setBrush(QColor('#219ebc'))
         pen = QPen(QColor('#219ebc'), 1)
         painter.setPen(pen)
@@ -63,6 +75,8 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         painter.setPen(Qt.GlobalColor.white)
         painter.setFont(self._font)
         painter.drawText(0, 0, self._text)
+        if self._icon:
+            self._icon.paint(painter, -30, -18, 25, 25)
         painter.end()
 
 
@@ -75,6 +89,7 @@ class WorldBuildingEditor(QGraphicsView):
         self._scene = QGraphicsScene()
 
         item = WorldBuildingItem()
+        item.setIcon(IconRegistry.book_icon('white'))
         self._scene.addItem(item)
 
         self.setScene(self._scene)
