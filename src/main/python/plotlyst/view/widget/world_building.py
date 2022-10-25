@@ -59,6 +59,59 @@ class PlusItem(QAbstractGraphicsShapeItem):
         self.update()
 
 
+class EditItem(QAbstractGraphicsShapeItem):
+    def __init__(self, parent=None):
+        super(EditItem, self).__init__(parent)
+        self._editIcon = IconRegistry.edit_icon('white')
+        self._hovered = False
+        self._pressed = False
+        self.setAcceptHoverEvents(True)
+        pointy(self)
+
+    @overrides
+    def boundingRect(self):
+        return QRectF(0, 0, 20, 20)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
+
+        painter.setPen(Qt.GlobalColor.white)
+        if self._hovered:
+            color = '#52b788'
+        else:
+            color = '#2d6a4f'
+        painter.setBrush(QColor(color))
+        if self._pressed:
+            painter.drawEllipse(0, 0, 19, 19)
+        else:
+            painter.drawEllipse(0, 0, 20, 20)
+        self._editIcon.paint(painter, 1, 1, 18, 18)
+
+    @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        event.accept()
+        self._pressed = True
+        self.update()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self._pressed = False
+        self.update()
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._hovered = True
+        self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._hovered = False
+        self.update()
+
+
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
     def __init__(self, parent=None):
@@ -71,6 +124,10 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._recalculateRect()
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
+
+        self._editItem = EditItem(self)
+        self._editItem.setPos(self._rect.x() + self._rect.width() - 20, self._rect.y() - 5)
+        self._editItem.setVisible(False)
 
     def setText(self, text: str):
         self._text = text
@@ -116,8 +173,17 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         if self._icon:
             self._icon.paint(painter, -30, -18, 25, 25)
 
+    @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         self.setSelected(True)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._editItem.setVisible(True)
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._editItem.setVisible(False)
 
 
 class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
@@ -128,8 +194,8 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._item.setPos(0, 0)
 
         self._plusItem = PlusItem(self)
-        self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 5,
-                              self._item.boundingRect().y() + 13)
+        self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 10,
+                              self._item.boundingRect().y() + 10)
 
         self._plusItem.setVisible(False)
         self.setAcceptHoverEvents(True)
@@ -154,12 +220,13 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
 class WorldBuildingEditorScene(QGraphicsScene):
 
+    @overrides
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         items = self.items(event.scenePos())
-        if items:
-            items[0].setSelected(True)
-        else:
+        if not items:
             self.clearSelection()
+
+        super(WorldBuildingEditorScene, self).mouseReleaseEvent(event)
 
 
 class WorldBuildingEditor(QGraphicsView):
@@ -172,9 +239,6 @@ class WorldBuildingEditor(QGraphicsView):
 
         item = WorldBuildingItemGroup()
         item.setPos(0, 0)
-
-        self._scene.addLine(item.boundingRect().x() + item.boundingRect().width() - 40, item.boundingRect().y() + 15,
-                            400, 400, QPen(Qt.GlobalColor.red, 4))
 
         self._scene.addItem(item)
         item = WorldBuildingItemGroup()

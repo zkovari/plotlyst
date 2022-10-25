@@ -93,8 +93,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.sliders-h')
 
     @staticmethod
-    def edit_icon(color_on: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.pencil', color_on=color_on)
+    def edit_icon(color: str = 'black', color_on: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.pencil', color, color_on=color_on)
 
     @staticmethod
     def plus_edit_icon() -> QIcon:
