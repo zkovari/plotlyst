@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOpt
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent
 from overrides import overrides
 
+from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -33,6 +34,7 @@ class PlusItem(QAbstractGraphicsShapeItem):
         super(PlusItem, self).__init__(parent)
         self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
         self.setAcceptHoverEvents(True)
+        pointy(self)
 
     @overrides
     def boundingRect(self):
@@ -45,6 +47,16 @@ class PlusItem(QAbstractGraphicsShapeItem):
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
 
         self._plusIcon.paint(painter, 0, 0, 25, 25)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._plusIcon = IconRegistry.plus_circle_icon('#457b9d')
+        self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
+        self.update()
 
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
