@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect, QPoint
-from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon
+from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit, \
     QGraphicsLineItem
@@ -291,7 +291,8 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         super(WorldBuildingItemGroup, self).__init__(parent)
         self._entity = entity
         self._childrenEntityItems: List['WorldBuildingItemGroup'] = []
-        self._connecters: List[ConnectorItem] = []
+        self._inputConnector: Optional[ConnectorItem] = None
+        self._outputConnectors: List[ConnectorItem] = []
 
         self._collapseDistance = 30
 
@@ -315,6 +316,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         if self.scene():
             self.worldBuildingScene().rearrangeItems()
 
+    def entityItem(self) -> WorldBuildingItem:
+        return self._item
+
     def _updateConnector(self):
         if self._childrenEntityItems:
             self._collapseItem.setVisible(True)
@@ -332,6 +336,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         self._plusItem.setVisible(True)
 
+    @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._plusItem.setVisible(False)
 
@@ -353,20 +358,27 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._updateConnector()
         self.worldBuildingScene().rearrangeItems()
 
-    def addConnector(self, connector: ConnectorItem):
-        self._connecters.append(connector)
+    def addOutputConnector(self, connector: ConnectorItem):
+        self._outputConnectors.append(connector)
+
+    def setInputConnector(self, connector: ConnectorItem):
+        self._inputConnector = connector
 
     def setChildrenVisible(self, visible: bool):
         for child in self._childrenEntityItems:
             child.setVisible(visible)
 
-        for connector in self._connecters:
+        for connector in self._outputConnectors:
             connector.setVisible(visible)
 
     def worldBuildingScene(self) -> Optional['WorldBuildingEditorScene']:
         scene = self.scene()
         if scene is not None and isinstance(scene, WorldBuildingEditorScene):
             return scene
+
+    def prepareRemove(self):
+        if self._inputConnector is not None:
+            self.worldBuildingScene().removeItem(self._inputConnector)
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
@@ -389,6 +401,14 @@ class WorldBuildingEditorScene(QGraphicsScene):
 
         super(WorldBuildingEditorScene, self).mouseReleaseEvent(event)
 
+    @overrides
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            for item in self.selectedItems():
+                if item is not self._rootItem.entityItem():
+                    item.parentItem().prepareRemove()
+                    self.removeItem(item.parentItem())
+
     def rearrangeItems(self):
         self._rootItem.setPos(0, 0)
         for child in self._rootItem.childrenEntityItems():
@@ -396,7 +416,8 @@ class WorldBuildingEditorScene(QGraphicsScene):
             connector = ConnectorItem(child)
             connector.setPos(self._rootItem.boundingRect().width() + LINE_WIDTH, child.boundingRect().height() // 2 + 3)
             self.addItem(connector)
-            self._rootItem.addConnector(connector)
+            self._rootItem.addOutputConnector(connector)
+            child.setInputConnector(connector)
 
 
 class WorldBuildingEditor(QGraphicsView):
