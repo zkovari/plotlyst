@@ -353,7 +353,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def addChild(self):
         child = WorldBuildingEntity('Entity')
         self._entity.children.append(child)
-        self._childrenEntityItems.append(WorldBuildingItemGroup(child, parent=self))
+        item = WorldBuildingItemGroup(child)
+        self._childrenEntityItems.append(item)
+        self.worldBuildingScene().addItem(item)
 
         self._updateConnector()
         self.worldBuildingScene().rearrangeItems()
