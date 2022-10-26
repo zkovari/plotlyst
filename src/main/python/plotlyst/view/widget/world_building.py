@@ -31,6 +31,29 @@ from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
+class ConnectorItem(QAbstractGraphicsShapeItem):
+
+    def __init__(self, source: QGraphicsItem, target: QGraphicsItem):
+        super(ConnectorItem, self).__init__(target)
+        self._source = source
+        self._target = target
+
+    @overrides
+    def boundingRect(self):
+        # source_pos = self._source.pos()
+        # target_pos = self._target.pos()
+        return QRectF(0, 0, 75, 10)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
+
+        painter.setPen(QPen(QColor('#219ebc'), 4))
+        painter.drawLine(0, 0, 25, 0)
+
+
 class PlusItem(QAbstractGraphicsShapeItem):
     def __init__(self, parent: 'WorldBuildingItemGroup'):
         super(PlusItem, self).__init__(parent)
@@ -276,9 +299,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 10,
                               self._item.boundingRect().y() + 10)
         self._plusItem.setVisible(False)
-        self._updateCollapse()
+        self._updateConnector()
 
-    def _updateCollapse(self):
+    def _updateConnector(self):
         if self._childrenEntityItems:
             self._collapseItem.setVisible(True)
             self._lineItem.setVisible(True)
@@ -312,7 +335,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._entity.children.append(child)
         self._childrenEntityItems.append(WorldBuildingItemGroup(child, parent=self))
 
-        self._updateCollapse()
+        self._updateConnector()
         self.scene().rearrangeItems()
 
     def setChildrenVisible(self, visible: bool):
@@ -344,6 +367,10 @@ class WorldBuildingEditorScene(QGraphicsScene):
         self._rootItem.setPos(0, 0)
         for child in self._rootItem.childrenEntityItems():
             child.setPos(self._rootItem.boundingRect().width() + self._itemHorizontalDistance, self._rootItem.y())
+            connector = ConnectorItem(self._rootItem, child)
+            self.addItem(connector)
+            # connector.setPos(self._rootItem.boundingRect().width() + 20, self._rootItem.y())
+            connector.setPos(-71, -5)
 
 
 class WorldBuildingEditor(QGraphicsView):
