@@ -199,6 +199,8 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._parent = parent
 
         self._icon: Optional[QIcon] = None
+        if entity.icon:
+            self._icon = IconRegistry.from_name(entity.icon, entity.icon_color)
         self._iconSize = 25
         self._iconLeftMargin = 13
         self._font = QFont('Helvetica', 14)
@@ -294,7 +296,6 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._collapseDistance = 30
 
         self._item = WorldBuildingItem(self._entity, parent=self)
-        self._item.setIcon(IconRegistry.book_icon('white'))
         self._item.setPos(0, 0)
 
         self._plusItem = PlusItem(parent=self)

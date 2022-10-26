@@ -37,7 +37,8 @@ class WorldBuildingView(AbstractNovelView):
         self.widget.setPalette(QPalette(Qt.GlobalColor.white))
         vbox(self.widget, 10)
 
-        self._editor = WorldBuildingEditor(WorldBuildingEntity('My new world'))
+        self._editor = WorldBuildingEditor(
+            WorldBuildingEntity('My new world', icon='fa5s.book-open', icon_color='white'))
         self.widget.layout().addWidget(self._editor)
 
     @overrides
