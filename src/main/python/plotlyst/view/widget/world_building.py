@@ -30,19 +30,19 @@ from src.main.python.plotlyst.core.domain import WorldBuildingEntity
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 
+LINE_WIDTH: int = 4
+
 
 class ConnectorItem(QAbstractGraphicsShapeItem):
 
-    def __init__(self, source: QGraphicsItem, target: QGraphicsItem):
-        super(ConnectorItem, self).__init__(target)
-        self._source = source
+    def __init__(self, target: QGraphicsItem):
+        super(ConnectorItem, self).__init__()
         self._target = target
 
     @overrides
     def boundingRect(self):
-        # source_pos = self._source.pos()
-        # target_pos = self._target.pos()
-        return QRectF(0, 0, 75, 10)
+        # TODO fix for curving line
+        return QRectF(0, -LINE_WIDTH / 2, self._target.pos().x() - self.pos().x(), LINE_WIDTH)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -50,8 +50,8 @@ class ConnectorItem(QAbstractGraphicsShapeItem):
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
 
-        painter.setPen(QPen(QColor('#219ebc'), 4))
-        painter.drawLine(0, 0, 25, 0)
+        painter.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
+        painter.drawLine(0, 0, self.boundingRect().width(), 0)
 
 
 class PlusItem(QAbstractGraphicsShapeItem):
@@ -159,14 +159,13 @@ class CollapseItem(QAbstractGraphicsShapeItem):
     def __init__(self, parent: 'WorldBuildingItemGroup'):
         super(CollapseItem, self).__init__(parent)
         self._parent = parent
-        self._penWidth = 4
         self._size = 15
         self._toggled = True
         pointy(self)
 
     @overrides
     def boundingRect(self):
-        return QRectF(0, 0, self._size + self._penWidth * 2, self._size + self._penWidth * 2)
+        return QRectF(0, 0, self._size + LINE_WIDTH * 2, self._size + LINE_WIDTH * 2)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -174,7 +173,7 @@ class CollapseItem(QAbstractGraphicsShapeItem):
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
 
-        painter.setPen(QPen(QColor('#219ebc'), self._penWidth))
+        painter.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
         painter.drawEllipse(0, 0, self._size, self._size)
         if not self._toggled:
             painter.setBrush(QColor('#219ebc'))
@@ -287,6 +286,10 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         super(WorldBuildingItemGroup, self).__init__(parent)
         self._entity = entity
         self._childrenEntityItems: List['WorldBuildingItemGroup'] = []
+        self._connecters: List[ConnectorItem] = []
+
+        self._collapseDistance = 30
+
         self._item = WorldBuildingItem(self._entity, parent=self)
         self._item.setIcon(IconRegistry.book_icon('white'))
         self._item.setPos(0, 0)
@@ -306,16 +309,17 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._plusItem.setVisible(False)
         self._updateConnector()
         if self.scene():
-            self.scene().rearrangeItems()
+            self.worldBuildingScene().rearrangeItems()
 
     def _updateConnector(self):
         if self._childrenEntityItems:
             self._collapseItem.setVisible(True)
             self._lineItem.setVisible(True)
-            self._collapseItem.setPos(self._plusItem.pos().x() + 30, self._plusItem.y() + 4)
-            self._lineItem.setPen(QPen(QColor('#219ebc'), 4))
+            self._collapseItem.setPos(self._plusItem.pos().x() + self._collapseDistance, self._plusItem.y() + 4)
+            self._lineItem.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
             self._lineItem.setLine(self._item.boundingRect().x() + self._item.boundingRect().width(),
-                                   self._plusItem.y() + 12, self._plusItem.pos().x() + 30, self._plusItem.y() + 12)
+                                   self._plusItem.y() + 12, self._plusItem.pos().x() + self._collapseDistance,
+                                   self._plusItem.y() + 12)
         else:
             self._collapseItem.setVisible(False)
             self._lineItem.setVisible(False)
@@ -330,7 +334,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     @overrides
     def boundingRect(self):
         rect_f = QRectF(self._item.boundingRect())
-        rect_f.setWidth(rect_f.width() + 40)
+        rect_f.setWidth(rect_f.width() + self._collapseDistance + self._collapseItem.boundingRect().width())
         return rect_f
 
     @overrides
@@ -343,11 +347,22 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._childrenEntityItems.append(WorldBuildingItemGroup(child, parent=self))
 
         self._updateConnector()
-        self.scene().rearrangeItems()
+        self.worldBuildingScene().rearrangeItems()
+
+    def addConnector(self, connector: ConnectorItem):
+        self._connecters.append(connector)
 
     def setChildrenVisible(self, visible: bool):
         for child in self._childrenEntityItems:
             child.setVisible(visible)
+
+        for connector in self._connecters:
+            connector.setVisible(visible)
+
+    def worldBuildingScene(self) -> Optional['WorldBuildingEditorScene']:
+        scene = self.scene()
+        if scene is not None and isinstance(scene, WorldBuildingEditorScene):
+            return scene
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
@@ -374,10 +389,13 @@ class WorldBuildingEditorScene(QGraphicsScene):
         self._rootItem.setPos(0, 0)
         for child in self._rootItem.childrenEntityItems():
             child.setPos(self._rootItem.boundingRect().width() + self._itemHorizontalDistance, self._rootItem.y())
-            connector = ConnectorItem(self._rootItem, child)
+            connector = ConnectorItem(child)
+            connector.setPos(self._rootItem.boundingRect().width() + LINE_WIDTH, child.boundingRect().height() // 2 + 3)
             self.addItem(connector)
-            # connector.setPos(self._rootItem.boundingRect().width() + 20, self._rootItem.y())
-            connector.setPos(-71, -5)
+            self._rootItem.addConnector(connector)
+            # print(child.pos())
+            # print(child.boundingRect().height())
+            # connector.setPos(-self._itemHorizontalDistance + LINE_WIDTH, child.boundingRect().height() // 2 + 3)
 
 
 class WorldBuildingEditor(QGraphicsView):
