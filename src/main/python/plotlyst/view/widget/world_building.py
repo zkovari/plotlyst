@@ -31,8 +31,9 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class PlusItem(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+    def __init__(self, parent: 'WorldBuildingItemGroup'):
         super(PlusItem, self).__init__(parent)
+        self._parent = parent
         self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
         self.setAcceptHoverEvents(True)
         pointy(self)
@@ -58,6 +59,14 @@ class PlusItem(QAbstractGraphicsShapeItem):
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
         self.update()
+
+    @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        event.accept()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self._parent.addChild()
 
 
 class EditItem(QAbstractGraphicsShapeItem):
@@ -124,7 +133,7 @@ class EditItem(QAbstractGraphicsShapeItem):
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
-    def __init__(self, entity: WorldBuildingEntity, parent=None):
+    def __init__(self, entity: WorldBuildingEntity, parent):
         super(WorldBuildingItem, self).__init__(parent)
         self._entity = entity
 
@@ -242,8 +251,25 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         pass
 
+    def addChild(self):
+        child = WorldBuildingEntity('Entity')
+        self._entity.children.append(child)
+        WorldBuildingItemGroup(child, parent=self)
+
+        self.scene().rearrangeItems()
+
 
 class WorldBuildingEditorScene(QGraphicsScene):
+
+    def __init__(self, entity: WorldBuildingEntity, parent=None):
+        super(WorldBuildingEditorScene, self).__init__(parent)
+        self._root = entity
+        self._itemHorizontalDistance = 40
+
+        self._rootItem = WorldBuildingItemGroup(self._root)
+        self.addItem(self._rootItem)
+
+        self.rearrangeItems()
 
     @overrides
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -253,6 +279,12 @@ class WorldBuildingEditorScene(QGraphicsScene):
 
         super(WorldBuildingEditorScene, self).mouseReleaseEvent(event)
 
+    def rearrangeItems(self):
+        self._rootItem.setPos(0, 0)
+        for child in self._rootItem.childItems():
+            if isinstance(child, WorldBuildingItemGroup):
+                child.setPos(self._rootItem.boundingRect().width() + self._itemHorizontalDistance, self._rootItem.y())
+
 
 class WorldBuildingEditor(QGraphicsView):
     def __init__(self, entity: WorldBuildingEntity, parent=None):
@@ -260,18 +292,7 @@ class WorldBuildingEditor(QGraphicsView):
         self._moveOriginX = 0
         self._moveOriginY = 0
 
-        self._root = entity
-
-        self._scene = WorldBuildingEditorScene()
-
-        item = WorldBuildingItemGroup(self._root)
-        item.setPos(0, 0)
-
-        self._scene.addItem(item)
-        item = WorldBuildingItemGroup(self._root)
-        item.setPos(50, 300)
-        self._scene.addItem(item)
-
+        self._scene = WorldBuildingEditorScene(entity)
         self.setScene(self._scene)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
 

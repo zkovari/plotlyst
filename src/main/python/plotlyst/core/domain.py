@@ -731,6 +731,10 @@ class WorldBuildingEntity:
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
 
 @dataclass
 class StoryStructure(CharacterBased):
