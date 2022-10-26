@@ -59,12 +59,13 @@ class PlusItem(QAbstractGraphicsShapeItem):
         super(PlusItem, self).__init__(parent)
         self._parent = parent
         self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
+        self._iconSize = 25
         self.setAcceptHoverEvents(True)
         pointy(self)
 
     @overrides
     def boundingRect(self):
-        return QRectF(0, 0, 25, 25)
+        return QRectF(0, 0, self._iconSize, self._iconSize)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -72,7 +73,7 @@ class PlusItem(QAbstractGraphicsShapeItem):
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
 
-        self._plusIcon.paint(painter, 0, 0, 25, 25)
+        self._plusIcon.paint(painter, 0, 0, self._iconSize, self._iconSize)
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -198,6 +199,8 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._parent = parent
 
         self._icon: Optional[QIcon] = None
+        self._iconSize = 25
+        self._iconLeftMargin = 13
         self._font = QFont('Helvetica', 14)
         self._metrics = QFontMetrics(self._font)
         self._rect = QRect(0, 0, 1, 1)
@@ -235,13 +238,13 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._textRect = self._metrics.boundingRect(self.text())
         self._textRect.moveTopLeft(QPoint(0, 0))
 
-        x_diff = 10
-        icon_diff = 40 if self._icon else 0
+        margins = 10
+        icon_diff = self._iconSize + self._iconLeftMargin if self._icon else 0
 
-        self._rect = QRect(0, 0, self._textRect.width() + x_diff + icon_diff + self._penWidth * 2,
-                           self._textRect.height() + 10 + self._penWidth * 2)
+        self._rect = QRect(0, 0, self._textRect.width() + margins + icon_diff + self._penWidth * 2,
+                           self._textRect.height() + margins + self._penWidth * 2)
 
-        self._textRect.moveLeft(x_diff / 2 + icon_diff)
+        self._textRect.moveLeft(margins / 2 + icon_diff)
 
     @overrides
     def boundingRect(self):
@@ -266,7 +269,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         painter.setFont(self._font)
         painter.drawText(self._textRect.x(), self._textRect.height(), self.text())
         if self._icon:
-            self._icon.paint(painter, 13, 8, 25, 25)
+            self._icon.paint(painter, self._iconLeftMargin, 8, self._iconSize, self._iconSize)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -393,9 +396,6 @@ class WorldBuildingEditorScene(QGraphicsScene):
             connector.setPos(self._rootItem.boundingRect().width() + LINE_WIDTH, child.boundingRect().height() // 2 + 3)
             self.addItem(connector)
             self._rootItem.addConnector(connector)
-            # print(child.pos())
-            # print(child.boundingRect().height())
-            # connector.setPos(-self._itemHorizontalDistance + LINE_WIDTH, child.boundingRect().height() // 2 + 3)
 
 
 class WorldBuildingEditor(QGraphicsView):
