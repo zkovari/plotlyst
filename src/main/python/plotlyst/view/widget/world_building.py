@@ -17,12 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
-    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit
+    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit, \
+    QGraphicsLineItem
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity
@@ -131,6 +132,42 @@ class EditItem(QAbstractGraphicsShapeItem):
             self._parent.setText(text)
 
 
+class CollapseItem(QAbstractGraphicsShapeItem):
+    def __init__(self, parent: 'WorldBuildingItemGroup'):
+        super(CollapseItem, self).__init__(parent)
+        self._parent = parent
+        self._penWidth = 4
+        self._size = 15
+        self._toggled = True
+        pointy(self)
+
+    @overrides
+    def boundingRect(self):
+        return QRectF(0, 0, self._size + self._penWidth * 2, self._size + self._penWidth * 2)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
+
+        painter.setPen(QPen(QColor('#219ebc'), self._penWidth))
+        painter.drawEllipse(0, 0, self._size, self._size)
+        if not self._toggled:
+            painter.setBrush(QColor('#219ebc'))
+            painter.drawEllipse(6, 6, 3, 3)
+
+    @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        event.accept()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self._toggled = not self._toggled
+        self._parent.setChildrenVisible(self._toggled)
+        self.update()
+
+
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
     def __init__(self, entity: WorldBuildingEntity, parent):
@@ -220,19 +257,38 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingItemGroup, self).__init__(parent)
         self._entity = entity
+        self._childrenEntityItems: List['WorldBuildingItemGroup'] = []
         self._item = WorldBuildingItem(self._entity, parent=self)
         self._item.setIcon(IconRegistry.book_icon('white'))
         self._item.setPos(0, 0)
 
         self._plusItem = PlusItem(parent=self)
+        self._collapseItem = CollapseItem(parent=self)
+        self._lineItem = QGraphicsLineItem(parent=self)
         self.update()
         self.setAcceptHoverEvents(True)
+
+    def childrenEntityItems(self) -> List['WorldBuildingItemGroup']:
+        return self._childrenEntityItems
 
     @overrides
     def update(self, rect: QRectF = ...) -> None:
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 10,
                               self._item.boundingRect().y() + 10)
         self._plusItem.setVisible(False)
+        self._updateCollapse()
+
+    def _updateCollapse(self):
+        if self._childrenEntityItems:
+            self._collapseItem.setVisible(True)
+            self._lineItem.setVisible(True)
+            self._collapseItem.setPos(self._plusItem.pos().x() + 30, self._plusItem.y() + 4)
+            self._lineItem.setPen(QPen(QColor('#219ebc'), 4))
+            self._lineItem.setLine(self._item.boundingRect().x() + self._item.boundingRect().width(),
+                                   self._plusItem.y() + 12, self._plusItem.pos().x() + 30, self._plusItem.y() + 12)
+        else:
+            self._collapseItem.setVisible(False)
+            self._lineItem.setVisible(False)
 
     @overrides
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
@@ -254,9 +310,14 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def addChild(self):
         child = WorldBuildingEntity('Entity')
         self._entity.children.append(child)
-        WorldBuildingItemGroup(child, parent=self)
+        self._childrenEntityItems.append(WorldBuildingItemGroup(child, parent=self))
 
+        self._updateCollapse()
         self.scene().rearrangeItems()
+
+    def setChildrenVisible(self, visible: bool):
+        for child in self._childrenEntityItems:
+            child.setVisible(visible)
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
@@ -281,9 +342,8 @@ class WorldBuildingEditorScene(QGraphicsScene):
 
     def rearrangeItems(self):
         self._rootItem.setPos(0, 0)
-        for child in self._rootItem.childItems():
-            if isinstance(child, WorldBuildingItemGroup):
-                child.setPos(self._rootItem.boundingRect().width() + self._itemHorizontalDistance, self._rootItem.y())
+        for child in self._rootItem.childrenEntityItems():
+            child.setPos(self._rootItem.boundingRect().width() + self._itemHorizontalDistance, self._rootItem.y())
 
 
 class WorldBuildingEditor(QGraphicsView):
