@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import vbox
 
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.widget.world_building import WorldBuildingEditor
 
@@ -37,7 +37,7 @@ class WorldBuildingView(AbstractNovelView):
         self.widget.setPalette(QPalette(Qt.GlobalColor.white))
         vbox(self.widget, 10)
 
-        self._editor = WorldBuildingEditor()
+        self._editor = WorldBuildingEditor(WorldBuildingEntity('My new world'))
         self.widget.layout().addWidget(self._editor)
 
     @overrides

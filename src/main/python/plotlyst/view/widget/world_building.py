@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOpt
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit
 from overrides import overrides
 
+from src.main.python.plotlyst.core.domain import WorldBuildingEntity
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -123,9 +124,10 @@ class EditItem(QAbstractGraphicsShapeItem):
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
-    def __init__(self, parent=None):
+    def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingItem, self).__init__(parent)
-        self._text = 'My new world'
+        self._entity = entity
+
         self._icon: Optional[QIcon] = None
         self._font = QFont('Helvetica', 14)
         self._metrics = QFontMetrics(self._font)
@@ -138,10 +140,10 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self.update()
 
     def text(self) -> str:
-        return self._text
+        return self._entity.name
 
     def setText(self, text: str):
-        self._text = text
+        self._entity.name = text
         self._recalculateRect()
         self.prepareGeometryChange()
         self.parentItem().update()
@@ -159,7 +161,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         super(WorldBuildingItem, self).update()
 
     def _recalculateRect(self):
-        self._rect = self._metrics.boundingRect(self._text)
+        self._rect = self._metrics.boundingRect(self.text())
         x_diff = 10
         icon_diff = 40 if self._icon else 0
         self._rect.setX(self._rect.x() - x_diff - icon_diff)
@@ -188,7 +190,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
         painter.setPen(Qt.GlobalColor.white)
         painter.setFont(self._font)
-        painter.drawText(0, 0, self._text)
+        painter.drawText(0, 0, self.text())
         if self._icon:
             self._icon.paint(painter, -30, -18, 25, 25)
 
@@ -206,13 +208,14 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
 
 class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+    def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingItemGroup, self).__init__(parent)
-        self._item = WorldBuildingItem(self)
+        self._entity = entity
+        self._item = WorldBuildingItem(self._entity, parent=self)
         self._item.setIcon(IconRegistry.book_icon('white'))
         self._item.setPos(0, 0)
 
-        self._plusItem = PlusItem(self)
+        self._plusItem = PlusItem(parent=self)
         self.update()
         self.setAcceptHoverEvents(True)
 
@@ -252,18 +255,20 @@ class WorldBuildingEditorScene(QGraphicsScene):
 
 
 class WorldBuildingEditor(QGraphicsView):
-    def __init__(self, parent=None):
+    def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingEditor, self).__init__(parent)
         self._moveOriginX = 0
         self._moveOriginY = 0
 
+        self._root = entity
+
         self._scene = WorldBuildingEditorScene()
 
-        item = WorldBuildingItemGroup()
+        item = WorldBuildingItemGroup(self._root)
         item.setPos(0, 0)
 
         self._scene.addItem(item)
-        item = WorldBuildingItemGroup()
+        item = WorldBuildingItemGroup(self._root)
         item.setPos(50, 300)
         self._scene.addItem(item)
 
