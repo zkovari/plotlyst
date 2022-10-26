@@ -20,7 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect, QPoint
-from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent
+from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent, \
+    QPainterPath
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit, \
     QGraphicsLineItem
@@ -42,7 +43,8 @@ class ConnectorItem(QAbstractGraphicsShapeItem):
     @overrides
     def boundingRect(self):
         # TODO fix for curving line
-        return QRectF(0, -LINE_WIDTH / 2, self._target.pos().x() - self.pos().x(), LINE_WIDTH)
+
+        return QRectF(0, self._target.pos().y() - LINE_WIDTH / 2, self._target.pos().x() - self.pos().x(), LINE_WIDTH)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -51,7 +53,18 @@ class ConnectorItem(QAbstractGraphicsShapeItem):
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
 
         painter.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
-        painter.drawLine(0, 0, self.boundingRect().width(), 0)
+        target_y = self._target.pos().y()
+        target_h = self._target.boundingRect().height()
+        if target_y - target_h <= self.pos().y() <= target_y + target_h:
+            painter.drawLine(0, 0, self.boundingRect().width(), self._target.pos().y())
+        else:
+            path = QPainterPath()
+            path.lineTo(8, 0)
+            # path.cubicTo(23, -30, 10, -30, 15, -65)
+            path.cubicTo(23, -40, -5, -40, self.boundingRect().width(), self._target.pos().y())
+            # path.cubicTo(5, -75, 15, -65, self.boundingRect().width(), self._target.pos().y())
+            # path.cubicTo(10, -10, 10, -30, 10, -35)
+            painter.drawPath(path)
 
 
 class PlusItem(QAbstractGraphicsShapeItem):
