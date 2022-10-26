@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional, List
 
-from PyQt6.QtCore import Qt, QRectF, QRect
+from PyQt6.QtCore import Qt, QRectF, QRect, QPoint
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit, \
@@ -193,14 +193,17 @@ class CollapseItem(QAbstractGraphicsShapeItem):
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
-    def __init__(self, entity: WorldBuildingEntity, parent):
+    def __init__(self, entity: WorldBuildingEntity, parent: 'WorldBuildingItemGroup'):
         super(WorldBuildingItem, self).__init__(parent)
         self._entity = entity
+        self._parent = parent
 
         self._icon: Optional[QIcon] = None
         self._font = QFont('Helvetica', 14)
         self._metrics = QFontMetrics(self._font)
         self._rect = QRect(0, 0, 1, 1)
+        self._textRect = QRect(0, 0, 1, 1)
+        self._penWidth = 1
         self._recalculateRect()
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.setAcceptHoverEvents(True)
@@ -215,7 +218,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._entity.name = text
         self._recalculateRect()
         self.prepareGeometryChange()
-        self.parentItem().update()
+        self._parent.rearrangeItems()
         self.update()
 
     def setIcon(self, icon: QIcon):
@@ -230,13 +233,16 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         super(WorldBuildingItem, self).update()
 
     def _recalculateRect(self):
-        self._rect = self._metrics.boundingRect(self.text())
+        self._textRect = self._metrics.boundingRect(self.text())
+        self._textRect.moveTopLeft(QPoint(0, 0))
+
         x_diff = 10
         icon_diff = 40 if self._icon else 0
-        self._rect.setX(self._rect.x() - x_diff - icon_diff)
-        self._rect.setWidth(self._rect.width() + x_diff)
-        self._rect.setY(self._rect.y() - 5)
-        self._rect.setHeight(self._rect.height() + 10)
+
+        self._rect = QRect(0, 0, self._textRect.width() + x_diff + icon_diff + self._penWidth * 2,
+                           self._textRect.height() + 10 + self._penWidth * 2)
+
+        self._textRect.moveLeft(x_diff / 2 + icon_diff)
 
     @overrides
     def boundingRect(self):
@@ -249,19 +255,19 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
 
         if self.isSelected():
-            painter.setPen(QPen(Qt.GlobalColor.black, 1, Qt.PenStyle.DashLine))
+            painter.setPen(QPen(Qt.GlobalColor.black, self._penWidth, Qt.PenStyle.DashLine))
             painter.drawRoundedRect(self._rect, 2, 2)
 
         painter.setBrush(QColor('#219ebc'))
-        pen = QPen(QColor('#219ebc'), 1)
+        pen = QPen(QColor('#219ebc'), self._penWidth)
         painter.setPen(pen)
         painter.drawRoundedRect(self._rect, 25, 25)
 
         painter.setPen(Qt.GlobalColor.white)
         painter.setFont(self._font)
-        painter.drawText(0, 0, self.text())
+        painter.drawText(self._textRect.x(), self._textRect.height(), self.text())
         if self._icon:
-            self._icon.paint(painter, -30, -18, 25, 25)
+            self._icon.paint(painter, 13, 8, 25, 25)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -288,18 +294,19 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._plusItem = PlusItem(parent=self)
         self._collapseItem = CollapseItem(parent=self)
         self._lineItem = QGraphicsLineItem(parent=self)
-        self.update()
+        self.rearrangeItems()
         self.setAcceptHoverEvents(True)
 
     def childrenEntityItems(self) -> List['WorldBuildingItemGroup']:
         return self._childrenEntityItems
 
-    @overrides
-    def update(self, rect: QRectF = ...) -> None:
+    def rearrangeItems(self) -> None:
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 10,
                               self._item.boundingRect().y() + 10)
         self._plusItem.setVisible(False)
         self._updateConnector()
+        if self.scene():
+            self.scene().rearrangeItems()
 
     def _updateConnector(self):
         if self._childrenEntityItems:
