@@ -38,7 +38,8 @@ class ConnectorItem(QGraphicsLineItem):
     def __init__(self, source: 'WorldBuildingItemGroup', target: 'WorldBuildingItemGroup'):
         super(ConnectorItem, self).__init__()
         self._target = target
-        self.setPos(source.boundingRect().width() + LINE_WIDTH, target.boundingRect().height() // 2 + 3)
+        self.setPos(source.pos().x() + source.boundingRect().width() + LINE_WIDTH,
+                    target.boundingRect().height() // 2 + 3)
         self.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
         self.rearrange()
         source.addOutputConnector(self)
@@ -411,6 +412,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def setChildrenVisible(self, visible: bool):
         for child in self._childrenEntityItems:
             child.setVisible(visible)
+            child.setChildrenVisible(visible)
 
         for connector in self._outputConnectors:
             connector.setVisible(visible)
@@ -435,6 +437,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
         self._itemVerticalDistance = 70
 
         self._rootItem = WorldBuildingItemGroup(self._root)
+        self._rootItem.setPos(0, 0)
         self.addItem(self._rootItem)
 
         self.rearrangeItems()
@@ -457,13 +460,32 @@ class WorldBuildingEditorScene(QGraphicsScene):
                     self.rearrangeItems()
 
     def rearrangeItems(self):
-        self._rootItem.setPos(0, 0)
-        number = len(self._rootItem.childrenEntityItems())
+        self.rearrangeChildrenItems(self._rootItem)
+        # number = len(self._rootItem.childrenEntityItems())
+        # if number == 0:
+        #     return
+        #
+        # if number == 1:
+        #     self._arrangeChild(self._rootItem, self._rootItem.childrenEntityItems()[0], self._rootItem.y())
+        # else:
+        #     distances = []
+        #     diff_ = number // 2
+        #     if number % 2 == 0:
+        #         for i in range(-number + diff_, number - diff_):
+        #             distances.append(self._itemVerticalDistance * i + self._itemVerticalDistance / 2)
+        #     else:
+        #         for i in range(-number + diff_ + 1, number - diff_):
+        #             distances.append(self._itemVerticalDistance * i)
+        #     for i, child in enumerate(self._rootItem.childrenEntityItems()):
+        #         self._arrangeChild(self._rootItem, child, distances[i])
+
+    def rearrangeChildrenItems(self, parent: WorldBuildingItemGroup):
+        number = len(parent.childrenEntityItems())
         if number == 0:
             return
 
         if number == 1:
-            self._arrangeChild(self._rootItem, self._rootItem.childrenEntityItems()[0], self._rootItem.y())
+            self._arrangeChild(parent, parent.childrenEntityItems()[0], parent.y())
         else:
             distances = []
             diff_ = number // 2
@@ -473,11 +495,14 @@ class WorldBuildingEditorScene(QGraphicsScene):
             else:
                 for i in range(-number + diff_ + 1, number - diff_):
                     distances.append(self._itemVerticalDistance * i)
-            for i, child in enumerate(self._rootItem.childrenEntityItems()):
-                self._arrangeChild(self._rootItem, child, distances[i])
+            for i, child in enumerate(parent.childrenEntityItems()):
+                self._arrangeChild(parent, child, distances[i])
 
-    def _arrangeChild(self, parentItem, child, y):
-        child.setPos(parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
+        for child in parent.childrenEntityItems():
+            self.rearrangeChildrenItems(child)
+
+    def _arrangeChild(self, parentItem: WorldBuildingItemGroup, child: WorldBuildingItemGroup, y: float):
+        child.setPos(parentItem.pos().x() + parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
         if child.inputConnector() is None:
             connector = ConnectorItem(parentItem, child)
             self.addItem(connector)
