@@ -62,6 +62,7 @@ from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
+from src.main.python.plotlyst.view.world_building_view import WorldBuildingView
 
 textstat.sentence_count = sentence_count
 
@@ -211,6 +212,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.characters_view = CharactersView(self.novel)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
         self.locations_view = LocationsView(self.novel)
+        self.world_building_view = WorldBuildingView(self.novel)
         self.comments_view = CommentsView(self.novel)
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
@@ -221,18 +223,22 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnScenes.setIcon(IconRegistry.scene_icon())
         self.btnLocations.setIcon(IconRegistry.location_icon())
+        self.btnWorld.setIcon(IconRegistry.world_building_icon())
         self.btnNotes.setIcon(IconRegistry.document_edition_icon())
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)
         self.pageScenes.layout().addWidget(self.scenes_outline_view.widget)
         self.pageLocations.layout().addWidget(self.locations_view.widget)
+        self.pageWorld.layout().addWidget(self.world_building_view.widget)
         self.pageNotes.layout().addWidget(self.notes_view.widget)
 
         if self.novel.prefs.panels.scenes_view == ScenesView.NOVEL:
             self.btnNovel.setChecked(True)
         elif self.novel.prefs.panels.scenes_view == ScenesView.CHARACTERS:
             self.btnCharacters.setChecked(True)
+        elif self.novel.prefs.panels.scenes_view == ScenesView.WORLD_BUILDING:
+            self.btnWorld.setChecked(True)
         elif self.novel.prefs.panels.scenes_view == ScenesView.LOCATIONS:
             self.btnLocations.setChecked(True)
         elif self.novel.prefs.panels.scenes_view == ScenesView.DOCS:
@@ -262,6 +268,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.stackedWidget.setCurrentWidget(self.pageLocations)
             title = self.locations_view.title
             self.locations_view.activate()
+        elif self.btnWorld.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageWorld)
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
             title = self.notes_view.title
@@ -522,6 +530,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             scenes_view = ScenesView.NOVEL
         elif self.stackedWidget.currentWidget() == self.pageCharacters:
             scenes_view = ScenesView.CHARACTERS
+        elif self.stackedWidget.currentWidget() == self.pageWorld:
+            scenes_view = ScenesView.WORLD_BUILDING
         elif self.stackedWidget.currentWidget() == self.pageLocations:
             scenes_view = ScenesView.LOCATIONS
         elif self.stackedWidget.currentWidget() == self.pageNotes:

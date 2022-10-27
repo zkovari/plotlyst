@@ -49,7 +49,6 @@ class NltkResourceDownloadWorker(QRunnable):
     def run(self) -> None:
         for resource_type in self.resource_types:
             if resource_manager.has_resource(resource_type):
-                print(f'Resource {resource_type.name} is already present. Skip downloading.')
                 continue
             resource = resource_manager.resource(resource_type)
             resource_path = os.path.join(app_env.nltk_data, resource.folder)

@@ -93,8 +93,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.sliders-h')
 
     @staticmethod
-    def edit_icon(color_on: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.pencil', color_on=color_on)
+    def edit_icon(color: str = 'black', color_on: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.pencil', color, color_on=color_on)
 
     @staticmethod
     def plus_edit_icon() -> QIcon:
@@ -135,6 +135,10 @@ class IconRegistry:
     @staticmethod
     def location_icon() -> QIcon:
         return qtawesome.icon('fa5s.map-pin', color_on='darkBlue', options=[{'scale_factor': 1.1}])
+
+    @staticmethod
+    def world_building_icon():
+        return IconRegistry.from_name('mdi.globe-model', color_on='#40916c')
 
     @staticmethod
     def scene_icon() -> QIcon:

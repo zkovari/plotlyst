@@ -723,6 +723,20 @@ class Location:
 
 
 @dataclass
+class WorldBuildingEntity:
+    name: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    children: List['WorldBuildingEntity'] = field(default_factory=list)
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+@dataclass
 class StoryStructure(CharacterBased):
     title: str
     icon: str = ''
@@ -1160,6 +1174,7 @@ class ScenesView(Enum):
     CHARACTERS = 'characters'
     SCENES = 'scenes'
     LOCATIONS = 'locations'
+    WORLD_BUILDING = 'world_building'
     DOCS = 'docs'
 
 
