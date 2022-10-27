@@ -247,6 +247,9 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
     def boundingRect(self):
         return QRectF(self._rect)
 
+    def width(self) -> float:
+        return self.boundingRect().width()
+
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -289,7 +292,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._inputConnector: Optional[ConnectorItem] = None
         self._outputConnectors: List[ConnectorItem] = []
 
-        self._collapseDistance = 30
+        self._collapseDistance = 10
 
         self._item = WorldBuildingItem(self._entity, parent=self)
         self._item.setPos(0, 0)
@@ -297,6 +300,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._plusItem = PlusItem(parent=self)
         self._collapseItem = CollapseItem(parent=self)
         self._lineItem = QGraphicsLineItem(parent=self)
+        self._lineItem.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
         self.rearrangeItems()
         self.setAcceptHoverEvents(True)
 
@@ -308,7 +312,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         return self._childrenEntityItems
 
     def rearrangeItems(self) -> None:
-        self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 10,
+        self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 20,
                               self._item.boundingRect().y() + 10)
         self._plusItem.setVisible(False)
         self._updateConnector()
@@ -325,10 +329,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         if self._childrenEntityItems:
             self._collapseItem.setVisible(True)
             self._lineItem.setVisible(True)
-            self._collapseItem.setPos(self._plusItem.pos().x() + self._collapseDistance, self._plusItem.y() + 4)
-            self._lineItem.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
-            self._lineItem.setLine(self._item.boundingRect().x() + self._item.boundingRect().width(),
-                                   self._plusItem.y() + 12, self._plusItem.pos().x() + self._collapseDistance,
+            self._collapseItem.setPos(self._item.width() + self._collapseDistance, self._plusItem.y() + 4)
+            self._lineItem.setLine(self._item.width(),
+                                   self._plusItem.y() + 12, self._collapseItem.pos().x(),
                                    self._plusItem.y() + 12)
         else:
             self._collapseItem.setVisible(False)
@@ -348,6 +351,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         rect_f.setWidth(rect_f.width() + self._collapseDistance + self._collapseItem.boundingRect().width())
         return rect_f
 
+    def width(self) -> float:
+        return self.boundingRect().width()
+
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         pass
@@ -358,7 +364,6 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         item = self._addChild(entity)
 
         self._updateConnector()
-        self.worldBuildingScene().addItem(item)
         self.worldBuildingScene().rearrangeItems()
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
@@ -459,10 +464,16 @@ class WorldBuildingEditorScene(QGraphicsScene):
     def _arrangeChild(self, parentItem: WorldBuildingItemGroup, child: WorldBuildingItemGroup, y: float):
         child.setPos(parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
         if child.inputConnector() is None:
-            connector = ConnectorItem(parentItem, child)
-            self.addItem(connector)
+            ConnectorItem(parentItem, child)
         else:
             child.inputConnector().rearrange()
+
+        colliding = [x for x in child.collidingItems(Qt.ItemSelectionMode.IntersectsItemBoundingRect) if
+                     isinstance(x, WorldBuildingItemGroup)]
+        if colliding:
+            print(f'child {child.entity().name}')
+            for col in colliding:
+                print(f'collide with {col.entity().name}')
 
 
 class WorldBuildingEditor(QGraphicsView):
