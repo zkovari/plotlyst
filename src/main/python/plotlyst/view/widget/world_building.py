@@ -20,8 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect, QPoint
-from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent, \
-    QPainterPath
+from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit, \
     QGraphicsLineItem
@@ -34,37 +33,46 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 LINE_WIDTH: int = 4
 
 
-class ConnectorItem(QAbstractGraphicsShapeItem):
+class ConnectorItem(QGraphicsLineItem):
 
-    def __init__(self, target: QGraphicsItem):
+    def __init__(self, source: 'WorldBuildingItemGroup', target: 'WorldBuildingItemGroup'):
         super(ConnectorItem, self).__init__()
         self._target = target
+        self.setPos(source.boundingRect().width() + LINE_WIDTH, target.boundingRect().height() // 2 + 3)
+        self.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
+        self.rearrange()
+        source.addOutputConnector(self)
+        target.setInputConnector(self)
 
-    @overrides
-    def boundingRect(self):
-        # TODO fix for curving line
+    def rearrange(self):
+        self.setLine(0, 0, self._target.pos().x() - self.pos().x(), self._target.pos().y())
+    # @overrides
+    # def boundingRect(self):
+    #     return QRectF(0, self._target.pos().y() - LINE_WIDTH / 2, self._target.pos().x() - self.pos().x(),
+    #                   self._target.pos().y() + LINE_WIDTH / 2)
 
-        return QRectF(0, self._target.pos().y() - LINE_WIDTH / 2, self._target.pos().x() - self.pos().x(), LINE_WIDTH)
+    # @overrides
+    # def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    #     painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+    #     painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
+    #
+    #     painter.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
+    #     target_y = self._target.pos().y()
+    #     target_h = self._target.boundingRect().height()
+    # if target_y - target_h <= self.pos().y() <= target_y + target_h:
+    # painter.drawLine(0, 0, self.boundingRect().width(), self._target.pos().y())
+    # else:
+    #     path = QPainterPath()
+    #     path.lineTo(8, 0)
+    # path.cubicTo(23, -30, 10, -30, 15, -65)
 
-    @overrides
-    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
+    # original
+    # path.cubicTo(23, -40, -5, -40, self.boundingRect().width(), self._target.pos().y())
 
-        painter.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
-        target_y = self._target.pos().y()
-        target_h = self._target.boundingRect().height()
-        if target_y - target_h <= self.pos().y() <= target_y + target_h:
-            painter.drawLine(0, 0, self.boundingRect().width(), self._target.pos().y())
-        else:
-            path = QPainterPath()
-            path.lineTo(8, 0)
-            # path.cubicTo(23, -30, 10, -30, 15, -65)
-            path.cubicTo(23, -40, -5, -40, self.boundingRect().width(), self._target.pos().y())
-            # path.cubicTo(5, -75, 15, -65, self.boundingRect().width(), self._target.pos().y())
-            # path.cubicTo(10, -10, 10, -30, 10, -35)
-            painter.drawPath(path)
+    # path.cubicTo(5, -75, 15, -65, self.boundingRect().width(), self._target.pos().y())
+    # path.cubicTo(10, -10, 10, -30, 10, -35)
+    # painter.drawPath(path)
 
 
 class PlusItem(QAbstractGraphicsShapeItem):
@@ -376,6 +384,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def addOutputConnector(self, connector: ConnectorItem):
         self._outputConnectors.append(connector)
 
+    def inputConnector(self) -> Optional[ConnectorItem]:
+        return self._inputConnector
+
     def setInputConnector(self, connector: ConnectorItem):
         self._inputConnector = connector
 
@@ -402,6 +413,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
         super(WorldBuildingEditorScene, self).__init__(parent)
         self._root = entity
         self._itemHorizontalDistance = 40
+        self._itemVerticalDistance = 70
 
         self._rootItem = WorldBuildingItemGroup(self._root)
         self.addItem(self._rootItem)
@@ -426,13 +438,31 @@ class WorldBuildingEditorScene(QGraphicsScene):
 
     def rearrangeItems(self):
         self._rootItem.setPos(0, 0)
-        for child in self._rootItem.childrenEntityItems():
-            child.setPos(self._rootItem.boundingRect().width() + self._itemHorizontalDistance, self._rootItem.y())
-            connector = ConnectorItem(child)
-            connector.setPos(self._rootItem.boundingRect().width() + LINE_WIDTH, child.boundingRect().height() // 2 + 3)
+        number = len(self._rootItem.childrenEntityItems())
+        if number == 0:
+            return
+
+        if number == 1:
+            self._arrangeChild(self._rootItem, self._rootItem.childrenEntityItems()[0], self._rootItem.y())
+        else:
+            distances = []
+            diff_ = number // 2
+            if number % 2 == 0:
+                for i in range(-number + diff_, number - diff_):
+                    distances.append(self._itemVerticalDistance * i + self._itemVerticalDistance / 2)
+            else:
+                for i in range(-number + diff_ + 1, number - diff_):
+                    distances.append(self._itemVerticalDistance * i)
+            for i, child in enumerate(self._rootItem.childrenEntityItems()):
+                self._arrangeChild(self._rootItem, child, distances[i])
+
+    def _arrangeChild(self, parentItem, child, y):
+        child.setPos(parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
+        if child.inputConnector() is None:
+            connector = ConnectorItem(parentItem, child)
             self.addItem(connector)
-            self._rootItem.addOutputConnector(connector)
-            child.setInputConnector(connector)
+        else:
+            child.inputConnector().rearrange()
 
 
 class WorldBuildingEditor(QGraphicsView):
