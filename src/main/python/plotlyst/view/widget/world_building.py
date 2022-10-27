@@ -440,7 +440,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
             return
 
         if number == 1:
-            self._arrangeChild(parent, parent.childrenEntityItems()[0], parent.y())
+            self._arrangeChild(parent, parent.childrenEntityItems()[0], 0)
         else:
             distances = []
             diff_ = number // 2
