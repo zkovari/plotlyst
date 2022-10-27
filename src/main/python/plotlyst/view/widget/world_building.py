@@ -36,17 +36,16 @@ LINE_WIDTH: int = 4
 class ConnectorItem(QGraphicsLineItem):
 
     def __init__(self, source: 'WorldBuildingItemGroup', target: 'WorldBuildingItemGroup'):
-        super(ConnectorItem, self).__init__()
+        super(ConnectorItem, self).__init__(source)
         self._source = source
         self._target = target
         self.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
+        self.setPos(self._source.boundingRect().width() + LINE_WIDTH, self._source.boundingRect().height() // 2 + 3)
         self.rearrange()
         source.addOutputConnector(self)
         target.setInputConnector(self)
 
     def rearrange(self):
-        self.setPos(self._source.pos().x() + self._source.boundingRect().width() + LINE_WIDTH,
-                    self._source.pos().y() + self._target.boundingRect().height() // 2 + 3)
         self.setLine(0, 0, self._target.pos().x() - self.pos().x(), self._target.pos().y())
     # @overrides
     # def boundingRect(self):
@@ -391,7 +390,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self.worldBuildingScene().rearrangeItems()
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
-        item = WorldBuildingItemGroup(entity)
+        item = WorldBuildingItemGroup(entity, self)
         item.setAncestor(self)
         self._childrenEntityItems.append(item)
 
@@ -421,7 +420,6 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def setChildrenVisible(self, visible: bool):
         for child in self._childrenEntityItems:
             child.setVisible(visible)
-            child.setChildrenVisible(visible)
 
         for connector in self._outputConnectors:
             connector.setVisible(visible)
@@ -511,10 +509,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
             self.rearrangeChildrenItems(child)
 
     def _arrangeChild(self, parentItem: WorldBuildingItemGroup, child: WorldBuildingItemGroup, y: float):
-        if child.scene() is None:
-            self.addItem(child)
-
-        child.setPos(parentItem.pos().x() + parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
+        child.setPos(parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
         if child.inputConnector() is None:
             connector = ConnectorItem(parentItem, child)
             self.addItem(connector)
