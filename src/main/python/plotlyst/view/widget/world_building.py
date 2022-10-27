@@ -113,7 +113,7 @@ class PlusItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        self._parent.addChild()
+        self._parent.addNewChild()
 
 
 class EditItem(QAbstractGraphicsShapeItem):
@@ -328,6 +328,10 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self.rearrangeItems()
         self.setAcceptHoverEvents(True)
 
+        for child_entity in self._entity.children:
+            self._addChild(child_entity)
+        self._updateConnector()
+
     def childrenEntityItems(self) -> List['WorldBuildingItemGroup']:
         return self._childrenEntityItems
 
@@ -376,17 +380,21 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         pass
 
-    def addChild(self):
+    def addNewChild(self):
         entity = WorldBuildingEntity('Entity')
         self._entity.children.append(entity)
+        item = self._addChild(entity)
 
+        self._updateConnector()
+        self.worldBuildingScene().addItem(item)
+        self.worldBuildingScene().rearrangeItems()
+
+    def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
         item = WorldBuildingItemGroup(entity)
         item.setAncestor(self)
         self._childrenEntityItems.append(item)
-        self.worldBuildingScene().addItem(item)
 
-        self._updateConnector()
-        self.worldBuildingScene().rearrangeItems()
+        return item
 
     def removeChild(self, child: 'WorldBuildingItemGroup'):
         if child in self._childrenEntityItems:
@@ -502,6 +510,9 @@ class WorldBuildingEditorScene(QGraphicsScene):
             self.rearrangeChildrenItems(child)
 
     def _arrangeChild(self, parentItem: WorldBuildingItemGroup, child: WorldBuildingItemGroup, y: float):
+        if child.scene() is None:
+            self.addItem(child)
+
         child.setPos(parentItem.pos().x() + parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
         if child.inputConnector() is None:
             connector = ConnectorItem(parentItem, child)
