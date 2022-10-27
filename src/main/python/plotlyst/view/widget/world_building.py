@@ -37,15 +37,16 @@ class ConnectorItem(QGraphicsLineItem):
 
     def __init__(self, source: 'WorldBuildingItemGroup', target: 'WorldBuildingItemGroup'):
         super(ConnectorItem, self).__init__()
+        self._source = source
         self._target = target
-        self.setPos(source.pos().x() + source.boundingRect().width() + LINE_WIDTH,
-                    target.boundingRect().height() // 2 + 3)
         self.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
         self.rearrange()
         source.addOutputConnector(self)
         target.setInputConnector(self)
 
     def rearrange(self):
+        self.setPos(self._source.pos().x() + self._source.boundingRect().width() + LINE_WIDTH,
+                    self._source.pos().y() + self._target.boundingRect().height() // 2 + 3)
         self.setLine(0, 0, self._target.pos().x() - self.pos().x(), self._target.pos().y())
     # @overrides
     # def boundingRect(self):
