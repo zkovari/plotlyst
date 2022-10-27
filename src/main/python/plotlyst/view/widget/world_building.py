@@ -314,6 +314,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._childrenEntityItems: List['WorldBuildingItemGroup'] = []
         self._inputConnector: Optional[ConnectorItem] = None
         self._outputConnectors: List[ConnectorItem] = []
+        self._ancestor: Optional['WorldBuildingItemGroup'] = None
 
         self._collapseDistance = 30
 
@@ -372,14 +373,20 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         pass
 
     def addChild(self):
-        child = WorldBuildingEntity('Entity')
-        self._entity.children.append(child)
-        item = WorldBuildingItemGroup(child)
+        entity = WorldBuildingEntity('Entity')
+        self._entity.children.append(entity)
+
+        item = WorldBuildingItemGroup(entity)
+        item.setAncestor(self)
         self._childrenEntityItems.append(item)
         self.worldBuildingScene().addItem(item)
 
         self._updateConnector()
         self.worldBuildingScene().rearrangeItems()
+
+    def removeChild(self, child: 'WorldBuildingItemGroup'):
+        if child in self._childrenEntityItems:
+            self._childrenEntityItems.remove(child)
 
     def addOutputConnector(self, connector: ConnectorItem):
         self._outputConnectors.append(connector)
@@ -389,6 +396,12 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
     def setInputConnector(self, connector: ConnectorItem):
         self._inputConnector = connector
+
+    def ancestor(self) -> Optional['WorldBuildingItemGroup']:
+        return self._ancestor
+
+    def setAncestor(self, ancestor: 'WorldBuildingItemGroup'):
+        self._ancestor = ancestor
 
     def setChildrenVisible(self, visible: bool):
         for child in self._childrenEntityItems:
@@ -405,6 +418,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def prepareRemove(self):
         if self._inputConnector is not None:
             self.worldBuildingScene().removeItem(self._inputConnector)
+            self.ancestor().removeChild(self)
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
@@ -435,6 +449,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
                 if item is not self._rootItem.entityItem():
                     item.parentItem().prepareRemove()
                     self.removeItem(item.parentItem())
+                    self.rearrangeItems()
 
     def rearrangeItems(self):
         self._rootItem.setPos(0, 0)
