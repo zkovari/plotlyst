@@ -47,33 +47,6 @@ class ConnectorItem(QGraphicsLineItem):
 
     def rearrange(self):
         self.setLine(0, 0, self._target.pos().x() - self.pos().x(), self._target.pos().y())
-    # @overrides
-    # def boundingRect(self):
-    #     return QRectF(0, self._target.pos().y() - LINE_WIDTH / 2, self._target.pos().x() - self.pos().x(),
-    #                   self._target.pos().y() + LINE_WIDTH / 2)
-
-    # @overrides
-    # def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-    #     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    #     painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-    #     painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
-    #
-    #     painter.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
-    #     target_y = self._target.pos().y()
-    #     target_h = self._target.boundingRect().height()
-    # if target_y - target_h <= self.pos().y() <= target_y + target_h:
-    # painter.drawLine(0, 0, self.boundingRect().width(), self._target.pos().y())
-    # else:
-    #     path = QPainterPath()
-    #     path.lineTo(8, 0)
-    # path.cubicTo(23, -30, 10, -30, 15, -65)
-
-    # original
-    # path.cubicTo(23, -40, -5, -40, self.boundingRect().width(), self._target.pos().y())
-
-    # path.cubicTo(5, -75, 15, -65, self.boundingRect().width(), self._target.pos().y())
-    # path.cubicTo(10, -10, 10, -30, 10, -35)
-    # painter.drawPath(path)
 
 
 class PlusItem(QAbstractGraphicsShapeItem):
@@ -315,7 +288,6 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._childrenEntityItems: List['WorldBuildingItemGroup'] = []
         self._inputConnector: Optional[ConnectorItem] = None
         self._outputConnectors: List[ConnectorItem] = []
-        self._ancestor: Optional['WorldBuildingItemGroup'] = None
 
         self._collapseDistance = 30
 
@@ -391,7 +363,6 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
         item = WorldBuildingItemGroup(entity, self)
-        item.setAncestor(self)
         self._childrenEntityItems.append(item)
 
         return item
@@ -411,12 +382,6 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def setInputConnector(self, connector: ConnectorItem):
         self._inputConnector = connector
 
-    def ancestor(self) -> Optional['WorldBuildingItemGroup']:
-        return self._ancestor
-
-    def setAncestor(self, ancestor: 'WorldBuildingItemGroup'):
-        self._ancestor = ancestor
-
     def setChildrenVisible(self, visible: bool):
         for child in self._childrenEntityItems:
             child.setVisible(visible)
@@ -432,7 +397,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def prepareRemove(self):
         if self._inputConnector is not None:
             self.worldBuildingScene().removeItem(self._inputConnector)
-            self.ancestor().removeChild(self)
+            self.parentItem().removeChild(self)
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
