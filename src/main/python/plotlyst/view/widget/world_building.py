@@ -433,23 +433,6 @@ class WorldBuildingEditorScene(QGraphicsScene):
 
     def rearrangeItems(self):
         self.rearrangeChildrenItems(self._rootItem)
-        # number = len(self._rootItem.childrenEntityItems())
-        # if number == 0:
-        #     return
-        #
-        # if number == 1:
-        #     self._arrangeChild(self._rootItem, self._rootItem.childrenEntityItems()[0], self._rootItem.y())
-        # else:
-        #     distances = []
-        #     diff_ = number // 2
-        #     if number % 2 == 0:
-        #         for i in range(-number + diff_, number - diff_):
-        #             distances.append(self._itemVerticalDistance * i + self._itemVerticalDistance / 2)
-        #     else:
-        #         for i in range(-number + diff_ + 1, number - diff_):
-        #             distances.append(self._itemVerticalDistance * i)
-        #     for i, child in enumerate(self._rootItem.childrenEntityItems()):
-        #         self._arrangeChild(self._rootItem, child, distances[i])
 
     def rearrangeChildrenItems(self, parent: WorldBuildingItemGroup):
         number = len(parent.childrenEntityItems())
