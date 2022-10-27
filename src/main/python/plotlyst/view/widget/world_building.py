@@ -338,6 +338,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         if self.scene():
             self.worldBuildingScene().rearrangeItems()
 
+    def entity(self) -> WorldBuildingEntity:
+        return self._entity
+
     def entityItem(self) -> WorldBuildingItem:
         return self._item
 
@@ -387,6 +390,8 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def removeChild(self, child: 'WorldBuildingItemGroup'):
         if child in self._childrenEntityItems:
             self._childrenEntityItems.remove(child)
+            self._entity.children.remove(child.entity())
+            self._updateConnector()
 
     def addOutputConnector(self, connector: ConnectorItem):
         self._outputConnectors.append(connector)
