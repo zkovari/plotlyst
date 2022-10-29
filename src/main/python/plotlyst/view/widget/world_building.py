@@ -367,7 +367,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self.worldBuildingScene().rearrangeItems()
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
-        item = WorldBuildingItemGroup(entity, self)
+        item = WorldBuildingItemGroup(entity)
         self._childrenEntityItems.append(item)
 
         return item
@@ -465,6 +465,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
         child.setPos(parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
         if child.inputConnector() is None:
             ConnectorItem(parentItem, child)
+            child.setParentItem(parentItem)
         else:
             child.inputConnector().rearrange()
 
