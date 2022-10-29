@@ -472,9 +472,19 @@ class WorldBuildingEditorScene(QGraphicsScene):
         colliding = [x for x in child.collidingItems(Qt.ItemSelectionMode.IntersectsItemBoundingRect) if
                      isinstance(x, WorldBuildingItemGroup)]
         if colliding:
-            print(f'child {child.entity().name}')
             for col in colliding:
-                print(f'collide with {col.entity().name}')
+                overlap = child.mapRectToScene(child.boundingRect()).intersected(
+                    col.mapRectToScene(col.boundingRect())).height()
+                common_ancestor = child.commonAncestorItem(col)
+                self._moveChildren(common_ancestor, overlap)
+
+    def _moveChildren(self, parent: WorldBuildingItemGroup, overlap: float):
+        for child in parent.childrenEntityItems():
+            if child.pos().y() >= 0:
+                child.moveBy(0, overlap)
+            else:
+                child.moveBy(0, -overlap)
+            child.inputConnector().rearrange()
 
 
 class WorldBuildingEditor(QGraphicsView):
