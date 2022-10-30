@@ -368,7 +368,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def addNewChild(self):
         entity = WorldBuildingEntity('Entity')
         self._entity.children.append(entity)
-        item = self._addChild(entity)
+        self._addChild(entity)
 
         self._updateConnector()
         self.worldBuildingScene().rearrangeItems()
@@ -417,8 +417,8 @@ class WorldBuildingEditorScene(QGraphicsScene):
     def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingEditorScene, self).__init__(parent)
         self._root = entity
-        self._itemHorizontalDistance = 40
-        self._itemVerticalDistance = 70
+        self._itemHorizontalDistance = 20
+        self._itemVerticalDistance = 80
 
         self._rootItem = WorldBuildingItemGroup(self._root)
         self._rootItem.setPos(0, 0)
@@ -488,9 +488,9 @@ class WorldBuildingEditorScene(QGraphicsScene):
     def _moveChildren(self, parent: WorldBuildingItemGroup, overlap: float):
         for child in parent.childrenEntityItems():
             if child.pos().y() >= 0:
-                child.moveBy(0, overlap)
+                child.moveBy(0, overlap + self._itemVerticalDistance / 2)
             else:
-                child.moveBy(0, -overlap)
+                child.moveBy(0, -overlap - self._itemVerticalDistance / 2)
             child.inputConnector().rearrange()
 
 
