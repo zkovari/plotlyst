@@ -38,9 +38,11 @@ class ConnectorItem(QGraphicsLineItem):
     def __init__(self, source: 'WorldBuildingItemGroup', target: 'WorldBuildingItemGroup'):
         super(ConnectorItem, self).__init__(source)
         self._source = source
+        self._collapseItem = source.collapseItem()
         self._target = target
         self.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
-        self.setPos(self._source.boundingRect().width() + LINE_WIDTH, self._source.boundingRect().height() // 2 + 3)
+        self.setPos(self._collapseItem.pos().x() + self._collapseItem.boundingRect().width() - LINE_WIDTH - 1,
+                    self._source.boundingRect().center().y() + LINE_WIDTH / 2)
         self.rearrange()
         source.addOutputConnector(self)
         target.setInputConnector(self)
@@ -162,6 +164,9 @@ class CollapseItem(QAbstractGraphicsShapeItem):
     @overrides
     def boundingRect(self):
         return QRectF(0, 0, self._size + LINE_WIDTH * 2, self._size + LINE_WIDTH * 2)
+
+    def radius(self) -> float:
+        return self.boundingRect().height() / 2
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
@@ -325,14 +330,16 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def entityItem(self) -> WorldBuildingItem:
         return self._item
 
+    def collapseItem(self) -> CollapseItem:
+        return self._collapseItem
+
     def _updateConnector(self):
         if self._childrenEntityItems:
             self._collapseItem.setVisible(True)
             self._lineItem.setVisible(True)
             self._collapseItem.setPos(self._item.width() + self._collapseDistance, self._plusItem.y() + 4)
-            self._lineItem.setLine(self._item.width(),
-                                   self._plusItem.y() + 12, self._collapseItem.pos().x(),
-                                   self._plusItem.y() + 12)
+            line_y = self._collapseItem.y() + self._collapseItem.radius() - LINE_WIDTH
+            self._lineItem.setLine(self._item.width(), line_y, self._collapseItem.pos().x(), line_y)
         else:
             self._collapseItem.setVisible(False)
             self._lineItem.setVisible(False)
