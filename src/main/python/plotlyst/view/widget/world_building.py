@@ -41,11 +41,14 @@ class ConnectorItem(QGraphicsLineItem):
         self._collapseItem = source.collapseItem()
         self._target = target
         self.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
+        self.updatePos()
+        source.addOutputConnector(self)
+        target.setInputConnector(self)
+
+    def updatePos(self):
         self.setPos(self._collapseItem.pos().x() + self._collapseItem.boundingRect().width() - LINE_WIDTH - 1,
                     self._source.boundingRect().center().y() + LINE_WIDTH / 2)
         self.rearrange()
-        source.addOutputConnector(self)
-        target.setInputConnector(self)
 
     def rearrange(self):
         self.setLine(0, 0, self._target.pos().x() - self.pos().x(), self._target.pos().y())
@@ -311,7 +314,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
         for child_entity in self._entity.children:
             self._addChild(child_entity)
-        self._updateConnector()
+        self._updateCollapse()
 
     def childrenEntityItems(self) -> List['WorldBuildingItemGroup']:
         return self._childrenEntityItems
@@ -320,9 +323,11 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 20,
                               self._item.boundingRect().y() + 10)
         self._plusItem.setVisible(False)
-        self._updateConnector()
+        self._updateCollapse()
         if self.scene():
             self.worldBuildingScene().rearrangeItems()
+        for connector in self._outputConnectors:
+            connector.updatePos()
 
     def entity(self) -> WorldBuildingEntity:
         return self._entity
@@ -333,7 +338,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def collapseItem(self) -> CollapseItem:
         return self._collapseItem
 
-    def _updateConnector(self):
+    def _updateCollapse(self):
         if self._childrenEntityItems:
             self._collapseItem.setVisible(True)
             self._lineItem.setVisible(True)
@@ -370,7 +375,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._entity.children.append(entity)
         self._addChild(entity)
 
-        self._updateConnector()
+        self._updateCollapse()
         self.worldBuildingScene().rearrangeItems()
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
@@ -383,7 +388,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         if child in self._childrenEntityItems:
             self._childrenEntityItems.remove(child)
             self._entity.children.remove(child.entity())
-            self._updateConnector()
+            self._updateCollapse()
 
     def addOutputConnector(self, connector: ConnectorItem):
         self._outputConnectors.append(connector)
