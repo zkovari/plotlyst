@@ -119,6 +119,7 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
 
         self._item: Optional['WorldBuildingItem'] = None
         self.lineName.textEdited.connect(self._nameEdited)
+        self._iconPicker.iconSelected.connect(self._iconSelected)
 
     def setItem(self, item: 'WorldBuildingItem'):
         self._item = item
@@ -135,6 +136,12 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         if self._item is None or not text:
             return
         self._item.setText(text)
+
+    def _iconSelected(self, icon: str, color: QColor):
+        if self._item is None:
+            return
+
+        self._item.setIcon(IconRegistry.from_name(icon, color.name()))
 
 
 class WorldBuildingItemEditor(QMenu):
@@ -295,6 +302,8 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
     def setIcon(self, icon: QIcon):
         self._icon = icon
         self._recalculateRect()
+        self.prepareGeometryChange()
+        self._parent.rearrangeItems()
         self.update()
 
     @overrides
