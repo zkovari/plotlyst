@@ -511,14 +511,14 @@ class WorldBuildingEditor(QGraphicsView):
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.MouseButton.MiddleButton:
+        if event.button() == Qt.MouseButton.MiddleButton or event.button() == Qt.MouseButton.LeftButton:
             self._moveOriginX = event.pos().x()
             self._moveOriginY = event.pos().y()
         super(WorldBuildingEditor, self).mousePressEvent(event)
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if event.buttons() & Qt.MouseButton.MiddleButton:
+        if event.buttons() & Qt.MouseButton.MiddleButton or event.buttons() & Qt.MouseButton.LeftButton:
             oldPoint = self.mapToScene(self._moveOriginX, self._moveOriginY)
             newPoint = self.mapToScene(event.pos())
             translation = newPoint - oldPoint
