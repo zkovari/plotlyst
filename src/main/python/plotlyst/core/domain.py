@@ -729,6 +729,7 @@ class WorldBuildingEntity:
     children: List['WorldBuildingEntity'] = field(default_factory=list)
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    emoji: str = field(default='', metadata=config(exclude=exclude_if_empty))
     bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
