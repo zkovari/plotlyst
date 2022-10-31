@@ -20,10 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect, QPoint, pyqtSignal
-from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent
+from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent, \
+    QPainterPath
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
-    QMenu, QTabWidget, QWidgetAction
+    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity
@@ -36,7 +37,7 @@ from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelect
 LINE_WIDTH: int = 4
 
 
-class ConnectorItem(QGraphicsLineItem):
+class ConnectorItem(QGraphicsPathItem):
 
     def __init__(self, source: 'WorldBuildingItemGroup', target: 'WorldBuildingItemGroup'):
         super(ConnectorItem, self).__init__(source)
@@ -54,7 +55,17 @@ class ConnectorItem(QGraphicsLineItem):
         self.rearrange()
 
     def rearrange(self):
-        self.setLine(0, 0, self._target.pos().x() - self.pos().x(), self._target.pos().y())
+        path = QPainterPath()
+        target_x = self._target.pos().x() - self.pos().x()
+        target_y = self._target.pos().y()
+        if self._target.pos().y() < 0:
+            path.quadTo(0, target_y / 2, target_x, target_y)
+        elif self._target.pos().y() > 0:
+            path.quadTo(0, target_y / 2, target_x, target_y)
+        else:
+            path.lineTo(target_x, target_y)
+
+        self.setPath(path)
 
 
 class PlusItem(QAbstractGraphicsShapeItem):
@@ -72,10 +83,6 @@ class PlusItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
-
         self._plusIcon.paint(painter, 0, 0, self._iconSize, self._iconSize)
 
     @overrides
@@ -177,10 +184,6 @@ class EditItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
-
         painter.setPen(Qt.GlobalColor.white)
         if self._hovered:
             color = '#b100e8'
@@ -236,10 +239,6 @@ class CollapseItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
-
         painter.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
         painter.drawEllipse(0, 0, self._size, self._size)
         if not self._toggled:
@@ -348,10 +347,6 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        painter.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
-
         if self.isSelected():
             painter.setPen(QPen(Qt.GlobalColor.black, self._penWidth, Qt.PenStyle.DashLine))
             painter.drawRoundedRect(self._rect, 2, 2)
@@ -601,11 +596,14 @@ class WorldBuildingEditor(QGraphicsView):
         super(WorldBuildingEditor, self).__init__(parent)
         self._moveOriginX = 0
         self._moveOriginY = 0
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        self.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
 
         self._scene = WorldBuildingEditorScene(entity)
         self.setScene(self._scene)
         self._scene.editItemRequested.connect(self._editItem)
-        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
 
         self._itemEditor = WorldBuildingItemEditor(self)
 
