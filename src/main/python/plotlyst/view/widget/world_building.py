@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOpt
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
     QMenu, QTabWidget, QWidgetAction
 from overrides import overrides
+from qthandy import vspacer
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity
 from src.main.python.plotlyst.view.common import pointy
@@ -103,6 +104,7 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self.setupUi(self)
         self._colorPicker = ColorPicker(self)
         self.tabMain.layout().addWidget(self._colorPicker)
+        self.tabMain.layout().addWidget(vspacer())
 
         self._iconPicker = IconSelectorWidget(self)
         self.tabIcons.layout().addWidget(self._iconPicker)
@@ -584,5 +586,5 @@ class WorldBuildingEditor(QGraphicsView):
             self.scale(1 + scale, 1 + scale)
 
     def _editItem(self, item: WorldBuildingItem):
-        view_pos = self.mapFromScene(item.scenePos())
+        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
         self._itemEditor.edit(item, self.mapToGlobal(view_pos))
