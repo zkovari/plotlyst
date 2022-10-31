@@ -319,6 +319,10 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self.setSelected(True)
 
     @overrides
+    def mouseDoubleClickEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self.scene().editItem(self)
+
+    @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._editItem.setVisible(True)
 
