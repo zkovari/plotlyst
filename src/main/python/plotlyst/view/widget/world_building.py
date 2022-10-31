@@ -246,9 +246,16 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._entity = entity
         self._parent = parent
 
+        if entity.icon_color:
+            self._textColor = entity.icon_color
+        elif entity.bg_color:
+            self._textColor = 'white'
+        else:
+            self._textColor = 'black'
+
         self._icon: Optional[QIcon] = None
         if entity.icon:
-            self._icon = IconRegistry.from_name(entity.icon, entity.icon_color)
+            self._icon = IconRegistry.from_name(entity.icon, self._textColor)
         self._iconSize = 25
         self._iconLeftMargin = 13
         self._font = QFont('Helvetica', 14)
@@ -316,12 +323,13 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
             painter.setPen(QPen(Qt.GlobalColor.black, self._penWidth, Qt.PenStyle.DashLine))
             painter.drawRoundedRect(self._rect, 2, 2)
 
-        painter.setBrush(QColor('#219ebc'))
-        pen = QPen(QColor('#219ebc'), self._penWidth)
-        painter.setPen(pen)
-        painter.drawRoundedRect(self._rect, 25, 25)
+        if self._entity.bg_color:
+            painter.setBrush(QColor(self._entity.bg_color))
+            pen = QPen(QColor('#219ebc'), self._penWidth)
+            painter.setPen(pen)
+            painter.drawRoundedRect(self._rect, 25, 25)
 
-        painter.setPen(Qt.GlobalColor.white)
+        painter.setPen(QColor(self._textColor))
         painter.setFont(self._font)
         painter.drawText(self._textRect.x(), self._textRect.height(), self.text())
         if self._icon:
