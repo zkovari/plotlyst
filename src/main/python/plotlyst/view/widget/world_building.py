@@ -633,7 +633,7 @@ class WorldBuildingEditor(QGraphicsView):
         super(WorldBuildingEditor, self).wheelEvent(event)
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
             diff = event.angleDelta().y()
-            scale = (diff // 120) / 10
+            scale = diff / 1200
             self.scale(1 + scale, 1 + scale)
 
     def _editItem(self, item: WorldBuildingItem):
