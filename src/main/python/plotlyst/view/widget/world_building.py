@@ -332,9 +332,10 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
         margins = 10
         icon_diff = self._iconSize + self._iconLeftMargin if self._icon else 0
+        y_surplus = self._iconSize - self._textRect.height() if self._textRect.height() < self._iconSize else 0
 
         self._rect = QRect(0, 0, self._textRect.width() + margins + icon_diff + self._penWidth * 2,
-                           self._textRect.height() + margins + self._penWidth * 2)
+                           self._textRect.height() + margins + self._penWidth * 2 + y_surplus)
 
         self._textRect.moveLeft(margins / 2 + icon_diff)
 
