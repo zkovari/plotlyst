@@ -19,16 +19,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional, List
 
-from PyQt6.QtCore import Qt, QRectF, QRect, QPoint
+from PyQt6.QtCore import Qt, QRectF, QRect, QPoint, pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
-    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit, \
-    QGraphicsLineItem
+    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
+    QMenu, QTabWidget, QWidgetAction
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity
 from src.main.python.plotlyst.view.common import pointy
+from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.input import TextEditBase
+from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelectorWidget
 
 LINE_WIDTH: int = 4
 
@@ -94,6 +97,41 @@ class PlusItem(QAbstractGraphicsShapeItem):
         self._parent.addNewChild()
 
 
+class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
+    def __init__(self, parent=None):
+        super(_WorldBuildingItemEditorWidget, self).__init__(parent)
+        self.setupUi(self)
+        self._colorPicker = ColorPicker(self)
+        self.tabMain.layout().addWidget(self._colorPicker)
+
+        self._iconPicker = IconSelectorWidget(self)
+        self.tabIcons.layout().addWidget(self._iconPicker)
+
+        self._notes = TextEditBase(self)
+        self.tabNotes.layout().addWidget(self._notes)
+
+    def setItem(self, item: 'WorldBuildingItem'):
+        self.lineName.setText(item.text())
+
+    @overrides
+    def mousePressEvent(self, a0: QMouseEvent) -> None:
+        pass
+
+
+class WorldBuildingItemEditor(QMenu):
+    def __init__(self, parent=None):
+        super(WorldBuildingItemEditor, self).__init__(parent)
+
+        action = QWidgetAction(self)
+        self._itemEditor = _WorldBuildingItemEditorWidget()
+        action.setDefaultWidget(self._itemEditor)
+        self.addAction(action)
+
+    def edit(self, item: 'WorldBuildingItem', pos: QPoint):
+        self._itemEditor.setItem(item)
+        self.popup(pos)
+
+
 class EditItem(QAbstractGraphicsShapeItem):
 
     def __init__(self, parent: 'WorldBuildingItem'):
@@ -150,10 +188,7 @@ class EditItem(QAbstractGraphicsShapeItem):
         self.update()
 
     def _edit(self):
-        text, ok = QInputDialog.getText(self.scene().views()[0], 'Edit', 'Edit text', QLineEdit.EchoMode.Normal,
-                                        self._parent.text())
-        if ok:
-            self._parent.setText(text)
+        self.scene().editItem(self._parent)
 
 
 class CollapseItem(QAbstractGraphicsShapeItem):
@@ -418,6 +453,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
+    editItemRequested = pyqtSignal(WorldBuildingItem)
 
     def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingEditorScene, self).__init__(parent)
@@ -447,6 +483,9 @@ class WorldBuildingEditorScene(QGraphicsScene):
                     item.parentItem().prepareRemove()
                     self.removeItem(item.parentItem())
                     self.rearrangeItems()
+
+    def editItem(self, item: WorldBuildingItem):
+        self.editItemRequested.emit(item)
 
     def rearrangeItems(self):
         self.rearrangeChildrenItems(self._rootItem)
@@ -507,7 +546,10 @@ class WorldBuildingEditor(QGraphicsView):
 
         self._scene = WorldBuildingEditorScene(entity)
         self.setScene(self._scene)
+        self._scene.editItemRequested.connect(self._editItem)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
+
+        self._itemEditor = WorldBuildingItemEditor(self)
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -536,3 +578,7 @@ class WorldBuildingEditor(QGraphicsView):
             diff = event.angleDelta().y()
             scale = (diff // 120) / 10
             self.scale(1 + scale, 1 + scale)
+
+    def _editItem(self, item: WorldBuildingItem):
+        view_pos = self.mapFromScene(item.scenePos())
+        self._itemEditor.edit(item, self.mapToGlobal(view_pos))
