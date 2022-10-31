@@ -117,7 +117,11 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
 
         self.setCurrentWidget(self.tabMain)
 
+        self._item: Optional['WorldBuildingItem'] = None
+        self.lineName.textEdited.connect(self._nameEdited)
+
     def setItem(self, item: 'WorldBuildingItem'):
+        self._item = item
         self.lineName.setText(item.text())
         self.lineName.setFocus()
 
@@ -126,6 +130,11 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
     @overrides
     def mousePressEvent(self, a0: QMouseEvent) -> None:
         pass
+
+    def _nameEdited(self, text: str):
+        if self._item is None or not text:
+            return
+        self._item.setText(text)
 
 
 class WorldBuildingItemEditor(QMenu):
