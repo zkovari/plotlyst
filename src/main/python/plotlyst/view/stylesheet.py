@@ -223,7 +223,6 @@ QTabBar::tab:bottom:!selected {
 }
 
 QTabBar::tab:top, QTabBar::tab:bottom {
-    min-width: 8ex;
     margin-right: -1px;
     padding: 5px 10px 5px 10px;
 }
