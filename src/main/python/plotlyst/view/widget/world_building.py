@@ -25,10 +25,9 @@ from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOpt
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
     QMenu, QTabWidget, QWidgetAction
 from overrides import overrides
-from qthandy import vspacer
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity
-from src.main.python.plotlyst.view.common import pointy
+from src.main.python.plotlyst.view.common import pointy, set_tab_icon
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import TextEditBase
@@ -103,17 +102,26 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         super(_WorldBuildingItemEditorWidget, self).__init__(parent)
         self.setupUi(self)
         self._colorPicker = ColorPicker(self)
-        self.tabMain.layout().addWidget(self._colorPicker)
-        self.tabMain.layout().addWidget(vspacer())
+        self.wdgColorsParent.layout().addWidget(self._colorPicker)
 
         self._iconPicker = IconSelectorWidget(self)
         self.tabIcons.layout().addWidget(self._iconPicker)
 
         self._notes = TextEditBase(self)
+        self._notes.setPlaceholderText('Notes...')
         self.tabNotes.layout().addWidget(self._notes)
+
+        set_tab_icon(self, self.tabMain, IconRegistry.edit_icon())
+        set_tab_icon(self, self.tabIcons, IconRegistry.icons_icon())
+        set_tab_icon(self, self.tabNotes, IconRegistry.document_edition_icon())
+
+        self.setCurrentWidget(self.tabMain)
 
     def setItem(self, item: 'WorldBuildingItem'):
         self.lineName.setText(item.text())
+        self.lineName.setFocus()
+
+        self._iconPicker.setColor(QColor(item.entity().icon_color))
 
     @overrides
     def mousePressEvent(self, a0: QMouseEvent) -> None:
@@ -254,6 +262,9 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
         self._editItem = EditItem(self)
         self.update()
+
+    def entity(self) -> WorldBuildingEntity:
+        return self._entity
 
     def text(self) -> str:
         return self._entity.name
