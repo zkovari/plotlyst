@@ -120,6 +120,7 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self._item: Optional['WorldBuildingItem'] = None
         self.lineName.textEdited.connect(self._nameEdited)
         self._iconPicker.iconSelected.connect(self._iconSelected)
+        self._colorPicker.colorPicked.connect(self._bgColorSelected)
 
     def setItem(self, item: 'WorldBuildingItem'):
         self._item = item
@@ -133,15 +134,16 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         pass
 
     def _nameEdited(self, text: str):
-        if self._item is None or not text:
-            return
-        self._item.setText(text)
+        if self._item is not None and text:
+            self._item.setText(text)
 
     def _iconSelected(self, icon: str, color: QColor):
-        if self._item is None:
-            return
+        if self._item is not None:
+            self._item.setIcon(icon, color.name())
 
-        self._item.setIcon(IconRegistry.from_name(icon, color.name()))
+    def _bgColorSelected(self, color: QColor):
+        if self._item is not None:
+            self._item.setBackgroundColor(color)
 
 
 class WorldBuildingItemEditor(QMenu):
@@ -299,11 +301,24 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._parent.rearrangeItems()
         self.update()
 
-    def setIcon(self, icon: QIcon):
-        self._icon = icon
+    def setIcon(self, icon: str, color: str):
+        self._entity.icon = icon
+        self._entity.icon_color = color
+        self._icon = IconRegistry.from_name(icon, color)
         self._recalculateRect()
         self.prepareGeometryChange()
         self._parent.rearrangeItems()
+        self.update()
+
+    def setBackgroundColor(self, color: QColor):
+        self._entity.bg_color = color.name()
+        if self._entity.icon_color:
+            self._textColor = self._entity.icon_color
+        elif self._entity.bg_color:
+            self._textColor = 'white'
+        else:
+            self._textColor = 'black'
+
         self.update()
 
     @overrides
