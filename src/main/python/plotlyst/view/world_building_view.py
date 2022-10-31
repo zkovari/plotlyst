@@ -38,7 +38,7 @@ class WorldBuildingView(AbstractNovelView):
         vbox(self.widget, 10)
 
         self._editor = WorldBuildingEditor(
-            WorldBuildingEntity('My new world', icon='fa5s.book-open', icon_color='white'))
+            WorldBuildingEntity('My new world', icon='fa5s.book-open', bg_color='#219ebc'))
         self.widget.layout().addWidget(self._editor)
 
     @overrides

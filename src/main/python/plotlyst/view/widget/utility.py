@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Any
 
 from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QBrush
 from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
 from overrides import overrides
 from qthandy import flow
@@ -50,7 +50,7 @@ class ColorPicker(QWidget):
 
         for color in ['#0077b6', '#00b4d8', '#007200', '#2a9d8f', '#94d2bd', '#ffe66d', '#ffd000', '#f48c06', '#e85d04',
                       '#dc2f02',
-                      '#ffc6ff', '#b5179e', '#7209b7', '#d6ccc2', '#6c757d', '#dda15e', '#bc6c25', 'black']:
+                      '#ffc6ff', '#b5179e', '#7209b7', '#d6ccc2', '#6c757d', '#dda15e', '#bc6c25', 'black', 'white']:
             btn = ColorButton(color, self)
             btn.setIconSize(QSize(22, 22))
             btn.setCheckable(True)
@@ -59,10 +59,8 @@ class ColorPicker(QWidget):
             QToolButton {{
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
                                       stop: 0 {color});
+                border: 1px solid darkGrey;
                 border-radius: 12px;
-            }}
-            QToolButton:hover {{
-                border: 1px dashed darkGrey;
             }}
             QToolButton:pressed {{
                 border: 1px solid white;
@@ -194,6 +192,11 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
                 return self.icons[index.row()].type
             if role == Qt.ItemDataRole.DecorationRole:
                 return IconRegistry.from_name(self.icons[index.row()].name, self.color)
+            if role == Qt.ItemDataRole.BackgroundRole:
+                if self.color == '#ffffff':
+                    return QBrush(Qt.GlobalColor.lightGray)
+                else:
+                    return QBrush(Qt.GlobalColor.white)
 
             if role == Qt.ItemDataRole.ToolTipRole:
                 return self.icons[index.row()].name.split('.')[1].replace('-', ' ').capitalize()

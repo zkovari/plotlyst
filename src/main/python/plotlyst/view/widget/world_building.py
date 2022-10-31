@@ -19,16 +19,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional, List
 
-from PyQt6.QtCore import Qt, QRectF, QRect, QPoint
+from PyQt6.QtCore import Qt, QRectF, QRect, QPoint, pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
-    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QInputDialog, QLineEdit, \
-    QGraphicsLineItem
+    QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
+    QMenu, QTabWidget, QWidgetAction
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity
-from src.main.python.plotlyst.view.common import pointy
+from src.main.python.plotlyst.view.common import pointy, set_tab_icon
+from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.input import TextEditBase
+from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelectorWidget
 
 LINE_WIDTH: int = 4
 
@@ -94,6 +97,69 @@ class PlusItem(QAbstractGraphicsShapeItem):
         self._parent.addNewChild()
 
 
+class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
+    def __init__(self, parent=None):
+        super(_WorldBuildingItemEditorWidget, self).__init__(parent)
+        self.setupUi(self)
+        self._colorPicker = ColorPicker(self)
+        self.wdgColorsParent.layout().addWidget(self._colorPicker)
+
+        self._iconPicker = IconSelectorWidget(self)
+        self.tabIcons.layout().addWidget(self._iconPicker)
+
+        self._notes = TextEditBase(self)
+        self._notes.setPlaceholderText('Notes...')
+        self.tabNotes.layout().addWidget(self._notes)
+
+        set_tab_icon(self, self.tabMain, IconRegistry.edit_icon())
+        set_tab_icon(self, self.tabIcons, IconRegistry.icons_icon())
+        set_tab_icon(self, self.tabNotes, IconRegistry.document_edition_icon())
+
+        self.setCurrentWidget(self.tabMain)
+
+        self._item: Optional['WorldBuildingItem'] = None
+        self.lineName.textEdited.connect(self._nameEdited)
+        self._iconPicker.iconSelected.connect(self._iconSelected)
+        self._colorPicker.colorPicked.connect(self._bgColorSelected)
+
+    def setItem(self, item: 'WorldBuildingItem'):
+        self._item = item
+        self.lineName.setText(item.text())
+        self.lineName.setFocus()
+
+        self._iconPicker.setColor(QColor(item.entity().icon_color))
+
+    @overrides
+    def mousePressEvent(self, a0: QMouseEvent) -> None:
+        pass
+
+    def _nameEdited(self, text: str):
+        if self._item is not None and text:
+            self._item.setText(text)
+
+    def _iconSelected(self, icon: str, color: QColor):
+        if self._item is not None:
+            self._item.setIcon(icon, color.name())
+
+    def _bgColorSelected(self, color: QColor):
+        if self._item is not None:
+            self._item.setBackgroundColor(color)
+
+
+class WorldBuildingItemEditor(QMenu):
+    def __init__(self, parent=None):
+        super(WorldBuildingItemEditor, self).__init__(parent)
+
+        action = QWidgetAction(self)
+        self._itemEditor = _WorldBuildingItemEditorWidget()
+        action.setDefaultWidget(self._itemEditor)
+        self.addAction(action)
+
+    def edit(self, item: 'WorldBuildingItem', pos: QPoint):
+        self._itemEditor.setItem(item)
+        self.popup(pos)
+
+
 class EditItem(QAbstractGraphicsShapeItem):
 
     def __init__(self, parent: 'WorldBuildingItem'):
@@ -150,10 +216,7 @@ class EditItem(QAbstractGraphicsShapeItem):
         self.update()
 
     def _edit(self):
-        text, ok = QInputDialog.getText(self.scene().views()[0], 'Edit', 'Edit text', QLineEdit.EchoMode.Normal,
-                                        self._parent.text())
-        if ok:
-            self._parent.setText(text)
+        self.scene().editItem(self._parent)
 
 
 class CollapseItem(QAbstractGraphicsShapeItem):
@@ -201,9 +264,16 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._entity = entity
         self._parent = parent
 
+        if entity.icon_color:
+            self._textColor = entity.icon_color
+        elif entity.bg_color:
+            self._textColor = 'white'
+        else:
+            self._textColor = 'black'
+
         self._icon: Optional[QIcon] = None
         if entity.icon:
-            self._icon = IconRegistry.from_name(entity.icon, entity.icon_color)
+            self._icon = IconRegistry.from_name(entity.icon, self._textColor)
         self._iconSize = 25
         self._iconLeftMargin = 13
         self._font = QFont('Helvetica', 14)
@@ -218,6 +288,9 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._editItem = EditItem(self)
         self.update()
 
+    def entity(self) -> WorldBuildingEntity:
+        return self._entity
+
     def text(self) -> str:
         return self._entity.name
 
@@ -228,9 +301,24 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._parent.rearrangeItems()
         self.update()
 
-    def setIcon(self, icon: QIcon):
-        self._icon = icon
+    def setIcon(self, icon: str, color: str):
+        self._entity.icon = icon
+        self._entity.icon_color = color
+        self._icon = IconRegistry.from_name(icon, color)
         self._recalculateRect()
+        self.prepareGeometryChange()
+        self._parent.rearrangeItems()
+        self.update()
+
+    def setBackgroundColor(self, color: QColor):
+        self._entity.bg_color = color.name()
+        if self._entity.icon_color:
+            self._textColor = self._entity.icon_color
+        elif self._entity.bg_color:
+            self._textColor = 'white'
+        else:
+            self._textColor = 'black'
+
         self.update()
 
     @overrides
@@ -268,12 +356,13 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
             painter.setPen(QPen(Qt.GlobalColor.black, self._penWidth, Qt.PenStyle.DashLine))
             painter.drawRoundedRect(self._rect, 2, 2)
 
-        painter.setBrush(QColor('#219ebc'))
-        pen = QPen(QColor('#219ebc'), self._penWidth)
-        painter.setPen(pen)
-        painter.drawRoundedRect(self._rect, 25, 25)
+        if self._entity.bg_color:
+            painter.setBrush(QColor(self._entity.bg_color))
+            pen = QPen(QColor('#219ebc'), self._penWidth)
+            painter.setPen(pen)
+            painter.drawRoundedRect(self._rect, 25, 25)
 
-        painter.setPen(Qt.GlobalColor.white)
+        painter.setPen(QColor(self._textColor))
         painter.setFont(self._font)
         painter.drawText(self._textRect.x(), self._textRect.height(), self.text())
         if self._icon:
@@ -282,6 +371,10 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         self.setSelected(True)
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self.scene().editItem(self)
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -418,6 +511,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
+    editItemRequested = pyqtSignal(WorldBuildingItem)
 
     def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingEditorScene, self).__init__(parent)
@@ -447,6 +541,9 @@ class WorldBuildingEditorScene(QGraphicsScene):
                     item.parentItem().prepareRemove()
                     self.removeItem(item.parentItem())
                     self.rearrangeItems()
+
+    def editItem(self, item: WorldBuildingItem):
+        self.editItemRequested.emit(item)
 
     def rearrangeItems(self):
         self.rearrangeChildrenItems(self._rootItem)
@@ -507,7 +604,10 @@ class WorldBuildingEditor(QGraphicsView):
 
         self._scene = WorldBuildingEditorScene(entity)
         self.setScene(self._scene)
+        self._scene.editItemRequested.connect(self._editItem)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
+
+        self._itemEditor = WorldBuildingItemEditor(self)
 
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -536,3 +636,7 @@ class WorldBuildingEditor(QGraphicsView):
             diff = event.angleDelta().y()
             scale = (diff // 120) / 10
             self.scale(1 + scale, 1 + scale)
+
+    def _editItem(self, item: WorldBuildingItem):
+        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
+        self._itemEditor.edit(item, self.mapToGlobal(view_pos))
