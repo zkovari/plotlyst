@@ -737,6 +737,12 @@ class WorldBuildingEntity:
         return hash(str(self.id))
 
 
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class WorldBuilding:
+    root_entity: WorldBuildingEntity = WorldBuildingEntity('My world')
+
+
 @dataclass
 class StoryStructure(CharacterBased):
     title: str
@@ -1212,6 +1218,7 @@ class Novel(NovelDescriptor):
     premise: str = ''
     synopsis: Optional['Document'] = None
     prefs: NovelPreferences = NovelPreferences()
+    world: WorldBuilding = WorldBuilding()
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title

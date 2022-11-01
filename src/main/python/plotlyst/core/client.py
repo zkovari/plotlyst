@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
     Location, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive
+    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding
 from src.main.python.plotlyst.core.template import Role, default_location_profiles, exclude_if_empty
 
 
@@ -191,6 +191,7 @@ class NovelInfo:
     synopsis: Optional['Document'] = None
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
     prefs: NovelPreferences = NovelPreferences()
+    world: WorldBuilding = WorldBuilding()
 
 
 @dataclass
@@ -476,15 +477,22 @@ class JsonClient:
         for char in characters:
             self.__collect_goal_ids(goal_ids, char.goals)
 
-        return Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
-                     import_origin=project_novel_info.import_origin,
-                     plots=novel_info.plots, characters=characters,
-                     scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
-                     story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
-                     location_profiles=novel_info.location_profiles,
-                     conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
-                     documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
-                     prefs=novel_info.prefs)
+        novel = Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
+                      import_origin=project_novel_info.import_origin,
+                      plots=novel_info.plots, characters=characters,
+                      scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
+                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
+                      location_profiles=novel_info.location_profiles,
+                      conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
+                      documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
+                      prefs=novel_info.prefs)
+
+        world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
+        if os.path.exists(world_path):
+            with open(world_path, encoding='utf8') as json_file:
+                novel.world = WorldBuilding.from_json(json_file.read())
+
+        return novel
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -516,6 +524,14 @@ class JsonClient:
                                version=LATEST_VERSION, prefs=novel.prefs)
 
         self.__persist_info(self.novels_dir, novel_info)
+        self._persist_world(novel.id, novel.world)
+
+    def _persist_world(self, novel_id: uuid.UUID, world: WorldBuilding):
+        novel_dir = self.novels_dir.joinpath(str(novel_id))
+        if not novel_dir.exists():
+            novel_dir.mkdir()
+
+        self.__persist_info_by_name(novel_dir, world, 'world')
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
@@ -594,6 +610,13 @@ class JsonClient:
 
     def __persist_info(self, dir, info: Any):
         self.__persist_json_by_id(dir, info.to_json(), info.id)
+
+    def __persist_info_by_name(self, dir, info: Any, name: str):
+        self.__persist_json_by_name(dir, info.to_json(), name)
+
+    def __persist_json_by_name(self, dir, json_data: str, name: str):
+        with atomic_write(dir.joinpath(f'{name}.json'), overwrite=True) as f:
+            f.write(json_data)
 
     def __persist_json_by_id(self, dir, json_data: str, id: uuid.UUID):
         with atomic_write(dir.joinpath(self.__json_file(id)), overwrite=True) as f:

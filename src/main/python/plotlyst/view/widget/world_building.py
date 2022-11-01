@@ -299,6 +299,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self.prepareGeometryChange()
         self._parent.rearrangeItems()
         self.update()
+        self.worldBuildingScene().modelChanged.emit()
 
     def setIcon(self, icon: str, color: str):
         self._entity.icon = icon
@@ -308,6 +309,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self.prepareGeometryChange()
         self._parent.rearrangeItems()
         self.update()
+        self.worldBuildingScene().modelChanged.emit()
 
     def setBackgroundColor(self, color: QColor):
         self._entity.bg_color = color.name()
@@ -319,6 +321,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
             self._textColor = 'black'
 
         self.update()
+        self.worldBuildingScene().modelChanged.emit()
 
     @overrides
     def update(self, rect: QRectF = ...) -> None:
@@ -379,6 +382,11 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._editItem.setVisible(False)
+
+    def worldBuildingScene(self) -> Optional['WorldBuildingEditorScene']:
+        scene = self.scene()
+        if scene is not None and isinstance(scene, WorldBuildingEditorScene):
+            return scene
 
 
 class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
@@ -466,6 +474,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
         self._updateCollapse()
         self.worldBuildingScene().rearrangeItems()
+        self.worldBuildingScene().modelChanged.emit()
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
         item = WorldBuildingItemGroup(entity)
@@ -478,6 +487,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
             self._childrenEntityItems.remove(child)
             self._entity.children.remove(child.entity())
             self._updateCollapse()
+            self.worldBuildingScene().modelChanged.emit()
 
     def addOutputConnector(self, connector: ConnectorItem):
         self._outputConnectors.append(connector)
@@ -508,6 +518,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
 class WorldBuildingEditorScene(QGraphicsScene):
     editItemRequested = pyqtSignal(WorldBuildingItem)
+    modelChanged = pyqtSignal()
 
     def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingEditorScene, self).__init__(parent)
