@@ -548,6 +548,10 @@ class WorldBuildingEditorScene(QGraphicsScene):
                     item.parentItem().prepareRemove()
                     self.removeItem(item.parentItem())
                     self.rearrangeItems()
+        elif event.key() == Qt.Key.Key_E and len(self.selectedItems()) == 1:
+            item = self.selectedItems()[0]
+            if isinstance(item, WorldBuildingItem):
+                self.editItem(item)
 
     def editItem(self, item: WorldBuildingItem):
         self.editItemRequested.emit(item)
