@@ -27,6 +27,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QText
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc, clear_layout
+from qthandy.filter import InstantTooltipEventFilter
 from textstat import textstat
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART
@@ -342,6 +343,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.setMinimumWidth(50)
         self.btnComments.setCheckable(True)
         self.btnComments.toggled.connect(self.wdgSidebar.setVisible)
+        self.btnComments.setDisabled(True)
+        self.btnComments.setToolTip('Comments are not available yet')
+        self.btnComments.installEventFilter(InstantTooltipEventFilter(self.btnComments))
 
         self.toolBar.addWidget(spacer(5))
         self.toolBar.addWidget(self.home_mode)
