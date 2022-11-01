@@ -740,7 +740,7 @@ class WorldBuildingEntity:
 @dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class WorldBuilding:
-    root_entity: WorldBuildingEntity = WorldBuildingEntity('My world')
+    root_entity: WorldBuildingEntity = WorldBuildingEntity('My world', icon='mdi.globe-model', bg_color='#40916c')
 
 
 @dataclass
