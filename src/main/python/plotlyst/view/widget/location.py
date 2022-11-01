@@ -36,7 +36,7 @@ class LocationProfileTemplateView(ProfileTemplateView):
             if widget.field.id == location_name_field.id:
                 self._name_widget = widget
 
-        self._name_widget.wdgEditor.setFocusPolicy(Qt.StrongFocus)
+        self._name_widget.wdgEditor.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._name_widget.setFocus()
 
         self._name_widget.setValue(self.location.name)
