@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOpt
     QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import WorldBuildingEntity
+from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType
 from src.main.python.plotlyst.view.common import pointy, set_tab_icon
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -130,6 +130,11 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         set_tab_icon(self, self.tabIcons, IconRegistry.icons_icon())
         set_tab_icon(self, self.tabNotes, IconRegistry.document_edition_icon())
 
+        self.btnEntity.setIcon(IconRegistry.world_building_icon())
+        self.btnLocation.setIcon(IconRegistry.location_icon())
+        self.btnGroup.setIcon(IconRegistry.conflict_society_icon())
+        self.btnItem.setIcon(IconRegistry.from_name('mdi.ring'))
+
         self.setCurrentWidget(self.tabEntity)
 
         self._item: Optional['WorldBuildingItem'] = None
@@ -138,6 +143,7 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self._notes.textChanged.connect(self._notesChanged)
         self._iconPicker.iconSelected.connect(self._iconSelected)
         self._colorPicker.colorPicked.connect(self._bgColorSelected)
+        self.btnGroupType.buttonClicked.connect(self._typeChanged)
 
     def setItem(self, item: 'WorldBuildingItem'):
         self._item = None
@@ -179,6 +185,19 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
     def _bgColorSelected(self, color: QColor):
         if self._item is not None:
             self._item.setBackgroundColor(color)
+            self._emit()
+
+    def _typeChanged(self):
+        if self._item is not None:
+            if self.btnEntity.isChecked():
+                self._item.setWorldBuildingType(WorldBuildingEntityType.ABSTRACT)
+            elif self.btnLocation.isChecked():
+                self._item.setWorldBuildingType(WorldBuildingEntityType.SETTING)
+            elif self.btnGroup.isChecked():
+                self._item.setWorldBuildingType(WorldBuildingEntityType.GROUP)
+            elif self.btnItem.isChecked():
+                self._item.setWorldBuildingType(WorldBuildingEntityType.ITEM)
+
             self._emit()
 
     def _emit(self):
@@ -332,6 +351,13 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self.prepareGeometryChange()
         self._parent.rearrangeItems()
         self.update()
+
+    def worldBuildingType(self) -> WorldBuildingEntityType:
+        return self._entity.type
+
+    def setWorldBuildingType(self, type_: WorldBuildingEntityType):
+        self._entity.type = type_
+        self._parent.update()
 
     def setIcon(self, icon: str, color: str):
         self._entity.icon = icon
@@ -495,7 +521,15 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        pass
+        if self._entity.type == WorldBuildingEntityType.ABSTRACT:
+            return
+        if self._entity.type == WorldBuildingEntityType.SETTING:
+            icon = IconRegistry.location_icon('red')
+        elif self._entity.type == WorldBuildingEntityType.GROUP:
+            icon = IconRegistry.conflict_society_icon()
+        else:
+            icon = IconRegistry.from_name('mdi.ring')
+        icon.paint(painter, self._item.boundingRect().width() - 2, 2, 10, 10)
 
     def addNewChild(self):
         entity = WorldBuildingEntity('Entity')

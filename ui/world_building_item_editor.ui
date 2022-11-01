@@ -151,6 +151,12 @@
          <property name="text">
           <string/>
          </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
          <attribute name="buttonGroup">
           <string notr="true">btnGroupType</string>
          </attribute>
@@ -160,6 +166,9 @@
         <widget class="QToolButton" name="btnLocation">
          <property name="text">
           <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">btnGroupType</string>
@@ -171,6 +180,9 @@
          <property name="text">
           <string/>
          </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
          <attribute name="buttonGroup">
           <string notr="true">btnGroupType</string>
          </attribute>
@@ -180,6 +192,9 @@
         <widget class="QToolButton" name="btnItem">
          <property name="text">
           <string/>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">btnGroupType</string>
