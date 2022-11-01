@@ -711,6 +711,13 @@ def default_stages() -> List[SceneStage]:
             SceneStage('Edited'), SceneStage('Proofread'), SceneStage('Final')]
 
 
+class WorldBuildingEntityType(Enum):
+    ABSTRACT = 1
+    SETTING = 2
+    GROUP = 3
+    ITEM = 4
+
+
 @dataclass
 class WorldBuildingEntity:
     name: str
@@ -720,6 +727,9 @@ class WorldBuildingEntity:
     icon_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     emoji: str = field(default='', metadata=config(exclude=exclude_if_empty))
     bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    type: WorldBuildingEntityType = WorldBuildingEntityType.ABSTRACT
+    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __hash__(self):

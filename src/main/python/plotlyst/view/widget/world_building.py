@@ -24,7 +24,7 @@ from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontM
     QPainterPath
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
-    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem
+    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity
@@ -115,27 +115,42 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self._iconPicker = IconSelectorWidget(self)
         self.tabIcons.layout().addWidget(self._iconPicker)
 
+        self._summary = TextEditBase(self)
+        self._summary.setPlaceholderText('Summary...')
+        self._summary.setMaximumHeight(75)
+        self.wdgSummaryParent.layout().addWidget(self._summary, alignment=Qt.AlignmentFlag.AlignTop)
+
         self._notes = TextEditBase(self)
+        self._notes.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self._notes.setPlaceholderText('Notes...')
         self.tabNotes.layout().addWidget(self._notes)
 
-        set_tab_icon(self, self.tabMain, IconRegistry.edit_icon())
+        set_tab_icon(self, self.tabEntity, IconRegistry.world_building_icon())
+        set_tab_icon(self, self.tabStyle, IconRegistry.from_name('fa5s.palette'))
         set_tab_icon(self, self.tabIcons, IconRegistry.icons_icon())
         set_tab_icon(self, self.tabNotes, IconRegistry.document_edition_icon())
 
-        self.setCurrentWidget(self.tabMain)
+        self.setCurrentWidget(self.tabEntity)
 
         self._item: Optional['WorldBuildingItem'] = None
         self.lineName.textEdited.connect(self._nameEdited)
+        self._summary.textChanged.connect(self._summaryChanged)
+        self._notes.textChanged.connect(self._notesChanged)
         self._iconPicker.iconSelected.connect(self._iconSelected)
         self._colorPicker.colorPicked.connect(self._bgColorSelected)
 
     def setItem(self, item: 'WorldBuildingItem'):
-        self._item = item
-        self.lineName.setText(item.text())
+        self._item = None
+        entity = item.entity()
+
+        self.lineName.setText(entity.name)
         self.lineName.setFocus()
 
+        self._summary.setText(entity.summary)
+        self._notes.setMarkdown(entity.notes)
+
         self._iconPicker.setColor(QColor(item.entity().icon_color))
+        self._item = item
 
     @overrides
     def mousePressEvent(self, a0: QMouseEvent) -> None:
@@ -144,14 +159,30 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
     def _nameEdited(self, text: str):
         if self._item is not None and text:
             self._item.setText(text)
+            self._emit()
+
+    def _summaryChanged(self):
+        if self._item is not None:
+            self._item.entity().summary = self._summary.toPlainText()
+            self._emit()
+
+    def _notesChanged(self):
+        if self._item is not None:
+            self._item.entity().notes = self._notes.toMarkdown()
+            self._emit()
 
     def _iconSelected(self, icon: str, color: QColor):
         if self._item is not None:
             self._item.setIcon(icon, color.name())
+            self._emit()
 
     def _bgColorSelected(self, color: QColor):
         if self._item is not None:
             self._item.setBackgroundColor(color)
+            self._emit()
+
+    def _emit(self):
+        self._item.worldBuildingScene().modelChanged.emit()
 
 
 class WorldBuildingItemEditor(QMenu):
@@ -301,7 +332,6 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self.prepareGeometryChange()
         self._parent.rearrangeItems()
         self.update()
-        self.worldBuildingScene().modelChanged.emit()
 
     def setIcon(self, icon: str, color: str):
         self._entity.icon = icon
@@ -311,7 +341,6 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self.prepareGeometryChange()
         self._parent.rearrangeItems()
         self.update()
-        self.worldBuildingScene().modelChanged.emit()
 
     def setBackgroundColor(self, color: QColor):
         self._entity.bg_color = color.name()
@@ -323,7 +352,6 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
             self._textColor = 'black'
 
         self.update()
-        self.worldBuildingScene().modelChanged.emit()
 
     @overrides
     def update(self, rect: QRectF = ...) -> None:
