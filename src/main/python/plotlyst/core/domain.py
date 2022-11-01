@@ -712,17 +712,6 @@ def default_stages() -> List[SceneStage]:
 
 
 @dataclass
-class Location:
-    name: str
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    children: List['Location'] = field(default_factory=list)
-    icon: str = ''
-    icon_color: str = 'black'
-    template_values: List[TemplateValue] = field(default_factory=list)
-    document: Optional['Document'] = None
-
-
-@dataclass
 class WorldBuildingEntity:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -1203,7 +1192,6 @@ class Novel(NovelDescriptor):
     story_structures: List[StoryStructure] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
-    locations: List[Location] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
