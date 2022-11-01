@@ -76,6 +76,7 @@ class PlusItem(QAbstractGraphicsShapeItem):
         self._iconSize = 25
         self.setAcceptHoverEvents(True)
         pointy(self)
+        self.setToolTip('Add new child')
 
     @overrides
     def boundingRect(self):
@@ -177,6 +178,7 @@ class EditItem(QAbstractGraphicsShapeItem):
         self._pressed = False
         self.setAcceptHoverEvents(True)
         pointy(self)
+        self.setToolTip('Edit item')
 
     @overrides
     def boundingRect(self):
