@@ -17,40 +17,40 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from PyQt6.QtWidgets import QFrame
 
-from PyQt6.QtCore import Qt
-
-from src.main.python.plotlyst.core.domain import Location, Novel
-from src.main.python.plotlyst.core.template import location_name_field, ProfileTemplate
+from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.template import ProfileTemplate
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.widget.template import ProfileTemplateView, LabelsSelectionWidget
+from src.main.python.plotlyst.view.widget.template import ProfileTemplateView
 
 
 class LocationProfileTemplateView(ProfileTemplateView):
-    def __init__(self, novel: Novel, location: Location, profile: ProfileTemplate):
-        super().__init__(location.template_values, profile)
+    def __init__(self, novel: Novel, profile: ProfileTemplate):
+        super().__init__([], profile)
         self.novel = novel
-        self.location = location
+        # palette = QPalette()
+        # palette.setColor(QPalette.ColorRole.Window, Qt.GlobalColor.white)
+        # self.scrollAreaWidgetContents.setPalette(palette)
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
+        # for widget in self.widgets:
+        #     if widget.field.id == location_name_field.id:
+        #         self._name_widget = widget
 
-        for widget in self.widgets:
-            if widget.field.id == location_name_field.id:
-                self._name_widget = widget
+        # self._name_widget.wdgEditor.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        # self._name_widget.setFocus()
 
-        self._name_widget.wdgEditor.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self._name_widget.setFocus()
-
-        self._name_widget.setValue(self.location.name)
-
-        for widget in self.widgets:
-            if isinstance(widget.wdgEditor, LabelsSelectionWidget):
-                widget.wdgEditor.selectionChanged.connect(self._save)
-
-        self._name_widget.wdgEditor.textChanged.connect(self._save)
+        # for widget in self.widgets:
+        #     if isinstance(widget.wdgEditor, LabelsSelectionWidget):
+        #         widget.wdgEditor.selectionChanged.connect(self._save)
+        #
+        # self._name_widget.wdgEditor.textChanged.connect(self._save)
 
         self.repo = RepositoryPersistenceManager.instance()
 
     def _save(self):
-        self.location.name = self._name_widget.value()
-        self.location.template_values.clear()
-        self.location.template_values.extend(self.values())
-        self.repo.update_novel(self.novel)
+        pass
+        # self.location.name = self._name_widget.value()
+        # self.location.template_values.clear()
+        # self.location.template_values.extend(self.values())
+        # self.repo.update_novel(self.novel)

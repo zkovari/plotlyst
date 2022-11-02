@@ -29,8 +29,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QPalette, QColor
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
-    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QListView, QPushButton, QTextEdit
+    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QSpacerItem, QListView, QPushButton, QTextEdit
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
     decr_font, retain_when_hidden, translucent
@@ -63,7 +62,7 @@ class _ProfileTemplateBase(QWidget):
     def __init__(self, profile: ProfileTemplate, editor_mode: bool = False, parent=None):
         super().__init__(parent)
         self._profile = profile
-        self.layout = QVBoxLayout(self)
+        self.layout = vbox(self)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
