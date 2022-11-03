@@ -40,6 +40,7 @@ from src.main.python.plotlyst.view.widget.template import ProfileTemplateView, T
 from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelectorWidget
 
 LINE_WIDTH: int = 4
+DEFAULT_COLOR: str = '#219ebc'
 
 
 class WorldBuildingProfileTemplateView(ProfileTemplateView):
@@ -77,7 +78,10 @@ class ConnectorItem(QGraphicsPathItem):
         self._source = source
         self._collapseItem = source.collapseItem()
         self._target = target
-        self.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
+        if self._target.entity().bg_color:
+            self.setPen(QPen(QColor(self._target.entity().bg_color), LINE_WIDTH))
+        else:
+            self.setPen(QPen(source.connectorColor(), LINE_WIDTH))
         self.updatePos()
         source.addOutputConnector(self)
         target.setInputConnector(self)
@@ -314,6 +318,9 @@ class CollapseItem(QAbstractGraphicsShapeItem):
         self._parent = parent
         self._size = 15
         self._toggled = True
+        color = parent.connectorColor()
+        self.setPen(QPen(color, LINE_WIDTH))
+        self.setBrush(color)
         pointy(self)
 
     @overrides
@@ -325,10 +332,10 @@ class CollapseItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        painter.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
+        painter.setPen(self.pen())
         painter.drawEllipse(0, 0, self._size, self._size)
         if not self._toggled:
-            painter.setBrush(QColor('#219ebc'))
+            painter.setBrush(self.brush())
             painter.drawEllipse(6, 6, 3, 3)
 
     @overrides
@@ -413,6 +420,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
             self._textColor = 'black'
 
         self.update()
+        self._parent.propagateColor()
 
     @overrides
     def update(self, rect: QRectF = ...) -> None:
@@ -450,7 +458,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
         if self._entity.bg_color:
             painter.setBrush(QColor(self._entity.bg_color))
-            pen = QPen(QColor('#219ebc'), self._penWidth)
+            pen = QPen(QColor(self._entity.bg_color), self._penWidth)
             painter.setPen(pen)
             painter.drawRoundedRect(self._rect, 25, 25)
 
@@ -500,7 +508,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._plusItem = PlusItem(parent=self)
         self._collapseItem = CollapseItem(parent=self)
         self._lineItem = QGraphicsLineItem(parent=self)
-        self._lineItem.setPen(QPen(QColor('#219ebc'), LINE_WIDTH))
+        self._lineItem.setPen(QPen(self.connectorColor(), LINE_WIDTH))
         self.rearrangeItems()
         self.setAcceptHoverEvents(True)
 
@@ -600,6 +608,14 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def setInputConnector(self, connector: ConnectorItem):
         self._inputConnector = connector
 
+    def connectorColor(self) -> QColor:
+        if self._entity.bg_color:
+            return QColor(self._entity.bg_color)
+        elif self._inputConnector:
+            return self._inputConnector.pen().color()
+        else:
+            return QColor(DEFAULT_COLOR)
+
     def setChildrenVisible(self, visible: bool):
         for child in self._childrenEntityItems:
             child.setVisible(visible)
@@ -616,6 +632,23 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         if self._inputConnector is not None:
             self.worldBuildingScene().removeItem(self._inputConnector)
             self.parentItem().removeChild(self)
+
+    def propagateColor(self, color: Optional[QColor] = None):
+        if color and self._entity.bg_color:
+            return
+        if color is None:
+            if self._entity.bg_color:
+                color = QColor(self._entity.bg_color)
+            else:
+                return
+        
+        if self._inputConnector:
+            self._inputConnector.setPen(QPen(QColor(color), LINE_WIDTH))
+        self._lineItem.setPen(QPen(QColor(color), LINE_WIDTH))
+        self._collapseItem.setPen(QPen(QColor(color), LINE_WIDTH))
+
+        for child in self._childrenEntityItems:
+            child.propagateColor(color)
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
