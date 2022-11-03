@@ -21,11 +21,13 @@ from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect, QPoint, pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent, \
-    QPainterPath
+    QPainterPath, QResizeEvent
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
-    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QFrame
+    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QFrame, QToolButton
 from overrides import overrides
+from qthandy import transparent
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType, Novel
 from src.main.python.plotlyst.core.template import ProfileTemplate
@@ -721,6 +723,18 @@ class WorldBuildingEditor(QGraphicsView):
 
         self._itemEditor = WorldBuildingItemEditor(self)
 
+        self._btnZoomIn = QToolButton(self)
+        self._btnZoomOut = QToolButton(self)
+        self._btnZoomIn.setIcon(IconRegistry.plus_circle_icon('grey'))
+        self._btnZoomOut.setIcon(IconRegistry.minus_icon('grey'))
+        for btn_ in [self._btnZoomIn, self._btnZoomOut]:
+            pointy(btn_)
+            transparent(btn_)
+            btn_.installEventFilter(OpacityEventFilter(btn_))
+        self._btnZoomIn.clicked.connect(lambda: self.scale(1.1, 1.1))
+        self._btnZoomOut.clicked.connect(lambda: self.scale(0.9, 0.9))
+        self.__arrangeZoomButtons()
+
     @overrides
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.MiddleButton or event.button() == Qt.MouseButton.LeftButton:
@@ -749,6 +763,15 @@ class WorldBuildingEditor(QGraphicsView):
             scale = diff / 1200
             self.scale(1 + scale, 1 + scale)
 
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super(WorldBuildingEditor, self).resizeEvent(event)
+        self.__arrangeZoomButtons()
+
     def _editItem(self, item: WorldBuildingItem):
         view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
         self._itemEditor.edit(item, self.mapToGlobal(view_pos))
+
+    def __arrangeZoomButtons(self):
+        self._btnZoomOut.setGeometry(10, self.height() - 30, 20, 20)
+        self._btnZoomIn.setGeometry(35, self.height() - 30, 20, 20)
