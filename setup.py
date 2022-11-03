@@ -13,7 +13,7 @@ REQUIREMENTS: dict = {
         'qtawesome==1.1.1',
         'PyQt6-Charts==6.4.0',
         'anytree==2.8.0',
-        'emoji==1.4.1',
+        'emoji==2.2.0',
         'fbs[sentry]',
         'atomicwrites==1.4.0',
         'dataclasses-json==0.5.2',

@@ -26,13 +26,14 @@ from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOpt
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
     QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QFrame, QToolButton
 from overrides import overrides
-from qthandy import transparent
+from qtemoji import EmojiPicker
+from qthandy import transparent, busy
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType, Novel
 from src.main.python.plotlyst.core.template import ProfileTemplate
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import pointy, set_tab_icon
+from src.main.python.plotlyst.view.common import pointy, set_tab_icon, link_buttons_to_pages, emoji_font
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import TextEditBase
@@ -150,7 +151,8 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self.wdgColorsParent.layout().addWidget(self._colorPicker)
 
         self._iconPicker = IconSelectorWidget(self)
-        self.tabIcons.layout().addWidget(self._iconPicker)
+        self.pageIcons.layout().addWidget(self._iconPicker)
+        self._emojiPicker: Optional[EmojiPicker] = None
 
         self._summary = TextEditBase(self)
         self._summary.setPlaceholderText('Summary...')
@@ -175,6 +177,9 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
 
         self.setCurrentWidget(self.tabEntity)
 
+        link_buttons_to_pages(self.stackedWidget,
+                              [(self.btnIconSelector, self.pageIcons), (self.btnEmojiSelector, self.pageEmojis)])
+
         self._item: Optional['WorldBuildingItem'] = None
         self.lineName.textEdited.connect(self._nameEdited)
         self._summary.textChanged.connect(self._summaryChanged)
@@ -182,6 +187,7 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self._iconPicker.iconSelected.connect(self._iconSelected)
         self._colorPicker.colorPicked.connect(self._bgColorSelected)
         self.btnGroupType.buttonClicked.connect(self._typeChanged)
+        self.btnEmojiSelector.clicked.connect(self._emojiSelectorClicked)
 
     def setItem(self, item: 'WorldBuildingItem'):
         self._item = None
@@ -236,6 +242,18 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
             elif self.btnItem.isChecked():
                 self._item.setWorldBuildingType(WorldBuildingEntityType.ITEM)
 
+            self._emit()
+
+    @busy
+    def _emojiSelectorClicked(self, _: bool):
+        if self._emojiPicker is None:
+            self._emojiPicker = EmojiPicker()
+            self.pageEmojis.layout().addWidget(self._emojiPicker)
+            self._emojiPicker.emojiPicked.connect(self._emojiPicked)
+
+    def _emojiPicked(self, emoji: str):
+        if self._item is not None:
+            self._item.setEmoji(emoji)
             self._emit()
 
     def _emit(self):
@@ -351,11 +369,12 @@ class CollapseItem(QAbstractGraphicsShapeItem):
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
-    def __init__(self, entity: WorldBuildingEntity, font: QFont, parent: 'WorldBuildingItemGroup'):
+    def __init__(self, entity: WorldBuildingEntity, font: QFont, emoji_font: QFont, parent: 'WorldBuildingItemGroup'):
         super(WorldBuildingItem, self).__init__(parent)
         self._entity = entity
         self._parent = parent
         self._font = font
+        self._emoji_font = emoji_font
 
         if entity.icon_color:
             self._textColor = entity.icon_color
@@ -404,7 +423,19 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
     def setIcon(self, icon: str, color: str):
         self._entity.icon = icon
         self._entity.icon_color = color
+        self._entity.emoji = ''
         self._icon = IconRegistry.from_name(icon, color)
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self._parent.rearrangeItems()
+        self.update()
+
+    def setEmoji(self, emoji: str):
+        self._entity.emoji = emoji
+        self._icon = None
+        self._entity.icon = ''
+        self._entity.icon_color = ''
+
         self._recalculateRect()
         self.prepareGeometryChange()
         self._parent.rearrangeItems()
@@ -433,7 +464,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._textRect.moveTopLeft(QPoint(0, 0))
 
         margins = 10
-        icon_diff = self._textRect.height() + self._iconLeftMargin if self._icon else 0
+        icon_diff = self._textRect.height() + self._iconLeftMargin if self._icon or self._entity.emoji else 0
 
         self._rect = QRect(0, 0, self._textRect.width() + margins + icon_diff + self._penWidth * 2,
                            self._textRect.height() + margins + self._penWidth * 2)
@@ -467,6 +498,9 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         painter.drawText(self._textRect.x(), self._textRect.height(), self.text())
         if self._icon:
             self._icon.paint(painter, self._iconLeftMargin, self._icon_y, self._iconSize, self._iconSize)
+        elif self._entity.emoji:
+            painter.setFont(self._emoji_font)
+            painter.drawText(self._iconLeftMargin, self._textRect.height(), self._entity.emoji)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -492,7 +526,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
 
 class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
-    def __init__(self, entity: WorldBuildingEntity, font: QFont, parent=None):
+    def __init__(self, entity: WorldBuildingEntity, font: QFont, emoji_font: QFont, parent=None):
         super(WorldBuildingItemGroup, self).__init__(parent)
         self._entity = entity
         self._childrenEntityItems: List['WorldBuildingItemGroup'] = []
@@ -501,8 +535,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
         self._collapseDistance = 10
         self._font = font
+        self._emoji_font = emoji_font
 
-        self._item = WorldBuildingItem(self._entity, self._font, parent=self)
+        self._item = WorldBuildingItem(self._entity, self._font, self._emoji_font, parent=self)
         self._item.setPos(0, 0)
 
         self._plusItem = PlusItem(parent=self)
@@ -587,7 +622,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self.worldBuildingScene().modelChanged.emit()
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
-        item = WorldBuildingItemGroup(entity, self._font)
+        item = WorldBuildingItemGroup(entity, self._font, self._emoji_font)
         self._childrenEntityItems.append(item)
 
         return item
@@ -641,7 +676,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
                 color = QColor(self._entity.bg_color)
             else:
                 return
-        
+
         if self._inputConnector:
             self._inputConnector.setPen(QPen(QColor(color), LINE_WIDTH))
         self._lineItem.setPen(QPen(QColor(color), LINE_WIDTH))
@@ -671,7 +706,15 @@ class WorldBuildingEditorScene(QGraphicsScene):
             _font = QFont('Helvetica', font_size)
             _metrics = QFontMetrics(_font)
 
-        self._rootItem = WorldBuildingItemGroup(self._root, _font)
+        font_size = 12
+        _emoji_font = emoji_font(font_size)
+        _metrics = QFontMetrics(_emoji_font)
+        while _metrics.boundingRect('🙂').height() < 25:
+            font_size += 1
+            _emoji_font = emoji_font(font_size)
+            _metrics = QFontMetrics(_emoji_font)
+
+        self._rootItem = WorldBuildingItemGroup(self._root, _font, _emoji_font)
         self._rootItem.setPos(0, 0)
         self.addItem(self._rootItem)
 
