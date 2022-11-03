@@ -362,6 +362,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
             self._icon = IconRegistry.from_name(entity.icon, self._textColor)
         self._iconLeftMargin = 13
         self._iconSize = 25
+        self._icon_y = 0
         self._metrics = QFontMetrics(self._font)
         self._rect = QRect(0, 0, 1, 1)
         self._textRect = QRect(0, 0, 1, 1)
@@ -431,6 +432,9 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
         self._textRect.moveLeft(margins / 2 + icon_diff)
 
+        self._iconSize = self._textRect.height()
+        self._icon_y = margins / 2
+
     @overrides
     def boundingRect(self):
         return QRectF(self._rect)
@@ -454,8 +458,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         painter.setFont(self._font)
         painter.drawText(self._textRect.x(), self._textRect.height(), self.text())
         if self._icon:
-            icon_y = 5 + (self._textRect.height() - self._iconSize)
-            self._icon.paint(painter, self._iconLeftMargin, icon_y, self._iconSize, self._iconSize)
+            self._icon.paint(painter, self._iconLeftMargin, self._icon_y, self._iconSize, self._iconSize)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
