@@ -238,7 +238,7 @@ def test_character_distribution_display(qtbot, filled_window: MainWindow):
     assert model.rowCount() == 7
 
 
-def test_add_scene_comment(qtbot, filled_window: MainWindow):
+def _test_add_scene_comment(qtbot, filled_window: MainWindow):
     view: ScenesOutlineView = go_to_scenes(filled_window)
 
     card = view.ui.cards.cardAt(0)

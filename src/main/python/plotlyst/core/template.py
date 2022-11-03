@@ -506,28 +506,32 @@ def default_character_profiles() -> List[ProfileTemplate]:
                             elements=fields)]
 
 
-sight_field = TemplateField('Sight', type=TemplateFieldType.LABELS,
+entity_summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
+                                     id=uuid.UUID('207053e6-dd51-4956-8830-478fe8efca0a'),
+                                     placeholder="Summarize your entity",
+                                     show_label=False)
+
+sight_field = TemplateField('Sight', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('935e6595-27ae-426e-8b41-b315e9160ad9'),
                             emoji=':eyes:',
+                            show_label=False,
                             placeholder='Sight')
 
-location_name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':round_pushpin:',
-                                    placeholder='Name',
-                                    id=uuid.UUID('84f9bdee-c817-4caa-9e65-666cd0c4a546'), required=True,
-                                    highlighted=True, show_label=False)
-
-smell_field = TemplateField('Smell', type=TemplateFieldType.LABELS,
+smell_field = TemplateField('Smell', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('50245a33-599b-49c6-9746-094f12b4d667'),
-                            emoji=':nose:',
+                            emoji=':pig_nose:',
+                            show_label=False,
                             placeholder='Smell')
-noise_field = TemplateField('Noise', type=TemplateFieldType.LABELS,
+noise_field = TemplateField('Sound', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('76659d94-8753-4945-8d5c-e811189e3b49'),
-                            emoji=':speaker_high_volume:',
-                            placeholder='Noise')
+                            emoji=':bell:',
+                            show_label=False,
+                            placeholder='Sound')
 
 animals_field = TemplateField('Animals', type=TemplateFieldType.LABELS,
                               id=uuid.UUID('3aa9cc09-312c-492a-bc19-6914bb1eeba6'),
                               emoji=':paw_prints:',
+                              show_label=False,
                               placeholder='Animals')
 nature_field = TemplateField('Nature', type=TemplateFieldType.LABELS,
                              id=uuid.UUID('ab54bf84-1b69-4bb4-b1b4-c04ad2dd58b1'),
@@ -536,13 +540,16 @@ nature_field = TemplateField('Nature', type=TemplateFieldType.LABELS,
 
 
 def default_location_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(location_name_field, 0, 0, col_span=2, h_alignment=HAlignment.CENTER),
-              ProfileElement(sight_field, 1, 0),
-              ProfileElement(smell_field, 1, 1),
-              ProfileElement(noise_field, 2, 0),
-              ProfileElement(animals_field, 3, 0),
-              ProfileElement(nature_field, 3, 1),
-              ]
+    summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    sensory_title = TemplateField('Sensory details', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    fields = [
+        ProfileElement(summary_title, 0, 0),
+        ProfileElement(entity_summary_field, 1, 0, margins=Margins(left=15)),
+        ProfileElement(sensory_title, 2, 0),
+        ProfileElement(sight_field, 3, 0, margins=Margins(left=15)),
+        ProfileElement(smell_field, 4, 0, margins=Margins(left=15)),
+        ProfileElement(noise_field, 5, 0, margins=Margins(left=15)),
+    ]
     return [ProfileTemplate(title='Default location template',
                             id=uuid.UUID('8a95aa51-a975-416e-83d4-e349b84565b1'),
                             elements=fields)]

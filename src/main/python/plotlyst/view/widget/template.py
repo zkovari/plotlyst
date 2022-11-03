@@ -29,8 +29,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QPalette, QColor
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
-    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QListView, QPushButton, QTextEdit
+    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QSpacerItem, QListView, QPushButton, QTextEdit
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
     decr_font, retain_when_hidden, translucent
@@ -63,7 +62,7 @@ class _ProfileTemplateBase(QWidget):
     def __init__(self, profile: ProfileTemplate, editor_mode: bool = False, parent=None):
         super().__init__(parent)
         self._profile = profile
-        self.layout = QVBoxLayout(self)
+        self.layout = vbox(self)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -123,13 +122,17 @@ class _ProfileTemplateBase(QWidget):
             ids[str(value.id)] = value
 
         for widget in self.widgets:
-            if isinstance(widget, TemplateDisplayWidget):
-                continue
-            if str(widget.field.id) in ids.keys():
-                value = ids[str(widget.field.id)]
-                widget.setValue(value.value)
-                if value.notes:
-                    widget.setNotes(value.notes)
+            if isinstance(widget, TemplateFieldWidgetBase):
+                if str(widget.field.id) in ids.keys():
+                    value = ids[str(widget.field.id)]
+                    widget.setValue(value.value)
+                    if value.notes:
+                        widget.setNotes(value.notes)
+
+    def clearValues(self):
+        for wdg in self.widgets:
+            if isinstance(wdg, TemplateFieldWidgetBase):
+                wdg.clear()
 
 
 class _PlaceHolder(QFrame):
@@ -559,6 +562,9 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
     @abstractmethod
     def setValue(self, value: Any):
         pass
+
+    def clear(self):
+        self.wdgEditor.clear()
 
     def notes(self) -> str:
         if self.field.has_notes:

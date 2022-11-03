@@ -711,15 +711,11 @@ def default_stages() -> List[SceneStage]:
             SceneStage('Edited'), SceneStage('Proofread'), SceneStage('Final')]
 
 
-@dataclass
-class Location:
-    name: str
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
-    children: List['Location'] = field(default_factory=list)
-    icon: str = ''
-    icon_color: str = 'black'
-    template_values: List[TemplateValue] = field(default_factory=list)
-    document: Optional['Document'] = None
+class WorldBuildingEntityType(Enum):
+    ABSTRACT = 1
+    SETTING = 2
+    GROUP = 3
+    ITEM = 4
 
 
 @dataclass
@@ -731,6 +727,11 @@ class WorldBuildingEntity:
     icon_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     emoji: str = field(default='', metadata=config(exclude=exclude_if_empty))
     bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    type: WorldBuildingEntityType = WorldBuildingEntityType.ABSTRACT
+    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    template_values: List[TemplateValue] = field(default_factory=list)
+    topics: List[TemplateValue] = field(default_factory=list)
 
     @overrides
     def __hash__(self):
@@ -741,6 +742,7 @@ class WorldBuildingEntity:
 @dataclass
 class WorldBuilding:
     root_entity: WorldBuildingEntity = WorldBuildingEntity('My world', icon='mdi.globe-model', bg_color='#40916c')
+    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
 
 
 @dataclass
@@ -1180,7 +1182,6 @@ class ScenesView(Enum):
     NOVEL = 'novel'
     CHARACTERS = 'characters'
     SCENES = 'scenes'
-    LOCATIONS = 'locations'
     WORLD_BUILDING = 'world_building'
     DOCS = 'docs'
 
@@ -1204,13 +1205,11 @@ class Novel(NovelDescriptor):
     story_structures: List[StoryStructure] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
-    locations: List[Location] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     character_topics: List[Topic] = field(default_factory=list)
-    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[Goal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)

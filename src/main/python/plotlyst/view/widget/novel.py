@@ -40,7 +40,6 @@ from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneCha
 from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.model.locations_model import LocationsTreeModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
@@ -511,7 +510,6 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
 
         self._charactersModel: Optional[CharactersTableModel] = None
         self._chaptersModel: Optional[ChaptersTreeModel] = None
-        self._locationsModel: Optional[LocationsTreeModel] = None
 
     def setNovel(self, novel: Novel):
         self.lblTitle.setText(novel.title)
@@ -522,13 +520,6 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
             self.btnCharacters.setChecked(True)
         else:
             self.btnCharacters.setDisabled(True)
-        if novel.locations:
-            self._locationsModel = LocationsTreeModel(novel)
-            self.treeLocations.setModel(self._locationsModel)
-            if not self.btnCharacters.isChecked():
-                self.btnLocations.setChecked(True)
-        else:
-            self.btnLocations.setDisabled(True)
 
         if novel.scenes:
             self._chaptersModel = ChaptersTreeModel(novel)
