@@ -149,6 +149,7 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self._summary = TextEditBase(self)
         self._summary.setPlaceholderText('Summary...')
         self._summary.setMaximumHeight(75)
+        self._summary.setDisabled(True)
         self.wdgSummaryParent.layout().addWidget(self._summary, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._notes = TextEditBase(self)

@@ -506,6 +506,11 @@ def default_character_profiles() -> List[ProfileTemplate]:
                             elements=fields)]
 
 
+entity_summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
+                                     id=uuid.UUID('207053e6-dd51-4956-8830-478fe8efca0a'),
+                                     placeholder="Summarize your entity",
+                                     show_label=False)
+
 sight_field = TemplateField('Sight', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('935e6595-27ae-426e-8b41-b315e9160ad9'),
                             emoji=':eyes:',
@@ -535,12 +540,16 @@ nature_field = TemplateField('Nature', type=TemplateFieldType.LABELS,
 
 
 def default_location_profiles() -> List[ProfileTemplate]:
+    summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     sensory_title = TemplateField('Sensory details', type=TemplateFieldType.DISPLAY_HEADER, required=True)
-    fields = [ProfileElement(sensory_title, 0, 0),
-              ProfileElement(sight_field, 1, 0, margins=Margins(left=15)),
-              ProfileElement(smell_field, 2, 0, margins=Margins(left=15)),
-              ProfileElement(noise_field, 3, 0, margins=Margins(left=15)),
-              ]
+    fields = [
+        ProfileElement(summary_title, 0, 0),
+        ProfileElement(entity_summary_field, 1, 0, margins=Margins(left=15)),
+        ProfileElement(sensory_title, 2, 0),
+        ProfileElement(sight_field, 3, 0, margins=Margins(left=15)),
+        ProfileElement(smell_field, 4, 0, margins=Margins(left=15)),
+        ProfileElement(noise_field, 5, 0, margins=Margins(left=15)),
+    ]
     return [ProfileTemplate(title='Default location template',
                             id=uuid.UUID('8a95aa51-a975-416e-83d4-e349b84565b1'),
                             elements=fields)]
