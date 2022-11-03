@@ -730,6 +730,8 @@ class WorldBuildingEntity:
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     type: WorldBuildingEntityType = WorldBuildingEntityType.ABSTRACT
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    template_values: List[TemplateValue] = field(default_factory=list)
+    topics: List[TemplateValue] = field(default_factory=list)
 
     @overrides
     def __hash__(self):

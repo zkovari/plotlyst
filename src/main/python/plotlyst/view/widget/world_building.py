@@ -24,17 +24,48 @@ from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontM
     QPainterPath
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
-    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit
+    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QFrame
 from overrides import overrides
 
-from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType
+from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType, Novel
+from src.main.python.plotlyst.core.template import ProfileTemplate
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import pointy, set_tab_icon
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import TextEditBase
+from src.main.python.plotlyst.view.widget.template import ProfileTemplateView, TemplateFieldWidgetBase
 from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelectorWidget
 
 LINE_WIDTH: int = 4
+
+
+class WorldBuildingProfileTemplateView(ProfileTemplateView):
+    def __init__(self, novel: Novel, profile: ProfileTemplate):
+        super().__init__([], profile)
+        self.novel = novel
+        self._entity: Optional[WorldBuildingEntity] = None
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
+        for wdg in self.widgets:
+            if isinstance(wdg, TemplateFieldWidgetBase):
+                wdg.valueFilled.connect(self._save)
+                wdg.valueReset.connect(self._save)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def setLocation(self, entity: WorldBuildingEntity):
+        self._entity = entity
+        self.setValues(entity.template_values)
+
+    @overrides
+    def clearValues(self):
+        self._entity = None
+        super(WorldBuildingProfileTemplateView, self).clearValues()
+
+    def _save(self):
+        if self._entity:
+            self._entity.template_values = self.values()
+            self.repo.update_novel(self.novel)
 
 
 class ConnectorItem(QGraphicsPathItem):
@@ -582,6 +613,8 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
 class WorldBuildingEditorScene(QGraphicsScene):
     editItemRequested = pyqtSignal(WorldBuildingItem)
+    itemSelected = pyqtSignal(WorldBuildingItem)
+    selectionCleared = pyqtSignal()
     modelChanged = pyqtSignal()
 
     def __init__(self, entity: WorldBuildingEntity, parent=None):
