@@ -454,7 +454,8 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         painter.setFont(self._font)
         painter.drawText(self._textRect.x(), self._textRect.height(), self.text())
         if self._icon:
-            self._icon.paint(painter, self._iconLeftMargin, 8, self._iconSize, self._iconSize)
+            icon_y = 5 + (self._textRect.height() - self._iconSize)
+            self._icon.paint(painter, self._iconLeftMargin, icon_y, self._iconSize, self._iconSize)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
