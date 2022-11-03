@@ -344,10 +344,11 @@ class CollapseItem(QAbstractGraphicsShapeItem):
 
 class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
-    def __init__(self, entity: WorldBuildingEntity, parent: 'WorldBuildingItemGroup'):
+    def __init__(self, entity: WorldBuildingEntity, font: QFont, parent: 'WorldBuildingItemGroup'):
         super(WorldBuildingItem, self).__init__(parent)
         self._entity = entity
         self._parent = parent
+        self._font = font
 
         if entity.icon_color:
             self._textColor = entity.icon_color
@@ -360,8 +361,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         if entity.icon:
             self._icon = IconRegistry.from_name(entity.icon, self._textColor)
         self._iconLeftMargin = 13
-        self._font = QFont('Helvetica', 14)
-        self._iconSize = 13
+        self._iconSize = 25
         self._metrics = QFontMetrics(self._font)
         self._rect = QRect(0, 0, 1, 1)
         self._textRect = QRect(0, 0, 1, 1)
@@ -424,7 +424,6 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._textRect.moveTopLeft(QPoint(0, 0))
 
         margins = 10
-        self._iconSize = self._textRect.height() - 2
         icon_diff = self._textRect.height() + self._iconLeftMargin if self._icon else 0
 
         self._rect = QRect(0, 0, self._textRect.width() + margins + icon_diff + self._penWidth * 2,
@@ -480,7 +479,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
 
 
 class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
-    def __init__(self, entity: WorldBuildingEntity, parent=None):
+    def __init__(self, entity: WorldBuildingEntity, font: QFont, parent=None):
         super(WorldBuildingItemGroup, self).__init__(parent)
         self._entity = entity
         self._childrenEntityItems: List['WorldBuildingItemGroup'] = []
@@ -488,8 +487,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self._outputConnectors: List[ConnectorItem] = []
 
         self._collapseDistance = 10
+        self._font = font
 
-        self._item = WorldBuildingItem(self._entity, parent=self)
+        self._item = WorldBuildingItem(self._entity, self._font, parent=self)
         self._item.setPos(0, 0)
 
         self._plusItem = PlusItem(parent=self)
@@ -575,7 +575,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self.worldBuildingScene().modelChanged.emit()
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
-        item = WorldBuildingItemGroup(entity)
+        item = WorldBuildingItemGroup(entity, self._font)
         self._childrenEntityItems.append(item)
 
         return item
@@ -626,7 +626,15 @@ class WorldBuildingEditorScene(QGraphicsScene):
         self._itemHorizontalDistance = 20
         self._itemVerticalDistance = 80
 
-        self._rootItem = WorldBuildingItemGroup(self._root)
+        font_size = 12
+        _font = QFont('Helvetica', font_size)
+        _metrics = QFontMetrics(_font)
+        while _metrics.boundingRect('I').height() < 25:
+            font_size += 1
+            _font = QFont('Helvetica', font_size)
+            _metrics = QFontMetrics(_font)
+
+        self._rootItem = WorldBuildingItemGroup(self._root, _font)
         self._rootItem.setPos(0, 0)
         self.addItem(self._rootItem)
 
