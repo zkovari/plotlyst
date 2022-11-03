@@ -39,7 +39,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
     CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding
-from src.main.python.plotlyst.core.template import Role, default_location_profiles, exclude_if_empty
+from src.main.python.plotlyst.core.template import Role, exclude_if_empty
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -180,7 +180,6 @@ class NovelInfo:
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
-    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[Goal] = field(default_factory=list)
     tags: List[Tag] = field(default_factory=default_general_tags)
@@ -481,7 +480,6 @@ class JsonClient:
                       plots=novel_info.plots, characters=characters,
                       scenes=scenes, chapters=chapters, stages=novel_info.stages,
                       story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
-                      location_profiles=default_location_profiles(),
                       conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
                       documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
                       prefs=novel_info.prefs)
@@ -512,7 +510,6 @@ class JsonClient:
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
                                stages=novel.stages, story_structures=novel.story_structures,
                                character_profiles=novel.character_profiles,
-                               location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,
                                goals=novel.goals,
                                tags=[item for sublist in novel.tags.values() for item in sublist if not item.builtin],

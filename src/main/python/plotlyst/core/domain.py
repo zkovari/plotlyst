@@ -740,6 +740,7 @@ class WorldBuildingEntity:
 @dataclass
 class WorldBuilding:
     root_entity: WorldBuildingEntity = WorldBuildingEntity('My world', icon='mdi.globe-model', bg_color='#40916c')
+    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
 
 
 @dataclass
@@ -1207,7 +1208,6 @@ class Novel(NovelDescriptor):
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     character_topics: List[Topic] = field(default_factory=list)
-    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[Goal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)
