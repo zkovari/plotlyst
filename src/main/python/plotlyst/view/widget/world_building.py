@@ -359,9 +359,9 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._icon: Optional[QIcon] = None
         if entity.icon:
             self._icon = IconRegistry.from_name(entity.icon, self._textColor)
-        self._iconSize = 25
         self._iconLeftMargin = 13
         self._font = QFont('Helvetica', 14)
+        self._iconSize = 13
         self._metrics = QFontMetrics(self._font)
         self._rect = QRect(0, 0, 1, 1)
         self._textRect = QRect(0, 0, 1, 1)
@@ -424,11 +424,11 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         self._textRect.moveTopLeft(QPoint(0, 0))
 
         margins = 10
-        icon_diff = self._iconSize + self._iconLeftMargin if self._icon else 0
-        y_surplus = self._iconSize - self._textRect.height() if self._textRect.height() < self._iconSize else 0
+        self._iconSize = self._textRect.height() - 2
+        icon_diff = self._textRect.height() + self._iconLeftMargin if self._icon else 0
 
         self._rect = QRect(0, 0, self._textRect.width() + margins + icon_diff + self._penWidth * 2,
-                           self._textRect.height() + margins + self._penWidth * 2 + y_surplus)
+                           self._textRect.height() + margins + self._penWidth * 2)
 
         self._textRect.moveLeft(margins / 2 + icon_diff)
 
