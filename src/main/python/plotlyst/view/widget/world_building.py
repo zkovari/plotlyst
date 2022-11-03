@@ -467,6 +467,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._editItem.setVisible(True)
+        self._parent.setPlusVisible(True)
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -525,6 +526,9 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def collapseItem(self) -> CollapseItem:
         return self._collapseItem
 
+    def setPlusVisible(self, visible: bool):
+        self._plusItem.setVisible(visible)
+
     def _updateCollapse(self):
         if self._childrenEntityItems:
             self._collapseItem.setVisible(True)
@@ -535,10 +539,6 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         else:
             self._collapseItem.setVisible(False)
             self._lineItem.setVisible(False)
-
-    @overrides
-    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
-        self._plusItem.setVisible(True)
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
