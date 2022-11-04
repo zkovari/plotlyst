@@ -349,6 +349,10 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.tblConflicts.model().update()
         self.tblConflicts.model().modelReset.emit()
 
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        pass
+
     def _update_characters(self):
         for char in self.novel.characters:
             if self.agenda.character_id and char.id != self.agenda.character_id:
