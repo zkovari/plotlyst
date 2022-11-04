@@ -24,7 +24,7 @@ from typing import Optional, List
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu
+from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu, QWidgetAction
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
@@ -44,7 +44,7 @@ from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import link_buttons_to_pages
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, action
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
@@ -62,6 +62,7 @@ from src.main.python.plotlyst.view.widget.display import Subtitle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, PlotValueLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
 class _StoryStructureButton(QPushButton):
@@ -561,7 +562,23 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
         self._updateIcon()
 
-        self.btnPlotIcon.clicked.connect(self._changeIcon)
+        iconMenu = QMenu(self.btnPlotIcon)
+
+        colorAction = QWidgetAction(iconMenu)
+        colorPicker = ColorPicker(self)
+        colorPicker.setFixedSize(300, 150)
+        colorPicker.colorPicked.connect(self._colorChanged)
+        colorAction.setDefaultWidget(colorPicker)
+        colorMenu = QMenu('Color', iconMenu)
+        colorMenu.setIcon(IconRegistry.from_name('fa5s.palette'))
+        colorMenu.addAction(colorAction)
+
+        iconMenu.addMenu(colorMenu)
+        iconMenu.addSeparator()
+        iconMenu.addAction(
+            action('Change icon', icon=IconRegistry.icons_icon(), slot=self._changeIcon, parent=iconMenu))
+        btn_popup_menu(self.btnPlotIcon, iconMenu)
+
         self.btnRemove.clicked.connect(self.removalRequested.emit)
         self.installEventFilter(self)
 
@@ -601,6 +618,11 @@ class PlotWidget(QFrame, Ui_PlotWidget):
             self.plot.icon_color = result[1].name()
             self._updateIcon()
             self.repo.update_novel(self.novel)
+
+    def _colorChanged(self, color: QColor):
+        self.plot.icon_color = color.name()
+        self._updateIcon()
+        self.repo.update_novel(self.novel)
 
     def _newValue(self):
         value = PlotValueEditorDialog().display()
