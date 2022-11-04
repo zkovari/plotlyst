@@ -58,6 +58,7 @@ class CharacterEditor:
         self.ui.btnNewBackstory.clicked.connect(lambda: self.ui.wdgBackstory.add())
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
+        self.ui.textEdit.setWidthPercentage(95)
 
         self.ui.btnMale.setIcon(IconRegistry.male_gender_icon())
         self.ui.btnMale.installEventFilter(OpacityEventFilter(parent=self.ui.btnMale, ignoreCheckedButton=True))
