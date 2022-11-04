@@ -1285,7 +1285,7 @@ class SceneStoryStructureWidget(QWidget):
                 if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
                     btn.installEventFilter(
                         DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat), hideParent=True))
-                    btn.setCursor(Qt.CursorShape.DragMoveCursor)
+                    btn.setCursor(Qt.CursorShape.OpenHandCursor)
                 else:
                     btn.setCursor(self._beatCursor)
                 if self._checkOccupiedBeats and beat not in occupied_beats:
