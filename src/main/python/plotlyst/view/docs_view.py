@@ -23,7 +23,7 @@ from PyQt6.QtCore import QModelIndex, Qt, QSize
 from PyQt6.QtWidgets import QHeaderView, QWidgetAction, QListView
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import clear_layout
+from qthandy import clear_layout, bold
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, Character, DocumentType, \
@@ -52,6 +52,9 @@ class DocumentsView(AbstractNovelView):
         self._current_doc: Optional[Document] = None
 
         self.ui.splitter.setSizes([150, 500])
+
+        self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
+        bold(self.ui.lblTitle)
 
         self.model = DocumentsTreeModel(self.novel)
         self.ui.treeDocuments.setModel(self.model)
