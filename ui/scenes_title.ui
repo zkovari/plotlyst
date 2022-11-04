@@ -73,30 +73,30 @@
     </widget>
    </item>
    <item>
-    <widget class="QToolButton" name="btnCount">
+    <widget class="QPushButton" name="btnCount">
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
      </property>
      <property name="styleSheet">
-      <string notr="true">QToolButton {
+      <string notr="true">QPushButton {
 	border: 1px dotted lightgrey;
+	padding: 2px;
 }
 
-QToolButton:hover {
+QPushButton:hover {
 	border: 1px dotted grey;
 }
 
-QToolButton:pressed {
+QPushButton:pressed {
 	border: 1px solid black;
 }
 
-QToolButton::menu-indicator {width:0px;}</string>
+QPushButton::menu-indicator {
+	width:0px;
+}</string>
      </property>
      <property name="text">
       <string/>
-     </property>
-     <property name="popupMode">
-      <enum>QToolButton::InstantPopup</enum>
      </property>
     </widget>
    </item>
