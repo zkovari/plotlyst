@@ -32,6 +32,7 @@ from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType, Novel
 from src.main.python.plotlyst.core.template import ProfileTemplate
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import pointy, set_tab_icon, link_buttons_to_pages, emoji_font
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
@@ -709,7 +710,11 @@ class WorldBuildingEditorScene(QGraphicsScene):
         font_size = 12
         _emoji_font = emoji_font(font_size)
         _metrics = QFontMetrics(_emoji_font)
-        while _metrics.boundingRect('🙂').height() < 25:
+        if app_env.is_mac():
+            threshold = 30
+        else:
+            threshold = 25
+        while _metrics.boundingRect('🙂').height() < threshold:
             font_size += 1
             _emoji_font = emoji_font(font_size)
             _metrics = QFontMetrics(_emoji_font)
