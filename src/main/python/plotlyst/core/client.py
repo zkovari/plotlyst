@@ -120,6 +120,7 @@ class CharacterInfo:
     occupation: Optional[str] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
+    disabled_template_headers: Dict[str, bool] = field(default_factory=dict)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional[Document] = None
@@ -389,6 +390,7 @@ class JsonClient:
                 character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role, age=info.age,
                                       occupation=info.occupation,
                                       template_values=info.template_values,
+                                      disabled_template_headers=info.disabled_template_headers,
                                       backstory=info.backstory, goals=info.goals, document=info.document,
                                       journals=info.journals, prefs=info.prefs, topics=info.topics)
                 if info.avatar_id:
@@ -532,6 +534,7 @@ class JsonClient:
         char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
                                   occupation=char.occupation,
                                   template_values=char.template_values,
+                                  disabled_template_headers=char.disabled_template_headers,
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,
                                   journals=char.journals, prefs=char.prefs, topics=char.topics)

@@ -98,9 +98,9 @@ class TemplateField:
     emoji: str = field(default='', metadata=config(exclude=exclude_if_empty))
     placeholder: str = field(default='', metadata=config(exclude=exclude_if_empty))
     selections: List[SelectionItem] = field(default_factory=list)
-    highlighted: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     required: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     exclusive: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    enabled: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     custom: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     min_value: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     max_value = 2_147_483_647

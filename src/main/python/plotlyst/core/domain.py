@@ -182,6 +182,7 @@ class Character:
     occupation: Optional[str] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
+    disabled_template_headers: Dict[str, bool] = field(default_factory=dict)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional['Document'] = None

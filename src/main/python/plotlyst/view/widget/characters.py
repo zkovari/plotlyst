@@ -1649,7 +1649,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
 
-    def _updateForCharacter(self, char, fields, headers, row, col):
+    def _updateForCharacter(self, char: Character, fields, headers, row: int, col: int):
         name_progress = CircularProgressBar(parent=self)
         if char.name:
             name_progress.setValue(1)
@@ -1677,6 +1677,8 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
             header = fields[str(value.id)]
             if not header.header.required and char.is_minor():
                 continue
+            if not char.disabled_template_headers.get(str(header.header.id), header.header.enabled):
+                continue
             if value.value:
                 headers[header] = headers[header] + 1
 
@@ -1686,6 +1688,8 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
 
         for h, v in headers.items():
             if not h.header.required and char.is_minor():
+                continue
+            if not char.disabled_template_headers.get(str(h.header.id), h.header.enabled):
                 continue
             value_progress = CircularProgressBar(v, h.max_value, parent=self)
             self._addWidget(value_progress, h.row, col + 1)

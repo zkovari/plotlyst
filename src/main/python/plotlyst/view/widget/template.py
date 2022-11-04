@@ -52,16 +52,19 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
 
 
 class _ProfileTemplateBase(QWidget):
 
-    def __init__(self, profile: ProfileTemplate, editor_mode: bool = False, parent=None):
+    def __init__(self, profile: ProfileTemplate, editor_mode: bool = False, disabled_template_headers=None,
+                 parent=None):
         super().__init__(parent)
         self._profile = profile
+        self._disabled_template_headers: Dict[
+            str, bool] = disabled_template_headers if disabled_template_headers else {}
         self.layout = vbox(self)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
@@ -99,6 +102,8 @@ class _ProfileTemplateBase(QWidget):
 
         for _, header in self._headers:
             header.updateProgress()
+            header.setHeaderEnabled(self._disabled_template_headers.get(str(header.field.id), header.field.enabled))
+            header.headerEnabledChanged.connect(partial(self._headerEnabledChanged, header.field))
 
         self._addSpacerToEnd()
 
@@ -133,6 +138,9 @@ class _ProfileTemplateBase(QWidget):
         for wdg in self.widgets:
             if isinstance(wdg, TemplateFieldWidgetBase):
                 wdg.clear()
+
+    def _headerEnabledChanged(self, header: TemplateField, enabled: bool):
+        pass
 
 
 class _PlaceHolder(QFrame):
@@ -440,6 +448,7 @@ class IconTemplateDisplayWidget(TemplateDisplayWidget):
 
 
 class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
+    headerEnabledChanged = pyqtSignal(bool)
 
     def __init__(self, field: TemplateField, parent=None):
         super(HeaderTemplateDisplayWidget, self).__init__(field, parent)
@@ -460,6 +469,14 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         self.layout().addWidget(self.progress, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.layout().addWidget(spacer())
 
+        self._toggle: Optional[Toggle] = None
+        if not field.required:
+            self._toggle = Toggle(self)
+            self._toggle.setToolTip(f'Character has {field.name}')
+            retain_when_hidden(self._toggle)
+            self._toggle.toggled.connect(self._headerEnabledChanged)
+            self.layout().addWidget(self._toggle)
+
         self.children: List[TemplateWidgetBase] = []
         self.progressStatuses: Dict[TemplateWidgetBase] = {}
 
@@ -478,6 +495,16 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
     def collapse(self, collapsed: bool):
         self.btnHeader.setChecked(collapsed)
 
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        if self._toggle:
+            self._toggle.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, a0: QEvent) -> None:
+        if self._toggle and self._toggle.isChecked():
+            self._toggle.setHidden(True)
+
     def _toggleCollapse(self, checked: bool):
         for wdg in self.children:
             wdg.setHidden(checked)
@@ -485,6 +512,18 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
             self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-right'))
         else:
             self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-down'))
+
+    def setHeaderEnabled(self, enabled: bool):
+        self.collapse(not enabled)
+        self.btnHeader.setEnabled(enabled)
+        self.progress.setVisible(enabled)
+        if self._toggle:
+            self._toggle.setChecked(enabled)
+            self._toggle.setHidden(enabled)
+
+    def _headerEnabledChanged(self, enabled: bool):
+        self.setHeaderEnabled(enabled)
+        self.headerEnabledChanged.emit(enabled)
 
     def _valueFilled(self, widget: TemplateWidgetBase):
         if self.progressStatuses[widget]:
@@ -1053,15 +1092,15 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
 
 class ProfileTemplateView(_ProfileTemplateBase):
-    def __init__(self, values: List[TemplateValue], profile: ProfileTemplate):
-        super().__init__(profile)
+    def __init__(self, values: List[TemplateValue], profile: ProfileTemplate, disabled_template_headers):
+        super().__init__(profile, disabled_template_headers=disabled_template_headers)
         self.setProperty('mainFrame', True)
         self.setValues(values)
 
 
 class CharacterProfileTemplateView(ProfileTemplateView):
     def __init__(self, character: Character, profile: ProfileTemplate):
-        super().__init__(character.template_values, profile)
+        super().__init__(character.template_values, profile, character.disabled_template_headers)
         self.character = character
         self._required_headers_toggled: bool = False
         self._enneagram_widget: Optional[TextSelectionWidget] = None
@@ -1085,6 +1124,10 @@ class CharacterProfileTemplateView(ProfileTemplateView):
             if not header.field.required:
                 header.collapse(toggled)
                 header.setHidden(toggled)
+
+    @overrides
+    def _headerEnabledChanged(self, header: TemplateField, enabled: bool):
+        self.character.disabled_template_headers[str(header.id)] = enabled
 
     def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
         if self._traits_widget:

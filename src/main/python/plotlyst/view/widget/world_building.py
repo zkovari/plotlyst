@@ -47,7 +47,7 @@ DEFAULT_COLOR: str = '#219ebc'
 
 class WorldBuildingProfileTemplateView(ProfileTemplateView):
     def __init__(self, novel: Novel, profile: ProfileTemplate):
-        super().__init__([], profile)
+        super().__init__([], profile, {})
         self.novel = novel
         self._entity: Optional[WorldBuildingEntity] = None
         self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
