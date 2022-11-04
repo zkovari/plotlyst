@@ -330,7 +330,7 @@ weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.
 ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
                             placeholder="What's the character's ghost from their past that haunts them?",
                             id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
-values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hugging_face:',
+values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':smiling_face_with_open_hands:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
 values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
