@@ -79,18 +79,18 @@
      </property>
      <property name="styleSheet">
       <string notr="true">QToolButton {
-	border: 1px hidden black;
-    padding: 1px;
-    margin: 2px;
+	border: 1px dotted lightgrey;
 }
 
 QToolButton:hover {
-	border: 1px dashed black;
+	border: 1px dotted grey;
 }
 
 QToolButton:pressed {
 	border: 1px solid black;
-}</string>
+}
+
+QToolButton::menu-indicator {width:0px;}</string>
      </property>
      <property name="text">
       <string/>
