@@ -152,13 +152,19 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
         self._structure: Optional[StoryStructure] = None
-
-    def display(self) -> Optional[StoryStructure]:
         self._structureChanged()
-        result = self.exec()
+
+    def structure(self) -> Optional[StoryStructure]:
+        return self._structure
+
+    @staticmethod
+    def display() -> Optional[StoryStructure]:
+        dialog = StoryStructureSelectorDialog()
+
+        result = dialog.exec()
 
         if result == QDialog.DialogCode.Accepted:
-            return self._structure
+            return dialog.structure()
 
         return None
 
