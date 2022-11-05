@@ -45,7 +45,8 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     SceneStructureItemType, SceneStructureAgenda, SceneStructureItem, SceneOutcome, StoryBeat, Conflict, \
     Character, Plot, ScenePlotReference, Chapter, StoryBeatType, Tag, PlotValue, ScenePlotValueCharge, \
-    SceneStage, GoalReference, CharacterGoal, ConflictReference, ReaderPosition, InformationAcquisition, Document
+    SceneStage, GoalReference, CharacterGoal, ConflictReference, ReaderPosition, InformationAcquisition, Document, \
+    StoryStructure
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -1207,6 +1208,7 @@ class SceneStoryStructureWidget(QWidget):
         self._actsResizeable: bool = False
         self._beatCursor = Qt.CursorShape.PointingHandCursor
         self.novel: Optional[Novel] = None
+        self.structure: Optional[StoryStructure] = None
         self._acts: List[QPushButton] = []
         self._beats: Dict[StoryBeat, QToolButton] = {}
         self._containers: Dict[StoryBeat, QPushButton] = {}
@@ -1248,16 +1250,17 @@ class SceneStoryStructureWidget(QWidget):
     def setBeatCursor(self, value: int):
         self._beatCursor = value
 
-    def setNovel(self, novel: Novel):
+    def setStructure(self, novel: Novel, structure: Optional[StoryStructure] = None):
         def _beat(beat, btn):
             return beat
-
+        
         self.novel = novel
+        self.structure = structure if structure else novel.active_story_structure
         self._acts.clear()
         self._beats.clear()
 
         occupied_beats = acts_registry.occupied_beats()
-        for beat in self.novel.active_story_structure.beats:
+        for beat in self.structure.beats:
             if beat.type == StoryBeatType.CONTAINER:
                 btn = QPushButton(self)
                 if beat.percentage_end - beat.percentage > 7:
@@ -1316,7 +1319,7 @@ class SceneStoryStructureWidget(QWidget):
         for btn in self._acts:
             btn.setEnabled(self._actsClickable)
 
-        beats = self.novel.active_story_structure.act_beats()
+        beats = self.structure.act_beats()
         if not len(beats) == 2:
             return emit_critical('Only 3 acts are supported at the moment for story structure widget')
 

@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu, QWidgetAction, \
-    QDialog, QLabel
+    QDialog
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
@@ -254,18 +254,18 @@ class _AbstractStructureEditorWidget(QWidget):
 
 
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super(_ThreeActStructureEditorWidget, self).__init__(parent)
-        self.wdgPreview.setNovel()
+        self.wdgPreview.setStructure(novel, three_act_structure)
 
         self.layout().addWidget(self.wdgPreview)
-        self.layout().addWidget(QLabel('Test', self))
 
 
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super(StoryStructureSelectorDialog, self).__init__(parent)
         self.setupUi(self)
+        self._novel = novel
         self.setWindowIcon(IconRegistry.story_structure_icon())
         self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
@@ -277,8 +277,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         return self._structure
 
     @staticmethod
-    def display() -> Optional[StoryStructure]:
-        dialog = StoryStructureSelectorDialog()
+    def display(novel: Novel) -> Optional[StoryStructure]:
+        dialog = StoryStructureSelectorDialog(novel)
 
         result = dialog.exec()
 
@@ -292,7 +292,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             self._structure = three_act_structure
             self.stackedWidget.setCurrentWidget(self.pageThreeAct)
             if self.pageThreeAct.layout().count() == 0:
-                self.pageThreeAct.layout().addWidget(_ThreeActStructureEditorWidget(self))
+                self.pageThreeAct.layout().addWidget(_ThreeActStructureEditorWidget(self._novel, self))
         elif self.btnSaveTheCat.isChecked():
             self._structure = save_the_cat
             self.stackedWidget.setCurrentWidget(self.pageSaveTheCat)
@@ -387,7 +387,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
                 self._removeStructure(st)
 
     def _selectTemplateStructure(self):
-        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display()
+        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
         if structure:
             self.novel.story_structures.append(structure)
             self._addStructure(structure)
@@ -408,7 +408,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             self.wdgPreview = SceneStoryStructureWidget(self)
             self.__initWdgPReview()
             self.layout().insertWidget(1, self.wdgPreview)
-        self.wdgPreview.setNovel(self.novel)
+        self.wdgPreview.setStructure(self.novel)
         row = 0
         col = 0
         for beat in structure.beats:

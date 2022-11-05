@@ -188,7 +188,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.wdgStoryStructureParent.setHidden(True)
         self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
-        self.ui.wdgStoryStructure.setNovel(self.novel)
+        self.ui.wdgStoryStructure.setStructure(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
 
         self.ui.btnFilter.setIcon(IconRegistry.filter_icon())
@@ -233,7 +233,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.wdgStoryStructure = SceneStoryStructureWidget(self.ui.wdgStoryStructureParent)
             self.ui.wdgStoryStructure.setBeatCursor(Qt.CursorShape.ArrowCursor)
             self.ui.wdgStoryStructureParent.layout().addWidget(self.ui.wdgStoryStructure)
-        self.ui.wdgStoryStructure.setNovel(self.novel)
+        self.ui.wdgStoryStructure.setStructure(self.novel)
         self.ui.wdgStoryStructure.setActsClickable(False)
 
         if self.stagesModel:
