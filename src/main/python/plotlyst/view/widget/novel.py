@@ -45,7 +45,7 @@ from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, action
-from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
+from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog, StoryStructureSelectorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
@@ -298,10 +298,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
                 border: 2px dotted darkBlue;
             }
         ''')
+        self.btnTemplateEditor.clicked.connect(self._selectTemplateStructure)
         self.wdgCharacterLink: Optional[StoryStructureCharacterLinkWidget] = None
-        self.structureSelector = StoryStructureSelector(self.btnTemplateEditor)
-        self.structureSelector.structureClicked.connect(self._structureSelectionChanged)
-        btn_popup(self.btnTemplateEditor, self.structureSelector, show_menu_icon=True)
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
@@ -324,7 +322,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.wdgCharacterLink.linkCharacter.connect(self._linkCharacter)
         self.wdgCharacterLink.unlinkCharacter.connect(self._unlinkCharacter)
         btn_popup(self.btnLinkCharacter, self.wdgCharacterLink)
-        self.structureSelector.setNovel(self.novel)
         for structure in self.novel.story_structures:
             self._addStructure(structure)
 
@@ -370,6 +367,12 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             for st in matched_structures:
                 self.novel.story_structures.remove(st)
                 self._removeStructure(st)
+
+    def _selectTemplateStructure(self):
+        structure: Optional[StoryStructure] = StoryStructureSelectorDialog().display()
+        if structure:
+            self.novel.story_structures.append(structure)
+            self._addStructure(structure)
 
     def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
         if not toggled:
@@ -423,18 +426,18 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.wdgPreview.toggleBeatVisibility(beat)
         self.repo.update_novel(self.novel)
 
-    def _structureSelectionChanged(self, structure: StoryStructure, toggled: bool):
-        if toggled:
-            self.novel.story_structures.append(structure)
-            self._addStructure(structure)
-        else:
-            matched_structures = [x for x in self.novel.story_structures if x.id == structure.id]
-            if matched_structures:
-                for st in matched_structures:
-                    self.novel.story_structures.remove(st)
-            self._removeStructure(structure)
-
-        self.repo.update_novel(self.novel)
+    # def _structureSelectionChanged(self, structure: StoryStructure, toggled: bool):
+    #     if toggled:
+    #         self.novel.story_structures.append(structure)
+    #         self._addStructure(structure)
+    #     else:
+    #         matched_structures = [x for x in self.novel.story_structures if x.id == structure.id]
+    #         if matched_structures:
+    #             for st in matched_structures:
+    #                 self.novel.story_structures.remove(st)
+    #         self._removeStructure(structure)
+    #
+    #     self.repo.update_novel(self.novel)
 
 
 class TagLabelsEditor(LabelsEditorWidget):
