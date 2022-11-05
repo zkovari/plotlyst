@@ -31,7 +31,7 @@ from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bo
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    three_act_structure, save_the_cat, Character, SceneType, Scene, TagType, SelectionItem, Tag, \
+    Character, SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, Plot, PlotType, PlotValue
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
@@ -53,7 +53,6 @@ from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_Plo
 from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.generated.story_structure_character_link_widget_ui import \
     Ui_StoryStructureCharacterLink
-from src.main.python.plotlyst.view.generated.story_structure_selector_ui import Ui_StoryStructureSelector
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
@@ -209,42 +208,6 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             self.repo.update_scene(self.scene)
 
 
-class StoryStructureSelector(QWidget, Ui_StoryStructureSelector):
-    structureClicked = pyqtSignal(StoryStructure, bool)
-
-    def __init__(self, parent=None):
-        super(StoryStructureSelector, self).__init__(parent)
-        self.setupUi(self)
-        self.novel: Optional[Novel] = None
-        self.cb3act.clicked.connect(partial(self.structureClicked.emit, three_act_structure))
-        self.cbSaveTheCat.clicked.connect(partial(self.structureClicked.emit, save_the_cat))
-        self.buttonGroup.buttonToggled.connect(self._btnToggled)
-
-    def setNovel(self, novel: Novel):
-        self.novel = novel
-
-        self.cb3act.setChecked(False)
-        self.cbSaveTheCat.setChecked(False)
-
-        for structure in self.novel.story_structures:
-            if structure.id == three_act_structure.id:
-                self.cb3act.setChecked(True)
-            elif structure.id == save_the_cat.id:
-                self.cbSaveTheCat.setChecked(True)
-
-    def _btnToggled(self):
-        checked_buttons = []
-        for btn in self.buttonGroup.buttons():
-            btn.setVisible(True)
-            if btn.isChecked():
-                if checked_buttons:
-                    return
-                checked_buttons.append(btn)
-
-        if len(checked_buttons) == 1:
-            checked_buttons[0].setHidden(True)
-
-
 class StoryStructureCharacterLinkWidget(QWidget, Ui_StoryStructureCharacterLink, EventListener):
     linkCharacter = pyqtSignal(Character)
     unlinkCharacter = pyqtSignal(Character)
@@ -369,7 +332,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
                 self._removeStructure(st)
 
     def _selectTemplateStructure(self):
-        structure: Optional[StoryStructure] = StoryStructureSelectorDialog().display()
+        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display()
         if structure:
             self.novel.story_structures.append(structure)
             self._addStructure(structure)
