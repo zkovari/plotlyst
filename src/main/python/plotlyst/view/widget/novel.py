@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu, QWidgetAction, \
-    QDialog
+    QDialog, QLabel
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
@@ -246,10 +246,27 @@ class StoryStructureCharacterLinkWidget(QWidget, Ui_StoryStructureCharacterLink,
             self.unlinkCharacter.emit(character)
 
 
+class _AbstractStructureEditorWidget(QWidget):
+    def __init__(self, parent=None):
+        super(_AbstractStructureEditorWidget, self).__init__(parent)
+        vbox(self)
+        self.wdgPreview = SceneStoryStructureWidget(self)
+
+
+class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
+    def __init__(self, parent=None):
+        super(_ThreeActStructureEditorWidget, self).__init__(parent)
+        self.wdgPreview.setNovel()
+
+        self.layout().addWidget(self.wdgPreview)
+        self.layout().addWidget(QLabel('Test', self))
+
+
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
     def __init__(self, parent=None):
         super(StoryStructureSelectorDialog, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon(IconRegistry.story_structure_icon())
         self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
@@ -273,8 +290,12 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
     def _structureChanged(self):
         if self.btnThreeAct.isChecked():
             self._structure = three_act_structure
+            self.stackedWidget.setCurrentWidget(self.pageThreeAct)
+            if self.pageThreeAct.layout().count() == 0:
+                self.pageThreeAct.layout().addWidget(_ThreeActStructureEditorWidget(self))
         elif self.btnSaveTheCat.isChecked():
             self._structure = save_the_cat
+            self.stackedWidget.setCurrentWidget(self.pageSaveTheCat)
 
 
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):

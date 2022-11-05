@@ -131,14 +131,19 @@
       </widget>
      </item>
      <item>
-      <widget class="QWidget" name="widget" native="true">
+      <widget class="QStackedWidget" name="stackedWidget">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2"/>
+       <widget class="QWidget" name="pageThreeAct" native="true">
+        <layout class="QVBoxLayout" name="verticalLayout_2"/>
+       </widget>
+       <widget class="QWidget" name="pageSaveTheCat">
+        <layout class="QVBoxLayout" name="verticalLayout_4"/>
+       </widget>
       </widget>
      </item>
     </layout>
