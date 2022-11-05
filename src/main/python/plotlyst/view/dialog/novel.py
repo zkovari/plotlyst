@@ -27,14 +27,11 @@ from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox
 from qthandy import flow
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
-from src.main.python.plotlyst.common import ACT_THREE_COLOR
-from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue, StoryStructure, three_act_structure, \
-    save_the_cat
+from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue
 from src.main.python.plotlyst.view.common import link_editor_to_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from src.main.python.plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
-from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -142,34 +139,3 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
             self._value.icon_color = result[1].name()
             self.btnIcon.setIcon(IconRegistry.from_name(self._value.icon, self._value.icon_color))
             self.btnIcon.setBorderColor(self._value.icon_color)
-
-
-class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
-    def __init__(self, parent=None):
-        super(StoryStructureSelectorDialog, self).__init__(parent)
-        self.setupUi(self)
-        self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
-        self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
-        self.buttonGroup.buttonClicked.connect(self._structureChanged)
-        self._structure: Optional[StoryStructure] = None
-        self._structureChanged()
-
-    def structure(self) -> Optional[StoryStructure]:
-        return self._structure
-
-    @staticmethod
-    def display() -> Optional[StoryStructure]:
-        dialog = StoryStructureSelectorDialog()
-
-        result = dialog.exec()
-
-        if result == QDialog.DialogCode.Accepted:
-            return dialog.structure()
-
-        return None
-
-    def _structureChanged(self):
-        if self.btnThreeAct.isChecked():
-            self._structure = three_act_structure
-        elif self.btnSaveTheCat.isChecked():
-            self._structure = save_the_cat

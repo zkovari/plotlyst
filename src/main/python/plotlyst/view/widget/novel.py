@@ -24,15 +24,17 @@ from typing import Optional, List
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu, QWidgetAction
+from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu, QWidgetAction, \
+    QDialog
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
+from src.main.python.plotlyst.common import ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     Character, SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType, Plot, PlotType, PlotValue
+    StoryBeatType, Plot, PlotType, PlotValue, three_act_structure, save_the_cat
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -45,7 +47,7 @@ from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, action
-from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog, StoryStructureSelectorDialog
+from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
@@ -53,6 +55,7 @@ from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_Plo
 from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.generated.story_structure_character_link_widget_ui import \
     Ui_StoryStructureCharacterLink
+from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
@@ -241,6 +244,37 @@ class StoryStructureCharacterLinkWidget(QWidget, Ui_StoryStructureCharacterLink,
             self.linkCharacter.emit(character)
         else:
             self.unlinkCharacter.emit(character)
+
+
+class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
+    def __init__(self, parent=None):
+        super(StoryStructureSelectorDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
+        self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
+        self.buttonGroup.buttonClicked.connect(self._structureChanged)
+        self._structure: Optional[StoryStructure] = None
+        self._structureChanged()
+
+    def structure(self) -> Optional[StoryStructure]:
+        return self._structure
+
+    @staticmethod
+    def display() -> Optional[StoryStructure]:
+        dialog = StoryStructureSelectorDialog()
+
+        result = dialog.exec()
+
+        if result == QDialog.DialogCode.Accepted:
+            return dialog.structure()
+
+        return None
+
+    def _structureChanged(self):
+        if self.btnThreeAct.isChecked():
+            self._structure = three_act_structure
+        elif self.btnSaveTheCat.isChecked():
+            self._structure = save_the_cat
 
 
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
