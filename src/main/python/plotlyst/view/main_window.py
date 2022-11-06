@@ -46,6 +46,7 @@ from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
 from src.main.python.plotlyst.settings import settings
+from src.main.python.plotlyst.view.board_view import BoardView
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
@@ -212,6 +213,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.characters_view = CharactersView(self.novel)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
         self.world_building_view = WorldBuildingView(self.novel)
+        self.board_view = BoardView(self.novel)
         self.comments_view = CommentsView(self.novel)
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
@@ -230,6 +232,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageScenes.layout().addWidget(self.scenes_outline_view.widget)
         self.pageWorld.layout().addWidget(self.world_building_view.widget)
         self.pageNotes.layout().addWidget(self.notes_view.widget)
+        self.pageBoard.layout().addWidget(self.board_view.widget)
 
         if self.novel.prefs.panels.scenes_view == ScenesView.NOVEL:
             self.btnNovel.setChecked(True)

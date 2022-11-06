@@ -747,6 +747,33 @@ class WorldBuilding:
 
 
 @dataclass
+class TaskStatus(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
+
+
+class Task:
+    title: str
+    status_ref: uuid.UUID
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+
+def default_task_statues() -> List[TaskStatus]:
+    return [TaskStatus('To Do', color_hexa='#0077b6'), TaskStatus('In Progress', color_hexa='#9f86c0'),
+            TaskStatus('Done', color_hexa='#588157')]
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Board:
+    tasks: List[Task] = field(default_factory=list)
+    statuses: List[TaskStatus] = field(default_factory=default_task_statues)
+
+
+@dataclass
 class StoryStructure(CharacterBased):
     title: str
     icon: str = ''
@@ -1219,6 +1246,7 @@ class Novel(NovelDescriptor):
     synopsis: Optional['Document'] = None
     prefs: NovelPreferences = NovelPreferences()
     world: WorldBuilding = WorldBuilding()
+    board: Board = Board()
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title
