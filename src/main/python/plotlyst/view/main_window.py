@@ -218,6 +218,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.notes_view = DocumentsView(self.novel)
 
+        self.btnBoard.setIcon(IconRegistry.from_name('mdi6.clipboard-check-outline', color_on='#2B0548'))
         self.btnNovel.setIcon(IconRegistry.book_icon())
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnScenes.setIcon(IconRegistry.scene_icon())
@@ -248,7 +249,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             return
 
         title = None
-        if self.btnNovel.isChecked():
+        if self.btnBoard.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageBoard)
+        elif self.btnNovel.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNovel)
             self.novel_view.activate()
         elif self.btnCharacters.isChecked():
