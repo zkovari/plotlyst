@@ -251,13 +251,19 @@ class _AbstractStructureEditorWidget(QWidget):
         super(_AbstractStructureEditorWidget, self).__init__(parent)
         vbox(self)
         self.wdgPreview = SceneStoryStructureWidget(self)
+        self.wdgPreview.setCheckOccupiedBeats(False)
+        self.wdgPreview.setBeatCursor(Qt.CursorShape.ArrowCursor)
+        self.wdgPreview.setBeatsMoveable(True)
+        self.wdgPreview.setActsClickable(False)
+        self.wdgPreview.setActsResizeable(True)
+        # self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
+        # self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
 
 
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
     def __init__(self, novel: Novel, parent=None):
         super(_ThreeActStructureEditorWidget, self).__init__(parent)
-        self.wdgPreview.setStructure(novel, three_act_structure)
-
+        self.wdgPreview.setStructure(novel, copy.deepcopy(three_act_structure))
         self.layout().addWidget(self.wdgPreview)
 
 
