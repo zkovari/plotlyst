@@ -588,7 +588,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.btnDelete.clicked.connect(self._remove)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
         self.btnDrag.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
-                                                        grabbed=self.btnIcon, hideParent=True))
+                                                        grabbed=self.btnIcon, hideTarget=True))
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, parent=self))
         retain_when_hidden(self.btnDelete)
         retain_when_hidden(self.btnDrag)
@@ -1284,7 +1284,7 @@ class SceneStoryStructureWidget(QWidget):
                 btn.installEventFilter(self)
                 if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
                     btn.installEventFilter(
-                        DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat), hideParent=True))
+                        DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat), hideTarget=True))
                     btn.setCursor(Qt.CursorShape.OpenHandCursor)
                 else:
                     btn.setCursor(self._beatCursor)
