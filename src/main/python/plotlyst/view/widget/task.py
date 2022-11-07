@@ -17,10 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QGraphicsDropShadowEffect
+from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QGraphicsDropShadowEffect, QPushButton
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden
-from qthandy.filter import VisibilityToggleEventFilter
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
 from src.main.python.plotlyst.env import app_env
@@ -114,11 +115,25 @@ class StatusColumnWidget(QWidget):
         self.layout().addWidget(self._container)
         self.layout().addWidget(vspacer())
 
+        self._btnAdd = QPushButton('New Task', self)
+        self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        transparent(self._btnAdd)
+        pointy(self._btnAdd)
+        self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
+        self._btnAdd.installEventFilter(OpacityEventFilter(self._btnAdd))
+
+        self._container.layout().addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
+
+        self._btnAdd.clicked.connect(self._addNewTask)
         self._header.addTask.connect(self._addNewTask)
 
     def addTask(self, task: Task):
         wdg = TaskWidget(task, self)
-        self._container.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignTop)
+        self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
+                                              alignment=Qt.AlignmentFlag.AlignTop)
+        qtanim.fade_in(wdg, 150)
 
     def _addNewTask(self):
         task = Task('New task', self._status.id)
