@@ -105,7 +105,7 @@ class StatusColumnWidget(QWidget):
         super(StatusColumnWidget, self).__init__(parent)
         self._novel = novel
         self._status = status
-        vbox(self, 3, 4)
+        vbox(self, 1, 20)
         self._header = StatusHeader(self._status)
         self._container = QWidget(self)
         spacing = 6 if app_env.is_mac() else 12
