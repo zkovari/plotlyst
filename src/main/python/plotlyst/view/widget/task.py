@@ -18,28 +18,37 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton
-from qthandy import vbox, hbox, incr_font, bold, transparent, vspacer
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QGraphicsDropShadowEffect
+from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden
+from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import CollapseButton
 
-TASK_WIDGET_MAX_WIDTH = 450
+TASK_WIDGET_MAX_WIDTH = 350
+
+
+def shadow(wdg: QWidget):
+    effect = QGraphicsDropShadowEffect(wdg)
+    effect.setBlurRadius(0)
+    effect.setOffset(2, 2)
+    effect.setColor(Qt.GlobalColor.lightGray)
+    wdg.setGraphicsEffect(effect)
 
 
 class TaskWidget(QFrame):
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
         self._task = task
-        self.setStyleSheet('TaskWidget {background: white;}')
+        self.setStyleSheet('TaskWidget {background: white; border: 1px solid white; border-radius: 6px;}')
+        shadow(self)
 
         vbox(self)
         self._lblTitle = QLabel(self._task.title, self)
         self.layout().addWidget(self._lblTitle, alignment=Qt.AlignmentFlag.AlignTop)
-        pointy(self)
 
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.setMinimumHeight(75)
@@ -58,16 +67,26 @@ class StatusHeader(QFrame):
             }}''')
         hbox(self, margin=8)
         self._title = QLabel(self._status.text.upper(), self)
-        incr_font(self._title)
         bold(self._title)
         self._btnCollapse = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.LeftEdge, self)
-        self._btnCollapse.installEventFilter(OpacityEventFilter(self._btnCollapse))
         self.installEventFilter(VisibilityToggleEventFilter(self._btnCollapse, self))
+        shadow(self)
 
-        self._btnAdd = QToolButton(self)
+        self._btnAdd = QToolButton()
         self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
-        self._btnAdd.installEventFilter(OpacityEventFilter(self._btnCollapse))
         transparent(self._btnAdd)
+        retain_when_hidden(self._btnAdd)
+        self._btnAdd.setStyleSheet('''
+            QToolButton {
+                border-radius: 12px;
+                border: 1px hidden lightgrey;
+                padding: 2px;
+            }
+
+            QToolButton:hover {
+                background: lightgrey;
+            }
+        ''')
         pointy(self._btnAdd)
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
         self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
@@ -88,7 +107,8 @@ class StatusColumnWidget(QWidget):
         vbox(self, 3, 4)
         self._header = StatusHeader(self._status)
         self._container = QWidget(self)
-        vbox(self._container)
+        spacing = 6 if app_env.is_mac() else 12
+        vbox(self._container, margin=5, spacing=spacing)
         self.setMaximumWidth(TASK_WIDGET_MAX_WIDTH)
         self.layout().addWidget(self._header)
         self.layout().addWidget(self._container)
@@ -111,6 +131,10 @@ class BoardWidget(QWidget):
         super(BoardWidget, self).__init__(parent)
         self._novel = novel
 
-        hbox(self)
+        hbox(self, spacing=20)
         for status in self._novel.board.statuses:
             self.layout().addWidget(StatusColumnWidget(novel, status))
+        _spacer = spacer()
+        _spacer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.layout().addWidget(_spacer)
+        margins(self, left=20)
