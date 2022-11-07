@@ -22,12 +22,13 @@ from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize
+from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget
 from fbs_runtime import platform
+from overrides import overrides
 from qthandy import hbox
 
 from src.main.python.plotlyst.env import app_env
@@ -132,6 +133,27 @@ class PopupMenuBuilder:
 
     def popup(self):
         self.menu.popup(self._viewport.mapToGlobal(self.pos))
+
+
+class ButtonPressResizeEventFilter(QObject):
+    def __init__(self, parent):
+        super(ButtonPressResizeEventFilter, self).__init__(parent)
+        self._originalSize: Optional[QSize] = None
+        self._reducedSize: Optional[QSize] = None
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(watched, QAbstractButton):
+            if event.type() == QEvent.Type.MouseButtonPress:
+                if self._originalSize is None:
+                    self._originalSize = watched.iconSize()
+                    self._reducedSize = watched.iconSize()
+                    self._reducedSize.setWidth(self._originalSize.width() - 1)
+                    self._reducedSize.setHeight(self._originalSize.height() - 1)
+                watched.setIconSize(self._reducedSize)
+            elif event.type() == QEvent.Type.MouseButtonRelease:
+                watched.setIconSize(self._originalSize)
+        return super(ButtonPressResizeEventFilter, self).eventFilter(watched, event)
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):

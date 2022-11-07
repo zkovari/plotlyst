@@ -18,11 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel
-from qthandy import vbox, hbox, incr_font
+from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton
+from qthandy import vbox, hbox, incr_font, bold, transparent
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import CollapseButton
 
 TASK_WIDGET_MAX_WIDTH = 450
@@ -36,6 +38,7 @@ class TaskWidget(QWidget):
 
 class StatusHeader(QFrame):
     collapseToggled = pyqtSignal(bool)
+    addTask = pyqtSignal()
 
     def __init__(self, status: TaskStatus, parent=None):
         super(StatusHeader, self).__init__(parent)
@@ -44,16 +47,28 @@ class StatusHeader(QFrame):
                 background: white;
                 border-bottom: 3px solid {self._status.color_hexa};
             }}''')
-        hbox(self)
+        hbox(self, margin=8)
         self._title = QLabel(self._status.text.upper(), self)
         incr_font(self._title)
+        bold(self._title)
         self._btnCollapse = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.LeftEdge, self)
         self._btnCollapse.installEventFilter(OpacityEventFilter(self._btnCollapse))
         self.installEventFilter(VisibilityToggleEventFilter(self._btnCollapse, self))
+
+        self._btnAdd = QToolButton(self)
+        self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        self._btnAdd.installEventFilter(OpacityEventFilter(self._btnCollapse))
+        transparent(self._btnAdd)
+        pointy(self._btnAdd)
+        self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
+
         self.layout().addWidget(self._title)
         self.layout().addWidget(self._btnCollapse)
+        self.layout().addWidget(self._btnAdd)
 
         self._btnCollapse.clicked.connect(self.collapseToggled.emit)
+        self._btnAdd.clicked.connect(self.addTask.emit)
 
 
 class StatusColumnWidget(QWidget):
