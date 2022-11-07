@@ -22,10 +22,10 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup
 from overrides import overrides
-from qthandy import hbox, translucent, bold, incr_font
+from qthandy import hbox, translucent, bold, incr_font, transparent
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import SelectionItem
@@ -253,3 +253,33 @@ class ToolbarButton(QToolButton):
     @overrides
     def enterEvent(self, event: QEvent) -> None:
         qtanim.colorize(self, color=QColor('#7B2CBF'))
+
+
+class CollapseButton(QToolButton):
+    def __init__(self, idle: Qt.Edge, checked: Qt.Edge, parent=None):
+        super(CollapseButton, self).__init__(parent)
+        self._idleIcon = self._icon(idle)
+        self._checkedIcon = self._icon(checked)
+        self.setIcon(self._idleIcon)
+        self.setCheckable(True)
+
+        pointy(self)
+        transparent(self)
+
+        self.toggled.connect(self._toggled)
+
+    def _toggled(self, checked: bool):
+        if checked:
+            self.setIcon(self._checkedIcon)
+        else:
+            self.setIcon(self._idleIcon)
+
+    def _icon(self, direction: Qt.Edge) -> QIcon:
+        if direction == Qt.Edge.TopEdge:
+            return IconRegistry.from_name('fa5s.chevron-up')
+        elif direction == Qt.Edge.LeftEdge:
+            return IconRegistry.from_name('fa5s.chevron-left')
+        elif direction == Qt.Edge.RightEdge:
+            return IconRegistry.from_name('fa5s.chevron-right')
+        else:
+            return IconRegistry.from_name('fa5s.chevron-down')
