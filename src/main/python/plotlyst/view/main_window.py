@@ -242,6 +242,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnWorld.setChecked(True)
         elif self.novel.prefs.panels.scenes_view == ScenesView.DOCS:
             self.btnNotes.setChecked(True)
+        elif self.novel.prefs.panels.scenes_view == ScenesView.BOARD:
+            self.btnBoard.setChecked(True)
         elif self.novel.scenes:
             self.btnScenes.setChecked(True)
         else:
@@ -532,6 +534,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             scenes_view = ScenesView.WORLD_BUILDING
         elif self.stackedWidget.currentWidget() == self.pageNotes:
             scenes_view = ScenesView.DOCS
+        elif self.stackedWidget.currentWidget() == self.pageBoard:
+            scenes_view = ScenesView.BOARD
         else:
             scenes_view = None
         self.novel.prefs.panels.scenes_view = scenes_view
