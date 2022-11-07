@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
 from overrides import overrides
 from qthandy import vbox
 
@@ -31,6 +30,9 @@ class BoardView(AbstractNovelView):
     def __init__(self, novel: Novel):
         super().__init__(novel)
         vbox(self.widget)
+        self.widget.setObjectName('boardParentWidget')
+
+        self.widget.setStyleSheet('#boardParentWidget {background: #f3f3f6;}')
 
         self._board = BoardWidget(novel)
         self.widget.layout().addWidget(self._board)
