@@ -22,6 +22,7 @@ from qthandy import vbox
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.generated.board_view_ui import Ui_BoardView
 from src.main.python.plotlyst.view.widget.task import BoardWidget
 
 
@@ -29,13 +30,15 @@ class BoardView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
         super().__init__(novel)
+        self.ui = Ui_BoardView()
+        self.ui.setupUi(self.widget)
         vbox(self.widget)
         self.widget.setObjectName('boardParentWidget')
 
         self.widget.setStyleSheet('#boardParentWidget {background: #f3f3f6;}')
 
         self._board = BoardWidget(novel)
-        self.widget.layout().addWidget(self._board)
+        self.ui.scrollAreaWidgetContents.layout().addWidget(self._board)
 
     @overrides
     def refresh(self):
