@@ -755,6 +755,7 @@ class TaskStatus(SelectionItem):
         return hash(str(id))
 
 
+@dataclass
 class Task:
     title: str
     status_ref: uuid.UUID

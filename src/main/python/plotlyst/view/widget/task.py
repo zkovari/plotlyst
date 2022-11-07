@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton
-from qthandy import vbox, hbox, incr_font, bold, transparent
+from qthandy import vbox, hbox, incr_font, bold, transparent, vspacer
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
@@ -30,10 +30,19 @@ from src.main.python.plotlyst.view.widget.button import CollapseButton
 TASK_WIDGET_MAX_WIDTH = 450
 
 
-class TaskWidget(QWidget):
+class TaskWidget(QFrame):
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
         self._task = task
+        self.setStyleSheet('TaskWidget {background: white;}')
+
+        vbox(self)
+        self._lblTitle = QLabel(self._task.title, self)
+        self.layout().addWidget(self._lblTitle, alignment=Qt.AlignmentFlag.AlignTop)
+        pointy(self)
+
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self.setMinimumHeight(75)
 
 
 class StatusHeader(QFrame):
@@ -72,17 +81,29 @@ class StatusHeader(QFrame):
 
 
 class StatusColumnWidget(QWidget):
-    def __init__(self, status: TaskStatus, parent=None):
+    def __init__(self, novel: Novel, status: TaskStatus, parent=None):
         super(StatusColumnWidget, self).__init__(parent)
+        self._novel = novel
         self._status = status
         vbox(self, 3, 4)
         self._header = StatusHeader(self._status)
-        self._container = QWidget()
+        self._container = QWidget(self)
         vbox(self._container)
-        self._container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMaximumWidth(TASK_WIDGET_MAX_WIDTH)
         self.layout().addWidget(self._header)
         self.layout().addWidget(self._container)
+        self.layout().addWidget(vspacer())
+
+        self._header.addTask.connect(self._addNewTask)
+
+    def addTask(self, task: Task):
+        wdg = TaskWidget(task, self)
+        self._container.layout().addWidget(wdg, alignment=Qt.AlignmentFlag.AlignTop)
+
+    def _addNewTask(self):
+        task = Task('New task', self._status.id)
+        self._novel.board.tasks.append(task)
+        self.addTask(task)
 
 
 class BoardWidget(QWidget):
@@ -92,4 +113,4 @@ class BoardWidget(QWidget):
 
         hbox(self)
         for status in self._novel.board.statuses:
-            self.layout().addWidget(StatusColumnWidget(status))
+            self.layout().addWidget(StatusColumnWidget(novel, status))
