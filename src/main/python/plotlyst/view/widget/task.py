@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Dict
 
 import qtanim
@@ -41,7 +42,8 @@ TASK_MIME_TYPE: str = 'application/task'
 
 
 class TaskWidget(QFrame):
-    delete = pyqtSignal(object)
+    removalRequested = pyqtSignal(object)
+    changed = pyqtSignal()
 
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
@@ -86,7 +88,7 @@ class TaskWidget(QFrame):
         menu = QMenu(self._btnMenu)
         menu.addAction(IconRegistry.edit_icon(), 'Rename', self._lineTitle.setFocus)
         menu.addSeparator()
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', lambda: self.delete.emit(self))
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', lambda: self.removalRequested.emit(self))
         btn_popup_menu(self._btnMenu, menu)
         self._wdgBottom.layout().addWidget(self._btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
@@ -104,10 +106,11 @@ class TaskWidget(QFrame):
 
     def _titleEdited(self, text: str):
         self._task.title = text
+        self.changed.emit()
 
     def _titleEditingFinished(self):
         if not self._task.title:
-            self.delete.emit(self)
+            self.removalRequested.emit(self)
 
     def _activated(self):
         self._lineTitle.setFocus()
@@ -160,7 +163,7 @@ class _StatusHeader(QFrame):
 
 
 class StatusColumnWidget(QFrame):
-    taskMoved = pyqtSignal(Task)
+    taskChanged = pyqtSignal(Task)
     taskDeleted = pyqtSignal(Task)
 
     def __init__(self, novel: Novel, status: TaskStatus, parent=None):
@@ -206,7 +209,8 @@ class StatusColumnWidget(QFrame):
             DragEventFilter(self, mimeType=TASK_MIME_TYPE, dataFunc=self._grabbedTaskData,
                             startedSlot=lambda: wdg.setDisabled(True),
                             finishedSlot=lambda: self._dragFinished(wdg)))
-        wdg.delete.connect(self._deleteTask)
+        wdg.removalRequested.connect(self._deleteTask)
+        wdg.changed.connect(partial(self.taskChanged.emit, task))
 
         if edit:
             wdg.activate()
@@ -242,7 +246,7 @@ class StatusColumnWidget(QFrame):
         task: Task = mimeData.reference()
         if task.status_ref == self._status.id:
             return
-        self.taskMoved.emit(task)
+        self.taskChanged.emit(task)
         task.status_ref = self._status.id
         self.addTask(task)
 
@@ -261,7 +265,7 @@ class BoardWidget(QWidget):
         self._statusColumns: Dict[str, StatusColumnWidget] = {}
         for status in self._novel.board.statuses:
             column = StatusColumnWidget(novel, status)
-            column.taskMoved.connect(self._saveBoard)
+            column.taskChanged.connect(self._saveBoard)
             column.taskDeleted.connect(self._taskDeleted)
             self.layout().addWidget(column)
             self._statusColumns[str(status.id)] = column
@@ -286,7 +290,7 @@ class BoardWidget(QWidget):
             column.addTask(task, edit=True)
 
     def _firstStatusColumn(self) -> StatusColumnWidget:
-        return self._statusColumns[str(self._novel.board.statuses[0])]
+        return self._statusColumns[str(self._novel.board.statuses[0].id)]
 
     def _saveBoard(self):
         self.repo.update_novel(self._novel)
