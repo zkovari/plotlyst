@@ -30,6 +30,7 @@ from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, Drag
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import CollapseButton
@@ -160,6 +161,7 @@ class _StatusHeader(QFrame):
 
 class StatusColumnWidget(QFrame):
     taskMoved = pyqtSignal(Task)
+    taskDeleted = pyqtSignal(Task)
 
     def __init__(self, novel: Novel, status: TaskStatus, parent=None):
         super(StatusColumnWidget, self).__init__(parent)
@@ -218,6 +220,7 @@ class StatusColumnWidget(QFrame):
         task = taskWidget.task()
         self._novel.board.tasks.remove(task)
         self.__removeTaskWidget(taskWidget)
+        self.taskDeleted.emit(task)
 
     def _grabbedTaskData(self, widget: TaskWidget):
         return widget.task()
@@ -257,9 +260,11 @@ class BoardWidget(QWidget):
         hbox(self, spacing=20)
         self._statusColumns: Dict[str, StatusColumnWidget] = {}
         for status in self._novel.board.statuses:
-            header = StatusColumnWidget(novel, status)
-            self.layout().addWidget(header)
-            self._statusColumns[str(status.id)] = header
+            column = StatusColumnWidget(novel, status)
+            column.taskMoved.connect(self._saveBoard)
+            column.taskDeleted.connect(self._taskDeleted)
+            self.layout().addWidget(column)
+            self._statusColumns[str(status.id)] = column
 
         for task in novel.board.tasks:
             column = self._statusColumns.get(str(task.status_ref))
@@ -272,6 +277,8 @@ class BoardWidget(QWidget):
         self.layout().addWidget(_spacer)
         margins(self, left=20)
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     def addNewTask(self):
         if self._statusColumns:
             column = self._firstStatusColumn()
@@ -280,3 +287,9 @@ class BoardWidget(QWidget):
 
     def _firstStatusColumn(self) -> StatusColumnWidget:
         return self._statusColumns[str(self._novel.board.statuses[0])]
+
+    def _saveBoard(self):
+        self.repo.update_novel(self._novel)
+
+    def _taskDeleted(self, task: Task):
+        self._saveBoard()

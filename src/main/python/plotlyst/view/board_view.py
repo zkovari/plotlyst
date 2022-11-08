@@ -21,7 +21,7 @@ from overrides import overrides
 from qthandy import bold
 from qthandy.filter import InstantTooltipEventFilter
 
-from src.main.python.plotlyst.core.domain import Novel, Task
+from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.board_view_ui import Ui_BoardView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -47,7 +47,6 @@ class BoardView(AbstractNovelView):
         bold(self.ui.lblTitle)
         self.ui.iconBoard.setIcon(IconRegistry.board_icon())
 
-        novel.board.tasks.append(Task('My task', status_ref=novel.board.statuses[1].id))
         self._board = BoardWidget(novel)
         self.ui.scrollAreaWidgetContents.layout().addWidget(self._board)
 
