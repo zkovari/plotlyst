@@ -26,7 +26,8 @@ from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODev
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
-    QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget
+    QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
+    QGraphicsDropShadowEffect, QTableView
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import hbox
@@ -208,11 +209,19 @@ def pointy(widget):
     widget.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
-def autoresize_col(view: QAbstractItemView, col: int):
+def shadow(wdg: QWidget, offset: int = 2):
+    effect = QGraphicsDropShadowEffect(wdg)
+    effect.setBlurRadius(0)
+    effect.setOffset(offset, offset)
+    effect.setColor(Qt.GlobalColor.lightGray)
+    wdg.setGraphicsEffect(effect)
+
+
+def autoresize_col(view: QTableView, col: int):
     view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
 
 
-def stretch_col(view: QAbstractItemView, col: int):
+def stretch_col(view: QTableView, col: int):
     view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
 
 
