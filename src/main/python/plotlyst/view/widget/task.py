@@ -17,14 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import List
+from typing import Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton, \
-    QLineEdit
-from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font
+    QLineEdit, QMenu
+from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
+    btn_popup_menu, gc
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
@@ -37,12 +38,18 @@ TASK_WIDGET_MAX_WIDTH = 350
 
 
 class TaskWidget(QFrame):
+    delete = pyqtSignal(object)
+
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
         self._task = task
         self.setStyleSheet('TaskWidget {background: white; border: 1px solid lightGrey; border-radius: 6px;}')
 
         vbox(self, margin=5)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self.setMinimumHeight(75)
+        shadow(self, 3)
+
         self._lineTitle = QLineEdit(self)
         self._lineTitle.setPlaceholderText('New task')
         self._lineTitle.setText(task.title)
@@ -53,11 +60,40 @@ class TaskWidget(QFrame):
         incr_font(self._lineTitle)
         self.layout().addWidget(self._lineTitle, alignment=Qt.AlignmentFlag.AlignTop)
 
-        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self.setMinimumHeight(75)
-        shadow(self, 3)
+        self._wdgBottom = QWidget()
+        retain_when_hidden(self._wdgBottom)
+        vbox(self._wdgBottom)
+        self._btnMenu = QToolButton(self._wdgBottom)
+        self._btnMenu.setIcon(IconRegistry.dots_icon('grey'))
+        self._btnMenu.setStyleSheet('''
+                    QToolButton {
+                        border-radius: 12px;
+                        border: 1px hidden lightgrey;
+                        padding: 2px;
+                    }
+                    QToolButton::menu-indicator {
+                        width:0px;
+                    }
 
+                    QToolButton:hover {
+                        background: lightgrey;
+                    }
+                ''')
+        pointy(self._btnMenu)
+        menu = QMenu(self._btnMenu)
+        menu.addAction(IconRegistry.edit_icon(), 'Rename', self._lineTitle.setFocus)
+        menu.addSeparator()
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self._delete)
+        btn_popup_menu(self._btnMenu, menu)
+        self._wdgBottom.layout().addWidget(self._btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
+        self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnMenu, self))
         self._lineTitle.textEdited.connect(self._titleEdited)
+        self._lineTitle.editingFinished.connect(self._titleEditingFinished)
+
+    def task(self) -> Task:
+        return self._task
 
     def activate(self):
         anim = qtanim.fade_in(self, 150)
@@ -66,19 +102,26 @@ class TaskWidget(QFrame):
     def _titleEdited(self, text: str):
         self._task.title = text
 
+    def _titleEditingFinished(self):
+        if not self._task.title:
+            self._delete()
+
     def _activated(self):
         self._lineTitle.setFocus()
         shadow(self, 3)
 
+    def _delete(self):
+        self.delete.emit(self)
 
-class StatusHeader(QFrame):
+
+class _StatusHeader(QFrame):
     collapseToggled = pyqtSignal(bool)
     addTask = pyqtSignal()
 
     def __init__(self, status: TaskStatus, parent=None):
-        super(StatusHeader, self).__init__(parent)
+        super(_StatusHeader, self).__init__(parent)
         self._status = status
-        self.setStyleSheet(f'''StatusHeader {{
+        self.setStyleSheet(f'''_StatusHeader {{
                 background: white;
                 border-bottom: 3px solid {self._status.color_hexa};
             }}''')
@@ -122,7 +165,7 @@ class StatusColumnWidget(QWidget):
         self._novel = novel
         self._status = status
         vbox(self, 1, 20)
-        self._header = StatusHeader(self._status)
+        self._header = _StatusHeader(self._status)
         self._container = QWidget(self)
         spacing = 6 if app_env.is_mac() else 12
         vbox(self._container, margin=5, spacing=spacing)
@@ -152,6 +195,7 @@ class StatusColumnWidget(QWidget):
         wdg = TaskWidget(task, self)
         self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
+        wdg.delete.connect(self._deleteTaskWidget)
 
         if edit:
             wdg.activate()
@@ -161,6 +205,13 @@ class StatusColumnWidget(QWidget):
         self._novel.board.tasks.append(task)
         self.addTask(task, edit=True)
 
+    def _deleteTaskWidget(self, taskWidget: TaskWidget):
+        task = taskWidget.task()
+        self._novel.board.tasks.remove(task)
+        taskWidget.setHidden(True)
+        self._container.layout().removeWidget(taskWidget)
+        gc(taskWidget)
+
 
 class BoardWidget(QWidget):
     def __init__(self, novel: Novel, parent=None):
@@ -168,18 +219,28 @@ class BoardWidget(QWidget):
         self._novel = novel
 
         hbox(self, spacing=20)
-        self._statusHeaders: List[StatusColumnWidget] = []
+        self._statusColumns: Dict[str, StatusColumnWidget] = {}
         for status in self._novel.board.statuses:
             header = StatusColumnWidget(novel, status)
             self.layout().addWidget(header)
-            self._statusHeaders.append(header)
+            self._statusColumns[str(status.id)] = header
+
+        for task in novel.board.tasks:
+            column = self._statusColumns.get(str(task.status_ref))
+            if column is None:
+                column = self._firstStatusColumn()
+            column.addTask(task)
+
         _spacer = spacer()
         _spacer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self.layout().addWidget(_spacer)
         margins(self, left=20)
 
     def addNewTask(self):
-        if self._statusHeaders:
-            header = self._statusHeaders[0]
-            task = Task('', header.status().id)
-            header.addTask(task, edit=True)
+        if self._statusColumns:
+            column = self._firstStatusColumn()
+            task = Task('', column.status().id)
+            column.addTask(task, edit=True)
+
+    def _firstStatusColumn(self) -> StatusColumnWidget:
+        return self._statusColumns[str(self._novel.board.statuses[0])]
