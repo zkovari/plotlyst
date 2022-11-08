@@ -20,13 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QMimeData
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton, \
     QLineEdit, QMenu
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
     btn_popup_menu, gc
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
 from src.main.python.plotlyst.env import app_env
@@ -35,6 +35,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import CollapseButton
 
 TASK_WIDGET_MAX_WIDTH = 350
+
+TASK_MIME_TYPE: str = 'application/task'
 
 
 class TaskWidget(QFrame):
@@ -83,7 +85,7 @@ class TaskWidget(QFrame):
         menu = QMenu(self._btnMenu)
         menu.addAction(IconRegistry.edit_icon(), 'Rename', self._lineTitle.setFocus)
         menu.addSeparator()
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self._delete)
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', lambda: self.delete.emit(self))
         btn_popup_menu(self._btnMenu, menu)
         self._wdgBottom.layout().addWidget(self._btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
@@ -104,14 +106,11 @@ class TaskWidget(QFrame):
 
     def _titleEditingFinished(self):
         if not self._task.title:
-            self._delete()
+            self.delete.emit(self)
 
     def _activated(self):
         self._lineTitle.setFocus()
         shadow(self, 3)
-
-    def _delete(self):
-        self.delete.emit(self)
 
 
 class _StatusHeader(QFrame):
@@ -159,7 +158,9 @@ class _StatusHeader(QFrame):
         self._btnAdd.clicked.connect(self.addTask.emit)
 
 
-class StatusColumnWidget(QWidget):
+class StatusColumnWidget(QFrame):
+    taskMoved = pyqtSignal(Task)
+
     def __init__(self, novel: Novel, status: TaskStatus, parent=None):
         super(StatusColumnWidget, self).__init__(parent)
         self._novel = novel
@@ -184,6 +185,10 @@ class StatusColumnWidget(QWidget):
         self._container.layout().addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
+        self.setAcceptDrops(True)
+        self.installEventFilter(
+            DropEventFilter(self, [TASK_MIME_TYPE], enteredSlot=self._dragEntered, leftSlot=self._dragLeft,
+                            droppedSlot=self._dropped))
 
         self._btnAdd.clicked.connect(self._addNewTask)
         self._header.addTask.connect(self._addNewTask)
@@ -195,7 +200,11 @@ class StatusColumnWidget(QWidget):
         wdg = TaskWidget(task, self)
         self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
-        wdg.delete.connect(self._deleteTaskWidget)
+        wdg.installEventFilter(
+            DragEventFilter(self, mimeType=TASK_MIME_TYPE, dataFunc=self._grabbedTaskData,
+                            startedSlot=lambda: wdg.setDisabled(True),
+                            finishedSlot=lambda: self._dragFinished(wdg)))
+        wdg.delete.connect(self._deleteTask)
 
         if edit:
             wdg.activate()
@@ -205,9 +214,36 @@ class StatusColumnWidget(QWidget):
         self._novel.board.tasks.append(task)
         self.addTask(task, edit=True)
 
-    def _deleteTaskWidget(self, taskWidget: TaskWidget):
+    def _deleteTask(self, taskWidget: TaskWidget):
         task = taskWidget.task()
         self._novel.board.tasks.remove(task)
+        self.__removeTaskWidget(taskWidget)
+
+    def _grabbedTaskData(self, widget: TaskWidget):
+        return widget.task()
+
+    def _dragEntered(self, _: QMimeData):
+        self.setStyleSheet(f'StatusColumnWidget {{border: 2px dashed {self._status.color_hexa};}}')
+
+    def _dragLeft(self):
+        self.setStyleSheet('')
+
+    def _dragFinished(self, taskWidget: TaskWidget):
+        if taskWidget.task().status_ref == self._status.id:
+            taskWidget.setEnabled(True)
+        else:
+            self.__removeTaskWidget(taskWidget)
+
+    def _dropped(self, mimeData: QMimeData):
+        self.setStyleSheet('')
+        task: Task = mimeData.reference()
+        if task.status_ref == self._status.id:
+            return
+        self.taskMoved.emit(task)
+        task.status_ref = self._status.id
+        self.addTask(task)
+
+    def __removeTaskWidget(self, taskWidget):
         taskWidget.setHidden(True)
         self._container.layout().removeWidget(taskWidget)
         gc(taskWidget)
