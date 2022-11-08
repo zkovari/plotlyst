@@ -22,7 +22,8 @@ from typing import List
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QGraphicsDropShadowEffect, QPushButton
+from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QGraphicsDropShadowEffect, QPushButton, \
+    QLineEdit
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
@@ -51,15 +52,26 @@ class TaskWidget(QFrame):
         shadow(self)
 
         vbox(self, margin=5)
-        self._lblTitle = QLabel(self._task.title, self)
+        self._lineTitle = QLineEdit(self)
+        self._lineTitle.setPlaceholderText('New task')
+        self._lineTitle.setText(task.title)
+        self._lineTitle.setFrame(False)
         font = QFont('Arial')
         font.setWeight(QFont.Weight.Medium)
-        self._lblTitle.setFont(font)
-        incr_font(self._lblTitle)
-        self.layout().addWidget(self._lblTitle, alignment=Qt.AlignmentFlag.AlignTop)
+        self._lineTitle.setFont(font)
+        incr_font(self._lineTitle)
+        self.layout().addWidget(self._lineTitle, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.setMinimumHeight(75)
+
+        self._lineTitle.textEdited.connect(self._titleEdited)
+
+    def activate(self):
+        self._lineTitle.setFocus()
+
+    def _titleEdited(self, text: str):
+        self._task.title = text
 
 
 class StatusHeader(QFrame):
@@ -139,16 +151,19 @@ class StatusColumnWidget(QWidget):
     def status(self) -> TaskStatus:
         return self._status
 
-    def addTask(self, task: Task):
+    def addTask(self, task: Task, edit: bool = False):
         wdg = TaskWidget(task, self)
         self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
         qtanim.fade_in(wdg, 150)
 
+        if edit:
+            wdg.activate()
+
     def _addNewTask(self):
-        task = Task('New task', self._status.id)
+        task = Task('', self._status.id)
         self._novel.board.tasks.append(task)
-        self.addTask(task)
+        self.addTask(task, edit=True)
 
 
 class BoardWidget(QWidget):
@@ -170,5 +185,5 @@ class BoardWidget(QWidget):
     def addNewTask(self):
         if self._statusHeaders:
             header = self._statusHeaders[0]
-            task = Task('New task', header.status().id)
-            header.addTask(task)
+            task = Task('', header.status().id)
+            header.addTask(task, edit=True)
