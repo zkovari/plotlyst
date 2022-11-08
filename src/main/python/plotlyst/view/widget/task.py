@@ -22,34 +22,25 @@ from typing import List
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QGraphicsDropShadowEffect, QPushButton, \
+from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton, \
     QLineEdit
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import CollapseButton
 
 TASK_WIDGET_MAX_WIDTH = 350
 
 
-def shadow(wdg: QWidget):
-    effect = QGraphicsDropShadowEffect(wdg)
-    effect.setBlurRadius(0)
-    effect.setOffset(2, 2)
-    effect.setColor(Qt.GlobalColor.lightGray)
-    wdg.setGraphicsEffect(effect)
-
-
 class TaskWidget(QFrame):
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
         self._task = task
-        self.setStyleSheet('TaskWidget {background: white; border: 1px solid white; border-radius: 6px;}')
-        shadow(self)
+        self.setStyleSheet('TaskWidget {background: white; border: 1px solid lightGrey; border-radius: 6px;}')
 
         vbox(self, margin=5)
         self._lineTitle = QLineEdit(self)
@@ -64,14 +55,20 @@ class TaskWidget(QFrame):
 
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.setMinimumHeight(75)
+        shadow(self, 3)
 
         self._lineTitle.textEdited.connect(self._titleEdited)
 
     def activate(self):
-        self._lineTitle.setFocus()
+        anim = qtanim.fade_in(self, 150)
+        anim.finished.connect(self._activated)
 
     def _titleEdited(self, text: str):
         self._task.title = text
+
+    def _activated(self):
+        self._lineTitle.setFocus()
+        shadow(self, 3)
 
 
 class StatusHeader(QFrame):
@@ -155,7 +152,6 @@ class StatusColumnWidget(QWidget):
         wdg = TaskWidget(task, self)
         self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
                                               alignment=Qt.AlignmentFlag.AlignTop)
-        qtanim.fade_in(wdg, 150)
 
         if edit:
             wdg.activate()
