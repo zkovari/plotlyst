@@ -18,11 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from overrides import overrides
-from qthandy import vbox
+from qthandy import bold
+from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.board_view_ui import Ui_BoardView
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.task import BoardWidget
 
 
@@ -32,13 +34,25 @@ class BoardView(AbstractNovelView):
         super().__init__(novel)
         self.ui = Ui_BoardView()
         self.ui.setupUi(self.widget)
-        vbox(self.widget)
         self.widget.setObjectName('boardParentWidget')
-
         self.widget.setStyleSheet('#boardParentWidget {background: #f3f3f6;}')
+
+        self.ui.btnNew.setIcon(IconRegistry.plus_icon('white'))
+        self.ui.btnBoard.setIcon(IconRegistry.from_name('fa5s.columns', color_on='darkBlue'))
+        self.ui.btnChart.setIcon(IconRegistry.from_name('mdi.chart-areaspline'))
+        self.ui.btnSettings.setIcon(IconRegistry.cog_icon())
+        self.ui.btnChart.installEventFilter(InstantTooltipEventFilter(self.ui.btnChart))
+        self.ui.btnSettings.installEventFilter(InstantTooltipEventFilter(self.ui.btnSettings))
+
+        bold(self.ui.lblTitle)
+        self.ui.iconBoard.setIcon(IconRegistry.board_icon())
 
         self._board = BoardWidget(novel)
         self.ui.scrollAreaWidgetContents.layout().addWidget(self._board)
+
+        self.ui.btnNew.clicked.connect(self._board.addNewTask)
+
+        self.ui.btnBoard.setChecked(True)
 
     @overrides
     def refresh(self):

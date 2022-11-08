@@ -146,14 +146,19 @@ class ButtonPressResizeEventFilter(QObject):
         if isinstance(watched, QAbstractButton):
             if event.type() == QEvent.Type.MouseButtonPress:
                 if self._originalSize is None:
-                    self._originalSize = watched.iconSize()
-                    self._reducedSize = watched.iconSize()
-                    self._reducedSize.setWidth(self._originalSize.width() - 1)
-                    self._reducedSize.setHeight(self._originalSize.height() - 1)
+                    self._calculateSize(watched)
                 watched.setIconSize(self._reducedSize)
             elif event.type() == QEvent.Type.MouseButtonRelease:
+                if self._originalSize is None:
+                    self._calculateSize(watched)
                 watched.setIconSize(self._originalSize)
         return super(ButtonPressResizeEventFilter, self).eventFilter(watched, event)
+
+    def _calculateSize(self, watched):
+        self._originalSize = watched.iconSize()
+        self._reducedSize = watched.iconSize()
+        self._reducedSize.setWidth(self._originalSize.width() - 1)
+        self._reducedSize.setHeight(self._originalSize.height() - 1)
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):

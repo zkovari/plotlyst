@@ -220,7 +220,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.notes_view = DocumentsView(self.novel)
 
-        self.btnBoard.setIcon(IconRegistry.from_name('mdi6.clipboard-check-outline', color_on='#2B0548'))
+        self.btnBoard.setIcon(IconRegistry.board_icon())
         self.btnNovel.setIcon(IconRegistry.book_icon())
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnScenes.setIcon(IconRegistry.scene_icon())

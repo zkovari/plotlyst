@@ -17,10 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import List
+
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QGraphicsDropShadowEffect, QPushButton
-from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden
+from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
@@ -47,8 +50,12 @@ class TaskWidget(QFrame):
         self.setStyleSheet('TaskWidget {background: white; border: 1px solid white; border-radius: 6px;}')
         shadow(self)
 
-        vbox(self)
+        vbox(self, margin=5)
         self._lblTitle = QLabel(self._task.title, self)
+        font = QFont('Arial')
+        font.setWeight(QFont.Weight.Medium)
+        self._lblTitle.setFont(font)
+        incr_font(self._lblTitle)
         self.layout().addWidget(self._lblTitle, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
@@ -129,6 +136,9 @@ class StatusColumnWidget(QWidget):
         self._btnAdd.clicked.connect(self._addNewTask)
         self._header.addTask.connect(self._addNewTask)
 
+    def status(self) -> TaskStatus:
+        return self._status
+
     def addTask(self, task: Task):
         wdg = TaskWidget(task, self)
         self._container.layout().insertWidget(self._container.layout().count() - 1, wdg,
@@ -147,9 +157,18 @@ class BoardWidget(QWidget):
         self._novel = novel
 
         hbox(self, spacing=20)
+        self._statusHeaders: List[StatusColumnWidget] = []
         for status in self._novel.board.statuses:
-            self.layout().addWidget(StatusColumnWidget(novel, status))
+            header = StatusColumnWidget(novel, status)
+            self.layout().addWidget(header)
+            self._statusHeaders.append(header)
         _spacer = spacer()
         _spacer.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self.layout().addWidget(_spacer)
         margins(self, left=20)
+
+    def addNewTask(self):
+        if self._statusHeaders:
+            header = self._statusHeaders[0]
+            task = Task('New task', header.status().id)
+            header.addTask(task)
