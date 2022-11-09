@@ -287,6 +287,7 @@ class BoardWidget(QWidget):
         if self._statusColumns:
             column = self._firstStatusColumn()
             task = Task('', column.status().id)
+            self._novel.board.tasks.append(task)
             column.addTask(task, edit=True)
 
     def _firstStatusColumn(self) -> StatusColumnWidget:
