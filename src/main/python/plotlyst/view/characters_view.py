@@ -224,7 +224,7 @@ class CharactersView(AbstractNovelView):
         character = self.editor.character
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
-        self.editor.widget.deleteLater()
+        gc(self.editor.widget)
         self.editor = None
         emit_event(CharacterChangedEvent(self, character))
         emit_event(ToggleOutlineViewTitle(self, visible=True))

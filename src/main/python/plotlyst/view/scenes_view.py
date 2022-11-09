@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout, busy, bold
+from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout, busy, bold, gc
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
@@ -324,7 +324,7 @@ class ScenesOutlineView(AbstractNovelView):
         if self.editor.scene.pov and self.editor.scene.pov not in self._scene_filter.povFilter.characters():
             self._scene_filter.povFilter.addCharacter(self.editor.scene.pov)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
-        self.editor.widget.deleteLater()
+        gc(self.editor.widget)
         self.editor = None
 
         emit_event(SceneChangedEvent(self))

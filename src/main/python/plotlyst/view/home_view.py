@@ -22,7 +22,7 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QPixmap
 from overrides import overrides
-from qthandy import ask_confirmation, clear_layout, flow, transparent
+from qthandy import ask_confirmation, clear_layout, flow, transparent, gc
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Event
@@ -137,7 +137,7 @@ class HomeView(AbstractView):
             novel = self.selected_card.novel
             self.repo.delete_novel(novel)
             emit_event(NovelDeletedEvent(self, novel))
-            self.selected_card.deleteLater()
+            gc(self.selected_card)
             self.selected_card = None
             self.ui.btnDelete.setDisabled(True)
             self.refresh()

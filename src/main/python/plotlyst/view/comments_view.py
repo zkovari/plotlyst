@@ -22,7 +22,7 @@ from typing import Optional
 from PyQt6.QtCore import QEvent, pyqtSignal, Qt
 from PyQt6.QtWidgets import QFrame
 from overrides import overrides
-from qthandy import ask_confirmation
+from qthandy import ask_confirmation, gc
 
 from src.main.python.plotlyst.core.domain import Novel, Comment, Scene, Event
 from src.main.python.plotlyst.events import SceneSelectedEvent, SceneSelectionClearedEvent
@@ -71,7 +71,7 @@ class CommentsView(AbstractNovelView):
         while self.ui.wdgComments.layout().count():
             item = self.ui.wdgComments.layout().takeAt(0)
             if item:
-                item.widget().deleteLater()
+                gc(item.widget())
 
         if show_all:
             for scene in self.novel.scenes:
@@ -107,7 +107,7 @@ class CommentsView(AbstractNovelView):
         if comment_wdg.scene:
             comment_wdg.scene.comments.remove(comment_wdg.comment)
             self.repo.update_scene(comment_wdg.scene)
-        comment_wdg.deleteLater()
+        gc(comment_wdg)
 
 
 class CommentWidget(QFrame, Ui_CommentWidget):

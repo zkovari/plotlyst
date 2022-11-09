@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayo
     QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QSpacerItem, QListView, QPushButton, QTextEdit
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, translucent
+    decr_font, retain_when_hidden, translucent, gc
 from qthandy.filter import VisibilityToggleEventFilter
 from qttextedit import EnhancedTextEdit
 
@@ -1012,7 +1012,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         widget_to_drop.setEnabled(False)
         pos = self.gridLayout.getItemPosition(index)
         item: QLayoutItem = self.gridLayout.takeAt(index)
-        item.widget().deleteLater()
+        gc(item.widget())
         self.gridLayout.addWidget(widget_to_drop, *pos)
         self._installEventFilter(widget_to_drop)
 
@@ -1061,7 +1061,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             self.gridLayout.removeWidget(self._selected)
             self._addPlaceholder(pos[0], pos[1])
             self.widgets.remove(self._selected)
-            self._selected.deleteLater()
+            gc(self._selected)
             self._selected = None
 
     def setShowLabelForSelected(self, enabled: bool):
