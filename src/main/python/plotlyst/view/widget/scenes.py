@@ -29,7 +29,7 @@ from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QIcon, \
     QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
-    QPushButton, QHeaderView, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
+    QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QApplication
 from overrides import overrides
 from qthandy import busy, margins, vspacer, btn_popup_menu, bold
@@ -73,7 +73,6 @@ from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation,
     DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
     PlotLabel, PlotValueLabel, SceneLabel
-from src.main.python.plotlyst.view.widget.tree_view import ActionBasedTreeView
 
 
 class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
@@ -1561,21 +1560,24 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
 
 
-class ScenesTreeView(ActionBasedTreeView):
+class ScenesTreeView(QFrame):
 
     def __init__(self, parent=None):
         super(ScenesTreeView, self).__init__(parent)
-        self.clicked.connect(self._on_chapter_clicked)
+        # self.clicked.connect(self._on_chapter_clicked)
         self.repo = RepositoryPersistenceManager.instance()
 
-    @overrides
+    def setNovel(self, novel: Novel):
+        pass
+
     def setModel(self, model: ChaptersTreeModel) -> None:
-        super(ScenesTreeView, self).setModel(model)
-        self.expandAll()
-        self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
-        model.orderChanged.connect(self._on_scene_moved)
-        model.modelReset.connect(self.expandAll)
+        return
+        # super(ScenesTreeView, self).setModel(model)
+        # self.expandAll()
+        # self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        # self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
+        # model.orderChanged.connect(self._on_scene_moved)
+        # model.modelReset.connect(self.expandAll)
 
     def insertChapter(self, index: int = -1):
         self.model().newChapter(index)

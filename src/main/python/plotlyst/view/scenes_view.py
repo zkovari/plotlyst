@@ -143,9 +143,9 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setModel(self.chaptersModel)
-        self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
+        # self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
 
-        self.ui.treeChapters.doubleClicked.connect(self._on_edit)
+        # self.ui.treeChapters.doubleClicked.connect(self._on_edit)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
         self.ui.btnChaptersToggle.setIcon(IconRegistry.chapter_icon())
