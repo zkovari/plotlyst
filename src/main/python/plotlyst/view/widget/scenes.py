@@ -1560,15 +1560,60 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
 
 
+class SceneWidget(QWidget):
+    def __init__(self, scene: Scene, novel: Novel, parent=None):
+        super(SceneWidget, self).__init__(parent)
+        self._scene = scene
+        self._novel = novel
+        hbox(self)
+
+        self._lblTitle = QLabel(self._scene.title_or_index(self._novel), self)
+        self.layout().addWidget(self._lblTitle)
+
+
+class ChapterWidget(QWidget):
+    def __init__(self, chapter: Chapter, novel: Novel, parent=None):
+        super(ChapterWidget, self).__init__(parent)
+        self._chapter = chapter
+        self._novel = novel
+        vbox(self)
+
+        self._lblTitle = QLabel(self._chapter.title_index(self._novel), self)
+        self.layout().addWidget(self._lblTitle)
+
+        self._scenesContainer = QWidget(self)
+        vbox(self._scenesContainer)
+        margins(self._scenesContainer, left=10)
+        self.layout().addWidget(self._scenesContainer)
+
+    def addScene(self, scene: Scene, novel: Novel):
+        wdg = SceneWidget(scene, novel, self)
+        self._scenesContainer.layout().addWidget(wdg)
+
+
 class ScenesTreeView(QFrame):
 
     def __init__(self, parent=None):
         super(ScenesTreeView, self).__init__(parent)
+        vbox(self)
         # self.clicked.connect(self._on_chapter_clicked)
+
+        self._chapters: Dict[Chapter, ChapterWidget] = {}
+
         self.repo = RepositoryPersistenceManager.instance()
 
     def setNovel(self, novel: Novel):
-        pass
+        clear_layout(self)
+
+        for scene in novel.scenes:
+            if scene.chapter:
+                if scene.chapter not in self._chapters.keys():
+                    chapterWdg = ChapterWidget(scene.chapter, novel)
+                    self._chapters[scene.chapter] = chapterWdg
+                    self.layout().addWidget(chapterWdg)
+                self._chapters[scene.chapter].addScene(scene, novel)
+
+        self.layout().addWidget(vspacer())
 
     def setModel(self, model: ChaptersTreeModel) -> None:
         return

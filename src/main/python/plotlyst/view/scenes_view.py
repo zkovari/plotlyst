@@ -142,7 +142,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.splitterLeft.setSizes([100, 500])
 
         self.chaptersModel = ChaptersTreeModel(self.novel)
-        self.ui.treeChapters.setModel(self.chaptersModel)
+        self.ui.treeChapters.setNovel(self.novel)
+        # self.ui.treeChapters.setModel(self.chaptersModel)
         # self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
 
         # self.ui.treeChapters.doubleClicked.connect(self._on_edit)
