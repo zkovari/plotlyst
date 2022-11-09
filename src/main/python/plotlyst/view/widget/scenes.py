@@ -1560,7 +1560,7 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
 
 
-class SceneWidget(QWidget):
+class SceneWidget(QFrame):
     def __init__(self, scene: Scene, novel: Novel, parent=None):
         super(SceneWidget, self).__init__(parent)
         self._scene = scene
@@ -1569,6 +1569,8 @@ class SceneWidget(QWidget):
 
         self._lblTitle = QLabel(self._scene.title_or_index(self._novel), self)
         self.layout().addWidget(self._lblTitle)
+
+        self.setStyleSheet('SceneWidget:hover {background-color: #D8D5D5;}')
 
 
 class ChapterWidget(QWidget):
@@ -1580,11 +1582,14 @@ class ChapterWidget(QWidget):
 
         self._lblTitle = QLabel(self._chapter.title_index(self._novel), self)
         self.layout().addWidget(self._lblTitle)
+        self._lblTitle.setStyleSheet('QLabel:hover {background-color: #D8D5D5;}')
 
         self._scenesContainer = QWidget(self)
         vbox(self._scenesContainer)
         margins(self._scenesContainer, left=10)
         self.layout().addWidget(self._scenesContainer)
+
+        # self.setStyleSheet('ChapterWidget:hover {background-color: #D8D5D5;}')
 
     def addScene(self, scene: Scene, novel: Novel):
         wdg = SceneWidget(scene, novel, self)
@@ -1599,6 +1604,7 @@ class ScenesTreeView(QFrame):
         # self.clicked.connect(self._on_chapter_clicked)
 
         self._chapters: Dict[Chapter, ChapterWidget] = {}
+        self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
         self.repo = RepositoryPersistenceManager.instance()
 
