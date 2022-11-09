@@ -22,12 +22,14 @@ from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize
+from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
-    QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget
+    QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
+    QGraphicsDropShadowEffect, QTableView
 from fbs_runtime import platform
+from overrides import overrides
 from qthandy import hbox
 
 from src.main.python.plotlyst.env import app_env
@@ -134,6 +136,32 @@ class PopupMenuBuilder:
         self.menu.popup(self._viewport.mapToGlobal(self.pos))
 
 
+class ButtonPressResizeEventFilter(QObject):
+    def __init__(self, parent):
+        super(ButtonPressResizeEventFilter, self).__init__(parent)
+        self._originalSize: Optional[QSize] = None
+        self._reducedSize: Optional[QSize] = None
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if isinstance(watched, QAbstractButton):
+            if event.type() == QEvent.Type.MouseButtonPress:
+                if self._originalSize is None:
+                    self._calculateSize(watched)
+                watched.setIconSize(self._reducedSize)
+            elif event.type() == QEvent.Type.MouseButtonRelease:
+                if self._originalSize is None:
+                    self._calculateSize(watched)
+                watched.setIconSize(self._originalSize)
+        return super(ButtonPressResizeEventFilter, self).eventFilter(watched, event)
+
+    def _calculateSize(self, watched):
+        self._originalSize = watched.iconSize()
+        self._reducedSize = watched.iconSize()
+        self._reducedSize.setWidth(self._originalSize.width() - 1)
+        self._reducedSize.setHeight(self._originalSize.height() - 1)
+
+
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
     def _open(widget: QWidget, toggled: bool):
         if toggled:
@@ -181,11 +209,19 @@ def pointy(widget):
     widget.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
-def autoresize_col(view: QAbstractItemView, col: int):
+def shadow(wdg: QWidget, offset: int = 2):
+    effect = QGraphicsDropShadowEffect(wdg)
+    effect.setBlurRadius(0)
+    effect.setOffset(offset, offset)
+    effect.setColor(Qt.GlobalColor.lightGray)
+    wdg.setGraphicsEffect(effect)
+
+
+def autoresize_col(view: QTableView, col: int):
     view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
 
 
-def stretch_col(view: QAbstractItemView, col: int):
+def stretch_col(view: QTableView, col: int):
     view.horizontalHeader().setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
 
 

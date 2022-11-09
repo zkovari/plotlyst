@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding
+    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty
 
 
@@ -191,6 +191,7 @@ class NovelInfo:
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
     prefs: NovelPreferences = NovelPreferences()
     world: WorldBuilding = WorldBuilding()
+    board: Board = Board()
 
 
 @dataclass
@@ -490,6 +491,10 @@ class JsonClient:
         if os.path.exists(world_path):
             with open(world_path, encoding='utf8') as json_file:
                 novel.world = WorldBuilding.from_json(json_file.read())
+        board_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('board.json')
+        if os.path.exists(board_path):
+            with open(board_path, encoding='utf8') as json_file:
+                novel.board = Board.from_json(json_file.read())
 
         return novel
 
@@ -522,6 +527,7 @@ class JsonClient:
 
         self.__persist_info(self.novels_dir, novel_info)
         self._persist_world(novel.id, novel.world)
+        self._persist_board(novel.id, novel.board)
 
     def _persist_world(self, novel_id: uuid.UUID, world: WorldBuilding):
         novel_dir = self.novels_dir.joinpath(str(novel_id))
@@ -529,6 +535,13 @@ class JsonClient:
             novel_dir.mkdir()
 
         self.__persist_info_by_name(novel_dir, world, 'world')
+
+    def _persist_board(self, novel_id: uuid.UUID, board: Board):
+        novel_dir = self.novels_dir.joinpath(str(novel_id))
+        if not novel_dir.exists():
+            novel_dir.mkdir()
+
+        self.__persist_info_by_name(novel_dir, board, 'board')
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
