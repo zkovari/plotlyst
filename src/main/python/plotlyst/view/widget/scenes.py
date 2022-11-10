@@ -1571,7 +1571,13 @@ class SceneWidget(QFrame):
 
         self._selected: bool = False
 
+        self._sceneTypeIcon = Icon(self)
+        if self._scene.type != SceneType.DEFAULT:
+            self._sceneTypeIcon.setIcon(IconRegistry.scene_type_icon(self._scene))
+        self._sceneTypeIcon.setVisible(self._scene.type != SceneType.DEFAULT)
         self._lblTitle = QLabel(self._scene.title_or_index(self._novel), self)
+
+        self.layout().addWidget(self._sceneTypeIcon)
         self.layout().addWidget(self._lblTitle)
 
         self._reStyle()
