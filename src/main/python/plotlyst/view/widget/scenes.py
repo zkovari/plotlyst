@@ -62,7 +62,7 @@ from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_Sc
 from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, SecondaryActionToolButton, \
     SecondaryActionPushButton, FadeOutButtonGroup
@@ -1571,12 +1571,23 @@ class SceneWidget(QFrame):
 
         self._selected: bool = False
 
+        self._scenePovIcon = Icon(self)
+        if scene.pov:
+            avatar = avatars.avatar(scene.pov, fallback=False)
+            self._scenePovIcon.setIcon(avatar)
+        else:
+            avatar = None
+
+        self._scenePovIcon.setVisible(avatar is not None)
+
         self._sceneTypeIcon = Icon(self)
         if self._scene.type != SceneType.DEFAULT:
             self._sceneTypeIcon.setIcon(IconRegistry.scene_type_icon(self._scene))
         self._sceneTypeIcon.setVisible(self._scene.type != SceneType.DEFAULT)
         self._lblTitle = QLabel(self._scene.title_or_index(self._novel), self)
+        self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
+        self.layout().addWidget(self._scenePovIcon)
         self.layout().addWidget(self._sceneTypeIcon)
         self.layout().addWidget(self._lblTitle)
 
