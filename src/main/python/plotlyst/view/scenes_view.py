@@ -223,8 +223,7 @@ class ScenesOutlineView(AbstractNovelView):
     @overrides
     def refresh(self):
         self.tblModel.modelReset.emit()
-        # self.chaptersModel.update()
-        # self.chaptersModel.modelReset.emit()
+        self.ui.treeChapters.refresh()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
 
@@ -277,7 +276,7 @@ class ScenesOutlineView(AbstractNovelView):
         if toggled:
             menu = QMenu(self.ui.btnNew)
             menu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
-            # menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
+            menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
             self.ui.btnNew.setMenu(menu)
         else:
             self.ui.btnNew.setMenu(None)

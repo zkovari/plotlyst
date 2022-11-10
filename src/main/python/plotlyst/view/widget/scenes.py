@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from enum import Enum
 from functools import partial
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 from typing import List
 
 import qtanim
@@ -50,7 +50,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
-    ActiveSceneStageChanged, AvailableSceneStagesChanged
+    ActiveSceneStageChanged, AvailableSceneStagesChanged, SceneSelectedEvent
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -1599,6 +1599,7 @@ class SceneWidget(QFrame):
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self._toggleSelection(not self._selected)
+        self.selectionChanged.emit(self._selected)
 
     def select(self):
         self._toggleSelection(True)
@@ -1608,9 +1609,7 @@ class SceneWidget(QFrame):
 
     def _toggleSelection(self, selected: bool):
         self._selected = selected
-        bold(self._lblTitle, self._selected)
-
-        self.selectionChanged.emit(self._selected)
+        # bold(self._lblTitle, self._selected)
 
         self._reStyle()
 
@@ -1660,7 +1659,7 @@ class ChapterWidget(QWidget):
         return wdg
 
 
-class ScenesTreeView(QFrame):
+class ScenesTreeView(QFrame, EventListener):
 
     def __init__(self, parent=None):
         super(ScenesTreeView, self).__init__(parent)
@@ -1669,7 +1668,10 @@ class ScenesTreeView(QFrame):
 
         self._chapters: Dict[Chapter, ChapterWidget] = {}
         self._scenes: Dict[Scene, SceneWidget] = {}
+        self._selectedScenes: Set[Scene] = set()
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
+
+        event_dispatcher.register(self, SceneSelectedEvent)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -1688,11 +1690,31 @@ class ScenesTreeView(QFrame):
 
         self.layout().addWidget(vspacer())
 
+    def refresh(self):
+        pass
+
+    def insertChapter(self):
+        pass
+
+    def event_received(self, event: Event):
+        if isinstance(event, SceneSelectedEvent):
+            self._clearSelections()
+            wdg = self._scenes[event.scene]
+            wdg.select()
+            self._selectedScenes.add(event.scene)
+
     def _sceneSelectionChanged(self, sceneWdg: SceneWidget, selected: bool):
         if selected:
-            for k, v in self._scenes.items():
-                if k is not sceneWdg.scene():
-                    v.deselect()
+            self._clearSelections()
+            self._selectedScenes.add(sceneWdg.scene())
+        elif sceneWdg.scene() in self._selectedScenes:
+            self._selectedScenes.remove(sceneWdg.scene())
+
+    def _clearSelections(self):
+        for scene in self._selectedScenes:
+            wdg = self._scenes[scene]
+            wdg.deselect()
+        self._selectedScenes.clear()
 
     # def setModel(self, model: ChaptersTreeModel) -> None:
     #     return
