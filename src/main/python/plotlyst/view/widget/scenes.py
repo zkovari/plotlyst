@@ -30,7 +30,7 @@ from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEve
     QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
-    QAbstractItemView, QApplication
+    QAbstractItemView, QApplication, QScrollArea
 from overrides import overrides
 from qthandy import busy, margins, vspacer, btn_popup_menu, bold
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
@@ -1609,8 +1609,6 @@ class SceneWidget(QFrame):
 
     def _toggleSelection(self, selected: bool):
         self._selected = selected
-        # bold(self._lblTitle, self._selected)
-
         self._reStyle()
 
     def _reStyle(self):
@@ -1659,11 +1657,16 @@ class ChapterWidget(QWidget):
         return wdg
 
 
-class ScenesTreeView(QFrame, EventListener):
+class ScenesTreeView(QScrollArea, EventListener):
 
     def __init__(self, parent=None):
         super(ScenesTreeView, self).__init__(parent)
-        vbox(self)
+        self.setWidgetResizable(True)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._centralWidget = QWidget(self)
+        self.setWidget(self._centralWidget)
+        vbox(self._centralWidget)
         # self.clicked.connect(self._on_chapter_clicked)
 
         self._chapters: Dict[Chapter, ChapterWidget] = {}
@@ -1683,12 +1686,12 @@ class ScenesTreeView(QFrame, EventListener):
                 if scene.chapter not in self._chapters.keys():
                     chapterWdg = ChapterWidget(scene.chapter, novel)
                     self._chapters[scene.chapter] = chapterWdg
-                    self.layout().addWidget(chapterWdg)
+                    self._centralWidget.layout().addWidget(chapterWdg)
                 sceneWdg = self._chapters[scene.chapter].addScene(scene, novel)
                 self._scenes[scene] = sceneWdg
                 sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
 
-        self.layout().addWidget(vspacer())
+        self._centralWidget.layout().addWidget(vspacer())
 
     def refresh(self):
         pass
