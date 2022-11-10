@@ -24,7 +24,7 @@ from typing import Dict, Optional, Set
 from typing import List
 
 import qtanim
-from PyQt6.QtCore import QPoint, QTimeLine, QRectF, QMimeData
+from PyQt6.QtCore import QPoint, QTimeLine, QRectF, QMimeData, QPointF
 from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QIcon, \
     QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath
@@ -1660,6 +1660,9 @@ class ChapterWidget(QWidget):
     def novel(self) -> Novel:
         return self._novel
 
+    def titleWidget(self) -> QWidget:
+        return self._wdgTitle
+
     def addScene(self, scene: Scene, novel: Novel) -> SceneWidget:
         wdg = SceneWidget(scene, novel, self)
         self._scenesContainer.layout().addWidget(wdg)
@@ -1677,7 +1680,6 @@ class ScenesTreeView(QScrollArea, EventListener):
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setAcceptDrops(True)
         self._centralWidget = QWidget(self)
         self.setWidget(self._centralWidget)
         vbox(self._centralWidget)
@@ -1710,6 +1712,11 @@ class ScenesTreeView(QScrollArea, EventListener):
                     chapterWdg.installEventFilter(
                         DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
                                         hideTarget=True, startedSlot=partial(self._dragStarted, chapterWdg)))
+                    chapterWdg.titleWidget().setAcceptDrops(True)
+                    chapterWdg.titleWidget().installEventFilter(
+                        DropEventFilter(chapterWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
+                                        motionDetection=Qt.Orientation.Vertical,
+                                        motionSlot=partial(self._dragMovedOnChapter, chapterWdg)))
                     self._chapters[scene.chapter] = chapterWdg
                     self._centralWidget.layout().addWidget(chapterWdg)
                 sceneWdg = self._chapters[scene.chapter].addScene(scene, novel)
@@ -1718,6 +1725,10 @@ class ScenesTreeView(QScrollArea, EventListener):
                 sceneWdg.installEventFilter(
                     DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(), hideTarget=True,
                                     startedSlot=partial(self._dragStarted, sceneWdg)))
+                sceneWdg.setAcceptDrops(True)
+                # sceneWdg.installEventFilter(
+                #     DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
+                #                     motionDetection=Qt.Orientation.Vertical, motionSlot=self._dragMovedOnScene))
 
         self._centralWidget.layout().addWidget(self._spacer)
 
@@ -1759,6 +1770,9 @@ class ScenesTreeView(QScrollArea, EventListener):
         translucent(self._dummyWdg)
         self._dummyWdg.setHidden(True)
         self._dummyWdg.setParent(self._centralWidget)
+        self._dummyWdg.setAcceptDrops(True)
+        self._dummyWdg.installEventFilter(
+            DropEventFilter(self._dummyWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE]))
 
     def _dragEnteredForEnd(self, _: QMimeData):
         self._spacer.layout().addWidget(self._dummyWdg, alignment=Qt.AlignmentFlag.AlignTop)
@@ -1768,6 +1782,18 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._dummyWdg.setHidden(True)
         self._spacer.layout().removeWidget(self._dummyWdg)
         self._dummyWdg.setParent(self._centralWidget)
+
+    def _dragMovedOnChapter(self, chapterWdg: ChapterWidget, edge: Qt.Edge, _: QPointF):
+        i = self._centralWidget.layout().indexOf(chapterWdg)
+        if edge == Qt.Edge.TopEdge:
+            self._centralWidget.layout().insertWidget(i, self._dummyWdg)
+        else:
+            self._centralWidget.layout().insertWidget(i + 1, self._dummyWdg)
+        self._dummyWdg.setVisible(True)
+
+    def _dragMovedOnScene(self, edge: Qt.Edge, _: QPointF):
+        print(edge)
+        pass
 
     # def setModel(self, model: ChaptersTreeModel) -> None:
     #     return
