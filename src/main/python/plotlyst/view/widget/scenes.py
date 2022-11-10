@@ -27,7 +27,7 @@ import qtanim
 from PyQt6.QtCore import QPoint, QTimeLine, QRectF, QMimeData, QPointF
 from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QIcon, \
-    QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath
+    QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath, QEnterEvent
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QApplication, QScrollArea
@@ -1604,6 +1604,10 @@ class SceneWidget(QFrame):
         self._toggleSelection(not self._selected)
         self.selectionChanged.emit(self._selected)
 
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        qtanim.glow(self, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
+
     def select(self):
         self._toggleSelection(True)
 
@@ -1621,14 +1625,9 @@ class SceneWidget(QFrame):
                 SceneWidget {
                     background-color: #D8D5D5;
                 }
-                SceneWidget:hover {
-                    background-color: #D8D5D5;
-                }
             ''')
         else:
-            self.setStyleSheet('''SceneWidget:hover {
-                background-color: #D8D5D5;
-            }''')
+            self.setStyleSheet('')
 
 
 class ChapterWidget(QWidget):
@@ -1646,7 +1645,7 @@ class ChapterWidget(QWidget):
         self._lblTitle = QLabel(self._chapter.title_index(self._novel), self._wdgTitle)
         self._wdgTitle.layout().addWidget(self._chapterIcon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
-        self._wdgTitle.setStyleSheet('QWidget:hover {background-color: #D8D5D5;}')
+        self._wdgTitle.installEventFilter(self)
 
         self._scenesContainer = QWidget(self)
         vbox(self._scenesContainer)
@@ -1668,6 +1667,12 @@ class ChapterWidget(QWidget):
         self._scenesContainer.layout().addWidget(wdg)
 
         return wdg
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Enter:
+            qtanim.glow(self._wdgTitle, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
+        return super(ChapterWidget, self).eventFilter(watched, event)
 
 
 class ScenesTreeView(QScrollArea, EventListener):
@@ -1698,6 +1703,10 @@ class ScenesTreeView(QScrollArea, EventListener):
             DropEventFilter(self, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE], enteredSlot=self._dragEnteredForEnd,
                             leftSlot=self._dragLeftFromEnd))
 
+        self._centralWidget.setAcceptDrops(True)
+        self._centralWidget.installEventFilter(DropEventFilter(self, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
+                                                               leftSlot=lambda: self._dummyWdg.setHidden(True)))
+
         event_dispatcher.register(self, SceneSelectedEvent)
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -1711,7 +1720,8 @@ class ScenesTreeView(QScrollArea, EventListener):
                     chapterWdg = ChapterWidget(scene.chapter, novel)
                     chapterWdg.installEventFilter(
                         DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
-                                        hideTarget=True, startedSlot=partial(self._dragStarted, chapterWdg)))
+                                        hideTarget=True, startedSlot=partial(self._dragStarted, chapterWdg),
+                                        finishedSlot=self._dragStopped))
                     chapterWdg.titleWidget().setAcceptDrops(True)
                     chapterWdg.titleWidget().installEventFilter(
                         DropEventFilter(chapterWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
@@ -1724,11 +1734,11 @@ class ScenesTreeView(QScrollArea, EventListener):
                 sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
                 sceneWdg.installEventFilter(
                     DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(), hideTarget=True,
-                                    startedSlot=partial(self._dragStarted, sceneWdg)))
+                                    startedSlot=partial(self._dragStarted, sceneWdg), finishedSlot=self._dragStopped))
                 sceneWdg.setAcceptDrops(True)
-                # sceneWdg.installEventFilter(
-                #     DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
-                #                     motionDetection=Qt.Orientation.Vertical, motionSlot=self._dragMovedOnScene))
+                sceneWdg.installEventFilter(
+                    DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
+                                    motionDetection=Qt.Orientation.Vertical, motionSlot=self._dragMovedOnScene))
 
         self._centralWidget.layout().addWidget(self._spacer)
 
@@ -1773,6 +1783,11 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._dummyWdg.setAcceptDrops(True)
         self._dummyWdg.installEventFilter(
             DropEventFilter(self._dummyWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE]))
+
+    def _dragStopped(self):
+        self._dummyWdg.setHidden(True)
+        gc(self._dummyWdg)
+        self._dummyWdg = None
 
     def _dragEnteredForEnd(self, _: QMimeData):
         self._spacer.layout().addWidget(self._dummyWdg, alignment=Qt.AlignmentFlag.AlignTop)
