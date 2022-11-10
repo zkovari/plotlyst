@@ -36,7 +36,7 @@ from qthandy import busy, margins, vspacer, btn_popup_menu, bold
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
-    OpacityEventFilter, DragEventFilter
+    OpacityEventFilter, DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR, \
     emotion_color
@@ -1609,6 +1609,7 @@ class SceneWidget(QFrame):
 
     def _toggleSelection(self, selected: bool):
         self._selected = selected
+        bold(self._lblTitle, self._selected)
         self._reStyle()
 
     def _reStyle(self):
@@ -1650,6 +1651,9 @@ class ChapterWidget(QWidget):
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._scenesContainer)
 
+    def chapter(self) -> Chapter:
+        return self._chapter
+
     def addScene(self, scene: Scene, novel: Novel) -> SceneWidget:
         wdg = SceneWidget(scene, novel, self)
         self._scenesContainer.layout().addWidget(wdg)
@@ -1658,12 +1662,15 @@ class ChapterWidget(QWidget):
 
 
 class ScenesTreeView(QScrollArea, EventListener):
+    SCENE_MIME_TYPE = 'application/tree-scene-widget'
+    CHAPTER_MIME_TYPE = 'application/tree-chapter-widget'
 
     def __init__(self, parent=None):
         super(ScenesTreeView, self).__init__(parent)
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setAcceptDrops(True)
         self._centralWidget = QWidget(self)
         self.setWidget(self._centralWidget)
         vbox(self._centralWidget)
@@ -1675,7 +1682,6 @@ class ScenesTreeView(QScrollArea, EventListener):
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
         event_dispatcher.register(self, SceneSelectedEvent)
-
         self.repo = RepositoryPersistenceManager.instance()
 
     def setNovel(self, novel: Novel):
@@ -1685,13 +1691,21 @@ class ScenesTreeView(QScrollArea, EventListener):
             if scene.chapter:
                 if scene.chapter not in self._chapters.keys():
                     chapterWdg = ChapterWidget(scene.chapter, novel)
+                    chapterWdg.installEventFilter(
+                        DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
+                                        hideTarget=True))
                     self._chapters[scene.chapter] = chapterWdg
                     self._centralWidget.layout().addWidget(chapterWdg)
                 sceneWdg = self._chapters[scene.chapter].addScene(scene, novel)
                 self._scenes[scene] = sceneWdg
                 sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
+                sceneWdg.installEventFilter(
+                    DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(), hideTarget=True))
 
-        self._centralWidget.layout().addWidget(vspacer())
+        _spacer = vspacer()
+        _spacer.setAcceptDrops(True)
+        _spacer.installEventFilter(DropEventFilter(self, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE]))
+        self._centralWidget.layout().addWidget(_spacer)
 
     def refresh(self):
         pass
