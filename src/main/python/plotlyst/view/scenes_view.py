@@ -181,7 +181,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct1.toggled.connect(self._update_cards)
         self.ui.btnAct2.toggled.connect(self._update_cards)
         self.ui.btnAct3.toggled.connect(self._update_cards)
-        self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
+        self.ui.cards.selectionCleared.connect(self._selection_cleared)
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
@@ -367,6 +367,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.selected_card = card
         self._enable_action_buttons(True)
         emit_event(SceneSelectedEvent(self, card.scene))
+
+    def _selection_cleared(self):
+        self._enable_action_buttons(False)
+        self.ui.treeChapters.clearSelection()
 
     def _enable_action_buttons(self, enabled: bool):
         self.ui.btnDelete.setEnabled(enabled)

@@ -1699,25 +1699,25 @@ class ScenesTreeView(QScrollArea, EventListener):
     def insertChapter(self):
         pass
 
+    def clearSelection(self):
+        for scene in self._selectedScenes:
+            wdg = self._scenes[scene]
+            wdg.deselect()
+        self._selectedScenes.clear()
+
     def event_received(self, event: Event):
         if isinstance(event, SceneSelectedEvent):
-            self._clearSelections()
+            self.clearSelection()
             wdg = self._scenes[event.scene]
             wdg.select()
             self._selectedScenes.add(event.scene)
 
     def _sceneSelectionChanged(self, sceneWdg: SceneWidget, selected: bool):
         if selected:
-            self._clearSelections()
+            self.clearSelection()
             self._selectedScenes.add(sceneWdg.scene())
         elif sceneWdg.scene() in self._selectedScenes:
             self._selectedScenes.remove(sceneWdg.scene())
-
-    def _clearSelections(self):
-        for scene in self._selectedScenes:
-            wdg = self._scenes[scene]
-            wdg.deselect()
-        self._selectedScenes.clear()
 
     # def setModel(self, model: ChaptersTreeModel) -> None:
     #     return
