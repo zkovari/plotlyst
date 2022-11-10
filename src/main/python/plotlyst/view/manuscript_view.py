@@ -28,11 +28,9 @@ from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
     ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode
-from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode, ChapterNode
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import scroll_to_top
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
@@ -88,12 +86,12 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_editor.exitRequested.connect(self._exit_distraction_free)
         self.ui.pageDistractionFree.layout().addWidget(self._dist_free_editor)
 
-        self.chaptersModel = ChaptersTreeModel(self.novel)
-        self.ui.treeChapters.setModel(self.chaptersModel)
-        self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
+        # self.chaptersModel = ChaptersTreeModel(self.novel)
+        # self.ui.treeChapters.setModel(self.chaptersModel)
+        # self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
         self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
-        self.ui.treeChapters.clicked.connect(self._edit)
+        # self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
+        # self.ui.treeChapters.clicked.connect(self._edit)
 
         self.ui.wdgTopAnalysis.setHidden(True)
         self.ui.wdgSideAnalysis.setHidden(True)
@@ -109,9 +107,9 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
-        if self.chaptersModel.rowCount(self.chaptersModel.rootIndex()):
-            self._edit(self.chaptersModel.index(0, 0, self.chaptersModel.rootIndex()))
-            scroll_to_top(self.ui.textEdit.textEdit)
+        # if self.chaptersModel.rowCount(self.chaptersModel.rootIndex()):
+        #     self._edit(self.chaptersModel.index(0, 0, self.chaptersModel.rootIndex()))
+        #     scroll_to_top(self.ui.textEdit.textEdit)
 
         self._update_story_goal()
 

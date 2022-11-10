@@ -35,7 +35,6 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged
-from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
@@ -141,7 +140,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.splitterLeft.setSizes([100, 500])
 
-        self.chaptersModel = ChaptersTreeModel(self.novel)
+        # self.chaptersModel = ChaptersTreeModel(self.novel)
         self.ui.treeChapters.setNovel(self.novel)
         # self.ui.treeChapters.setModel(self.chaptersModel)
         # self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
@@ -224,8 +223,8 @@ class ScenesOutlineView(AbstractNovelView):
     @overrides
     def refresh(self):
         self.tblModel.modelReset.emit()
-        self.chaptersModel.update()
-        self.chaptersModel.modelReset.emit()
+        # self.chaptersModel.update()
+        # self.chaptersModel.modelReset.emit()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
 
@@ -278,7 +277,7 @@ class ScenesOutlineView(AbstractNovelView):
         if toggled:
             menu = QMenu(self.ui.btnNew)
             menu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
-            menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
+            # menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
             self.ui.btnNew.setMenu(menu)
         else:
             self.ui.btnNew.setMenu(None)

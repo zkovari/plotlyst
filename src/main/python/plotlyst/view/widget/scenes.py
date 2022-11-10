@@ -49,9 +49,8 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import ChapterChangedEvent, SceneChangedEvent, SceneStatusChangedEvent, \
+from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
     ActiveSceneStageChanged, AvailableSceneStagesChanged
-from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, ChapterNode, SceneNode
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -69,6 +68,7 @@ from src.main.python.plotlyst.view.widget.button import WordWrappedPushButton, S
     SecondaryActionPushButton, FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterGoalSelector, \
     CharacterEmotionButton
+from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation, RotatedButton, MenuWithDescription, \
     DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
@@ -1620,13 +1620,20 @@ class ChapterWidget(QWidget):
         self._novel = novel
         vbox(self)
 
-        self._lblTitle = QLabel(self._chapter.title_index(self._novel), self)
-        self.layout().addWidget(self._lblTitle)
-        self._lblTitle.setStyleSheet('QLabel:hover {background-color: #D8D5D5;}')
+        self._wdgTitle = QWidget(self)
+        hbox(self._wdgTitle, 0, 2)
+
+        self._chapterIcon = Icon(self._wdgTitle)
+        self._chapterIcon.setIcon(IconRegistry.chapter_icon())
+        self._lblTitle = QLabel(self._chapter.title_index(self._novel), self._wdgTitle)
+        self._wdgTitle.layout().addWidget(self._chapterIcon)
+        self._wdgTitle.layout().addWidget(self._lblTitle)
+        self._wdgTitle.setStyleSheet('QWidget:hover {background-color: #D8D5D5;}')
 
         self._scenesContainer = QWidget(self)
         vbox(self._scenesContainer)
         margins(self._scenesContainer, left=10)
+        self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._scenesContainer)
 
     def addScene(self, scene: Scene, novel: Novel) -> SceneWidget:
@@ -1670,64 +1677,64 @@ class ScenesTreeView(QFrame):
                 if k is not sceneWdg.scene():
                     v.deselect()
 
-    def setModel(self, model: ChaptersTreeModel) -> None:
-        return
-        # super(ScenesTreeView, self).setModel(model)
-        # self.expandAll()
-        # self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        # self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
-        # model.orderChanged.connect(self._on_scene_moved)
-        # model.modelReset.connect(self.expandAll)
+    # def setModel(self, model: ChaptersTreeModel) -> None:
+    #     return
+    # super(ScenesTreeView, self).setModel(model)
+    # self.expandAll()
+    # self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+    # self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
+    # model.orderChanged.connect(self._on_scene_moved)
+    # model.modelReset.connect(self.expandAll)
 
-    def insertChapter(self, index: int = -1):
-        self.model().newChapter(index)
-        self.repo.update_novel(app_env.novel)
-        emit_event(ChapterChangedEvent(self))
-
-    def insertSceneAfter(self, scene: Scene, chapter: Optional[Chapter] = None):
-        new_scene = app_env.novel.insert_scene_after(scene, chapter)
-        self.model().update()
-        self.model().modelReset.emit()
-        self.repo.insert_scene(app_env.novel, new_scene)
-        emit_event(SceneChangedEvent(self))
-
-    def selectedChapter(self) -> Optional[Chapter]:
-        indexes = self.selectionModel().selectedIndexes()
-        if indexes:
-            node = indexes[0].data(ChaptersTreeModel.NodeRole)
-            if isinstance(node, ChapterNode):
-                return node.chapter
-
-    def _on_chapter_clicked(self, index: QModelIndex):
-        if index.column() == 0:
-            return
-
-        indexes = self.selectionModel().selectedIndexes()
-        if not indexes:
-            return
-        node = indexes[0].data(ChaptersTreeModel.NodeRole)
-
-        novel = app_env.novel
-        if isinstance(node, ChapterNode):
-            builder = PopupMenuBuilder.from_index(self, index)
-
-            scenes = novel.scenes_in_chapter(node.chapter)
-            if scenes:
-                builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self.insertSceneAfter(scenes[-1]))
-                builder.add_separator()
-
-            builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
-                               slot=lambda: self.insertChapter(novel.chapters.index(node.chapter)))
-            builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
-                               slot=lambda: self.insertChapter(novel.chapters.index(node.chapter) + 1))
-            builder.popup()
-        elif isinstance(node, SceneNode):
-            if node.scene and node.scene.chapter:
-                self.insertSceneAfter(node.scene)
-
-    def _on_scene_moved(self):
-        self.repo.update_novel(app_env.novel)
-        emit_event(SceneChangedEvent(self))
+    # def insertChapter(self, index: int = -1):
+    #     self.model().newChapter(index)
+    #     self.repo.update_novel(app_env.novel)
+    #     emit_event(ChapterChangedEvent(self))
+    #
+    # def insertSceneAfter(self, scene: Scene, chapter: Optional[Chapter] = None):
+    #     new_scene = app_env.novel.insert_scene_after(scene, chapter)
+    #     self.model().update()
+    #     self.model().modelReset.emit()
+    #     self.repo.insert_scene(app_env.novel, new_scene)
+    #     emit_event(SceneChangedEvent(self))
+    #
+    # def selectedChapter(self) -> Optional[Chapter]:
+    #     indexes = self.selectionModel().selectedIndexes()
+    #     if indexes:
+    #         node = indexes[0].data(ChaptersTreeModel.NodeRole)
+    #         if isinstance(node, ChapterNode):
+    #             return node.chapter
+    #
+    # def _on_chapter_clicked(self, index: QModelIndex):
+    #     if index.column() == 0:
+    #         return
+    #
+    #     indexes = self.selectionModel().selectedIndexes()
+    #     if not indexes:
+    #         return
+    #     node = indexes[0].data(ChaptersTreeModel.NodeRole)
+    #
+    #     novel = app_env.novel
+    #     if isinstance(node, ChapterNode):
+    #         builder = PopupMenuBuilder.from_index(self, index)
+    #
+    #         scenes = novel.scenes_in_chapter(node.chapter)
+    #         if scenes:
+    #             builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self.insertSceneAfter(scenes[-1]))
+    #             builder.add_separator()
+    #
+    #         builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
+    #                            slot=lambda: self.insertChapter(novel.chapters.index(node.chapter)))
+    #         builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
+    #                            slot=lambda: self.insertChapter(novel.chapters.index(node.chapter) + 1))
+    #         builder.popup()
+    #     elif isinstance(node, SceneNode):
+    #         if node.scene and node.scene.chapter:
+    #             self.insertSceneAfter(node.scene)
+    #
+    # def _on_scene_moved(self):
+    #     self.repo.update_novel(app_env.novel)
+    #     emit_event(SceneChangedEvent(self))
 
 
 class StoryMapDisplayMode(Enum):
