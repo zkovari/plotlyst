@@ -1561,16 +1561,56 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
 
 
 class SceneWidget(QFrame):
+    selectionChanged = pyqtSignal(bool)
+
     def __init__(self, scene: Scene, novel: Novel, parent=None):
         super(SceneWidget, self).__init__(parent)
         self._scene = scene
         self._novel = novel
         hbox(self)
 
+        self._selected: bool = False
+
         self._lblTitle = QLabel(self._scene.title_or_index(self._novel), self)
         self.layout().addWidget(self._lblTitle)
 
-        self.setStyleSheet('SceneWidget:hover {background-color: #D8D5D5;}')
+        self._reStyle()
+
+    def scene(self) -> Scene:
+        return self._scene
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self._toggleSelection(not self._selected)
+
+    def select(self):
+        self._toggleSelection(True)
+
+    def deselect(self):
+        self._toggleSelection(False)
+
+    def _toggleSelection(self, selected: bool):
+        self._selected = selected
+        bold(self._lblTitle, self._selected)
+
+        self.selectionChanged.emit(self._selected)
+
+        self._reStyle()
+
+    def _reStyle(self):
+        if self._selected:
+            self.setStyleSheet('''
+                SceneWidget {
+                    background-color: #D8D5D5;
+                }
+                SceneWidget:hover {
+                    background-color: #D8D5D5;
+                }
+            ''')
+        else:
+            self.setStyleSheet('''SceneWidget:hover {
+                background-color: #D8D5D5;
+            }''')
 
 
 class ChapterWidget(QWidget):
@@ -1589,11 +1629,11 @@ class ChapterWidget(QWidget):
         margins(self._scenesContainer, left=10)
         self.layout().addWidget(self._scenesContainer)
 
-        # self.setStyleSheet('ChapterWidget:hover {background-color: #D8D5D5;}')
-
-    def addScene(self, scene: Scene, novel: Novel):
+    def addScene(self, scene: Scene, novel: Novel) -> SceneWidget:
         wdg = SceneWidget(scene, novel, self)
         self._scenesContainer.layout().addWidget(wdg)
+
+        return wdg
 
 
 class ScenesTreeView(QFrame):
@@ -1604,6 +1644,7 @@ class ScenesTreeView(QFrame):
         # self.clicked.connect(self._on_chapter_clicked)
 
         self._chapters: Dict[Chapter, ChapterWidget] = {}
+        self._scenes: Dict[Scene, SceneWidget] = {}
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -1617,9 +1658,17 @@ class ScenesTreeView(QFrame):
                     chapterWdg = ChapterWidget(scene.chapter, novel)
                     self._chapters[scene.chapter] = chapterWdg
                     self.layout().addWidget(chapterWdg)
-                self._chapters[scene.chapter].addScene(scene, novel)
+                sceneWdg = self._chapters[scene.chapter].addScene(scene, novel)
+                self._scenes[scene] = sceneWdg
+                sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
 
         self.layout().addWidget(vspacer())
+
+    def _sceneSelectionChanged(self, sceneWdg: SceneWidget, selected: bool):
+        if selected:
+            for k, v in self._scenes.items():
+                if k is not sceneWdg.scene():
+                    v.deselect()
 
     def setModel(self, model: ChaptersTreeModel) -> None:
         return
