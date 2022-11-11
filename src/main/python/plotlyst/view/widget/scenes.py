@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from enum import Enum
 from functools import partial
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Set, Union
 from typing import List
 
 import qtanim
@@ -1668,6 +1668,9 @@ class ChapterWidget(QWidget):
 
         return wdg
 
+    def insertSceneWidget(self, i: int, wdg: SceneWidget):
+        self._scenesContainer.layout().insertWidget(i, wdg)
+
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.Enter:
@@ -1695,7 +1698,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._selectedScenes: Set[Scene] = set()
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
-        self._dummyWdg: Optional[QWidget] = None
+        self._dummyWdg: Optional[Union[SceneWidget, ChapterWidget]] = None
         self._spacer: QWidget = vspacer()
         vbox(self._spacer)
         self._spacer.setAcceptDrops(True)
@@ -1720,6 +1723,7 @@ class ScenesTreeView(QScrollArea, EventListener):
                     chapterWdg = ChapterWidget(scene.chapter, novel)
                     chapterWdg.installEventFilter(
                         DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
+                                        grabbed=chapterWdg.titleWidget(),
                                         hideTarget=True, startedSlot=partial(self._dragStarted, chapterWdg),
                                         finishedSlot=self._dragStopped))
                     chapterWdg.titleWidget().setAcceptDrops(True)
@@ -1737,8 +1741,9 @@ class ScenesTreeView(QScrollArea, EventListener):
                                     startedSlot=partial(self._dragStarted, sceneWdg), finishedSlot=self._dragStopped))
                 sceneWdg.setAcceptDrops(True)
                 sceneWdg.installEventFilter(
-                    DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
-                                    motionDetection=Qt.Orientation.Vertical, motionSlot=self._dragMovedOnScene))
+                    DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE],
+                                    motionDetection=Qt.Orientation.Vertical,
+                                    motionSlot=partial(self._dragMovedOnScene, sceneWdg)))
 
         self._centralWidget.layout().addWidget(self._spacer)
 
@@ -1803,12 +1808,16 @@ class ScenesTreeView(QScrollArea, EventListener):
         if edge == Qt.Edge.TopEdge:
             self._centralWidget.layout().insertWidget(i, self._dummyWdg)
         else:
-            self._centralWidget.layout().insertWidget(i + 1, self._dummyWdg)
+            chapterWdg.insertSceneWidget(0, self._dummyWdg)
         self._dummyWdg.setVisible(True)
 
-    def _dragMovedOnScene(self, edge: Qt.Edge, _: QPointF):
-        print(edge)
-        pass
+    def _dragMovedOnScene(self, sceneWdg: SceneWidget, edge: Qt.Edge, _: QPointF):
+        i = sceneWdg.parent().layout().indexOf(sceneWdg)
+        if edge == Qt.Edge.TopEdge:
+            sceneWdg.parent().layout().insertWidget(i, self._dummyWdg)
+        else:
+            sceneWdg.parent().layout().insertWidget(i + 1, self._dummyWdg)
+        self._dummyWdg.setVisible(True)
 
     # def setModel(self, model: ChaptersTreeModel) -> None:
     #     return
