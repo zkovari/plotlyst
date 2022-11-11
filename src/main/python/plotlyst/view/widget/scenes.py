@@ -50,7 +50,8 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
-    ActiveSceneStageChanged, AvailableSceneStagesChanged, SceneSelectedEvent
+    ActiveSceneStageChanged, AvailableSceneStagesChanged, SceneSelectedEvent, SceneDeletedEvent, \
+    SceneChangedEvent
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -1572,25 +1573,15 @@ class SceneWidget(QFrame):
         self._selected: bool = False
 
         self._scenePovIcon = Icon(self)
-        if scene.pov:
-            avatar = avatars.avatar(scene.pov, fallback=False)
-            self._scenePovIcon.setIcon(avatar)
-        else:
-            avatar = None
-
-        self._scenePovIcon.setVisible(avatar is not None)
-
         self._sceneTypeIcon = Icon(self)
-        if self._scene.type != SceneType.DEFAULT:
-            self._sceneTypeIcon.setIcon(IconRegistry.scene_type_icon(self._scene))
-        self._sceneTypeIcon.setVisible(self._scene.type != SceneType.DEFAULT)
-        self._lblTitle = QLabel(self._scene.title_or_index(self._novel), self)
+        self._lblTitle = QLabel(self)
         self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
         self.layout().addWidget(self._scenePovIcon)
         self.layout().addWidget(self._sceneTypeIcon)
         self.layout().addWidget(self._lblTitle)
 
+        self.refresh()
         self._reStyle()
 
     def scene(self) -> Scene:
@@ -1598,6 +1589,20 @@ class SceneWidget(QFrame):
 
     def novel(self) -> Novel:
         return self._novel
+
+    def refresh(self):
+        if self._scene.type != SceneType.DEFAULT:
+            self._sceneTypeIcon.setIcon(IconRegistry.scene_type_icon(self._scene))
+        self._sceneTypeIcon.setVisible(self._scene.type != SceneType.DEFAULT)
+
+        if self._scene.pov:
+            avatar = avatars.avatar(self._scene.pov, fallback=False)
+            self._scenePovIcon.setIcon(avatar)
+        else:
+            avatar = None
+        self._scenePovIcon.setVisible(avatar is not None)
+
+        self._lblTitle.setText(self._scene.title_or_index(self._novel))
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -1662,11 +1667,8 @@ class ChapterWidget(QWidget):
     def titleWidget(self) -> QWidget:
         return self._wdgTitle
 
-    def addScene(self, scene: Scene, novel: Novel) -> SceneWidget:
-        wdg = SceneWidget(scene, novel, self)
+    def addSceneWidget(self, wdg: SceneWidget):
         self._scenesContainer.layout().addWidget(wdg)
-
-        return wdg
 
     def insertSceneWidget(self, i: int, wdg: SceneWidget):
         self._scenesContainer.layout().insertWidget(i, wdg)
@@ -1685,6 +1687,7 @@ class ScenesTreeView(QScrollArea, EventListener):
     # noinspection PyTypeChecker
     def __init__(self, parent=None):
         super(ScenesTreeView, self).__init__(parent)
+        self._novel: Optional[Novel] = None
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -1711,44 +1714,30 @@ class ScenesTreeView(QScrollArea, EventListener):
                                                                leftSlot=lambda: self._dummyWdg.setHidden(True)))
 
         event_dispatcher.register(self, SceneSelectedEvent)
+        event_dispatcher.register(self, SceneDeletedEvent)
+        event_dispatcher.register(self, SceneChangedEvent)
         self.repo = RepositoryPersistenceManager.instance()
 
-    # noinspection PyTypeChecker
     def setNovel(self, novel: Novel):
-        clear_layout(self)
-
-        for scene in novel.scenes:
-            if scene.chapter:
-                if scene.chapter not in self._chapters.keys():
-                    chapterWdg = ChapterWidget(scene.chapter, novel)
-                    chapterWdg.installEventFilter(
-                        DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
-                                        grabbed=chapterWdg.titleWidget(),
-                                        hideTarget=True, startedSlot=partial(self._dragStarted, chapterWdg),
-                                        finishedSlot=self._dragStopped))
-                    chapterWdg.titleWidget().setAcceptDrops(True)
-                    chapterWdg.titleWidget().installEventFilter(
-                        DropEventFilter(chapterWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
-                                        motionDetection=Qt.Orientation.Vertical,
-                                        motionSlot=partial(self._dragMovedOnChapter, chapterWdg)))
-                    self._chapters[scene.chapter] = chapterWdg
-                    self._centralWidget.layout().addWidget(chapterWdg)
-                sceneWdg = self._chapters[scene.chapter].addScene(scene, novel)
-                self._scenes[scene] = sceneWdg
-                sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
-                sceneWdg.installEventFilter(
-                    DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(), hideTarget=True,
-                                    startedSlot=partial(self._dragStarted, sceneWdg), finishedSlot=self._dragStopped))
-                sceneWdg.setAcceptDrops(True)
-                sceneWdg.installEventFilter(
-                    DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE],
-                                    motionDetection=Qt.Orientation.Vertical,
-                                    motionSlot=partial(self._dragMovedOnScene, sceneWdg)))
-
-        self._centralWidget.layout().addWidget(self._spacer)
+        self._novel = novel
+        self.refresh()
 
     def refresh(self):
-        pass
+        clear_layout(self, auto_delete=False)
+
+        for scene in self._novel.scenes:
+            if scene not in self._scenes.keys():
+                self.__initSceneWidget(scene)
+
+            sceneWdg = self._scenes[scene]
+            if scene.chapter:
+                if scene.chapter not in self._chapters.keys():
+                    self.__initChapterWidget(scene.chapter)
+                self._chapters[scene.chapter].addSceneWidget(sceneWdg)
+            else:
+                self._centralWidget.layout().addWidget(sceneWdg)
+
+        self._centralWidget.layout().addWidget(self._spacer)
 
     def insertChapter(self):
         pass
@@ -1766,6 +1755,15 @@ class ScenesTreeView(QScrollArea, EventListener):
             wdg = self._scenes[event.scene]
             wdg.select()
             self._selectedScenes.add(event.scene)
+        elif isinstance(event, SceneDeletedEvent):
+            wdg = self._scenes.pop(event.scene)
+            if event.scene in self._selectedScenes:
+                self._selectedScenes.remove(event.scene)
+            wdg.parent().layout().removeWidget(wdg)
+            gc(wdg)
+        elif isinstance(event, SceneChangedEvent):
+            wdg = self._scenes[event.scene]
+            wdg.refresh()
 
     def _sceneSelectionChanged(self, sceneWdg: SceneWidget, selected: bool):
         if selected:
@@ -1779,6 +1777,8 @@ class ScenesTreeView(QScrollArea, EventListener):
             self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel())
         elif isinstance(wdg, ChapterWidget):
             self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel())
+            for v in self._scenes.values():
+                v.setDisabled(True)
         else:
             return
 
@@ -1793,6 +1793,11 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._dummyWdg.setHidden(True)
         gc(self._dummyWdg)
         self._dummyWdg = None
+
+        for v in self._scenes.values():
+            v.setEnabled(True)
+
+        self.refresh()
 
     def _dragEnteredForEnd(self, _: QMimeData):
         self._spacer.layout().addWidget(self._dummyWdg, alignment=Qt.AlignmentFlag.AlignTop)
@@ -1818,6 +1823,36 @@ class ScenesTreeView(QScrollArea, EventListener):
         else:
             sceneWdg.parent().layout().insertWidget(i + 1, self._dummyWdg)
         self._dummyWdg.setVisible(True)
+
+    # noinspection PyTypeChecker
+    def __initChapterWidget(self, chapter):
+        chapterWdg = ChapterWidget(chapter, self._novel)
+        chapterWdg.installEventFilter(
+            DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
+                            grabbed=chapterWdg.titleWidget(),
+                            hideTarget=True, startedSlot=partial(self._dragStarted, chapterWdg),
+                            finishedSlot=self._dragStopped))
+        chapterWdg.titleWidget().setAcceptDrops(True)
+        chapterWdg.titleWidget().installEventFilter(
+            DropEventFilter(chapterWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self._dragMovedOnChapter, chapterWdg)))
+        self._chapters[chapter] = chapterWdg
+        self._centralWidget.layout().addWidget(chapterWdg)
+
+    # noinspection PyTypeChecker
+    def __initSceneWidget(self, scene: Scene):
+        sceneWdg = SceneWidget(scene, self._novel)
+        self._scenes[scene] = sceneWdg
+        sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
+        sceneWdg.installEventFilter(
+            DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(), hideTarget=True,
+                            startedSlot=partial(self._dragStarted, sceneWdg), finishedSlot=self._dragStopped))
+        sceneWdg.setAcceptDrops(True)
+        sceneWdg.installEventFilter(
+            DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self._dragMovedOnScene, sceneWdg)))
 
     # def setModel(self, model: ChaptersTreeModel) -> None:
     #     return

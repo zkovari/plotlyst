@@ -42,7 +42,7 @@ class CharacterChangedEvent(Event):
 
 @dataclass
 class SceneChangedEvent(Event):
-    pass
+    scene: Scene
 
 
 @dataclass
@@ -57,7 +57,7 @@ class ChapterChangedEvent(Event):
 
 @dataclass
 class SceneDeletedEvent(Event):
-    pass
+    scene: Scene
 
 
 @dataclass

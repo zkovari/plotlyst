@@ -321,10 +321,10 @@ class ScenesOutlineView(AbstractNovelView):
             self._scene_filter.povFilter.addCharacter(self.editor.scene.pov)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         gc(self.editor.widget)
-        self.editor = None
 
-        emit_event(SceneChangedEvent(self))
+        emit_event(SceneChangedEvent(self, self.editor.scene))
         emit_event(ToggleOutlineViewTitle(self, visible=True))
+        self.editor = None
         self.refresh()
 
     def _new_scene(self):
@@ -543,7 +543,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None):
         new_scene = self.novel.insert_scene_after(scene, chapter)
         self.repo.insert_scene(self.novel, new_scene)
-        emit_event(SceneChangedEvent(self))
+        emit_event(SceneChangedEvent(self, new_scene))
 
         self.refresh()
         self.editor = SceneEditor(self.novel, new_scene)
@@ -555,7 +555,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.novel.scenes.remove(scene)
             self.repo.delete_scene(self.novel, scene)
             self.refresh()
-            emit_event(SceneDeletedEvent(self))
+            emit_event(SceneDeletedEvent(self, scene))
         elif not scene:
             if not self.ui.treeChapters.selectedChapter():
                 return
@@ -569,7 +569,8 @@ class ScenesOutlineView(AbstractNovelView):
         pos = self.novel.scenes.index(moved_to.scene)
         self.novel.scenes.insert(pos, removed.scene)
 
-        emit_event(SceneChangedEvent(self))
+        emit_event(SceneChangedEvent(self, removed.scene))
+        emit_event(SceneChangedEvent(self, moved_to.scene))
         self.refresh()
         self.repo.update_novel(self.novel)
 
