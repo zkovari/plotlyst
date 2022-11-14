@@ -1739,6 +1739,10 @@ class ScenesTreeView(QScrollArea, EventListener):
             else:
                 self._centralWidget.layout().addWidget(sceneWdg)
 
+        for chapter in self._novel.chapters:
+            if chapter in self._chapters.keys():
+                continue
+
         self._centralWidget.layout().addWidget(self._spacer)
 
     def insertChapter(self):
@@ -1792,16 +1796,21 @@ class ScenesTreeView(QScrollArea, EventListener):
             DropEventFilter(self._dummyWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE], droppedSlot=self._drop))
 
     def _dragStopped(self):
-        if self._dummyWdg is None:
-            return
-        self._dummyWdg.setHidden(True)
-        gc(self._dummyWdg)
-        self._dummyWdg = None
+        if self._dummyWdg:
+            self._dummyWdg.setHidden(True)
+            self._dummyWdg.parent().layout().removeWidget(self._dummyWdg)
+            gc(self._dummyWdg)
+            self._dummyWdg = None
+        if self._toBeRemoved:
+            self._toBeRemoved.parent().layout().removeWidget(self._toBeRemoved)
+            gc(self._toBeRemoved)
+            self._toBeRemoved = None
+
+            self._reorderScenes()
 
         for v in self._scenes.values():
             v.setEnabled(True)
 
-        self.refresh()
 
     def _dragEnteredForEnd(self, _: QMimeData):
         self._spacer.layout().addWidget(self._dummyWdg, alignment=Qt.AlignmentFlag.AlignTop)
@@ -1830,13 +1839,11 @@ class ScenesTreeView(QScrollArea, EventListener):
             if self._dummyWdg.parent() is self._centralWidget:
                 ref.chapter = None
                 new_widget = self.__initSceneWidget(ref)
-                sceneWdg.parent().layout().removeWidget(sceneWdg)
-                gc(sceneWdg)
+                self._toBeRemoved = sceneWdg
                 self._scenes[ref] = new_widget
                 new_widget.setParent(self._centralWidget)
-                self._centralWidget.layout().replaceWidget(self._dummyWdg, new_widget)
-                gc(self._dummyWdg)
-                self._dummyWdg = None
+                i = self._centralWidget.layout().indexOf(self._dummyWdg)
+                self._centralWidget.layout().insertWidget(i, new_widget)
             elif self._dummyWdg.parent() is self._spacer:
                 new_parent = self._dummyWdg.parent()
                 print('scene in the end')
@@ -1849,8 +1856,6 @@ class ScenesTreeView(QScrollArea, EventListener):
             print(ref.title)
         elif isinstance(ref, Chapter):
             print(ref.title_index(self._novel))
-
-        self._reorderScenes()
 
     def _reorderScenes(self):
         pass
