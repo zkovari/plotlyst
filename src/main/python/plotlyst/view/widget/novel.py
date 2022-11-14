@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu, QWidgetAction, \
-    QDialog
+    QDialog, QToolButton
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
@@ -324,6 +324,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         ''')
         self.btnTemplateEditor.clicked.connect(self._selectTemplateStructure)
         self.wdgCharacterLink: Optional[StoryStructureCharacterLinkWidget] = None
+
+        self._btnDelete = QToolButton()
+        self._btnDelete.setIcon(IconRegistry.minus_icon())
+        self._btnDelete.clicked.connect(self._removeStructure)
+        self.horizontalLayout.addWidget(self._btnDelete)
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
@@ -358,19 +363,25 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         if structure.active:
             btn.setChecked(True)
 
-    def _removeStructure(self, structure: StoryStructure):
-        to_be_removed = []
+    def _removeStructure(self):
+        if len(self.novel.story_structures) < 2:
+            return
+        to_be_removed = None
         activate_new = False
+        structure = self.novel.active_story_structure
         for btn in self.btnGroupStructure.buttons():
             if btn.structure().id == structure.id and btn.structure().character_id == structure.character_id:
-                to_be_removed.append(btn)
+                to_be_removed = btn
                 if btn.isChecked():
                     activate_new = True
+                break
 
-        for btn in to_be_removed:
-            self.btnGroupStructure.removeButton(btn)
-            self.wdgTemplates.layout().removeWidget(btn)
-            gc(btn)
+        if not to_be_removed:
+            return
+        
+        self.btnGroupStructure.removeButton(to_be_removed)
+        self.wdgTemplates.layout().removeWidget(to_be_removed)
+        gc(to_be_removed)
         if activate_new and self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[0].setChecked(True)
             emit_event(NovelStoryStructureUpdated(self))
