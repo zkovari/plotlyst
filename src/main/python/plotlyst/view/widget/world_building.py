@@ -616,11 +616,13 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def addNewChild(self):
         entity = WorldBuildingEntity('Entity')
         self._entity.children.append(entity)
-        self._addChild(entity)
+        group = self._addChild(entity)
 
         self._updateCollapse()
         self.worldBuildingScene().rearrangeItems()
         self.worldBuildingScene().modelChanged.emit()
+
+        self.worldBuildingScene().editItem(group.entityItem())
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
         item = WorldBuildingItemGroup(entity, self._font, self._emoji_font)
