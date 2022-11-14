@@ -713,7 +713,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
         _emoji_font = emoji_font(font_size)
         _metrics = QFontMetrics(_emoji_font)
         if app_env.is_mac():
-            threshold = 30
+            threshold = 35
         else:
             threshold = 25
         while _metrics.boundingRect('🙂').height() < threshold:
