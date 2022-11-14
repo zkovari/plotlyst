@@ -1763,10 +1763,15 @@ class ScenesTreeView(QScrollArea, EventListener):
             else:
                 self._centralWidget.layout().addWidget(sceneWdg)
 
-        for chapter in self._novel.chapters:
+        chapter_index = 0
+        for i, chapter in enumerate(self._novel.chapters):
             if chapter not in self._chapters.keys():
                 chapter_wdg = self.__initChapterWidget(chapter)
-                self._centralWidget.layout().insertWidget(self._last_chapter_wdg_index, chapter_wdg)
+                if i > 0:
+                    prev_chapter_wdg = self._chapters[self._novel.chapters[i - 1]]
+                    chapter_index = self._centralWidget.layout().indexOf(prev_chapter_wdg)
+                    chapter_index += 1
+                self._centralWidget.layout().insertWidget(chapter_index, chapter_wdg)
                 self._last_chapter_wdg_index += 1
 
         self._centralWidget.layout().addWidget(self._spacer)
