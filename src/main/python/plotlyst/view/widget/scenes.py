@@ -1746,6 +1746,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self.refresh()
 
     def refresh(self):
+        self.clearSelection()
         clear_layout(self, auto_delete=False)
 
         for scene in self._novel.scenes:
@@ -1826,11 +1827,11 @@ class ScenesTreeView(QScrollArea, EventListener):
 
     def _dragStopped(self):
         if self._dummyWdg:
-            self._dummyWdg.setHidden(True)
+            # self._dummyWdg.setHidden(True)
             gc(self._dummyWdg)
             self._dummyWdg = None
         if self._toBeRemoved:
-            self._toBeRemoved.setHidden(True)
+            # self._toBeRemoved.setHidden(True)
             gc(self._toBeRemoved)
             self._toBeRemoved = None
 
@@ -1857,6 +1858,8 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._dummyWdg.setVisible(True)
 
     def _drop(self, mimeData: QMimeData):
+        self.clearSelection()
+
         ref = mimeData.reference()
         if self._dummyWdg.isHidden():
             return
@@ -1864,7 +1867,6 @@ class ScenesTreeView(QScrollArea, EventListener):
             sceneWdg = self._scenes[ref]
             self._toBeRemoved = sceneWdg
             new_widget = self.__initSceneWidget(ref)
-            self._scenes[ref] = new_widget
             if self._dummyWdg.parent() is self._centralWidget:
                 ref.chapter = None
                 new_widget.setParent(self._centralWidget)
@@ -1880,18 +1882,14 @@ class ScenesTreeView(QScrollArea, EventListener):
                 new_widget.setParent(chapter_wdg)
                 i = chapter_wdg.containerWidget().layout().indexOf(self._dummyWdg)
                 chapter_wdg.insertSceneWidget(i, new_widget)
+            self.repo.update_scene(ref)
         elif isinstance(ref, Chapter):
             chapter_wdg = self._chapters[ref]
             self._toBeRemoved = chapter_wdg
             new_widget = self.__initChapterWidget(ref)
-            self._chapters[ref] = new_widget
 
             for wdg in chapter_wdg.sceneWidgets():
-                new_widget.addSceneWidget(wdg)
-            # for i in range(chapter_wdg.containerWidget().layout().count()):
-            #     item = chapter_wdg.containerWidget().layout().itemAt(i)
-            #     if item is not None:
-            #         new_widget.addSceneWidget(item.widget())
+                new_widget.addSceneWidget(self.__initSceneWidget(wdg.scene()))
 
             new_widget.setParent(self._centralWidget)
             i = self._centralWidget.layout().indexOf(self._dummyWdg)
@@ -1917,6 +1915,9 @@ class ScenesTreeView(QScrollArea, EventListener):
             wdg.refresh()
 
         emit_event(SceneOrderChangedEvent(self))
+        self.repo.update_novel(self._novel)
+
+        self.refresh()
 
     def _dragMovedOnScene(self, sceneWdg: SceneWidget, edge: Qt.Edge, _: QPointF):
         i = sceneWdg.parent().layout().indexOf(sceneWdg)
