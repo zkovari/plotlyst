@@ -1701,6 +1701,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._chapters: Dict[Chapter, ChapterWidget] = {}
         self._scenes: Dict[Scene, SceneWidget] = {}
         self._selectedScenes: Set[Scene] = set()
+        self._last_chapter_wdg_index = 0
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
         self._dummyWdg: Optional[Union[SceneWidget, ChapterWidget]] = None
@@ -1734,19 +1735,27 @@ class ScenesTreeView(QScrollArea, EventListener):
             sceneWdg = self._scenes[scene]
             if scene.chapter:
                 if scene.chapter not in self._chapters.keys():
-                    self.__initChapterWidget(scene.chapter)
+                    chapter_wdg = self.__initChapterWidget(scene.chapter)
+                    self._centralWidget.layout().addWidget(chapter_wdg)
+                    self._last_chapter_wdg_index = self._centralWidget.layout().count()
                 self._chapters[scene.chapter].addSceneWidget(sceneWdg)
             else:
                 self._centralWidget.layout().addWidget(sceneWdg)
 
         for chapter in self._novel.chapters:
-            if chapter in self._chapters.keys():
-                continue
+            if chapter not in self._chapters.keys():
+                chapter_wdg = self.__initChapterWidget(chapter)
+                self._centralWidget.layout().insertWidget(self._last_chapter_wdg_index, chapter_wdg)
+                self._last_chapter_wdg_index += 1
 
         self._centralWidget.layout().addWidget(self._spacer)
 
     def insertChapter(self):
-        pass
+        chapter = Chapter('')
+        self._novel.chapters.append(chapter)
+        wdg = self.__initChapterWidget(chapter)
+        self._centralWidget.layout().insertWidget(self._last_chapter_wdg_index, wdg)
+        self._last_chapter_wdg_index += 1
 
     def clearSelection(self):
         for scene in self._selectedScenes:
@@ -1810,7 +1819,6 @@ class ScenesTreeView(QScrollArea, EventListener):
 
         for v in self._scenes.values():
             v.setEnabled(True)
-
 
     def _dragEnteredForEnd(self, _: QMimeData):
         self._spacer.layout().addWidget(self._dummyWdg, alignment=Qt.AlignmentFlag.AlignTop)
@@ -1885,7 +1893,8 @@ class ScenesTreeView(QScrollArea, EventListener):
                             )
         )
         self._chapters[chapter] = chapterWdg
-        self._centralWidget.layout().addWidget(chapterWdg)
+
+        return chapterWdg
 
     # noinspection PyTypeChecker
     def __initSceneWidget(self, scene: Scene) -> SceneWidget:
