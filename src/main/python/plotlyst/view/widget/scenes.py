@@ -1807,11 +1807,10 @@ class ScenesTreeView(QScrollArea, EventListener):
     def _dragStopped(self):
         if self._dummyWdg:
             self._dummyWdg.setHidden(True)
-            self._dummyWdg.parent().layout().removeWidget(self._dummyWdg)
             gc(self._dummyWdg)
             self._dummyWdg = None
         if self._toBeRemoved:
-            self._toBeRemoved.parent().layout().removeWidget(self._toBeRemoved)
+            self._toBeRemoved.setHidden(True)
             gc(self._toBeRemoved)
             self._toBeRemoved = None
 
@@ -1840,28 +1839,24 @@ class ScenesTreeView(QScrollArea, EventListener):
     def _drop(self, mimeData: QMimeData):
         ref = mimeData.reference()
         if self._dummyWdg.isHidden():
-            print('dummy is hidden')
             return
         if isinstance(ref, Scene):
             sceneWdg = self._scenes[ref]
+            self._toBeRemoved = sceneWdg
+            new_widget = self.__initSceneWidget(ref)
+            self._scenes[ref] = new_widget
             if self._dummyWdg.parent() is self._centralWidget:
                 ref.chapter = None
-                new_widget = self.__initSceneWidget(ref)
-                self._toBeRemoved = sceneWdg
-                self._scenes[ref] = new_widget
                 new_widget.setParent(self._centralWidget)
                 i = self._centralWidget.layout().indexOf(self._dummyWdg)
                 self._centralWidget.layout().insertWidget(i, new_widget)
             elif self._dummyWdg.parent() is self._spacer:
-                new_parent = self._dummyWdg.parent()
-                print('scene in the end')
+                ref.chapter = None
+                new_widget.setParent(self._centralWidget)
+                self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, new_widget)
             else:
                 if isinstance(self._dummyWdg.parent().parent(), ChapterWidget):
                     print('chapter parent parent')
-            # print(new_parent)
-            # new_parent.layout().replaceWidget(self._dummyWdg, sceneWdg)
-            # ref.chapter = chapterWdg.chapter()
-            print(ref.title)
         elif isinstance(ref, Chapter):
             print(ref.title_index(self._novel))
 
