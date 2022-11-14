@@ -71,6 +71,11 @@ class SceneSelectionClearedEvent(Event):
 
 
 @dataclass
+class SceneOrderChangedEvent(Event):
+    pass
+
+
+@dataclass
 class ActiveSceneStageChanged(Event):
     stage: SceneStage
 

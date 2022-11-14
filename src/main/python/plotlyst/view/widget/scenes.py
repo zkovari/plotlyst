@@ -38,6 +38,7 @@ from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent,
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
     OpacityEventFilter, DragEventFilter, DropEventFilter
 
+from main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR, \
     emotion_color
 from src.main.python.plotlyst.common import truncate_string
@@ -1649,7 +1650,8 @@ class ChapterWidget(QWidget):
 
         self._chapterIcon = Icon(self._wdgTitle)
         self._chapterIcon.setIcon(IconRegistry.chapter_icon())
-        self._lblTitle = QLabel(self._chapter.title_index(self._novel), self._wdgTitle)
+        self._lblTitle = QLabel(self._wdgTitle)
+        self.refresh()
         self._wdgTitle.layout().addWidget(self._chapterIcon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
         self._wdgTitle.installEventFilter(self)
@@ -1659,6 +1661,9 @@ class ChapterWidget(QWidget):
         margins(self._scenesContainer, left=10)
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._scenesContainer)
+
+    def refresh(self):
+        self._lblTitle.setText(self._chapter.title_index(self._novel))
 
     def chapter(self) -> Chapter:
         return self._chapter
@@ -1671,6 +1676,17 @@ class ChapterWidget(QWidget):
 
     def titleWidget(self) -> QWidget:
         return self._wdgTitle
+
+    def sceneWidgets(self) -> List[SceneWidget]:
+        scenes_ = []
+        for i in range(self._scenesContainer.layout().count()):
+            item = self._scenesContainer.layout().itemAt(i)
+            if item is None:
+                continue
+            if isinstance(item.widget(), SceneWidget):
+                scenes_.append(item.widget())
+
+        return scenes_
 
     def addSceneWidget(self, wdg: SceneWidget):
         self._scenesContainer.layout().addWidget(wdg)
@@ -1870,17 +1886,37 @@ class ScenesTreeView(QScrollArea, EventListener):
             new_widget = self.__initChapterWidget(ref)
             self._chapters[ref] = new_widget
 
-            for i in range(chapter_wdg.containerWidget().layout().count()):
-                item = chapter_wdg.containerWidget().layout().itemAt(i)
-                if item is not None:
-                    new_widget.addSceneWidget(item.widget())
+            for wdg in chapter_wdg.sceneWidgets():
+                new_widget.addSceneWidget(wdg)
+            # for i in range(chapter_wdg.containerWidget().layout().count()):
+            #     item = chapter_wdg.containerWidget().layout().itemAt(i)
+            #     if item is not None:
+            #         new_widget.addSceneWidget(item.widget())
 
             new_widget.setParent(self._centralWidget)
             i = self._centralWidget.layout().indexOf(self._dummyWdg)
             self._centralWidget.layout().insertWidget(i, new_widget)
 
     def _reorderScenes(self):
-        pass
+        self._novel.chapters.clear()
+        self._novel.scenes.clear()
+
+        for i in range(self._centralWidget.layout().count()):
+            item = self._centralWidget.layout().itemAt(i)
+            if item is None:
+                continue
+            wdg = item.widget()
+            if isinstance(wdg, ChapterWidget):
+                self._novel.chapters.append(wdg.chapter())
+                for scene_wdg in wdg.sceneWidgets():
+                    self._novel.scenes.append(scene_wdg.scene())
+            elif isinstance(wdg, SceneWidget):
+                self._novel.scenes.append(wdg.scene())
+
+        for wdg in self._chapters.values():
+            wdg.refresh()
+
+        emit_event(SceneOrderChangedEvent(self))
 
     def _dragMovedOnScene(self, sceneWdg: SceneWidget, edge: Qt.Edge, _: QPointF):
         i = sceneWdg.parent().layout().indexOf(sceneWdg)
