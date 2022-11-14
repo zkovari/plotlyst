@@ -363,6 +363,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         if structure.active:
             btn.setChecked(True)
 
+        self._btnDelete.setEnabled(len(self.novel.story_structures) > 1)
+
     def _removeStructure(self):
         if len(self.novel.story_structures) < 2:
             return
@@ -378,13 +380,16 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
         if not to_be_removed:
             return
-        
+
         self.btnGroupStructure.removeButton(to_be_removed)
         self.wdgTemplates.layout().removeWidget(to_be_removed)
         gc(to_be_removed)
+        self.novel.story_structures.remove(structure)
         if activate_new and self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[0].setChecked(True)
             emit_event(NovelStoryStructureUpdated(self))
+        self.repo.update_novel(self.novel)
+        self._btnDelete.setEnabled(len(self.novel.story_structures) > 1)
 
     def _linkCharacter(self, character: Character):
         new_structure = copy.deepcopy(self.novel.active_story_structure)
