@@ -1794,7 +1794,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         if isinstance(wdg, SceneWidget):
             self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel(), animation=False)
         elif isinstance(wdg, ChapterWidget):
-            self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel(), animation=False)
+            self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel())
             for v in self._scenes.values():
                 v.setDisabled(True)
         else:
