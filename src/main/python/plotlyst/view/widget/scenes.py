@@ -1708,6 +1708,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
         self._dummyWdg: Optional[Union[SceneWidget, ChapterWidget]] = None
+        self._toBeRemoved: Optional[Union[SceneWidget, ChapterWidget]] = None
         self._spacer: QWidget = vspacer()
         vbox(self._spacer)
         self._spacer.setAcceptDrops(True)
@@ -1864,7 +1865,19 @@ class ScenesTreeView(QScrollArea, EventListener):
                 i = chapter_wdg.containerWidget().layout().indexOf(self._dummyWdg)
                 chapter_wdg.insertSceneWidget(i, new_widget)
         elif isinstance(ref, Chapter):
-            print(ref.title_index(self._novel))
+            chapter_wdg = self._chapters[ref]
+            self._toBeRemoved = chapter_wdg
+            new_widget = self.__initChapterWidget(ref)
+            self._chapters[ref] = new_widget
+
+            for i in range(chapter_wdg.containerWidget().layout().count()):
+                item = chapter_wdg.containerWidget().layout().itemAt(i)
+                if item is not None:
+                    new_widget.addSceneWidget(item.widget())
+
+            new_widget.setParent(self._centralWidget)
+            i = self._centralWidget.layout().indexOf(self._dummyWdg)
+            self._centralWidget.layout().insertWidget(i, new_widget)
 
     def _reorderScenes(self):
         pass
