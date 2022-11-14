@@ -110,6 +110,11 @@ class _StoryStructureButton(QPushButton):
         self.setFont(font)
 
 
+class StoryStructurePreview(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
 class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     beatHighlighted = pyqtSignal(StoryBeat)
     beatToggled = pyqtSignal(StoryBeat)
