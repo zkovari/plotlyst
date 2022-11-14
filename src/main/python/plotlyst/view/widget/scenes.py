@@ -1666,6 +1666,9 @@ class ChapterWidget(QWidget):
     def novel(self) -> Novel:
         return self._novel
 
+    def containerWidget(self) -> QWidget:
+        return self._scenesContainer
+
     def titleWidget(self) -> QWidget:
         return self._wdgTitle
 
@@ -1854,9 +1857,12 @@ class ScenesTreeView(QScrollArea, EventListener):
                 ref.chapter = None
                 new_widget.setParent(self._centralWidget)
                 self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, new_widget)
-            else:
-                if isinstance(self._dummyWdg.parent().parent(), ChapterWidget):
-                    print('chapter parent parent')
+            elif isinstance(self._dummyWdg.parent().parent(), ChapterWidget):
+                chapter_wdg: ChapterWidget = self._dummyWdg.parent().parent()
+                ref.chapter = chapter_wdg.chapter()
+                new_widget.setParent(chapter_wdg)
+                i = chapter_wdg.containerWidget().layout().indexOf(self._dummyWdg)
+                chapter_wdg.insertSceneWidget(i, new_widget)
         elif isinstance(ref, Chapter):
             print(ref.title_index(self._novel))
 
