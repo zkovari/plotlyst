@@ -287,12 +287,9 @@ class ScenesOutlineView(AbstractNovelView):
     def _selected_scene(self) -> Optional[Scene]:
         if self.ui.btnCardsView.isChecked() and self.selected_card:
             return self.selected_card.scene
-        elif self.ui.treeChapters.selectionModel().selectedIndexes():
-            scenes = self.ui.treeChapters.selectedScenes()
-            if scenes:
-                return next(scenes)
-            else:
-                return None
+        scenes = self.ui.treeChapters.selectedScenes()
+        if scenes:
+            return scenes[0]
         else:
             indexes = None
             if self.ui.btnTableView.isChecked():

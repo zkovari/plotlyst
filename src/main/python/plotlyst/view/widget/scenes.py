@@ -1778,8 +1778,8 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._novel = novel
         self.refresh()
 
-    def selectedScenes(self) -> Set[Scene]:
-        return self._selectedScenes
+    def selectedScenes(self) -> List[Scene]:
+        return list(self._selectedScenes)
 
     def refresh(self):
         self.clearSelection()
@@ -1841,8 +1841,9 @@ class ScenesTreeView(QScrollArea, EventListener):
             wdg.parent().layout().removeWidget(wdg)
             gc(wdg)
         elif isinstance(event, SceneChangedEvent):
-            wdg = self._scenes[event.scene]
-            wdg.refresh()
+            wdg = self._scenes.get(event.scene)
+            if wdg is not None:
+                wdg.refresh()
 
     def _sceneSelectionChanged(self, sceneWdg: SceneWidget, selected: bool):
         if selected:
