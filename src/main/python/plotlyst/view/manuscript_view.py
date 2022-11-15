@@ -24,8 +24,8 @@ from overrides import overrides
 from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
 from qthandy.filter import OpacityEventFilter
 
-from main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.core.domain import Novel, Document
+from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
     ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode

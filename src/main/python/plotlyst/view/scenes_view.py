@@ -28,7 +28,6 @@ from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout, busy, bold, gc
 
-from main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.event.core import emit_event, EventListener
@@ -36,6 +35,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged
+from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
