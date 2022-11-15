@@ -18,12 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtCore import QModelIndex, QTimer, Qt
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
 from qthandy.filter import OpacityEventFilter
 
+from main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
@@ -87,6 +88,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageDistractionFree.layout().addWidget(self._dist_free_editor)
 
         self.ui.treeChapters.setNovel(self.novel)
+        self.ui.treeChapters.sceneSelected.connect(self._editScene)
 
         self.ui.wdgTopAnalysis.setHidden(True)
         self.ui.wdgSideAnalysis.setHidden(True)
@@ -141,59 +143,57 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnStoryGoal.setText(f'{wc} word{"s" if wc > 1 else ""}')
         self.ui.progressStory.setValue(int(wc / 80000 * 100))
 
-    def _edit(self, index: QModelIndex):
-        node = index.data(ChaptersTreeModel.NodeRole)
+    def _editScene(self, scene: Scene):
         self.ui.textEdit.setGrammarCheckEnabled(False)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
 
-        if isinstance(node, SceneNode):
-            if not node.scene.manuscript:
-                node.scene.manuscript = Document('', scene_id=node.scene.id)
-                self.repo.update_scene(node.scene)
+        if not scene.manuscript:
+            scene.manuscript = Document('', scene_id=scene.id)
+            self.repo.update_scene(scene)
 
-            self.ui.textEdit.setScene(node.scene)
+        self.ui.textEdit.setScene(scene)
 
-            if node.scene.title:
-                self.ui.lineSceneTitle.setText(node.scene.title)
-                self.ui.lineSceneTitle.setPlaceholderText('Scene title')
-            else:
-                self.ui.lineSceneTitle.clear()
-                self.ui.lineSceneTitle.setPlaceholderText(node.scene.title_or_index(self.novel))
+        if scene.title:
+            self.ui.lineSceneTitle.setText(scene.title)
+            self.ui.lineSceneTitle.setPlaceholderText('Scene title')
+        else:
+            self.ui.lineSceneTitle.clear()
+            self.ui.lineSceneTitle.setPlaceholderText(scene.title_or_index(self.novel))
 
-            if node.scene.pov:
-                self.ui.btnPov.setIcon(avatars.avatar(node.scene.pov))
-                self.ui.btnPov.setVisible(True)
-            else:
-                self.ui.btnPov.setHidden(True)
-            scene_type_icon = IconRegistry.scene_type_icon(node.scene)
-            if scene_type_icon:
-                self.ui.btnSceneType.setIcon(scene_type_icon)
-                self.ui.btnSceneType.setVisible(True)
-            else:
-                self.ui.btnSceneType.setHidden(True)
-
-            self.notesEditor.setScene(node.scene)
-            self.ui.btnNotes.setEnabled(True)
-            self.ui.btnStage.setEnabled(True)
-            self.ui.btnStage.setScene(node.scene)
-
-        elif isinstance(node, ChapterNode):
-            scenes = self.novel.scenes_in_chapter(node.chapter)
-            for scene in scenes:
-                if not scene.manuscript:
-                    scene.manuscript = Document('', scene_id=scene.id)
-                    self.repo.update_scene(scene)
-            if scenes:
-                self.ui.textEdit.setChapterScenes(scenes)
-            else:
-                self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
-
-            self.ui.lineSceneTitle.setText(node.chapter.title_index(self.novel))
+        if scene.pov:
+            self.ui.btnPov.setIcon(avatars.avatar(scene.pov))
+            self.ui.btnPov.setVisible(True)
+        else:
             self.ui.btnPov.setHidden(True)
+        scene_type_icon = IconRegistry.scene_type_icon(scene)
+        if scene_type_icon:
+            self.ui.btnSceneType.setIcon(scene_type_icon)
+            self.ui.btnSceneType.setVisible(True)
+        else:
             self.ui.btnSceneType.setHidden(True)
-            self.ui.btnNotes.setChecked(False)
-            self.ui.btnNotes.setDisabled(True)
-            self.ui.btnStage.setDisabled(True)
+
+        self.notesEditor.setScene(scene)
+        self.ui.btnNotes.setEnabled(True)
+        self.ui.btnStage.setEnabled(True)
+        self.ui.btnStage.setScene(scene)
+
+        # elif isinstance(node, ChapterNode):
+        #     scenes = self.novel.scenes_in_chapter(node.chapter)
+        #     for scene in scenes:
+        #         if not scene.manuscript:
+        #             scene.manuscript = Document('', scene_id=scene.id)
+        #             self.repo.update_scene(scene)
+        #     if scenes:
+        #         self.ui.textEdit.setChapterScenes(scenes)
+        #     else:
+        #         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+        #
+        #     self.ui.lineSceneTitle.setText(node.chapter.title_index(self.novel))
+        #     self.ui.btnPov.setHidden(True)
+        #     self.ui.btnSceneType.setHidden(True)
+        #     self.ui.btnNotes.setChecked(False)
+        #     self.ui.btnNotes.setDisabled(True)
+        #     self.ui.btnStage.setDisabled(True)
 
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
             self.ui.textEdit.setMargins(30, 30, 30, 30)
