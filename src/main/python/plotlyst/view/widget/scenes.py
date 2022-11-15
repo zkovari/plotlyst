@@ -1714,7 +1714,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._centralWidget = QWidget(self)
         self.setWidget(self._centralWidget)
-        vbox(self._centralWidget)
+        vbox(self._centralWidget, spacing=0)
         # self.clicked.connect(self._on_chapter_clicked)
 
         self._chapters: Dict[Chapter, ChapterWidget] = {}
@@ -1831,7 +1831,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._dummyWdg.installEventFilter(
             DropEventFilter(self._dummyWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE], droppedSlot=self._drop))
 
-    def _dragStopped(self):
+    def _dragStopped(self, wdg: QWidget):
         if self._dummyWdg:
             gc(self._dummyWdg)
             self._dummyWdg = None
@@ -1840,6 +1840,8 @@ class ScenesTreeView(QScrollArea, EventListener):
             self._toBeRemoved = None
 
             self._reorderScenes()
+        else:
+            wdg.setVisible(True)
 
         for v in self._scenes.values():
             v.setEnabled(True)
@@ -1938,7 +1940,7 @@ class ScenesTreeView(QScrollArea, EventListener):
             DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
                             grabbed=chapterWdg.titleWidget(),
                             startedSlot=partial(self._dragStarted, chapterWdg),
-                            finishedSlot=self._dragStopped))
+                            finishedSlot=partial(self._dragStopped, chapterWdg)))
         chapterWdg.titleWidget().setAcceptDrops(True)
         chapterWdg.titleWidget().installEventFilter(
             DropEventFilter(chapterWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
@@ -1958,7 +1960,8 @@ class ScenesTreeView(QScrollArea, EventListener):
         sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
         sceneWdg.installEventFilter(
             DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(),
-                            startedSlot=partial(self._dragStarted, sceneWdg), finishedSlot=self._dragStopped))
+                            startedSlot=partial(self._dragStarted, sceneWdg),
+                            finishedSlot=partial(self._dragStopped, sceneWdg)))
         sceneWdg.setAcceptDrops(True)
         sceneWdg.installEventFilter(
             DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE],
