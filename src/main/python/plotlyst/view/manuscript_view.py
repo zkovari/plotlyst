@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from PyQt6.QtCore import QModelIndex, QTimer, Qt
-from PyQt6.QtWidgets import QHeaderView, QApplication
+from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
 from qthandy.filter import OpacityEventFilter
@@ -86,12 +86,7 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_editor.exitRequested.connect(self._exit_distraction_free)
         self.ui.pageDistractionFree.layout().addWidget(self._dist_free_editor)
 
-        # self.chaptersModel = ChaptersTreeModel(self.novel)
-        # self.ui.treeChapters.setModel(self.chaptersModel)
-        # self.chaptersModel.modelReset.connect(self.ui.treeChapters.expandAll)
-        self.ui.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        # self.ui.treeChapters.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
-        # self.ui.treeChapters.clicked.connect(self._edit)
+        self.ui.treeChapters.setNovel(self.novel)
 
         self.ui.wdgTopAnalysis.setHidden(True)
         self.ui.wdgSideAnalysis.setHidden(True)
