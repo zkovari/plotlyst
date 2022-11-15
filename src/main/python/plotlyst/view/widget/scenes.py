@@ -38,7 +38,6 @@ from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent,
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
     OpacityEventFilter, DragEventFilter, DropEventFilter
 
-from main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR, \
     emotion_color
 from src.main.python.plotlyst.common import truncate_string
@@ -50,6 +49,7 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
     ActiveSceneStageChanged, AvailableSceneStagesChanged, SceneSelectedEvent, SceneDeletedEvent, \
     SceneChangedEvent
@@ -1704,6 +1704,8 @@ class ChapterWidget(QWidget):
 class ScenesTreeView(QScrollArea, EventListener):
     SCENE_MIME_TYPE = 'application/tree-scene-widget'
     CHAPTER_MIME_TYPE = 'application/tree-chapter-widget'
+    sceneSelected = pyqtSignal(Scene)
+    chapterSelected = pyqtSignal(Chapter)
 
     # noinspection PyTypeChecker
     def __init__(self, parent=None):
@@ -1810,6 +1812,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         if selected:
             self.clearSelection()
             self._selectedScenes.add(sceneWdg.scene())
+            self.sceneSelected.emit(sceneWdg.scene())
         elif sceneWdg.scene() in self._selectedScenes:
             self._selectedScenes.remove(sceneWdg.scene())
 
