@@ -24,7 +24,7 @@ from overrides import overrides
 from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.core.domain import Novel, Document
+from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
 from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
@@ -89,6 +89,7 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.treeChapters.setNovel(self.novel)
         self.ui.treeChapters.sceneSelected.connect(self._editScene)
+        self.ui.treeChapters.chapterSelected.connect(self._editChapter)
 
         self.ui.wdgTopAnalysis.setHidden(True)
         self.ui.wdgSideAnalysis.setHidden(True)
@@ -100,6 +101,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
         self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
 
+        self.ui.textEdit.setMargins(30, 30, 30, 30)
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
@@ -177,26 +179,31 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnStage.setEnabled(True)
         self.ui.btnStage.setScene(scene)
 
-        # elif isinstance(node, ChapterNode):
-        #     scenes = self.novel.scenes_in_chapter(node.chapter)
-        #     for scene in scenes:
-        #         if not scene.manuscript:
-        #             scene.manuscript = Document('', scene_id=scene.id)
-        #             self.repo.update_scene(scene)
-        #     if scenes:
-        #         self.ui.textEdit.setChapterScenes(scenes)
-        #     else:
-        #         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
-        #
-        #     self.ui.lineSceneTitle.setText(node.chapter.title_index(self.novel))
-        #     self.ui.btnPov.setHidden(True)
-        #     self.ui.btnSceneType.setHidden(True)
-        #     self.ui.btnNotes.setChecked(False)
-        #     self.ui.btnNotes.setDisabled(True)
-        #     self.ui.btnStage.setDisabled(True)
+        self._recheckDocument()
 
+    def _editChapter(self, chapter: Chapter):
+        scenes = self.novel.scenes_in_chapter(chapter)
+        for scene in scenes:
+            if not scene.manuscript:
+                scene.manuscript = Document('', scene_id=scene.id)
+                self.repo.update_scene(scene)
+        if scenes:
+            self.ui.textEdit.setChapterScenes(scenes)
+        else:
+            self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+
+        self.ui.lineSceneTitle.setText(chapter.title_index(self.novel))
+        self.ui.btnPov.setHidden(True)
+        self.ui.btnSceneType.setHidden(True)
+        self.ui.btnNotes.setChecked(False)
+        self.ui.btnNotes.setDisabled(True)
+        self.ui.btnStage.setDisabled(True)
+
+        self._recheckDocument()
+    
+    def _recheckDocument(self):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
-            self.ui.textEdit.setMargins(30, 30, 30, 30)
+            # self.ui.textEdit.setMargins(30, 30, 30, 30)
             self._text_changed()
 
             if self.ui.cbSpellCheck.isChecked():

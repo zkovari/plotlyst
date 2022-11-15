@@ -143,8 +143,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.splitterLeft.setSizes([120, 500])
 
         self.ui.treeChapters.setNovel(self.novel)
-        # self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
-        # self.ui.treeChapters.doubleClicked.connect(self._on_edit)
+        self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
         self.ui.btnChaptersToggle.setIcon(IconRegistry.chapter_icon())
@@ -257,19 +256,14 @@ class ScenesOutlineView(AbstractNovelView):
             emit_event(
                 SceneSelectedEvent(self, indexes[0].data(ScenesTableModel.SceneRole)))
 
-    def _on_chapter_selected(self):
-        indexes = self.ui.treeChapters.selectedIndexes()
-        if not indexes:
-            return
-
+    def _on_chapter_selected(self, chapter: Chapter):
         self.ui.tblScenes.clearSelection()
         if self.selected_card:
             self.selected_card.clearSelection()
             self.selected_card = None
 
         self.ui.btnDelete.setEnabled(True)
-        node = indexes[0].data(ChaptersTreeModel.NodeRole)
-        self.ui.btnEdit.setEnabled(isinstance(node, SceneNode))
+        self.ui.btnEdit.setEnabled(False)
 
     def _hide_chapters_toggled(self, toggled: bool):
         if toggled:
@@ -294,11 +288,11 @@ class ScenesOutlineView(AbstractNovelView):
         if self.ui.btnCardsView.isChecked() and self.selected_card:
             return self.selected_card.scene
         elif self.ui.treeChapters.selectionModel().selectedIndexes():
-            index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
-            node = index.data(ChaptersTreeModel.NodeRole)
-            if isinstance(node, SceneNode):
-                return node.scene
-            return None
+            scenes = self.ui.treeChapters.selectedScenes()
+            if scenes:
+                return next(scenes)
+            else:
+                return None
         else:
             indexes = None
             if self.ui.btnTableView.isChecked():
@@ -559,12 +553,13 @@ class ScenesOutlineView(AbstractNovelView):
             self.refresh()
             emit_event(SceneDeletedEvent(self, scene))
         elif not scene:
-            if not self.ui.treeChapters.selectedChapter():
-                return
-            index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
-            if ask_confirmation(f'Are you sure you want to delete "{index.data()}"? (scenes will remain)'):
-                self.chaptersModel.removeChapter(index)
-                emit_event(ChapterChangedEvent(self))
+            pass
+            # if not self.ui.treeChapters.selectedChapter():
+            #     return
+            # index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
+            # if ask_confirmation(f'Are you sure you want to delete "{index.data()}"? (scenes will remain)'):
+            #     self.chaptersModel.removeChapter(index)
+            #     emit_event(ChapterChangedEvent(self))
 
     def _scenes_swapped(self, removed: SceneCard, moved_to: SceneCard):
         self.novel.scenes.remove(removed.scene)

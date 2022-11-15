@@ -1640,6 +1640,8 @@ class SceneWidget(QFrame):
 
 
 class ChapterWidget(QWidget):
+    selectionChanged = pyqtSignal(bool)
+
     def __init__(self, chapter: Chapter, novel: Novel, parent=None):
         super(ChapterWidget, self).__init__(parent)
         self._chapter = chapter
@@ -1649,6 +1651,7 @@ class ChapterWidget(QWidget):
         self._wdgTitle = QWidget(self)
         hbox(self._wdgTitle, 0, 2)
 
+        self._selected: bool = False
         self._chapterIcon = Icon(self._wdgTitle)
         self._chapterIcon.setIcon(IconRegistry.chapter_icon())
         self._lblTitle = QLabel(self._wdgTitle)
@@ -1662,6 +1665,8 @@ class ChapterWidget(QWidget):
         margins(self._scenesContainer, left=10)
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._scenesContainer)
+
+        self._reStyle()
 
     def refresh(self):
         self._lblTitle.setText(self._chapter.title_index(self._novel))
@@ -1699,7 +1704,31 @@ class ChapterWidget(QWidget):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.Enter:
             qtanim.glow(self._wdgTitle, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
+        elif event.type() == QEvent.Type.MouseButtonRelease:
+            self._toggleSelection(not self._selected)
+            self.selectionChanged.emit(self._selected)
         return super(ChapterWidget, self).eventFilter(watched, event)
+
+    def select(self):
+        self._toggleSelection(True)
+
+    def deselect(self):
+        self._toggleSelection(False)
+
+    def _toggleSelection(self, selected: bool):
+        self._selected = selected
+        bold(self._lblTitle, self._selected)
+        self._reStyle()
+
+    def _reStyle(self):
+        if self._selected:
+            self._wdgTitle.setStyleSheet('''
+                QWidget {
+                    background-color: #D8D5D5;
+                }
+            ''')
+        else:
+            self._wdgTitle.setStyleSheet('')
 
 
 class ScenesTreeView(QScrollArea, EventListener):
@@ -1723,6 +1752,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._chapters: Dict[Chapter, ChapterWidget] = {}
         self._scenes: Dict[Scene, SceneWidget] = {}
         self._selectedScenes: Set[Scene] = set()
+        self._selectedChapters: Set[Chapter] = set()
         self._last_chapter_wdg_index = 0
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
@@ -1747,6 +1777,9 @@ class ScenesTreeView(QScrollArea, EventListener):
     def setNovel(self, novel: Novel):
         self._novel = novel
         self.refresh()
+
+    def selectedScenes(self) -> Set[Scene]:
+        return self._selectedScenes
 
     def refresh(self):
         self.clearSelection()
@@ -1788,9 +1821,11 @@ class ScenesTreeView(QScrollArea, EventListener):
 
     def clearSelection(self):
         for scene in self._selectedScenes:
-            wdg = self._scenes[scene]
-            wdg.deselect()
+            self._scenes[scene].deselect()
+        for chapter in self._selectedChapters:
+            self._chapters[chapter].deselect()
         self._selectedScenes.clear()
+        self._selectedChapters.clear()
 
     @overrides
     def event_received(self, event: Event):
@@ -1816,6 +1851,14 @@ class ScenesTreeView(QScrollArea, EventListener):
             self.sceneSelected.emit(sceneWdg.scene())
         elif sceneWdg.scene() in self._selectedScenes:
             self._selectedScenes.remove(sceneWdg.scene())
+
+    def _chapterSelectionChanged(self, chapterWdg: ChapterWidget, selected: bool):
+        if selected:
+            self.clearSelection()
+            self._selectedChapters.add(chapterWdg.chapter())
+            self.chapterSelected.emit(chapterWdg.chapter())
+        elif chapterWdg.chapter() in self._selectedChapters:
+            self._selectedChapters.remove(chapterWdg.chapter())
 
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
@@ -1940,6 +1983,7 @@ class ScenesTreeView(QScrollArea, EventListener):
     # noinspection PyTypeChecker
     def __initChapterWidget(self, chapter):
         chapterWdg = ChapterWidget(chapter, self._novel)
+        chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
         chapterWdg.installEventFilter(
             DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
                             grabbed=chapterWdg.titleWidget(),
