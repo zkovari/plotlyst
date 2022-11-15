@@ -1835,11 +1835,12 @@ class ScenesTreeView(QScrollArea, EventListener):
             wdg.select()
             self._selectedScenes.add(event.scene)
         elif isinstance(event, SceneDeletedEvent):
-            wdg = self._scenes.pop(event.scene)
             if event.scene in self._selectedScenes:
                 self._selectedScenes.remove(event.scene)
-            wdg.parent().layout().removeWidget(wdg)
-            gc(wdg)
+            if event.scene in self._scenes.keys():
+                wdg = self._scenes.pop(event.scene)
+                wdg.parent().layout().removeWidget(wdg)
+                gc(wdg)
         elif isinstance(event, SceneChangedEvent):
             wdg = self._scenes.get(event.scene)
             if wdg is not None:
