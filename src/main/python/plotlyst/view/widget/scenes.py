@@ -1599,7 +1599,8 @@ class SceneWidget(QFrame):
 
         if self._scene.pov:
             avatar = avatars.avatar(self._scene.pov, fallback=False)
-            self._scenePovIcon.setIcon(avatar)
+            if avatar:
+                self._scenePovIcon.setIcon(avatar)
         else:
             avatar = None
         self._scenePovIcon.setVisible(avatar is not None)
