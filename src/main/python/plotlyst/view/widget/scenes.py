@@ -1814,6 +1814,7 @@ class ScenesTreeView(QScrollArea, EventListener):
             self._selectedScenes.remove(sceneWdg.scene())
 
     def _dragStarted(self, wdg: QWidget):
+        wdg.setHidden(True)
         if isinstance(wdg, SceneWidget):
             self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel(), animation=False)
         elif isinstance(wdg, ChapterWidget):
@@ -1832,11 +1833,9 @@ class ScenesTreeView(QScrollArea, EventListener):
 
     def _dragStopped(self):
         if self._dummyWdg:
-            # self._dummyWdg.setHidden(True)
             gc(self._dummyWdg)
             self._dummyWdg = None
         if self._toBeRemoved:
-            # self._toBeRemoved.setHidden(True)
             gc(self._toBeRemoved)
             self._toBeRemoved = None
 
@@ -1900,6 +1899,8 @@ class ScenesTreeView(QScrollArea, EventListener):
             i = self._centralWidget.layout().indexOf(self._dummyWdg)
             self._centralWidget.layout().insertWidget(i, new_widget)
 
+        self._dummyWdg.setHidden(True)
+
     def _reorderScenes(self):
         self._novel.chapters.clear()
         self._novel.scenes.clear()
@@ -1922,8 +1923,6 @@ class ScenesTreeView(QScrollArea, EventListener):
         emit_event(SceneOrderChangedEvent(self))
         self.repo.update_novel(self._novel)
 
-        self.refresh()
-
     def _dragMovedOnScene(self, sceneWdg: SceneWidget, edge: Qt.Edge, _: QPointF):
         i = sceneWdg.parent().layout().indexOf(sceneWdg)
         if edge == Qt.Edge.TopEdge:
@@ -1938,7 +1937,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         chapterWdg.installEventFilter(
             DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
                             grabbed=chapterWdg.titleWidget(),
-                            hideTarget=True, startedSlot=partial(self._dragStarted, chapterWdg),
+                            startedSlot=partial(self._dragStarted, chapterWdg),
                             finishedSlot=self._dragStopped))
         chapterWdg.titleWidget().setAcceptDrops(True)
         chapterWdg.titleWidget().installEventFilter(
@@ -1958,7 +1957,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._scenes[scene] = sceneWdg
         sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
         sceneWdg.installEventFilter(
-            DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(), hideTarget=True,
+            DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(),
                             startedSlot=partial(self._dragStarted, sceneWdg), finishedSlot=self._dragStopped))
         sceneWdg.setAcceptDrops(True)
         sceneWdg.installEventFilter(
