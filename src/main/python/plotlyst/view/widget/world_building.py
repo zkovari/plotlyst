@@ -43,6 +43,8 @@ from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelect
 
 LINE_WIDTH: int = 4
 DEFAULT_COLOR: str = '#219ebc'
+ITEM_HORIZONTAL_DISTANCE = 20
+ITEM_VERTICAL_DISTANCE = 80
 
 
 class WorldBuildingProfileTemplateView(ProfileTemplateView):
@@ -555,13 +557,52 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def childrenEntityItems(self) -> List['WorldBuildingItemGroup']:
         return self._childrenEntityItems
 
+    def rearrangeChildrenItems(self):
+        number = len(self.childrenEntityItems())
+        if number == 0:
+            return
+
+        if number == 1:
+            self._arrangeChild(self.childrenEntityItems()[0], 0)
+        else:
+            distances = []
+            diff_ = number // 2
+            if number % 2 == 0:
+                for i in range(-number + diff_, number - diff_):
+                    distances.append(ITEM_VERTICAL_DISTANCE * i + ITEM_VERTICAL_DISTANCE / 2)
+            else:
+                for i in range(-number + diff_ + 1, number - diff_):
+                    distances.append(ITEM_VERTICAL_DISTANCE * i)
+            for i, child in enumerate(self.childrenEntityItems()):
+                self._arrangeChild(child, distances[i])
+
+        for child in self.childrenEntityItems():
+            child.rearrangeChildrenItems()
+            # self.rearrangeChildrenItems(child)
+
+    def _arrangeChild(self, child: 'WorldBuildingItemGroup', y: float):
+        child.setPos(self.boundingRect().width() + ITEM_HORIZONTAL_DISTANCE, y)
+        if child.inputConnector() is None:
+            ConnectorItem(self, child)
+            child.setParentItem(self)
+        else:
+            child.inputConnector().rearrange()
+
+        colliding = [x for x in child.collidingItems(Qt.ItemSelectionMode.IntersectsItemBoundingRect) if
+                     isinstance(x, WorldBuildingItemGroup)]
+        if colliding:
+            for col in colliding:
+                overlap = child.mapRectToScene(child.boundingRect()).intersected(
+                    col.mapRectToScene(col.boundingRect())).height()
+                common_ancestor = child.commonAncestorItem(col)
+                # self._moveChildren(common_ancestor, overlap)
+
     def rearrangeItems(self) -> None:
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 20,
                               self._item.boundingRect().y() + 10)
         self._plusItem.setVisible(False)
         self._updateCollapse()
-        if self.scene():
-            self.worldBuildingScene().rearrangeItems()
+        self.rearrangeChildrenItems()
         for connector in self._outputConnectors:
             connector.updatePos()
 
@@ -621,7 +662,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         group = self._addChild(entity)
 
         self._updateCollapse()
-        self.worldBuildingScene().rearrangeItems()
+        self.rearrangeChildrenItems()
         self.worldBuildingScene().modelChanged.emit()
 
         self.worldBuildingScene().editItem(group.entityItem())
@@ -727,7 +768,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
         self._rootItem.setPos(0, 0)
         self.addItem(self._rootItem)
 
-        self.rearrangeItems()
+        self._rootItem.rearrangeChildrenItems()
 
     @overrides
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -744,7 +785,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
                 if item is not self._rootItem.entityItem():
                     item.parentItem().prepareRemove()
                     self.removeItem(item.parentItem())
-                    self.rearrangeItems()
+                    self._rootItem.rearrangeChildrenItems()
         elif event.key() == Qt.Key.Key_E and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
             if isinstance(item, WorldBuildingItem):
@@ -752,48 +793,6 @@ class WorldBuildingEditorScene(QGraphicsScene):
 
     def editItem(self, item: WorldBuildingItem):
         self.editItemRequested.emit(item)
-
-    def rearrangeItems(self):
-        self.rearrangeChildrenItems(self._rootItem)
-
-    def rearrangeChildrenItems(self, parent: WorldBuildingItemGroup):
-        number = len(parent.childrenEntityItems())
-        if number == 0:
-            return
-
-        if number == 1:
-            self._arrangeChild(parent, parent.childrenEntityItems()[0], 0)
-        else:
-            distances = []
-            diff_ = number // 2
-            if number % 2 == 0:
-                for i in range(-number + diff_, number - diff_):
-                    distances.append(self._itemVerticalDistance * i + self._itemVerticalDistance / 2)
-            else:
-                for i in range(-number + diff_ + 1, number - diff_):
-                    distances.append(self._itemVerticalDistance * i)
-            for i, child in enumerate(parent.childrenEntityItems()):
-                self._arrangeChild(parent, child, distances[i])
-
-        for child in parent.childrenEntityItems():
-            self.rearrangeChildrenItems(child)
-
-    def _arrangeChild(self, parentItem: WorldBuildingItemGroup, child: WorldBuildingItemGroup, y: float):
-        child.setPos(parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
-        if child.inputConnector() is None:
-            ConnectorItem(parentItem, child)
-            child.setParentItem(parentItem)
-        else:
-            child.inputConnector().rearrange()
-
-        colliding = [x for x in child.collidingItems(Qt.ItemSelectionMode.IntersectsItemBoundingRect) if
-                     isinstance(x, WorldBuildingItemGroup)]
-        if colliding:
-            for col in colliding:
-                overlap = child.mapRectToScene(child.boundingRect()).intersected(
-                    col.mapRectToScene(col.boundingRect())).height()
-                common_ancestor = child.commonAncestorItem(col)
-                self._moveChildren(common_ancestor, overlap)
 
     def _moveChildren(self, parent: WorldBuildingItemGroup, overlap: float):
         for child in parent.childrenEntityItems():
