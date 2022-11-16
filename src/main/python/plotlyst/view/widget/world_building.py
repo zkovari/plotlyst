@@ -597,6 +597,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def boundingRect(self):
         rect_f = QRectF(self._item.boundingRect())
         rect_f.setWidth(rect_f.width() + self._collapseDistance + self._collapseItem.boundingRect().width())
+        rect_f.setHeight(rect_f.height() + 35)
         return rect_f
 
     def width(self) -> float:
