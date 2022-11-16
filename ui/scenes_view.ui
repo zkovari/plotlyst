@@ -564,6 +564,9 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
+         <property name="handleWidth">
+          <number>0</number>
+         </property>
          <property name="childrenCollapsible">
           <bool>false</bool>
          </property>
@@ -595,21 +598,6 @@
              <property name="mouseTracking">
               <bool>true</bool>
              </property>
-             <property name="dragEnabled">
-              <bool>true</bool>
-             </property>
-             <property name="dragDropMode">
-              <enum>QAbstractItemView::DragDrop</enum>
-             </property>
-             <property name="indentation">
-              <number>10</number>
-             </property>
-             <attribute name="headerVisible">
-              <bool>false</bool>
-             </attribute>
-             <attribute name="headerStretchLastSection">
-              <bool>false</bool>
-             </attribute>
             </widget>
            </item>
           </layout>
@@ -1093,7 +1081,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>476</width>
+                    <width>479</width>
                     <height>562</height>
                    </rect>
                   </property>

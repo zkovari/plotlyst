@@ -616,11 +616,13 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def addNewChild(self):
         entity = WorldBuildingEntity('Entity')
         self._entity.children.append(entity)
-        self._addChild(entity)
+        group = self._addChild(entity)
 
         self._updateCollapse()
         self.worldBuildingScene().rearrangeItems()
         self.worldBuildingScene().modelChanged.emit()
+
+        self.worldBuildingScene().editItem(group.entityItem())
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
         item = WorldBuildingItemGroup(entity, self._font, self._emoji_font)
@@ -711,7 +713,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
         _emoji_font = emoji_font(font_size)
         _metrics = QFontMetrics(_emoji_font)
         if app_env.is_mac():
-            threshold = 30
+            threshold = 35
         else:
             threshold = 25
         while _metrics.boundingRect('🙂').height() < threshold:

@@ -24,7 +24,7 @@ from typing import Optional, List
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QHeaderView, QMenu, QWidgetAction, \
+from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QMenu, QWidgetAction, \
     QDialog, QToolButton
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
@@ -39,7 +39,6 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
-from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
@@ -558,7 +557,7 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
                                (self.btnScenes, self.pageScenes)])
 
         self._charactersModel: Optional[CharactersTableModel] = None
-        self._chaptersModel: Optional[ChaptersTreeModel] = None
+        # self._chaptersModel: Optional[ChaptersTreeModel] = None
 
     def setNovel(self, novel: Novel):
         self.lblTitle.setText(novel.title)
@@ -571,11 +570,11 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
             self.btnCharacters.setDisabled(True)
 
         if novel.scenes:
-            self._chaptersModel = ChaptersTreeModel(novel)
-            self.treeChapters.setModel(self._chaptersModel)
-            self.treeChapters.expandAll()
-            self.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-            self.treeChapters.hideColumn(ChaptersTreeModel.ColPlus)
+            # self._chaptersModel = ChaptersTreeModel(novel)
+            # self.treeChapters.setModel(self._chaptersModel)
+            # self.treeChapters.expandAll()
+            # self.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+            # self.treeChapters.hideColumn(ChaptersTreeModel.ColPlus)
             if not self.btnLocations.isChecked():
                 self.btnScenes.setChecked(True)
 

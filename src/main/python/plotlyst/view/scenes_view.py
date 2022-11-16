@@ -26,7 +26,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout, busy, bold
+from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout, busy, bold, gc
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
@@ -35,7 +35,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged
-from src.main.python.plotlyst.model.chapters_model import ChaptersTreeModel, SceneNode
+from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
@@ -99,7 +99,8 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
 class ScenesOutlineView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelStoryStructureUpdated, SceneChangedEvent, ChapterChangedEvent, SceneDeletedEvent])
+        super().__init__(novel, [NovelStoryStructureUpdated, SceneChangedEvent, ChapterChangedEvent, SceneDeletedEvent,
+                                 SceneOrderChangedEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -139,13 +140,10 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.widget.setStyleSheet(f'#cards {{background: {RELAXED_WHITE_COLOR};}}')
 
-        self.ui.splitterLeft.setSizes([100, 500])
+        self.ui.splitterLeft.setSizes([120, 500])
 
-        self.chaptersModel = ChaptersTreeModel(self.novel)
-        self.ui.treeChapters.setModel(self.chaptersModel)
-        self.ui.treeChapters.selectionModel().selectionChanged.connect(self._on_chapter_selected)
-
-        self.ui.treeChapters.doubleClicked.connect(self._on_edit)
+        self.ui.treeChapters.setNovel(self.novel)
+        self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
         self.ui.btnChaptersToggle.setIcon(IconRegistry.chapter_icon())
@@ -181,7 +179,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct1.toggled.connect(self._update_cards)
         self.ui.btnAct2.toggled.connect(self._update_cards)
         self.ui.btnAct3.toggled.connect(self._update_cards)
-        self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
+        self.ui.cards.selectionCleared.connect(self._selection_cleared)
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
@@ -223,8 +221,7 @@ class ScenesOutlineView(AbstractNovelView):
     @overrides
     def refresh(self):
         self.tblModel.modelReset.emit()
-        self.chaptersModel.update()
-        self.chaptersModel.modelReset.emit()
+        self.ui.treeChapters.refresh()
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
 
@@ -259,19 +256,14 @@ class ScenesOutlineView(AbstractNovelView):
             emit_event(
                 SceneSelectedEvent(self, indexes[0].data(ScenesTableModel.SceneRole)))
 
-    def _on_chapter_selected(self):
-        indexes = self.ui.treeChapters.selectedIndexes()
-        if not indexes:
-            return
-
+    def _on_chapter_selected(self, chapter: Chapter):
         self.ui.tblScenes.clearSelection()
         if self.selected_card:
             self.selected_card.clearSelection()
             self.selected_card = None
 
         self.ui.btnDelete.setEnabled(True)
-        node = indexes[0].data(ChaptersTreeModel.NodeRole)
-        self.ui.btnEdit.setEnabled(isinstance(node, SceneNode))
+        self.ui.btnEdit.setEnabled(False)
 
     def _hide_chapters_toggled(self, toggled: bool):
         if toggled:
@@ -295,12 +287,9 @@ class ScenesOutlineView(AbstractNovelView):
     def _selected_scene(self) -> Optional[Scene]:
         if self.ui.btnCardsView.isChecked() and self.selected_card:
             return self.selected_card.scene
-        elif self.ui.treeChapters.selectionModel().selectedIndexes():
-            index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
-            node = index.data(ChaptersTreeModel.NodeRole)
-            if isinstance(node, SceneNode):
-                return node.scene
-            return None
+        scenes = self.ui.treeChapters.selectedScenes()
+        if scenes:
+            return scenes[0]
         else:
             indexes = None
             if self.ui.btnTableView.isChecked():
@@ -324,11 +313,11 @@ class ScenesOutlineView(AbstractNovelView):
         if self.editor.scene.pov and self.editor.scene.pov not in self._scene_filter.povFilter.characters():
             self._scene_filter.povFilter.addCharacter(self.editor.scene.pov)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
-        self.editor.widget.deleteLater()
-        self.editor = None
+        gc(self.editor.widget)
 
-        emit_event(SceneChangedEvent(self))
+        emit_event(SceneChangedEvent(self, self.editor.scene))
         emit_event(ToggleOutlineViewTitle(self, visible=True))
+        self.editor = None
         self.refresh()
 
     def _new_scene(self):
@@ -368,6 +357,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.selected_card = card
         self._enable_action_buttons(True)
         emit_event(SceneSelectedEvent(self, card.scene))
+
+    def _selection_cleared(self):
+        self._enable_action_buttons(False)
+        self.ui.treeChapters.clearSelection()
 
     def _enable_action_buttons(self, enabled: bool):
         self.ui.btnDelete.setEnabled(enabled)
@@ -543,7 +536,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None):
         new_scene = self.novel.insert_scene_after(scene, chapter)
         self.repo.insert_scene(self.novel, new_scene)
-        emit_event(SceneChangedEvent(self))
+        emit_event(SceneChangedEvent(self, new_scene))
 
         self.refresh()
         self.editor = SceneEditor(self.novel, new_scene)
@@ -555,21 +548,23 @@ class ScenesOutlineView(AbstractNovelView):
             self.novel.scenes.remove(scene)
             self.repo.delete_scene(self.novel, scene)
             self.refresh()
-            emit_event(SceneDeletedEvent(self))
-        elif not scene:
-            if not self.ui.treeChapters.selectedChapter():
-                return
-            index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
-            if ask_confirmation(f'Are you sure you want to delete "{index.data()}"? (scenes will remain)'):
-                self.chaptersModel.removeChapter(index)
-                emit_event(ChapterChangedEvent(self))
+            emit_event(SceneDeletedEvent(self, scene))
+        # elif not scene:
+        #     chapters = self.ui.treeChapters.selectedChapters()
+        #     title = chapters[0].title_index(self.novel)
+        #     if chapters:
+        #         if ask_confirmation(
+        #                 f'Are you sure you want to delete chapter "{title}"? (scenes will remain)'):
+        #             self.chaptersModel.removeChapter(index)
+        #             emit_event(ChapterChangedEvent(self))
 
     def _scenes_swapped(self, removed: SceneCard, moved_to: SceneCard):
         self.novel.scenes.remove(removed.scene)
         pos = self.novel.scenes.index(moved_to.scene)
         self.novel.scenes.insert(pos, removed.scene)
 
-        emit_event(SceneChangedEvent(self))
+        emit_event(SceneChangedEvent(self, removed.scene))
+        emit_event(SceneChangedEvent(self, moved_to.scene))
         self.refresh()
         self.repo.update_novel(self.novel)
 
