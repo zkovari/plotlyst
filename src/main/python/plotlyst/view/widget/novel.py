@@ -25,16 +25,16 @@ import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QMenu, QWidgetAction, \
-    QDialog, QToolButton
+    QDialog, QToolButton, QGridLayout, QScrollArea, QApplication
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
-    margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden
+    margins, italic, btn_popup_menu, ask_confirmation, retain_when_hidden, grid
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     Character, SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType, Plot, PlotType, PlotValue, three_act_structure, save_the_cat
+    StoryBeatType, Plot, PlotType, PlotValue, save_the_cat, three_act_structure
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -109,9 +109,33 @@ class _StoryStructureButton(QPushButton):
         self.setFont(font)
 
 
-class StoryStructurePreview(QWidget):
+class BeatsPreview(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._layout: QGridLayout = grid(self)
+        self._structurePreview: Optional[SceneStoryStructureWidget] = None
+
+        self.setStyleSheet("background-color: rgb(255, 255, 255);")
+
+    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
+        self._structurePreview = structurePreview
+
+    def setStructure(self, structure: StoryStructure):
+        row = 0
+        col = 0
+        for beat in structure.beats:
+            if beat.type != StoryBeatType.BEAT:
+                continue
+            wdg = BeatWidget(beat)
+            wdg.setMinimumSize(200, 50)
+            if beat.act - 1 > col:  # new act
+                self._layout.addWidget(vspacer(), row + 1, col)
+                col = beat.act - 1
+                row = 0
+            self._layout.addWidget(wdg, row, col)
+            row += 1
+            wdg.beatHighlighted.connect(self._structurePreview.highlightBeat)
+            # wdg.beatToggled.connect(self._beatToggled)
 
 
 class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
@@ -251,8 +275,9 @@ class StoryStructureCharacterLinkWidget(QWidget, Ui_StoryStructureCharacterLink,
 
 
 class _AbstractStructureEditorWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, structure: StoryStructure, parent=None):
         super(_AbstractStructureEditorWidget, self).__init__(parent)
+        self._structure = structure
         vbox(self)
         self.wdgPreview = SceneStoryStructureWidget(self)
         self.wdgPreview.setCheckOccupiedBeats(False)
@@ -260,15 +285,28 @@ class _AbstractStructureEditorWidget(QWidget):
         self.wdgPreview.setBeatsMoveable(True)
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)
+
+        self._scroll = QScrollArea(self)
+        self._scroll.setWidgetResizable(True)
+        vbox(self._scroll)
+
+        self.beatsPreview = BeatsPreview()
+        self._scroll.setWidget(self.beatsPreview)
+        self.beatsPreview.attachStructurePreview(self.wdgPreview)
         # self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
         # self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
 
+    def structure(self) -> StoryStructure:
+        return self._structure
+
 
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
-    def __init__(self, novel: Novel, parent=None):
-        super(_ThreeActStructureEditorWidget, self).__init__(parent)
-        self.wdgPreview.setStructure(novel, copy.deepcopy(three_act_structure))
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
+        super(_ThreeActStructureEditorWidget, self).__init__(structure, parent)
+        self.wdgPreview.setStructure(novel, self._structure)
+        self.beatsPreview.setStructure(self._structure)
         self.layout().addWidget(self.wdgPreview)
+        self.layout().addWidget(self._scroll)
 
 
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
@@ -280,15 +318,24 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
+
+        margins(self.pageThreeAct, 0, 0, 0, 0)
+        margins(self.pageSaveTheCat, 0, 0, 0, 0)
+
         self._structure: Optional[StoryStructure] = None
         self._structureChanged()
 
-    def structure(self) -> Optional[StoryStructure]:
+    def structure(self) -> StoryStructure:
         return self._structure
 
     @staticmethod
     def display(novel: Novel) -> Optional[StoryStructure]:
         dialog = StoryStructureSelectorDialog(novel)
+        screen = QApplication.screenAt(dialog.pos())
+        if screen:
+            dialog.resize(screen.size().width() * 0.9, screen.size().height() * 0.7)
+        else:
+            dialog.resize(600, 500)
 
         result = dialog.exec()
 
@@ -299,10 +346,10 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
 
     def _structureChanged(self):
         if self.btnThreeAct.isChecked():
-            self._structure = three_act_structure
             self.stackedWidget.setCurrentWidget(self.pageThreeAct)
             if self.pageThreeAct.layout().count() == 0:
-                self.pageThreeAct.layout().addWidget(_ThreeActStructureEditorWidget(self._novel, self))
+                self._structure = copy.deepcopy(three_act_structure)
+                self.pageThreeAct.layout().addWidget(_ThreeActStructureEditorWidget(self._novel, self._structure, self))
         elif self.btnSaveTheCat.isChecked():
             self._structure = save_the_cat
             self.stackedWidget.setCurrentWidget(self.pageSaveTheCat)
