@@ -135,7 +135,7 @@ class BeatsPreview(QFrame):
             self._layout.addWidget(wdg, row, col)
             row += 1
             wdg.beatHighlighted.connect(self._structurePreview.highlightBeat)
-            # wdg.beatToggled.connect(self._beatToggled)
+            wdg.beatToggled.connect(partial(self._structurePreview.toggleBeatVisibility, beat))
 
 
 class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
