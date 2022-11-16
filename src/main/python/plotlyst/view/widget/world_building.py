@@ -578,7 +578,6 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
         for child in self.childrenEntityItems():
             child.rearrangeChildrenItems()
-            # self.rearrangeChildrenItems(child)
 
     def _arrangeChild(self, child: 'WorldBuildingItemGroup', y: float):
         child.setPos(self.boundingRect().width() + ITEM_HORIZONTAL_DISTANCE, y)
@@ -595,7 +594,16 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
                 overlap = child.mapRectToScene(child.boundingRect()).intersected(
                     col.mapRectToScene(col.boundingRect())).height()
                 common_ancestor = child.commonAncestorItem(col)
-                # self._moveChildren(common_ancestor, overlap)
+                print(overlap)
+                common_ancestor.moveChildren(overlap)
+
+    def moveChildren(self, overlap: float):
+        for child in self.childrenEntityItems():
+            if child.pos().y() >= 0:
+                child.moveBy(0, overlap / len(self.childrenEntityItems()))
+            else:
+                child.moveBy(0, -overlap / len(self.childrenEntityItems()))
+            child.inputConnector().rearrange()
 
     def rearrangeItems(self) -> None:
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 20,
@@ -793,14 +801,6 @@ class WorldBuildingEditorScene(QGraphicsScene):
 
     def editItem(self, item: WorldBuildingItem):
         self.editItemRequested.emit(item)
-
-    def _moveChildren(self, parent: WorldBuildingItemGroup, overlap: float):
-        for child in parent.childrenEntityItems():
-            if child.pos().y() >= 0:
-                child.moveBy(0, overlap + self._itemVerticalDistance / 2)
-            else:
-                child.moveBy(0, -overlap - self._itemVerticalDistance / 2)
-            child.inputConnector().rearrange()
 
 
 class WorldBuildingEditor(QGraphicsView):
