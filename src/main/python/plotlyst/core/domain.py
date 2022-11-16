@@ -246,6 +246,10 @@ class Chapter:
     def title_index(self, novel: 'Novel') -> str:
         return f'Chapter {novel.chapters.index(self) + 1}'
 
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
+
 
 @dataclass
 class CharacterArc:

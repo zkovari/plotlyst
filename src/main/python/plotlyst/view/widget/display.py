@@ -242,7 +242,12 @@ class _AbstractIcon:
         return self._iconName
 
     @iconName.setter
-    def iconName(self, value):
+    def iconName(self, value: str):
+        self.setIconName(value)
+        self._iconName = value
+        self._setIcon()
+
+    def setIconName(self, value: str):
         self._iconName = value
         self._setIcon()
 
