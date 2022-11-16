@@ -549,14 +549,14 @@ class ScenesOutlineView(AbstractNovelView):
             self.repo.delete_scene(self.novel, scene)
             self.refresh()
             emit_event(SceneDeletedEvent(self, scene))
-        elif not scene:
-            pass
-            # if not self.ui.treeChapters.selectedChapter():
-            #     return
-            # index = self.ui.treeChapters.selectionModel().selectedIndexes()[0]
-            # if ask_confirmation(f'Are you sure you want to delete "{index.data()}"? (scenes will remain)'):
-            #     self.chaptersModel.removeChapter(index)
-            #     emit_event(ChapterChangedEvent(self))
+        # elif not scene:
+        #     chapters = self.ui.treeChapters.selectedChapters()
+        #     title = chapters[0].title_index(self.novel)
+        #     if chapters:
+        #         if ask_confirmation(
+        #                 f'Are you sure you want to delete chapter "{title}"? (scenes will remain)'):
+        #             self.chaptersModel.removeChapter(index)
+        #             emit_event(ChapterChangedEvent(self))
 
     def _scenes_swapped(self, removed: SceneCard, moved_to: SceneCard):
         self.novel.scenes.remove(removed.scene)

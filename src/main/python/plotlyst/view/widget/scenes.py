@@ -49,7 +49,7 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import SceneOrderChangedEvent
+from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
     ActiveSceneStageChanged, AvailableSceneStagesChanged, SceneSelectedEvent, SceneDeletedEvent, \
     SceneChangedEvent
@@ -1641,6 +1641,7 @@ class SceneWidget(QFrame):
 
 class ChapterWidget(QWidget):
     selectionChanged = pyqtSignal(bool)
+    deleted = pyqtSignal()
 
     def __init__(self, chapter: Chapter, novel: Novel, parent=None):
         super(ChapterWidget, self).__init__(parent)
@@ -1654,11 +1655,19 @@ class ChapterWidget(QWidget):
         self._selected: bool = False
         self._chapterIcon = Icon(self._wdgTitle)
         self._chapterIcon.setIcon(IconRegistry.chapter_icon())
+        self._btnSettings = QToolButton(self._wdgTitle)
+        self._btnSettings.setIcon(IconRegistry.dots_icon(vertical=True))
+        self._btnSettings.setProperty('transparent', True)
+        menu = QMenu(self._btnSettings)
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.deleted.emit)
+        btn_popup_menu(self._btnSettings, menu)
         self._lblTitle = QLabel(self._wdgTitle)
         self.refresh()
         self._wdgTitle.layout().addWidget(self._chapterIcon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
+        self._wdgTitle.layout().addWidget(self._btnSettings, alignment=Qt.AlignmentFlag.AlignRight)
         self._wdgTitle.installEventFilter(self)
+        self._wdgTitle.installEventFilter(VisibilityToggleEventFilter(self._btnSettings, self._wdgTitle))
 
         self._scenesContainer = QWidget(self)
         vbox(self._scenesContainer)
@@ -1753,7 +1762,6 @@ class ScenesTreeView(QScrollArea, EventListener):
         self._scenes: Dict[Scene, SceneWidget] = {}
         self._selectedScenes: Set[Scene] = set()
         self._selectedChapters: Set[Chapter] = set()
-        self._last_chapter_wdg_index = 0
         self.setStyleSheet('ScenesTreeView {background-color: rgb(244, 244, 244);}')
 
         self._dummyWdg: Optional[Union[SceneWidget, ChapterWidget]] = None
@@ -1781,6 +1789,9 @@ class ScenesTreeView(QScrollArea, EventListener):
     def selectedScenes(self) -> List[Scene]:
         return list(self._selectedScenes)
 
+    def selectedChapters(self) -> List[Chapter]:
+        return list(self._selectedChapters)
+
     def refresh(self):
         self.clearSelection()
         clear_layout(self, auto_delete=False)
@@ -1794,7 +1805,6 @@ class ScenesTreeView(QScrollArea, EventListener):
                 if scene.chapter not in self._chapters.keys():
                     chapter_wdg = self.__initChapterWidget(scene.chapter)
                     self._centralWidget.layout().addWidget(chapter_wdg)
-                    self._last_chapter_wdg_index = self._centralWidget.layout().count()
                 self._chapters[scene.chapter].addSceneWidget(sceneWdg)
             else:
                 self._centralWidget.layout().addWidget(sceneWdg)
@@ -1808,16 +1818,19 @@ class ScenesTreeView(QScrollArea, EventListener):
                     chapter_index = self._centralWidget.layout().indexOf(prev_chapter_wdg)
                     chapter_index += 1
                 self._centralWidget.layout().insertWidget(chapter_index, chapter_wdg)
-                self._last_chapter_wdg_index += 1
 
         self._centralWidget.layout().addWidget(self._spacer)
 
     def insertChapter(self):
+        if self._novel.chapters:
+            last_chapter = self._novel.chapters[-1]
+            i = self._centralWidget.layout().indexOf(self._chapters[last_chapter]) + 1
+        else:
+            i = 0
         chapter = Chapter('')
         self._novel.chapters.append(chapter)
         wdg = self.__initChapterWidget(chapter)
-        self._centralWidget.layout().insertWidget(self._last_chapter_wdg_index, wdg)
-        self._last_chapter_wdg_index += 1
+        self._centralWidget.layout().insertWidget(i, wdg)
 
     def clearSelection(self):
         for scene in self._selectedScenes:
@@ -1861,6 +1874,33 @@ class ScenesTreeView(QScrollArea, EventListener):
             self.chapterSelected.emit(chapterWdg.chapter())
         elif chapterWdg.chapter() in self._selectedChapters:
             self._selectedChapters.remove(chapterWdg.chapter())
+
+    def _deleteChapterWidget(self, chapterWdg: ChapterWidget):
+        chapter = chapterWdg.chapter()
+        if chapter in self._selectedChapters:
+            self._selectedChapters.remove(chapter)
+        self._chapters.pop(chapter)
+
+        i = self._centralWidget.layout().indexOf(chapterWdg)
+        for wdg in chapterWdg.sceneWidgets():
+            chapterWdg.containerWidget().layout().removeWidget(wdg)
+            wdg.setParent(self._centralWidget)
+            self._centralWidget.layout().insertWidget(i, wdg)
+            i += 1
+
+            wdg.scene().chapter = None
+            self.repo.update_scene(wdg.scene())
+
+        chapterWdg.setHidden(True)
+        gc(chapterWdg)
+
+        self._novel.chapters.remove(chapter)
+        self.repo.update_novel(self._novel)
+
+        for wdg in self._chapters.values():
+            wdg.refresh()
+
+        emit_event(ChapterChangedEvent(self))
 
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
@@ -1986,6 +2026,7 @@ class ScenesTreeView(QScrollArea, EventListener):
     def __initChapterWidget(self, chapter):
         chapterWdg = ChapterWidget(chapter, self._novel)
         chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
+        chapterWdg.deleted.connect(partial(self._deleteChapterWidget, chapterWdg))
         chapterWdg.installEventFilter(
             DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
                             grabbed=chapterWdg.titleWidget(),
