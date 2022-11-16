@@ -469,10 +469,10 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         margins = 10
         icon_diff = self._textRect.height() + self._iconLeftMargin if self._icon or self._entity.emoji else 0
 
-        self._rect = QRect(0, 0, self._textRect.width() + margins + icon_diff + self._penWidth * 2,
+        self._rect = QRect(0, 0, self._textRect.width() + margins * 2 + icon_diff + self._penWidth * 2,
                            self._textRect.height() + margins + self._penWidth * 2)
 
-        self._textRect.moveLeft(margins / 2 + icon_diff)
+        self._textRect.moveLeft(margins + icon_diff)
 
         self._iconSize = self._textRect.height()
         self._icon_y = margins / 2
