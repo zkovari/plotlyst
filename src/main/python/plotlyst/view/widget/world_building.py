@@ -90,7 +90,7 @@ class ConnectorItem(QGraphicsPathItem):
 
     def updatePos(self):
         self.setPos(self._collapseItem.pos().x() + self._collapseItem.boundingRect().width() - LINE_WIDTH - 1,
-                    self._source.boundingRect().center().y() + LINE_WIDTH / 2)
+                    self._collapseItem.y() + self._collapseItem.radius() - LINE_WIDTH)
         self.rearrange()
 
     def rearrange(self):
@@ -581,7 +581,8 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         if self._childrenEntityItems:
             self._collapseItem.setVisible(True)
             self._lineItem.setVisible(True)
-            self._collapseItem.setPos(self._item.width() + self._collapseDistance, self._plusItem.y() + 4)
+            self._collapseItem.setPos(self._item.width() + self._collapseDistance,
+                                      self._item.boundingRect().center().y() - self._collapseItem.radius() + LINE_WIDTH)
             line_y = self._collapseItem.y() + self._collapseItem.radius() - LINE_WIDTH
             self._lineItem.setLine(self._item.width(), line_y, self._collapseItem.pos().x(), line_y)
         else:
