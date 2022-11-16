@@ -106,9 +106,12 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
-        # if self.chaptersModel.rowCount(self.chaptersModel.rootIndex()):
-        #     self._edit(self.chaptersModel.index(0, 0, self.chaptersModel.rootIndex()))
-        #     scroll_to_top(self.ui.textEdit.textEdit)
+        if self.novel.chapters:
+            self.ui.treeChapters.selectChapter(self.novel.chapters[0])
+            self._editChapter(self.novel.chapters[0])
+        elif self.novel.scenes:
+            self.ui.treeChapters.selectScene(self.novel.scenes[0])
+            self._editScene(self.novel.scenes[0])
 
         self._update_story_goal()
 
@@ -182,6 +185,9 @@ class ManuscriptView(AbstractNovelView):
         self._recheckDocument()
 
     def _editChapter(self, chapter: Chapter):
+        self.ui.textEdit.setGrammarCheckEnabled(False)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
+        
         scenes = self.novel.scenes_in_chapter(chapter)
         for scene in scenes:
             if not scene.manuscript:
@@ -200,10 +206,9 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnStage.setDisabled(True)
 
         self._recheckDocument()
-    
+
     def _recheckDocument(self):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
-            # self.ui.textEdit.setMargins(30, 30, 30, 30)
             self._text_changed()
 
             if self.ui.cbSpellCheck.isChecked():

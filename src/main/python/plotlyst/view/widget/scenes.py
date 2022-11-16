@@ -1832,6 +1832,18 @@ class ScenesTreeView(QScrollArea, EventListener):
         wdg = self.__initChapterWidget(chapter)
         self._centralWidget.layout().insertWidget(i, wdg)
 
+    def selectChapter(self, chapter: Chapter):
+        self.clearSelection()
+        self._chapters[chapter].select()
+        if chapter not in self._selectedChapters:
+            self._selectedChapters.add(chapter)
+
+    def selectScene(self, scene: Scene):
+        self.clearSelection()
+        self._scenes[scene].select()
+        if scene not in self._selectedScenes:
+            self._selectedScenes.add(scene)
+
     def clearSelection(self):
         for scene in self._selectedScenes:
             self._scenes[scene].deselect()
@@ -1843,10 +1855,7 @@ class ScenesTreeView(QScrollArea, EventListener):
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, SceneSelectedEvent):
-            self.clearSelection()
-            wdg = self._scenes[event.scene]
-            wdg.select()
-            self._selectedScenes.add(event.scene)
+            self.selectScene(event.scene)
         elif isinstance(event, SceneDeletedEvent):
             if event.scene in self._selectedScenes:
                 self._selectedScenes.remove(event.scene)
