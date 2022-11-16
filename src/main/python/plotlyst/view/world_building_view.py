@@ -51,6 +51,8 @@ class WorldBuildingView(AbstractNovelView):
         self._editor.scene().modelChanged.connect(lambda: self.repo.update_novel(self.novel))
         self._editor.scene().selectionChanged.connect(self._selectionChanged)
 
+        self.ui.btnEditorToggle.setChecked(False)
+
     @overrides
     def refresh(self):
         pass
