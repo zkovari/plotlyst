@@ -59,7 +59,7 @@ from src.main.python.plotlyst.view.generated.story_structure_settings_ui import 
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.display import Subtitle
+from src.main.python.plotlyst.view.widget.display import Subtitle, IconText
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget, PlotValueLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
@@ -275,10 +275,17 @@ class StoryStructureCharacterLinkWidget(QWidget, Ui_StoryStructureCharacterLink,
 
 
 class _AbstractStructureEditorWidget(QWidget):
-    def __init__(self, structure: StoryStructure, parent=None):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super(_AbstractStructureEditorWidget, self).__init__(parent)
         self._structure = structure
         vbox(self)
+        self.wdgTitle = IconText(self)
+        self.wdgTitle.setText(structure.title)
+        if structure.icon:
+            self.wdgTitle.setIcon(IconRegistry.from_name(structure.icon, structure.icon_color))
+        bold(self.wdgTitle)
+        incr_font(self.wdgTitle, 2)
+
         self.wdgPreview = SceneStoryStructureWidget(self)
         self.wdgPreview.setCheckOccupiedBeats(False)
         self.wdgPreview.setBeatCursor(Qt.CursorShape.ArrowCursor)
@@ -293,6 +300,12 @@ class _AbstractStructureEditorWidget(QWidget):
         self.beatsPreview = BeatsPreview()
         self._scroll.setWidget(self.beatsPreview)
         self.beatsPreview.attachStructurePreview(self.wdgPreview)
+        self.wdgPreview.setStructure(novel, self._structure)
+        self.beatsPreview.setStructure(self._structure)
+        self.layout().addWidget(self.wdgTitle)
+        self.layout().addWidget(vspacer(20))
+        self.layout().addWidget(self.wdgPreview)
+        self.layout().addWidget(self._scroll)
         # self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
         # self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
 
@@ -302,11 +315,12 @@ class _AbstractStructureEditorWidget(QWidget):
 
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
-        super(_ThreeActStructureEditorWidget, self).__init__(structure, parent)
-        self.wdgPreview.setStructure(novel, self._structure)
-        self.beatsPreview.setStructure(self._structure)
-        self.layout().addWidget(self.wdgPreview)
-        self.layout().addWidget(self._scroll)
+        super(_ThreeActStructureEditorWidget, self).__init__(novel, structure, parent)
+
+
+class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
+        super(_SaveTheCatActStructureEditorWidget, self).__init__(novel, structure, parent)
 
 
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
@@ -346,13 +360,17 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
 
     def _structureChanged(self):
         if self.btnThreeAct.isChecked():
-            self.stackedWidget.setCurrentWidget(self.pageThreeAct)
-            if self.pageThreeAct.layout().count() == 0:
-                self._structure = copy.deepcopy(three_act_structure)
-                self.pageThreeAct.layout().addWidget(_ThreeActStructureEditorWidget(self._novel, self._structure, self))
+            self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditorWidget)
         elif self.btnSaveTheCat.isChecked():
-            self._structure = save_the_cat
-            self.stackedWidget.setCurrentWidget(self.pageSaveTheCat)
+            self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget)
+
+    def __initEditor(self, structure: StoryStructure, page: QWidget, clazz):
+        self.stackedWidget.setCurrentWidget(page)
+        if page.layout().count() == 0:
+            self._structure = copy.deepcopy(structure)
+            page.layout().addWidget(clazz(self._novel, self._structure, self))
+        else:
+            self._structure = page.layout().itemAt(0).widget().structure()
 
 
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
@@ -420,15 +438,11 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         if len(self.novel.story_structures) < 2:
             return
         to_be_removed = None
-        activate_new = False
         structure = self.novel.active_story_structure
         for btn in self.btnGroupStructure.buttons():
-            if btn.structure().id == structure.id and btn.structure().character_id == structure.character_id:
+            if btn.structure() is structure:
                 to_be_removed = btn
-                if btn.isChecked():
-                    activate_new = True
                 break
-
         if not to_be_removed:
             return
 
@@ -436,7 +450,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.wdgTemplates.layout().removeWidget(to_be_removed)
         gc(to_be_removed)
         self.novel.story_structures.remove(structure)
-        if activate_new and self.btnGroupStructure.buttons():
+        if self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[0].setChecked(True)
             emit_event(NovelStoryStructureUpdated(self))
         self.repo.update_novel(self.novel)
@@ -464,6 +478,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         if structure:
             self.novel.story_structures.append(structure)
             self._addStructure(structure)
+            self.btnGroupStructure.buttons()[-1].setChecked(True)
+            emit_event(NovelStoryStructureUpdated(self))
 
     def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
         if not toggled:
