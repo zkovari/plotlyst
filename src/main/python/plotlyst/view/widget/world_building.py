@@ -108,6 +108,12 @@ class ConnectorItem(QGraphicsPathItem):
 
         self.setPath(path)
 
+    def source(self) -> 'WorldBuildingItemGroup':
+        return self._source
+
+    def target(self) -> 'WorldBuildingItemGroup':
+        return self._target
+
 
 class PlusItem(QAbstractGraphicsShapeItem):
     def __init__(self, parent: 'WorldBuildingItemGroup'):
