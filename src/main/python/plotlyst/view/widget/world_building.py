@@ -812,7 +812,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
                 if item is not self._rootItem.entityItem():
                     item.parentItem().prepareRemove()
                     self.removeItem(item.parentItem())
-                    self._rootItem.rearrangeChildrenItems()
+                    # self._rootItem.rearrangeChildrenItems()
         elif event.key() == Qt.Key.Key_E and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
             if isinstance(item, WorldBuildingItem):
