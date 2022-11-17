@@ -157,6 +157,7 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self.pageIcons.layout().addWidget(self._iconPicker)
         self._emojiPicker: Optional[EmojiPicker] = None
 
+        self.lineName.setPlaceholderText('Entity')
         self._summary = TextEditBase(self)
         self._summary.setPlaceholderText('Summary...')
         self._summary.setMaximumHeight(75)
@@ -272,8 +273,10 @@ class WorldBuildingItemEditor(QMenu):
         action.setDefaultWidget(self._itemEditor)
         self.addAction(action)
 
-    def edit(self, item: 'WorldBuildingItem', pos: QPoint):
+    def edit(self, item: 'WorldBuildingItem', newItem: bool, pos: QPoint):
         self._itemEditor.setItem(item)
+        if newItem:
+            self._itemEditor.setCurrentWidget(self._itemEditor.tabEntity)
         self.popup(pos)
 
 
@@ -407,7 +410,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         return self._entity
 
     def text(self) -> str:
-        return self._entity.name
+        return self._entity.name if self._entity.name else 'Entity'
 
     def setText(self, text: str):
         self._entity.name = text
@@ -665,7 +668,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         icon.paint(painter, self._item.boundingRect().width() - 2, 2, 10, 10)
 
     def addNewChild(self):
-        entity = WorldBuildingEntity('Entity')
+        entity = WorldBuildingEntity('')
         self._entity.children.append(entity)
         group = self._addChild(entity)
 
@@ -673,7 +676,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         self.rearrangeChildrenItems()
         self.worldBuildingScene().modelChanged.emit()
 
-        self.worldBuildingScene().editItem(group.entityItem())
+        self.worldBuildingScene().editItem(group.entityItem(), newItem=True)
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
         item = WorldBuildingItemGroup(entity, self._font, self._emoji_font)
@@ -741,7 +744,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
-    editItemRequested = pyqtSignal(WorldBuildingItem)
+    editItemRequested = pyqtSignal(WorldBuildingItem, bool)
     itemSelected = pyqtSignal(WorldBuildingItem)
     selectionCleared = pyqtSignal()
     modelChanged = pyqtSignal()
@@ -799,8 +802,8 @@ class WorldBuildingEditorScene(QGraphicsScene):
             if isinstance(item, WorldBuildingItem):
                 self.editItem(item)
 
-    def editItem(self, item: WorldBuildingItem):
-        self.editItemRequested.emit(item)
+    def editItem(self, item: WorldBuildingItem, newItem: bool = False):
+        self.editItemRequested.emit(item, newItem)
 
 
 class WorldBuildingEditor(QGraphicsView):
@@ -864,9 +867,9 @@ class WorldBuildingEditor(QGraphicsView):
         super(WorldBuildingEditor, self).resizeEvent(event)
         self.__arrangeZoomButtons()
 
-    def _editItem(self, item: WorldBuildingItem):
+    def _editItem(self, item: WorldBuildingItem, newItem: bool):
         view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
-        self._itemEditor.edit(item, self.mapToGlobal(view_pos))
+        self._itemEditor.edit(item, newItem, self.mapToGlobal(view_pos))
 
     def __arrangeZoomButtons(self):
         self._btnZoomOut.setGeometry(10, self.height() - 30, 20, 20)
