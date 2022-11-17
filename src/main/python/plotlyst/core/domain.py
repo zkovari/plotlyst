@@ -168,6 +168,64 @@ class AvatarPreferences:
 
 
 @dataclass
+class BigFiveFacet:
+    name: str
+
+
+@dataclass
+class BigFiveDimension:
+    name: str
+    facets: List[BigFiveFacet] = field(default_factory=list)
+
+
+agreeableness = BigFiveDimension('agreeableness',
+                                 facets=[
+                                     BigFiveFacet('trust'),
+                                     BigFiveFacet('straightforwardness'),
+                                     BigFiveFacet('altruism'),
+                                     BigFiveFacet('compliance'),
+                                     BigFiveFacet('modesty'),
+                                     BigFiveFacet('tender-mindedness'),
+                                 ])
+neuroticism = BigFiveDimension('neuroticism',
+                               facets=[
+                                   BigFiveFacet('anxiety'),
+                                   BigFiveFacet('hostility'),
+                                   BigFiveFacet('depression'),
+                                   BigFiveFacet('self-consciousness'),
+                                   BigFiveFacet('impulsiveness'),
+                                   BigFiveFacet('vulnerability'),
+                               ])
+extroversion = BigFiveDimension('extroversion',
+                                facets=[
+                                    BigFiveFacet('warmth'),
+                                    BigFiveFacet('gregariousness'),
+                                    BigFiveFacet('assertiveness'),
+                                    BigFiveFacet('activity'),
+                                    BigFiveFacet('excitement-seeking'),
+                                    BigFiveFacet('positive emotions'),
+                                ])
+openness = BigFiveDimension('openness',
+                            facets=[
+                                BigFiveFacet('fantasy'),
+                                BigFiveFacet('aesthetics'),
+                                BigFiveFacet('feelings'),
+                                BigFiveFacet('actions'),
+                                BigFiveFacet('ideas'),
+                                BigFiveFacet('values'),
+                            ])
+conscientiousness = BigFiveDimension('conscientiousness',
+                                     facets=[
+                                         BigFiveFacet('competence'),
+                                         BigFiveFacet('order'),
+                                         BigFiveFacet('dutifulness'),
+                                         BigFiveFacet('achievement striving'),
+                                         BigFiveFacet('self-discipline'),
+                                         BigFiveFacet('deliberation'),
+                                     ])
+
+
+@dataclass
 class CharacterPreferences:
     avatar: AvatarPreferences = AvatarPreferences()
 
