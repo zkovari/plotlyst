@@ -590,23 +590,39 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         else:
             child.inputConnector().rearrange()
 
-        colliding = [x for x in child.collidingItems(Qt.ItemSelectionMode.IntersectsItemBoundingRect) if
+        child.checkCollision()
+
+    def checkCollision(self):
+        colliding = [x for x in self.collidingItems(Qt.ItemSelectionMode.IntersectsItemBoundingRect) if
                      isinstance(x, WorldBuildingItemGroup)]
         if colliding:
             for col in colliding:
-                overlap = child.mapRectToScene(child.boundingRect()).intersected(
+                overlap_y = (self.mapRectToScene(self.boundingRect()).topLeft() - col.mapRectToScene(
+                    col.boundingRect()).topLeft()).y()
+                intersect = self.mapRectToScene(self.boundingRect()).intersected(
                     col.mapRectToScene(col.boundingRect())).height()
-                common_ancestor = child.commonAncestorItem(col)
-                print(overlap)
-                common_ancestor.moveChildren(overlap)
+                common_ancestor = self.commonAncestorItem(col)
+                print('------')
+                print(overlap_y)
+                print(intersect)
+                print(self.entity().name)
+                print(col.entity().name)
+                print(common_ancestor.entity().name)
+                common_ancestor.moveChildren(max(abs(overlap_y), intersect))
+
+        for child in self.childrenEntityItems():
+            child.checkCollision()
 
     def moveChildren(self, overlap: float):
         for child in self.childrenEntityItems():
-            if child.pos().y() >= 0:
+            if child.pos().y() > 0:
                 child.moveBy(0, overlap / len(self.childrenEntityItems()))
-            else:
+            elif child.pos().y() < 0:
                 child.moveBy(0, -overlap / len(self.childrenEntityItems()))
             child.inputConnector().rearrange()
+
+        for child in self.childrenEntityItems():
+            child.checkCollision()
 
     def rearrangeItems(self) -> None:
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 20,
