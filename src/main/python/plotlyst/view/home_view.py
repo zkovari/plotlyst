@@ -20,16 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QPixmap
 from overrides import overrides
-from qthandy import ask_confirmation, clear_layout, flow
+from qthandy import ask_confirmation, clear_layout, flow, transparent, gc
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Event
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
+from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractView
+from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
@@ -49,6 +52,19 @@ class HomeView(AbstractView):
         self.selected_card: Optional[NovelCard] = None
         self.refresh()
 
+        self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
+        self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', 'white'))
+        self.ui.btnInstagram.setIcon(IconRegistry.from_name('fa5b.instagram', 'white'))
+        self.ui.btnFacebook.setIcon(IconRegistry.from_name('fa5b.facebook', 'white'))
+        transparent(self.ui.btnTwitter)
+        transparent(self.ui.btnInstagram)
+        transparent(self.ui.btnFacebook)
+
+        self.ui.btnLibrary.setIcon(IconRegistry.from_name('mdi.bookshelf', color_on='darkBlue'))
+        self.ui.btnProgress.setIcon(IconRegistry.from_name('fa5s.chart-line'))
+        self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
+        self.ui.btnRoadmap.setIcon(IconRegistry.from_name('fa5s.road'))
+
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self.selected_card.novel))
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
@@ -60,6 +76,12 @@ class HomeView(AbstractView):
         self.ui.btnDelete.setDisabled(True)
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnActivate.setDisabled(True)
+
+        link_buttons_to_pages(self.ui.stackedWidget,
+                              [(self.ui.btnLibrary, self.ui.pageLibrary), (self.ui.btnProgress, self.ui.pageProgress),
+                               (self.ui.btnNotes, self.ui.pageNotes), (self.ui.btnRoadmap, self.ui.pageRoadmap)])
+
+        self.ui.btnLibrary.setChecked(True)
 
         event_dispatcher.register(self, NovelUpdatedEvent)
 
@@ -115,7 +137,7 @@ class HomeView(AbstractView):
             novel = self.selected_card.novel
             self.repo.delete_novel(novel)
             emit_event(NovelDeletedEvent(self, novel))
-            self.selected_card.deleteLater()
+            gc(self.selected_card)
             self.selected_card = None
             self.ui.btnDelete.setDisabled(True)
             self.refresh()

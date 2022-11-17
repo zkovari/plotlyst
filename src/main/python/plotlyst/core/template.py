@@ -98,15 +98,16 @@ class TemplateField:
     emoji: str = field(default='', metadata=config(exclude=exclude_if_empty))
     placeholder: str = field(default='', metadata=config(exclude=exclude_if_empty))
     selections: List[SelectionItem] = field(default_factory=list)
-    highlighted: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     required: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     exclusive: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    enabled: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     custom: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     min_value: int = field(default=0, metadata=config(exclude=exclude_if_empty))
     max_value = 2_147_483_647
     compact: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    has_notes: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     @overrides
     def __hash__(self):
@@ -231,7 +232,8 @@ positive_traits = sorted([
     'Intelligent', 'Intuitive', 'Invulnerable', 'Just', 'Kind', 'Knowledge', 'Leaderly', 'Logical', 'Lovable', 'Loyal',
     'Mature', 'Methodical', 'Maticulous', 'Moderate', 'Modest', 'Neat', 'Objective', 'Observant', 'Open', 'Optimistic',
     'Orderly', 'Organized', 'Original', 'Passionate', 'Patient', 'Peaceful', 'Perceptive', 'Perfectionist',
-    'Persuasive', 'Playful', 'Popular', 'Powerful', 'Practical', 'Precise', 'Principled', 'Protective', 'Punctual',
+    'Persuasive', 'Playful', 'Popular', 'Powerful', 'Practical', 'Pragmatic', 'Precise', 'Principled', 'Protective',
+    'Punctual',
     'Purposeful', 'Rational', 'Realistic', 'Reflective', 'Relaxed', 'Reliable', 'Resourceful', 'Respectful',
     'Responsible', 'Responsive', 'Romantic', 'Sane', 'Scholarly', 'Secure', 'Selfless', 'Self-aware', 'Self-critical',
     'Sensitive', 'Sentimental', 'Serious', 'Sharing', 'Skillful', 'Sociable', 'Solid', 'Sophisticated', 'Spontaneous',
@@ -297,29 +299,29 @@ desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TE
 
 goal_field = TemplateField('External goal', type=TemplateFieldType.SMALL_TEXT, emoji=':bullseye:',
                            placeholder="What external goal does the character want to accomplish?",
-                           id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'))
+                           id=uuid.UUID('99526331-6f3b-429d-ad22-0a4a90ee9d77'), has_notes=True)
 internal_goal_field = TemplateField('Internal goal', type=TemplateFieldType.SMALL_TEXT,
                                     emoji=':smiling_face_with_hearts:',
                                     placeholder="What emotional state does the character want to achieve?",
-                                    id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'))
+                                    id=uuid.UUID('090d2431-3ae7-4aa3-81b3-2737a8043db7'), has_notes=True)
 motivation_field = TemplateField('Motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':right-facing_fist:',
                                  placeholder='Why does the character want to accomplish their goal?',
-                                 id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'))
+                                 id=uuid.UUID('5aa2c2e6-90a6-42b2-af7b-b4c82a56390e'), has_notes=True)
 internal_motivation_field = TemplateField('Internal motivation', type=TemplateFieldType.SMALL_TEXT, emoji=':red_heart:',
                                           placeholder='Why does the character want to feel that way?',
-                                          id=uuid.UUID('6388368e-6d52-4259-b1e2-1d9c1aa5c89d'))
+                                          id=uuid.UUID('6388368e-6d52-4259-b1e2-1d9c1aa5c89d'), has_notes=True)
 conflict_field = TemplateField('Conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':crossed_swords:',
                                placeholder='What external force is stopping the character from their goal?',
-                               id=uuid.UUID('c7e39f6d-4b94-4060-b3a6-d2604247ca80'))
+                               id=uuid.UUID('c7e39f6d-4b94-4060-b3a6-d2604247ca80'), has_notes=True)
 internal_conflict_field = TemplateField('Internal conflict', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
                                         placeholder='What stops the character from their desired emotional state?',
-                                        id=uuid.UUID('8dcf6ce1-6679-4100-b332-8898ee2a2e3c'))
+                                        id=uuid.UUID('8dcf6ce1-6679-4100-b332-8898ee2a2e3c'), has_notes=True)
 stakes_field = TemplateField('Stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':skull:',
                              placeholder="What's at stake if the character fails to reach their goal?",
-                             id=uuid.UUID('15770e28-b801-44c4-a6e6-ddba33935bc4'))
+                             id=uuid.UUID('15770e28-b801-44c4-a6e6-ddba33935bc4'), has_notes=True)
 internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
                                       placeholder="What's at stake if the character fails to achieve that emotional state?",
-                                      id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'))
+                                      id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'), has_notes=True)
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
                            placeholder='What does the character actually need in the story?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
@@ -329,7 +331,7 @@ weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.
 ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
                             placeholder="What's the character's ghost from their past that haunts them?",
                             id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
-values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':hugging_face:',
+values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':smiling_face_with_open_hands:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
 values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
@@ -416,7 +418,7 @@ love_interest_role = Role('Love Interest', icon='ei.heart', icon_color='#d1495b'
 supporter_role = Role('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3')
 foil_role = Role('Foil', icon='fa5s.yin-yang', icon_color='#947eb0', can_be_promoted=True)
 secondary_role = Role('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a', can_be_promoted=True)
-henchmen_role = Role('Henchmen', icon='mdi.shuriken', icon_color='#596475', importance=RoleImportance.MINOR)
+henchmen_role = Role('Heckler', icon='mdi.shuriken', icon_color='#596475', importance=RoleImportance.MINOR)
 tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68', importance=RoleImportance.MINOR)
 
 
@@ -505,28 +507,32 @@ def default_character_profiles() -> List[ProfileTemplate]:
                             elements=fields)]
 
 
-sight_field = TemplateField('Sight', type=TemplateFieldType.LABELS,
+entity_summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
+                                     id=uuid.UUID('207053e6-dd51-4956-8830-478fe8efca0a'),
+                                     placeholder="Summarize your entity",
+                                     show_label=False)
+
+sight_field = TemplateField('Sight', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('935e6595-27ae-426e-8b41-b315e9160ad9'),
                             emoji=':eyes:',
+                            show_label=False,
                             placeholder='Sight')
 
-location_name_field = TemplateField(name='Name', type=TemplateFieldType.TEXT, emoji=':round_pushpin:',
-                                    placeholder='Name',
-                                    id=uuid.UUID('84f9bdee-c817-4caa-9e65-666cd0c4a546'), required=True,
-                                    highlighted=True, show_label=False)
-
-smell_field = TemplateField('Smell', type=TemplateFieldType.LABELS,
+smell_field = TemplateField('Smell', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('50245a33-599b-49c6-9746-094f12b4d667'),
-                            emoji=':nose:',
+                            emoji=':pig_nose:',
+                            show_label=False,
                             placeholder='Smell')
-noise_field = TemplateField('Noise', type=TemplateFieldType.LABELS,
+noise_field = TemplateField('Sound', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('76659d94-8753-4945-8d5c-e811189e3b49'),
-                            emoji=':speaker_high_volume:',
-                            placeholder='Noise')
+                            emoji=':bell:',
+                            show_label=False,
+                            placeholder='Sound')
 
 animals_field = TemplateField('Animals', type=TemplateFieldType.LABELS,
                               id=uuid.UUID('3aa9cc09-312c-492a-bc19-6914bb1eeba6'),
                               emoji=':paw_prints:',
+                              show_label=False,
                               placeholder='Animals')
 nature_field = TemplateField('Nature', type=TemplateFieldType.LABELS,
                              id=uuid.UUID('ab54bf84-1b69-4bb4-b1b4-c04ad2dd58b1'),
@@ -535,13 +541,16 @@ nature_field = TemplateField('Nature', type=TemplateFieldType.LABELS,
 
 
 def default_location_profiles() -> List[ProfileTemplate]:
-    fields = [ProfileElement(location_name_field, 0, 0, col_span=2, h_alignment=HAlignment.CENTER),
-              ProfileElement(sight_field, 1, 0),
-              ProfileElement(smell_field, 1, 1),
-              ProfileElement(noise_field, 2, 0),
-              ProfileElement(animals_field, 3, 0),
-              ProfileElement(nature_field, 3, 1),
-              ]
+    summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    sensory_title = TemplateField('Sensory details', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    fields = [
+        ProfileElement(summary_title, 0, 0),
+        ProfileElement(entity_summary_field, 1, 0, margins=Margins(left=15)),
+        ProfileElement(sensory_title, 2, 0),
+        ProfileElement(sight_field, 3, 0, margins=Margins(left=15)),
+        ProfileElement(smell_field, 4, 0, margins=Margins(left=15)),
+        ProfileElement(noise_field, 5, 0, margins=Margins(left=15)),
+    ]
     return [ProfileTemplate(title='Default location template',
                             id=uuid.UUID('8a95aa51-a975-416e-83d4-e349b84565b1'),
                             elements=fields)]

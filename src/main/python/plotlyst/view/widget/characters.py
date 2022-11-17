@@ -34,7 +34,7 @@ from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, Q
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
-    spacer, clear_layout, vbox, hbox, flow, translucent, margins
+    spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
     OpacityEventFilter
 
@@ -348,6 +348,10 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self._update_characters()
         self.tblConflicts.model().update()
         self.tblConflicts.model().modelReset.emit()
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        pass
 
     def _update_characters(self):
         for char in self.novel.characters:
@@ -891,6 +895,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
         self.btnType.setIconSize(QSize(24, 24))
 
         incr_font(self.lblKeyphrase, 2)
+        bold(self.lblKeyphrase)
 
         self.setMinimumWidth(30)
         self.refresh()
@@ -1062,6 +1067,13 @@ class CharacterTimelineWidget(QWidget):
     def resizeEvent(self, event: QResizeEvent) -> None:
         for sp in self._spacers:
             sp.setFixedWidth(self.width() // 2 + 3)
+
+    def refreshCharacter(self):
+        item = self._layout.itemAt(0)
+        if item:
+            wdg = item.widget()
+            if isinstance(wdg, QLabel):
+                set_avatar(wdg, self.character, 64)
 
     def refresh(self):
         if self.character is None:
@@ -1391,6 +1403,7 @@ class AvatarSelectors(QWidget, Ui_AvatarSelectors):
 
 
 class CharacterAvatar(QWidget, Ui_CharacterAvatar):
+    avatarUpdated = pyqtSignal()
 
     def __init__(self, parent=None):
         super(CharacterAvatar, self).__init__(parent)
@@ -1402,7 +1415,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
         self.btnPov.installEventFilter(OpacityEventFilter(parent=self.btnPov, enterOpacity=0.7, leaveOpacity=1.0))
 
         self._character: Optional[Character] = None
-        self._updated: bool = False
+        self._uploaded: bool = False
         self._uploadSelectorsEnabled: bool = False
 
         self.reset()
@@ -1430,17 +1443,18 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
             self.btnPov.setIcon(avatar)
         else:
             self.reset()
+        self.avatarUpdated.emit()
 
     def reset(self):
         self.btnPov.setIconSize(QSize(118, 118))
         self.btnPov.setIcon(IconRegistry.character_icon(color='grey'))
         self.btnPov.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
-    def avatarUpdated(self) -> bool:
-        return self._updated
+    def imageUploaded(self) -> bool:
+        return self._uploaded
 
     def _uploadedAvatar(self):
-        self._updated = True
+        self._uploaded = True
         avatars.update_image(self._character)
         self.updateAvatar()
 
@@ -1639,7 +1653,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
 
-    def _updateForCharacter(self, char, fields, headers, row, col):
+    def _updateForCharacter(self, char: Character, fields, headers, row: int, col: int):
         name_progress = CircularProgressBar(parent=self)
         if char.name:
             name_progress.setValue(1)
@@ -1667,6 +1681,8 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
             header = fields[str(value.id)]
             if not header.header.required and char.is_minor():
                 continue
+            if not char.disabled_template_headers.get(str(header.header.id), header.header.enabled):
+                continue
             if value.value:
                 headers[header] = headers[header] + 1
 
@@ -1676,6 +1692,8 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
 
         for h, v in headers.items():
             if not h.header.required and char.is_minor():
+                continue
+            if not char.disabled_template_headers.get(str(h.header.id), h.header.enabled):
                 continue
             value_progress = CircularProgressBar(v, h.max_value, parent=self)
             self._addWidget(value_progress, h.row, col + 1)

@@ -82,7 +82,7 @@ class SceneEditor(QObject):
         self.ui.lblPlotEmoji.setText(emoji.emojize(':chart_increasing:'))
 
         self.ui.wdgStructure.setBeatsCheckable(True)
-        self.ui.wdgStructure.setNovel(self.novel)
+        self.ui.wdgStructure.setStructure(self.novel)
         self.ui.wdgStructure.setActsClickable(False)
         self.ui.wdgStructure.beatSelected.connect(self._beat_selected)
         self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
@@ -95,6 +95,7 @@ class SceneEditor(QObject):
         self.ui.wdgPov.btnPov.setText('Select POV')
 
         self.ui.textNotes.setTitleVisible(False)
+        self.ui.textNotes.setPlaceholderText("Scene notes")
 
         self.tblCharacters = QTableView()
         self.tblCharacters.setShowGrid(False)

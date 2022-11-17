@@ -30,7 +30,7 @@ from PyQt6.QtGui import QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDr
 from PyQt6.QtWidgets import QFrame, QApplication
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import FlowLayout, clear_layout
+from qthandy import FlowLayout, clear_layout, retain_when_hidden
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
@@ -202,8 +202,12 @@ class CharacterCard(Ui_CharacterCard, Card):
             self.btnMbti.setStyleSheet(f'color: {mbti.icon_color};border:0px;')
             self.btnMbti.setText(mbti.text)
             self.btnMbti.setIcon(IconRegistry.from_name(mbti.icon, mbti.icon_color))
-        if self.character.role:
+
+        retain_when_hidden(self.iconRole)
+        self.iconRole.setHidden(self.character.prefs.avatar.use_role)
+        if self.character.role and not self.character.prefs.avatar.use_role:
             self.iconRole.setRole(self.character.role)
+            self.iconRole.setToolTip(self.character.role.text)
         self._setStyleSheet()
 
     @overrides

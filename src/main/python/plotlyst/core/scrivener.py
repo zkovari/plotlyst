@@ -27,7 +27,7 @@ from xml.etree.ElementTree import Element
 from striprtf.striprtf import rtf_to_text
 
 from src.main.python.plotlyst.core.client import load_image
-from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Location, Document
+from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document
 
 
 class ScrivenerParsingError(Exception):
@@ -89,7 +89,7 @@ class ScrivenerImporter:
                 scenes.append(self._parse_scene(scene_item, data_folder))
 
         characters: List[Character] = []
-        locations: List[Location] = []
+        # locations: List[Location] = []
         for item in binder.findall('BinderItem'):
             if item.attrib.get('Type') == 'Folder':
                 title_item = item.find('Title')
@@ -106,13 +106,13 @@ class ScrivenerImporter:
                     children_item = item.find('Children')
                     if not children_item:
                         continue
-                    for location_item in children_item.findall('BinderItem'):
-                        location = self._parse_location(location_item)
-                        if location:
-                            locations.append(location)
+                    # for location_item in children_item.findall('BinderItem'):
+                    #     location = self._parse_location(location_item)
+                    #     if location:
+                    #         locations.append(location)
 
         return Novel(title='Importer project', id=UUID(novel_id), characters=characters, scenes=scenes,
-                     chapters=chapters, locations=locations)
+                     chapters=chapters)
 
     def _parse_chapter(self, element: Element) -> Chapter:
         uuid = element.attrib.get('UUID')
@@ -143,12 +143,12 @@ class ScrivenerImporter:
         character.avatar = self._find_image(character.id, data_folder)
         return character
 
-    def _parse_location(self, element: Element) -> Optional[Location]:
-        uuid = element.attrib.get('UUID')
-        if not uuid:
-            return None
-        name = self._find_title(element)
-        return Location(name, id=UUID(uuid))
+    # def _parse_location(self, element: Element) -> Optional[Location]:
+    #     uuid = element.attrib.get('UUID')
+    #     if not uuid:
+    #         return None
+    #     name = self._find_title(element)
+    #     return Location(name, id=UUID(uuid))
 
     def _find_title(self, element) -> str:
         title_el = element.find('Title')

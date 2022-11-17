@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>41</height>
+    <width>390</width>
+    <height>37</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -65,13 +65,6 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
-     </property>
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-       <strikeout>false</strikeout>
-      </font>
      </property>
      <property name="text">
       <string>Characters</string>

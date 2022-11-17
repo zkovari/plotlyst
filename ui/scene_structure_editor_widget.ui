@@ -97,14 +97,12 @@
             <number>2</number>
            </property>
            <item>
-            <widget class="QLabel" name="label">
-             <property name="font">
-              <font>
-               <underline>true</underline>
-              </font>
-             </property>
+            <widget class="QLabel" name="lblAgendaCharacter">
              <property name="text">
-              <string>Agenda character:</string>
+              <string>&lt;u&gt;Agenda character:&lt;/u&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>
@@ -165,13 +163,7 @@
             <number>2</number>
            </property>
            <item alignment="Qt::AlignBottom">
-            <widget class="IconText" name="icontext">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
+            <widget class="IconText" name="iconBeginning">
              <property name="text">
               <string>Beginning</string>
              </property>
@@ -194,21 +186,18 @@
             </spacer>
            </item>
            <item>
-            <widget class="QLabel" name="label_2">
+            <widget class="QLabel" name="lblEnd">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
-              <string>End</string>
+              <string>&lt;b&gt;End&lt;/b&gt;</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::RichText</enum>
              </property>
             </widget>
            </item>

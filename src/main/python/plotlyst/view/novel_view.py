@@ -22,7 +22,7 @@ from PyQt6.QtCore import QObject, QEvent, Qt
 from PyQt6.QtGui import QFont
 from overrides import overrides
 from qthandy import retain_when_hidden, transparent
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
@@ -49,6 +49,9 @@ class NovelView(AbstractNovelView):
         self.ui.btnPlot.setIcon(IconRegistry.plot_icon(color='white'))
         self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
         self.ui.btnTags.setIcon(IconRegistry.tags_icon('white'))
+        self.ui.btnSettings.setIcon(IconRegistry.cog_icon('white'))
+        self.ui.btnSettings.setToolTip('Novel settings are not available yet')
+        self.ui.btnSettings.installEventFilter(InstantTooltipEventFilter(self.ui.btnSettings))
 
         self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
         self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))
@@ -68,6 +71,8 @@ class NovelView(AbstractNovelView):
         self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
         self.ui.textPremise.textEdit.textChanged.connect(self._premise_changed)
         self._premise_changed()
+        self.ui.textSynopsis.setPlaceholderText("Write down your story's main events")
+        self.ui.textSynopsis.setMargins(0, 10, 0, 10)
         self.ui.textSynopsis.setGrammarCheckEnabled(True)
         self.ui.textPremise.setGrammarCheckEnabled(True)
 
@@ -94,7 +99,8 @@ class NovelView(AbstractNovelView):
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnStructure, self.ui.pageStructure),
                                                       (self.ui.btnPlot, self.ui.pagePlot),
                                                       (self.ui.btnSynopsis, self.ui.pageSynopsis),
-                                                      (self.ui.btnTags, self.ui.pageTags)])
+                                                      (self.ui.btnTags, self.ui.pageTags),
+                                                      (self.ui.btnSettings, self.ui.pageSettings)])
         self.ui.btnStructure.setChecked(True)
 
         for btn in self.ui.buttonGroup.buttons():
@@ -107,6 +113,13 @@ class NovelView(AbstractNovelView):
                 color: white;
                 padding: 2px;
                 font: bold;
+            }
+            QPushButton:disabled {
+                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 lightGray);
+                border: 2px solid grey;
+                color: grey;
+                opacity: 0.45;
             }
             QPushButton:checked {
                 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>407</width>
-    <height>41</height>
+    <height>43</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,13 +60,6 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-       <strikeout>false</strikeout>
-      </font>
-     </property>
      <property name="text">
       <string>Scenes</string>
      </property>
@@ -86,15 +79,20 @@
      </property>
      <property name="styleSheet">
       <string notr="true">QPushButton {
-	border: 1px hidden black;
+	border: 1px dotted lightgrey;
+	padding: 2px;
 }
 
 QPushButton:hover {
-	border: 1px dashed black;
+	border: 1px dotted grey;
 }
 
 QPushButton:pressed {
 	border: 1px solid black;
+}
+
+QPushButton::menu-indicator {
+	width:0px;
 }</string>
      </property>
      <property name="text">

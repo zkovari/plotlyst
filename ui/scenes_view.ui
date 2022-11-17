@@ -40,13 +40,13 @@
         <number>0</number>
        </property>
        <property name="leftMargin">
-        <number>0</number>
+        <number>10</number>
        </property>
        <property name="topMargin">
         <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>0</number>
+        <number>10</number>
        </property>
        <property name="bottomMargin">
         <number>0</number>
@@ -186,28 +186,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QToolButton" name="btnTimelineView">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="shortcut">
-             <string>5</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="base" stdset="0">
-             <bool>true</bool>
-            </property>
-            <attribute name="buttonGroup">
-             <string notr="true">btnGroupViews</string>
-            </attribute>
-           </widget>
-          </item>
-          <item>
            <widget class="Line" name="line_5">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -223,7 +201,7 @@
              <string/>
             </property>
             <property name="shortcut">
-             <string>6</string>
+             <string>5</string>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -266,16 +244,16 @@
            <number>4</number>
           </property>
           <property name="leftMargin">
-           <number>6</number>
+           <number>0</number>
           </property>
           <property name="topMargin">
-           <number>3</number>
+           <number>2</number>
           </property>
           <property name="rightMargin">
-           <number>6</number>
+           <number>0</number>
           </property>
           <property name="bottomMargin">
-           <number>3</number>
+           <number>2</number>
           </property>
           <item>
            <widget class="QPushButton" name="btnChaptersToggle">
@@ -586,6 +564,9 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
+         <property name="handleWidth">
+          <number>0</number>
+         </property>
          <property name="childrenCollapsible">
           <bool>false</bool>
          </property>
@@ -617,21 +598,6 @@
              <property name="mouseTracking">
               <bool>true</bool>
              </property>
-             <property name="dragEnabled">
-              <bool>true</bool>
-             </property>
-             <property name="dragDropMode">
-              <enum>QAbstractItemView::DragDrop</enum>
-             </property>
-             <property name="indentation">
-              <number>10</number>
-             </property>
-             <attribute name="headerVisible">
-              <bool>false</bool>
-             </attribute>
-             <attribute name="headerStretchLastSection">
-              <bool>false</bool>
-             </attribute>
             </widget>
            </item>
           </layout>
@@ -944,6 +910,9 @@
                <property name="leftMargin">
                 <number>0</number>
                </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
                <property name="rightMargin">
                 <number>0</number>
                </property>
@@ -1112,8 +1081,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>441</width>
-                    <height>555</height>
+                    <width>479</width>
+                    <height>562</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -1142,25 +1111,6 @@
                  </widget>
                 </widget>
                </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="pageTimeline">
-              <layout class="QHBoxLayout" name="horizontalLayout_6">
-               <property name="spacing">
-                <number>2</number>
-               </property>
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
               </layout>
              </widget>
             </widget>
@@ -1196,6 +1146,12 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>CardsView</class>
+   <extends>QFrame</extends>
+   <header>src.main.python.plotlyst.view.widget.cards</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>RotatedButton</class>
    <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
@@ -1204,12 +1160,6 @@
    <class>ScenesTreeView</class>
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
-  </customwidget>
-  <customwidget>
-   <class>CardsView</class>
-   <extends>QFrame</extends>
-   <header>src.main.python.plotlyst.view.widget.cards</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>SceneStoryStructureWidget</class>

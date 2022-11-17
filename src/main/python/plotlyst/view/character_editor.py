@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt6.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit
+from PyQt6.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit, QCompleter
 from fbs_runtime import platform
 from qthandy import translucent, btn_popup, incr_font, bold, italic
 from qthandy.filter import OpacityEventFilter
@@ -58,6 +58,7 @@ class CharacterEditor:
         self.ui.btnNewBackstory.clicked.connect(lambda: self.ui.wdgBackstory.add())
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)
+        self.ui.textEdit.setWidthPercentage(95)
 
         self.ui.btnMale.setIcon(IconRegistry.male_gender_icon())
         self.ui.btnMale.installEventFilter(OpacityEventFilter(parent=self.ui.btnMale, ignoreCheckedButton=True))
@@ -97,6 +98,9 @@ class CharacterEditor:
         self._lineOccupation = QLineEdit()
         self._lineOccupation.setPlaceholderText('Fill out occupation')
         self._lineOccupation.textChanged.connect(self._occupation_changed)
+        occupations = set([x.occupation for x in self.novel.characters])
+        if occupations:
+            self._lineOccupation.setCompleter(QCompleter(occupations))
         menu = btn_popup(self.ui.btnOccupation, self._lineOccupation)
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
@@ -133,6 +137,7 @@ class CharacterEditor:
         self.ui.wdgAvatar.btnPov.setToolTip('Character avatar. Click to add an image')
         self.ui.wdgAvatar.setCharacter(self.character)
         self.ui.wdgAvatar.setUploadPopupMenu()
+        self.ui.wdgAvatar.avatarUpdated.connect(self.ui.wdgBackstory.refreshCharacter)
 
         self.ui.splitter.setSizes([400, 400])
 
@@ -293,7 +298,7 @@ class CharacterEditor:
         self.character.name = self.ui.lineName.text()
         self.character.template_values = self.profile.values()
 
-        self.repo.update_character(self.character, self.ui.wdgAvatar.avatarUpdated())
+        self.repo.update_character(self.character, self.ui.wdgAvatar.imageUploaded())
         self.repo.update_novel(self.novel)  # TODO temporary to update custom labels
 
         if not self.character.document:

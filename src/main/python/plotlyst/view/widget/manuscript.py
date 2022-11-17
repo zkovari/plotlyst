@@ -31,7 +31,7 @@ from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout
+from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout, gc
 from qthandy.filter import OpacityEventFilter
 from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState
 from textstat import textstat
@@ -395,14 +395,14 @@ class ManuscriptTextEdit(TextEditBase):
 
     def clearHighlights(self):
         if self._sentenceHighlighter is not None:
-            self._sentenceHighlighter.deleteLater()
+            gc(self._sentenceHighlighter)
             self._sentenceHighlighter = None
         if self._nightModeHighlighter is not None:
-            self._nightModeHighlighter.deleteLater()
+            gc(self._nightModeHighlighter)
             self._nightModeHighlighter = None
             self._setDefaultStyleSheet()
         if self._wordTagHighlighter is not None:
-            self._wordTagHighlighter.deleteLater()
+            gc(self._wordTagHighlighter)
             self._wordTagHighlighter = None
 
     def setNightModeEnabled(self, enabled: bool):
@@ -437,7 +437,7 @@ class ManuscriptTextEditor(RichTextEditor):
 
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
-        self.toolbar.setVisible(False)
+        self.toolbar().setVisible(False)
         self._scenes: List[Scene] = []
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -640,7 +640,8 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         if updated:
             if not self.btnRefresh.isVisible():
                 anim = qtanim.fade_in(self.btnRefresh)
-                anim.finished.connect(lambda: translucent(self.btnRefresh, 0.4))
+                if not app_env.test_env():
+                    anim.finished.connect(lambda: translucent(self.btnRefresh, 0.4))
         else:
             if self.btnRefresh.isVisible():
                 qtanim.fade_out(self.btnRefresh)

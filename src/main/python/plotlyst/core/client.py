@@ -36,10 +36,10 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
-    Location, three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
+    three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive
-from src.main.python.plotlyst.core.template import Role, default_location_profiles, exclude_if_empty
+    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board
+from src.main.python.plotlyst.core.template import Role, exclude_if_empty
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -120,6 +120,7 @@ class CharacterInfo:
     occupation: Optional[str] = None
     avatar_id: Optional[uuid.UUID] = None
     template_values: List[TemplateValue] = field(default_factory=list)
+    disabled_template_headers: Dict[str, bool] = field(default_factory=dict)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional[Document] = None
@@ -176,12 +177,10 @@ class NovelInfo:
     story_structures: List[StoryStructure] = field(default_factory=list)
     scenes: List[uuid.UUID] = field(default_factory=list)
     characters: List[uuid.UUID] = field(default_factory=list)
-    locations: List[Location] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[ChapterInfo] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
-    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[Goal] = field(default_factory=list)
     tags: List[Tag] = field(default_factory=default_general_tags)
@@ -191,6 +190,8 @@ class NovelInfo:
     synopsis: Optional['Document'] = None
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
     prefs: NovelPreferences = NovelPreferences()
+    world: WorldBuilding = WorldBuilding()
+    board: Board = Board()
 
 
 @dataclass
@@ -390,6 +391,7 @@ class JsonClient:
                 character = Character(name=info.name, id=info.id, gender=info.gender, role=info.role, age=info.age,
                                       occupation=info.occupation,
                                       template_values=info.template_values,
+                                      disabled_template_headers=info.disabled_template_headers,
                                       backstory=info.backstory, goals=info.goals, document=info.document,
                                       journals=info.journals, prefs=info.prefs, topics=info.topics)
                 if info.avatar_id:
@@ -476,15 +478,25 @@ class JsonClient:
         for char in characters:
             self.__collect_goal_ids(goal_ids, char.goals)
 
-        return Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
-                     import_origin=project_novel_info.import_origin,
-                     plots=novel_info.plots, characters=characters,
-                     scenes=scenes, chapters=chapters, locations=novel_info.locations, stages=novel_info.stages,
-                     story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
-                     location_profiles=novel_info.location_profiles,
-                     conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
-                     documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
-                     prefs=novel_info.prefs)
+        novel = Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
+                      import_origin=project_novel_info.import_origin,
+                      plots=novel_info.plots, characters=characters,
+                      scenes=scenes, chapters=chapters, stages=novel_info.stages,
+                      story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
+                      conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
+                      documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
+                      prefs=novel_info.prefs)
+
+        world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
+        if os.path.exists(world_path):
+            with open(world_path, encoding='utf8') as json_file:
+                novel.world = WorldBuilding.from_json(json_file.read())
+        board_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('board.json')
+        if os.path.exists(board_path):
+            with open(board_path, encoding='utf8') as json_file:
+                novel.board = Board.from_json(json_file.read())
+
+        return novel
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
         path = self.novels_dir.joinpath(self.__json_file(id))
@@ -502,11 +514,9 @@ class JsonClient:
         novel_info = NovelInfo(id=novel.id, scenes=[x.id for x in novel.scenes],
                                plots=novel.plots,
                                characters=[x.id for x in novel.characters],
-                               locations=novel.locations,
                                chapters=[ChapterInfo(title=x.title, id=x.id) for x in novel.chapters],
                                stages=novel.stages, story_structures=novel.story_structures,
                                character_profiles=novel.character_profiles,
-                               location_profiles=novel.location_profiles,
                                conflicts=novel.conflicts,
                                goals=novel.goals,
                                tags=[item for sublist in novel.tags.values() for item in sublist if not item.builtin],
@@ -516,11 +526,28 @@ class JsonClient:
                                version=LATEST_VERSION, prefs=novel.prefs)
 
         self.__persist_info(self.novels_dir, novel_info)
+        self._persist_world(novel.id, novel.world)
+        self._persist_board(novel.id, novel.board)
+
+    def _persist_world(self, novel_id: uuid.UUID, world: WorldBuilding):
+        novel_dir = self.novels_dir.joinpath(str(novel_id))
+        if not novel_dir.exists():
+            novel_dir.mkdir()
+
+        self.__persist_info_by_name(novel_dir, world, 'world')
+
+    def _persist_board(self, novel_id: uuid.UUID, board: Board):
+        novel_dir = self.novels_dir.joinpath(str(novel_id))
+        if not novel_dir.exists():
+            novel_dir.mkdir()
+
+        self.__persist_info_by_name(novel_dir, board, 'board')
 
     def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
                                   occupation=char.occupation,
                                   template_values=char.template_values,
+                                  disabled_template_headers=char.disabled_template_headers,
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,
                                   journals=char.journals, prefs=char.prefs, topics=char.topics)
@@ -594,6 +621,13 @@ class JsonClient:
 
     def __persist_info(self, dir, info: Any):
         self.__persist_json_by_id(dir, info.to_json(), info.id)
+
+    def __persist_info_by_name(self, dir, info: Any, name: str):
+        self.__persist_json_by_name(dir, info.to_json(), name)
+
+    def __persist_json_by_name(self, dir, json_data: str, name: str):
+        with atomic_write(dir.joinpath(f'{name}.json'), overwrite=True) as f:
+            f.write(json_data)
 
     def __persist_json_by_id(self, dir, json_data: str, id: uuid.UUID):
         with atomic_write(dir.joinpath(self.__json_file(id)), overwrite=True) as f:

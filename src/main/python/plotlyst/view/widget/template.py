@@ -29,11 +29,12 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QPalette, QColor
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
-    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QVBoxLayout, \
-    QSpacerItem, QListView, QPushButton, QTextEdit
+    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QSpacerItem, QListView, QPushButton, QTextEdit
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font
+    decr_font, retain_when_hidden, translucent, gc
+from qthandy.filter import VisibilityToggleEventFilter
+from qttextedit import EnhancedTextEdit
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Character, Topic
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
@@ -51,17 +52,20 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
 
 
 class _ProfileTemplateBase(QWidget):
 
-    def __init__(self, profile: ProfileTemplate, editor_mode: bool = False, parent=None):
+    def __init__(self, profile: ProfileTemplate, editor_mode: bool = False, disabled_template_headers=None,
+                 parent=None):
         super().__init__(parent)
         self._profile = profile
-        self.layout = QVBoxLayout(self)
+        self._disabled_template_headers: Dict[
+            str, bool] = disabled_template_headers if disabled_template_headers else {}
+        self.layout = vbox(self)
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -98,6 +102,8 @@ class _ProfileTemplateBase(QWidget):
 
         for _, header in self._headers:
             header.updateProgress()
+            header.setHeaderEnabled(self._disabled_template_headers.get(str(header.field.id), header.field.enabled))
+            header.headerEnabledChanged.connect(partial(self._headerEnabledChanged, header.field))
 
         self._addSpacerToEnd()
 
@@ -111,21 +117,30 @@ class _ProfileTemplateBase(QWidget):
         for widget in self.widgets:
             if isinstance(widget, TemplateDisplayWidget):
                 continue
-            values.append(TemplateValue(id=widget.field.id, value=widget.value()))
+            values.append(TemplateValue(id=widget.field.id, value=widget.value(), notes=widget.notes()))
 
         return values
 
     def setValues(self, values: List[TemplateValue]):
         ids = {}
         for value in values:
-            ids[str(value.id)] = value.value
+            ids[str(value.id)] = value
 
         for widget in self.widgets:
-            if isinstance(widget, TemplateDisplayWidget):
-                continue
-            if str(widget.field.id) in ids.keys():
-                value = ids[str(widget.field.id)]
-                widget.setValue(value)
+            if isinstance(widget, TemplateFieldWidgetBase):
+                if str(widget.field.id) in ids.keys():
+                    value = ids[str(widget.field.id)]
+                    widget.setValue(value.value)
+                    if value.notes:
+                        widget.setNotes(value.notes)
+
+    def clearValues(self):
+        for wdg in self.widgets:
+            if isinstance(wdg, TemplateFieldWidgetBase):
+                wdg.clear()
+
+    def _headerEnabledChanged(self, header: TemplateField, enabled: bool):
+        pass
 
 
 class _PlaceHolder(QFrame):
@@ -294,10 +309,10 @@ class TraitSelectionWidget(LabelsSelectionWidget):
     def _addItems(self, items: Set[SelectionItem]):
         for item in items:
             if item.meta.get('positive', True):
-                self._wdgLabels.addLabel(TraitLabel(item.text, parent=self))
+                self._wdgLabels.addLabel(TraitLabel(item.text))
         for item in items:
             if not item.meta.get('positive', True):
-                self._wdgLabels.addLabel(TraitLabel(item.text, positive=False, parent=self))
+                self._wdgLabels.addLabel(TraitLabel(item.text, positive=False))
 
     class Popup(QWidget, Ui_TraitSelectionWidget):
         def __init__(self, parent=None):
@@ -433,6 +448,7 @@ class IconTemplateDisplayWidget(TemplateDisplayWidget):
 
 
 class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
+    headerEnabledChanged = pyqtSignal(bool)
 
     def __init__(self, field: TemplateField, parent=None):
         super(HeaderTemplateDisplayWidget, self).__init__(field, parent)
@@ -453,6 +469,14 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         self.layout().addWidget(self.progress, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.layout().addWidget(spacer())
 
+        self._toggle: Optional[Toggle] = None
+        if not field.required:
+            self._toggle = Toggle(self)
+            self._toggle.setToolTip(f'Character has {field.name}')
+            retain_when_hidden(self._toggle)
+            self._toggle.toggled.connect(self._headerEnabledChanged)
+            self.layout().addWidget(self._toggle)
+
         self.children: List[TemplateWidgetBase] = []
         self.progressStatuses: Dict[TemplateWidgetBase] = {}
 
@@ -471,6 +495,16 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
     def collapse(self, collapsed: bool):
         self.btnHeader.setChecked(collapsed)
 
+    @overrides
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        if self._toggle:
+            self._toggle.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, a0: QEvent) -> None:
+        if self._toggle and self._toggle.isChecked():
+            self._toggle.setHidden(True)
+
     def _toggleCollapse(self, checked: bool):
         for wdg in self.children:
             wdg.setHidden(checked)
@@ -478,6 +512,18 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
             self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-right'))
         else:
             self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-down'))
+
+    def setHeaderEnabled(self, enabled: bool):
+        self.collapse(not enabled)
+        self.btnHeader.setEnabled(enabled)
+        self.progress.setVisible(enabled)
+        if self._toggle:
+            self._toggle.setChecked(enabled)
+            self._toggle.setHidden(enabled)
+
+    def _headerEnabledChanged(self, enabled: bool):
+        self.setHeaderEnabled(enabled)
+        self.headerEnabledChanged.emit(enabled)
 
     def _valueFilled(self, widget: TemplateWidgetBase):
         if self.progressStatuses[widget]:
@@ -522,6 +568,13 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
         if not field.show_label:
             self.lblName.setHidden(True)
 
+        if app_env.is_mac():
+            self._boxSpacing = 1
+            self._boxMargin = 0
+        else:
+            self._boxSpacing = 3
+            self._boxMargin = 1
+
     @overrides
     def setEnabled(self, enabled: bool):
         if not self.layout():
@@ -548,6 +601,18 @@ class TemplateFieldWidgetBase(TemplateWidgetBase):
     @abstractmethod
     def setValue(self, value: Any):
         pass
+
+    def clear(self):
+        self.wdgEditor.clear()
+
+    def notes(self) -> str:
+        if self.field.has_notes:
+            return self._notesEditor.toMarkdown()
+        return ''
+
+    def setNotes(self, notes: str):
+        if self.field.has_notes:
+            self._notesEditor.setMarkdown(notes)
 
 
 class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
@@ -583,17 +648,36 @@ class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
-        _layout = vbox(self, margin=1)
+        _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
         self.wdgEditor = AutoAdjustableTextEdit(height=60)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setPlaceholderText(field.placeholder)
         self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
-        self.wdgEditor.setMaximumWidth(600)
+        self.setMaximumWidth(600)
 
-        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        self.btnNotes = QToolButton()
+
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer(), self.btnNotes))
         _layout.addWidget(self.wdgEditor)
 
         self.wdgEditor.textChanged.connect(self._textChanged)
+        if field.has_notes:
+            self.btnNotes.setIcon(IconRegistry.from_name('mdi6.note-plus-outline'))
+            pointy(self.btnNotes)
+            transparent(self.btnNotes)
+            translucent(self.btnNotes)
+            self._notesEditor = EnhancedTextEdit()
+            self._notesEditor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            self._notesEditor.setMinimumSize(400, 300)
+            self._notesEditor.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
+            self._notesEditor.setPlaceholderText(f'Add notes to {field.name}')
+            self._notesEditor.setViewportMargins(5, 5, 5, 5)
+            menu = btn_popup(self.btnNotes, self._notesEditor)
+            menu.aboutToShow.connect(self._notesEditor.setFocus)
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnNotes, self))
+            retain_when_hidden(self.btnNotes)
+        else:
+            self.btnNotes.setHidden(True)
 
     @overrides
     def value(self) -> Any:
@@ -928,7 +1012,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         widget_to_drop.setEnabled(False)
         pos = self.gridLayout.getItemPosition(index)
         item: QLayoutItem = self.gridLayout.takeAt(index)
-        item.widget().deleteLater()
+        gc(item.widget())
         self.gridLayout.addWidget(widget_to_drop, *pos)
         self._installEventFilter(widget_to_drop)
 
@@ -977,7 +1061,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
             self.gridLayout.removeWidget(self._selected)
             self._addPlaceholder(pos[0], pos[1])
             self.widgets.remove(self._selected)
-            self._selected.deleteLater()
+            gc(self._selected)
             self._selected = None
 
     def setShowLabelForSelected(self, enabled: bool):
@@ -1008,15 +1092,15 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
 
 
 class ProfileTemplateView(_ProfileTemplateBase):
-    def __init__(self, values: List[TemplateValue], profile: ProfileTemplate):
-        super().__init__(profile)
+    def __init__(self, values: List[TemplateValue], profile: ProfileTemplate, disabled_template_headers):
+        super().__init__(profile, disabled_template_headers=disabled_template_headers)
         self.setProperty('mainFrame', True)
         self.setValues(values)
 
 
 class CharacterProfileTemplateView(ProfileTemplateView):
     def __init__(self, character: Character, profile: ProfileTemplate):
-        super().__init__(character.template_values, profile)
+        super().__init__(character.template_values, profile, character.disabled_template_headers)
         self.character = character
         self._required_headers_toggled: bool = False
         self._enneagram_widget: Optional[TextSelectionWidget] = None
@@ -1040,6 +1124,10 @@ class CharacterProfileTemplateView(ProfileTemplateView):
             if not header.field.required:
                 header.collapse(toggled)
                 header.setHidden(toggled)
+
+    @overrides
+    def _headerEnabledChanged(self, header: TemplateField, enabled: bool):
+        self.character.disabled_template_headers[str(header.id)] = enabled
 
     def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
         if self._traits_widget:
@@ -1086,6 +1174,7 @@ class TopicWidget(QWidget):
         self.textEdit = AutoAdjustableTextEdit(height=100)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setMarkdown(value.value)
+        self.textEdit.setPlaceholderText(f'Write about {topic.text.lower()}')
         self.textEdit.textChanged.connect(self._textChanged)
 
         top = group(self.btnCollapse, self.btnHeader, margin=0, spacing=1)

@@ -32,7 +32,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <property name="spacing">
-      <number>3</number>
+      <number>0</number>
      </property>
      <item>
       <widget class="QLineEdit" name="filterPositive">
@@ -71,7 +71,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <property name="spacing">
-      <number>3</number>
+      <number>0</number>
      </property>
      <item>
       <widget class="QLineEdit" name="filterNegative">

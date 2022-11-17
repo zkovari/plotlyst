@@ -23,7 +23,7 @@ from PyQt6.QtCore import QModelIndex, Qt, QSize
 from PyQt6.QtWidgets import QHeaderView, QWidgetAction, QListView
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import clear_layout
+from qthandy import clear_layout, bold
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, Character, DocumentType, \
@@ -52,6 +52,9 @@ class DocumentsView(AbstractNovelView):
         self._current_doc: Optional[Document] = None
 
         self.ui.splitter.setSizes([150, 500])
+
+        self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
+        bold(self.ui.lblTitle)
 
         self.model = DocumentsTreeModel(self.novel)
         self.ui.treeDocuments.setModel(self.model)
@@ -124,7 +127,7 @@ class DocumentsView(AbstractNovelView):
         self.textEditor = DocumentTextEditor(self.ui.docEditorPage)
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
         self.textEditor.textEdit.textChanged.connect(self._save)
-        self.textEditor.textTitle.textChanged.connect(self._title_changed)
+        self.textEditor.titleChanged.connect(self._title_changed)
 
     def _clear_text_editor(self):
         clear_layout(self.ui.docEditorPage.layout())
@@ -226,10 +229,9 @@ class DocumentsView(AbstractNovelView):
             self._current_doc.content = self.textEditor.textEdit.toHtml()
         self.repo.update_doc(self.novel, self._current_doc)
 
-    def _title_changed(self):
+    def _title_changed(self, title: str):
         if self._current_doc:
-            new_title = self.textEditor.textTitle.text()
-            if new_title and new_title != self._current_doc.title:
-                self._current_doc.title = new_title
+            if title and title != self._current_doc.title:
+                self._current_doc.title = title
                 emit_column_changed_in_tree(self.model, 0, QModelIndex())
                 self.repo.update_novel(self.novel)

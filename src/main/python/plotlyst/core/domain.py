@@ -39,6 +39,7 @@ from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_emp
 class TemplateValue:
     id: uuid.UUID
     value: Any
+    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
     def __hash__(self):
@@ -181,6 +182,7 @@ class Character:
     occupation: Optional[str] = None
     avatar: Optional[Any] = None
     template_values: List[TemplateValue] = field(default_factory=list)
+    disabled_template_headers: Dict[str, bool] = field(default_factory=dict)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     goals: List[CharacterGoal] = field(default_factory=list)
     document: Optional['Document'] = None
@@ -243,6 +245,10 @@ class Chapter:
 
     def title_index(self, novel: 'Novel') -> str:
         return f'Chapter {novel.chapters.index(self) + 1}'
+
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
 
 
 @dataclass
@@ -710,15 +716,66 @@ def default_stages() -> List[SceneStage]:
             SceneStage('Edited'), SceneStage('Proofread'), SceneStage('Final')]
 
 
+class WorldBuildingEntityType(Enum):
+    ABSTRACT = 1
+    SETTING = 2
+    GROUP = 3
+    ITEM = 4
+
+
 @dataclass
-class Location:
+class WorldBuildingEntity:
     name: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    children: List['Location'] = field(default_factory=list)
-    icon: str = ''
-    icon_color: str = 'black'
+    children: List['WorldBuildingEntity'] = field(default_factory=list)
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    emoji: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    bg_color: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    type: WorldBuildingEntityType = WorldBuildingEntityType.ABSTRACT
+    notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
     template_values: List[TemplateValue] = field(default_factory=list)
-    document: Optional['Document'] = None
+    topics: List[TemplateValue] = field(default_factory=list)
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class WorldBuilding:
+    root_entity: WorldBuildingEntity = WorldBuildingEntity('My world', icon='mdi.globe-model', bg_color='#40916c')
+    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
+
+
+@dataclass
+class TaskStatus(SelectionItem):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
+
+
+@dataclass
+class Task:
+    title: str
+    status_ref: uuid.UUID
+    summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+
+def default_task_statues() -> List[TaskStatus]:
+    return [TaskStatus('To Do', color_hexa='#0077b6'), TaskStatus('In Progress', color_hexa='#9f86c0'),
+            TaskStatus('Done', color_hexa='#588157')]
+
+
+@dataclass_json(undefined=Undefined.EXCLUDE)
+@dataclass
+class Board:
+    tasks: List[Task] = field(default_factory=list)
+    statuses: List[TaskStatus] = field(default_factory=default_task_statues)
 
 
 @dataclass
@@ -1158,8 +1215,9 @@ class ScenesView(Enum):
     NOVEL = 'novel'
     CHARACTERS = 'characters'
     SCENES = 'scenes'
-    LOCATIONS = 'locations'
+    WORLD_BUILDING = 'world_building'
     DOCS = 'docs'
+    BOARD = 'board'
 
 
 @dataclass
@@ -1181,13 +1239,11 @@ class Novel(NovelDescriptor):
     story_structures: List[StoryStructure] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
     scenes: List[Scene] = field(default_factory=list)
-    locations: List[Location] = field(default_factory=list)
     plots: List[Plot] = field(default_factory=list)
     chapters: List[Chapter] = field(default_factory=list)
     stages: List[SceneStage] = field(default_factory=default_stages)
     character_profiles: List[ProfileTemplate] = field(default_factory=default_character_profiles)
     character_topics: List[Topic] = field(default_factory=list)
-    location_profiles: List[ProfileTemplate] = field(default_factory=default_location_profiles)
     conflicts: List[Conflict] = field(default_factory=list)
     goals: List[Goal] = field(default_factory=list)
     documents: List[Document] = field(default_factory=default_documents)
@@ -1195,6 +1251,8 @@ class Novel(NovelDescriptor):
     premise: str = ''
     synopsis: Optional['Document'] = None
     prefs: NovelPreferences = NovelPreferences()
+    world: WorldBuilding = WorldBuilding()
+    board: Board = Board()
 
     def update_from(self, updated_novel: 'Novel'):
         self.title = updated_novel.title

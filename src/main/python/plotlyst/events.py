@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 from language_tool_python import LanguageTool
 
-from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, Location, SceneStage
+from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -42,7 +42,7 @@ class CharacterChangedEvent(Event):
 
 @dataclass
 class SceneChangedEvent(Event):
-    pass
+    scene: Scene
 
 
 @dataclass
@@ -57,7 +57,7 @@ class ChapterChangedEvent(Event):
 
 @dataclass
 class SceneDeletedEvent(Event):
-    pass
+    scene: Scene
 
 
 @dataclass
@@ -71,6 +71,11 @@ class SceneSelectionClearedEvent(Event):
 
 
 @dataclass
+class SceneOrderChangedEvent(Event):
+    pass
+
+
+@dataclass
 class ActiveSceneStageChanged(Event):
     stage: SceneStage
 
@@ -80,9 +85,9 @@ class AvailableSceneStagesChanged(Event):
     pass
 
 
-@dataclass
-class LocationChangedEvent(Event):
-    location: Location
+# @dataclass
+# class LocationChangedEvent(Event):
+#     location: Location
 
 
 @dataclass

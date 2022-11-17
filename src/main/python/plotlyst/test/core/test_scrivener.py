@@ -4,7 +4,7 @@ from uuid import UUID
 
 import pytest
 
-from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Location, Character
+from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Character
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 
 
@@ -49,9 +49,9 @@ def test_import_with_acts(test_client):
                     agendas=[SceneStructureAgenda()])]
     characters = [Character('John', id=UUID('C33E84AA-CC86-4112-A2B4-713917EDB7EF')),
                   Character('Luna', id=UUID('CA105A6C-E2E7-4A27-9EF3-CB9D6D6B9CD9'))]
-    locations = [Location('Place one', id=UUID('BEF3ADD7-99D3-46B6-829F-D4B7CF08D4D0'))]
+    # locations = [Location('Place one', id=UUID('BEF3ADD7-99D3-46B6-829F-D4B7CF08D4D0'))]
     expected_novel = Novel(title='Importer project', id=UUID('C4B3D990-B9C2-4FE6-861E-B06B498283A4'), chapters=chapters,
-                           scenes=scenes, characters=characters, locations=locations, stages=novel.stages,
+                           scenes=scenes, characters=characters, stages=novel.stages,
                            story_structures=novel.story_structures)
     assert novel.title == expected_novel.title
     assert novel.id == expected_novel.id
@@ -60,7 +60,7 @@ def test_import_with_acts(test_client):
     novel.scenes[0].manuscript = None
     novel.scenes[1].manuscript = None
     assert novel.scenes == expected_novel.scenes
-    assert novel.locations == expected_novel.locations
+    # assert novel.locations == expected_novel.locations
 
     for c in novel.characters:
         assert c.avatar, 'Character avatar should have been loaded'

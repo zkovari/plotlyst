@@ -93,8 +93,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.sliders-h')
 
     @staticmethod
-    def edit_icon(color_on: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.pencil', color_on=color_on)
+    def edit_icon(color: str = 'black', color_on: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.pencil', color, color_on=color_on)
 
     @staticmethod
     def plus_edit_icon() -> QIcon:
@@ -133,8 +133,16 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.chess-pawn', CHARACTER_MINOR_COLOR)
 
     @staticmethod
-    def location_icon() -> QIcon:
-        return qtawesome.icon('fa5s.map-pin', color_on='darkBlue', options=[{'scale_factor': 1.1}])
+    def location_icon(color: str = 'black') -> QIcon:
+        return qtawesome.icon('fa5s.map-pin', color=color, color_on='darkBlue', options=[{'scale_factor': 1.1}])
+
+    @staticmethod
+    def world_building_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.globe-model', color_on='#40916c')
+
+    @staticmethod
+    def board_icon() -> QIcon:
+        return IconRegistry.from_name('mdi6.clipboard-check-outline', color_on='#2B0548')
 
     @staticmethod
     def scene_icon() -> QIcon:
@@ -202,10 +210,6 @@ class IconRegistry:
     @staticmethod
     def tasks_icon() -> QIcon:
         return qtawesome.icon('fa5s.tasks')
-
-    @staticmethod
-    def timeline_icon() -> QIcon:
-        return qtawesome.icon('mdi.chart-timeline-variant', color_on='darkBlue')
 
     @staticmethod
     def reports_icon(color_on: str = 'darkBlue') -> QIcon:
@@ -388,8 +392,8 @@ class IconRegistry:
         return IconRegistry.from_name('ei.adult')
 
     @staticmethod
-    def cog_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.cog')
+    def cog_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.cog', color=color)
 
     @staticmethod
     def cause_icon(color: str = 'black') -> QIcon:
