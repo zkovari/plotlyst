@@ -19,8 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional, List
 
-from PyQt6.QtWidgets import QWidget, QLabel, QDial
-from qthandy import vbox, hbox
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QLabel, QDial, QScrollArea
+from qthandy import vbox, hbox, bold, pointy
 
 from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
     conscientiousness, neuroticism, extroversion, openness
@@ -38,12 +39,15 @@ class BigFiveFacetWidget(QWidget):
         super().__init__(parent)
         self._facet = facet
 
-        vbox(self)
-        self._lblName = QLabel(self._facet.name, self)
+        vbox(self, 0, 0)
+        self._lblName = QLabel(self._facet.name.capitalize(), self)
+        self._lblName.setWordWrap(True)
         self._dial = QDial(self)
+        pointy(self._dial)
+        self._dial.setFixedSize(50, 50)
 
-        self.layout().addWidget(self._dial)
-        self.layout().addWidget(self._lblName)
+        self.layout().addWidget(self._dial, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._lblName, alignment=Qt.AlignmentFlag.AlignCenter)
 
 
 class BigFiveDimensionWidget(QWidget):
@@ -52,11 +56,12 @@ class BigFiveDimensionWidget(QWidget):
         self._dimension = dimension
 
         self._facets: List[BigFiveFacetWidget] = []
-        self._lblName = QLabel(self._dimension.name, self)
+        self._lblName = QLabel(self._dimension.name.capitalize(), self)
+        bold(self._lblName)
 
-        vbox(self).addWidget(self._lblName)
+        vbox(self, 0, 3).addWidget(self._lblName)
         self._facetsContainer = QWidget(self)
-        hbox(self._facetsContainer)
+        hbox(self._facetsContainer, 0, 0)
         self.layout().addWidget(self._facetsContainer)
 
         for facet in self._dimension.facets:
@@ -65,22 +70,27 @@ class BigFiveDimensionWidget(QWidget):
             self._facetsContainer.layout().addWidget(wdg)
 
 
-class BigFivePersonalityWidget(QWidget):
+class BigFivePersonalityWidget(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
-        vbox(self)
+
+        self.setWidgetResizable(True)
+        # self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._centralWidget = QWidget()
+        self.setWidget(self._centralWidget)
+        vbox(self._centralWidget)
         self._character: Optional[Character] = None
 
         self._chart = BigFiveChart()
         self._chartView = ChartView(self)
         self._chartView.setChart(self._chart)
-        self.layout().addWidget(self._chartView)
+        self._centralWidget.layout().addWidget(self._chartView)
 
         self._dimensions: List[BigFiveDimension] = [agreeableness, conscientiousness, neuroticism, extroversion,
                                                     openness]
         for dim_ in self._dimensions:
             wdg = BigFiveDimensionWidget(dim_)
-            self.layout().addWidget(wdg)
+            self._centralWidget.layout().addWidget(wdg)
 
     def setCharacter(self, character: Character):
         self._character = character
