@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>512</width>
-    <height>228</height>
+    <width>652</width>
+    <height>422</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -67,10 +67,10 @@
      <attribute name="horizontalHeaderVisible">
       <bool>false</bool>
      </attribute>
-     <attribute name="horizontalHeaderMinimumSectionSize">
+     <attribute name="horizontalHeaderDefaultSectionSize">
       <number>20</number>
      </attribute>
-     <attribute name="horizontalHeaderDefaultSectionSize">
+     <attribute name="horizontalHeaderMinimumSectionSize">
       <number>20</number>
      </attribute>
      <attribute name="horizontalHeaderStretchLastSection">
@@ -86,19 +86,9 @@
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>5</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
+     <property name="spacing">
+      <number>1</number>
+     </property>
      <item>
       <widget class="QTextBrowser" name="textBrowser">
        <property name="sizePolicy">
