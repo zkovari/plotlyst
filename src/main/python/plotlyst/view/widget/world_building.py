@@ -605,16 +605,17 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
             for col in colliding:
                 overlap_y = (self.mapRectToScene(self.boundingRect()).topLeft() - col.mapRectToScene(
                     col.boundingRect()).topLeft()).y()
+                if abs(overlap_y) > 70:
+                    continue
                 intersect = self.mapRectToScene(self.boundingRect()).intersected(
                     col.mapRectToScene(col.boundingRect())).height()
                 common_ancestor = self.commonAncestorItem(col)
                 print('------')
-                print(overlap_y)
-                print(intersect)
-                print(self.entity().name)
-                print(col.entity().name)
-                print(common_ancestor.entity().name)
-                common_ancestor.moveChildren(max(abs(overlap_y), intersect))
+                print(f'{overlap_y} {intersect}')
+                print(
+                    f'{self.entity().name} collides with {col.entity().name} while parent is {common_ancestor.entity().name}')
+                shift = intersect if intersect > 1 else abs(overlap_y)
+                common_ancestor.moveChildren(shift)
 
         for child in self.childrenEntityItems():
             child.checkCollision()
