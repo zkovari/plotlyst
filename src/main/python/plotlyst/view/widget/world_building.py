@@ -43,6 +43,8 @@ from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelect
 
 LINE_WIDTH: int = 4
 DEFAULT_COLOR: str = '#219ebc'
+ITEM_HORIZONTAL_DISTANCE = 20
+ITEM_VERTICAL_DISTANCE = 80
 
 
 class WorldBuildingProfileTemplateView(ProfileTemplateView):
@@ -106,6 +108,12 @@ class ConnectorItem(QGraphicsPathItem):
 
         self.setPath(path)
 
+    def source(self) -> 'WorldBuildingItemGroup':
+        return self._source
+
+    def target(self) -> 'WorldBuildingItemGroup':
+        return self._target
+
 
 class PlusItem(QAbstractGraphicsShapeItem):
     def __init__(self, parent: 'WorldBuildingItemGroup'):
@@ -155,6 +163,7 @@ class _WorldBuildingItemEditorWidget(QTabWidget, Ui_WorldBuildingItemEditor):
         self.pageIcons.layout().addWidget(self._iconPicker)
         self._emojiPicker: Optional[EmojiPicker] = None
 
+        self.lineName.setPlaceholderText('Entity')
         self._summary = TextEditBase(self)
         self._summary.setPlaceholderText('Summary...')
         self._summary.setMaximumHeight(75)
@@ -270,8 +279,10 @@ class WorldBuildingItemEditor(QMenu):
         action.setDefaultWidget(self._itemEditor)
         self.addAction(action)
 
-    def edit(self, item: 'WorldBuildingItem', pos: QPoint):
+    def edit(self, item: 'WorldBuildingItem', newItem: bool, pos: QPoint):
         self._itemEditor.setItem(item)
+        if newItem:
+            self._itemEditor.setCurrentWidget(self._itemEditor.tabEntity)
         self.popup(pos)
 
 
@@ -405,7 +416,7 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         return self._entity
 
     def text(self) -> str:
-        return self._entity.name
+        return self._entity.name if self._entity.name else 'Entity'
 
     def setText(self, text: str):
         self._entity.name = text
@@ -467,10 +478,10 @@ class WorldBuildingItem(QAbstractGraphicsShapeItem):
         margins = 10
         icon_diff = self._textRect.height() + self._iconLeftMargin if self._icon or self._entity.emoji else 0
 
-        self._rect = QRect(0, 0, self._textRect.width() + margins + icon_diff + self._penWidth * 2,
+        self._rect = QRect(0, 0, self._textRect.width() + margins * 2 + icon_diff + self._penWidth * 2,
                            self._textRect.height() + margins + self._penWidth * 2)
 
-        self._textRect.moveLeft(margins / 2 + icon_diff)
+        self._textRect.moveLeft(margins + icon_diff)
 
         self._iconSize = self._textRect.height()
         self._icon_y = margins / 2
@@ -555,13 +566,77 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
     def childrenEntityItems(self) -> List['WorldBuildingItemGroup']:
         return self._childrenEntityItems
 
+    def rearrangeChildrenItems(self):
+        number = len(self.childrenEntityItems())
+        if number == 0:
+            return
+
+        if number == 1:
+            self._arrangeChild(self.childrenEntityItems()[0], 0)
+        else:
+            distances = []
+            diff_ = number // 2
+            if number % 2 == 0:
+                for i in range(-number + diff_, number - diff_):
+                    distances.append(ITEM_VERTICAL_DISTANCE * i + ITEM_VERTICAL_DISTANCE / 2)
+            else:
+                for i in range(-number + diff_ + 1, number - diff_):
+                    distances.append(ITEM_VERTICAL_DISTANCE * i)
+            for i, child in enumerate(self.childrenEntityItems()):
+                self._arrangeChild(child, distances[i])
+
+        for child in self.childrenEntityItems():
+            child.rearrangeChildrenItems()
+
+    def _arrangeChild(self, child: 'WorldBuildingItemGroup', y: float):
+        child.setPos(self.boundingRect().width() + ITEM_HORIZONTAL_DISTANCE, y)
+        if child.inputConnector() is None:
+            ConnectorItem(self, child)
+            child.setParentItem(self)
+        else:
+            child.inputConnector().rearrange()
+
+        child.checkCollision()
+
+    def checkCollision(self):
+        colliding = [x for x in self.collidingItems(Qt.ItemSelectionMode.IntersectsItemBoundingRect) if
+                     isinstance(x, WorldBuildingItemGroup)]
+        if colliding:
+            for col in colliding:
+                overlap_y = (self.mapRectToScene(self.boundingRect()).topLeft() - col.mapRectToScene(
+                    col.boundingRect()).topLeft()).y()
+                if abs(overlap_y) > 70:
+                    continue
+                intersect = self.mapRectToScene(self.boundingRect()).intersected(
+                    col.mapRectToScene(col.boundingRect())).height()
+                common_ancestor = self.commonAncestorItem(col)
+                print('------')
+                print(f'{overlap_y} {intersect}')
+                print(
+                    f'{self.entity().name} collides with {col.entity().name} while parent is {common_ancestor.entity().name}')
+                shift = intersect if intersect > 1 else abs(overlap_y)
+                common_ancestor.moveChildren(shift)
+
+        for child in self.childrenEntityItems():
+            child.checkCollision()
+
+    def moveChildren(self, overlap: float):
+        for child in self.childrenEntityItems():
+            if child.pos().y() > 0:
+                child.moveBy(0, overlap / len(self.childrenEntityItems()))
+            elif child.pos().y() < 0:
+                child.moveBy(0, -overlap / len(self.childrenEntityItems()))
+            child.inputConnector().rearrange()
+
+        for child in self.childrenEntityItems():
+            child.checkCollision()
+
     def rearrangeItems(self) -> None:
         self._plusItem.setPos(self._item.boundingRect().x() + self._item.boundingRect().width() + 20,
                               self._item.boundingRect().y() + 10)
         self._plusItem.setVisible(False)
         self._updateCollapse()
-        if self.scene():
-            self.worldBuildingScene().rearrangeItems()
+        self.rearrangeChildrenItems()
         for connector in self._outputConnectors:
             connector.updatePos()
 
@@ -616,15 +691,15 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
         icon.paint(painter, self._item.boundingRect().width() - 2, 2, 10, 10)
 
     def addNewChild(self):
-        entity = WorldBuildingEntity('Entity')
+        entity = WorldBuildingEntity('')
         self._entity.children.append(entity)
         group = self._addChild(entity)
 
         self._updateCollapse()
-        self.worldBuildingScene().rearrangeItems()
+        self.rearrangeChildrenItems()
         self.worldBuildingScene().modelChanged.emit()
 
-        self.worldBuildingScene().editItem(group.entityItem())
+        self.worldBuildingScene().editItem(group.entityItem(), newItem=True)
 
     def _addChild(self, entity: WorldBuildingEntity) -> 'WorldBuildingItemGroup':
         item = WorldBuildingItemGroup(entity, self._font, self._emoji_font)
@@ -692,7 +767,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
 
 
 class WorldBuildingEditorScene(QGraphicsScene):
-    editItemRequested = pyqtSignal(WorldBuildingItem)
+    editItemRequested = pyqtSignal(WorldBuildingItem, bool)
     itemSelected = pyqtSignal(WorldBuildingItem)
     selectionCleared = pyqtSignal()
     modelChanged = pyqtSignal()
@@ -727,7 +802,7 @@ class WorldBuildingEditorScene(QGraphicsScene):
         self._rootItem.setPos(0, 0)
         self.addItem(self._rootItem)
 
-        self.rearrangeItems()
+        self._rootItem.rearrangeChildrenItems()
 
     @overrides
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -744,64 +819,14 @@ class WorldBuildingEditorScene(QGraphicsScene):
                 if item is not self._rootItem.entityItem():
                     item.parentItem().prepareRemove()
                     self.removeItem(item.parentItem())
-                    self.rearrangeItems()
+                    # self._rootItem.rearrangeChildrenItems()
         elif event.key() == Qt.Key.Key_E and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
             if isinstance(item, WorldBuildingItem):
                 self.editItem(item)
 
-    def editItem(self, item: WorldBuildingItem):
-        self.editItemRequested.emit(item)
-
-    def rearrangeItems(self):
-        self.rearrangeChildrenItems(self._rootItem)
-
-    def rearrangeChildrenItems(self, parent: WorldBuildingItemGroup):
-        number = len(parent.childrenEntityItems())
-        if number == 0:
-            return
-
-        if number == 1:
-            self._arrangeChild(parent, parent.childrenEntityItems()[0], 0)
-        else:
-            distances = []
-            diff_ = number // 2
-            if number % 2 == 0:
-                for i in range(-number + diff_, number - diff_):
-                    distances.append(self._itemVerticalDistance * i + self._itemVerticalDistance / 2)
-            else:
-                for i in range(-number + diff_ + 1, number - diff_):
-                    distances.append(self._itemVerticalDistance * i)
-            for i, child in enumerate(parent.childrenEntityItems()):
-                self._arrangeChild(parent, child, distances[i])
-
-        for child in parent.childrenEntityItems():
-            self.rearrangeChildrenItems(child)
-
-    def _arrangeChild(self, parentItem: WorldBuildingItemGroup, child: WorldBuildingItemGroup, y: float):
-        child.setPos(parentItem.boundingRect().width() + self._itemHorizontalDistance, y)
-        if child.inputConnector() is None:
-            ConnectorItem(parentItem, child)
-            child.setParentItem(parentItem)
-        else:
-            child.inputConnector().rearrange()
-
-        colliding = [x for x in child.collidingItems(Qt.ItemSelectionMode.IntersectsItemBoundingRect) if
-                     isinstance(x, WorldBuildingItemGroup)]
-        if colliding:
-            for col in colliding:
-                overlap = child.mapRectToScene(child.boundingRect()).intersected(
-                    col.mapRectToScene(col.boundingRect())).height()
-                common_ancestor = child.commonAncestorItem(col)
-                self._moveChildren(common_ancestor, overlap)
-
-    def _moveChildren(self, parent: WorldBuildingItemGroup, overlap: float):
-        for child in parent.childrenEntityItems():
-            if child.pos().y() >= 0:
-                child.moveBy(0, overlap + self._itemVerticalDistance / 2)
-            else:
-                child.moveBy(0, -overlap - self._itemVerticalDistance / 2)
-            child.inputConnector().rearrange()
+    def editItem(self, item: WorldBuildingItem, newItem: bool = False):
+        self.editItemRequested.emit(item, newItem)
 
 
 class WorldBuildingEditor(QGraphicsView):
@@ -865,9 +890,9 @@ class WorldBuildingEditor(QGraphicsView):
         super(WorldBuildingEditor, self).resizeEvent(event)
         self.__arrangeZoomButtons()
 
-    def _editItem(self, item: WorldBuildingItem):
+    def _editItem(self, item: WorldBuildingItem, newItem: bool):
         view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
-        self._itemEditor.edit(item, self.mapToGlobal(view_pos))
+        self._itemEditor.edit(item, newItem, self.mapToGlobal(view_pos))
 
     def __arrangeZoomButtons(self):
         self._btnZoomOut.setGeometry(10, self.height() - 30, 20, 20)
