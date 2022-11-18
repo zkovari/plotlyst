@@ -25,6 +25,7 @@ from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValue
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QCursor, QIcon
 from PyQt6.QtWidgets import QToolTip
+from overrides import overrides
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel, \
@@ -49,6 +50,15 @@ class _AbstractChart:
     def reset(self):
         if self.series():
             self.removeAllSeries()
+
+
+class BaseChart(QChart, _AbstractChart):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    @overrides
+    def reset(self):
+        super(BaseChart, self).reset()
         h_axis = self.axes(Qt.Orientation.Horizontal)
         if h_axis:
             self.removeAxis(h_axis[0])
@@ -57,14 +67,21 @@ class _AbstractChart:
             self.removeAxis(y_axis[0])
 
 
-class BaseChart(QChart, _AbstractChart):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-
 class PolarBaseChart(QPolarChart, _AbstractChart):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+    @overrides
+    def reset(self):
+        super(PolarBaseChart, self).reset()
+        p_axis = self.axes(QPolarChart.PolarOrientation.PolarOrientationAngular)
+        if p_axis:
+            for ax in p_axis:
+                self.removeAxis(ax)
+        a_axis = self.axes(QPolarChart.PolarOrientation.PolarOrientationAngular)
+        if a_axis:
+            for ax in a_axis:
+                self.removeAxis(ax)
 
 
 class GenderCharacterChart(BaseChart):

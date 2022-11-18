@@ -21,13 +21,17 @@ from functools import partial
 from typing import Optional, List
 
 import qtanim
+from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QSplineSeries
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPen, QColor
 from PyQt6.QtWidgets import QWidget, QLabel, QDial, QScrollArea, QGridLayout, QProgressBar
 from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 
 from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
     conscientiousness, neuroticism, extroversion, openness
 from src.main.python.plotlyst.core.text import html
+from src.main.python.plotlyst.view.common import icon_to_html_img
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.chart import PolarBaseChart
 from src.main.python.plotlyst.view.widget.display import ChartView
 
@@ -38,7 +42,29 @@ class BigFiveChart(PolarBaseChart):
         self.setTitle(html('Big Five Personality Traits').bold())
 
     def refresh(self):
-        print('refresh')
+        self.reset()
+
+        axis = QCategoryAxis()
+        axis.setRange(0, 360)
+        img = icon_to_html_img(IconRegistry.book_icon())
+        axis.append(img, 90)
+
+        series = QSplineSeries()
+        pen = QPen()
+        pen.setColor(QColor('#f3a712'))
+        pen.setWidth(2)
+        series.setPen(pen)
+
+        series.append(1, 1)
+        series.append(80, 3)
+        series.append(160, 5)
+        series.append(240, 5)
+        series.append(300, 3)
+
+        self.addAxis(axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
+
+        self.addSeries(series)
+        series.attachAxis(axis)
 
 
 class FacetDial(QDial):
