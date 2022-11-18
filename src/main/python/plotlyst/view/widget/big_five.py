@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import qtanim
 from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QSplineSeries
@@ -41,27 +41,42 @@ class BigFiveChart(PolarBaseChart):
         super().__init__(parent)
         self.setTitle(html('Big Five Personality Traits').bold())
 
-    def refresh(self):
-        self.reset()
+        self._series: Dict[BigFiveDimension, QSplineSeries] = {}
+        self._angles: Dict[BigFiveDimension, List[int]] = {
+            openness: [12, 24, 36, 48, 60, 72],
+            extroversion: [84, 96, 108, 120, 132, 144],
+            neuroticism: [156, 168, 180, 192, 204, 216],
+            conscientiousness: [228, 240, 252, 264, 276, 288],
+            agreeableness: [300, 312, 324, 336, 348, 360]
+        }
 
-        axis = QCategoryAxis()
-        axis.setRange(0, 360)
-        img = icon_to_html_img(IconRegistry.book_icon())
-        axis.append(img, 90)
+    def refreshDimension(self, dimension: BigFiveDimension, values: List[int]):
+        axis = self.axes(QPolarChart.PolarOrientation.PolarOrientationAngular)
+        if not axis:
+            axis = QCategoryAxis()
+            axis.setRange(0, 360)
+            img = icon_to_html_img(IconRegistry.book_icon())
+            axis.append(img, 90)
+
+            self.addAxis(axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
+        else:
+            axis = axis[0]
+
+        if dimension in self._series.keys():
+            series = self._series[dimension]
+            self.removeSeries(series)
 
         series = QSplineSeries()
         pen = QPen()
-        pen.setColor(QColor('#f3a712'))
+        pen.setColor(QColor(dimension.color))
         pen.setWidth(2)
         series.setPen(pen)
+        self._series[dimension] = series
 
-        series.append(1, 1)
-        series.append(80, 3)
-        series.append(160, 5)
-        series.append(240, 5)
-        series.append(300, 3)
-
-        self.addAxis(axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
+        for v in self._angles.values():
+            series.append(v[0], 0)
+        for i in values:
+            series.append(self._angles[dimension][i], values[i])
 
         self.addSeries(series)
         series.attachAxis(axis)
@@ -144,12 +159,15 @@ class BigFivePersonalityWidget(QWidget):
                 display = BigFiveFacetBarDisplay(facet, self._centralWidget)
                 self._gridLayout.addWidget(display, i * 7 + j + 2, 1, 1, 5)
 
-                facet.dial.valueChanged.connect(partial(self._facetEdited, facet))
+                facet.dial.valueChanged.connect(partial(self._facetEdited, facet, dim_))
+
+        self._chart.refreshDimension(agreeableness, [1, 3, 1, 3, 2, 4])
+        self._chart.refreshDimension(extroversion, [5, 2, 2, 3, 1, 2])
 
     def setCharacter(self, character: Character):
         self._character = character
 
-    def _facetEdited(self, facet: BigFiveFacetWidget, value: int):
+    def _facetEdited(self, facet: BigFiveFacetWidget, dimension: BigFiveDimension, value: int):
         if value <= 20:
             qtanim.glow(self._headers[0], duration=50)
         elif value <= 40:
@@ -162,4 +180,4 @@ class BigFivePersonalityWidget(QWidget):
             qtanim.glow(self._headers[4], duration=50)
 
         if not facet.dial.isSliderDown():
-            self._chart.refresh()
+            self._chart.refreshDimension(dimension, [1, 3, 4, 1, 2, 3])
