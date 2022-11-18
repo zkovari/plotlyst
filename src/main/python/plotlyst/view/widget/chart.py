@@ -20,7 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Dict
 
-from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QSplineSeries
+from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QSplineSeries, \
+    QPolarChart
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QCursor, QIcon
 from PyQt6.QtWidgets import QToolTip
@@ -36,9 +37,9 @@ from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
-class BaseChart(QChart):
-    def __init__(self, parent=None):
-        super(BaseChart, self).__init__(parent)
+class _AbstractChart:
+
+    def __init__(self, _=None):
         self.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
         self.setAnimationDuration(500)
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -54,6 +55,16 @@ class BaseChart(QChart):
         y_axis = self.axes(Qt.Orientation.Vertical)
         if y_axis:
             self.removeAxis(y_axis[0])
+
+
+class BaseChart(QChart, _AbstractChart):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
+class PolarBaseChart(QPolarChart, _AbstractChart):
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
 
 class GenderCharacterChart(BaseChart):
