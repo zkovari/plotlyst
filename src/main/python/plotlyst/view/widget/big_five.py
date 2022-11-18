@@ -17,10 +17,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional, List
 
+import qtanim
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QLabel, QDial, QScrollArea, QGridLayout
+from PyQt6.QtWidgets import QWidget, QLabel, QDial, QScrollArea, QGridLayout, QProgressBar
 from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 
 from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
@@ -35,8 +37,22 @@ class BigFiveChart(PolarBaseChart):
         super().__init__(parent)
         self.setTitle(html('Big Five Personality Traits').bold())
 
+    def refresh(self):
+        print('refresh')
+
+
+class FacetDial(QDial):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        pointy(self)
+        self.setFixedSize(30, 30)
+        self.setMinimum(1)
+        self.setMaximum(100)
+        self.setValue(50)
+
 
 class BigFiveFacetWidget(QWidget):
+
     def __init__(self, facet: BigFiveFacet, parent=None):
         super().__init__(parent)
         self._facet = facet
@@ -44,12 +60,21 @@ class BigFiveFacetWidget(QWidget):
         hbox(self, 0, 0)
         self._lblName = QLabel(self._facet.name.capitalize(), self)
         self._lblName.setWordWrap(True)
-        self._dial = QDial(self)
-        pointy(self._dial)
-        self._dial.setFixedSize(30, 30)
+        self.dial = FacetDial(self)
 
-        self.layout().addWidget(self._dial, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self.dial, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._lblName, alignment=Qt.AlignmentFlag.AlignCenter)
+
+
+class BigFiveFacetBarDisplay(QProgressBar):
+    def __init__(self, facetWdg: BigFiveFacetWidget, parent=None):
+        super().__init__(parent)
+        self._facetWdg = facetWdg
+        self.setMinimum(1)
+        self.setMaximum(100)
+        self.setValue(50)
+
+        self._facetWdg.dial.valueChanged.connect(self.setValue)
 
 
 class BigFivePersonalityWidget(QWidget):
@@ -74,8 +99,11 @@ class BigFivePersonalityWidget(QWidget):
         self._dimensions: List[BigFiveDimension] = [agreeableness, conscientiousness, neuroticism, extroversion,
                                                     openness]
 
+        self._headers: List[QLabel] = []
+
         for i, header in enumerate(['Not at all', 'No', 'Not sure', 'Yes', 'Absolutely']):
             lblHeader = QLabel(header, self._centralWidget)
+            self._headers.append(lblHeader)
             decr_font(lblHeader)
             italic(lblHeader)
             self._gridLayout.addWidget(lblHeader, 0, 1 + i, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -87,6 +115,25 @@ class BigFivePersonalityWidget(QWidget):
             for j, facet in enumerate(dim_.facets):
                 facet = BigFiveFacetWidget(facet, self._centralWidget)
                 self._gridLayout.addWidget(facet, i * 7 + j + 2, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+                display = BigFiveFacetBarDisplay(facet, self._centralWidget)
+                self._gridLayout.addWidget(display, i * 7 + j + 2, 1, 1, 5)
+
+                facet.dial.valueChanged.connect(partial(self._facetEdited, facet))
 
     def setCharacter(self, character: Character):
         self._character = character
+
+    def _facetEdited(self, facet: BigFiveFacetWidget, value: int):
+        if value <= 20:
+            qtanim.glow(self._headers[0], duration=50)
+        elif value <= 40:
+            qtanim.glow(self._headers[1], duration=50)
+        elif value <= 60:
+            qtanim.glow(self._headers[2], duration=50)
+        elif value <= 80:
+            qtanim.glow(self._headers[3], duration=50)
+        else:
+            qtanim.glow(self._headers[4], duration=50)
+
+        if not facet.dial.isSliderDown():
+            self._chart.refresh()
