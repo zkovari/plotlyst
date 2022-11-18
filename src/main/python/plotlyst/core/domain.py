@@ -229,6 +229,16 @@ conscientiousness = BigFiveDimension('conscientiousness', color='#cdb4db',
                                      ])
 
 
+def default_big_five_values() -> Dict[str, List[int]]:
+    return {
+        agreeableness.name: [50, 50, 50, 50, 50, 50],
+        neuroticism.name: [50, 50, 50, 50, 50, 50],
+        extroversion.name: [50, 50, 50, 50, 50, 50],
+        openness.name: [50, 50, 50, 50, 50, 50],
+        conscientiousness.name: [50, 50, 50, 50, 50, 50]
+    }
+
+
 @dataclass
 class CharacterPreferences:
     avatar: AvatarPreferences = AvatarPreferences()
@@ -251,6 +261,7 @@ class Character:
     journals: List['Document'] = field(default_factory=list)
     prefs: CharacterPreferences = CharacterPreferences()
     topics: List[TemplateValue] = field(default_factory=list)
+    big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:

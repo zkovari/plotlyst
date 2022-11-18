@@ -21,7 +21,7 @@ from functools import partial
 from typing import Optional, List, Dict
 
 import qtanim
-from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QSplineSeries
+from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QSplineSeries, QValueAxis
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPen, QColor
 from PyQt6.QtWidgets import QWidget, QLabel, QDial, QScrollArea, QGridLayout, QProgressBar
@@ -30,8 +30,6 @@ from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
     conscientiousness, neuroticism, extroversion, openness
 from src.main.python.plotlyst.core.text import html
-from src.main.python.plotlyst.view.common import icon_to_html_img
-from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.chart import PolarBaseChart
 from src.main.python.plotlyst.view.widget.display import ChartView
 
@@ -50,18 +48,15 @@ class BigFiveChart(PolarBaseChart):
             agreeableness: [300, 312, 324, 336, 348, 360]
         }
 
+        self._rad_axis = QValueAxis()
+        self._rad_axis.setRange(0, 75)
+        self._rad_axis.setLabelsVisible(False)
+        self.addAxis(self._rad_axis, QPolarChart.PolarOrientation.PolarOrientationRadial)
+        self._angular_axis = QCategoryAxis()
+        self._angular_axis.setRange(0, 360)
+        self.addAxis(self._angular_axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
+
     def refreshDimension(self, dimension: BigFiveDimension, values: List[int]):
-        axis = self.axes(QPolarChart.PolarOrientation.PolarOrientationAngular)
-        if not axis:
-            axis = QCategoryAxis()
-            axis.setRange(0, 360)
-            img = icon_to_html_img(IconRegistry.book_icon())
-            axis.append(img, 90)
-
-            self.addAxis(axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
-        else:
-            axis = axis[0]
-
         if dimension in self._series.keys():
             series = self._series[dimension]
             self.removeSeries(series)
@@ -71,15 +66,17 @@ class BigFiveChart(PolarBaseChart):
         pen.setColor(QColor(dimension.color))
         pen.setWidth(2)
         series.setPen(pen)
+        series.setBrush(QColor(dimension.color))
         self._series[dimension] = series
 
         for v in self._angles.values():
             series.append(v[0], 0)
-        for i in values:
-            series.append(self._angles[dimension][i], values[i])
+        for i, value in enumerate(values):
+            series.append(self._angles[dimension][i], value)
 
         self.addSeries(series)
-        series.attachAxis(axis)
+        series.attachAxis(self._angular_axis)
+        series.attachAxis(self._rad_axis)
 
 
 class FacetDial(QDial):
@@ -161,11 +158,23 @@ class BigFivePersonalityWidget(QWidget):
 
                 facet.dial.valueChanged.connect(partial(self._facetEdited, facet, dim_))
 
-        self._chart.refreshDimension(agreeableness, [1, 3, 1, 3, 2, 4])
-        self._chart.refreshDimension(extroversion, [5, 2, 2, 3, 1, 2])
-
     def setCharacter(self, character: Character):
         self._character = character
+
+        for bf, values in self._character.big_five.items():
+            self._chart.refreshDimension(self._dimension(bf), values)
+
+    def _dimension(self, name: str):
+        if name == agreeableness.name:
+            return agreeableness
+        elif name == openness.name:
+            return openness
+        elif name == extroversion.name:
+            return extroversion
+        elif name == neuroticism.name:
+            return neuroticism
+        else:
+            return conscientiousness
 
     def _facetEdited(self, facet: BigFiveFacetWidget, dimension: BigFiveDimension, value: int):
         if value <= 20:
