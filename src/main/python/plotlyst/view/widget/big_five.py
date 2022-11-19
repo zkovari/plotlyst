@@ -67,8 +67,9 @@ class BigFiveChart(PolarBaseChart):
             upper_series.append(self._angles[dimension][i + 1], value)
             lower_series.append(self._angles[dimension][i], 1)
             lower_series.append(self._angles[dimension][i + 1], 1)
-        lower_series.attachAxis(self._rad_axis)
 
+        self.addSeries(upper_series)
+        self.addSeries(lower_series)
         area_series = QAreaSeries(upper_series, lower_series)
 
         pen = QPen()
@@ -81,8 +82,6 @@ class BigFiveChart(PolarBaseChart):
         self._series[dimension] = area_series
 
         self.addSeries(area_series)
-        self.addSeries(upper_series)
-        self.addSeries(lower_series)
         area_series.attachAxis(self._angular_axis)
         area_series.attachAxis(self._rad_axis)
 
