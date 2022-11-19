@@ -168,6 +168,79 @@ class AvatarPreferences:
 
 
 @dataclass
+class BigFiveFacet:
+    name: str
+
+
+@dataclass
+class BigFiveDimension:
+    name: str
+    color: str = 'black'
+    icon: str = ''
+    facets: List[BigFiveFacet] = field(default_factory=list)
+
+    def __hash__(self):
+        return hash(self.name)
+
+
+agreeableness = BigFiveDimension('agreeableness', color='#8ecae6', icon='fa5s.thumbs-up',
+                                 facets=[
+                                     BigFiveFacet('trust'),
+                                     BigFiveFacet('straightforwardness'),
+                                     BigFiveFacet('altruism'),
+                                     BigFiveFacet('compliance'),
+                                     BigFiveFacet('modesty'),
+                                     BigFiveFacet('tender-mindedness'),
+                                 ])
+neuroticism = BigFiveDimension('neuroticism', color='#e63946', icon='mdi6.head-flash',
+                               facets=[
+                                   BigFiveFacet('anxiety'),
+                                   BigFiveFacet('depression'),
+                                   BigFiveFacet('impulsiveness'),
+                                   BigFiveFacet('hostility'),
+                                   BigFiveFacet('vulnerability'),
+                                   BigFiveFacet('self-consciousness'),
+                               ])
+extroversion = BigFiveDimension('extroversion', color='#a7c957', icon='fa5s.people-arrows',
+                                facets=[
+                                    BigFiveFacet('warmth'),
+                                    BigFiveFacet('gregariousness'),
+                                    BigFiveFacet('assertiveness'),
+                                    BigFiveFacet('activity'),
+                                    BigFiveFacet('excitement-seeking'),
+                                    BigFiveFacet('positive emotions'),
+                                ])
+openness = BigFiveDimension('openness', color='#e9c46a', icon='mdi.head-lightbulb',
+                            facets=[
+                                BigFiveFacet('fantasy'),
+                                BigFiveFacet('aesthetics'),
+                                BigFiveFacet('feelings'),
+                                BigFiveFacet('actions'),
+                                BigFiveFacet('ideas'),
+                                BigFiveFacet('values'),
+                            ])
+conscientiousness = BigFiveDimension('conscientiousness', color='#cdb4db', icon='mdi.head-cog-outline',
+                                     facets=[
+                                         BigFiveFacet('competence'),
+                                         BigFiveFacet('order'),
+                                         BigFiveFacet('dutifulness'),
+                                         BigFiveFacet('achievement striving'),
+                                         BigFiveFacet('self-discipline'),
+                                         BigFiveFacet('deliberation'),
+                                     ])
+
+
+def default_big_five_values() -> Dict[str, List[int]]:
+    return {
+        agreeableness.name: [50, 50, 50, 50, 50, 50],
+        neuroticism.name: [50, 50, 50, 50, 50, 50],
+        extroversion.name: [50, 50, 50, 50, 50, 50],
+        openness.name: [50, 50, 50, 50, 50, 50],
+        conscientiousness.name: [50, 50, 50, 50, 50, 50]
+    }
+
+
+@dataclass
 class CharacterPreferences:
     avatar: AvatarPreferences = AvatarPreferences()
 
@@ -189,6 +262,7 @@ class Character:
     journals: List['Document'] = field(default_factory=list)
     prefs: CharacterPreferences = CharacterPreferences()
     topics: List[TemplateValue] = field(default_factory=list)
+    big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:

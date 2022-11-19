@@ -613,7 +613,7 @@ class WorldBuildingItemGroup(QAbstractGraphicsShapeItem):
                 print('------')
                 print(f'{overlap_y} {intersect}')
                 print(
-                    f'{self.entity().name} collides with {col.entity().name} while parent is {common_ancestor.entity().name}')
+                    f'{self.entity().name} collides with {col.entity().name}, parent {common_ancestor.entity().name}')
                 shift = intersect if intersect > 1 else abs(overlap_y)
                 common_ancestor.moveChildren(shift)
 

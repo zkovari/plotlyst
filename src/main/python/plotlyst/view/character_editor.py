@@ -34,6 +34,7 @@ from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor, CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 
@@ -129,8 +130,14 @@ class CharacterEditor:
 
         set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory, IconRegistry.backstory_icon('black'))
         set_tab_icon(self.ui.tabAttributes, self.ui.tabTopics, IconRegistry.topics_icon())
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabBigFive,
+                     IconRegistry.from_name('ph.number-square-five-bold', color_on='#7209b7'))
         set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
         set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black'))
+
+        self._bigFive = BigFivePersonalityWidget()
+        self._bigFive.setCharacter(self.character)
+        self.ui.tabBigFive.layout().addWidget(self._bigFive)
 
         self.ui.wdgAvatar.btnPov.setToolTip('Character avatar. Click to add an image')
         self.ui.wdgAvatar.setCharacter(self.character)
