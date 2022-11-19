@@ -50,7 +50,7 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
 
         self.pov_number = {}
 
-        self.chart = QChart()
+        self.chart = BaseChart()
         self.chart.legend().hide()
         self._updateCharactersChart()
         self.chart.createDefaultAxes()
