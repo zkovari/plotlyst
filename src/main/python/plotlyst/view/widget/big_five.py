@@ -21,7 +21,7 @@ from functools import partial
 from typing import Optional, List, Dict
 
 import qtanim
-from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QValueAxis, QAreaSeries, QLineSeries
+from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QValueAxis, QAreaSeries, QSplineSeries
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPen
 from PyQt6.QtWidgets import QWidget, QLabel, QDial, QScrollArea, QGridLayout, QProgressBar
@@ -63,8 +63,8 @@ class BigFiveChart(PolarBaseChart):
             self.removeSeries(area_series.lowerSeries())
             self.removeSeries(area_series)
 
-        upper_series = QLineSeries()
-        lower_series = QLineSeries()
+        upper_series = QSplineSeries()
+        lower_series = QSplineSeries()
         for i, value in enumerate(values):
             upper_series.append(self._angles[dimension][i], value)
             upper_series.append(self._angles[dimension][i + 1], value)
@@ -77,9 +77,10 @@ class BigFiveChart(PolarBaseChart):
 
         pen = QPen()
         pen.setColor(QColor(dimension.color))
-        pen.setWidth(2)
+        pen.setWidth(3)
         upper_series.setPen(pen)
         lower_series.setPen(pen)
+        area_series.setPen(pen)
         area_series.setColor(QColor(dimension.color))
         area_series.setOpacity(0.7)
         self._series[dimension] = area_series
