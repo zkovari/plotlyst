@@ -108,14 +108,23 @@ class BigFiveValueLabel(QLabel):
 
 
 class FacetSlider(QSlider):
-    def __init__(self, parent=None):
+    def __init__(self, dimension: BigFiveDimension, parent=None):
         super().__init__(parent)
+        self._dimension = dimension
         self.setOrientation(Qt.Orientation.Horizontal)
         pointy(self)
         self.setMinimum(1)
         self.setMaximum(100)
         self.setValue(50)
         self.setTracking(False)
+        self.setStyleSheet(f'''
+            QSlider::add-page:horizontal {{
+                background: lightgray;
+            }}
+            QSlider::sub-page:horizontal {{
+                background: {self._dimension.color};
+            }}
+        ''')
 
     @overrides
     def wheelEvent(self, event: QWheelEvent) -> None:
@@ -169,14 +178,14 @@ class BigFivePersonalityWidget(QWidget):
         self._facetWidgets: Dict[BigFiveDimension, List[FacetSlider]] = {}
         for i, dim_ in enumerate(self._dimensions):
             _lblDimName = QLabel(dim_.name.capitalize(), self._centralWidget)
+            # _lblDimName.setStyleSheet(f'color: {dim_.color}')
             bold(_lblDimName)
             self._gridLayout.addWidget(_lblDimName, 1 + i * 7, 0)
             self._facetWidgets[dim_] = []
             for j, facet in enumerate(dim_.facets):
                 facet = BigFiveFacetWidget(facet, self._centralWidget)
-
-                self._gridLayout.addWidget(facet, i * 7 + j + 2, 0, alignment=Qt.AlignmentFlag.AlignLeft)
-                slider = FacetSlider(self._centralWidget)
+                self._gridLayout.addWidget(facet, i * 7 + j + 2, 0, alignment=Qt.AlignmentFlag.AlignRight)
+                slider = FacetSlider(dim_, self._centralWidget)
                 self._facetWidgets[dim_].append(slider)
                 self._gridLayout.addWidget(slider, i * 7 + j + 2, 1, 1, 5)
 
