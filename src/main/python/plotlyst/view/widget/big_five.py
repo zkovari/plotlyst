@@ -31,6 +31,7 @@ from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
     conscientiousness, neuroticism, extroversion, openness
 from src.main.python.plotlyst.core.text import html
+from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.chart import PolarBaseChart
 from src.main.python.plotlyst.view.widget.display import ChartView, IconText
@@ -56,6 +57,16 @@ class BigFiveChart(PolarBaseChart):
         self.addAxis(self._rad_axis, QPolarChart.PolarOrientation.PolarOrientationRadial)
         self._angular_axis = QCategoryAxis()
         self._angular_axis.setRange(0, 360)
+        self._angular_axis.append(
+            f'<html>{icon_to_html_img(IconRegistry.from_name(openness.icon, openness.color))}', 50)
+        self._angular_axis.append(
+            f'<html>{icon_to_html_img(IconRegistry.from_name(extroversion.icon, extroversion.color))}', 120)
+        self._angular_axis.append(
+            f'<html>{icon_to_html_img(IconRegistry.from_name(neuroticism.icon, neuroticism.color))}', 190)
+        self._angular_axis.append(
+            f'<html>{icon_to_html_img(IconRegistry.from_name(conscientiousness.icon, conscientiousness.color))}', 260)
+        self._angular_axis.append(
+            f'<html>{icon_to_html_img(IconRegistry.from_name(agreeableness.icon, agreeableness.color))}', 330)
         self.addAxis(self._angular_axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
 
     def refreshDimension(self, dimension: BigFiveDimension, values: List[int]):
