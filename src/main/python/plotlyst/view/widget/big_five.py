@@ -156,12 +156,16 @@ class BigFivePersonalityWidget(QWidget):
             italic(lblHeader)
             self._gridLayout.addWidget(lblHeader, 0, 1 + i, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        self._facetWidgets: Dict[BigFiveDimension, List[BigFiveFacetWidget]] = {}
+
         for i, dim_ in enumerate(self._dimensions):
             _lblDimName = QLabel(dim_.name.capitalize(), self._centralWidget)
             bold(_lblDimName)
             self._gridLayout.addWidget(_lblDimName, 1 + i * 7, 0)
+            self._facetWidgets[dim_] = []
             for j, facet in enumerate(dim_.facets):
                 facet = BigFiveFacetWidget(facet, self._centralWidget)
+                self._facetWidgets[dim_].append(facet)
                 self._gridLayout.addWidget(facet, i * 7 + j + 2, 0, alignment=Qt.AlignmentFlag.AlignLeft)
                 display = BigFiveFacetBarDisplay(facet, self._centralWidget)
                 self._gridLayout.addWidget(display, i * 7 + j + 2, 1, 1, 5)
@@ -198,5 +202,7 @@ class BigFivePersonalityWidget(QWidget):
         else:
             qtanim.glow(self._headers[4], duration=50)
 
+        self._character.big_five[dimension.name] = [x.dial.value() for x in self._facetWidgets[dimension]]
+
         if not facet.dial.isSliderDown():
-            self._chart.refreshDimension(dimension, [1, 3, 4, 1, 2, 3])
+            self._chart.refreshDimension(dimension, self._character.big_five[dimension.name])
