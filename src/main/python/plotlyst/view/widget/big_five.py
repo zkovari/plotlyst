@@ -24,7 +24,7 @@ import qtanim
 from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QValueAxis, QAreaSeries, QSplineSeries
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPen
-from PyQt6.QtWidgets import QWidget, QLabel, QDial, QScrollArea, QGridLayout, QProgressBar
+from PyQt6.QtWidgets import QWidget, QLabel, QScrollArea, QGridLayout, QSlider
 from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 
 from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
@@ -90,11 +90,11 @@ class BigFiveChart(PolarBaseChart):
         area_series.attachAxis(self._rad_axis)
 
 
-class FacetDial(QDial):
+class FacetSlider(QSlider):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setOrientation(Qt.Orientation.Horizontal)
         pointy(self)
-        self.setFixedSize(30, 30)
         self.setMinimum(1)
         self.setMaximum(100)
         self.setValue(50)
@@ -109,21 +109,7 @@ class BigFiveFacetWidget(QWidget):
         hbox(self, 0, 0)
         self._lblName = QLabel(self._facet.name.capitalize(), self)
         self._lblName.setWordWrap(True)
-        self.dial = FacetDial(self)
-
-        self.layout().addWidget(self.dial, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._lblName, alignment=Qt.AlignmentFlag.AlignCenter)
-
-
-class BigFiveFacetBarDisplay(QProgressBar):
-    def __init__(self, facetWdg: BigFiveFacetWidget, parent=None):
-        super().__init__(parent)
-        self._facetWdg = facetWdg
-        self.setMinimum(1)
-        self.setMaximum(100)
-        self.setValue(50)
-
-        self._facetWdg.dial.valueChanged.connect(self.setValue)
 
 
 class BigFivePersonalityWidget(QWidget):
@@ -157,8 +143,7 @@ class BigFivePersonalityWidget(QWidget):
             italic(lblHeader)
             self._gridLayout.addWidget(lblHeader, 0, 1 + i, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self._facetWidgets: Dict[BigFiveDimension, List[BigFiveFacetWidget]] = {}
-
+        self._facetWidgets: Dict[BigFiveDimension, List[FacetSlider]] = {}
         for i, dim_ in enumerate(self._dimensions):
             _lblDimName = QLabel(dim_.name.capitalize(), self._centralWidget)
             bold(_lblDimName)
@@ -166,12 +151,13 @@ class BigFivePersonalityWidget(QWidget):
             self._facetWidgets[dim_] = []
             for j, facet in enumerate(dim_.facets):
                 facet = BigFiveFacetWidget(facet, self._centralWidget)
-                self._facetWidgets[dim_].append(facet)
-                self._gridLayout.addWidget(facet, i * 7 + j + 2, 0, alignment=Qt.AlignmentFlag.AlignLeft)
-                display = BigFiveFacetBarDisplay(facet, self._centralWidget)
-                self._gridLayout.addWidget(display, i * 7 + j + 2, 1, 1, 5)
 
-                facet.dial.valueChanged.connect(partial(self._facetEdited, facet, dim_))
+                self._gridLayout.addWidget(facet, i * 7 + j + 2, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+                slider = FacetSlider(self._centralWidget)
+                self._facetWidgets[dim_].append(slider)
+                self._gridLayout.addWidget(slider, i * 7 + j + 2, 1, 1, 5)
+
+                slider.valueChanged.connect(partial(self._facetEdited, dim_))
 
     def setCharacter(self, character: Character):
         self._character = character
@@ -191,7 +177,7 @@ class BigFivePersonalityWidget(QWidget):
         else:
             return conscientiousness
 
-    def _facetEdited(self, facet: BigFiveFacetWidget, dimension: BigFiveDimension, value: int):
+    def _facetEdited(self, dimension: BigFiveDimension, value: int):
         if value <= 20:
             qtanim.glow(self._headers[0], duration=50)
         elif value <= 40:
@@ -203,7 +189,6 @@ class BigFivePersonalityWidget(QWidget):
         else:
             qtanim.glow(self._headers[4], duration=50)
 
-        self._character.big_five[dimension.name] = [x.dial.value() for x in self._facetWidgets[dimension]]
+        self._character.big_five[dimension.name] = [x.value() for x in self._facetWidgets[dimension]]
 
-        if not facet.dial.isSliderDown():
-            self._chart.refreshDimension(dimension, self._character.big_five[dimension.name])
+        self._chart.refreshDimension(dimension, self._character.big_five[dimension.name])
