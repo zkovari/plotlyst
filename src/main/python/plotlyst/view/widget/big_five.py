@@ -43,11 +43,11 @@ class BigFiveChart(PolarBaseChart):
 
         self._series: Dict[BigFiveDimension, QAreaSeries] = {}
         self._angles: Dict[BigFiveDimension, List[int]] = {
-            openness: [0, 12, 24, 36, 48, 60, 72],
-            extroversion: [72, 84, 96, 108, 120, 132, 144],
-            neuroticism: [144, 156, 168, 180, 192, 204, 216],
-            conscientiousness: [216, 228, 240, 252, 264, 276, 288],
-            agreeableness: [288, 300, 312, 324, 336, 348, 360]
+            openness: [0, 14.4, 28.8, 43.2, 57.6, 72],
+            extroversion: [72, 86.4, 100.8, 115.2, 129.6, 144],
+            neuroticism: [144, 158.4, 172.8, 187.2, 201.6, 216],
+            conscientiousness: [216, 230.4, 244.8, 259.2, 273.6, 288],
+            agreeableness: [288, 302.4, 316.8, 332.2, 346.6, 360]
         }
 
         self._rad_axis = QValueAxis()
@@ -69,9 +69,7 @@ class BigFiveChart(PolarBaseChart):
         lower_series = QSplineSeries()
         for i, value in enumerate(values):
             upper_series.append(self._angles[dimension][i], value)
-            upper_series.append(self._angles[dimension][i + 1], value)
             lower_series.append(self._angles[dimension][i], 1)
-            lower_series.append(self._angles[dimension][i + 1], 1)
 
         self.addSeries(upper_series)
         self.addSeries(lower_series)
