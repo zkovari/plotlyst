@@ -176,13 +176,14 @@ class BigFiveFacet:
 class BigFiveDimension:
     name: str
     color: str = 'black'
+    icon: str = ''
     facets: List[BigFiveFacet] = field(default_factory=list)
 
     def __hash__(self):
         return hash(self.name)
 
 
-agreeableness = BigFiveDimension('agreeableness', color='#8ecae6',
+agreeableness = BigFiveDimension('agreeableness', color='#8ecae6', icon='fa5s.thumbs-up',
                                  facets=[
                                      BigFiveFacet('trust'),
                                      BigFiveFacet('straightforwardness'),
@@ -191,16 +192,16 @@ agreeableness = BigFiveDimension('agreeableness', color='#8ecae6',
                                      BigFiveFacet('modesty'),
                                      BigFiveFacet('tender-mindedness'),
                                  ])
-neuroticism = BigFiveDimension('neuroticism', color='#e63946',
+neuroticism = BigFiveDimension('neuroticism', color='#e63946', icon='mdi6.head-flash',
                                facets=[
                                    BigFiveFacet('anxiety'),
-                                   BigFiveFacet('hostility'),
                                    BigFiveFacet('depression'),
-                                   BigFiveFacet('self-consciousness'),
                                    BigFiveFacet('impulsiveness'),
+                                   BigFiveFacet('hostility'),
                                    BigFiveFacet('vulnerability'),
+                                   BigFiveFacet('self-consciousness'),
                                ])
-extroversion = BigFiveDimension('extroversion', color='#a7c957',
+extroversion = BigFiveDimension('extroversion', color='#a7c957', icon='fa5s.people-arrows',
                                 facets=[
                                     BigFiveFacet('warmth'),
                                     BigFiveFacet('gregariousness'),
@@ -209,7 +210,7 @@ extroversion = BigFiveDimension('extroversion', color='#a7c957',
                                     BigFiveFacet('excitement-seeking'),
                                     BigFiveFacet('positive emotions'),
                                 ])
-openness = BigFiveDimension('openness', color='#e9c46a',
+openness = BigFiveDimension('openness', color='#e9c46a', icon='mdi.head-lightbulb',
                             facets=[
                                 BigFiveFacet('fantasy'),
                                 BigFiveFacet('aesthetics'),
@@ -218,7 +219,7 @@ openness = BigFiveDimension('openness', color='#e9c46a',
                                 BigFiveFacet('ideas'),
                                 BigFiveFacet('values'),
                             ])
-conscientiousness = BigFiveDimension('conscientiousness', color='#cdb4db',
+conscientiousness = BigFiveDimension('conscientiousness', color='#cdb4db', icon='mdi.head-cog-outline',
                                      facets=[
                                          BigFiveFacet('competence'),
                                          BigFiveFacet('order'),

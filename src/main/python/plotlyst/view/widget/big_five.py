@@ -31,8 +31,9 @@ from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
     conscientiousness, neuroticism, extroversion, openness
 from src.main.python.plotlyst.core.text import html
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.chart import PolarBaseChart
-from src.main.python.plotlyst.view.widget.display import ChartView
+from src.main.python.plotlyst.view.widget.display import ChartView, IconText
 
 
 class BigFiveChart(PolarBaseChart):
@@ -159,7 +160,6 @@ class BigFivePersonalityWidget(QWidget):
         self._chart = BigFiveChart()
         self._chartView = ChartView(self)
         self._chartView.setChart(self._chart)
-        self._chartView.scale(1.09, 1.09)
         self.layout().addWidget(self._chartView)
         self.layout().addWidget(self._scrollArea)
 
@@ -177,10 +177,11 @@ class BigFivePersonalityWidget(QWidget):
 
         self._facetWidgets: Dict[BigFiveDimension, List[FacetSlider]] = {}
         for i, dim_ in enumerate(self._dimensions):
-            _lblDimName = QLabel(dim_.name.capitalize(), self._centralWidget)
-            # _lblDimName.setStyleSheet(f'color: {dim_.color}')
+            _lblDimName = IconText(self._centralWidget)
+            _lblDimName.setText(dim_.name.capitalize())
+            _lblDimName.setIcon(IconRegistry.from_name(dim_.icon, dim_.color))
             bold(_lblDimName)
-            self._gridLayout.addWidget(_lblDimName, 1 + i * 7, 0)
+            self._gridLayout.addWidget(_lblDimName, 1 + i * 7, 0, alignment=Qt.AlignmentFlag.AlignLeft)
             self._facetWidgets[dim_] = []
             for j, facet in enumerate(dim_.facets):
                 facet = BigFiveFacetWidget(facet, self._centralWidget)
