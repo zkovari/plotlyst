@@ -21,9 +21,9 @@ from functools import partial
 from typing import Optional, List, Dict
 
 import qtanim
-from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QSplineSeries, QValueAxis
+from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QValueAxis, QAreaSeries, QLineSeries
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPen, QColor
+from PyQt6.QtGui import QColor, QPen
 from PyQt6.QtWidgets import QWidget, QLabel, QDial, QScrollArea, QGridLayout, QProgressBar
 from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 
@@ -39,17 +39,17 @@ class BigFiveChart(PolarBaseChart):
         super().__init__(parent)
         self.setTitle(html('Big Five Personality Traits').bold())
 
-        self._series: Dict[BigFiveDimension, QSplineSeries] = {}
+        self._series: Dict[BigFiveDimension, QAreaSeries] = {}
         self._angles: Dict[BigFiveDimension, List[int]] = {
-            openness: [12, 24, 36, 48, 60, 72],
-            extroversion: [84, 96, 108, 120, 132, 144],
-            neuroticism: [156, 168, 180, 192, 204, 216],
-            conscientiousness: [228, 240, 252, 264, 276, 288],
-            agreeableness: [300, 312, 324, 336, 348, 360]
+            openness: [0, 12, 24, 36, 48, 60, 72],
+            extroversion: [72, 84, 96, 108, 120, 132, 144],
+            neuroticism: [144, 156, 168, 180, 192, 204, 216],
+            conscientiousness: [216, 228, 240, 252, 264, 276, 288],
+            agreeableness: [288, 300, 312, 324, 336, 348, 360]
         }
 
         self._rad_axis = QValueAxis()
-        self._rad_axis.setRange(0, 75)
+        self._rad_axis.setRange(0, 100)
         self._rad_axis.setLabelsVisible(False)
         self.addAxis(self._rad_axis, QPolarChart.PolarOrientation.PolarOrientationRadial)
         self._angular_axis = QCategoryAxis()
@@ -58,25 +58,33 @@ class BigFiveChart(PolarBaseChart):
 
     def refreshDimension(self, dimension: BigFiveDimension, values: List[int]):
         if dimension in self._series.keys():
-            series = self._series[dimension]
-            self.removeSeries(series)
+            self.removeSeries(self._series[dimension])
 
-        series = QSplineSeries()
+        upper_series = QLineSeries()
+        lower_series = QLineSeries()
+        for i, value in enumerate(values):
+            upper_series.append(self._angles[dimension][i], value)
+            upper_series.append(self._angles[dimension][i + 1], value)
+            lower_series.append(self._angles[dimension][i], 1)
+            lower_series.append(self._angles[dimension][i + 1], 1)
+        lower_series.attachAxis(self._rad_axis)
+
+        area_series = QAreaSeries(upper_series, lower_series)
+
         pen = QPen()
         pen.setColor(QColor(dimension.color))
         pen.setWidth(2)
-        series.setPen(pen)
-        series.setBrush(QColor(dimension.color))
-        self._series[dimension] = series
+        upper_series.setPen(pen)
+        lower_series.setPen(pen)
+        area_series.setColor(QColor(dimension.color))
+        area_series.setOpacity(0.7)
+        self._series[dimension] = area_series
 
-        for v in self._angles.values():
-            series.append(v[0], 0)
-        for i, value in enumerate(values):
-            series.append(self._angles[dimension][i], value)
-
-        self.addSeries(series)
-        series.attachAxis(self._angular_axis)
-        series.attachAxis(self._rad_axis)
+        self.addSeries(area_series)
+        self.addSeries(upper_series)
+        self.addSeries(lower_series)
+        area_series.attachAxis(self._angular_axis)
+        area_series.attachAxis(self._rad_axis)
 
 
 class FacetDial(QDial):
