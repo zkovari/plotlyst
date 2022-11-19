@@ -58,7 +58,10 @@ class BigFiveChart(PolarBaseChart):
 
     def refreshDimension(self, dimension: BigFiveDimension, values: List[int]):
         if dimension in self._series.keys():
-            self.removeSeries(self._series[dimension])
+            area_series = self._series[dimension]
+            self.removeSeries(area_series.upperSeries())
+            self.removeSeries(area_series.lowerSeries())
+            self.removeSeries(area_series)
 
         upper_series = QLineSeries()
         lower_series = QLineSeries()
