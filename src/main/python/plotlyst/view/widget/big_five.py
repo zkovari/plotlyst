@@ -194,10 +194,15 @@ class BigFivePersonalityWidget(QWidget):
                 slider.valueChanged.connect(partial(self._facetChanged, dim_))
 
     def setCharacter(self, character: Character):
-        self._character = character
+        self._character = None
 
-        for bf, values in self._character.big_five.items():
+        for bf, values in character.big_five.items():
+            for i, v in enumerate(values):
+                self._facetWidgets[self._dimension(bf)][i].setValue(v)
+        for bf, values in character.big_five.items():
             self._chart.refreshDimension(self._dimension(bf), values)
+
+        self._character = character
 
     def _dimension(self, name: str):
         if name == agreeableness.name:
@@ -225,5 +230,7 @@ class BigFivePersonalityWidget(QWidget):
         header.animate()
 
     def _facetChanged(self, dimension: BigFiveDimension):
+        if self._character is None:
+            return
         self._character.big_five[dimension.name] = [x.value() for x in self._facetWidgets[dimension]]
         self._chart.refreshDimension(dimension, self._character.big_five[dimension.name])

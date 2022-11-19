@@ -38,7 +38,8 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board
+    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
+    default_big_five_values
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty
 
 
@@ -127,6 +128,7 @@ class CharacterInfo:
     journals: List[Document] = field(default_factory=list)
     prefs: CharacterPreferences = CharacterPreferences()
     topics: List[TemplateValue] = field(default_factory=list)
+    big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
 
 
 @dataclass
@@ -393,7 +395,8 @@ class JsonClient:
                                       template_values=info.template_values,
                                       disabled_template_headers=info.disabled_template_headers,
                                       backstory=info.backstory, goals=info.goals, document=info.document,
-                                      journals=info.journals, prefs=info.prefs, topics=info.topics)
+                                      journals=info.journals, prefs=info.prefs, topics=info.topics,
+                                      big_five=info.big_five)
                 if info.avatar_id:
                     bytes = self._load_image(self.__image_file(info.avatar_id))
                     if bytes:
@@ -550,7 +553,7 @@ class JsonClient:
                                   disabled_template_headers=char.disabled_template_headers,
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,
-                                  journals=char.journals, prefs=char.prefs, topics=char.topics)
+                                  journals=char.journals, prefs=char.prefs, topics=char.topics, big_five=char.big_five)
         self.__persist_info(self.characters_dir, char_info)
 
     def _persist_scene(self, scene: Scene):
