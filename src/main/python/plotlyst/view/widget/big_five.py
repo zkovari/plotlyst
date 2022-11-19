@@ -90,6 +90,22 @@ class BigFiveChart(PolarBaseChart):
         area_series.attachAxis(self._rad_axis)
 
 
+class BigFiveValueLabel(QLabel):
+    def __init__(self, text: str, parent=None):
+        super().__init__(text, parent)
+        self._animated: bool = False
+
+    def animate(self):
+        if self._animated:
+            return
+        self._animated = True
+        anim = qtanim.glow(self)
+        anim.finished.connect(self._finished)
+
+    def _finished(self):
+        self._animated = False
+
+
 class FacetSlider(QSlider):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -134,10 +150,10 @@ class BigFivePersonalityWidget(QWidget):
         self._dimensions: List[BigFiveDimension] = [agreeableness, conscientiousness, neuroticism, extroversion,
                                                     openness]
 
-        self._headers: List[QLabel] = []
+        self._headers: List[BigFiveValueLabel] = []
 
         for i, header in enumerate(['Not at all', 'No', 'Not sure', 'Yes', 'Absolutely']):
-            lblHeader = QLabel(header, self._centralWidget)
+            lblHeader = BigFiveValueLabel(header, self._centralWidget)
             self._headers.append(lblHeader)
             decr_font(lblHeader)
             italic(lblHeader)
@@ -157,7 +173,7 @@ class BigFivePersonalityWidget(QWidget):
                 self._facetWidgets[dim_].append(slider)
                 self._gridLayout.addWidget(slider, i * 7 + j + 2, 1, 1, 5)
 
-                slider.valueChanged.connect(partial(self._facetEdited, dim_))
+                slider.valueChanged.connect(partial(self._facetEdited, dim_, slider))
 
     def setCharacter(self, character: Character):
         self._character = character
@@ -177,18 +193,19 @@ class BigFivePersonalityWidget(QWidget):
         else:
             return conscientiousness
 
-    def _facetEdited(self, dimension: BigFiveDimension, value: int):
+    def _facetEdited(self, dimension: BigFiveDimension, facetSlider: FacetSlider, value: int):
         if value <= 20:
-            qtanim.glow(self._headers[0], duration=50)
+            header = self._headers[0]
         elif value <= 40:
-            qtanim.glow(self._headers[1], duration=50)
+            header = self._headers[1]
         elif value <= 60:
-            qtanim.glow(self._headers[2], duration=50)
+            header = self._headers[2]
         elif value <= 80:
-            qtanim.glow(self._headers[3], duration=50)
+            header = self._headers[3]
         else:
-            qtanim.glow(self._headers[4], duration=50)
+            header = self._headers[4]
+        header.animate()
 
-        self._character.big_five[dimension.name] = [x.value() for x in self._facetWidgets[dimension]]
-
-        self._chart.refreshDimension(dimension, self._character.big_five[dimension.name])
+        if not facetSlider.isSliderDown():
+            self._character.big_five[dimension.name] = [x.value() for x in self._facetWidgets[dimension]]
+            self._chart.refreshDimension(dimension, self._character.big_five[dimension.name])
