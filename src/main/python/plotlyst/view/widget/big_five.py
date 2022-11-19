@@ -23,8 +23,9 @@ from typing import Optional, List, Dict
 import qtanim
 from PyQt6.QtCharts import QCategoryAxis, QPolarChart, QValueAxis, QAreaSeries, QSplineSeries
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPen
+from PyQt6.QtGui import QColor, QPen, QWheelEvent
 from PyQt6.QtWidgets import QWidget, QLabel, QScrollArea, QGridLayout, QSlider
+from overrides import overrides
 from qthandy import vbox, bold, pointy, hbox, grid, decr_font, italic
 
 from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, BigFiveFacet, agreeableness, \
@@ -114,6 +115,11 @@ class FacetSlider(QSlider):
         self.setMinimum(1)
         self.setMaximum(100)
         self.setValue(50)
+        self.setTracking(False)
+
+    @overrides
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        event.ignore()
 
 
 class BigFiveFacetWidget(QWidget):
@@ -174,7 +180,8 @@ class BigFivePersonalityWidget(QWidget):
                 self._facetWidgets[dim_].append(slider)
                 self._gridLayout.addWidget(slider, i * 7 + j + 2, 1, 1, 5)
 
-                slider.valueChanged.connect(partial(self._facetEdited, dim_, slider))
+                slider.sliderMoved.connect(self._facetEdited)
+                slider.valueChanged.connect(partial(self._facetChanged, dim_))
 
     def setCharacter(self, character: Character):
         self._character = character
@@ -194,7 +201,7 @@ class BigFivePersonalityWidget(QWidget):
         else:
             return conscientiousness
 
-    def _facetEdited(self, dimension: BigFiveDimension, facetSlider: FacetSlider, value: int):
+    def _facetEdited(self, value: int):
         if value <= 20:
             header = self._headers[0]
         elif value <= 40:
@@ -207,6 +214,6 @@ class BigFivePersonalityWidget(QWidget):
             header = self._headers[4]
         header.animate()
 
-        if not facetSlider.isSliderDown():
-            self._character.big_five[dimension.name] = [x.value() for x in self._facetWidgets[dimension]]
-            self._chart.refreshDimension(dimension, self._character.big_five[dimension.name])
+    def _facetChanged(self, dimension: BigFiveDimension):
+        self._character.big_five[dimension.name] = [x.value() for x in self._facetWidgets[dimension]]
+        self._chart.refreshDimension(dimension, self._character.big_five[dimension.name])
