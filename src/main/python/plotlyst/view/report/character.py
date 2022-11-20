@@ -18,11 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
-from PyQt6.QtCharts import QPieSeries
+from PyQt6.QtCharts import QPieSeries, QPolarChart, QCategoryAxis, QLineSeries, QAreaSeries
 from PyQt6.QtCharts import QValueAxis, QSplineSeries
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtGui import QPen
 from PyQt6.QtWidgets import QLabel, QWidget, QToolButton
 from overrides import overrides
 from qthandy import clear_layout, vspacer, hbox, transparent, vbox
@@ -30,6 +31,7 @@ from qthandy import clear_layout, vspacer, hbox, transparent, vbox
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, SceneType
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.service.cache import acts_registry
+from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -81,8 +83,9 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         self._chartGenderMinor.refresh(novel.minor_characters())
         self.chartViewGenderMinor.setChart(self._chartGenderMinor)
 
-        self._chartAge = PolarBaseChart()
+        self._chartAge = AgeChart()
         self.chartViewAge.setChart(self._chartAge)
+        self._chartAge.refresh(novel.characters)
 
     @overrides
     def display(self):
@@ -125,6 +128,72 @@ class PovDistributionChart(BaseChart):
 
         self.removeAllSeries()
         self.addSeries(series)
+
+
+class AgeChart(PolarBaseChart):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle(html('Age distribution').bold())
+
+        self._rad_axis = QValueAxis()
+        self._rad_axis.setLabelsVisible(False)
+        self.addAxis(self._rad_axis, QPolarChart.PolarOrientation.PolarOrientationRadial)
+        self._angular_axis = QCategoryAxis()
+        self._angular_axis.setRange(0, 45)
+        self._angular_axis.append(icon_to_html_img(IconRegistry.baby_icon()), 3)
+        self._angular_axis.append(icon_to_html_img(IconRegistry.child_icon()), 10)
+        self._angular_axis.append(icon_to_html_img(IconRegistry.teenager_icon()), 15)
+        self._angular_axis.append(icon_to_html_img(IconRegistry.adult_icon()), 35)
+        self.addAxis(self._angular_axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
+
+    def refresh(self, characters: List[Character]):
+        if self.series():
+            self.removeAllSeries()
+
+        pen = QPen()
+        pen.setWidth(2)
+        pen.setColor(Qt.GlobalColor.darkBlue)
+
+        upper_series = QLineSeries()
+        upper_series.setPen(pen)
+        lower_series = QLineSeries()
+        lower_series.setPen(pen)
+
+        ages = {}
+        for char in characters:
+            if not char.age:
+                continue
+            age = 45 if char.age > 45 else char.age
+            if age not in ages.keys():
+                ages[age] = 1
+            ages[age] = ages[age] + 1
+        sorted_ages = sorted(ages.keys())
+        if sorted_ages:
+            upper_series.append(sorted_ages[0], 0)
+            for age in sorted_ages:
+                upper_series.append(age, ages[age])
+                lower_series.append(age, 0)
+            upper_series.append(sorted_ages[-1], 0)
+
+        if ages:
+            self._rad_axis.setRange(0, max(ages.values()))
+
+        # scatter_series = QScatterSeries()
+        # scatter_series.append(18, 3)
+
+        # self.addSeries(scatter_series)
+        self.addSeries(upper_series)
+        self.addSeries(lower_series)
+
+        series = QAreaSeries(upper_series, lower_series)
+        series.setColor(Qt.GlobalColor.darkBlue)
+        series.setPen(pen)
+
+        self.addSeries(series)
+        # scatter_series.attachAxis(self._rad_axis)
+        # scatter_series.attachAxis(self._angular_axis)
+        series.attachAxis(self._rad_axis)
+        series.attachAxis(self._angular_axis)
 
 
 class SceneArcWidget(QWidget):
