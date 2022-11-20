@@ -89,6 +89,10 @@ class GenderCharacterChart(BaseChart):
     def __init__(self, parent=None):
         super(GenderCharacterChart, self).__init__(parent)
         self.setTitle('<b>Gender</b>')
+        self._labelsVisible: bool = True
+
+    def setLabelsVisible(self, visible: bool):
+        self._labelsVisible = visible
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()
@@ -104,7 +108,7 @@ class GenderCharacterChart(BaseChart):
         for k, v in genders.items():
             if v:
                 slice_ = series.append(k, v)
-                slice_.setLabelVisible()
+                slice_.setLabelVisible(self._labelsVisible)
                 slice_.setLabel(icon_to_html_img(self._iconForGender(k)))
                 slice_.setLabelArmLengthFactor(0.2)
                 slice_.hovered.connect(partial(self._hovered, k))

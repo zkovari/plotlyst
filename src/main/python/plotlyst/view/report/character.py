@@ -17,9 +17,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional
 
-from PyQt6.QtCharts import QChart, QPieSeries
+from PyQt6.QtCharts import QPieSeries
 from PyQt6.QtCharts import QValueAxis, QSplineSeries
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QLabel, QWidget, QToolButton
@@ -27,13 +28,15 @@ from overrides import overrides
 from qthandy import clear_layout, vspacer, hbox, transparent, vbox
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, SceneType
+from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton
-from src.main.python.plotlyst.view.widget.chart import BaseChart
+from src.main.python.plotlyst.view.widget.chart import BaseChart, SupporterRoleChart, GenderCharacterChart, \
+    PolarBaseChart
 
 
 class CharacterReport(AbstractReport, Ui_CharacterReport):
@@ -44,33 +47,67 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         self.btnAct1.setIcon(IconRegistry.act_one_icon())
         self.btnAct2.setIcon(IconRegistry.act_two_icon())
         self.btnAct3.setIcon(IconRegistry.act_three_icon())
-        self.btnAct1.toggled.connect(self._updateCharactersChart)
-        self.btnAct2.toggled.connect(self._updateCharactersChart)
-        self.btnAct3.toggled.connect(self._updateCharactersChart)
 
-        self.pov_number = {}
+        self._povChart = PovDistributionChart()
+        self.chartView.setChart(self._povChart)
+        self.btnAct1.toggled.connect(partial(self._povChart.toggleAct, 1))
+        self.btnAct2.toggled.connect(partial(self._povChart.toggleAct, 2))
+        self.btnAct3.toggled.connect(partial(self._povChart.toggleAct, 3))
+        self._povChart.refresh(novel)
 
-        self.chart = BaseChart()
-        self.chart.legend().hide()
-        self._updateCharactersChart()
-        self.chart.createDefaultAxes()
-        self.chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
-        self.chart.setTitle("POV Distribution")
+        self._chartRoles = SupporterRoleChart()
+        self._chartRoles.refresh(novel.characters)
+        self.chartViewRoles.setChart(self._chartRoles)
 
-        self.chartView.setChart(self.chart)
+        self._chartGenderAll = GenderCharacterChart()
+        self._chartGenderAll.refresh(novel.characters)
+        self.chartViewGenderAll.setChart(self._chartGenderAll)
+
+        self._chartGenderMajor = GenderCharacterChart()
+        self._chartGenderMajor.setTitle(html('Gender per major roles').bold())
+        self._chartGenderMajor.setLabelsVisible(False)
+        self._chartGenderMajor.refresh(novel.major_characters())
+        self.chartViewGenderMajor.setChart(self._chartGenderMajor)
+
+        self._chartGenderSecondary = GenderCharacterChart()
+        self._chartGenderSecondary.setTitle(html('Gender per secondary roles').bold())
+        self._chartGenderSecondary.setLabelsVisible(False)
+        self._chartGenderSecondary.refresh(novel.secondary_characters())
+        self.chartViewGenderSecondary.setChart(self._chartGenderSecondary)
+
+        self._chartGenderMinor = GenderCharacterChart()
+        self._chartGenderMinor.setTitle(html('Gender per minor roles').bold())
+        self._chartGenderMinor.setLabelsVisible(False)
+        self._chartGenderMinor.refresh(novel.minor_characters())
+        self.chartViewGenderMinor.setChart(self._chartGenderMinor)
+
+        self._chartAge = PolarBaseChart()
+        self.chartViewAge.setChart(self._chartAge)
 
     @overrides
     def display(self):
         pass
 
-    def _updateCharactersChart(self):
+
+class PovDistributionChart(BaseChart):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.createDefaultAxes()
+        self.setTitle("POV Distribution")
+
+        self.pov_number = {}
+        self._acts_filter = {1: True, 2: True, 3: True}
+
+    def toggleAct(self, act: int, toggled: bool):
+        self._acts_filter[act] = toggled
+        self.refresh()
+
+    def refresh(self, novel: Novel):
         for k in self.pov_number.keys():
             self.pov_number[k] = 0
 
-        acts_filter = {1: self.btnAct1.isChecked(), 2: self.btnAct2.isChecked(), 3: self.btnAct3.isChecked()}
-
-        for scene in self.novel.scenes:
-            if not acts_filter[acts_registry.act(scene)]:
+        for scene in novel.scenes:
+            if not self._acts_filter[acts_registry.act(scene)]:
                 continue
             if scene.pov and scene.pov.name not in self.pov_number.keys():
                 self.pov_number[scene.pov.name] = 0
@@ -86,8 +123,8 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
         for slice in series.slices():
             slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
 
-        self.chart.removeAllSeries()
-        self.chart.addSeries(series)
+        self.removeAllSeries()
+        self.addSeries(series)
 
 
 class SceneArcWidget(QWidget):
@@ -187,43 +224,3 @@ class CharacterArcChart(BaseChart):
         self.addSeries(series)
         # self.addAxis(self.axis, Qt.AlignmentFlag.AlignLeft)
         # self.axis.setVisible(False)
-
-# class StorylinesDistribution(QChartView):
-#     def __init__(self, novel: Novel, parent=None):
-#         super().__init__(parent)
-#         self.novel = novel
-#         arc_chart = QChart()
-#         arc_chart.createDefaultAxes()
-#         arc_chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
-#         arc_chart.setTitle('Storylines and characters distribution')
-#         self.setChart(arc_chart)
-#         self.setRenderHint(QPainter.RenderHint.Antialiasing)
-#         self.axis: Optional[QBarCategoryAxis] = None
-#
-#         self.refresh()
-#
-#     def refresh(self):
-#         self.chart().removeAllSeries()
-#         if self.axis:
-#             self.chart().removeAxis(self.axis)
-#
-#         character_names = [x.name for x in self.novel.characters]
-#         series = QStackedBarSeries()
-#         for i, plot in enumerate(self.novel.plots):
-#             set = QBarSet(plot.text)
-#             set.setColor(QColor(plot.color_hexa))
-#             occurences = []
-#             for char in self.novel.characters:
-#                 v = 0
-#                 for scene in self.novel.scenes:
-#                     if plot in scene.plots():
-#                         if char == scene.pov or char in scene.characters:
-#                             v += 1
-#                 occurences.append(v)
-#                 set.append(v)
-#             series.append(set)
-#         self.axis = QBarCategoryAxis()
-#         self.axis.append(character_names)
-#         self.chart().addAxis(self.axis, Qt.AlignmentFlag.AlignBottom)
-#         series.attachAxis(self.axis)
-#         self.chart().addSeries(series)
