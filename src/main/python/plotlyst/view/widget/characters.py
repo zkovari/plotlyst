@@ -1582,6 +1582,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
             else:
                 demote_role(self._currentRole)
 
+            self.iconRole.setRole(self._currentRole, animate=True)
             self._updateSelectionButton(self._currentRole)
             self.rolePromoted.emit(self._currentRole)
 
