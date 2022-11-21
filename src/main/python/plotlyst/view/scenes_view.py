@@ -310,8 +310,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _on_close_editor(self):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
-        if self.editor.scene.pov and self.editor.scene.pov not in self._scene_filter.povFilter.characters():
-            self._scene_filter.povFilter.addCharacter(self.editor.scene.pov)
+        self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         gc(self.editor.widget)
 
