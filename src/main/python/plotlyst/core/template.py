@@ -404,6 +404,14 @@ class Role(SelectionItem):
     def is_minor(self) -> bool:
         return self.importance == RoleImportance.MINOR
 
+    @overrides
+    def __eq__(self, other: 'Role'):
+        return self.text == other.text
+
+    @overrides
+    def __hash__(self):
+        return hash(self.text)
+
 
 protagonist_role = Role('Protagonist', icon='fa5s.chess-king', icon_color='#00798c', importance=RoleImportance.MAJOR)
 deuteragonist_role = Role('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a',
@@ -425,15 +433,18 @@ tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68', im
 def promote_role(role: Role):
     if not role.can_be_promoted:
         return
-    role.icon = 'mdi.tree'
-    role.icon_color = 'green'
+
+    if role == secondary_role:
+        role.icon = deuteragonist_role.icon
+        role.icon_color = deuteragonist_role.icon_color
 
 
 def demote_role(role: Role):
     if not role.can_be_promoted:
         return
-    role.icon = 'fa5s.stamp'
-    role.icon_color = 'blue'
+    if role == secondary_role:
+        role.icon = secondary_role.icon
+        role.icon_color = secondary_role.icon_color
 
 
 class HAlignment(Enum):
