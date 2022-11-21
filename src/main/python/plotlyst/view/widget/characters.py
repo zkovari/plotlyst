@@ -1487,7 +1487,9 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         translucent(self.iconMinor, 0.7)
 
         incr_font(self.lblRole, 2)
-        self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey'))
+        self.btnPromote.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey', color_on=CHARACTER_MAJOR_COLOR))
+        pointy(self.btnPromote)
+        self.btnPromote.checkedColor = CHARACTER_MAJOR_COLOR
 
         link_buttons_to_pages(self.stackedWidget, [(self.btnItemProtagonist, self.pageProtagonist),
                                                    (self.btnItemAntagonist, self.pageAntagonist),

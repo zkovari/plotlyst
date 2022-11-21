@@ -355,14 +355,17 @@
         </spacer>
        </item>
        <item>
-        <widget class="SecondaryActionPushButton" name="btnPromote">
+        <widget class="QToolButton" name="btnPromote">
          <property name="toolTip">
           <string>Promote to major role</string>
          </property>
          <property name="text">
-          <string>Promote</string>
+          <string/>
          </property>
          <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="transparent" stdset="0">
           <bool>true</bool>
          </property>
         </widget>
@@ -1675,11 +1678,6 @@ p, li { white-space: pre-wrap; }
   </customwidget>
   <customwidget>
    <class>SelectionItemPushButton</class>
-   <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
-  </customwidget>
-  <customwidget>
-   <class>SecondaryActionPushButton</class>
    <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.button</header>
   </customwidget>
