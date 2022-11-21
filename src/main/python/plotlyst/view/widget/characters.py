@@ -45,7 +45,8 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, Con
     CharacterGoal, Goal, GoalReference, Stake, Topic, TemplateValue
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
-    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance
+    tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
+    promote_role, demote_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
@@ -1463,6 +1464,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
 
 class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
     roleSelected = pyqtSignal(SelectionItem)
+    rolePromoted = pyqtSignal(SelectionItem)
 
     def __init__(self, parent=None):
         super(CharacterRoleSelector, self).__init__(parent)
@@ -1534,10 +1536,14 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         pass
 
     def setActiveRole(self, role: Role):
+        self._updateSelectionButton(role, checked=True)
+
+    def _updateSelectionButton(self, role: Role, checked: bool = False):
         for btn in self.buttonGroup.buttons():
             if btn.selectionItem().text == role.text:
                 btn.setSelectionItem(role)
-                btn.setChecked(True)
+                if checked:
+                    btn.setChecked(True)
                 break
 
     def _roleToggled(self, btn: SelectionItemPushButton, toggled: bool):
@@ -1556,8 +1562,6 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.iconSecondary.setDisabled(True)
         self.iconMinor.setDisabled(True)
 
-        print(self._currentRole.promoted)
-
         if self._currentRole.is_major():
             self.iconMajor.setEnabled(True)
             if anim:
@@ -1573,9 +1577,16 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         if self._currentRole.can_be_promoted:
             self._currentRole.promoted = checked
             self._updateRoleIcon(anim=True)
+            if checked:
+                promote_role(self._currentRole)
+            else:
+                demote_role(self._currentRole)
+
+            self._updateSelectionButton(self._currentRole)
+            self.rolePromoted.emit(self._currentRole)
 
     def _select(self):
-        self.roleSelected.emit(copy.deepcopy(self._currentRole))
+        self.roleSelected.emit(self._currentRole)
 
 
 class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):

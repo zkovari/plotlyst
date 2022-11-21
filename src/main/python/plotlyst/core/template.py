@@ -422,6 +422,20 @@ henchmen_role = Role('Heckler', icon='mdi.shuriken', icon_color='#596475', impor
 tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68', importance=RoleImportance.MINOR)
 
 
+def promote_role(role: Role):
+    if not role.can_be_promoted:
+        return
+    role.icon = 'mdi.tree'
+    role.icon_color = 'green'
+
+
+def demote_role(role: Role):
+    if not role.can_be_promoted:
+        return
+    role.icon = 'fa5s.stamp'
+    role.icon_color = 'blue'
+
+
 class HAlignment(Enum):
     DEFAULT = 0
     LEFT = Qt.AlignmentFlag.AlignLeft
