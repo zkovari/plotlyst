@@ -437,6 +437,9 @@ def promote_role(role: Role):
     if role == secondary_role:
         role.icon = deuteragonist_role.icon
         role.icon_color = deuteragonist_role.icon_color
+    elif role == love_interest_role:
+        role.icon = 'mdi6.heart-multiple'
+        role.icon_color = '#CD374B'
 
 
 def demote_role(role: Role):
@@ -445,6 +448,9 @@ def demote_role(role: Role):
     if role == secondary_role:
         role.icon = secondary_role.icon
         role.icon_color = secondary_role.icon_color
+    elif role == love_interest_role:
+        role.icon = love_interest_role.icon
+        role.icon_color = love_interest_role.icon_color
 
 
 class HAlignment(Enum):
