@@ -197,7 +197,7 @@ class CharacterEditor:
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
 
     def _role_promoted(self, role: SelectionItem):
-        if self.character.role is role:
+        if self.character.role == role:
             self._display_role()
             if self.character.prefs.avatar.use_role:
                 self.ui.wdgAvatar.updateAvatar()

@@ -60,9 +60,6 @@ class SelectionItemPushButton(QPushButton):
 
     def _toggled(self, checked: bool):
         bold(self, checked)
-        # font = self.font()
-        # font.setBold(checked)
-        # self.setFont(font)
 
     def _checkDoubleClick(self):
         if not self._item:
