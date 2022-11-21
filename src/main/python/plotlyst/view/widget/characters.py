@@ -38,7 +38,8 @@ from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup,
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
     OpacityEventFilter
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color, \
+    CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, SceneStructureAgenda, ConflictReference, \
     CharacterGoal, Goal, GoalReference, Stake, Topic, TemplateValue
@@ -1520,6 +1521,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
 
         self._currentRole = protagonist_role
         self.btnItemProtagonist.click()
+        self.btnPromote.clicked.connect(self._promoted)
 
         self.btnSelect.setIcon(IconRegistry.ok_icon('white'))
         self.btnSelect.clicked.connect(self._select)
@@ -1529,21 +1531,35 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         pass
 
     def _roleClicked(self, role: Role):
+        print()
         self._currentRole = role
         self.iconRole.setRole(role, animate=True)
         self.lblRole.setText(role.text)
         self.btnPromote.setVisible(role.can_be_promoted)
+        self.btnPromote.setChecked(role.promoted)
 
+        self._updateRoleIcon()
+
+    def _updateRoleIcon(self, anim: bool = False):
         self.iconMajor.setDisabled(True)
         self.iconSecondary.setDisabled(True)
         self.iconMinor.setDisabled(True)
 
         if self._currentRole.is_major():
             self.iconMajor.setEnabled(True)
+            if anim:
+                qtanim.glow(self.iconMajor, color=QColor(CHARACTER_MAJOR_COLOR))
         elif self._currentRole.is_secondary():
             self.iconSecondary.setEnabled(True)
+            if anim:
+                qtanim.glow(self.iconSecondary, color=QColor(CHARACTER_SECONDARY_COLOR))
         else:
             self.iconMinor.setEnabled(True)
+
+    def _promoted(self, checked: bool):
+        if self._currentRole.can_be_promoted:
+            self._currentRole.promoted = checked
+            self._updateRoleIcon(anim=True)
 
     def _select(self):
         self.roleSelected.emit(copy.deepcopy(self._currentRole))
