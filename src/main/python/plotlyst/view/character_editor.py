@@ -86,6 +86,8 @@ class CharacterEditor:
         self.ui.btnRole.installEventFilter(self._btnRoleEventFilter)
         self._roleSelector = CharacterRoleSelector()
         self._roleSelector.roleSelected.connect(self._role_changed)
+        if self.character.role:
+            self._roleSelector.setActiveRole(self.character.role)
         btn_popup(self.ui.btnRole, self._roleSelector)
 
         self._sbAge = QSpinBox()

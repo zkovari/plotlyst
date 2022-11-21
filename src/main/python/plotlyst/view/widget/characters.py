@@ -69,6 +69,7 @@ from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import 
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
+from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
 from src.main.python.plotlyst.view.widget.display import IconText, Icon
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
@@ -1467,19 +1468,19 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         super(CharacterRoleSelector, self).__init__(parent)
         self.setupUi(self)
 
-        self.btnItemProtagonist.setSelectionItem(protagonist_role)
-        self.btnItemAntagonist.setSelectionItem(antagonist_role)
-        self.btnItemContagonist.setSelectionItem(contagonist_role)
-        self.btnItemSecondary.setSelectionItem(secondary_role)
-        self.btnItemGuide.setSelectionItem(guide_role)
-        self.btnItemLoveInterest.setSelectionItem(love_interest_role)
-        self.btnItemSidekick.setSelectionItem(sidekick_role)
-        self.btnItemConfidant.setSelectionItem(confidant_role)
-        self.btnItemFoil.setSelectionItem(foil_role)
-        self.btnItemSupporter.setSelectionItem(supporter_role)
-        self.btnItemAdversary.setSelectionItem(adversary_role)
-        self.btnItemTertiary.setSelectionItem(tertiary_role)
-        self.btnItemHenchmen.setSelectionItem(henchmen_role)
+        self.btnItemProtagonist.setSelectionItem(copy.deepcopy(protagonist_role))
+        self.btnItemAntagonist.setSelectionItem(copy.deepcopy(antagonist_role))
+        self.btnItemContagonist.setSelectionItem(copy.deepcopy(contagonist_role))
+        self.btnItemSecondary.setSelectionItem(copy.deepcopy(secondary_role))
+        self.btnItemGuide.setSelectionItem(copy.deepcopy(guide_role))
+        self.btnItemLoveInterest.setSelectionItem(copy.deepcopy(love_interest_role))
+        self.btnItemSidekick.setSelectionItem(copy.deepcopy(sidekick_role))
+        self.btnItemConfidant.setSelectionItem(copy.deepcopy(confidant_role))
+        self.btnItemFoil.setSelectionItem(copy.deepcopy(foil_role))
+        self.btnItemSupporter.setSelectionItem(copy.deepcopy(supporter_role))
+        self.btnItemAdversary.setSelectionItem(copy.deepcopy(adversary_role))
+        self.btnItemTertiary.setSelectionItem(copy.deepcopy(tertiary_role))
+        self.btnItemHenchmen.setSelectionItem(copy.deepcopy(henchmen_role))
 
         translucent(self.iconMajor, 0.7)
         translucent(self.iconSecondary, 0.7)
@@ -1516,11 +1517,11 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
                     background-color: #ced4da;
                 }
             ''')
-            btn.itemClicked.connect(self._roleClicked)
+            btn.toggled.connect(partial(self._roleToggled, btn))
             btn.itemDoubleClicked.connect(self._select)
 
         self._currentRole = protagonist_role
-        self.btnItemProtagonist.click()
+        self.btnItemProtagonist.setChecked(True)
         self.btnPromote.clicked.connect(self._promoted)
 
         self.btnSelect.setIcon(IconRegistry.ok_icon('white'))
@@ -1530,20 +1531,30 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
     def mouseReleaseEvent(self, a0: QMouseEvent) -> None:
         pass
 
-    def _roleClicked(self, role: Role):
-        print()
-        self._currentRole = role
-        self.iconRole.setRole(role, animate=True)
-        self.lblRole.setText(role.text)
-        self.btnPromote.setVisible(role.can_be_promoted)
-        self.btnPromote.setChecked(role.promoted)
+    def setActiveRole(self, role: Role):
+        for btn in self.buttonGroup.buttons():
+            if btn.selectionItem().text == role.text:
+                btn.setSelectionItem(role)
+                btn.setChecked(True)
+                break
 
-        self._updateRoleIcon()
+    def _roleToggled(self, btn: SelectionItemPushButton, toggled: bool):
+        if toggled:
+            role: Role = btn.selectionItem()
+            self._currentRole = role
+            self.iconRole.setRole(role, animate=True)
+            self.lblRole.setText(role.text)
+            self.btnPromote.setVisible(role.can_be_promoted)
+            self.btnPromote.setChecked(role.promoted)
+
+            self._updateRoleIcon()
 
     def _updateRoleIcon(self, anim: bool = False):
         self.iconMajor.setDisabled(True)
         self.iconSecondary.setDisabled(True)
         self.iconMinor.setDisabled(True)
+
+        print(self._currentRole.promoted)
 
         if self._currentRole.is_major():
             self.iconMajor.setEnabled(True)
