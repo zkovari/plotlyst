@@ -404,22 +404,63 @@ class Role(SelectionItem):
     def is_minor(self) -> bool:
         return self.importance == RoleImportance.MINOR
 
+    @overrides
+    def __eq__(self, other: 'Role'):
+        return self.text == other.text
+
+    @overrides
+    def __hash__(self):
+        return hash(self.text)
+
 
 protagonist_role = Role('Protagonist', icon='fa5s.chess-king', icon_color='#00798c', importance=RoleImportance.MAJOR)
 deuteragonist_role = Role('Deuteragonist', icon='mdi.atom-variant', icon_color='#820b8a',
                           importance=RoleImportance.MAJOR)
 antagonist_role = Role('Antagonist', icon='mdi.guy-fawkes-mask', icon_color='#bc412b', importance=RoleImportance.MAJOR)
-contagonist_role = Role('Contagonist', icon='mdi.biohazard', icon_color='#ea9010')
+contagonist_role = Role('Contagonist', icon='mdi.biohazard', icon_color='#ea9010', can_be_promoted=True)
 adversary_role = Role('Adversary', icon='fa5s.thumbs-down', icon_color='#9e1946')
 guide_role = Role('Guide', icon='mdi.compass-rose', icon_color='#80ced7')
-confidant_role = Role('Confidant', icon='fa5s.user-friends', icon_color='#304d6d', can_be_promoted=True)
-sidekick_role = Role('Sidekick', icon='ei.asl', icon_color='#b0a990', can_be_promoted=True)
+confidant_role = Role('Confidant', icon='fa5s.user-friends', icon_color='#304d6d')
+sidekick_role = Role('Sidekick', icon='ei.asl', icon_color='#b0a990')
 love_interest_role = Role('Love Interest', icon='ei.heart', icon_color='#d1495b', can_be_promoted=True)
 supporter_role = Role('Supporter', icon='fa5s.thumbs-up', icon_color='#266dd3')
 foil_role = Role('Foil', icon='fa5s.yin-yang', icon_color='#947eb0', can_be_promoted=True)
 secondary_role = Role('Secondary', icon='fa5s.chess-knight', icon_color='#619b8a', can_be_promoted=True)
 henchmen_role = Role('Heckler', icon='mdi.shuriken', icon_color='#596475', importance=RoleImportance.MINOR)
 tertiary_role = Role('Tertiary', icon='mdi.chess-pawn', icon_color='#886f68', importance=RoleImportance.MINOR)
+
+
+def promote_role(role: Role):
+    if not role.can_be_promoted:
+        return
+
+    if role == secondary_role:
+        role.icon = deuteragonist_role.icon
+        role.icon_color = deuteragonist_role.icon_color
+    elif role == love_interest_role:
+        role.icon = 'mdi6.heart-multiple'
+        role.icon_color = '#CD374B'
+    elif role == contagonist_role:
+        role.icon = 'fa5s.biohazard'
+    elif role == foil_role:
+        role.icon = deuteragonist_role.icon
+        role.icon_color = '#7D639F'
+
+
+def demote_role(role: Role):
+    if not role.can_be_promoted:
+        return
+    if role == secondary_role:
+        role.icon = secondary_role.icon
+        role.icon_color = secondary_role.icon_color
+    elif role == love_interest_role:
+        role.icon = love_interest_role.icon
+        role.icon_color = love_interest_role.icon_color
+    elif role == contagonist_role:
+        role.icon = contagonist_role.icon
+    elif role == foil_role:
+        role.icon = foil_role.icon
+        role.icon_color = foil_role.icon_color
 
 
 class HAlignment(Enum):

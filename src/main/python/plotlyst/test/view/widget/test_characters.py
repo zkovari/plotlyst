@@ -20,7 +20,7 @@ def test_role_selector(qtbot):
 
     widget.btnItemSidekick.click()
     assert widget.stackedWidget.currentWidget() == widget.pageSidekick
-    assert widget.btnPromote.isVisible()
+    assert widget.btnPromote.isHidden()
 
     widget.btnItemSupporter.click()
     assert widget.stackedWidget.currentWidget() == widget.pageSupporter
@@ -32,7 +32,7 @@ def test_role_selector(qtbot):
 
     widget.btnItemConfidant.click()
     assert widget.stackedWidget.currentWidget() == widget.pageConfidant
-    assert widget.btnPromote.isVisible()
+    assert widget.btnPromote.isHidden()
 
     widget.btnItemLoveInterest.click()
     assert widget.stackedWidget.currentWidget() == widget.pageLoveInterest
@@ -44,7 +44,7 @@ def test_role_selector(qtbot):
 
     widget.btnItemContagonist.click()
     assert widget.stackedWidget.currentWidget() == widget.pageContagonist
-    assert widget.btnPromote.isHidden()
+    assert widget.btnPromote.isVisible()
 
     widget.btnItemFoil.click()
     assert widget.stackedWidget.currentWidget() == widget.pageFoil

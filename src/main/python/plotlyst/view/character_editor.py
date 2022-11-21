@@ -86,6 +86,9 @@ class CharacterEditor:
         self.ui.btnRole.installEventFilter(self._btnRoleEventFilter)
         self._roleSelector = CharacterRoleSelector()
         self._roleSelector.roleSelected.connect(self._role_changed)
+        self._roleSelector.rolePromoted.connect(self._role_promoted)
+        if self.character.role:
+            self._roleSelector.setActiveRole(self.character.role)
         btn_popup(self.ui.btnRole, self._roleSelector)
 
         self._sbAge = QSpinBox()
@@ -192,6 +195,12 @@ class CharacterEditor:
             if self.character.document and not self.character.document.loaded:
                 json_client.load_document(self.novel, self.character.document)
                 self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
+
+    def _role_promoted(self, role: SelectionItem):
+        if self.character.role == role:
+            self._display_role()
+            if self.character.prefs.avatar.use_role:
+                self.ui.wdgAvatar.updateAvatar()
 
     def _role_changed(self, role: SelectionItem):
         self.ui.btnRole.menu().hide()

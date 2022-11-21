@@ -34,36 +34,38 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class SelectionItemPushButton(QPushButton):
-    itemClicked = pyqtSignal(SelectionItem)
     itemDoubleClicked = pyqtSignal(SelectionItem)
 
     def __init__(self, parent=None):
         super(SelectionItemPushButton, self).__init__(parent)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.item: Optional[SelectionItem] = None
+        self._item: Optional[SelectionItem] = None
         self.timer = QTimer()
         self.timer.setSingleShot(True)
         self.clicked.connect(self._checkDoubleClick)
 
+    def selectionItem(self) -> Optional[SelectionItem]:
+        return self._item
+
     def setSelectionItem(self, item: SelectionItem):
-        self.item = item
         self.setText(item.text)
         if item.icon:
             self.setIcon(IconRegistry.from_name(item.icon, item.icon_color))
 
-        self.clicked.connect(partial(self.itemClicked.emit, item))
-        self.toggled.connect(self._toggled)
+        if self._item is None:
+            self._item = item
+            self.toggled.connect(self._toggled)
+        else:
+            self._item = item
 
     def _toggled(self, checked: bool):
-        font = self.font()
-        font.setBold(checked)
-        self.setFont(font)
+        bold(self, checked)
 
     def _checkDoubleClick(self):
-        if not self.item:
+        if not self._item:
             return
         if self.timer.isActive():
-            self.itemDoubleClicked.emit(self.item)
+            self.itemDoubleClicked.emit(self._item)
             self.timer.stop()
         else:
             self.timer.start(250)
