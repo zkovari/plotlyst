@@ -30,7 +30,7 @@ from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent,
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
     QPalette, QMouseEvent, QCursor, QAction
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
+    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction, QTextEdit
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
@@ -1886,3 +1886,33 @@ class CharacterTopicsEditor(QWidget):
                 self.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
             self.setText(topic.text)
             self.setToolTip(topic.description)
+
+
+class CharacterOverviewWidget(QWidget):
+    def __init__(self, character: Character, parent=None):
+        super().__init__(parent)
+        self._character = character
+
+        self._avatar = QLabel(self)
+        set_avatar(self._avatar, self._character, size=118)
+
+        vbox(self)
+        self.layout().addWidget(self._avatar, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(line())
+        self.layout().addWidget(QTextEdit(self))
+
+
+class CharacterComparisonWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._characters: Dict[Character, CharacterOverviewWidget] = {}
+        hbox(self)
+
+    def updateCharacter(self, character: Character, enabled: bool):
+        if enabled:
+            wdg = CharacterOverviewWidget(character)
+            self._characters[character] = wdg
+            self.layout().addWidget(wdg)
+        else:
+            wdg = self._characters.pop(character)
+            self.layout().removeWidget(wdg)

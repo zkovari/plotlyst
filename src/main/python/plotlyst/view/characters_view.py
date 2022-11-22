@@ -40,7 +40,8 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget, \
+    CharacterComparisonWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -113,6 +114,11 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.setCardsSizeRatio(CardSizeRatio.RATIO_2_3)
         self.ui.cards.setCardsWidth(142)
         self._update_cards()
+
+        self.ui.wdgComparisonCharacterSelector.setExclusive(False)
+        self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
+        self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
+        self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
 
         self._progress = CharactersProgressWidget()
         self.ui.pageProgressView.layout().addWidget(self._progress)
