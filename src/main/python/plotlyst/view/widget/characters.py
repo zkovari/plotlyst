@@ -302,7 +302,6 @@ class CharacterConflictWidget(QFrame, Ui_CharacterConflictWidget):
         self.scene = scene
         self.agenda = agenda
         self.setupUi(self)
-        self.setMaximumWidth(270)
 
         self.repo = RepositoryPersistenceManager.instance()
 
