@@ -71,7 +71,7 @@ from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import 
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
-from src.main.python.plotlyst.view.widget.display import IconText, Icon
+from src.main.python.plotlyst.view.widget.display import IconText, Icon, RoleIcon
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
@@ -1895,9 +1895,13 @@ class CharacterOverviewWidget(QWidget):
 
         self._avatar = QLabel(self)
         set_avatar(self._avatar, self._character, size=118)
+        self._roleIcon = RoleIcon(self)
+        if self._character.role:
+            self._roleIcon.setRole(self._character.role, showText=True)
 
         vbox(self)
         self.layout().addWidget(self._avatar, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._roleIcon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(line())
         self.layout().addWidget(QTextEdit(self))
 

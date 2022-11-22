@@ -220,9 +220,12 @@ class MinorRoleIcon(_AbstractRoleIcon):
 
 class RoleIcon(_AbstractRoleIcon):
 
-    def setRole(self, role: Role, animate: bool = False):
+    def setRole(self, role: Role, animate: bool = False, showText: bool = False):
         if role.icon:
             self.setIcon(IconRegistry.from_name(role.icon, role.icon_color))
+        if showText:
+            self.setText(role.text)
+            self.setStyleSheet(self.styleSheet() + f'QPushButton {{color: {role.icon_color};}}')
 
         if animate and role.is_major():
             if role.text == protagonist_role.text:
