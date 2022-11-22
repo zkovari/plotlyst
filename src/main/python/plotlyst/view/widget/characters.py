@@ -30,7 +30,7 @@ from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent,
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
     QPalette, QMouseEvent, QCursor, QAction
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction, QTextEdit
+    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
@@ -70,8 +70,9 @@ from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import 
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
+from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
-from src.main.python.plotlyst.view.widget.display import IconText, Icon, RoleIcon
+from src.main.python.plotlyst.view.widget.display import IconText, Icon, RoleIcon, ChartView
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
@@ -1899,18 +1900,25 @@ class CharacterOverviewWidget(QWidget):
         if self._character.role:
             self._roleIcon.setRole(self._character.role, showText=True)
 
-        vbox(self)
+        vbox(self, 0)
         self.layout().addWidget(self._avatar, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._roleIcon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(line())
-        self.layout().addWidget(QTextEdit(self))
+        self._bigFive = BigFiveChart()
+        self._bigFive.setTitle('')
+        for bf, values in character.big_five.items():
+            self._bigFive.refreshDimension(dimension_from(bf), values)
+        self._bigFiveChartView = ChartView(self)
+        self._bigFiveChartView.setChart(self._bigFive)
+
+        self.layout().addWidget(self._bigFiveChartView)
 
 
 class CharacterComparisonWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._characters: Dict[Character, CharacterOverviewWidget] = {}
-        hbox(self)
+        hbox(self, spacing=0)
 
     def updateCharacter(self, character: Character, enabled: bool):
         if enabled:
