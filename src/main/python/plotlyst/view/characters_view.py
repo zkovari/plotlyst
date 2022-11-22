@@ -92,6 +92,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
+        self.ui.btnComparison.setIcon(IconRegistry.from_name('mdi.compare-horizontal', color_on='darkBlue'))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
@@ -127,6 +128,7 @@ class CharactersView(AbstractNovelView):
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
                                                         (self.ui.btnBackstoryView, self.ui.pageBackstory),
+                                                        (self.ui.btnComparison, self.ui.pageComparison),
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
         self.ui.btnCardsView.setChecked(True)
 
@@ -192,9 +194,14 @@ class CharactersView(AbstractNovelView):
         elif self.ui.btnTableView.isChecked():
             self._enable_action_buttons(len(self.ui.tblCharacters.selectedIndexes()) > 0)
             self.ui.wdgToolbar.setVisible(True)
-        else:
+        elif self.ui.btnBackstoryView.isChecked():
             self.ui.wdgToolbar.setVisible(False)
             self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
+        elif self.ui.btnComparison.isChecked():
+            self.ui.wdgToolbar.setVisible(False)
+            self.ui.wdgComparisonCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
+        else:
+            self.ui.wdgToolbar.setVisible(False)
 
     def _on_edit(self):
         character = None
