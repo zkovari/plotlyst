@@ -785,6 +785,7 @@ class SceneStructureTimeline(QWidget):
         width = event.rect().width()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setOpacity(0.5)
 
         first_el = self._path.elementAt(0)
         last_el = self._path.elementAt(self._path.elementCount() - 1)
