@@ -56,6 +56,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
         incr_font(self.lineName)
         bold(self.lineName)
+        self.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
         self.textQuestion.setPlainText(self.plot.question)
