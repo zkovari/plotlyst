@@ -46,18 +46,15 @@
     </widget>
    </item>
    <item alignment="Qt::AlignHCenter">
-    <widget class="QWidget" name="" native="true">
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item alignment="Qt::AlignHCenter">
-       <widget class="QToolButton" name="btnPlotIcon">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="focusPolicy">
-         <enum>Qt::ClickFocus</enum>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QToolButton {
+    <widget class="QToolButton" name="btnPlotIcon">
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QToolButton {
 	border: 1px dashed grey;
 	border-radius: 6px;
 }
@@ -69,35 +66,32 @@ QToolButton:pressed {
 QToolButton:checked {
 		border: 2px solid black;	
 }</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>45</width>
-          <height>45</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item alignment="Qt::AlignLeft">
-       <widget class="QLineEdit" name="lineName">
-        <property name="styleSheet">
-         <string notr="true">QLineEdit {
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>45</width>
+       <height>45</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="lineName">
+     <property name="styleSheet">
+      <string notr="true">QLineEdit {
 	
 	background-color: rgba(0, 0, 0, 0);
 }</string>
-        </property>
-        <property name="frame">
-         <bool>false</bool>
-        </property>
-        <property name="placeholderText">
-         <string>Plot name</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     </property>
+     <property name="frame">
+      <bool>false</bool>
+     </property>
+     <property name="placeholderText">
+      <string>Plot name</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -122,19 +116,6 @@ QToolButton:checked {
      </property>
      <property name="placeholderText">
       <string>What is this plot's main dramatic question?</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_2">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Involved:</string>
      </property>
     </widget>
    </item>
