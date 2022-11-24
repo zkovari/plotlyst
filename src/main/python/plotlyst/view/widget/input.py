@@ -693,7 +693,7 @@ class RemovalButton(QToolButton):
         self.setIcon(IconRegistry.close_icon())
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.installEventFilter(OpacityEventFilter(parent=self))
-        self.setIconSize(QSize(14, 14))
+        self.setIconSize(QSize(12, 12))
         transparent(self)
 
         self.pressed.connect(lambda: self.setIcon(IconRegistry.close_icon('red')))
