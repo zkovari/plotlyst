@@ -228,6 +228,4 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
     def __destroy(self, widget: PlotWidget):
         delete_plot(self.novel, widget.plot)
-
-        self.scrollAreaWidgetContents.layout().removeWidget(widget)
-        gc(widget)
+        self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
