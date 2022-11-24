@@ -26,7 +26,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, transparent, retain_when_hidden
+    margins, btn_popup_menu, ask_confirmation, italic, transparent, retain_when_hidden, translucent
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -156,6 +156,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
     def _addValue(self, value: PlotValue):
         label = PlotValueLabel(value, parent=self.wdgValues, removalEnabled=True)
+        translucent(label)
         self.wdgValues.layout().addWidget(label)
         label.removalRequested.connect(partial(self._removeValue, label))
 
