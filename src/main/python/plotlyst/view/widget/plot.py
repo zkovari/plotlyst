@@ -60,6 +60,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
         self.textQuestion.setPlainText(self.plot.question)
+        self.textQuestion.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.textQuestion.textChanged.connect(self._questionChanged)
         retain_when_hidden(self.btnRemove)
         transparent(self.toolButton_3)
