@@ -26,7 +26,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic
+    margins, btn_popup_menu, ask_confirmation, italic, transparent
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -60,6 +60,23 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.lineName.textChanged.connect(self._nameEdited)
         self.textQuestion.setPlainText(self.plot.question)
         self.textQuestion.textChanged.connect(self._questionChanged)
+        transparent(self.toolButton_3)
+        transparent(self.toolButton_4)
+        transparent(self.toolButton_5)
+        transparent(self.toolButton_6)
+        transparent(self.toolButton_7)
+        transparent(self.toolButton_8)
+        transparent(self.toolButton_9)
+        transparent(self.toolButton_10)
+
+        self.toolButton_3.setIcon(IconRegistry.goal_icon())
+        self.toolButton_4.setIcon(IconRegistry.goal_icon())
+        self.toolButton_5.setIcon(IconRegistry.goal_icon())
+        self.toolButton_6.setIcon(IconRegistry.goal_icon())
+        self.toolButton_7.setIcon(IconRegistry.goal_icon())
+        self.toolButton_8.setIcon(IconRegistry.goal_icon())
+        self.toolButton_9.setIcon(IconRegistry.goal_icon())
+        self.toolButton_10.setIcon(IconRegistry.goal_icon())
 
         flow(self.wdgValues)
 
@@ -97,7 +114,6 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.repo = RepositoryPersistenceManager.instance()
 
     def _updateIcon(self):
-        self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border-left: 8px solid {self.plot.icon_color};}}')
         if self.plot.icon:
             self.btnPlotIcon.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
 
@@ -171,12 +187,14 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.repo = RepositoryPersistenceManager.instance()
 
     def _addPlotWidget(self, plot: Plot) -> PlotWidget:
-        widget = PlotWidget(self.novel, plot)
-        margins(widget, left=15)
-        widget.removalRequested.connect(partial(self._remove, widget))
         frame = Frame()
         frame.setFrameColor(QColor(plot.icon_color))
         frame.setBackgroundColor(QColor(RELAXED_WHITE_COLOR))
+
+        widget = PlotWidget(self.novel, plot, frame)
+        margins(widget, left=15)
+        widget.removalRequested.connect(partial(self._remove, widget))
+
         frame.setWidget(widget)
         self.scrollAreaWidgetContents.layout().addWidget(frame)
 

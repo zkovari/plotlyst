@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>516</width>
-    <height>98</height>
+    <width>535</width>
+    <height>394</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,39 +20,44 @@
    <string>Frame</string>
   </property>
   <property name="frameShape">
-   <enum>QFrame::Box</enum>
+   <enum>QFrame::NoFrame</enum>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>0</number>
+    <number>3</number>
    </property>
    <property name="leftMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="topMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="rightMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>2</number>
+    <number>0</number>
    </property>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <property name="spacing">
-      <number>3</number>
+   <item alignment="Qt::AlignRight">
+    <widget class="RemovalButton" name="btnRemove">
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
      </property>
-     <item alignment="Qt::AlignLeft">
-      <widget class="QToolButton" name="btnPlotIcon">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="focusPolicy">
-        <enum>Qt::ClickFocus</enum>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">QToolButton {
+    </widget>
+   </item>
+   <item alignment="Qt::AlignHCenter">
+    <widget class="QWidget" name="" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item alignment="Qt::AlignHCenter">
+       <widget class="QToolButton" name="btnPlotIcon">
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QToolButton {
 	border: 1px dashed grey;
 	border-radius: 6px;
 }
@@ -64,116 +69,208 @@ QToolButton:pressed {
 QToolButton:checked {
 		border: 2px solid black;	
 }</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item alignment="Qt::AlignLeft">
-      <widget class="QLineEdit" name="lineName">
-       <property name="styleSheet">
-        <string notr="true">QLineEdit {
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>45</width>
+          <height>45</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignLeft">
+       <widget class="QLineEdit" name="lineName">
+        <property name="styleSheet">
+         <string notr="true">QLineEdit {
 	
 	background-color: rgba(0, 0, 0, 0);
 }</string>
+        </property>
+        <property name="frame">
+         <bool>false</bool>
+        </property>
+        <property name="placeholderText">
+         <string>Plot name</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="AutoAdjustableTextEdit" name="textQuestion">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>700</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="placeholderText">
+      <string>What is this plot's main dramatic question?</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Involved:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="wdgValues" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QToolButton" name="toolButton_3">
+       <property name="text">
+        <string>...</string>
        </property>
-       <property name="frame">
-        <bool>false</bool>
-       </property>
-       <property name="placeholderText">
-        <string>Plot name</string>
+       <property name="iconSize">
+        <size>
+         <width>40</width>
+         <height>40</height>
+        </size>
        </property>
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+      <widget class="QToolButton" name="toolButton_4">
+       <property name="text">
+        <string>...</string>
        </property>
-       <property name="sizeHint" stdset="0">
+       <property name="iconSize">
         <size>
          <width>40</width>
-         <height>20</height>
+         <height>40</height>
         </size>
        </property>
-      </spacer>
+      </widget>
      </item>
-     <item alignment="Qt::AlignTop">
-      <widget class="RemovalButton" name="btnRemove">
-       <property name="focusPolicy">
-        <enum>Qt::ClickFocus</enum>
+     <item>
+      <widget class="QToolButton" name="toolButton_5">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>40</width>
+         <height>40</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="toolButton_6">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>40</width>
+         <height>40</height>
+        </size>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <property name="leftMargin">
-      <number>25</number>
-     </property>
-     <item alignment="Qt::AlignTop">
-      <widget class="AutoAdjustableTextEdit" name="textQuestion">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QToolButton" name="toolButton_7">
+       <property name="text">
+        <string>...</string>
        </property>
-       <property name="minimumSize">
+       <property name="iconSize">
         <size>
-         <width>0</width>
-         <height>25</height>
+         <width>40</width>
+         <height>40</height>
         </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>700</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="placeholderText">
-        <string>What is the most dramatic question of this plot?</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
+      <widget class="QToolButton" name="toolButton_8">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>40</width>
+         <height>40</height>
+        </size>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QWidget" name="wdgValues" native="true">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+      <widget class="QToolButton" name="toolButton_9">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>40</width>
+         <height>40</height>
+        </size>
        </property>
       </widget>
      </item>
     </layout>
    </item>
+   <item alignment="Qt::AlignHCenter">
+    <widget class="QToolButton" name="toolButton_10">
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>40</width>
+       <height>40</height>
+      </size>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>AutoAdjustableTextEdit</class>
-   <extends>QTextEdit</extends>
+   <class>RemovalButton</class>
+   <extends>QToolButton</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
-   <class>RemovalButton</class>
-   <extends>QToolButton</extends>
+   <class>AutoAdjustableTextEdit</class>
+   <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>
