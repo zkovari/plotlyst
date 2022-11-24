@@ -26,11 +26,12 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, transparent, retain_when_hidden, translucent
+    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType
+from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
@@ -63,23 +64,15 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.textQuestion.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.textQuestion.textChanged.connect(self._questionChanged)
         retain_when_hidden(self.btnRemove)
-        transparent(self.toolButton_3)
-        transparent(self.toolButton_4)
-        transparent(self.toolButton_5)
-        transparent(self.toolButton_6)
-        transparent(self.toolButton_7)
-        transparent(self.toolButton_8)
-        transparent(self.toolButton_9)
-        transparent(self.toolButton_10)
 
-        self.toolButton_3.setIcon(IconRegistry.goal_icon())
-        self.toolButton_4.setIcon(IconRegistry.goal_icon())
-        self.toolButton_5.setIcon(IconRegistry.goal_icon())
-        self.toolButton_6.setIcon(IconRegistry.goal_icon())
-        self.toolButton_7.setIcon(IconRegistry.goal_icon())
-        self.toolButton_8.setIcon(IconRegistry.goal_icon())
-        self.toolButton_9.setIcon(IconRegistry.goal_icon())
-        self.toolButton_10.setIcon(IconRegistry.goal_icon())
+        self.btnGoal.setIcon(IconRegistry.goal_icon())
+        self.btnAntagonist.setIcon(IconRegistry.from_selection_item(antagonist_role))
+        self.btnConflict.setIcon(IconRegistry.conflict_icon())
+        self.btnConsequences.setIcon(IconRegistry.cause_and_effect_icon())
+        self.btnProgress.setIcon(IconRegistry.rising_action_icon())
+        self.btnSetback.setIcon(IconRegistry.from_name('mdi6.slope-downhill'))
+        self.btnTurns.setIcon(IconRegistry.from_name('mdi.boom-gate-up-outline'))
+        self.btnCrisis.setIcon(IconRegistry.crisis_icon())
 
         flow(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
