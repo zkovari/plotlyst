@@ -183,7 +183,8 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         super(PlotEditor, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
-        flow(self.scrollAreaWidgetContents)
+        flow(self.scrollAreaWidgetContents, spacing=15)
+        margins(self.scrollAreaWidgetContents, left=15)
         for plot in self.novel.plots:
             self._addPlotWidget(plot)
 
