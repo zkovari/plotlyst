@@ -138,6 +138,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.beat = beat
         self.lblTitle.setText(self.beat.text)
         bold(self.lblTitle)
+        bold(self.lblSceneTitle)
         self.lblDescription.setText(self.beat.description)
         transparent(self.lblTitle)
         transparent(self.lblDescription)
