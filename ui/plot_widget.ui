@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>535</width>
-    <height>394</height>
+    <width>544</width>
+    <height>429</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -72,8 +72,8 @@ QToolButton:checked {
      </property>
      <property name="iconSize">
       <size>
-       <width>45</width>
-       <height>45</height>
+       <width>36</width>
+       <height>36</height>
       </size>
      </property>
     </widget>
@@ -134,12 +134,12 @@ QToolButton:checked {
      <item>
       <widget class="QToolButton" name="toolButton_3">
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="iconSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>32</width>
+         <height>32</height>
         </size>
        </property>
       </widget>
@@ -147,12 +147,12 @@ QToolButton:checked {
      <item>
       <widget class="QToolButton" name="toolButton_4">
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="iconSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>32</width>
+         <height>32</height>
         </size>
        </property>
       </widget>
@@ -160,12 +160,12 @@ QToolButton:checked {
      <item>
       <widget class="QToolButton" name="toolButton_5">
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="iconSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>32</width>
+         <height>32</height>
         </size>
        </property>
       </widget>
@@ -173,12 +173,12 @@ QToolButton:checked {
      <item>
       <widget class="QToolButton" name="toolButton_6">
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="iconSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>32</width>
+         <height>32</height>
         </size>
        </property>
       </widget>
@@ -190,12 +190,12 @@ QToolButton:checked {
      <item>
       <widget class="QToolButton" name="toolButton_7">
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="iconSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>32</width>
+         <height>32</height>
         </size>
        </property>
       </widget>
@@ -203,12 +203,12 @@ QToolButton:checked {
      <item>
       <widget class="QToolButton" name="toolButton_8">
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="iconSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>32</width>
+         <height>32</height>
         </size>
        </property>
       </widget>
@@ -216,12 +216,12 @@ QToolButton:checked {
      <item>
       <widget class="QToolButton" name="toolButton_9">
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="iconSize">
         <size>
-         <width>40</width>
-         <height>40</height>
+         <width>32</width>
+         <height>32</height>
         </size>
        </property>
       </widget>
@@ -231,12 +231,12 @@ QToolButton:checked {
    <item alignment="Qt::AlignHCenter">
     <widget class="QToolButton" name="toolButton_10">
      <property name="text">
-      <string>...</string>
+      <string/>
      </property>
      <property name="iconSize">
       <size>
-       <width>40</width>
-       <height>40</height>
+       <width>32</width>
+       <height>32</height>
       </size>
      </property>
     </widget>
