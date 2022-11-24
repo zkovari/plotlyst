@@ -141,6 +141,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
     def _colorChanged(self, color: QColor):
         self.plot.icon_color = color.name()
         self._updateIcon()
+        self.parent().setFrameColor(color)
         self.repo.update_novel(self.novel)
 
     def _newValue(self):
