@@ -21,14 +21,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt6.QtCore import QEvent, QObject, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu
-from overrides import overrides
+from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic
 from qthandy.filter import VisibilityToggleEventFilter
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
@@ -92,23 +93,8 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         btn_popup_menu(self.btnPlotIcon, iconMenu)
 
         self.btnRemove.clicked.connect(self.removalRequested.emit)
-        self.installEventFilter(self)
 
         self.repo = RepositoryPersistenceManager.instance()
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Enter:
-            self.setStyleSheet(f'''
-            .PlotWidget {{
-                background-color: #dee2e6;
-                border-radius: 6px;
-                border-left: 8px solid {self.plot.icon_color};
-            }}''')
-        elif event.type() == QEvent.Type.Leave:
-            self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border-left: 8px solid {self.plot.icon_color};}}')
-
-        return super(PlotWidget, self).eventFilter(watched, event)
 
     def _updateIcon(self):
         self.setStyleSheet(f'.PlotWidget {{border-radius: 6px; border-left: 8px solid {self.plot.icon_color};}}')
@@ -170,6 +156,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         super(PlotEditor, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
+        flow(self.scrollAreaWidgetContents)
         for plot in self.novel.plots:
             self._addPlotWidget(plot)
 
@@ -187,7 +174,11 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         widget = PlotWidget(self.novel, plot)
         margins(widget, left=15)
         widget.removalRequested.connect(partial(self._remove, widget))
-        self.scrollAreaWidgetContents.layout().insertWidget(self.scrollAreaWidgetContents.layout().count() - 2, widget)
+        frame = Frame()
+        frame.setFrameColor(QColor(plot.icon_color))
+        frame.setBackgroundColor(QColor(RELAXED_WHITE_COLOR))
+        frame.setWidget(widget)
+        self.scrollAreaWidgetContents.layout().addWidget(frame)
 
         return widget
 

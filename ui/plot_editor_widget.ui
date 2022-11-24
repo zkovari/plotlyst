@@ -36,6 +36,13 @@
     <number>2</number>
    </property>
    <item>
+    <widget class="SecondaryActionPushButton" name="btnAdd">
+     <property name="text">
+      <string>Add new plot</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QScrollArea" name="scrollArea">
      <property name="widgetResizable">
       <bool>true</bool>
@@ -45,8 +52,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>394</width>
-        <height>294</height>
+        <width>386</width>
+        <height>269</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -55,43 +62,6 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="spacing">
-        <number>4</number>
-       </property>
-       <property name="leftMargin">
-        <number>2</number>
-       </property>
-       <property name="topMargin">
-        <number>2</number>
-       </property>
-       <property name="rightMargin">
-        <number>2</number>
-       </property>
-       <property name="bottomMargin">
-        <number>2</number>
-       </property>
-       <item>
-        <widget class="SecondaryActionPushButton" name="btnAdd">
-         <property name="text">
-          <string>Add new plot</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
      </widget>
     </widget>
    </item>
