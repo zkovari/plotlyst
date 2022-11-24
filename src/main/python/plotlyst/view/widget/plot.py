@@ -65,14 +65,14 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.textQuestion.textChanged.connect(self._questionChanged)
         retain_when_hidden(self.btnRemove)
 
-        self.btnGoal.setIcon(IconRegistry.goal_icon())
-        self.btnAntagonist.setIcon(IconRegistry.from_selection_item(antagonist_role))
-        self.btnConflict.setIcon(IconRegistry.conflict_icon())
-        self.btnConsequences.setIcon(IconRegistry.cause_and_effect_icon())
-        self.btnProgress.setIcon(IconRegistry.rising_action_icon())
-        self.btnSetback.setIcon(IconRegistry.from_name('mdi6.slope-downhill'))
-        self.btnTurns.setIcon(IconRegistry.from_name('mdi.boom-gate-up-outline'))
-        self.btnCrisis.setIcon(IconRegistry.crisis_icon())
+        self.btnGoal.setIcon(IconRegistry.goal_icon('grey'))
+        self.btnAntagonist.setIcon(IconRegistry.from_name(antagonist_role.icon, 'grey'))
+        self.btnConflict.setIcon(IconRegistry.conflict_icon('grey'))
+        self.btnConsequences.setIcon(IconRegistry.cause_and_effect_icon('grey'))
+        self.btnProgress.setIcon(IconRegistry.rising_action_icon('grey'))
+        self.btnSetback.setIcon(IconRegistry.from_name('mdi6.slope-downhill', 'grey'))
+        self.btnTurns.setIcon(IconRegistry.from_name('mdi.boom-gate-up-outline', 'grey'))
+        self.btnCrisis.setIcon(IconRegistry.crisis_icon('grey'))
 
         flow(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
@@ -155,7 +155,6 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         label.removalRequested.connect(partial(self._removeValue, label))
 
         self._btnAddValue.setText('')
-        retain_when_hidden(self._btnAddValue, False)
 
     def _removeValue(self, widget: PlotValueLabel):
         if app_env.test_env():
@@ -171,7 +170,6 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         gc(widget)
         has_values = len(self.plot.values) > 0
         self._btnAddValue.setText('' if has_values else 'Attach story value')
-        retain_when_hidden(self._btnAddValue, not has_values)
 
 
 class PlotEditor(QWidget, Ui_PlotEditor):

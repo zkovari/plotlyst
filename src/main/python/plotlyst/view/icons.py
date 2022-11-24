@@ -449,12 +449,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.hook', '#829399')
 
     @staticmethod
-    def rising_action_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.chart-line', '#08605f')
+    def rising_action_icon(color: str = '#08605f') -> QIcon:
+        return IconRegistry.from_name('fa5s.chart-line', color=color)
 
     @staticmethod
-    def crisis_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.arrow-decision-outline', '#ce2d4f')
+    def crisis_icon(color: str = '#ce2d4f') -> QIcon:
+        return IconRegistry.from_name('mdi.arrow-decision-outline', color=color)
 
     @staticmethod
     def ticking_clock_icon() -> QIcon:
