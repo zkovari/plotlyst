@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu
 from qtframes import Frame
@@ -81,16 +81,19 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.toolButton_10.setIcon(IconRegistry.goal_icon())
 
         flow(self.wdgValues)
-
+        self._btnAddValue = SecondaryActionPushButton(self)
+        self._btnAddValue.setIconSize(QSize(14, 14))
+        self._btnAddValue.setText('' if self.plot.values else 'Attach story value')
+        retain_when_hidden(self._btnAddValue)
+        self._btnAddValue.setIcon(IconRegistry.plus_icon('grey'))
         for value in self.plot.values:
             self._addValue(value)
 
-        self._btnAddValue = SecondaryActionPushButton(self)
-        self._btnAddValue.setText('Attach story value')
         self.wdgValues.layout().addWidget(self._btnAddValue)
         self._btnAddValue.clicked.connect(self._newValue)
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemove, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
 
         self._updateIcon()
 
@@ -155,6 +158,9 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.wdgValues.layout().addWidget(label)
         label.removalRequested.connect(partial(self._removeValue, label))
 
+        self._btnAddValue.setText('')
+        retain_when_hidden(self._btnAddValue, False)
+
     def _removeValue(self, widget: PlotValueLabel):
         if app_env.test_env():
             self.__destroyValue(widget)
@@ -167,6 +173,9 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.repo.update_novel(self.novel)
         self.wdgValues.layout().removeWidget(widget)
         gc(widget)
+        has_values = len(self.plot.values) > 0
+        self._btnAddValue.setText('' if has_values else 'Attach story value')
+        retain_when_hidden(self._btnAddValue, not has_values)
 
 
 class PlotEditor(QWidget, Ui_PlotEditor):
