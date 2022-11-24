@@ -207,7 +207,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         frame.setBackgroundColor(QColor(RELAXED_WHITE_COLOR))
 
         widget = PlotWidget(self.novel, plot, frame)
-        margins(widget, left=15)
+        margins(widget, left=5, right=5)
         widget.removalRequested.connect(partial(self._remove, widget))
 
         frame.setWidget(widget)
