@@ -26,7 +26,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, transparent
+    margins, btn_popup_menu, ask_confirmation, italic, transparent, retain_when_hidden
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -60,6 +60,7 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.lineName.textChanged.connect(self._nameEdited)
         self.textQuestion.setPlainText(self.plot.question)
         self.textQuestion.textChanged.connect(self._questionChanged)
+        retain_when_hidden(self.btnRemove)
         transparent(self.toolButton_3)
         transparent(self.toolButton_4)
         transparent(self.toolButton_5)
