@@ -29,6 +29,7 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_TH
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
     Scene, SceneType, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
+from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
 
@@ -557,6 +558,10 @@ class IconRegistry:
     @staticmethod
     def topics_icon(color: str = 'black', color_on='darkBlue') -> QIcon:
         return IconRegistry.from_name('mdi.card-account-details-star-outline', color, color_on)
+
+    @staticmethod
+    def from_selection_item(item: SelectionItem) -> QIcon:
+        return IconRegistry.from_name(item.icon, item.icon_color)
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
