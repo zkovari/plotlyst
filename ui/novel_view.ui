@@ -341,7 +341,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>4</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -382,19 +382,6 @@
        <property name="bottomMargin">
         <number>2</number>
        </property>
-       <item>
-        <widget class="Subtitle" name="widget_6" native="true">
-         <property name="title" stdset="0">
-          <string>Plots</string>
-         </property>
-         <property name="description" stdset="0">
-          <string>Define your story's plots (main, internal, or subplots)</string>
-         </property>
-         <property name="icon" stdset="0">
-          <string>mdi.chart-bell-curve-cumulative</string>
-         </property>
-        </widget>
-       </item>
        <item>
         <widget class="QWidget" name="wdgPlotContainer" native="true">
          <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -606,8 +593,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>640</width>
-            <height>440</height>
+            <width>98</width>
+            <height>28</height>
            </rect>
           </property>
           <property name="sizePolicy">

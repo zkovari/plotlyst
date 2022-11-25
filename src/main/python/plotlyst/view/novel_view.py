@@ -35,7 +35,7 @@ from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.novel import PlotEditor
+from src.main.python.plotlyst.view.widget.plot import PlotEditor
 
 
 class NovelView(AbstractNovelView):

@@ -32,7 +32,6 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qthandy import transparent, hbox, margins, vspacer
-from qthandy.filter import OpacityEventFilter
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode
 
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
@@ -690,14 +689,22 @@ class PowerBar(QFrame):
 class RemovalButton(QToolButton):
     def __init__(self, parent=None):
         super(RemovalButton, self).__init__(parent)
-        self.setIcon(IconRegistry.close_icon())
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.installEventFilter(OpacityEventFilter(parent=self))
-        self.setIconSize(QSize(14, 14))
+        self.setIcon(IconRegistry.close_icon('grey'))
+        pointy(self)
+        self.installEventFilter(self)
+        self.setIconSize(QSize(12, 12))
         transparent(self)
 
         self.pressed.connect(lambda: self.setIcon(IconRegistry.close_icon('red')))
         self.released.connect(lambda: self.setIcon(IconRegistry.close_icon()))
+
+    @overrides
+    def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
+        if event.type() == QEvent.Type.Enter:
+            self.setIcon(IconRegistry.close_icon())
+        elif event.type() == QEvent.Type.Leave:
+            self.setIcon(IconRegistry.close_icon('grey'))
+        return super(RemovalButton, self).eventFilter(watched, event)
 
 
 class MenuWithDescription(QMenu):

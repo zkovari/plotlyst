@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>333</width>
-    <height>125</height>
+    <height>137</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -82,7 +82,7 @@
         <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="pageInfo">
         <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -157,12 +157,6 @@
            </item>
            <item alignment="Qt::AlignLeft">
             <widget class="QLabel" name="lblSceneTitle">
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>Scene title</string>
              </property>
@@ -218,13 +212,13 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Toggle</class>
-   <extends>QCheckBox</extends>
+   <class>AutoAdjustableTextEdit</class>
+   <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
-   <class>AutoAdjustableTextEdit</class>
-   <extends>QTextEdit</extends>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>

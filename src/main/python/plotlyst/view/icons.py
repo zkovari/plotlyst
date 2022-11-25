@@ -29,6 +29,7 @@ from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_TH
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
     Scene, SceneType, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
+from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.settings import CHARACTER_INITIAL_AVATAR_COLOR_CODES
 from src.main.python.plotlyst.view.common import rounded_pixmap
 
@@ -256,8 +257,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.question-circle')
 
     @staticmethod
-    def conflict_icon(color: str = '#f3a712') -> QIcon:
-        return IconRegistry.from_name('mdi.sword-cross', color=color)
+    def conflict_icon(color: str = '#f3a712', color_on: str = '#f3a712') -> QIcon:
+        return IconRegistry.from_name('mdi.sword-cross', color=color, color_on=color_on)
 
     @staticmethod
     def success_icon(color: str = '#0b6e4f', color_on: str = '#0b6e4f') -> QIcon:
@@ -400,8 +401,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.ray-start', color=color)
 
     @staticmethod
-    def cause_and_effect_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.ray-start-arrow', color=color)
+    def cause_and_effect_icon(color: str = 'black', color_on: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.ray-start-arrow', color=color, color_on=color_on)
 
     @staticmethod
     def reversed_cause_and_effect_icon() -> QIcon:
@@ -448,12 +449,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.hook', '#829399')
 
     @staticmethod
-    def rising_action_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.chart-line', '#08605f')
+    def rising_action_icon(color: str = '#08605f', color_on: str = '#08605f') -> QIcon:
+        return IconRegistry.from_name('fa5s.chart-line', color=color, color_on=color_on)
 
     @staticmethod
-    def crisis_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.arrow-decision-outline', '#ce2d4f')
+    def crisis_icon(color: str = '#ce2d4f', color_on: str = '#ce2d4f') -> QIcon:
+        return IconRegistry.from_name('mdi.arrow-decision-outline', color=color, color_on=color_on)
 
     @staticmethod
     def ticking_clock_icon() -> QIcon:
@@ -557,6 +558,10 @@ class IconRegistry:
     @staticmethod
     def topics_icon(color: str = 'black', color_on='darkBlue') -> QIcon:
         return IconRegistry.from_name('mdi.card-account-details-star-outline', color, color_on)
+
+    @staticmethod
+    def from_selection_item(item: SelectionItem) -> QIcon:
+        return IconRegistry.from_name(item.icon, item.icon_color)
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
