@@ -349,7 +349,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.setupUi(self)
         flow(self.wdgTemplates)
 
-        self.btnTemplateEditor.setIcon(IconRegistry.plus_edit_icon())
+        self.btnTemplateEditor.setIcon(IconRegistry.plus_icon('darkBlue'))
         self.btnTemplateEditor.clicked.connect(self._selectTemplateStructure)
 
         self.btnDelete.setIcon(IconRegistry.minus_icon())
