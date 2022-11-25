@@ -27,7 +27,8 @@ from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, 
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup, vbox
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, InstantTooltipEventFilter
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, InstantTooltipEventFilter, \
+    DisabledClickEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -39,7 +40,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, restyle
+from src.main.python.plotlyst.view.common import action, restyle, pointy
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -59,6 +60,7 @@ class PlotPrincipleEditor(QWidget):
         self._principle = principle
 
         vbox(self)
+        margins(self, bottom=5)
         self._label = QLabel()
         bold(self._label)
         self._label.setText(principle.type.name.lower().capitalize())
@@ -66,8 +68,10 @@ class PlotPrincipleEditor(QWidget):
         self._textedit = QTextEdit(self)
         self._textedit.setText(principle.value)
         self._textedit.setMaximumSize(200, 100)
+        self._textedit.textChanged.connect(self._valueChanged)
 
         self._btnSet = QPushButton('Set', self)
+        pointy(self._btnSet)
         self._btnSet.setProperty('base', True)
         self._btnSet.setProperty('highlighted', True)
         self._btnSet.setMinimumWidth(80)
@@ -75,6 +79,9 @@ class PlotPrincipleEditor(QWidget):
         self._btnSet.clicked.connect(self._btnSetClicked)
         self._btnSet.toggled.connect(self._btnSetToggled)
         self._btnSet.setChecked(self._principle.is_set)
+        self._checkSetEnabled()
+        self._btnSet.installEventFilter(
+            DisabledClickEventFilter(self._btnSet, slot=lambda: qtanim.shake(self._textedit)))
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._textedit)
@@ -83,7 +90,7 @@ class PlotPrincipleEditor(QWidget):
     def _btnSetClicked(self, toggled: bool):
         self._principle.is_set = toggled
         self.principleSet.emit(self._principle, toggled)
-        if isinstance(self.parent(), QMenu):
+        if toggled and isinstance(self.parent(), QMenu):
             self.parent().hide()
 
     def _btnSetToggled(self, toggled: bool):
@@ -91,6 +98,19 @@ class PlotPrincipleEditor(QWidget):
         self._btnSet.setProperty('highlighted', not toggled)
         self._btnSet.setProperty('deconstructive', toggled)
         restyle(self._btnSet)
+
+        self._checkSetEnabled()
+
+    def _valueChanged(self):
+        self._principle.value = self._textedit.toPlainText()
+        self._checkSetEnabled()
+
+    def _checkSetEnabled(self):
+        if not self._btnSet.isChecked():
+            if self._principle.value:
+                self._btnSet.setEnabled(True)
+            else:
+                self._btnSet.setDisabled(True)
 
 
 class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
