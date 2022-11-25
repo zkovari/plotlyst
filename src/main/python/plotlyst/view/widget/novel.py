@@ -23,7 +23,7 @@ from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QDialog, QGridLayout, \
-    QScrollArea, QApplication
+    QScrollArea, QApplication, QDialogButtonBox
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, retain_when_hidden, grid
@@ -293,6 +293,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self._structure: Optional[StoryStructure] = None
         if structure:
             self.setWindowTitle('Story structure editor')
+            self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Ok)
             self.wdgTypesContainer.setHidden(True)
             page, clazz = self._pageAndClass(structure)
             self.__initEditor(structure, page, clazz, copyStructure=False)
