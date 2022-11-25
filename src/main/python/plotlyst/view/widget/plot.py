@@ -53,6 +53,7 @@ from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
 class PlotPrincipleEditor(QWidget):
+    principleEdited = pyqtSignal(PlotPrinciple)
     principleSet = pyqtSignal(PlotPrinciple, bool)
 
     def __init__(self, principle: PlotPrinciple, parent=None):
@@ -87,6 +88,9 @@ class PlotPrincipleEditor(QWidget):
         self.layout().addWidget(self._textedit)
         self.layout().addWidget(self._btnSet, alignment=Qt.AlignmentFlag.AlignRight)
 
+    def activate(self):
+        self._textedit.setFocus()
+
     def _btnSetClicked(self, toggled: bool):
         self._principle.is_set = toggled
         self.principleSet.emit(self._principle, toggled)
@@ -104,6 +108,7 @@ class PlotPrincipleEditor(QWidget):
     def _valueChanged(self):
         self._principle.value = self._textedit.toPlainText()
         self._checkSetEnabled()
+        self.principleEdited.emit(self._principle)
 
     def _checkSetEnabled(self):
         if not self._btnSet.isChecked():
@@ -133,12 +138,12 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         retain_when_hidden(self.btnRemove)
 
         self.btnGoal.setIcon(IconRegistry.goal_icon('grey'))
-        self.btnAntagonist.setIcon(IconRegistry.from_name(antagonist_role.icon, 'grey'))
+        self.btnAntagonist.setIcon(IconRegistry.from_name(antagonist_role.icon, 'grey', antagonist_role.icon_color))
         self.btnConflict.setIcon(IconRegistry.conflict_icon('grey'))
-        self.btnConsequences.setIcon(IconRegistry.cause_and_effect_icon('grey'))
-        self.btnProgress.setIcon(IconRegistry.rising_action_icon('grey'))
-        self.btnSetback.setIcon(IconRegistry.from_name('mdi6.slope-downhill', 'grey'))
-        self.btnTurns.setIcon(IconRegistry.from_name('mdi.boom-gate-up-outline', 'grey'))
+        self.btnConsequences.setIcon(IconRegistry.cause_and_effect_icon('grey', '#3a5a40'))
+        self.btnProgress.setIcon(IconRegistry.rising_action_icon('grey', '#0096c7'))
+        self.btnSetback.setIcon(IconRegistry.from_name('mdi6.slope-downhill', 'grey', '#ae2012'))
+        self.btnTurns.setIcon(IconRegistry.from_name('mdi.boom-gate-up-outline', 'grey', '#8338ec'))
         self.btnCrisis.setIcon(IconRegistry.crisis_icon('grey'))
 
         for btn in self.buttonGroup.buttons():
@@ -152,7 +157,9 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
             editor = PlotPrincipleEditor(principle, btn)
             editor.principleSet.connect(self._principleSet)
-            btn_popup(btn, editor)
+            editor.principleEdited.connect(self._principleEdited)
+            menu = btn_popup(btn, editor)
+            menu.aboutToShow.connect(editor.activate)
 
         flow(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
@@ -241,6 +248,9 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             qtanim.glow(btn)
         else:
             translucent(btn, 0.4)
+        self.repo.update_novel(self.novel)
+
+    def _principleEdited(self, _: PlotPrinciple):
         self.repo.update_novel(self.novel)
 
     def _updateIcon(self):

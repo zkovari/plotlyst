@@ -401,8 +401,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.ray-start', color=color)
 
     @staticmethod
-    def cause_and_effect_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.ray-start-arrow', color=color)
+    def cause_and_effect_icon(color: str = 'black', color_on: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.ray-start-arrow', color=color, color_on=color_on)
 
     @staticmethod
     def reversed_cause_and_effect_icon() -> QIcon:
@@ -449,12 +449,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.hook', '#829399')
 
     @staticmethod
-    def rising_action_icon(color: str = '#08605f') -> QIcon:
-        return IconRegistry.from_name('fa5s.chart-line', color=color)
+    def rising_action_icon(color: str = '#08605f', color_on: str = '#08605f') -> QIcon:
+        return IconRegistry.from_name('fa5s.chart-line', color=color, color_on=color_on)
 
     @staticmethod
-    def crisis_icon(color: str = '#ce2d4f') -> QIcon:
-        return IconRegistry.from_name('mdi.arrow-decision-outline', color=color)
+    def crisis_icon(color: str = '#ce2d4f', color_on: str = '#ce2d4f') -> QIcon:
+        return IconRegistry.from_name('mdi.arrow-decision-outline', color=color, color_on=color_on)
 
     @staticmethod
     def ticking_clock_icon() -> QIcon:
