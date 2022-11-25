@@ -30,9 +30,12 @@ from qthandy import gc, bold, flow, incr_font, \
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType
+from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character
 from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import CharacterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action
@@ -47,7 +50,7 @@ from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
-class PlotWidget(QFrame, Ui_PlotWidget):
+class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     removalRequested = pyqtSignal()
 
     def __init__(self, novel: Novel, plot: Plot, parent=None):
@@ -92,6 +95,11 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self._characterSelector = CharacterSelectorButton(self)
         self._characterSelector.setGeometry(5, 5, 40, 40)
         self._characterSelector.setAvailableCharacters(novel.characters)
+        character = self.plot.character(novel)
+        if character is not None:
+            self._characterSelector.setCharacter(character)
+
+        self._characterSelector.characterSelected.connect(self._characterSelected)
 
         self.wdgValues.layout().addWidget(self._btnAddValue)
         self._btnAddValue.clicked.connect(self._newValue)
@@ -122,6 +130,12 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
         self.repo = RepositoryPersistenceManager.instance()
 
+        event_dispatcher.register(self, CharacterChangedEvent)
+
+    def event_received(self, event: Event):
+        if isinstance(event, CharacterChangedEvent):
+            self._characterSelector.setAvailableCharacters(self.novel.characters)
+
     def _updateIcon(self):
         if self.plot.icon:
             self.btnPlotIcon.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
@@ -132,6 +146,10 @@ class PlotWidget(QFrame, Ui_PlotWidget):
 
     def _questionChanged(self):
         self.plot.question = self.textQuestion.toPlainText()
+        self.repo.update_novel(self.novel)
+
+    def _characterSelected(self, character: Character):
+        self.plot.set_character(character)
         self.repo.update_novel(self.novel)
 
     def _changeIcon(self):
