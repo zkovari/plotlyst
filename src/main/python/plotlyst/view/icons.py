@@ -257,8 +257,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.question-circle')
 
     @staticmethod
-    def conflict_icon(color: str = '#f3a712') -> QIcon:
-        return IconRegistry.from_name('mdi.sword-cross', color=color)
+    def conflict_icon(color: str = '#f3a712', color_on: str = '#f3a712') -> QIcon:
+        return IconRegistry.from_name('mdi.sword-cross', color=color, color_on=color_on)
 
     @staticmethod
     def success_icon(color: str = '#0b6e4f', color_on: str = '#0b6e4f') -> QIcon:
