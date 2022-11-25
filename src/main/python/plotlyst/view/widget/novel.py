@@ -230,41 +230,6 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             self.repo.update_scene(self.scene)
 
 
-class StoryStructureCharacterLinkWidget(QWidget, Ui_StoryStructureCharacterLink, EventListener):
-    linkCharacter = pyqtSignal(Character)
-    unlinkCharacter = pyqtSignal(Character)
-
-    def __init__(self, novel: Novel, parent=None):
-        super(StoryStructureCharacterLinkWidget, self).__init__(parent)
-        self.setupUi(self)
-        self.novel = novel
-        self.wdgCharacters.setExclusive(False)
-        self.wdgCharacters.setCharacters(novel.characters, checkAll=False)
-        self.wdgCharacters.characterToggled.connect(self._characterToggled)
-        event_dispatcher.register(self, NovelStoryStructureUpdated)
-
-        self.refresh()
-
-    @overrides
-    def event_received(self, event: Event):
-        if isinstance(event, NovelStoryStructureUpdated):
-            self.refresh()
-
-    def refresh(self):
-        self.wdgCharacters.clear()
-        for char in self.novel.characters:
-            if char is self.novel.active_story_structure.character(self.novel):
-                self.wdgCharacters.addCharacter(char)
-            else:
-                self.wdgCharacters.addCharacter(char, checked=False)
-
-    def _characterToggled(self, character: Character, toggled: bool):
-        if toggled:
-            self.linkCharacter.emit(character)
-        else:
-            self.unlinkCharacter.emit(character)
-
-
 class _AbstractStructureEditorWidget(QWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super(_AbstractStructureEditorWidget, self).__init__(parent)
@@ -371,19 +336,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         flow(self.wdgTemplates)
 
         self.btnTemplateEditor.setIcon(IconRegistry.plus_edit_icon())
-        self.btnLinkCharacter.setIcon(IconRegistry.character_icon())
-        self.btnLinkCharacter.setStyleSheet('''
-            QPushButton {
-                border: 2px dotted grey;
-                border-radius: 6px;
-                font: italic;
-            }
-            QPushButton:hover {
-                border: 2px dotted darkBlue;
-            }
-        ''')
         self.btnTemplateEditor.clicked.connect(self._selectTemplateStructure)
-        self.wdgCharacterLink: Optional[StoryStructureCharacterLinkWidget] = None
 
         self._btnDelete = QToolButton()
         self._btnDelete.setIcon(IconRegistry.minus_icon())
@@ -407,10 +360,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
 
     def setNovel(self, novel: Novel):
         self.novel = novel
-        self.wdgCharacterLink = StoryStructureCharacterLinkWidget(self.novel)
-        self.wdgCharacterLink.linkCharacter.connect(self._linkCharacter)
-        self.wdgCharacterLink.unlinkCharacter.connect(self._unlinkCharacter)
-        btn_popup(self.btnLinkCharacter, self.wdgCharacterLink)
         for structure in self.novel.story_structures:
             self._addStructure(structure)
 
@@ -523,19 +472,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
     def _beatToggled(self, beat: StoryBeat):
         self.wdgPreview.toggleBeatVisibility(beat)
         self.repo.update_novel(self.novel)
-
-    # def _structureSelectionChanged(self, structure: StoryStructure, toggled: bool):
-    #     if toggled:
-    #         self.novel.story_structures.append(structure)
-    #         self._addStructure(structure)
-    #     else:
-    #         matched_structures = [x for x in self.novel.story_structures if x.id == structure.id]
-    #         if matched_structures:
-    #             for st in matched_structures:
-    #                 self.novel.story_structures.remove(st)
-    #         self._removeStructure(structure)
-    #
-    #     self.repo.update_novel(self.novel)
 
 
 class TagLabelsEditor(LabelsEditorWidget):
