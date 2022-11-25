@@ -22,16 +22,16 @@ from functools import partial
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QDialog, QToolButton, QGridLayout, \
+from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QDialog, QGridLayout, \
     QScrollArea, QApplication
 from overrides import overrides
-from qthandy import vspacer, spacer, translucent, transparent, btn_popup, gc, bold, clear_layout, flow, vbox, incr_font, \
+from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_layout, flow, vbox, incr_font, \
     margins, retain_when_hidden, grid
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
-    Character, SceneType, Scene, TagType, SelectionItem, Tag, \
+    SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, save_the_cat, three_act_structure
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -41,11 +41,9 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import link_buttons_to_pages
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
-from src.main.python.plotlyst.view.generated.story_structure_character_link_widget_ui import \
-    Ui_StoryStructureCharacterLink
 from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -280,7 +278,7 @@ class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
 
 
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
-    def __init__(self, novel: Novel, parent=None):
+    def __init__(self, novel: Novel, structure: Optional[StoryStructure] = None, parent=None):
         super(StoryStructureSelectorDialog, self).__init__(parent)
         self.setupUi(self)
         self._novel = novel
@@ -293,14 +291,20 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         margins(self.pageSaveTheCat, 0, 0, 0, 0)
 
         self._structure: Optional[StoryStructure] = None
-        self._structureChanged()
+        if structure:
+            self.setWindowTitle('Story structure editor')
+            self.wdgTypesContainer.setHidden(True)
+            page, clazz = self._pageAndClass(structure)
+            self.__initEditor(structure, page, clazz, copyStructure=False)
+        else:
+            self._structureChanged()
 
     def structure(self) -> StoryStructure:
         return self._structure
 
     @staticmethod
-    def display(novel: Novel) -> Optional[StoryStructure]:
-        dialog = StoryStructureSelectorDialog(novel)
+    def display(novel: Novel, structure: Optional[StoryStructure] = None) -> Optional[StoryStructure]:
+        dialog = StoryStructureSelectorDialog(novel, structure)
         screen = QApplication.screenAt(dialog.pos())
         if screen:
             dialog.resize(screen.size().width() * 0.9, screen.size().height() * 0.7)
@@ -320,13 +324,22 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         elif self.btnSaveTheCat.isChecked():
             self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget)
 
-    def __initEditor(self, structure: StoryStructure, page: QWidget, clazz):
+    def __initEditor(self, structure: StoryStructure, page: QWidget, clazz, copyStructure: bool = True):
         self.stackedWidget.setCurrentWidget(page)
         if page.layout().count() == 0:
-            self._structure = copy.deepcopy(structure)
+            if copyStructure:
+                self._structure = copy.deepcopy(structure)
+            else:
+                self._structure = structure
             page.layout().addWidget(clazz(self._novel, self._structure, self))
         else:
             self._structure = page.layout().itemAt(0).widget().structure()
+
+    def _pageAndClass(self, structure: StoryStructure):
+        if structure.title == three_act_structure.title:
+            return self.pageThreeAct, _ThreeActStructureEditorWidget
+        elif structure.title == save_the_cat.title:
+            return self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget
 
 
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
@@ -338,10 +351,16 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.btnTemplateEditor.setIcon(IconRegistry.plus_edit_icon())
         self.btnTemplateEditor.clicked.connect(self._selectTemplateStructure)
 
-        self._btnDelete = QToolButton()
-        self._btnDelete.setIcon(IconRegistry.minus_icon())
-        self._btnDelete.clicked.connect(self._removeStructure)
-        self.horizontalLayout.addWidget(self._btnDelete)
+        self.btnDelete.setIcon(IconRegistry.minus_icon())
+        self.btnDelete.installEventFilter(ButtonPressResizeEventFilter(self.btnDelete))
+        self.btnDelete.clicked.connect(self._removeStructure)
+        self.btnCopy.setIcon(IconRegistry.copy_icon())
+        self.btnCopy.installEventFilter(ButtonPressResizeEventFilter(self.btnCopy))
+        self.btnCopy.clicked.connect(self._duplicateStructure)
+        self.btnEdit.setIcon(IconRegistry.edit_icon())
+        self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
+        self.btnEdit.clicked.connect(self._editStructure)
+        self.horizontalLayout.addWidget(self.btnDelete)
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
@@ -361,9 +380,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
     def setNovel(self, novel: Novel):
         self.novel = novel
         for structure in self.novel.story_structures:
-            self._addStructure(structure)
+            self._addStructureWidget(structure)
 
-    def _addStructure(self, structure: StoryStructure):
+    def _addStructureWidget(self, structure: StoryStructure):
         btn = _StoryStructureButton(structure, self.novel)
         btn.toggled.connect(partial(self._activeStructureToggled, structure))
         btn.clicked.connect(partial(self._activeStructureClicked, structure))
@@ -372,7 +391,13 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         if structure.active:
             btn.setChecked(True)
 
-        self._btnDelete.setEnabled(len(self.novel.story_structures) > 1)
+        self._toggleDeleteButton()
+
+    def _addNewStructure(self, structure: StoryStructure):
+        self.novel.story_structures.append(structure)
+        self._addStructureWidget(structure)
+        self.btnGroupStructure.buttons()[-1].setChecked(True)
+        emit_event(NovelStoryStructureUpdated(self))
 
     def _removeStructure(self):
         if len(self.novel.story_structures) < 2:
@@ -394,32 +419,22 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
             self.btnGroupStructure.buttons()[0].setChecked(True)
             emit_event(NovelStoryStructureUpdated(self))
         self.repo.update_novel(self.novel)
-        self._btnDelete.setEnabled(len(self.novel.story_structures) > 1)
 
-    def _linkCharacter(self, character: Character):
-        new_structure = copy.deepcopy(self.novel.active_story_structure)
-        new_structure.set_character(character)
-        self.novel.story_structures.append(new_structure)
-        self._addStructure(new_structure)
-        self.repo.update_novel(self.novel)
-        emit_event(NovelStoryStructureUpdated(self))
+        self._toggleDeleteButton()
 
-    def _unlinkCharacter(self, character: Character):
-        active_structure_id = self.novel.active_story_structure.id
-        matched_structures = [x for x in self.novel.story_structures if
-                              x.id == active_structure_id and x.character_id == character.id]
-        if matched_structures:
-            for st in matched_structures:
-                self.novel.story_structures.remove(st)
-                self._removeStructure(st)
+    def _duplicateStructure(self):
+        structure = copy.deepcopy(self.novel.active_story_structure)
+        self._addNewStructure(structure)
+        self._editStructure()
 
-    def _selectTemplateStructure(self):
-        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
+    def _editStructure(self):
+        StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
+        self._activeStructureToggled(self.novel.active_story_structure, True)
+
+    def _selectTemplateStructure(self, structure: Optional[StoryStructure] = None):
+        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel, structure)
         if structure:
-            self.novel.story_structures.append(structure)
-            self._addStructure(structure)
-            self.btnGroupStructure.buttons()[-1].setChecked(True)
-            emit_event(NovelStoryStructureUpdated(self))
+            self._addNewStructure(structure)
 
     def _activeStructureToggled(self, structure: StoryStructure, toggled: bool):
         if not toggled:
@@ -472,6 +487,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
     def _beatToggled(self, beat: StoryBeat):
         self.wdgPreview.toggleBeatVisibility(beat)
         self.repo.update_novel(self.novel)
+
+    def _toggleDeleteButton(self):
+        self.btnDelete.setEnabled(len(self.novel.story_structures) > 1)
 
 
 class TagLabelsEditor(LabelsEditorWidget):
