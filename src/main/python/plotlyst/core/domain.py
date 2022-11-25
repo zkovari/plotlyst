@@ -435,9 +435,8 @@ class PlotPrincipleType(Enum):
 
 @dataclass
 class PlotPrinciple:
-    name: str
     type: PlotPrincipleType
-    value: Any
+    value: Any = None
     is_set: bool = False
 
 
