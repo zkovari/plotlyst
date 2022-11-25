@@ -23,11 +23,11 @@ from functools import partial
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu
+from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QTextEdit
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent
-from qthandy.filter import VisibilityToggleEventFilter
+    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType
@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_Plo
 from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
@@ -74,6 +75,11 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self.btnTurns.setIcon(IconRegistry.from_name('mdi.boom-gate-up-outline', 'grey'))
         self.btnCrisis.setIcon(IconRegistry.crisis_icon('grey'))
 
+        for btn in self.buttonGroup.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn))
+            btn.installEventFilter(InstantTooltipEventFilter(btn))
+            btn_popup(btn, QTextEdit(btn))
+
         flow(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
         self._btnAddValue.setIconSize(QSize(14, 14))
@@ -82,6 +88,10 @@ class PlotWidget(QFrame, Ui_PlotWidget):
         self._btnAddValue.setIcon(IconRegistry.plus_icon('grey'))
         for value in self.plot.values:
             self._addValue(value)
+
+        self._characterSelector = CharacterSelectorButton(self)
+        self._characterSelector.setGeometry(5, 5, 40, 40)
+        self._characterSelector.setAvailableCharacters(novel.characters)
 
         self.wdgValues.layout().addWidget(self._btnAddValue)
         self._btnAddValue.clicked.connect(self._newValue)
