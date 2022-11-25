@@ -209,6 +209,11 @@ def pointy(widget):
     widget.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
+def restyle(widget: QWidget):
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
+
+
 def shadow(wdg: QWidget, offset: int = 2):
     effect = QGraphicsDropShadowEffect(wdg)
     effect.setBlurRadius(0)

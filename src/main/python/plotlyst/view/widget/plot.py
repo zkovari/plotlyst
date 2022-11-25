@@ -39,7 +39,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action
+from src.main.python.plotlyst.view.common import action, restyle
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -69,9 +69,12 @@ class PlotPrincipleEditor(QWidget):
 
         self._btnSet = QPushButton('Set', self)
         self._btnSet.setProperty('base', True)
+        self._btnSet.setProperty('highlighted', True)
+        self._btnSet.setMinimumWidth(80)
         self._btnSet.setCheckable(True)
-        self._btnSet.setChecked(self._principle.is_set)
         self._btnSet.clicked.connect(self._btnSetClicked)
+        self._btnSet.toggled.connect(self._btnSetToggled)
+        self._btnSet.setChecked(self._principle.is_set)
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._textedit)
@@ -82,6 +85,12 @@ class PlotPrincipleEditor(QWidget):
         self.principleSet.emit(self._principle, toggled)
         if isinstance(self.parent(), QMenu):
             self.parent().hide()
+
+    def _btnSetToggled(self, toggled: bool):
+        self._btnSet.setText('Unset' if toggled else 'Set')
+        self._btnSet.setProperty('highlighted', not toggled)
+        self._btnSet.setProperty('deconstructive', toggled)
+        restyle(self._btnSet)
 
 
 class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
