@@ -68,7 +68,9 @@ class PlotPrincipleEditor(QWidget):
         self._textedit.setMaximumSize(200, 100)
 
         self._btnSet = QPushButton('Set', self)
+        self._btnSet.setProperty('base', True)
         self._btnSet.setCheckable(True)
+        self._btnSet.setChecked(self._principle.is_set)
         self._btnSet.clicked.connect(self._btnSetClicked)
 
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -76,6 +78,7 @@ class PlotPrincipleEditor(QWidget):
         self.layout().addWidget(self._btnSet, alignment=Qt.AlignmentFlag.AlignRight)
 
     def _btnSetClicked(self, toggled: bool):
+        self._principle.is_set = toggled
         self.principleSet.emit(self._principle, toggled)
         if isinstance(self.parent(), QMenu):
             self.parent().hide()
@@ -116,6 +119,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         for principle_type in PlotPrincipleType:
             principle = self._principle(principle_type)
             btn = self._btnPrinciple(principle_type)
+            btn.setChecked(principle.is_set)
 
             editor = PlotPrincipleEditor(principle, btn)
             editor.principleSet.connect(self._principleSet)
@@ -204,7 +208,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _principleSet(self, principle: PlotPrinciple, toggled: bool):
         btn = self._btnPrinciple(principle.type)
         btn.setChecked(toggled)
-        qtanim.glow(btn)
+        if toggled:
+            qtanim.glow(btn)
+        else:
+            translucent(btn, 0.4)
+        self.repo.update_novel(self.novel)
 
     def _updateIcon(self):
         if self.plot.icon:
