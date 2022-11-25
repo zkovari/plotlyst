@@ -417,7 +417,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         gc(to_be_removed)
         self.novel.story_structures.remove(structure)
         if self.btnGroupStructure.buttons():
-            self.btnGroupStructure.buttons()[0].setChecked(True)
+            self.btnGroupStructure.buttons()[-1].setChecked(True)
             emit_event(NovelStoryStructureUpdated(self))
         self.repo.update_novel(self.novel)
 
