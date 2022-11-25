@@ -178,7 +178,7 @@ QToolButton:hover {
            </size>
           </property>
           <property name="checkable">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
@@ -203,7 +203,7 @@ QToolButton:hover {
            </size>
           </property>
           <property name="checkable">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
@@ -228,7 +228,7 @@ QToolButton:hover {
            </size>
           </property>
           <property name="checkable">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
@@ -253,7 +253,7 @@ QToolButton:hover {
            </size>
           </property>
           <property name="checkable">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
@@ -282,7 +282,7 @@ QToolButton:hover {
            </size>
           </property>
           <property name="checkable">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
@@ -307,7 +307,7 @@ QToolButton:hover {
            </size>
           </property>
           <property name="checkable">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
@@ -332,7 +332,7 @@ QToolButton:hover {
            </size>
           </property>
           <property name="checkable">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
@@ -359,7 +359,7 @@ QToolButton:hover {
          </size>
         </property>
         <property name="checkable">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <attribute name="buttonGroup">
          <string notr="true">buttonGroup</string>
