@@ -56,7 +56,7 @@ from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, \
-    hmax, link_buttons_to_pages, pointy
+    hmax, link_buttons_to_pages, pointy, action
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
@@ -623,6 +623,49 @@ class CharacterGoalSelector(QWidget):
         self.scene.agendas[0].remove_goal(self.characterGoal)
         self.parent().layout().removeWidget(self)
         gc(self)
+
+
+class CharacterSelectorButton(QToolButton):
+    characterSelected = pyqtSignal(Character)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(IconRegistry.character_icon('grey'))
+        pointy(self)
+        self.setStyleSheet('''
+                        QToolButton {
+                            border: 2px dotted grey;
+                            border-radius: 6px;
+                        }
+                        QToolButton:hover {
+                            border: 2px dotted darkBlue;
+                        }
+                    ''')
+        self.setIconSize(QSize(32, 32))
+        self._opacityFilter = OpacityEventFilter(self)
+        self.installEventFilter(self._opacityFilter)
+        self._menu = QMenu(self)
+        btn_popup_menu(self, self._menu)
+
+    def setAvailableCharacters(self, characters: List[Character]):
+        self._menu.clear()
+
+        for char in characters:
+            self._menu.addAction(
+                action(char.name, avatars.avatar(char), slot=partial(self._selected, char), parent=self._menu))
+
+    def setCharacter(self, character: Character):
+        self.setIcon(avatars.avatar(character))
+        transparent(self)
+        if self._opacityFilter:
+            self.removeEventFilter(self._opacityFilter)
+            self._opacityFilter = None
+            translucent(self, 1.0)
+            self.setIconSize(QSize(35, 35))
+
+    def _selected(self, character: Character):
+        self.setCharacter(character)
+        self.characterSelected.emit(character)
 
 
 class CharacterLinkWidget(QWidget):
