@@ -145,11 +145,11 @@ class ButtonPressResizeEventFilter(QObject):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(watched, QAbstractButton):
-            if event.type() == QEvent.Type.MouseButtonPress:
+            if event.type() == QEvent.Type.MouseButtonPress and watched.isEnabled():
                 if self._originalSize is None:
                     self._calculateSize(watched)
                 watched.setIconSize(self._reducedSize)
-            elif event.type() == QEvent.Type.MouseButtonRelease:
+            elif event.type() == QEvent.Type.MouseButtonRelease and watched.isEnabled():
                 if self._originalSize is None:
                     self._calculateSize(watched)
                 watched.setIconSize(self._originalSize)
