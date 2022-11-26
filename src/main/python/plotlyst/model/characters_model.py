@@ -116,9 +116,9 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
                 font.setBold(True)
                 return font
             elif role == Qt.ItemDataRole.CheckStateRole:
-                return Qt.Checked
+                return Qt.CheckState.Checked
         elif role == Qt.ItemDataRole.CheckStateRole:
-            return Qt.Unchecked
+            return Qt.CheckState.Unchecked
 
         return super(CharactersSceneAssociationTableModel, self).data(index, role)
 
@@ -128,8 +128,8 @@ class CharactersSceneAssociationTableModel(CharactersTableModel):
         if not self.scene:
             return flags
         if self._data[index.row()] is self.scene.pov:
-            return Qt.NoItemFlags
-        return flags | Qt.ItemIsUserCheckable
+            return Qt.ItemFlag.NoItemFlags
+        return flags | Qt.ItemFlag.ItemIsUserCheckable
 
     def toggleSelection(self, index: QModelIndex):
         character = self._data[index.row()]
