@@ -26,16 +26,16 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QMouseEvent, QIcon
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QGridLayout
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, translucent
+    decr_font, retain_when_hidden, translucent, grid
 from qthandy.filter import VisibilityToggleEventFilter
 from qttextedit import EnhancedTextEdit
 
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
-    enneagram_choices
+    enneagram_choices, goal_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import pointy
@@ -676,3 +676,13 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
 class GmcFieldWidget(ComplexTemplateWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
+
+        self._goalField = SmallTextTemplateFieldWidget(goal_field)
+        self._layout: QGridLayout = grid(self, 2, 1)
+
+        self._layout.addWidget(self._goalField, 4, 0)
+        self._layout.addWidget(spacer(), 4, 1)
+
+    @property
+    def wdgEditor(self):
+        return self
