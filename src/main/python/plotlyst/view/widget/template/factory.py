@@ -39,7 +39,7 @@ def _icon(item: SelectionItem) -> QIcon:
 class TemplateFieldWidgetFactory:
 
     @staticmethod
-    def widget(field: TemplateField, parent=None) -> 'TemplateWidgetBase':
+    def widget(field: TemplateField, parent=None):
         if field.type == TemplateFieldType.DISPLAY_SUBTITLE:
             return SubtitleTemplateDisplayWidget(field, parent)
         elif field.type == TemplateFieldType.DISPLAY_LABEL:
