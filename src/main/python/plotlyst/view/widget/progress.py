@@ -251,7 +251,7 @@ class CircularProgressBar(QWidget):
         path = QPainterPath()
         path.moveTo(self._center, self._penWidth)
         path.arcTo(self._penWidth, self._penWidth, self._radius * 2, self._radius * 2, 90,
-                   -360 * self._value / self._maxValue)
+                   -360 * self._value / self._maxValue if self._maxValue else 1)
         painter.setPen(QPen(QColor('#2a9d8f'), self._penWidth, Qt.PenStyle.SolidLine))
         painter.drawPath(path)
 
