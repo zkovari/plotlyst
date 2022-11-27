@@ -38,7 +38,7 @@ from src.main.python.plotlyst.view.common import pointy, set_tab_icon, link_butt
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import TextEditBase
-from src.main.python.plotlyst.view.widget.template import ProfileTemplateView, TemplateFieldWidgetBase
+from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView, TemplateFieldWidgetBase
 from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelectorWidget
 
 LINE_WIDTH: int = 4

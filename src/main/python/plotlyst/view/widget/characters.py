@@ -77,7 +77,7 @@ from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
-from src.main.python.plotlyst.view.widget.template import TopicsEditor
+from src.main.python.plotlyst.view.widget.topic import TopicsEditor
 
 
 class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributionWidget):
