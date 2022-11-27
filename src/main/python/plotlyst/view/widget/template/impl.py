@@ -49,7 +49,7 @@ from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, T
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
 from src.main.python.plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
-    TemplateWidgetBase
+    TemplateWidgetBase, ComplexTemplateWidgetBase
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -671,3 +671,8 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueFilled.emit()
         else:
             self.valueReset.emit()
+
+
+class GmcFieldWidget(ComplexTemplateWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(field, parent)
