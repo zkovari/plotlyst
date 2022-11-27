@@ -525,7 +525,7 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(mbti_field, 3, 1),
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(gmc_title, 6, 0, col_span=2),
-              ProfileElement(gmc_field, 7, 0, col_span=2),
+              ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
               # ProfileElement(goal_field, 9, 0, margins=Margins(left=15)),
               # ProfileElement(internal_goal_field, 9, 1, margins=Margins(left=10)),
               # ProfileElement(arrow_field(), 10, 0),
