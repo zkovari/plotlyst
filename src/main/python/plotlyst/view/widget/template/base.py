@@ -46,6 +46,15 @@ class TemplateWidgetBase(QFrame):
     def deselect(self):
         self.setStyleSheet('')
 
+    def notes(self) -> str:
+        if self.field.has_notes:
+            return self._notesEditor.toMarkdown()
+        return ''
+
+    def setNotes(self, notes: str):
+        if self.field.has_notes:
+            self._notesEditor.setMarkdown(notes)
+
 
 class TemplateDisplayWidget(TemplateWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
@@ -55,6 +64,14 @@ class TemplateDisplayWidget(TemplateWidgetBase):
 class EditableTemplateWidget(TemplateWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
+
+    @abstractmethod
+    def value(self) -> Any:
+        pass
+
+    @abstractmethod
+    def setValue(self, value: Any):
+        pass
 
 
 class TemplateFieldWidgetBase(EditableTemplateWidget):
@@ -102,27 +119,9 @@ class TemplateFieldWidgetBase(EditableTemplateWidget):
         self.lblEmoji.setText(emoji)
         self.lblEmoji.setVisible(True)
 
-    @abstractmethod
-    def value(self) -> Any:
-        pass
-
-    @abstractmethod
-    def setValue(self, value: Any):
-        pass
-
     def clear(self):
         self.wdgEditor.clear()
 
-    def notes(self) -> str:
-        if self.field.has_notes:
-            return self._notesEditor.toMarkdown()
-        return ''
-
-    def setNotes(self, notes: str):
-        if self.field.has_notes:
-            self._notesEditor.setMarkdown(notes)
-
 
 class ComplexTemplateWidgetBase(EditableTemplateWidget):
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
+    pass
