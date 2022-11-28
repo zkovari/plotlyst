@@ -728,10 +728,13 @@ class FieldSelector(QWidget):
 
 
 class _PrimaryFieldWidget(QWidget):
-    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], parent=None):
+    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], value: str = '', parent=None):
         super().__init__(parent)
         self._field = field
         self._secondaryFields = secondaryFields
+        self._secondaryFieldWidgets: Dict[TemplateField, Optional[SmallTextTemplateFieldWidget]] = {}
+        for sf in secondaryFields:
+            self._secondaryFieldWidgets[sf] = None
         hbox(self, 0, 2)
         self._primaryWdg = SmallTextTemplateFieldWidget(field)
 
@@ -739,9 +742,9 @@ class _PrimaryFieldWidget(QWidget):
         transparent(btnSecondary)
         pointy(btnSecondary)
         btnSecondary.setIcon(IconRegistry.plus_edit_icon())
-        selector = FieldSelector(secondaryFields)
-        btn_popup(btnSecondary, selector)
-        selector.toggled.connect(self._toggleSecondaryField)
+        self._selector = FieldSelector(secondaryFields)
+        btn_popup(btnSecondary, self._selector)
+        self._selector.toggled.connect(self._toggleSecondaryField)
         btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary))
 
         self._secondaryWdgContainer = QWidget()
@@ -753,21 +756,30 @@ class _PrimaryFieldWidget(QWidget):
         self.layout().addWidget(wrap(btnSecondary, margin_top=20))
         self.layout().addWidget(self._secondaryWdgContainer)
 
+    def setValue(self, value: str):
+        self._primaryWdg.setValue(value)
+
+    def setSecondaryField(self, secondary: TemplateField, value: str):
+        print(secondary)
+        self._selector.toggle(secondary)
+        self._secondaryFieldWidgets[secondary].setValue(value)
+
     def _toggleSecondaryField(self, secondary: TemplateField, toggled: bool):
         i = self._secondaryFields.index(secondary)
 
         if toggled:
             wdg = SmallTextTemplateFieldWidget(secondary)
+            self._secondaryFieldWidgets[secondary] = wdg
             item = self._secondaryWdgContainer.layout().itemAt(i)
             self._secondaryWdgContainer.layout().replaceWidget(item.widget(), wdg)
         else:
-            item = self._secondaryWdgContainer.layout().itemAt(i)
-            wdg = item.widget()
-            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), spacer())
-            gc(wdg)
+            self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
+            gc(self._secondaryFieldWidgets[secondary])
+            self._secondaryFieldWidgets[secondary] = None
 
 
 class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
+    ID_KEY: str = 'id'
     VALUE_KEY: str = 'value'
     SECONDARY_KEY: str = 'secondary'
 
@@ -779,7 +791,7 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
         btn_popup_menu(self._btnPrimary, self._primaryMenu())
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self._layout: QVBoxLayout = vbox(self, 0, 2)
+        self._layout: QVBoxLayout = vbox(self, 0, 5)
 
         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5))
         self._layout.addWidget(vspacer())
@@ -811,12 +823,26 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         primary_fields = self._primaryFields()
         for k, v in value.items():
             primary = next((x for x in primary_fields if str(x.id) == k), None)
-            if primary:
-                self._addPrimaryField(primary)
+            if primary is None:
+                continue
+            wdg = self._addPrimaryField(primary)
+            wdg.setValue(v[self.VALUE_KEY])
 
-    def _addPrimaryField(self, field: TemplateField):
+            secondary_fields = self._secondaryFields(primary)
+            for secondary in v[self.SECONDARY_KEY]:
+                print(secondary)
+                secondary_field = next((x for x in secondary_fields if str(x.id) == secondary[self.ID_KEY]), None)
+                print(secondary_field)
+                if secondary_field:
+                    wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
+
+    def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
         wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
+        if self._layout.count() > 2:
+            self._layout.insertWidget(self._layout.count() - 2, line())
         self._layout.insertWidget(self._layout.count() - 2, wdg)
+
+        return wdg
 
 
 class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
@@ -824,7 +850,10 @@ class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
 
-        value = {str(goal_field.id): {self.VALUE_KEY: 'test', self.SECONDARY_KEY: ['']}}
+        value = {str(goal_field.id): {self.VALUE_KEY: 'test', self.SECONDARY_KEY: [
+            {self.ID_KEY: str(stakes_field.id), self.VALUE_KEY: 'test stakes'},
+            {self.ID_KEY: str(motivation_field.id), self.VALUE_KEY: 'test motivation'}
+        ]}}
         self.setValue(value)
 
     @property
