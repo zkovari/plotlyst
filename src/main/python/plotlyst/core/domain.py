@@ -30,9 +30,8 @@ from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
-    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, mbti_choices, \
-    Role, \
-    summary_field, exclude_if_false
+    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, \
+    mbti_choices, Role, summary_field, exclude_if_false
 
 
 @dataclass
