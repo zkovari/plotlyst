@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton
     QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QGridLayout, QMenu
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, translucent, grid, btn_popup_menu
+    decr_font, retain_when_hidden, translucent, grid, btn_popup_menu, gc
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qttextedit import EnhancedTextEdit
 
@@ -745,7 +745,7 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
         self.layout().addWidget(self._editor)
         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5))
-        self._layout.addWidget(spacer(), 0, 2)
+        # self._layout.addWidget(spacer(), 0, 2)
 
     @abstractmethod
     def _primaryFields(self) -> List[TemplateField]:
@@ -766,6 +766,10 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
         pass
 
+    @abstractmethod
+    def _secondaryRowDiff(self, primary: TemplateField, secondary: TemplateField) -> int:
+        pass
+
     @overrides
     def setValue(self, value: Any):
         if value is None:
@@ -780,13 +784,15 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
     def _addPrimaryField(self, field: TemplateField):
         row = self._layout.rowCount()
         wdg = SmallTextTemplateFieldWidget(field)
+        secondaryFields = self._secondaryFields(field)
+        row += len(secondaryFields) // 2
         self._layout.addWidget(wdg, row, 0)
 
         btnSecondary = QToolButton()
         transparent(btnSecondary)
         pointy(btnSecondary)
         btnSecondary.setIcon(IconRegistry.plus_circle_icon('grey'))
-        selector = FieldSelector(self._secondaryFields(field))
+        selector = FieldSelector(secondaryFields)
         btn_popup(btnSecondary, selector)
         selector.toggled.connect(partial(self._toggleSecondaryField, wdg))
         btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary))
@@ -794,7 +800,21 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._layout.addWidget(wrap(btnSecondary, margin_top=20), row, 1, 1, 1, Qt.AlignmentFlag.AlignVCenter)
 
     def _toggleSecondaryField(self, primaryWdg: SmallTextTemplateFieldWidget, secondary: TemplateField, toggled: bool):
-        print(f'{secondary.name} {toggled}')
+        primary = primaryWdg.field
+        i = self._layout.indexOf(primaryWdg)
+        primary_row = self._layout.getItemPosition(i)[0]
+        secondaryFields = self._secondaryFields(primary)
+        i = secondaryFields.index(secondary)
+        row = primary_row - len(secondaryFields) // 2 + i
+
+        if toggled:
+            wdg = SmallTextTemplateFieldWidget(secondary)
+            self._layout.addWidget(wdg, row, 2)
+        else:
+            item = self._layout.itemAtPosition(row, 2)
+            self._layout.removeItem(item)
+            if item.widget():
+                gc(item.widget())
 
 
 class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
@@ -824,3 +844,7 @@ class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
                     internal_stakes_field]
         else:
             return [internal_motivation_field, internal_conflict_field, internal_stakes_field]
+
+    @overrides
+    def _secondaryRowDiff(self, primary: TemplateField, secondary: TemplateField) -> int:
+        return -1
