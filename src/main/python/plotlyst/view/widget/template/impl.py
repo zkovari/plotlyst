@@ -27,10 +27,10 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QMouseEvent, QIcon
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QGridLayout, QMenu
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QMenu, QVBoxLayout
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, translucent, grid, btn_popup_menu, gc
+    decr_font, retain_when_hidden, translucent, btn_popup_menu, vspacer, gc
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qttextedit import EnhancedTextEdit
 
@@ -727,6 +727,46 @@ class FieldSelector(QWidget):
         self._fields[field].toggle.toggle()
 
 
+class _PrimaryFieldWidget(QWidget):
+    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], parent=None):
+        super().__init__(parent)
+        self._field = field
+        self._secondaryFields = secondaryFields
+        hbox(self, 0, 2)
+        self._primaryWdg = SmallTextTemplateFieldWidget(field)
+
+        btnSecondary = QToolButton()
+        transparent(btnSecondary)
+        pointy(btnSecondary)
+        btnSecondary.setIcon(IconRegistry.plus_edit_icon())
+        selector = FieldSelector(secondaryFields)
+        btn_popup(btnSecondary, selector)
+        selector.toggled.connect(self._toggleSecondaryField)
+        btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary))
+
+        self._secondaryWdgContainer = QWidget()
+        vbox(self._secondaryWdgContainer, 0, 2)
+        for _ in self._secondaryFields:
+            self._secondaryWdgContainer.layout().addWidget(spacer())
+
+        self.layout().addWidget(self._primaryWdg, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.layout().addWidget(wrap(btnSecondary, margin_top=20))
+        self.layout().addWidget(self._secondaryWdgContainer)
+
+    def _toggleSecondaryField(self, secondary: TemplateField, toggled: bool):
+        i = self._secondaryFields.index(secondary)
+
+        if toggled:
+            wdg = SmallTextTemplateFieldWidget(secondary)
+            item = self._secondaryWdgContainer.layout().itemAt(i)
+            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), wdg)
+        else:
+            item = self._secondaryWdgContainer.layout().itemAt(i)
+            wdg = item.widget()
+            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), spacer())
+            gc(wdg)
+
+
 class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
     VALUE_KEY: str = 'value'
     SECONDARY_KEY: str = 'secondary'
@@ -738,14 +778,11 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._btnPrimary.setText(self._primaryButtonText())
         self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
         btn_popup_menu(self._btnPrimary, self._primaryMenu())
-        vbox(self, 0, 2)
-        self._editor = QWidget(self)
-        self._editor.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self._layout: QGridLayout = grid(self._editor)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self._layout: QVBoxLayout = vbox(self, 0, 2)
 
-        self.layout().addWidget(self._editor)
         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5))
-        # self._layout.addWidget(spacer(), 0, 2)
+        self._layout.addWidget(vspacer())
 
     @abstractmethod
     def _primaryFields(self) -> List[TemplateField]:
@@ -766,10 +803,6 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
         pass
 
-    @abstractmethod
-    def _secondaryRowDiff(self, primary: TemplateField, secondary: TemplateField) -> int:
-        pass
-
     @overrides
     def setValue(self, value: Any):
         if value is None:
@@ -782,39 +815,8 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
                 self._addPrimaryField(primary)
 
     def _addPrimaryField(self, field: TemplateField):
-        row = self._layout.rowCount()
-        wdg = SmallTextTemplateFieldWidget(field)
-        secondaryFields = self._secondaryFields(field)
-        row += len(secondaryFields) // 2
-        self._layout.addWidget(wdg, row, 0)
-
-        btnSecondary = QToolButton()
-        transparent(btnSecondary)
-        pointy(btnSecondary)
-        btnSecondary.setIcon(IconRegistry.plus_circle_icon('grey'))
-        selector = FieldSelector(secondaryFields)
-        btn_popup(btnSecondary, selector)
-        selector.toggled.connect(partial(self._toggleSecondaryField, wdg))
-        btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary))
-
-        self._layout.addWidget(wrap(btnSecondary, margin_top=20), row, 1, 1, 1, Qt.AlignmentFlag.AlignVCenter)
-
-    def _toggleSecondaryField(self, primaryWdg: SmallTextTemplateFieldWidget, secondary: TemplateField, toggled: bool):
-        primary = primaryWdg.field
-        i = self._layout.indexOf(primaryWdg)
-        primary_row = self._layout.getItemPosition(i)[0]
-        secondaryFields = self._secondaryFields(primary)
-        i = secondaryFields.index(secondary)
-        row = primary_row - len(secondaryFields) // 2 + i
-
-        if toggled:
-            wdg = SmallTextTemplateFieldWidget(secondary)
-            self._layout.addWidget(wdg, row, 2)
-        else:
-            item = self._layout.itemAtPosition(row, 2)
-            self._layout.removeItem(item)
-            if item.widget():
-                gc(item.widget())
+        wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
+        self._layout.insertWidget(self._layout.count() - 2, wdg)
 
 
 class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
@@ -844,7 +846,3 @@ class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
                     internal_stakes_field]
         else:
             return [internal_motivation_field, internal_conflict_field, internal_stakes_field]
-
-    @overrides
-    def _secondaryRowDiff(self, primary: TemplateField, secondary: TemplateField) -> int:
-        return -1
