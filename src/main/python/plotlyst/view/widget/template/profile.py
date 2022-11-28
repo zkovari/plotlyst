@@ -34,7 +34,7 @@ from src.main.python.plotlyst.core.template import ProfileTemplate, TemplateFiel
     ProfileElement
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template.base import TemplateWidgetBase, TemplateDisplayWidget, \
-    TemplateFieldWidgetBase
+    EditableTemplateWidget
 from src.main.python.plotlyst.view.widget.template.factory import TemplateFieldWidgetFactory
 from src.main.python.plotlyst.view.widget.template.impl import HeaderTemplateDisplayWidget, TextSelectionWidget
 
@@ -132,7 +132,7 @@ class _ProfileTemplateBase(QWidget):
             ids[str(value.id)] = value
 
         for widget in self.widgets:
-            if isinstance(widget, TemplateFieldWidgetBase):
+            if isinstance(widget, EditableTemplateWidget):
                 if str(widget.field.id) in ids.keys():
                     value = ids[str(widget.field.id)]
                     widget.setValue(value.value)
@@ -141,7 +141,7 @@ class _ProfileTemplateBase(QWidget):
 
     def clearValues(self):
         for wdg in self.widgets:
-            if isinstance(wdg, TemplateFieldWidgetBase):
+            if isinstance(wdg, EditableTemplateWidget):
                 wdg.clear()
 
     def _headerEnabledChanged(self, header: TemplateField, enabled: bool):
@@ -177,7 +177,7 @@ class ProfileTemplateEditor(_ProfileTemplateBase):
         elements = []
         for i in range(self.gridLayout.count()):
             item = self.gridLayout.itemAt(i)
-            if item and isinstance(item.widget(), TemplateFieldWidgetBase):
+            if item and isinstance(item.widget(), EditableTemplateWidget):
                 pos = self.gridLayout.getItemPosition(i)
                 item = self.gridLayout.itemAtPosition(pos[0], pos[1])
                 if item.alignment() & Qt.AlignmentFlag.AlignRight:
