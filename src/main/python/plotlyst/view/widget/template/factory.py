@@ -21,12 +21,12 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QComboBox
 
 from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, enneagram_field, mbti_field, \
-    traits_field, SelectionItemType, SelectionItem
+    traits_field, SelectionItemType, SelectionItem, gmc_field
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template.impl import SubtitleTemplateDisplayWidget, \
     LabelTemplateDisplayWidget, HeaderTemplateDisplayWidget, LineTemplateDisplayWidget, IconTemplateDisplayWidget, \
     EnneagramFieldWidget, MbtiFieldWidget, TraitsFieldWidget, NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
-    LineTextTemplateFieldWidget, LabelsTemplateFieldWidget
+    LineTextTemplateFieldWidget, LabelsTemplateFieldWidget, GmcFieldWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -57,6 +57,8 @@ class TemplateFieldWidgetFactory:
             return MbtiFieldWidget(field, parent)
         elif field.id == traits_field.id:
             return TraitsFieldWidget(field)
+        elif field.id == gmc_field.id:
+            return GmcFieldWidget(field)
         elif field.type == TemplateFieldType.NUMERIC:
             return NumericTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.TEXT_SELECTION:

@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
     QGraphicsDropShadowEffect, QTableView
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import hbox
+from qthandy import hbox, vbox, margins
 
 from src.main.python.plotlyst.env import app_env
 
@@ -187,6 +187,15 @@ def scroll_to_bottom(scroll_area: QAbstractScrollArea):
 def hmax(widget: QWidget):
     vpol = widget.sizePolicy().verticalPolicy()
     widget.setSizePolicy(QSizePolicy.Policy.Maximum, vpol)
+
+
+def wrap(widget: QWidget, margin_left: int = 0, margin_top: int = 0, margin_right: int = 0,
+         margin_bottom: int = 0) -> QWidget:
+    parent = QWidget()
+    vbox(parent, 0, 0).addWidget(widget)
+    margins(parent, margin_left, margin_top, margin_right, margin_bottom)
+
+    return parent
 
 
 def spin(btn: QAbstractButton, color: str = 'black'):

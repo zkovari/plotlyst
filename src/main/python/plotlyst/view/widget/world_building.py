@@ -38,7 +38,8 @@ from src.main.python.plotlyst.view.common import pointy, set_tab_icon, link_butt
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import TextEditBase
-from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView, TemplateFieldWidgetBase
+from src.main.python.plotlyst.view.widget.template.base import EditableTemplateWidget
+from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView
 from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelectorWidget
 
 LINE_WIDTH: int = 4
@@ -54,7 +55,7 @@ class WorldBuildingProfileTemplateView(ProfileTemplateView):
         self._entity: Optional[WorldBuildingEntity] = None
         self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
         for wdg in self.widgets:
-            if isinstance(wdg, TemplateFieldWidgetBase):
+            if isinstance(wdg, EditableTemplateWidget):
                 wdg.valueFilled.connect(self._save)
                 wdg.valueReset.connect(self._save)
 
