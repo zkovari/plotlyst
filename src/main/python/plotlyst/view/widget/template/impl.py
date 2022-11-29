@@ -27,10 +27,10 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
 from PyQt6.QtGui import QMouseEvent, QIcon
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QMenu, QVBoxLayout
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QMenu, QVBoxLayout, QWidgetAction
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, translucent, btn_popup_menu, vspacer, gc
+    decr_font, retain_when_hidden, translucent, btn_popup_menu, vspacer, gc, italic
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qttextedit import EnhancedTextEdit
 
@@ -41,7 +41,7 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import pointy, action, wrap, emoji_font
+from src.main.python.plotlyst.view.common import pointy, action, wrap, emoji_font, hmax
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -728,6 +728,8 @@ class FieldSelector(QWidget):
 
 
 class _PrimaryFieldWidget(QWidget):
+    removed = pyqtSignal()
+
     def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], value: str = '', parent=None):
         super().__init__(parent)
         self._field = field
@@ -741,11 +743,28 @@ class _PrimaryFieldWidget(QWidget):
         btnSecondary = QToolButton()
         transparent(btnSecondary)
         pointy(btnSecondary)
+        btnSecondary.setIconSize(QSize(22, 22))
         btnSecondary.setIcon(IconRegistry.plus_edit_icon())
         self._selector = FieldSelector(secondaryFields)
-        btn_popup(btnSecondary, self._selector)
+        menu = QMenu(btnSecondary)
+        action = QWidgetAction(menu)
+        action.setDefaultWidget(self._selector)
+        menu.addAction(action)
+        menu.addSeparator()
+        action = QWidgetAction(menu)
+        btnRemove = QPushButton(f'Remove {self._field.name}')
+        transparent(btnRemove)
+        pointy(btnRemove)
+        btnRemove.installEventFilter(OpacityEventFilter(btnRemove))
+        btnRemove.setIcon(IconRegistry.trash_can_icon())
+        hmax(btnRemove)
+        italic(btnRemove)
+        btnRemove.clicked.connect(self.removed.emit)
+        action.setDefaultWidget(wrap(btnRemove, margin_top=15))
+        menu.addAction(action)
+        btn_popup_menu(btnSecondary, menu)
         self._selector.toggled.connect(self._toggleSecondaryField)
-        btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary))
+        btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary, leaveOpacity=0.7))
 
         self._secondaryWdgContainer = QWidget()
         vbox(self._secondaryWdgContainer, 0, 2)
@@ -869,11 +888,17 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
     def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
         wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
         self._primaryWidgets.append(wdg)
+        wdg.removed.connect(partial(self._removePrimaryField, wdg))
         if self._layout.count() > 2:
             self._layout.insertWidget(self._layout.count() - 2, line())
         self._layout.insertWidget(self._layout.count() - 2, wdg)
 
         return wdg
+
+    def _removePrimaryField(self, wdg: _PrimaryFieldWidget):
+        self._primaryWidgets.remove(wdg)
+        self._layout.removeWidget(wdg)
+        gc(wdg)
 
 
 class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
