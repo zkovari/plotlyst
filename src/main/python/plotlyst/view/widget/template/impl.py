@@ -41,7 +41,7 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import pointy, action, wrap, emoji_font, hmax
+from src.main.python.plotlyst.view.common import pointy, wrap, emoji_font, hmax, action
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -831,25 +831,6 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self.layout().addWidget(wrap(self._btnPrimary, margin_left=5))
         self._layout.addWidget(vspacer())
 
-    @abstractmethod
-    def _primaryFields(self) -> List[TemplateField]:
-        pass
-
-    def _primaryButtonText(self) -> str:
-        return 'Add new item'
-
-    def _primaryMenu(self) -> QMenu:
-        fields = self._primaryFields()
-        menu = QMenu()
-        for field in fields:
-            menu.addAction(action(field.name, slot=partial(self._addPrimaryField, field), parent=menu))
-
-        return menu
-
-    @abstractmethod
-    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        pass
-
     @overrides
     def value(self) -> Any:
         def secondaryValues(primaryWdg: _PrimaryFieldWidget):
@@ -885,6 +866,25 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
                 if secondary_field:
                     wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
 
+    @abstractmethod
+    def _primaryFields(self) -> List[TemplateField]:
+        pass
+
+    def _primaryButtonText(self) -> str:
+        return 'Add new item'
+
+    def _primaryMenu(self) -> QMenu:
+        fields = self._primaryFields()
+        menu = QMenu()
+        for field in fields:
+            menu.addAction(action(field.name, slot=partial(self._addPrimaryField, field), parent=menu))
+
+        return menu
+
+    @abstractmethod
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        pass
+
     def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
         wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
         self._primaryWidgets.append(wdg)
@@ -905,12 +905,6 @@ class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
-
-        # value = {str(goal_field.id): {self.VALUE_KEY: 'test', self.SECONDARY_KEY: [
-        #     {self.ID_KEY: str(stakes_field.id), self.VALUE_KEY: 'test stakes'},
-        #     {self.ID_KEY: str(motivation_field.id), self.VALUE_KEY: 'test motivation'}
-        # ]}}
-        # self.setValue(value)
 
     @property
     def wdgEditor(self):
