@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
 from functools import partial
-from typing import Optional, List, Any, Dict, Set
+from typing import Optional, List, Any, Dict, Set, Tuple
 
 import emoji
 import qtanim
@@ -756,11 +756,25 @@ class _PrimaryFieldWidget(QWidget):
         self.layout().addWidget(wrap(btnSecondary, margin_top=20))
         self.layout().addWidget(self._secondaryWdgContainer)
 
+    def field(self) -> TemplateField:
+        return self._field
+
+    def value(self) -> str:
+        return self._primaryWdg.value()
+
     def setValue(self, value: str):
         self._primaryWdg.setValue(value)
 
+    def secondaryFields(self) -> List[Tuple[str, str]]:
+        fields = []
+        for field, wdg in self._secondaryFieldWidgets.items():
+            if wdg is None:
+                continue
+            fields.append((str(field.id), wdg.value()))
+
+        return fields
+
     def setSecondaryField(self, secondary: TemplateField, value: str):
-        print(secondary)
         self._selector.toggle(secondary)
         self._secondaryFieldWidgets[secondary].setValue(value)
 
@@ -785,6 +799,8 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
+
+        self._primaryWidgets: List[_PrimaryFieldWidget] = []
 
         self._btnPrimary = SecondaryActionPushButton()
         self._btnPrimary.setText(self._primaryButtonText())
@@ -816,6 +832,22 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         pass
 
     @overrides
+    def value(self) -> Any:
+        def secondaryValues(primaryWdg: _PrimaryFieldWidget):
+            values = []
+            for field in primaryWdg.secondaryFields():
+                s_id, value_ = field
+                values.append({self.ID_KEY: s_id, self.VALUE_KEY: value_})
+            return values
+
+        value = {}
+        for primary_wdg in self._primaryWidgets:
+            value[str(primary_wdg.field().id)] = {self.VALUE_KEY: primary_wdg.value(),
+                                                  self.SECONDARY_KEY: secondaryValues(primary_wdg)}
+
+        return value
+
+    @overrides
     def setValue(self, value: Any):
         if value is None:
             return
@@ -830,14 +862,13 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
             secondary_fields = self._secondaryFields(primary)
             for secondary in v[self.SECONDARY_KEY]:
-                print(secondary)
                 secondary_field = next((x for x in secondary_fields if str(x.id) == secondary[self.ID_KEY]), None)
-                print(secondary_field)
                 if secondary_field:
                     wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
 
     def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
         wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
+        self._primaryWidgets.append(wdg)
         if self._layout.count() > 2:
             self._layout.insertWidget(self._layout.count() - 2, line())
         self._layout.insertWidget(self._layout.count() - 2, wdg)
@@ -850,11 +881,11 @@ class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super().__init__(field, parent)
 
-        value = {str(goal_field.id): {self.VALUE_KEY: 'test', self.SECONDARY_KEY: [
-            {self.ID_KEY: str(stakes_field.id), self.VALUE_KEY: 'test stakes'},
-            {self.ID_KEY: str(motivation_field.id), self.VALUE_KEY: 'test motivation'}
-        ]}}
-        self.setValue(value)
+        # value = {str(goal_field.id): {self.VALUE_KEY: 'test', self.SECONDARY_KEY: [
+        #     {self.ID_KEY: str(stakes_field.id), self.VALUE_KEY: 'test stakes'},
+        #     {self.ID_KEY: str(motivation_field.id), self.VALUE_KEY: 'test motivation'}
+        # ]}}
+        # self.setValue(value)
 
     @property
     def wdgEditor(self):
