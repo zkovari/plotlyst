@@ -336,6 +336,24 @@ ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':smiling_face_with_open_hands:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
 
+wounds_field = TemplateField('Wounds', type=TemplateFieldType.COMPLEX,
+                             id=uuid.UUID('b3e591ba-ce55-43c2-a4b0-f35864693977'))
+wound_field = TemplateField('Wound', type=TemplateFieldType.SMALL_TEXT, emoji=':broken heart:',
+                            placeholder='What past event caused emotional wound?',
+                            id=uuid.UUID('587cace8-0326-4895-b51e-de1d92b9db1b'))
+fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
+                           placeholder='',
+                           id=uuid.UUID('9601abef-c568-4ef6-9ff9-8da2e62e0572'))
+emotional_shield_field = TemplateField('Emotional shield', type=TemplateFieldType.SMALL_TEXT, emoji=':shield:',
+                                       placeholder='',
+                                       id=uuid.UUID('f6c2632a-91ba-41c8-bdea-5f618a1dcd96'))
+trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoji=':high_voltage:',
+                              placeholder='',
+                              id=uuid.UUID('1a7b45ee-29d4-4e69-a177-0f8804a93b78'))
+healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoji=':adhesive_bandage:',
+                              placeholder='',
+                              id=uuid.UUID('13ccb707-07bc-4567-9ae0-93da65b7f6e7'))
+
 values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
                 SelectionItem('Authenticity', icon='mdi6.certificate'),
                 SelectionItem('Adventure', icon='mdi6.snowboard'),
@@ -515,7 +533,8 @@ def default_character_profiles() -> List[ProfileTemplate]:
 
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
-    gmc_title = TemplateField('GMC', type=TemplateFieldType.DISPLAY_HEADER)
+    gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
+    wounds_title = TemplateField('Wounds', type=TemplateFieldType.DISPLAY_HEADER)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
 
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
@@ -526,6 +545,8 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(gmc_title, 6, 0, col_span=2),
               ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(wounds_title, 8, 0, col_span=2),
+              ProfileElement(wounds_field, 9, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(story_title, 14, 0, col_span=2),
               ProfileElement(need_field, 15, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(weaknesses_field, 16, 0, col_span=2, margins=Margins(left=15)),

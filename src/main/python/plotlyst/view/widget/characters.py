@@ -1710,8 +1710,8 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         self._addLine(self.RowGender + 1)
 
         fields = {}
-        headers = {}
-        header = None
+        headers: Dict[CharactersProgressWidget.Header, int] = {}
+        header: Optional[CharactersProgressWidget.Header] = None
         row = self.RowGender + 1
         for el in self.novel.character_profiles[0].elements:
             if el.field.type == TemplateFieldType.DISPLAY_HEADER:
