@@ -536,7 +536,7 @@ class _SceneBeatPlaceholderButton(QToolButton):
         self.setToolTip('Insert new beat')
 
         self._menu = MenuWithDescription(self)
-        self._addAction('Goal', SceneStructureItemType.ACTION, description='')
+        self._addAction('Action', SceneStructureItemType.ACTION, description='')
         self._addAction('Conflict', SceneStructureItemType.CONFLICT, description='')
         self._addAction('Outcome', SceneStructureItemType.OUTCOME, description='')
         self._addAction('Reaction', SceneStructureItemType.REACTION, description='')
@@ -785,6 +785,7 @@ class SceneStructureTimeline(QWidget):
         width = event.rect().width()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setOpacity(0.5)
 
         first_el = self._path.elementAt(0)
         last_el = self._path.elementAt(self._path.elementCount() - 1)
@@ -1031,8 +1032,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.wdgTypes.layout().addWidget(self.btnSequel)
 
         flow(self.wdgGoalConflictContainer)
-
-        bold(self.iconBeginning)
 
         self.timeline = SceneStructureTimeline(self)
         self.timeline.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)

@@ -37,6 +37,19 @@ from src.main.python.plotlyst.view.widget.chart import PolarBaseChart
 from src.main.python.plotlyst.view.widget.display import ChartView, IconText
 
 
+def dimension_from(name: str) -> BigFiveDimension:
+    if name == agreeableness.name:
+        return agreeableness
+    elif name == openness.name:
+        return openness
+    elif name == extroversion.name:
+        return extroversion
+    elif name == neuroticism.name:
+        return neuroticism
+    else:
+        return conscientiousness
+
+
 class BigFiveChart(PolarBaseChart):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -207,23 +220,11 @@ class BigFivePersonalityWidget(QWidget):
 
         for bf, values in character.big_five.items():
             for i, v in enumerate(values):
-                self._facetWidgets[self._dimension(bf)][i].setValue(v)
+                self._facetWidgets[dimension_from(bf)][i].setValue(v)
         for bf, values in character.big_five.items():
-            self._chart.refreshDimension(self._dimension(bf), values)
+            self._chart.refreshDimension(dimension_from(bf), values)
 
         self._character = character
-
-    def _dimension(self, name: str):
-        if name == agreeableness.name:
-            return agreeableness
-        elif name == openness.name:
-            return openness
-        elif name == extroversion.name:
-            return extroversion
-        elif name == neuroticism.name:
-            return neuroticism
-        else:
-            return conscientiousness
 
     def _facetEdited(self, value: int):
         if value <= 20:

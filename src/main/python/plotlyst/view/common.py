@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
     QGraphicsDropShadowEffect, QTableView
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import hbox
+from qthandy import hbox, vbox, margins
 
 from src.main.python.plotlyst.env import app_env
 
@@ -145,11 +145,11 @@ class ButtonPressResizeEventFilter(QObject):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(watched, QAbstractButton):
-            if event.type() == QEvent.Type.MouseButtonPress:
+            if event.type() == QEvent.Type.MouseButtonPress and watched.isEnabled():
                 if self._originalSize is None:
                     self._calculateSize(watched)
                 watched.setIconSize(self._reducedSize)
-            elif event.type() == QEvent.Type.MouseButtonRelease:
+            elif event.type() == QEvent.Type.MouseButtonRelease and watched.isEnabled():
                 if self._originalSize is None:
                     self._calculateSize(watched)
                 watched.setIconSize(self._originalSize)
@@ -189,6 +189,15 @@ def hmax(widget: QWidget):
     widget.setSizePolicy(QSizePolicy.Policy.Maximum, vpol)
 
 
+def wrap(widget: QWidget, margin_left: int = 0, margin_top: int = 0, margin_right: int = 0,
+         margin_bottom: int = 0) -> QWidget:
+    parent = QWidget()
+    vbox(parent, 0, 0).addWidget(widget)
+    margins(parent, margin_left, margin_top, margin_right, margin_bottom)
+
+    return parent
+
+
 def spin(btn: QAbstractButton, color: str = 'black'):
     spin_icon = qtawesome.icon('fa5s.spinner', color=color,
                                animation=qtawesome.Spin(btn))
@@ -207,6 +216,11 @@ def icon_to_html_img(icon: QIcon, size: int = 20) -> str:
 
 def pointy(widget):
     widget.setCursor(Qt.CursorShape.PointingHandCursor)
+
+
+def restyle(widget: QWidget):
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
 
 
 def shadow(wdg: QWidget, offset: int = 2):

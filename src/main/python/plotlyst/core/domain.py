@@ -30,9 +30,8 @@ from dataclasses_json import dataclass_json, Undefined, config
 from overrides import overrides
 
 from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_empty, exclude_if_black, enneagram_field, \
-    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, mbti_choices, \
-    Role, \
-    summary_field, exclude_if_false
+    mbti_field, ProfileTemplate, default_character_profiles, default_location_profiles, enneagram_choices, \
+    mbti_choices, Role, summary_field, exclude_if_false
 
 
 @dataclass
@@ -422,6 +421,24 @@ class PlotValue(SelectionItem):
         return hash(str(id))
 
 
+class PlotPrincipleType(Enum):
+    GOAL = 0
+    ANTAGONIST = 1
+    CONFLICT = 2
+    CONSEQUENCES = 3
+    PROGRESS = 4
+    SETBACK = 5
+    TURNS = 6
+    CRISIS = 7
+
+
+@dataclass
+class PlotPrinciple:
+    type: PlotPrincipleType
+    value: Any = None
+    is_set: bool = False
+
+
 class CharacterBased(ABC):
     def set_character(self, character: Optional[Character]):
         if character is None:
@@ -467,6 +484,7 @@ class Plot(SelectionItem, CharacterBased):
     values: List[PlotValue] = field(default_factory=list)
     character_id: Optional[uuid.UUID] = None
     question: str = ''
+    principles: List[PlotPrinciple] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None

@@ -3,7 +3,8 @@ from src.main.python.plotlyst.core.domain import SceneStoryBeat, save_the_cat
 from src.main.python.plotlyst.test.common import create_plot, go_to_novel, patch_confirmed, go_to_scenes
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
-from src.main.python.plotlyst.view.widget.novel import PlotWidget, StoryStructureSelectorDialog
+from src.main.python.plotlyst.view.widget.novel import StoryStructureSelectorDialog
+from src.main.python.plotlyst.view.widget.plot import PlotWidget
 
 
 def test_create_plot(qtbot, filled_window: MainWindow):
@@ -27,8 +28,8 @@ def test_delete_plot(qtbot, filled_window: MainWindow, monkeypatch):
 
     patch_confirmed(monkeypatch)
     item = view.plot_editor.scrollAreaWidgetContents.layout().itemAt(0)
-    assert item and item.widget() and isinstance(item.widget(), PlotWidget)
-    plot_widget: PlotWidget = item.widget()
+    assert item and item.widget() and isinstance(item.widget().widget(), PlotWidget)
+    plot_widget: PlotWidget = item.widget().widget()
     plot_widget.btnRemove.click()
 
     assert len(view.novel.plots) == 2

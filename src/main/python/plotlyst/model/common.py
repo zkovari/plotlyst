@@ -176,7 +176,7 @@ class SelectionItemsModel(QAbstractTableModel):
         if index.column() == self.ColName and role == Qt.ItemDataRole.DisplayRole:
             return item.text
         if role == Qt.ItemDataRole.CheckStateRole and self._checkable and index.column() == self._checkable_column:
-            return Qt.Checked if item in self._checked else Qt.Unchecked
+            return Qt.CheckState.Checked if item in self._checked else Qt.CheckState.Unchecked
         if role == Qt.ItemDataRole.FontRole and self._checkable and index.column() == self._checkable_column:
             if item in self._checked:
                 font = QFont()
@@ -193,16 +193,16 @@ class SelectionItemsModel(QAbstractTableModel):
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         flags = super().flags(index)
         if self._checkable and index.column() == self._checkable_column:
-            flags = flags | Qt.ItemIsUserCheckable
+            flags = flags | Qt.ItemFlag.ItemIsUserCheckable
         if self._editable and self.columnIsEditable(index.column()):
-            flags = flags | Qt.ItemIsEditable
+            flags = flags | Qt.ItemFlag.ItemIsEditable
 
         return flags
 
     @overrides
     def setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.DisplayRole) -> bool:
         item: SelectionItem = self.item(index)
-        if role == Qt.EditRole:
+        if role == Qt.ItemDataRole.EditRole:
             if index.column() == self.ColName:
                 was_checked = item in self._checked
                 if was_checked:
@@ -218,9 +218,9 @@ class SelectionItemsModel(QAbstractTableModel):
             self.item_edited.emit()
             return True
         if role == Qt.ItemDataRole.CheckStateRole:
-            if value == Qt.Checked:
+            if value == Qt.CheckState.Checked.value:
                 self._checked.add(item)
-            elif value == Qt.Unchecked:
+            elif value == Qt.CheckState.Unchecked.value:
                 self._checked.remove(item)
             self.selection_changed.emit()
             return True
@@ -304,7 +304,7 @@ class DistributionModel(QAbstractTableModel):
         if index.column() == self.IndexTags:
             if role == Qt.ItemDataRole.ForegroundRole:
                 if self._highlighted_tags and index not in self._highlighted_tags:
-                    return QBrush(QColor(Qt.gray))
+                    return QBrush(QColor(Qt.GlobalColor.gray))
                 else:
                     return self._dataForTag(index, role)
             elif role == self.SortRole:
@@ -326,10 +326,10 @@ class DistributionModel(QAbstractTableModel):
             if self._match(index):
                 if self._highlighted_scene:
                     if self._highlighted_scene.column() != index.column():
-                        return QBrush(QColor(Qt.gray))
+                        return QBrush(QColor(Qt.GlobalColor.gray))
                 if self._highlighted_tags:
                     if not all([self._match_by_row_col(x.row(), index.column()) for x in self._highlighted_tags]):
-                        return QBrush(QColor(Qt.gray))
+                        return QBrush(QColor(Qt.GlobalColor.gray))
                 if self.novel.scenes[index.column() - 2].wip:
                     return QBrush(QColor(WIP_COLOR))
                 if self.novel.scenes[index.column() - 2].beat(self.novel):
@@ -343,7 +343,7 @@ class DistributionModel(QAbstractTableModel):
 
         if self._highlighted_scene and index.column() == self.IndexTags:
             if not self._match_by_row_col(index.row(), self._highlighted_scene.column()):
-                return Qt.NoItemFlags
+                return Qt.ItemFlag.NoItemFlags
 
         return flags
 

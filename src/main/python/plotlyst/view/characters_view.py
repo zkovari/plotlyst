@@ -40,7 +40,8 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget, \
+    CharacterComparisonWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -92,6 +93,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
+        self.ui.btnComparison.setIcon(IconRegistry.from_name('mdi.compare-horizontal', color_on='darkBlue'))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
@@ -113,6 +115,11 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.setCardsWidth(142)
         self._update_cards()
 
+        self.ui.wdgComparisonCharacterSelector.setExclusive(False)
+        self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
+        self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
+        self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
+
         self._progress = CharactersProgressWidget()
         self.ui.pageProgressView.layout().addWidget(self._progress)
         self.ui.pageProgressView.setStyleSheet(f'''
@@ -127,6 +134,7 @@ class CharactersView(AbstractNovelView):
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
                                                         (self.ui.btnBackstoryView, self.ui.pageBackstory),
+                                                        (self.ui.btnComparison, self.ui.pageComparison),
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
         self.ui.btnCardsView.setChecked(True)
 
@@ -192,9 +200,14 @@ class CharactersView(AbstractNovelView):
         elif self.ui.btnTableView.isChecked():
             self._enable_action_buttons(len(self.ui.tblCharacters.selectedIndexes()) > 0)
             self.ui.wdgToolbar.setVisible(True)
-        else:
+        elif self.ui.btnBackstoryView.isChecked():
             self.ui.wdgToolbar.setVisible(False)
             self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
+        elif self.ui.btnComparison.isChecked():
+            self.ui.wdgToolbar.setVisible(False)
+            self.ui.wdgComparisonCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
+        else:
+            self.ui.wdgToolbar.setVisible(False)
 
     def _on_edit(self):
         character = None

@@ -36,7 +36,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_profile_editor_dialog_ui import Ui_CharacterProfileEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.template import ProfileTemplateEditor
+from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateEditor
 
 
 class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):

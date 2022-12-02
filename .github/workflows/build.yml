@@ -67,6 +67,7 @@ jobs:
           pip install git+https://github.com/plotlyst/qt-textedit.git
           pip install git+https://github.com/plotlyst/qt-handy.git
           pip install git+https://github.com/plotlyst/qt-emojipicker.git
+          pip install git+https://github.com/plotlyst/qt-frames.git
           pip install git+https://github.com/plotlyst/language_tool_python.git@feature/macos-awt-flag
       - name: Generate code
         run: |

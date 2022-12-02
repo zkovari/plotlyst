@@ -17,35 +17,31 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import pickle
 from abc import abstractmethod
 from functools import partial
 from typing import Optional, List, Any, Dict, Set, Tuple
 
 import emoji
 import qtanim
-import qtawesome
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QModelIndex, QSize
-from PyQt6.QtGui import QDropEvent, QIcon, QMouseEvent, QDragEnterEvent, QDragMoveEvent, QPalette, QColor
-from PyQt6.QtWidgets import QFrame, QHBoxLayout, QScrollArea, QWidget, QGridLayout, QLineEdit, QLayoutItem, \
-    QToolButton, QLabel, QSpinBox, QComboBox, QButtonGroup, QSizePolicy, QSpacerItem, QListView, QPushButton, QTextEdit
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
+from PyQt6.QtGui import QMouseEvent, QIcon
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QMenu, QVBoxLayout, QWidgetAction
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, translucent, gc
-from qthandy.filter import VisibilityToggleEventFilter
+    decr_font, retain_when_hidden, translucent, btn_popup_menu, vspacer, gc, italic
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qttextedit import EnhancedTextEdit
 
-from src.main.python.plotlyst.core.domain import TemplateValue, Character, Topic
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
-from src.main.python.plotlyst.core.template import TemplateField, TemplateFieldType, SelectionItem, \
-    ProfileTemplate, ProfileElement, SelectionItemType, \
-    enneagram_field, traits_field, HAlignment, VAlignment, mbti_field, \
-    enneagram_choices
+from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
+    enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
+    internal_motivation_field, internal_conflict_field, internal_stakes_field
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import emoji_font, pointy
+from src.main.python.plotlyst.view.common import pointy, wrap, emoji_font, hmax, action
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -55,115 +51,8 @@ from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar
-
-
-class _ProfileTemplateBase(QWidget):
-
-    def __init__(self, profile: ProfileTemplate, editor_mode: bool = False, disabled_template_headers=None,
-                 parent=None):
-        super().__init__(parent)
-        self._profile = profile
-        self._disabled_template_headers: Dict[
-            str, bool] = disabled_template_headers if disabled_template_headers else {}
-        self.layout = vbox(self)
-        self.scrollArea = QScrollArea(self)
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.scrollAreaWidgetContents = QWidget()
-        self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
-        self.gridLayout.setSpacing(1)
-        self.gridLayout.setContentsMargins(2, 0, 2, 0)
-        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-        self.layout.addWidget(self.scrollArea)
-
-        self._spacer_item = QSpacerItem(20, 50, QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-
-        self.widgets: List[TemplateWidgetBase] = []
-        self._headers: List[Tuple[int, HeaderTemplateDisplayWidget]] = []
-        self._initGrid(editor_mode)
-
-    def _initGrid(self, editor_mode: bool):
-        self.widgets.clear()
-        self._headers.clear()
-
-        for el in self._profile.elements:
-            widget = TemplateFieldWidgetFactory.widget(el.field, self)
-            if el.margins:
-                widget.setContentsMargins(el.margins.left, el.margins.top, el.margins.right, el.margins.bottom)
-            self.widgets.append(widget)
-            self.gridLayout.addWidget(widget, el.row, el.col, el.row_span, el.col_span,
-                                      el.h_alignment.value | el.v_alignment.value)
-
-            if isinstance(widget, HeaderTemplateDisplayWidget):
-                self._headers.append((el.row, widget))
-            else:
-                if self._headers:
-                    self._headers[-1][1].attachWidget(widget)
-
-        for _, header in self._headers:
-            header.updateProgress()
-            header.setHeaderEnabled(self._disabled_template_headers.get(str(header.field.id), header.field.enabled))
-            header.headerEnabledChanged.connect(partial(self._headerEnabledChanged, header.field))
-
-        self._addSpacerToEnd()
-
-    def _addSpacerToEnd(self):
-        self.gridLayout.addItem(self._spacer_item,
-                                self.gridLayout.rowCount(), 0)
-        self.gridLayout.setRowStretch(self.gridLayout.rowCount() - 1, 1)
-
-    def values(self) -> List[TemplateValue]:
-        values: List[TemplateValue] = []
-        for widget in self.widgets:
-            if isinstance(widget, TemplateDisplayWidget):
-                continue
-            values.append(TemplateValue(id=widget.field.id, value=widget.value(), notes=widget.notes()))
-
-        return values
-
-    def setValues(self, values: List[TemplateValue]):
-        ids = {}
-        for value in values:
-            ids[str(value.id)] = value
-
-        for widget in self.widgets:
-            if isinstance(widget, TemplateFieldWidgetBase):
-                if str(widget.field.id) in ids.keys():
-                    value = ids[str(widget.field.id)]
-                    widget.setValue(value.value)
-                    if value.notes:
-                        widget.setNotes(value.notes)
-
-    def clearValues(self):
-        for wdg in self.widgets:
-            if isinstance(wdg, TemplateFieldWidgetBase):
-                wdg.clear()
-
-    def _headerEnabledChanged(self, header: TemplateField, enabled: bool):
-        pass
-
-
-class _PlaceHolder(QFrame):
-    def __init__(self):
-        super(_PlaceHolder, self).__init__()
-        layout = QHBoxLayout(self)
-        layout.setSpacing(4)
-        layout.setContentsMargins(2, 2, 1, 2)
-        self.setLayout(layout)
-
-        self.btn = QToolButton()
-        self.btn.setIcon(qtawesome.icon('ei.plus-sign', color='lightgrey'))
-        self.btn.setText('<Drop here>')
-        self.btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.btn.setStyleSheet('''
-                background-color: rgb(255, 255, 255);
-                border: 0px;
-                color: lightgrey;''')
-        layout.addWidget(self.btn)
-
-
-def is_placeholder(widget: QWidget) -> bool:
-    return isinstance(widget, _PlaceHolder) or isinstance(widget.parent(), _PlaceHolder)
+from src.main.python.plotlyst.view.widget.template.base import TemplateDisplayWidget, TemplateFieldWidgetBase, \
+    TemplateWidgetBase, ComplexTemplateWidgetBase
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -396,27 +285,6 @@ class ButtonSelectionWidget(QWidget):
                 btn.setChecked(True)
 
 
-class TemplateWidgetBase(QFrame):
-    valueFilled = pyqtSignal()
-    valueReset = pyqtSignal()
-
-    def __init__(self, field: TemplateField, parent=None):
-        super(TemplateWidgetBase, self).__init__(parent)
-        self.field = field
-        self.setProperty('mainFrame', True)
-
-    def select(self):
-        self.setStyleSheet('QFrame[mainFrame=true] {border: 2px dashed #0496ff;}')
-
-    def deselect(self):
-        self.setStyleSheet('')
-
-
-class TemplateDisplayWidget(TemplateWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(TemplateDisplayWidget, self).__init__(field, parent)
-
-
 class SubtitleTemplateDisplayWidget(TemplateDisplayWidget):
     def __init__(self, field: TemplateField, parent=None):
         super(SubtitleTemplateDisplayWidget, self).__init__(field, parent)
@@ -547,72 +415,6 @@ class LineTemplateDisplayWidget(TemplateDisplayWidget):
         super(LineTemplateDisplayWidget, self).__init__(field, parent)
         hbox(self)
         self.layout().addWidget(line())
-
-
-class TemplateFieldWidgetBase(TemplateWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
-        super(TemplateFieldWidgetBase, self).__init__(field, parent)
-        self.lblEmoji = QLabel(self)
-        self.lblEmoji.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self.lblEmoji.setToolTip(field.description if field.description else field.placeholder)
-        self.lblName = QLabel(self)
-        self.lblName.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self.lblName.setText(self.field.name)
-        self.lblName.setToolTip(field.description if field.description else field.placeholder)
-
-        if self.field.emoji:
-            self.updateEmoji(emoji.emojize(self.field.emoji))
-        else:
-            self.lblEmoji.setHidden(True)
-
-        if not field.show_label:
-            self.lblName.setHidden(True)
-
-        if app_env.is_mac():
-            self._boxSpacing = 1
-            self._boxMargin = 0
-        else:
-            self._boxSpacing = 3
-            self._boxMargin = 1
-
-    @overrides
-    def setEnabled(self, enabled: bool):
-        if not self.layout():
-            return
-        for i in range(self.layout().count()):
-            item = self.layout().itemAt(i)
-            if item and item.widget():
-                item.widget().setEnabled(enabled)
-
-    def updateEmoji(self, emoji: str):
-        if app_env.is_windows():
-            emoji_size = 14
-        else:
-            emoji_size = 20
-
-        self.lblEmoji.setFont(emoji_font(emoji_size))
-        self.lblEmoji.setText(emoji)
-        self.lblEmoji.setVisible(True)
-
-    @abstractmethod
-    def value(self) -> Any:
-        pass
-
-    @abstractmethod
-    def setValue(self, value: Any):
-        pass
-
-    def clear(self):
-        self.wdgEditor.clear()
-
-    def notes(self) -> str:
-        if self.field.has_notes:
-            return self._notesEditor.toMarkdown()
-        return ''
-
-    def setNotes(self, notes: str):
-        if self.field.has_notes:
-            self._notesEditor.setMarkdown(notes)
 
 
 class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
@@ -874,342 +676,252 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
 
 
-class TemplateFieldWidgetFactory:
+class FieldToggle(QWidget):
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(parent)
+        self._field = field
+        hbox(self)
 
-    @staticmethod
-    def widget(field: TemplateField, parent=None) -> TemplateWidgetBase:
-        if field.type == TemplateFieldType.DISPLAY_SUBTITLE:
-            return SubtitleTemplateDisplayWidget(field, parent)
-        elif field.type == TemplateFieldType.DISPLAY_LABEL:
-            return LabelTemplateDisplayWidget(field, parent)
-        elif field.type == TemplateFieldType.DISPLAY_HEADER:
-            return HeaderTemplateDisplayWidget(field, parent)
-        elif field.type == TemplateFieldType.DISPLAY_LINE:
-            return LineTemplateDisplayWidget(field, parent)
-        elif field.type == TemplateFieldType.DISPLAY_ICON:
-            return IconTemplateDisplayWidget(field, parent)
+        self._lblEmoji = QLabel(self)
+        self._lblEmoji.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self._lblEmoji.setToolTip(field.description if field.description else field.placeholder)
+        self._lblName = QLabel(self)
+        self._lblName.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self._lblName.setText(self._field.name)
+        self._lblName.setToolTip(field.description if field.description else field.placeholder)
 
-        if field.id == enneagram_field.id:
-            return EnneagramFieldWidget(field, parent)
-        elif field.id == mbti_field.id:
-            return MbtiFieldWidget(field, parent)
-        elif field.id == traits_field.id:
-            return TraitsFieldWidget(field)
-        elif field.type == TemplateFieldType.NUMERIC:
-            return NumericTemplateFieldWidget(field, parent)
-        elif field.type == TemplateFieldType.TEXT_SELECTION:
-            widget = QComboBox()
-            if not field.required:
-                widget.addItem('')
-            for item in field.selections:
-                if item.type == SelectionItemType.CHOICE:
-                    widget.addItem(_icon(item), item.text)
-                if item.type == SelectionItemType.SEPARATOR:
-                    widget.insertSeparator(widget.count())
-        # elif field.type == TemplateFieldType.BUTTON_SELECTION:
-        #     widget = ButtonSelectionWidget(field)
-        elif field.type == TemplateFieldType.SMALL_TEXT:
-            return SmallTextTemplateFieldWidget(field, parent)
-        elif field.type == TemplateFieldType.TEXT:
-            return LineTextTemplateFieldWidget(field, parent)
-        elif field.type == TemplateFieldType.LABELS:
-            return LabelsTemplateFieldWidget(field, parent)
-        else:
-            return SmallTextTemplateFieldWidget(field, parent)
-
-
-class ProfileTemplateEditor(_ProfileTemplateBase):
-    MimeType: str = 'application/template-field'
-
-    fieldSelected = pyqtSignal(TemplateField)
-    placeholderSelected = pyqtSignal()
-    fieldAdded = pyqtSignal(TemplateField)
-
-    def __init__(self, profile: ProfileTemplate):
-        super(ProfileTemplateEditor, self).__init__(profile, editor_mode=True)
-        self.setAcceptDrops(True)
-        self.setStyleSheet('QWidget {background-color: rgb(255, 255, 255);}')
-        self._selected: Optional[TemplateWidgetBase] = None
-        self._target_to_drop: Optional[QWidget] = None
-
-        for w in self.widgets:
-            w.setEnabled(False)
-            w.setAcceptDrops(True)
-            self._installEventFilter(w)
-
-        self.gridLayout.removeItem(self._spacer_item)
-        for row in range(max(6, self.gridLayout.rowCount() + 1)):
-            for col in range(2):
-                if not self.gridLayout.itemAtPosition(row, col):
-                    self._addPlaceholder(row, col)
-
-    def profile(self) -> ProfileTemplate:
-        elements = []
-        for i in range(self.gridLayout.count()):
-            item = self.gridLayout.itemAt(i)
-            if item and isinstance(item.widget(), TemplateFieldWidgetBase):
-                pos = self.gridLayout.getItemPosition(i)
-                item = self.gridLayout.itemAtPosition(pos[0], pos[1])
-                if item.alignment() & Qt.AlignmentFlag.AlignRight:
-                    h_alignment = HAlignment.RIGHT
-                elif item.alignment() & Qt.AlignmentFlag.AlignLeft:
-                    h_alignment = HAlignment.LEFT
-                elif item.alignment() & Qt.AlignmentFlag.AlignHCenter:
-                    h_alignment = HAlignment.CENTER
-                elif item.alignment() & Qt.AlignmentFlag.AlignJustify:
-                    h_alignment = HAlignment.JUSTIFY
-                else:
-                    h_alignment = HAlignment.DEFAULT
-
-                if item.alignment() & Qt.AlignmentFlag.AlignTop:
-                    v_alignment = VAlignment.TOP
-                elif item.alignment() & Qt.AlignmentFlag.AlignBottom:
-                    v_alignment = VAlignment.BOTTOM
-                else:
-                    v_alignment = VAlignment.CENTER
-
-                elements.append(
-                    ProfileElement(item.widget().field, row=pos[0], col=pos[1], row_span=pos[2], col_span=pos[3],
-                                   h_alignment=h_alignment, v_alignment=v_alignment))
-
-        self._profile.elements = elements
-        return self._profile
-
-    @overrides
-    def dragEnterEvent(self, event: QDragEnterEvent):
-        if event.mimeData().hasFormat(self.MimeType):
-            event.accept()
-        else:
-            event.ignore()
-
-    @overrides
-    def dragMoveEvent(self, event: QDragMoveEvent):
-        if not self._target_to_drop:
-            event.ignore()
-            return
-        if is_placeholder(self._target_to_drop):
-            event.accept()
-        else:
-            event.ignore()
-
-    @overrides
-    def dropEvent(self, event: QDropEvent):
-        if not self._target_to_drop:
-            event.ignore()
-            return
-
-        if isinstance(self._target_to_drop, _PlaceHolder):
-            placeholder = self._target_to_drop
-        elif isinstance(self._target_to_drop.parent(), _PlaceHolder):
-            placeholder = self._target_to_drop.parent()
-        else:
-            event.ignore()
-            return
-        index = self.gridLayout.indexOf(placeholder)
-
-        field: TemplateField = pickle.loads(event.mimeData().data(self.MimeType))
-        widget_to_drop = TemplateFieldWidgetFactory.widget(field)
-        widget_to_drop.setEnabled(False)
-        pos = self.gridLayout.getItemPosition(index)
-        item: QLayoutItem = self.gridLayout.takeAt(index)
-        gc(item.widget())
-        self.gridLayout.addWidget(widget_to_drop, *pos)
-        self._installEventFilter(widget_to_drop)
-
-        self.widgets.append(widget_to_drop)
-
-        self.fieldAdded.emit(field)
-        self._select(widget_to_drop)
-
-        if pos[0] == self.gridLayout.rowCount() - 1:
-            self._addPlaceholder(pos[0] + 1, 0)
-            self._addPlaceholder(pos[0] + 1, 1)
-            self.gridLayout.update()
-
-        event.accept()
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.MouseButtonRelease:
-            if isinstance(watched, (QToolButton, QPushButton)):
-                self._select(watched.parent())
+        if self._field.emoji:
+            if app_env.is_windows():
+                emoji_size = 14
             else:
-                self._select(watched)
-        elif event.type() == QEvent.Type.DragEnter:
-            self._target_to_drop = watched
-            self.dragMoveEvent(event)
-        elif event.type() == QEvent.Type.Drop:
-            self.dropEvent(event)
-            self._target_to_drop = None
-        return super().eventFilter(watched, event)
+                emoji_size = 20
 
-    def _select(self, widget: TemplateWidgetBase):
-        if self._selected:
-            self._selected.deselect()
-        if is_placeholder(widget):
-            self._selected = None
-            self.placeholderSelected.emit()
-            return
-        self._selected = widget
-        self._selected.select()
-        self.fieldSelected.emit(self._selected.field)
+            self._lblEmoji.setFont(emoji_font(emoji_size))
+            self._lblEmoji.setText(emoji.emojize(self._field.emoji))
+        else:
+            self._lblEmoji.setHidden(True)
 
-    def removeSelected(self):
-        if self._selected:
-            index = self.gridLayout.indexOf(self._selected)
-            pos = self.gridLayout.getItemPosition(index)
-            self.gridLayout.removeWidget(self._selected)
-            self._addPlaceholder(pos[0], pos[1])
-            self.widgets.remove(self._selected)
-            gc(self._selected)
-            self._selected = None
+        self.toggle = Toggle()
 
-    def setShowLabelForSelected(self, enabled: bool):
-        if self._selected:
-            self._selected.lblName.setVisible(enabled)
-
-    def updateLabelForSelected(self, text: str):
-        if self._selected:
-            self._selected.lblName.setText(text)
-
-    def updateEmojiForSelected(self, text: str):
-        if self._selected:
-            self._selected.updateEmoji(emoji.emojize(text))
-
-    def _installEventFilter(self, widget: TemplateWidgetBase):
-        widget.installEventFilter(self)
-        if isinstance(widget, TemplateWidgetBase) and not isinstance(widget, TemplateDisplayWidget) and isinstance(
-                widget.wdgEditor, TextSelectionWidget):
-            widget.wdgEditor.installEventFilter(self)
-
-    def _addPlaceholder(self, row: int, col: int):
-        _placeholder = _PlaceHolder()
-        self.gridLayout.addWidget(_placeholder, row, col)
-        _placeholder.setAcceptDrops(True)
-        _placeholder.btn.setAcceptDrops(True)
-        _placeholder.installEventFilter(self)
-        _placeholder.btn.installEventFilter(self)
+        self.layout().addWidget(self._lblEmoji)
+        self.layout().addWidget(self._lblName)
+        self.layout().addWidget(spacer())
+        self.layout().addWidget(self.toggle)
 
 
-class ProfileTemplateView(_ProfileTemplateBase):
-    def __init__(self, values: List[TemplateValue], profile: ProfileTemplate, disabled_template_headers):
-        super().__init__(profile, disabled_template_headers=disabled_template_headers)
-        self.setProperty('mainFrame', True)
-        self.setValues(values)
+class FieldSelector(QWidget):
+    toggled = pyqtSignal(TemplateField, bool)
+
+    def __init__(self, fields: List[TemplateField], parent=None):
+        super().__init__(parent)
+        vbox(self)
+        self._fields: Dict[TemplateField, FieldToggle] = {}
+
+        for field in fields:
+            wdg = FieldToggle(field)
+            self._fields[field] = wdg
+            self.layout().addWidget(wdg)
+            wdg.toggle.toggled.connect(partial(self.toggled.emit, field))
+
+    def toggle(self, field: TemplateField):
+        self._fields[field].toggle.toggle()
 
 
-class CharacterProfileTemplateView(ProfileTemplateView):
-    def __init__(self, character: Character, profile: ProfileTemplate):
-        super().__init__(character.template_values, profile, character.disabled_template_headers)
-        self.character = character
-        self._required_headers_toggled: bool = False
-        self._enneagram_widget: Optional[TextSelectionWidget] = None
-        self._traits_widget: Optional[TraitSelectionWidget] = None
-        self._goals_widget: Optional[TemplateWidgetBase] = None
-        for widget in self.widgets:
-            if widget.field.id == enneagram_field.id:
-                self._enneagram_widget = widget.wdgEditor
-            elif widget.field.id == traits_field.id:
-                self._traits_widget = widget.wdgEditor
+class _PrimaryFieldWidget(QWidget):
+    removed = pyqtSignal()
 
-        if self._enneagram_widget:
-            self._enneagram_widget.selectionChanged.connect(self._enneagram_changed)
+    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], value: str = '', parent=None):
+        super().__init__(parent)
+        self._field = field
+        self._secondaryFields = secondaryFields
+        self._secondaryFieldWidgets: Dict[TemplateField, Optional[SmallTextTemplateFieldWidget]] = {}
+        for sf in secondaryFields:
+            self._secondaryFieldWidgets[sf] = None
+        hbox(self, 0, 2)
+        self._primaryWdg = SmallTextTemplateFieldWidget(field)
 
-    def toggleRequiredHeaders(self, toggled: bool):
-        if self._required_headers_toggled == toggled:
-            return
+        btnSecondary = QToolButton()
+        transparent(btnSecondary)
+        pointy(btnSecondary)
+        btnSecondary.setIconSize(QSize(22, 22))
+        btnSecondary.setIcon(IconRegistry.plus_edit_icon())
+        self._selector = FieldSelector(secondaryFields)
+        menu = QMenu(btnSecondary)
+        action = QWidgetAction(menu)
+        action.setDefaultWidget(self._selector)
+        menu.addAction(action)
+        menu.addSeparator()
+        action = QWidgetAction(menu)
+        btnRemove = QPushButton(f'Remove {self._field.name}')
+        transparent(btnRemove)
+        pointy(btnRemove)
+        btnRemove.installEventFilter(OpacityEventFilter(btnRemove))
+        btnRemove.setIcon(IconRegistry.trash_can_icon())
+        hmax(btnRemove)
+        italic(btnRemove)
+        btnRemove.clicked.connect(self.removed.emit)
+        action.setDefaultWidget(wrap(btnRemove, margin_top=15))
+        menu.addAction(action)
+        btn_popup_menu(btnSecondary, menu)
+        self._selector.toggled.connect(self._toggleSecondaryField)
+        btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary, leaveOpacity=0.7))
 
-        self._required_headers_toggled = toggled
-        for row, header in self._headers:
-            if not header.field.required:
-                header.collapse(toggled)
-                header.setHidden(toggled)
+        self._secondaryWdgContainer = QWidget()
+        vbox(self._secondaryWdgContainer, 0, 2)
+        for _ in self._secondaryFields:
+            self._secondaryWdgContainer.layout().addWidget(spacer())
+
+        self.layout().addWidget(self._primaryWdg, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.layout().addWidget(wrap(btnSecondary, margin_top=20))
+        self.layout().addWidget(self._secondaryWdgContainer)
+
+    def field(self) -> TemplateField:
+        return self._field
+
+    def value(self) -> str:
+        return self._primaryWdg.value()
+
+    def setValue(self, value: str):
+        self._primaryWdg.setValue(value)
+
+    def secondaryFields(self) -> List[Tuple[str, str]]:
+        fields = []
+        for field, wdg in self._secondaryFieldWidgets.items():
+            if wdg is None:
+                continue
+            fields.append((str(field.id), wdg.value()))
+
+        return fields
+
+    def setSecondaryField(self, secondary: TemplateField, value: str):
+        self._selector.toggle(secondary)
+        self._secondaryFieldWidgets[secondary].setValue(value)
+
+    def _toggleSecondaryField(self, secondary: TemplateField, toggled: bool):
+        i = self._secondaryFields.index(secondary)
+
+        if toggled:
+            wdg = SmallTextTemplateFieldWidget(secondary)
+            self._secondaryFieldWidgets[secondary] = wdg
+            item = self._secondaryWdgContainer.layout().itemAt(i)
+            self._secondaryWdgContainer.layout().replaceWidget(item.widget(), wdg)
+        else:
+            self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
+            gc(self._secondaryFieldWidgets[secondary])
+            self._secondaryFieldWidgets[secondary] = None
+
+
+class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
+    ID_KEY: str = 'id'
+    VALUE_KEY: str = 'value'
+    SECONDARY_KEY: str = 'secondary'
+
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(field, parent)
+
+        self._primaryWidgets: List[_PrimaryFieldWidget] = []
+
+        self._btnPrimary = SecondaryActionPushButton()
+        self._btnPrimary.setText(self._primaryButtonText())
+        self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
+        btn_popup_menu(self._btnPrimary, self._primaryMenu())
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self._layout: QVBoxLayout = vbox(self, 0, 5)
+
+        self.layout().addWidget(wrap(self._btnPrimary, margin_left=5))
+        self._layout.addWidget(vspacer())
 
     @overrides
-    def _headerEnabledChanged(self, header: TemplateField, enabled: bool):
-        self.character.disabled_template_headers[str(header.id)] = enabled
+    def value(self) -> Any:
+        def secondaryValues(primaryWdg: _PrimaryFieldWidget):
+            values = []
+            for field in primaryWdg.secondaryFields():
+                s_id, value_ = field
+                values.append({self.ID_KEY: s_id, self.VALUE_KEY: value_})
+            return values
 
-    def _enneagram_changed(self, previous: Optional[SelectionItem], current: SelectionItem):
-        if self._traits_widget:
-            traits: List[str] = self._traits_widget.value()
-            if previous:
-                for pos_trait in previous.meta['positive']:
-                    if pos_trait in traits:
-                        traits.remove(pos_trait)
-                for neg_trait in previous.meta['negative']:
-                    if neg_trait in traits:
-                        traits.remove(neg_trait)
-            for pos_trait in current.meta['positive']:
-                if pos_trait not in traits:
-                    traits.append(pos_trait)
-            for neg_trait in current.meta['negative']:
-                if neg_trait not in traits:
-                    traits.append(neg_trait)
-            self._traits_widget.setValue(traits)
+        value = {}
+        for primary_wdg in self._primaryWidgets:
+            value[str(primary_wdg.field().id)] = {self.VALUE_KEY: primary_wdg.value(),
+                                                  self.SECONDARY_KEY: secondaryValues(primary_wdg)}
+
+        return value
+
+    @overrides
+    def setValue(self, value: Any):
+        if value is None:
+            return
+
+        primary_fields = self._primaryFields()
+        for k, v in value.items():
+            primary = next((x for x in primary_fields if str(x.id) == k), None)
+            if primary is None:
+                continue
+            wdg = self._addPrimaryField(primary)
+            wdg.setValue(v[self.VALUE_KEY])
+
+            secondary_fields = self._secondaryFields(primary)
+            for secondary in v[self.SECONDARY_KEY]:
+                secondary_field = next((x for x in secondary_fields if str(x.id) == secondary[self.ID_KEY]), None)
+                if secondary_field:
+                    wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
+
+    @abstractmethod
+    def _primaryFields(self) -> List[TemplateField]:
+        pass
+
+    def _primaryButtonText(self) -> str:
+        return 'Add new item'
+
+    def _primaryMenu(self) -> QMenu:
+        fields = self._primaryFields()
+        menu = QMenu()
+        for field in fields:
+            menu.addAction(action(field.name, slot=partial(self._addPrimaryField, field), parent=menu))
+
+        return menu
+
+    @abstractmethod
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        pass
+
+    def _addPrimaryField(self, field: TemplateField) -> _PrimaryFieldWidget:
+        wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
+        self._primaryWidgets.append(wdg)
+        wdg.removed.connect(partial(self._removePrimaryField, wdg))
+        if self._layout.count() > 2:
+            self._layout.insertWidget(self._layout.count() - 2, line())
+        self._layout.insertWidget(self._layout.count() - 2, wdg)
+
+        return wdg
+
+    def _removePrimaryField(self, wdg: _PrimaryFieldWidget):
+        self._primaryWidgets.remove(wdg)
+        self._layout.removeWidget(wdg)
+        gc(wdg)
 
 
-class TopicWidget(QWidget):
-    def __init__(self, topic: Topic, value: TemplateValue, parent=None):
-        super(TopicWidget, self).__init__(parent)
+class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
-        self._value = value
+    def __init__(self, field: TemplateField, parent=None):
+        super().__init__(field, parent)
 
-        self.btnHeader = QPushButton()
-        self.btnHeader.setCheckable(True)
-        self.btnHeader.setText(topic.text)
-        self.btnHeader.setToolTip(topic.description)
-        if topic.icon:
-            self.btnHeader.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
+    @property
+    def wdgEditor(self):
+        return self
 
-        self.btnCollapse = QToolButton()
-        self.btnCollapse.setIconSize(QSize(16, 16))
-        self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-down'))
+    @overrides
+    def _primaryButtonText(self) -> str:
+        return 'Add new goal'
 
-        pointy(self.btnHeader)
-        pointy(self.btnCollapse)
-        transparent(self.btnHeader)
-        transparent(self.btnCollapse)
-        bold(self.btnHeader)
+    @overrides
+    def _primaryFields(self) -> List[TemplateField]:
+        return [goal_field, internal_goal_field]
 
-        self.textEdit = AutoAdjustableTextEdit(height=100)
-        self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
-        self.textEdit.setMarkdown(value.value)
-        self.textEdit.setPlaceholderText(f'Write about {topic.text.lower()}')
-        self.textEdit.textChanged.connect(self._textChanged)
-
-        top = group(self.btnCollapse, self.btnHeader, margin=0, spacing=1)
-        layout_ = vbox(self)
-        layout_.addWidget(top, alignment=Qt.AlignmentFlag.AlignLeft)
-
-        line_ = line()
-        line_.setPalette(QPalette(QColor(topic.icon_color)))
-        middle = group(line_, margin=0, spacing=0)
-        margins(middle, left=20)
-        layout_.addWidget(middle)
-
-        bottom = group(self.textEdit, vertical=False, margin=0, spacing=0)
-        margins(bottom, left=20)
-        layout_.addWidget(bottom, alignment=Qt.AlignmentFlag.AlignTop)
-
-        self.btnHeader.toggled.connect(self._toggleCollapse)
-        self.btnCollapse.clicked.connect(self.btnHeader.toggle)
-
-    def _textChanged(self):
-        self._value.value = self.textEdit.toMarkdown()
-
-    def _toggleCollapse(self, checked: bool):
-        self.textEdit.setHidden(checked)
-        if checked:
-            self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-right'))
+    @overrides
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        if primary.id == goal_field.id:
+            return [stakes_field, conflict_field, motivation_field, internal_motivation_field, internal_conflict_field,
+                    internal_stakes_field]
         else:
-            self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-down'))
-
-
-class TopicsEditor(QWidget):
-    def __init__(self, parent=None):
-        super(TopicsEditor, self).__init__(parent)
-        vbox(self)
-
-    def addTopic(self, topic: Topic, value: TemplateValue):
-        wdg = TopicWidget(topic, value, self)
-        self.layout().addWidget(wdg)
+            return [internal_motivation_field, internal_conflict_field, internal_stakes_field]
