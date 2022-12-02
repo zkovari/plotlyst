@@ -182,6 +182,8 @@ class IconRegistry:
             return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
         elif scene.type == SceneType.REACTION:
             return IconRegistry.reaction_scene_icon()
+        else:
+            return IconRegistry.empty_icon()
 
     @staticmethod
     def reaction_scene_icon() -> QIcon:
