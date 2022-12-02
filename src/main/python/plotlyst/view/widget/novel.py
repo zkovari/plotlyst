@@ -29,7 +29,7 @@ from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_l
     margins, retain_when_hidden, grid
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.common import ACT_THREE_COLOR
+from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, save_the_cat, three_act_structure
@@ -194,7 +194,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         if event.type() == QEvent.Type.Enter:
             if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setVisible(True)
-            self.setStyleSheet('.BeatWidget {background-color: #DBF5FA;}')
+            self.setStyleSheet(f'.BeatWidget {{background-color: {act_color(self.beat.act, translucent=True)};}}')
             self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Type.Leave:
             if self._canBeToggled() and self._infoPage():
