@@ -24,7 +24,7 @@ from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
 from overrides import overrides
-from qthandy import hbox, FlowLayout, vline, vbox, clear_layout, transparent, btn_popup
+from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.common import truncate_string
@@ -55,7 +55,7 @@ class LabelsWidget(QWidget):
 
     def __init__(self, parent=None):
         super(LabelsWidget, self).__init__(parent)
-        self.setLayout(FlowLayout())
+        flow(self)
 
     def addText(self, text: str, color: str = '#7c98b3'):
         label = QLabel(truncate_string(text, 40))
