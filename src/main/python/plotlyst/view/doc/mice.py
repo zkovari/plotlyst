@@ -31,7 +31,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.generated.mice_doc_ui import Ui_MiceQuotientDoc
 from src.main.python.plotlyst.view.generated.mice_thread_ui import Ui_MiceThread
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.scenes import SceneSelector
+from src.main.python.plotlyst.view.widget.scenes import SceneLabelLinkWidget
 
 mice_colors: Dict[MiceType, str] = {MiceType.MILIEU: '#2d6a4f',
                                     MiceType.INQUIRY: '#7b2cbf',
@@ -63,13 +63,13 @@ class MiceThreadWidget(QWidget, Ui_MiceThread):
         retain_when_hidden(self.btnRemoval)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnRemoval, self))
 
-        self.beginningSceneSelector = SceneSelector(app_env.novel, 'Beginning')
+        self.beginningSceneSelector = SceneLabelLinkWidget(app_env.novel, 'Beginning')
         self.beginningSceneSelector.sceneSelected.connect(self._beginningChanged)
         scene = self.thread.beginning_scene(app_env.novel)
         if scene:
             self.beginningSceneSelector.setScene(scene)
 
-        self.endingSceneSelector = SceneSelector(app_env.novel, 'Ending')
+        self.endingSceneSelector = SceneLabelLinkWidget(app_env.novel, 'Ending')
         self.endingSceneSelector.sceneSelected.connect(self._endingChanged)
         scene = self.thread.ending_scene(app_env.novel)
         if scene:
