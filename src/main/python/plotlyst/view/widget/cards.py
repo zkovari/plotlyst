@@ -30,7 +30,7 @@ from PyQt6.QtGui import QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDr
 from PyQt6.QtWidgets import QFrame, QApplication
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import FlowLayout, clear_layout, retain_when_hidden
+from qthandy import FlowLayout, clear_layout, retain_when_hidden, transparent
 
 from src.main.python.plotlyst.common import PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
@@ -193,10 +193,10 @@ class CharacterCard(Ui_CharacterCard, Card):
         self.textName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         set_avatar(self.lblPic, self.character, size=118)
 
+        transparent(self.btnEnneagram)
         enneagram = self.character.enneagram()
         if enneagram:
-            self.lblEnneagram.setPixmap(
-                IconRegistry.from_name(enneagram.icon, enneagram.icon_color).pixmap(QSize(28, 28)))
+            self.btnEnneagram.setIcon(IconRegistry.from_name(enneagram.icon, enneagram.icon_color))
         mbti = self.character.mbti()
         if mbti:
             self.btnMbti.setStyleSheet(f'color: {mbti.icon_color};border:0px;')
