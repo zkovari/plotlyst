@@ -346,22 +346,15 @@ class SceneTagSelector(QWidget):
             self._tagsModel.toggle(node.tag)
 
 
-class SceneSelector(QWidget):
+class SceneSelector(SecondaryActionPushButton):
     sceneSelected = pyqtSignal(Scene)
 
     def __init__(self, novel: Novel, text: str = '', parent=None):
         super(SceneSelector, self).__init__(parent)
         self.novel = novel
-        self.scene: Optional[Scene] = None
-
-        self.label: Optional[SceneLabel] = None
-
-        hbox(self)
-        self.btnSelect = SecondaryActionPushButton(self)
-        self.btnSelect.setText(text)
-        italic(self.btnSelect)
-        self.btnSelect.setIcon(IconRegistry.scene_icon())
-        self.layout().addWidget(self.btnSelect)
+        self.setText(text)
+        italic(self)
+        self.setIcon(IconRegistry.scene_icon())
 
         self._lstScenes = QTableView()
         self._lstScenes.verticalHeader().setHidden(True)
@@ -372,19 +365,8 @@ class SceneSelector(QWidget):
         self._lstScenes.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._lstScenes.clicked.connect(self._selected)
         pointy(self._lstScenes)
-        self.menu = btn_popup(self.btnSelect, self._lstScenes)
+        self.menu = btn_popup(self, self._lstScenes)
         self.menu.aboutToShow.connect(self._beforePopup)
-
-    def setScene(self, scene: Scene):
-        self.scene = scene
-        if self.label is None:
-            self.label = SceneLabel(self.scene)
-            self.layout().addWidget(self.label)
-            self.label.clicked.connect(self.menu.show)
-        else:
-            self.label.setScene(scene)
-
-        self.btnSelect.setHidden(True)
 
     @busy
     def _beforePopup(self):
@@ -402,9 +384,35 @@ class SceneSelector(QWidget):
 
     def _selected(self, index: QModelIndex):
         scene = index.data(ScenesTableModel.SceneRole)
-        self.setScene(scene)
-        self.btnSelect.menu().hide()
         self.sceneSelected.emit(scene)
+        self.menu.hide()
+
+
+class SceneLabelLinkWidget(QWidget):
+    sceneSelected = pyqtSignal(Scene)
+
+    def __init__(self, novel: Novel, text: str = '', parent=None):
+        super(SceneLabelLinkWidget, self).__init__(parent)
+        self.novel = novel
+        self.scene: Optional[Scene] = None
+
+        self.label: Optional[SceneLabel] = None
+
+        hbox(self)
+        self.btnSelect = SceneSelector(self.novel, text, parent=self)
+        self.layout().addWidget(self.btnSelect)
+        self.btnSelect.sceneSelected.connect(self.sceneSelected.emit)
+
+    def setScene(self, scene: Scene):
+        self.scene = scene
+        if self.label is None:
+            self.label = SceneLabel(self.scene)
+            self.layout().addWidget(self.label)
+            self.label.clicked.connect(self.btnSelect.menu.show)
+        else:
+            self.label.setScene(scene)
+
+        self.btnSelect.setHidden(True)
 
 
 class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):
