@@ -260,12 +260,12 @@ class SceneCard(Ui_SceneCard, Card):
         for char in scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
-        self._beatFrame = Frame()
+        self._beatFrame = Frame(self)
         self.btnBeat = QToolButton()
         transparent(self.btnBeat)
         self.btnBeat.setIconSize(QSize(24, 24))
         self._beatFrame.setWidget(self.btnBeat)
-        self.wdgTop.layout().addWidget(self._beatFrame, alignment=Qt.AlignmentFlag.AlignRight)
+        self._beatFrame.setGeometry(self.width() - 30, 0, self._beatFrame.width(), self._beatFrame.height())
 
         beat = self.scene.beat(self.novel)
         if beat and beat.icon:
@@ -329,6 +329,8 @@ class SceneCard(Ui_SceneCard, Card):
         self.textSynopsis.setVisible(w > 170)
         self.lineAfterTitle.setVisible(w > 170)
         self.lineAfterTitle.setFixedWidth(w - 30)
+
+        self._beatFrame.setGeometry(w - 40, 0, 40, 50)
 
 
 class CardSizeRatio(Enum):
