@@ -37,7 +37,7 @@ from qttextedit import EnhancedTextEdit
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
-    internal_motivation_field, internal_conflict_field, internal_stakes_field
+    internal_motivation_field, internal_conflict_field, internal_stakes_field, methods_field
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
@@ -921,7 +921,8 @@ class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
         if primary.id == goal_field.id:
-            return [stakes_field, conflict_field, motivation_field, internal_motivation_field, internal_conflict_field,
+            return [stakes_field, conflict_field, motivation_field, methods_field, internal_motivation_field,
+                    internal_conflict_field,
                     internal_stakes_field]
         else:
-            return [internal_motivation_field, internal_conflict_field, internal_stakes_field]
+            return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
