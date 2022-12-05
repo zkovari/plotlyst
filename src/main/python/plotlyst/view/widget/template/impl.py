@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
-    emotional_shield_field, healing_field, methods_field
+    healing_field, methods_field, misbelief_field
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
@@ -951,4 +951,4 @@ class WoundsFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        return [fear_field, emotional_shield_field, trigger_field, healing_field]
+        return [fear_field, misbelief_field, trigger_field, healing_field]

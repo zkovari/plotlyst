@@ -290,9 +290,9 @@ summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
                               placeholder="Summarize your character's role in the story",
                               show_label=False)
 
-misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
+misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT, emoji=':goblin:',
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
-                                placeholder='The misbelief/lie the character believes in')
+                                placeholder='What false view did the character develop about themselves or the world?')
 
 desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want in the story?',
@@ -341,20 +341,17 @@ values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':sm
 
 wounds_field = TemplateField('Wounds', type=TemplateFieldType.COMPLEX,
                              id=uuid.UUID('b3e591ba-ce55-43c2-a4b0-f35864693977'))
-wound_field = TemplateField('Wound', type=TemplateFieldType.SMALL_TEXT, emoji=':broken heart:',
-                            placeholder='What past event caused emotional wound?',
+wound_field = TemplateField('Wound', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
+                            placeholder='What past event harmed the character and left an emotional wound?',
                             id=uuid.UUID('587cace8-0326-4895-b51e-de1d92b9db1b'))
 fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
-                           placeholder='',
+                           placeholder='What does the character fear that developed from the wound?',
                            id=uuid.UUID('9601abef-c568-4ef6-9ff9-8da2e62e0572'))
-emotional_shield_field = TemplateField('Emotional shield', type=TemplateFieldType.SMALL_TEXT, emoji=':shield:',
-                                       placeholder='',
-                                       id=uuid.UUID('f6c2632a-91ba-41c8-bdea-5f618a1dcd96'))
 trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoji=':high_voltage:',
-                              placeholder='',
+                              placeholder="What could aggravate the character's wound?",
                               id=uuid.UUID('1a7b45ee-29d4-4e69-a177-0f8804a93b78'))
-healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoji=':adhesive_bandage:',
-                              placeholder='',
+healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoji=':syringe:',
+                              placeholder='How could the character heal their emotional wounds?',
                               id=uuid.UUID('13ccb707-07bc-4567-9ae0-93da65b7f6e7'))
 
 values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
