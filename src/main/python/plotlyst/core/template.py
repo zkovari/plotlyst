@@ -294,8 +294,8 @@ misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT, 
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
                                 placeholder='What false view did the character develop about themselves or the world?')
 
-desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
-                             placeholder='What does the character want in the story?',
+desire_field = TemplateField('Desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
+                             placeholder='What does the character want?',
                              id=uuid.UUID('eb6626ea-4d07-4b8a-80f0-d92d2fe7f1c3'))
 gmc_field = TemplateField('GMC', type=TemplateFieldType.COMPLEX, id=uuid.UUID('a8ac1eb0-dc18-4bd6-8ff4-47864d0dc431'))
 
@@ -328,7 +328,7 @@ methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoj
                               placeholder="How does the character try to achieve their goals?",
                               id=uuid.UUID('40d50e34-8dbf-4491-8fa9-854f060be5ef'), has_notes=True)
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
-                           placeholder='What does the character actually need in the story?',
+                           placeholder='What does the character actually need?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
 weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
                                  placeholder="What are the character's weaknesses or flaws in the story?",
@@ -353,6 +353,15 @@ trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoj
 healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoji=':syringe:',
                               placeholder='How could the character heal their emotional wounds?',
                               id=uuid.UUID('13ccb707-07bc-4567-9ae0-93da65b7f6e7'))
+
+arcs_field = TemplateField('Arc', type=TemplateFieldType.COMPLEX,
+                           id=uuid.UUID('f9cd5704-debb-4d98-98d4-7eca36983d56'))
+positive_arc = TemplateField('Positive arc', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_halo:',
+                             placeholder='How does the character change positively?',
+                             id=uuid.UUID('d0feee5d-c40b-4615-9aa0-78a6071f8ce7'))
+negative_arc = TemplateField('Negative arc', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_horns:',
+                             placeholder='How does the character change negatively?',
+                             id=uuid.UUID('fcd1d4b7-d431-4460-b480-56bc9226a29d'))
 
 values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
                 SelectionItem('Authenticity', icon='mdi6.certificate'),
@@ -535,6 +544,7 @@ def default_character_profiles() -> List[ProfileTemplate]:
     characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
     wounds_title = TemplateField('Wounds', type=TemplateFieldType.DISPLAY_HEADER)
+    arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
 
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
@@ -547,10 +557,10 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(wounds_title, 8, 0, col_span=2),
               ProfileElement(wounds_field, 9, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(arcs_title, 10, 0, col_span=2),
+              ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(story_title, 14, 0, col_span=2),
-              ProfileElement(need_field, 15, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(weaknesses_field, 16, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(ghost_field, 17, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(values_field, 18, 0, col_span=2, margins=Margins(left=15))
               ]
     return [ProfileTemplate(title='Default character template',
