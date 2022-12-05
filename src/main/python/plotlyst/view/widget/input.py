@@ -378,7 +378,8 @@ class CapitalizationEventFilter(QObject):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if isinstance(event, QKeyEvent) and event.type() == QEvent.Type.KeyPress:
-            if event.text().isalpha() and self._empty(watched) and 'filter' not in watched.objectName().lower():
+            if event.text().isalpha() and (self._empty(watched) or self._selectedAll(
+                    watched)) and 'filter' not in watched.objectName().lower():
                 inserted = self._insert(watched, event.text().upper())
                 if inserted:
                     return True
@@ -389,6 +390,14 @@ class CapitalizationEventFilter(QObject):
             return not widget.text()
         elif isinstance(widget, QTextEdit):
             return not widget.toPlainText()
+        return False
+
+    def _selectedAll(self, widget) -> bool:
+        if isinstance(widget, QLineEdit):
+            return widget.hasSelectedText() and widget.selectedText() == widget.text()
+        elif isinstance(widget, QTextEdit):
+            cursor = widget.textCursor()
+            return cursor.hasSelection() and cursor.selectedText() == widget.toPlainText()
         return False
 
     def _insert(self, widget, text: str) -> bool:
