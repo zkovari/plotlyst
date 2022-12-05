@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-2019, macos-10.15 ]
+        os: [ ubuntu-20.04, windows-2019, macos-10.15 ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -35,12 +35,12 @@ jobs:
         with:
           ruby-version: 2.5.1
 
-      - if: matrix.os == 'ubuntu-latest'
+      - if: matrix.os == 'ubuntu-20.04'
         name: Install libEgl libraries for Linux
         run: |
           sudo apt update
           sudo apt install -y libpulse-mainloop-glib0 libegl1-mesa-dev libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev
-      - if: matrix.os == 'ubuntu-latest'
+      - if: matrix.os == 'ubuntu-20.04'
         name: Install fpm on Linux
         run: |
           sudo gem install --no-document fpm
@@ -112,7 +112,7 @@ jobs:
           fbs installer
 
       - uses: actions/upload-artifact@v2
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-20.04'
         with:
           name: app-deb-artifact
           path: target/Plotlyst.deb
