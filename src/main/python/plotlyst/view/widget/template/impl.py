@@ -37,7 +37,8 @@ from qttextedit import EnhancedTextEdit
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
-    internal_motivation_field, internal_conflict_field, internal_stakes_field, methods_field
+    internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
+    healing_field, methods_field, misbelief_field
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
@@ -824,7 +825,10 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._btnPrimary = SecondaryActionPushButton()
         self._btnPrimary.setText(self._primaryButtonText())
         self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
-        btn_popup_menu(self._btnPrimary, self._primaryMenu())
+        if self._hasMenu():
+            btn_popup_menu(self._btnPrimary, self._primaryMenu())
+        else:
+            self._btnPrimary.clicked.connect(partial(self._addPrimaryField, self._primaryFields()[0]))
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._layout: QVBoxLayout = vbox(self, 0, 5)
 
@@ -873,6 +877,9 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
     def _primaryButtonText(self) -> str:
         return 'Add new item'
 
+    def _hasMenu(self) -> bool:
+        return True
+
     def _primaryMenu(self) -> QMenu:
         fields = self._primaryFields()
         menu = QMenu()
@@ -903,9 +910,6 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
 
 class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
 
-    def __init__(self, field: TemplateField, parent=None):
-        super().__init__(field, parent)
-
     @property
     def wdgEditor(self):
         return self
@@ -926,3 +930,25 @@ class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
                     internal_stakes_field]
         else:
             return [methods_field, internal_motivation_field, internal_conflict_field, internal_stakes_field]
+
+
+class WoundsFieldWidget(MultiLayerComplexTemplateWidgetBase):
+    @property
+    def wdgEditor(self):
+        return self
+
+    @overrides
+    def _primaryButtonText(self) -> str:
+        return 'Add new wound'
+
+    @overrides
+    def _hasMenu(self) -> bool:
+        return False
+
+    @overrides
+    def _primaryFields(self) -> List[TemplateField]:
+        return [wound_field]
+
+    @overrides
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        return [fear_field, misbelief_field, trigger_field, healing_field]

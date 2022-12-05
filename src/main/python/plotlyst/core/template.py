@@ -290,9 +290,9 @@ summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEXT,
                               placeholder="Summarize your character's role in the story",
                               show_label=False)
 
-misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT,
+misbelief_field = TemplateField('Misbelief', type=TemplateFieldType.SMALL_TEXT, emoji=':goblin:',
                                 id=uuid.UUID('32feaa23-acbf-4990-b99f-429747824a0b'),
-                                placeholder='The misbelief/lie the character believes in')
+                                placeholder='What false view did the character develop about themselves or the world?')
 
 desire_field = TemplateField('Conscious desire', type=TemplateFieldType.SMALL_TEXT, emoji=':star-struck:',
                              placeholder='What does the character want in the story?',
@@ -338,6 +338,21 @@ ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':
                             id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
 values_field = TemplateField('Values', type=TemplateFieldType.LABELS, emoji=':smiling_face_with_open_hands:',
                              id=uuid.UUID('47e2e30e-1708-414b-be79-3413063a798d'))
+
+wounds_field = TemplateField('Wounds', type=TemplateFieldType.COMPLEX,
+                             id=uuid.UUID('b3e591ba-ce55-43c2-a4b0-f35864693977'))
+wound_field = TemplateField('Wound', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
+                            placeholder='What past event harmed the character and left an emotional wound?',
+                            id=uuid.UUID('587cace8-0326-4895-b51e-de1d92b9db1b'))
+fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
+                           placeholder='What does the character fear that developed from the wound?',
+                           id=uuid.UUID('9601abef-c568-4ef6-9ff9-8da2e62e0572'))
+trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoji=':high_voltage:',
+                              placeholder="What could aggravate the character's wound?",
+                              id=uuid.UUID('1a7b45ee-29d4-4e69-a177-0f8804a93b78'))
+healing_field = TemplateField('Healing', type=TemplateFieldType.SMALL_TEXT, emoji=':syringe:',
+                              placeholder='How could the character heal their emotional wounds?',
+                              id=uuid.UUID('13ccb707-07bc-4567-9ae0-93da65b7f6e7'))
 
 values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
                 SelectionItem('Authenticity', icon='mdi6.certificate'),
@@ -519,6 +534,7 @@ def default_character_profiles() -> List[ProfileTemplate]:
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
+    wounds_title = TemplateField('Wounds', type=TemplateFieldType.DISPLAY_HEADER)
     story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
 
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
@@ -529,6 +545,8 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(gmc_title, 6, 0, col_span=2),
               ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(wounds_title, 8, 0, col_span=2),
+              ProfileElement(wounds_field, 9, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(story_title, 14, 0, col_span=2),
               ProfileElement(need_field, 15, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(weaknesses_field, 16, 0, col_span=2, margins=Margins(left=15)),

@@ -61,8 +61,8 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.conflict_icon('grey')
     elif type == PlotPrincipleType.CONSEQUENCES:
         return IconRegistry.cause_and_effect_icon('grey', '#3a5a40')
-    elif type == PlotPrincipleType.PROGRESS: \
-            return IconRegistry.rising_action_icon('grey', '#0096c7')
+    elif type == PlotPrincipleType.PROGRESS:
+        return IconRegistry.rising_action_icon('grey', '#0096c7')
     elif type == PlotPrincipleType.SETBACK:
         return IconRegistry.from_name('mdi6.slope-downhill', 'grey', '#ae2012')
     elif type == PlotPrincipleType.TURNS:
