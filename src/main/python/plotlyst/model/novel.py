@@ -27,8 +27,6 @@ from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, SelectionItem, SceneStage, TagType, \
     Tag
-from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel, DefaultSelectionItemsModel
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -89,11 +87,10 @@ class NovelTagsModel(_NovelSelectionItemsModel):
 
     @overrides
     def remove(self, index: QModelIndex):
-        super().remove(index)
         self.novel.tags[self.tagType].pop(index.row())
 
         self.repo.update_novel(self.novel)
-        emit_event(NovelReloadRequestedEvent(self))
+        self.modelReset.emit()
 
 
 class TagTypeNode(Node):

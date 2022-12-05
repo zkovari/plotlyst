@@ -520,6 +520,7 @@ class TagLabelsEditor(LabelsEditorWidget):
         super(TagLabelsEditor, self).__init__(checkable=False, parent=parent)
         self.btnEdit.setIcon(IconRegistry.tag_plus_icon())
         self.editor.model.item_edited.connect(self._updateTags)
+        self.editor.model.modelReset.connect(self._updateTags)
         self._updateTags()
 
     @overrides
