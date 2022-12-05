@@ -22,11 +22,11 @@ from functools import partial
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QAbstractButton, QLabel, QTextEdit
+from PyQt6.QtGui import QColor, QIcon
+from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QAbstractButton, QTextEdit
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup, vbox
+    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup, vbox, transparent
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, InstantTooltipEventFilter, \
     DisabledClickEventFilter
 
@@ -52,6 +52,25 @@ from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
+def principle_icon(type: PlotPrincipleType) -> QIcon:
+    if type == PlotPrincipleType.GOAL:
+        return IconRegistry.goal_icon('grey')
+    elif type == PlotPrincipleType.ANTAGONIST:
+        return IconRegistry.from_name(antagonist_role.icon, 'grey', antagonist_role.icon_color)
+    elif type == PlotPrincipleType.CONFLICT:
+        return IconRegistry.conflict_icon('grey')
+    elif type == PlotPrincipleType.CONSEQUENCES:
+        return IconRegistry.cause_and_effect_icon('grey', '#3a5a40')
+    elif type == PlotPrincipleType.PROGRESS: \
+            return IconRegistry.rising_action_icon('grey', '#0096c7')
+    elif type == PlotPrincipleType.SETBACK:
+        return IconRegistry.from_name('mdi6.slope-downhill', 'grey', '#ae2012')
+    elif type == PlotPrincipleType.TURNS:
+        return IconRegistry.from_name('mdi.boom-gate-up-outline', 'grey', '#8338ec')
+    elif type == PlotPrincipleType.CRISIS:
+        return IconRegistry.crisis_icon('grey')
+
+
 class PlotPrincipleEditor(QWidget):
     principleEdited = pyqtSignal(PlotPrinciple)
     principleSet = pyqtSignal(PlotPrinciple, bool)
@@ -62,9 +81,12 @@ class PlotPrincipleEditor(QWidget):
 
         vbox(self)
         margins(self, bottom=5)
-        self._label = QLabel()
+        self._label = QPushButton()
+        transparent(self._label)
         bold(self._label)
         self._label.setText(principle.type.name.lower().capitalize())
+        self._label.setIcon(principle_icon(principle.type))
+        self._label.setCheckable(True)
 
         self._textedit = QTextEdit(self)
         self._textedit.setText(principle.value)
@@ -102,6 +124,7 @@ class PlotPrincipleEditor(QWidget):
         self._btnSet.setProperty('highlighted', not toggled)
         self._btnSet.setProperty('deconstructive', toggled)
         restyle(self._btnSet)
+        self._label.setChecked(toggled)
 
         self._checkSetEnabled()
 
@@ -137,14 +160,14 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.textQuestion.textChanged.connect(self._questionChanged)
         retain_when_hidden(self.btnRemove)
 
-        self.btnGoal.setIcon(IconRegistry.goal_icon('grey'))
-        self.btnAntagonist.setIcon(IconRegistry.from_name(antagonist_role.icon, 'grey', antagonist_role.icon_color))
-        self.btnConflict.setIcon(IconRegistry.conflict_icon('grey'))
-        self.btnConsequences.setIcon(IconRegistry.cause_and_effect_icon('grey', '#3a5a40'))
-        self.btnProgress.setIcon(IconRegistry.rising_action_icon('grey', '#0096c7'))
-        self.btnSetback.setIcon(IconRegistry.from_name('mdi6.slope-downhill', 'grey', '#ae2012'))
-        self.btnTurns.setIcon(IconRegistry.from_name('mdi.boom-gate-up-outline', 'grey', '#8338ec'))
-        self.btnCrisis.setIcon(IconRegistry.crisis_icon('grey'))
+        self.btnGoal.setIcon(principle_icon(PlotPrincipleType.GOAL))
+        self.btnAntagonist.setIcon(principle_icon(PlotPrincipleType.ANTAGONIST))
+        self.btnConflict.setIcon(principle_icon(PlotPrincipleType.CONFLICT))
+        self.btnConsequences.setIcon(principle_icon(PlotPrincipleType.CONSEQUENCES))
+        self.btnProgress.setIcon(principle_icon(PlotPrincipleType.PROGRESS))
+        self.btnSetback.setIcon(principle_icon(PlotPrincipleType.SETBACK))
+        self.btnTurns.setIcon(principle_icon(PlotPrincipleType.TURNS))
+        self.btnCrisis.setIcon(principle_icon(PlotPrincipleType.CRISIS))
 
         for btn in self.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
@@ -154,6 +177,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             principle = self._principle(principle_type)
             btn = self._btnPrinciple(principle_type)
             btn.setChecked(principle.is_set)
+            if principle.is_set:
+                self._setPrincipleTooltip(btn, principle)
 
             editor = PlotPrincipleEditor(principle, btn)
             editor.principleSet.connect(self._principleSet)
@@ -249,9 +274,18 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         else:
             translucent(btn, 0.4)
         self.repo.update_novel(self.novel)
+        self._setPrincipleTooltip(btn, principle)
 
-    def _principleEdited(self, _: PlotPrinciple):
+    def _setPrincipleTooltip(self, btn: QAbstractButton, principle: PlotPrinciple):
+        if principle.is_set:
+            btn.setToolTip(f'<html>{principle.type.name.lower().capitalize()}<hr/>{principle.value}')
+        else:
+            btn.setToolTip(principle.type.name.lower().capitalize())
+
+    def _principleEdited(self, principle: PlotPrinciple):
         self.repo.update_novel(self.novel)
+        if principle.is_set:
+            self._setPrincipleTooltip(self._btnPrinciple(principle.type), principle)
 
     def _updateIcon(self):
         if self.plot.icon:
