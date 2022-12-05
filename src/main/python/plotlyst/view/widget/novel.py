@@ -21,7 +21,9 @@ import copy
 from functools import partial
 from typing import Optional, List
 
+import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QDialog, QGridLayout, \
     QScrollArea, QApplication, QDialogButtonBox
 from overrides import overrides
@@ -29,10 +31,11 @@ from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_l
     margins, retain_when_hidden, grid
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.common import ACT_THREE_COLOR
+from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType, save_the_cat, three_act_structure
+    StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
@@ -51,7 +54,7 @@ from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.display import Subtitle, IconText
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
-from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget
+from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget, SceneSelector
 
 
 class _StoryStructureButton(QPushButton):
@@ -145,6 +148,13 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             self.btnIcon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
         self.lblTitle.setStyleSheet(f'color: {beat.icon_color};')
 
+        self.btnSceneSelector = SceneSelector(app_env.novel)
+        self.layoutRight.insertWidget(0, self.btnSceneSelector,
+                                      alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        self.btnSceneSelector.setHidden(True)
+        self.btnSceneSelector.sceneSelected.connect(self._sceneLinked)
+        transparent(self.wdgToggleParent)
+
         retain_when_hidden(self.cbToggle)
 
         self.cbToggle.setHidden(True)
@@ -194,11 +204,12 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         if event.type() == QEvent.Type.Enter:
             if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setVisible(True)
-            self.setStyleSheet('.BeatWidget {background-color: #DBF5FA;}')
+            self.btnSceneSelector.setVisible(self._infoPage())
+            self.setStyleSheet(f'.BeatWidget {{background-color: {act_color(self.beat.act, translucent=True)};}}')
             self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Type.Leave:
-            if self._canBeToggled() and self._infoPage():
-                self.cbToggle.setHidden(True)
+            self.cbToggle.setHidden(True)
+            self.btnSceneSelector.setHidden(True)
             self.setStyleSheet('.BeatWidget {background-color: white;}')
 
         return super(BeatWidget, self).eventFilter(watched, event)
@@ -221,6 +232,13 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     def _beatClicked(self, checked: bool):
         self.beat.enabled = checked
         self.beatToggled.emit(self.beat)
+
+    def _sceneLinked(self, scene: Scene):
+        scene.beats.append(SceneStoryBeat.of(app_env.novel.active_story_structure, self.beat))
+        self.repo.update_scene(self.scene)
+        emit_event(SceneChangedEvent(self, scene))
+        self.refresh()
+        qtanim.glow(self.lblTitle, color=QColor(self.beat.icon_color))
 
     def _synopsisEdited(self):
         if self.scene:

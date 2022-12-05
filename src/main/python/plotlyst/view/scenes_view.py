@@ -218,6 +218,15 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.cards.swapped.connect(self._scenes_swapped)
 
+    #     event_dispatcher.register(self, CharacterChangedEvent)
+    #
+    # @overrides
+    # def event_received(self, event: Event):
+    #     if isinstance(event, CharacterChangedEvent):
+    #         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
+    #     else:
+    #         super(ScenesOutlineView, self).event_received(event)
+
     @overrides
     def refresh(self):
         self.tblModel.modelReset.emit()
@@ -310,8 +319,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _on_close_editor(self):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
-        if self.editor.scene.pov and self.editor.scene.pov not in self._scene_filter.povFilter.characters():
-            self._scene_filter.povFilter.addCharacter(self.editor.scene.pov)
+        self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         gc(self.editor.widget)
 

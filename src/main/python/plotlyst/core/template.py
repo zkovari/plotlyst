@@ -324,6 +324,9 @@ stakes_field = TemplateField('Stakes', type=TemplateFieldType.SMALL_TEXT, emoji=
 internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.SMALL_TEXT, emoji=':broken_heart:',
                                       placeholder="What's at stake if the character fails to achieve that emotional state?",
                                       id=uuid.UUID('95f58293-c77a-4ec7-9e1f-b2f38d123e8d'), has_notes=True)
+methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoji=':hammer_and_pick:',
+                              placeholder="How does the character try to achieve their goals?",
+                              id=uuid.UUID('40d50e34-8dbf-4491-8fa9-854f060be5ef'), has_notes=True)
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
                            placeholder='What does the character actually need in the story?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))

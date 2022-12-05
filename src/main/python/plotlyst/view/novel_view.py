@@ -62,10 +62,13 @@ class NovelView(AbstractNovelView):
 
         transparent(self.ui.textPremise.textEdit)
         self.ui.textPremise.textEdit.setPlaceholderText('Premise')
-        self.ui.textPremise.textEdit.setFontFamily('Helvetica')
-        self.ui.textPremise.textEdit.setFontPointSize(16)
+        font = self.ui.textPremise.textEdit.font()
+        font.setFamily('Helvetica')
+        font.setBold(True)
+        font.setPointSize(16)
+        self.ui.textPremise.textEdit.setFont(font)
         self.ui.textPremise.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.ui.textPremise.textEdit.setFontWeight(QFont.Weight.Bold)
+        self.ui.textPremise.textEdit.setAcceptRichText(False)
 
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)

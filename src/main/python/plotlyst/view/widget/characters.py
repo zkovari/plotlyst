@@ -255,9 +255,16 @@ class CharacterSelectorButtons(QWidget):
         if not self._buttons:
             return self.setCharacters(characters, checkAll)
 
+        current_characters = set(x for x in self._buttonsPerCharacters.keys())
+
         for c in characters:
-            if c not in self._buttonsPerCharacters.keys():
+            if c in self._buttonsPerCharacters.keys():
+                current_characters.remove(c)
+            else:
                 self.addCharacter(c, checkAll)
+
+        for c in current_characters:
+            self.removeCharacter(c)
 
     def addCharacter(self, character: Character, checked: bool = True):
         tool_btn = CharacterToolButton(character)
@@ -278,8 +285,9 @@ class CharacterSelectorButtons(QWidget):
             return
 
         btn = self._buttonsPerCharacters.pop(character)
-        self._layout.removeWidget(btn)
         self._btn_group.removeButton(btn)
+        self._buttons.remove(btn)
+        self._layout.removeWidget(btn)
         gc(btn)
 
     def clear(self):
@@ -287,6 +295,7 @@ class CharacterSelectorButtons(QWidget):
 
         for btn in self._buttons:
             self._btn_group.removeButton(btn)
+            self._layout.removeWidget(btn)
             gc(btn)
 
         self._buttons.clear()

@@ -22,20 +22,18 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Optional, List
 
-import emoji
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
 from PyQt6.QtGui import QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor, QAction
-from PyQt6.QtWidgets import QFrame, QApplication
-from fbs_runtime import platform
+from PyQt6.QtWidgets import QFrame, QApplication, QToolButton
 from overrides import overrides
-from qthandy import FlowLayout, clear_layout, retain_when_hidden
+from qtframes import Frame
+from qthandy import FlowLayout, clear_layout, retain_when_hidden, transparent, margins
 
-from src.main.python.plotlyst.common import PIVOTAL_COLOR
+from src.main.python.plotlyst.common import act_color
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
@@ -193,10 +191,10 @@ class CharacterCard(Ui_CharacterCard, Card):
         self.textName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         set_avatar(self.lblPic, self.character, size=118)
 
+        transparent(self.btnEnneagram)
         enneagram = self.character.enneagram()
         if enneagram:
-            self.lblEnneagram.setPixmap(
-                IconRegistry.from_name(enneagram.icon, enneagram.icon_color).pixmap(QSize(28, 28)))
+            self.btnEnneagram.setIcon(IconRegistry.from_name(enneagram.icon, enneagram.icon_color))
         mbti = self.character.mbti()
         if mbti:
             self.btnMbti.setStyleSheet(f'color: {mbti.icon_color};border:0px;')
@@ -262,21 +260,21 @@ class SceneCard(Ui_SceneCard, Card):
         for char in scene.characters:
             self.wdgCharacters.addLabel(CharacterAvatarLabel(char, 20))
 
+        self._beatFrame = Frame(self)
+        self.btnBeat = QToolButton()
+        transparent(self.btnBeat)
+        self.btnBeat.setIconSize(QSize(24, 24))
+        self._beatFrame.setWidget(self.btnBeat)
+        self._beatFrame.setGeometry(self.width() - 30, 0, self._beatFrame.width(), self._beatFrame.height())
+
         beat = self.scene.beat(self.novel)
-        if beat:
-            if beat.icon:
-                self.lblBeatEmoji.setPixmap(
-                    IconRegistry.from_name(beat.icon, beat.icon_color).pixmap(24, 24))
-            else:
-                if platform.is_windows():
-                    self._emoji_font = emoji_font(14)
-                else:
-                    self._emoji_font = emoji_font(20)
-                self.lblBeatEmoji.setFont(self._emoji_font)
-                self.lblBeatEmoji.setText(emoji.emojize(':performing_arts:'))
+        if beat and beat.icon:
+            self.btnBeat.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+            self._beatFrame.setFrameColor(QColor(act_color(beat.act)))
+            self._beatFrame.setBackgroundColor(Qt.GlobalColor.white)
+            margins(self._beatFrame, 0, 0, 0, 0)
         else:
-            self.lblBeatEmoji.clear()
-            self.lblBeatEmoji.setHidden(True)
+            self._beatFrame.setHidden(True)
 
         # if any([x.major for x in scene.comments]):
         #     self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#fb8b24'))
@@ -332,17 +330,7 @@ class SceneCard(Ui_SceneCard, Card):
         self.lineAfterTitle.setVisible(w > 170)
         self.lineAfterTitle.setFixedWidth(w - 30)
 
-    @overrides
-    def _borderSize(self, selected: bool = False) -> int:
-        if self.scene.beat(self.novel):
-            return 7 if selected else 5
-        return super(SceneCard, self)._borderSize(selected)
-
-    @overrides
-    def _borderColor(self, selected: bool = False) -> str:
-        if self.scene.beat(self.novel):
-            return '#6b7d7d' if selected else PIVOTAL_COLOR
-        return super(SceneCard, self)._borderColor(selected)
+        self._beatFrame.setGeometry(w - 40, 0, 40, 50)
 
 
 class CardSizeRatio(Enum):

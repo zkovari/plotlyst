@@ -25,8 +25,11 @@ WIP_COLOR: str = '#f6cd61'
 PIVOTAL_COLOR: str = '#3da4ab'
 
 ACT_ONE_COLOR: str = '#02bcd4'
+TRANS_ACT_ONE_COLOR: str = 'rgba(2, 188, 212, 45)'
 ACT_TWO_COLOR: str = '#1bbc9c'
+TRANS_ACT_TWO_COLOR: str = 'rgba(27, 188, 156, 45)'
 ACT_THREE_COLOR: str = '#ff7800'
+TRANS_ACT_THREE_COLOR: str = 'rgba(255, 120, 0, 45)'
 
 CONFLICT_CHARACTER_COLOR: str = '#c1666b'
 CONFLICT_SOCIETY_COLOR: str = '#69306d'
@@ -69,3 +72,14 @@ RIGHT_QUOTATION_ENGLISH = u'\u201D'
 
 def truncate_string(text: str, length: int = 25):
     return (text[:length] + '...') if len(text) > length else text
+
+
+def act_color(act: int, translucent: bool = False) -> str:
+    if act == 1:
+        return TRANS_ACT_ONE_COLOR if translucent else ACT_ONE_COLOR
+    elif act == 2:
+        return TRANS_ACT_TWO_COLOR if translucent else ACT_TWO_COLOR
+    elif act == 3:
+        return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
+    else:
+        return '#DBF5FA'

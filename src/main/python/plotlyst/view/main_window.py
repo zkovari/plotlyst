@@ -21,7 +21,7 @@ from typing import Optional
 
 import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QCloseEvent
+from PyQt6.QtGui import QCloseEvent, QPalette, QColor
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
     QProgressDialog
 from fbs_runtime import platform
@@ -77,6 +77,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.resize(1200, 830)
         if app_env.is_prod():
             self.setWindowState(Qt.WindowState.WindowMaximized)
+
+        palette = QApplication.palette()
+        palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#8E9AAF'))
+        QApplication.setPalette(palette)
+
         self.novel = None
         self._current_text_widget = None
         self.manuscript_view: Optional[ManuscriptView] = None
