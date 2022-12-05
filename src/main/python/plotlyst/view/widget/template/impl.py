@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
-    healing_field, methods_field, misbelief_field
+    healing_field, methods_field, misbelief_field, positive_arc, negative_arc, need_field, ghost_field, desire_field
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
@@ -952,3 +952,21 @@ class WoundsFieldWidget(MultiLayerComplexTemplateWidgetBase):
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
         return [fear_field, misbelief_field, trigger_field, healing_field]
+
+
+class ArcsFieldWidget(MultiLayerComplexTemplateWidgetBase):
+    @property
+    def wdgEditor(self):
+        return self
+
+    @overrides
+    def _primaryButtonText(self) -> str:
+        return 'Add new arc'
+
+    @overrides
+    def _primaryFields(self) -> List[TemplateField]:
+        return [positive_arc, negative_arc]
+
+    @overrides
+    def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
+        return [ghost_field, fear_field, misbelief_field, desire_field, need_field]
