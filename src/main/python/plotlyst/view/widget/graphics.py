@@ -43,7 +43,9 @@ class BaseGraphicsView(QGraphicsView):
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if event.buttons() & Qt.MouseButton.MiddleButton or event.buttons() & Qt.MouseButton.LeftButton:
+        if not self.itemAt(
+                event.pos()) and (
+                event.buttons() & Qt.MouseButton.MiddleButton or event.buttons() & Qt.MouseButton.LeftButton):
             oldPoint = self.mapToScene(self._moveOriginX, self._moveOriginY)
             newPoint = self.mapToScene(event.pos())
             translation = newPoint - oldPoint
