@@ -34,7 +34,7 @@ from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, \
-    ChapterChangedEvent, AvailableSceneStagesChanged
+    ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -217,15 +217,55 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
         self.ui.cards.swapped.connect(self._scenes_swapped)
+        event_dispatcher.register(self, CharacterChangedEvent)
+        event_dispatcher.register(self, CharacterDeletedEvent)
 
-    #     event_dispatcher.register(self, CharacterChangedEvent)
-    #
-    # @overrides
-    # def event_received(self, event: Event):
-    #     if isinstance(event, CharacterChangedEvent):
-    #         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
-    #     else:
-    #         super(ScenesOutlineView, self).event_received(event)
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, (CharacterChangedEvent, CharacterDeletedEvent)):
+            self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
+            if isinstance(event, CharacterDeletedEvent):
+                char_id = event.character.id
+                removed_conflicts = []
+                for conflict in self.novel.conflicts:
+                    if conflict.character_id == char_id or conflict.conflicting_character_id == char_id:
+                        removed_conflicts.append(conflict)
+                for conf in removed_conflicts:
+                    self.novel.conflicts.remove(conf)
+                if removed_conflicts:
+                    self.repo.update_novel(self.novel)
+                removed_conflicts = [x.id for x in removed_conflicts]
+
+                for scene in self.novel.scenes:
+                    update_scene = False
+                    if scene.pov is not None and scene.pov.id == char_id:
+                        scene.pov = None
+                        update_scene = True
+                    for char in scene.characters:
+                        if char.id == char_id:
+                            scene.characters.remove(char)
+                            update_scene = True
+                            break
+                    for agenda in scene.agendas:
+                        if agenda.character_id == char_id:
+                            agenda.reset_character()
+                            agenda.conflict_references.clear()
+                            agenda.goal_references.clear()
+                            update_scene = True
+                            continue
+                        if removed_conflicts:
+                            before = len(agenda.conflict_references)
+                            agenda.conflict_references[:] = [x for x in agenda.conflict_references
+                                                             if x.conflict_id not in removed_conflicts]
+                            if before != len(agenda.conflict_references):
+                                update_scene = True
+
+                    if update_scene:
+                        self.repo.update_scene(scene)
+
+            self.refresh()
+        else:
+            super(ScenesOutlineView, self).event_received(event)
 
     @overrides
     def refresh(self):

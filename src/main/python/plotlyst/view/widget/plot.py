@@ -37,7 +37,7 @@ from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import CharacterChangedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
 from src.main.python.plotlyst.view.common import action, restyle, pointy
@@ -234,10 +234,15 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.repo = RepositoryPersistenceManager.instance()
 
         event_dispatcher.register(self, CharacterChangedEvent)
+        event_dispatcher.register(self, CharacterDeletedEvent)
 
     def event_received(self, event: Event):
-        if isinstance(event, CharacterChangedEvent):
-            self._characterSelector.setAvailableCharacters(self.novel.characters)
+        self._characterSelector.setAvailableCharacters(self.novel.characters)
+        if isinstance(event, CharacterDeletedEvent):
+            if self.plot.character_id == event.character.id:
+                self.plot.reset_character()
+                self.repo.update_novel(self.novel)
+                self._characterSelector.clear()
 
     def _principle(self, principleType: PlotPrincipleType) -> PlotPrinciple:
         for principle in self.plot.principles:

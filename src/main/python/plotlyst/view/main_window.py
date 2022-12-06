@@ -35,16 +35,16 @@ from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, emit_event, event_sender, \
+from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, event_sender, \
     emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent, NovelReloadedEvent, NovelDeletedEvent, \
+from src.main.python.plotlyst.events import NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
 from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view.board_view import BoardView
 from src.main.python.plotlyst.view.characters_view import CharactersView
@@ -162,11 +162,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     @overrides
     def event_received(self, event: Event):
-        if isinstance(event, NovelReloadRequestedEvent):
-            updated_novel = self._flush_end_fetch_novel()
-            self.novel.update_from(updated_novel)
-            emit_event(NovelReloadedEvent(self))
-        elif isinstance(event, NovelDeletedEvent):
+        if isinstance(event, NovelDeletedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel = None
                 self._clear_novel_views()
@@ -191,12 +187,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not self.isFullScreen():
             if on:
                 self.showFullScreen()
-
-    @busy
-    def _flush_end_fetch_novel(self):
-        flush_or_fail()
-        updated_novel = client.fetch_novel(self.novel.id)
-        return updated_novel
 
     @busy
     def _init_views(self):
@@ -459,7 +449,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setChecked(True)
 
     def _register_events(self):
-        event_dispatcher.register(self, NovelReloadRequestedEvent)
         event_dispatcher.register(self, NovelDeletedEvent)
         event_dispatcher.register(self, NovelUpdatedEvent)
         event_dispatcher.register(self, OpenDistractionFreeMode)

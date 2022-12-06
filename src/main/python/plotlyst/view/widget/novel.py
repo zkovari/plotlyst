@@ -38,7 +38,8 @@ from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBea
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
+    CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
@@ -361,7 +362,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             return self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget
 
 
-class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
+class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def __init__(self, parent=None):
         super(StoryStructureEditor, self).__init__(parent)
         self.setupUi(self)
@@ -388,6 +389,13 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings):
         self.novel: Optional[Novel] = None
         self.beats.installEventFilter(self)
         self.repo = RepositoryPersistenceManager.instance()
+
+        event_dispatcher.register(self, CharacterChangedEvent)
+        event_dispatcher.register(self, CharacterDeletedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        self._activeStructureToggled(self.novel.active_story_structure, True)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
