@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPainter, QMouseEvent, QWheelEvent
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent
 from PyQt6.QtWidgets import QGraphicsView
 from overrides import overrides
 
@@ -51,8 +51,7 @@ class BaseGraphicsView(QGraphicsView):
 
             self._moveOriginX = event.pos().x()
             self._moveOriginY = event.pos().y()
-        else:
-            super(BaseGraphicsView, self).mouseMoveEvent(event)
+        super(BaseGraphicsView, self).mouseMoveEvent(event)
 
     @overrides
     def wheelEvent(self, event: QWheelEvent) -> None:
