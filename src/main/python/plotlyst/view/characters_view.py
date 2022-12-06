@@ -23,7 +23,7 @@ from typing import Optional
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import ask_confirmation, busy, gc, incr_font, bold
+from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character
@@ -40,6 +40,7 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
+from src.main.python.plotlyst.view.widget.character.relations import RelationsView
 from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget, \
     CharacterComparisonWidget
 
@@ -94,6 +95,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
         self.ui.btnComparison.setIcon(IconRegistry.from_name('mdi.compare-horizontal', color_on='darkBlue'))
+        self.ui.btnRelationsView.setIcon(IconRegistry.from_name('ph.share-network-bold', color_on='darkBlue'))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
@@ -120,6 +122,10 @@ class CharactersView(AbstractNovelView):
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
         self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
 
+        self._relations = RelationsView(self.novel)
+        self.ui.relationsParent.layout().addWidget(self._relations)
+        vbox(self.ui.wdgGraphSelectorParent)
+
         self._progress = CharactersProgressWidget()
         self.ui.pageProgressView.layout().addWidget(self._progress)
         self.ui.pageProgressView.setStyleSheet(f'''
@@ -134,9 +140,10 @@ class CharactersView(AbstractNovelView):
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
                                                         (self.ui.btnBackstoryView, self.ui.pageBackstory),
+                                                        (self.ui.btnRelationsView, self.ui.pageRelationsView),
                                                         (self.ui.btnComparison, self.ui.pageComparison),
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
-        self.ui.btnCardsView.setChecked(True)
+        self.ui.btnRelationsView.setChecked(True)
 
         self.ui.cards.swapped.connect(self._characters_swapped)
 

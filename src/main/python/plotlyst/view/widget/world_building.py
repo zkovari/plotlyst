@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QRectF, QRect, QPoint, pyqtSignal
-from PyQt6.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent, \
+from PyQt6.QtGui import QMouseEvent, QPainter, QColor, QPen, QFontMetrics, QFont, QIcon, QKeyEvent, \
     QPainterPath, QResizeEvent
-from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
+from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
     QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QFrame, QToolButton
 from overrides import overrides
@@ -37,6 +37,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import pointy, set_tab_icon, link_buttons_to_pages, emoji_font
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.input import TextEditBase
 from src.main.python.plotlyst.view.widget.template.base import EditableTemplateWidget
 from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView
@@ -830,15 +831,9 @@ class WorldBuildingEditorScene(QGraphicsScene):
         self.editItemRequested.emit(item, newItem)
 
 
-class WorldBuildingEditor(QGraphicsView):
+class WorldBuildingEditor(BaseGraphicsView):
     def __init__(self, entity: WorldBuildingEntity, parent=None):
         super(WorldBuildingEditor, self).__init__(parent)
-        self._moveOriginX = 0
-        self._moveOriginY = 0
-        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
-        self.setRenderHint(QPainter.RenderHint.Antialiasing)
-        self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-        self.setRenderHint(QPainter.RenderHint.LosslessImageRendering)
 
         self._scene = WorldBuildingEditorScene(entity)
         self.setScene(self._scene)
@@ -857,34 +852,6 @@ class WorldBuildingEditor(QGraphicsView):
         self._btnZoomIn.clicked.connect(lambda: self.scale(1.1, 1.1))
         self._btnZoomOut.clicked.connect(lambda: self.scale(0.9, 0.9))
         self.__arrangeZoomButtons()
-
-    @overrides
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.MouseButton.MiddleButton or event.button() == Qt.MouseButton.LeftButton:
-            self._moveOriginX = event.pos().x()
-            self._moveOriginY = event.pos().y()
-        super(WorldBuildingEditor, self).mousePressEvent(event)
-
-    @overrides
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if event.buttons() & Qt.MouseButton.MiddleButton or event.buttons() & Qt.MouseButton.LeftButton:
-            oldPoint = self.mapToScene(self._moveOriginX, self._moveOriginY)
-            newPoint = self.mapToScene(event.pos())
-            translation = newPoint - oldPoint
-            self.translate(translation.x(), translation.y())
-
-            self._moveOriginX = event.pos().x()
-            self._moveOriginY = event.pos().y()
-        else:
-            super(WorldBuildingEditor, self).mouseMoveEvent(event)
-
-    @overrides
-    def wheelEvent(self, event: QWheelEvent) -> None:
-        super(WorldBuildingEditor, self).wheelEvent(event)
-        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-            diff = event.angleDelta().y()
-            scale = diff / 1200
-            self.scale(1 + scale, 1 + scale)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
