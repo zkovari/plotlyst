@@ -639,22 +639,11 @@ class CharacterSelectorButton(QToolButton):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setIcon(IconRegistry.character_icon('grey'))
         pointy(self)
-        self.setStyleSheet('''
-                        QToolButton {
-                            border: 2px dotted grey;
-                            border-radius: 6px;
-                        }
-                        QToolButton:hover {
-                            border: 2px dotted darkBlue;
-                        }
-                    ''')
-        self.setIconSize(QSize(32, 32))
         self._opacityFilter = OpacityEventFilter(self)
-        self.installEventFilter(self._opacityFilter)
         self._menu = QMenu(self)
         btn_popup_menu(self, self._menu)
+        self.clear()
 
     def setAvailableCharacters(self, characters: List[Character]):
         self._menu.clear()
@@ -666,11 +655,23 @@ class CharacterSelectorButton(QToolButton):
     def setCharacter(self, character: Character):
         self.setIcon(avatars.avatar(character))
         transparent(self)
-        if self._opacityFilter:
-            self.removeEventFilter(self._opacityFilter)
-            self._opacityFilter = None
-            translucent(self, 1.0)
-            self.setIconSize(QSize(35, 35))
+        self.removeEventFilter(self._opacityFilter)
+        translucent(self, 1.0)
+        self.setIconSize(QSize(35, 35))
+
+    def clear(self):
+        self.setStyleSheet('''
+                                QToolButton {
+                                    border: 2px dotted grey;
+                                    border-radius: 6px;
+                                }
+                                QToolButton:hover {
+                                    border: 2px dotted darkBlue;
+                                }
+                            ''')
+        self.setIcon(IconRegistry.character_icon('grey'))
+        self.setIconSize(QSize(32, 32))
+        self.installEventFilter(self._opacityFilter)
 
     def _selected(self, character: Character):
         self.setCharacter(character)

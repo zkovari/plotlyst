@@ -1346,28 +1346,6 @@ class Novel(NovelDescriptor):
     world: WorldBuilding = WorldBuilding()
     board: Board = Board()
 
-    def update_from(self, updated_novel: 'Novel'):
-        self.title = updated_novel.title
-        self.scenes.clear()
-        self.scenes.extend(updated_novel.scenes)
-        self.characters.clear()
-        self.characters.extend(updated_novel.characters)
-        self.chapters.clear()
-        self.chapters.extend(updated_novel.chapters)
-        self.plots.clear()
-        self.plots.extend(updated_novel.plots)
-        self.stages.clear()
-        self.stages.extend(updated_novel.stages)
-        self.character_profiles.clear()
-        self.character_profiles.extend(updated_novel.character_profiles)
-        self.conflicts.clear()
-        self.conflicts.extend(updated_novel.conflicts)
-        self.goals.clear()
-        self.goals.extend(updated_novel.goals)
-        self.tags.clear()
-        for k in updated_novel.tags:
-            self.tags[k] = updated_novel.tags[k]
-
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
         povs: List[Character] = []

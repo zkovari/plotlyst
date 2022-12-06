@@ -26,18 +26,12 @@ from src.main.python.plotlyst.event.core import Event
 
 
 @dataclass
-class NovelReloadRequestedEvent(Event):
-    pass
-
-
-# remove
-@dataclass
-class NovelReloadedEvent(Event):
-    pass
-
-
-@dataclass
 class CharacterChangedEvent(Event):
+    character: Character
+
+
+@dataclass
+class CharacterDeletedEvent(Event):
     character: Character
 
 
