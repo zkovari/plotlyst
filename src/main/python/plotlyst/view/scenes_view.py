@@ -248,7 +248,7 @@ class ScenesOutlineView(AbstractNovelView):
                             break
                     for agenda in scene.agendas:
                         if agenda.character_id == char_id:
-                            agenda.character_id = None
+                            agenda.reset_character()
                             agenda.conflict_references.clear()
                             agenda.goal_references.clear()
                             update_scene = True

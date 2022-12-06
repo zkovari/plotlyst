@@ -240,7 +240,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._characterSelector.setAvailableCharacters(self.novel.characters)
         if isinstance(event, CharacterDeletedEvent):
             if self.plot.character_id == event.character.id:
-                self.plot.character_id = None
+                self.plot.reset_character()
                 self.repo.update_novel(self.novel)
                 self._characterSelector.clear()
 

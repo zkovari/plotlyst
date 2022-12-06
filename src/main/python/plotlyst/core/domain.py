@@ -442,11 +442,14 @@ class PlotPrinciple:
 class CharacterBased(ABC):
     def set_character(self, character: Optional[Character]):
         if character is None:
-            self.character_id = None
-            self._character = None
+            self.reset_character()
         else:
             self.character_id = character.id
             self._character = character
+
+    def reset_character(self):
+        self.character_id = None
+        self._character = None
 
     def character(self, novel: 'Novel') -> Optional[Character]:
         if not self.character_id:
