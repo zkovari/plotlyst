@@ -30,6 +30,7 @@ class NovelReloadRequestedEvent(Event):
     pass
 
 
+# remove
 @dataclass
 class NovelReloadedEvent(Event):
     pass
