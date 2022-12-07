@@ -23,6 +23,7 @@ import pathlib
 import uuid
 from dataclasses import dataclass, field
 from enum import IntEnum
+from pathlib import Path
 from typing import List, Optional, Any, Dict, Set
 
 from PyQt6.QtCore import QByteArray, QBuffer, QIODevice
@@ -41,6 +42,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty
+from src.main.python.plotlyst.env import app_env
 
 
 class ApplicationNovelVersion(IntEnum):
@@ -202,6 +204,7 @@ class ProjectNovelInfo:
     id: uuid.UUID
     lang_settings: LanguageSettings = LanguageSettings()
     import_origin: Optional[ImportOrigin] = None
+    migrated_to_new_location: bool = False
 
 
 def _default_story_structures():
@@ -222,10 +225,10 @@ class JsonClient:
         self.project_file_path = ''
         self.root_path: Optional[pathlib.Path] = None
         self.novels_dir: Optional[pathlib.Path] = None
-        self.scenes_dir: Optional[pathlib.Path] = None
-        self.characters_dir: Optional[pathlib.Path] = None
+        self._old_scenes_dir: Optional[pathlib.Path] = None
+        self._old_characters_dir: Optional[pathlib.Path] = None
         self.images_dir: Optional[pathlib.Path] = None
-        self.docs_dir: Optional[pathlib.Path] = None
+        self._old_docs_dir: Optional[pathlib.Path] = None
 
     def init(self, workspace: str):
         self.project_file_path = os.path.join(workspace, 'project.plotlyst')
@@ -242,21 +245,15 @@ class JsonClient:
         self._workspace = workspace
         self.root_path = pathlib.Path(self._workspace)
         self.novels_dir = self.root_path.joinpath('novels')
-        self.scenes_dir = self.root_path.joinpath('scenes')
-        self.characters_dir = self.root_path.joinpath('characters')
+        self._old_scenes_dir = self.root_path.joinpath('scenes')
+        self._old_characters_dir = self.root_path.joinpath('characters')
         self.images_dir = self.root_path.joinpath('images')
-        self.docs_dir = self.root_path.joinpath('docs')
+        self._old_docs_dir = self.root_path.joinpath('docs')
 
         if not os.path.exists(str(self.novels_dir)):
             os.mkdir(self.novels_dir)
-        if not os.path.exists(str(self.scenes_dir)):
-            os.mkdir(self.scenes_dir)
-        if not os.path.exists(str(self.characters_dir)):
-            os.mkdir(self.characters_dir)
         if not os.path.exists(str(self.images_dir)):
             os.mkdir(self.images_dir)
-        if not os.path.exists(str(self.docs_dir)):
-            os.mkdir(self.docs_dir)
 
     def novels(self) -> List[NovelDescriptor]:
         return [NovelDescriptor(title=x.title, id=x.id) for x in self.project.novels]
@@ -267,19 +264,61 @@ class JsonClient:
                 return True
         return False
 
+    def characters_dir(self, novel_id=None, migrated=None) -> Path:
+        if migrated is None:
+            migrated = app_env.novel.migrated_to_new_location
+        if migrated:
+            if novel_id is None:
+                novel_id = app_env.novel.id
+            characters_dir = self.novels_dir.joinpath(str(novel_id)).joinpath('characters')
+            if not characters_dir.exists():
+                characters_dir.mkdir()
+            return characters_dir
+        else:
+            return self._old_characters_dir
+
+    def scenes_dir(self, novel_id=None, migrated=None) -> Path:
+        if migrated is None:
+            migrated = app_env.novel.migrated_to_new_location
+        if migrated:
+            if novel_id is None:
+                novel_id = app_env.novel.id
+            scenes_dir = self.novels_dir.joinpath(str(novel_id)).joinpath('scenes')
+            if not scenes_dir.exists():
+                scenes_dir.mkdir()
+            return scenes_dir
+        else:
+            return self._old_scenes_dir
+
+    def docs_dir(self, novel_id=None) -> Path:
+        if app_env.novel.migrated_to_new_location:
+            if novel_id is None:
+                novel_id = app_env.novel.id
+            docs_dir = self.novels_dir.joinpath(str(novel_id)).joinpath('docs')
+            if not docs_dir.exists():
+                docs_dir.mkdir()
+            return docs_dir
+        else:
+            return self._old_docs_dir
+
     def update_project_novel(self, novel: Novel):
         novel_info = self._find_project_novel_info_or_fail(novel.id)
         novel_info.title = novel.title
         novel_info.lang_settings = novel.lang_settings
         novel_info.import_origin = novel.import_origin
+        novel_info.migrated_to_new_location = novel.migrated_to_new_location
         self._persist_project()
 
     def insert_novel(self, novel: Novel):
         project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id, lang_settings=novel.lang_settings,
-                                              import_origin=novel.import_origin)
+                                              import_origin=novel.import_origin,
+                                              migrated_to_new_location=novel.migrated_to_new_location)
         self.project.novels.append(project_novel_info)
         self._persist_project()
         self._persist_novel(novel)
+        novel_dir = self.novels_dir.joinpath(str(project_novel_info.id))
+        if not novel_dir.exists():
+            novel_dir.mkdir()
 
     def delete_novel(self, novel: Novel):
         novel_info = self._find_project_novel_info_or_fail(novel.id)
@@ -299,7 +338,7 @@ class JsonClient:
 
     def delete_scene(self, novel: Novel, scene: Scene):
         self._persist_novel(novel)
-        self.__delete_info(self.scenes_dir, scene.id)
+        self.__delete_info(self.scenes_dir(), scene.id)
         if scene.document:
             self.delete_document(novel, scene.document)
 
@@ -310,7 +349,7 @@ class JsonClient:
     def update_character(self, character: Character, update_avatar: bool = False):
         avatar_id: Optional[uuid.UUID] = None
 
-        path = self.characters_dir.joinpath(self.__json_file(character.id))
+        path = self.characters_dir().joinpath(self.__json_file(character.id))
         if os.path.exists(path):
             with open(path) as json_file:
                 data = json_file.read()
@@ -330,7 +369,7 @@ class JsonClient:
 
     def delete_character(self, novel: Novel, character: Character):
         self._persist_novel(novel)
-        self.__delete_info(self.characters_dir, character.id)
+        self.__delete_info(self.characters_dir(), character.id)
         if character.document:
             self.delete_document(novel, character.document)
 
@@ -384,7 +423,8 @@ class JsonClient:
 
         characters = []
         for char_id in novel_info.characters:
-            path = self.characters_dir.joinpath(self.__json_file(char_id))
+            path = self.characters_dir(novel_info.id, project_novel_info.migrated_to_new_location).joinpath(
+                self.__json_file(char_id))
             if not os.path.exists(path):
                 continue
             with open(path, encoding='utf8') as json_file:
@@ -425,7 +465,8 @@ class JsonClient:
 
         scenes: List[Scene] = []
         for scene_id in novel_info.scenes:
-            path = self.scenes_dir.joinpath(self.__json_file(scene_id))
+            path = self.scenes_dir(novel_info.id, project_novel_info.migrated_to_new_location).joinpath(
+                self.__json_file(scene_id))
             if not os.path.exists(path):
                 continue
             with open(path, encoding='utf8') as json_file:
@@ -483,6 +524,7 @@ class JsonClient:
 
         novel = Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
                       import_origin=project_novel_info.import_origin,
+                      migrated_to_new_location=project_novel_info.migrated_to_new_location,
                       plots=novel_info.plots, characters=characters,
                       scenes=scenes, chapters=chapters, stages=novel_info.stages,
                       story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
@@ -499,6 +541,15 @@ class JsonClient:
             with open(board_path, encoding='utf8') as json_file:
                 novel.board = Board.from_json(json_file.read())
 
+        if not novel.migrated_to_new_location:
+            app_env.novel = novel
+            novel.migrated_to_new_location = True
+            for character in novel.characters:
+                self.update_character(character)
+            for scene in novel.scenes:
+                self.update_scene(scene)
+            self.update_novel(novel)
+            self.update_project_novel(novel)
         return novel
 
     def _read_novel_info(self, id: uuid.UUID) -> NovelInfo:
@@ -554,7 +605,7 @@ class JsonClient:
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, goals=char.goals, document=char.document,
                                   journals=char.journals, prefs=char.prefs, topics=char.topics, big_five=char.big_five)
-        self.__persist_info(self.characters_dir, char_info)
+        self.__persist_info(self.characters_dir(), char_info)
 
     def _persist_scene(self, scene: Scene):
         plots = [ScenePlotReferenceInfo(x.plot.id, x.data) for x in scene.plot_values]
@@ -568,7 +619,7 @@ class JsonClient:
                          beats=scene.beats, comments=scene.comments,
                          tag_references=scene.tag_references, document=scene.document, manuscript=scene.manuscript,
                          drive=scene.drive)
-        self.__persist_info(self.scenes_dir, info)
+        self.__persist_info(self.scenes_dir(), info)
 
     @staticmethod
     def __id_or_none(item):
@@ -593,7 +644,7 @@ class JsonClient:
         return load_image(path)
 
     def __load_doc(self, novel: Novel, doc_uuid: uuid.UUID) -> str:
-        novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
+        novel_doc_dir = self.docs_dir().joinpath(str(novel.id))
         path = novel_doc_dir.joinpath(self.__doc_file(doc_uuid))
         if not os.path.exists(path):
             return ''
@@ -603,7 +654,7 @@ class JsonClient:
     def __load_doc_data(self, novel: Novel, data_uuid: uuid.UUID) -> str:
         if not data_uuid:
             return ''
-        novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
+        novel_doc_dir = self.docs_dir().joinpath(str(novel.id))
         path = novel_doc_dir.joinpath(self.__json_file(data_uuid))
         if not os.path.exists(path):
             return ''
@@ -611,7 +662,7 @@ class JsonClient:
             return json_file.read()
 
     def __persist_doc(self, novel: Novel, doc: Document):
-        novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
+        novel_doc_dir = self.docs_dir().joinpath(str(novel.id))
         if not os.path.exists(str(novel_doc_dir)):
             os.mkdir(novel_doc_dir)
 
@@ -647,7 +698,7 @@ class JsonClient:
             os.remove(path)
 
     def __delete_doc(self, novel: Novel, doc: Document):
-        novel_doc_dir = self.docs_dir.joinpath(str(novel.id))
+        novel_doc_dir = self.docs_dir().joinpath(str(novel.id))
         if not os.path.exists(str(novel_doc_dir)):
             return
         doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))

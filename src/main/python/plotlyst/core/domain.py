@@ -1119,6 +1119,7 @@ class NovelDescriptor:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     lang_settings: LanguageSettings = LanguageSettings()
     import_origin: Optional[ImportOrigin] = None
+    migrated_to_new_location: bool = True
 
 
 @dataclass
