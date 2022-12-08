@@ -1585,6 +1585,7 @@ class SceneWidget(QFrame):
         self._selected: bool = False
 
         self._scenePovIcon = Icon(self)
+        retain_when_hidden(self._scenePovIcon)
         self._sceneTypeIcon = Icon(self)
         self._lblTitle = QLabel(self)
         self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
