@@ -21,7 +21,7 @@ from typing import Optional
 
 import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QCloseEvent, QPalette, QColor
+from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
     QProgressDialog
 from fbs_runtime import platform
@@ -46,6 +46,7 @@ from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.settings import settings
+from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.board_view import BoardView
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -161,6 +162,20 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 language_tool_proxy.tool.close()
 
     @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Tab and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            if self._current_view is not None:
+                self._current_view.jumpToNext()
+        elif event.key() == Qt.Key.Key_Backtab and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            if self._current_view is not None:
+                self._current_view.jumpToPrevious()
+        else:
+            super(MainWindow, self).keyPressEvent(event)
+            return
+
+        event.ignore()
+
+    @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelDeletedEvent):
             if self.novel and event.novel.id == self.novel.id:
@@ -204,6 +219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.manuscript_mode.setEnabled(True)
         self.reports_mode.setEnabled(True)
 
+        self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
@@ -251,23 +267,31 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         title = None
         if self.btnBoard.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageBoard)
+            self._current_view = self.board_view
         elif self.btnNovel.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNovel)
             self.novel_view.activate()
+            self._current_view = self.novel_view
         elif self.btnCharacters.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageCharacters)
             title = self.characters_view.title if self.characters_view.can_show_title() else None
             self.characters_view.activate()
+            self._current_view = self.characters_view
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
             title = self.scenes_outline_view.title if self.scenes_outline_view.can_show_title() else None
             self.scenes_outline_view.activate()
+            self._current_view = self.scenes_outline_view
         elif self.btnWorld.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageWorld)
+            self._current_view = self.world_building_view
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
             title = self.notes_view.title
             self.notes_view.activate()
+            self._current_view = self.notes_view
+        else:
+            self._current_view = None
 
         if title:
             clear_layout(self.wdgTitle.layout(), auto_delete=False)
@@ -464,6 +488,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         gc(self.scenes_outline_view.widget)
         self.pageNotes.layout().removeWidget(self.notes_view.widget)
         gc(self.notes_view.widget)
+        self.pageWorld.layout().removeWidget(self.world_building_view.widget)
+        gc(self.world_building_view.widget)
+        self.pageBoard.layout().removeWidget(self.board_view.widget)
+        gc(self.board_view.widget)
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         gc(self.comments_view.widget)
 

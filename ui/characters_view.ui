@@ -386,7 +386,7 @@
        <item>
         <widget class="QStackedWidget" name="stackCharacters">
          <property name="currentIndex">
-          <number>3</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="pageTableView">
           <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -407,6 +407,9 @@
            </property>
            <item>
             <widget class="QTableView" name="tblCharacters">
+             <property name="tabKeyNavigation">
+              <bool>false</bool>
+             </property>
              <property name="dragEnabled">
               <bool>false</bool>
              </property>
@@ -434,10 +437,10 @@
              <attribute name="verticalHeaderVisible">
               <bool>false</bool>
              </attribute>
-             <attribute name="verticalHeaderDefaultSectionSize">
+             <attribute name="verticalHeaderMinimumSectionSize">
               <number>33</number>
              </attribute>
-             <attribute name="verticalHeaderMinimumSectionSize">
+             <attribute name="verticalHeaderDefaultSectionSize">
               <number>33</number>
              </attribute>
             </widget>
@@ -487,8 +490,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>725</width>
-                <height>544</height>
+                <width>98</width>
+                <height>28</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -576,7 +579,7 @@
                 <x>0</x>
                 <y>0</y>
                 <width>727</width>
-                <height>559</height>
+                <height>556</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -631,8 +634,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>876</width>
-                <height>646</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">

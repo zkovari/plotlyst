@@ -52,6 +52,7 @@ class NovelView(AbstractNovelView):
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon('white'))
         self.ui.btnSettings.setToolTip('Novel settings are not available yet')
         self.ui.btnSettings.installEventFilter(InstantTooltipEventFilter(self.ui.btnSettings))
+        self.setNavigableButtonGroup(self.ui.buttonGroup)
 
         self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
         self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))

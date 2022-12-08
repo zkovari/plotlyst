@@ -96,6 +96,8 @@ class CharactersView(AbstractNovelView):
         self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
         self.ui.btnComparison.setIcon(IconRegistry.from_name('mdi.compare-horizontal', color_on='darkBlue'))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
+        self.setNavigableButtonGroup(self.ui.btnGroupViews)
+
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
 

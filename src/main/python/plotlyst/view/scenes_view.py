@@ -164,6 +164,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.transit-connection-horizontal', color_on='darkBlue'))
+        self.setNavigableButtonGroup(self.ui.btnGroupViews)
 
         self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
         self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
