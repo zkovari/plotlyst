@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QApplication, QScrollArea
 from overrides import overrides
-from qthandy import busy, margins, vspacer, btn_popup_menu, bold
+from qthandy import busy, margins, vspacer, btn_popup_menu, bold, incr_font
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
@@ -2372,15 +2372,16 @@ class _SceneGridItem(QWidget):
         btn = WordWrappedPushButton(parent=self)
         btn.setFixedWidth(120)
         btn.setText(scene.title_or_index(self.novel))
-        decr_font(btn.label, step=2)
         transparent(btn)
 
         self.wdgTop = QWidget()
         hbox(self.wdgTop, 0)
-        self.wdgTop.layout().addWidget(btn)
+        self.wdgTop.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         self.textSynopsis = QTextEdit()
         self.textSynopsis.setFontPointSize(btn.label.font().pointSize())
+        self.textSynopsis.setPlaceholderText('Scene synopsis...')
+        self.textSynopsis.setTabChangesFocus(True)
         self.textSynopsis.verticalScrollBar().setVisible(False)
         transparent(self.textSynopsis)
         self.textSynopsis.setAcceptRichText(False)
@@ -2471,6 +2472,8 @@ class _ScenePlotAssociationsWidget(QWidget):
             line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         btnPlot.setText(self.plot.text)
+        incr_font(btnPlot)
+        bold(btnPlot)
         if self.plot.icon:
             btnPlot.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
         transparent(btnPlot)
