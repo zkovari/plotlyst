@@ -58,7 +58,8 @@ from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, pointy, action, stretch_col
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, pointy, action, stretch_col, \
+    ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
@@ -2488,11 +2489,19 @@ class _ScenePlotAssociationsWidget(QWidget):
         for scene in self.novel.scenes:
             pv = next((x for x in scene.plot_values if x.plot.id == self.plot.id), None)
             if pv:
-                wdg = QTextEdit()
-                wdg.setText(pv.data.comment)
-                wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, pv))
+                wdg = self.__initCommentWidget(scene, pv)
             else:
                 wdg = QWidget()
+                btnPlus = QToolButton()
+                transparent(btnPlus)
+                pointy(btnPlus)
+                btnPlus.setIcon(IconRegistry.plus_circle_icon('grey'))
+                btnPlus.setToolTip('Associate to plot')
+                btnPlus.setIconSize(QSize(32, 32))
+                btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.2))
+                btnPlus.installEventFilter(ButtonPressResizeEventFilter(btnPlus))
+                btnPlus.clicked.connect(partial(self._linkToPlot, wdg, scene))
+                vbox(wdg).addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
 
             wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
             self.wdgReferences.layout().addWidget(wdg)
@@ -2509,6 +2518,26 @@ class _ScenePlotAssociationsWidget(QWidget):
     def _commentChanged(self, editor: QTextEdit, scene: Scene, scenePlotRef: ScenePlotReference):
         scenePlotRef.data.comment = editor.toPlainText()
         self.repo.update_scene(scene)
+
+    def _linkToPlot(self, placeholder: QWidget, scene: Scene):
+        ref = ScenePlotReference(self.plot)
+        scene.plot_values.append(ref)
+
+        wdg = self.__initCommentWidget(scene, ref)
+        wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+        self.wdgReferences.layout().replaceWidget(placeholder, wdg)
+        qtanim.fade_in(wdg)
+
+        self.repo.update_scene(scene)
+
+    def __initCommentWidget(self, scene: Scene, ref: ScenePlotReference) -> QWidget:
+        wdg = QTextEdit()
+        wdg.setPlaceholderText('How is the plot related to this scene?')
+        wdg.setTabChangesFocus(True)
+        wdg.setText(ref.data.comment)
+        wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, ref))
+
+        return wdg
 
 
 class StoryMap(QWidget):
