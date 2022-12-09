@@ -2370,17 +2370,32 @@ class _SceneGridItem(QWidget):
 
         vbox(self)
 
-        btn = WordWrappedPushButton(parent=self)
-        btn.setFixedWidth(120)
-        btn.setText(scene.title_or_index(self.novel))
-        transparent(btn)
+        icon = Icon()
+        beat = self.scene.beat(self.novel)
+        if beat and beat.icon:
+            icon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+
+        self.label = QLabel(self)
+        self.label.setWordWrap(True)
+        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setText(scene.title_or_index(self.novel))
+
+        # btn = WordWrappedPushButton(parent=self)
+        # btn.setFixedWidth(120)
+        # btn.setText(scene.title_or_index(self.novel))
+
+        # transparent(btn)
 
         self.wdgTop = QWidget()
         hbox(self.wdgTop, 0)
-        self.wdgTop.layout().addWidget(btn, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.wdgTop.layout().addWidget(spacer())
+        self.wdgTop.layout().addWidget(icon)
+        self.wdgTop.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgTop.layout().addWidget(spacer())
 
         self.textSynopsis = QTextEdit()
-        self.textSynopsis.setFontPointSize(btn.label.font().pointSize())
+        self.textSynopsis.setFontPointSize(self.label.font().pointSize())
         self.textSynopsis.setPlaceholderText('Scene synopsis...')
         self.textSynopsis.setTabChangesFocus(True)
         self.textSynopsis.verticalScrollBar().setVisible(False)
@@ -2444,6 +2459,7 @@ class _ScenePlotAssociationsWidget(QWidget):
         super(_ScenePlotAssociationsWidget, self).__init__(parent)
         self.novel = novel
         self.plot = plot
+        self._vertical = vertical
 
         self.wdgReferences = QWidget()
         line = QPushButton()
@@ -2454,7 +2470,7 @@ class _ScenePlotAssociationsWidget(QWidget):
 
         if vertical:
             hbox(self, 0, 0)
-            vbox(self.wdgReferences, margin=0)
+            vbox(self.wdgReferences, margin=0, spacing=5)
             btnPlot = RotatedButton()
             btnPlot.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
             hmax(btnPlot)
@@ -2465,7 +2481,7 @@ class _ScenePlotAssociationsWidget(QWidget):
             hmax(self)
         else:
             vbox(self, 0, 0)
-            hbox(self.wdgReferences, margin=0)
+            hbox(self.wdgReferences, margin=0, spacing=5)
             btnPlot = QPushButton()
             self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignLeft)
 
@@ -2532,8 +2548,25 @@ class _ScenePlotAssociationsWidget(QWidget):
 
     def __initCommentWidget(self, scene: Scene, ref: ScenePlotReference) -> QWidget:
         wdg = QTextEdit()
+        wdg.setContentsMargins(5, 5, 5, 5)
+        wdg.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        wdg.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         wdg.setPlaceholderText('How is the plot related to this scene?')
         wdg.setTabChangesFocus(True)
+        if self._vertical:
+            wdg.setStyleSheet(f'''
+                                border:1px solid {self.plot.icon_color};
+                                border-left: 0px;
+                                border-bottom-right-radius: 12px;
+                                border-top-right-radius: 12px;
+                            ''')
+        else:
+            wdg.setStyleSheet(f'''
+                                border:1px solid {self.plot.icon_color};
+                                border-top: 0px;
+                                border-bottom-left-radius: 12px;
+                                border-bottom-right-radius: 12px;
+                            ''')
         wdg.setText(ref.data.comment)
         wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, ref))
 
