@@ -21,14 +21,14 @@ from abc import abstractmethod
 from typing import List, Any, Optional
 
 from PyQt6.QtCore import QObject
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QButtonGroup
 from overrides import overrides
 from qthandy import busy
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import NovelReloadedEvent
+from src.main.python.plotlyst.events import CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 
 
@@ -39,6 +39,7 @@ class AbstractView(QObject, EventListener):
         self._refresh_on_activation: bool = False
         self.widget = QWidget()
         self.title: Optional[QWidget] = None
+        self._navigable_button_group: Optional[QButtonGroup] = None
         if event_types:
             self._event_types = event_types
         else:
@@ -48,6 +49,11 @@ class AbstractView(QObject, EventListener):
             event_dispatcher.register(self, event)
 
         self.repo = RepositoryPersistenceManager.instance()
+
+    def setNavigableButtonGroup(self, group: QButtonGroup):
+        self._navigable_button_group = group
+        for i, btn in enumerate(self._navigable_button_group.buttons()):
+            self._navigable_button_group.setId(btn, i)
 
     @overrides
     def event_received(self, event: Event):
@@ -73,6 +79,28 @@ class AbstractView(QObject, EventListener):
     def refresh(self):
         pass
 
+    def jumpToPrevious(self):
+        if self._navigable_button_group is None:
+            return
+
+        id_ = self._navigable_button_group.checkedId()
+        if id_ == 0:
+            id_ = len(self._navigable_button_group.buttons()) - 1
+        else:
+            id_ -= 1
+        self._navigable_button_group.button(id_).setChecked(True)
+
+    def jumpToNext(self):
+        if self._navigable_button_group is None:
+            return
+
+        id_ = self._navigable_button_group.checkedId()
+        if id_ == len(self._navigable_button_group.buttons()) - 1:
+            id_ = 0
+        else:
+            id_ += 1
+        self._navigable_button_group.button(id_).setChecked(True)
+
 
 class AbstractNovelView(AbstractView):
 
@@ -81,7 +109,7 @@ class AbstractNovelView(AbstractView):
             events = event_types
         else:
             events = []
-        events.append(NovelReloadedEvent)
+        events.append(CharacterDeletedEvent)
         super().__init__(events)
         self.novel = novel
 

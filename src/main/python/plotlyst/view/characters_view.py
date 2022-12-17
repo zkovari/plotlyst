@@ -29,7 +29,8 @@ from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import NovelReloadRequestedEvent, CharacterChangedEvent, ToggleOutlineViewTitle
+from src.main.python.plotlyst.events import CharacterChangedEvent, ToggleOutlineViewTitle, \
+    CharacterDeletedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
@@ -58,7 +59,7 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
         self.refresh()
 
         event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, NovelReloadRequestedEvent)
+        event_dispatcher.register(self, CharacterDeletedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -97,6 +98,8 @@ class CharactersView(AbstractNovelView):
         self.ui.btnComparison.setIcon(IconRegistry.from_name('mdi.compare-horizontal', color_on='darkBlue'))
         self.ui.btnRelationsView.setIcon(IconRegistry.from_name('ph.share-network-bold', color_on='darkBlue'))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
+        self.setNavigableButtonGroup(self.ui.btnGroupViews)
+
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
 
@@ -272,7 +275,7 @@ class CharactersView(AbstractNovelView):
         self.novel.characters.remove(character)
         self.ui.wdgCharacterSelector.removeCharacter(character)
         self.repo.delete_character(self.novel, character)
-        emit_event(NovelReloadRequestedEvent(self))
+        emit_event(CharacterDeletedEvent(self, character))
         self.refresh()
 
     @busy

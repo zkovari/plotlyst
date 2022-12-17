@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView, QApplication, QScrollArea
 from overrides import overrides
-from qthandy import busy, margins, vspacer, btn_popup_menu, bold
+from qthandy import busy, margins, vspacer, btn_popup_menu, bold, incr_font
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
@@ -58,7 +58,8 @@ from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, pointy, action, stretch_col
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, pointy, action, stretch_col, \
+    ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
@@ -1585,6 +1586,7 @@ class SceneWidget(QFrame):
         self._selected: bool = False
 
         self._scenePovIcon = Icon(self)
+        retain_when_hidden(self._scenePovIcon)
         self._sceneTypeIcon = Icon(self)
         self._lblTitle = QLabel(self)
         self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -2368,18 +2370,34 @@ class _SceneGridItem(QWidget):
 
         vbox(self)
 
-        btn = WordWrappedPushButton(parent=self)
-        btn.setFixedWidth(120)
-        btn.setText(scene.title_or_index(self.novel))
-        decr_font(btn.label, step=2)
-        transparent(btn)
+        icon = Icon()
+        beat = self.scene.beat(self.novel)
+        if beat and beat.icon:
+            icon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+
+        self.label = QLabel(self)
+        self.label.setWordWrap(True)
+        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setText(scene.title_or_index(self.novel))
+
+        # btn = WordWrappedPushButton(parent=self)
+        # btn.setFixedWidth(120)
+        # btn.setText(scene.title_or_index(self.novel))
+
+        # transparent(btn)
 
         self.wdgTop = QWidget()
         hbox(self.wdgTop, 0)
-        self.wdgTop.layout().addWidget(btn)
+        self.wdgTop.layout().addWidget(spacer())
+        self.wdgTop.layout().addWidget(icon)
+        self.wdgTop.layout().addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.wdgTop.layout().addWidget(spacer())
 
         self.textSynopsis = QTextEdit()
-        self.textSynopsis.setFontPointSize(btn.label.font().pointSize())
+        self.textSynopsis.setFontPointSize(self.label.font().pointSize())
+        self.textSynopsis.setPlaceholderText('Scene synopsis...')
+        self.textSynopsis.setTabChangesFocus(True)
         self.textSynopsis.verticalScrollBar().setVisible(False)
         transparent(self.textSynopsis)
         self.textSynopsis.setAcceptRichText(False)
@@ -2441,6 +2459,7 @@ class _ScenePlotAssociationsWidget(QWidget):
         super(_ScenePlotAssociationsWidget, self).__init__(parent)
         self.novel = novel
         self.plot = plot
+        self._vertical = vertical
 
         self.wdgReferences = QWidget()
         line = QPushButton()
@@ -2451,7 +2470,7 @@ class _ScenePlotAssociationsWidget(QWidget):
 
         if vertical:
             hbox(self, 0, 0)
-            vbox(self.wdgReferences, margin=0)
+            vbox(self.wdgReferences, margin=0, spacing=5)
             btnPlot = RotatedButton()
             btnPlot.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
             hmax(btnPlot)
@@ -2462,7 +2481,7 @@ class _ScenePlotAssociationsWidget(QWidget):
             hmax(self)
         else:
             vbox(self, 0, 0)
-            hbox(self.wdgReferences, margin=0)
+            hbox(self.wdgReferences, margin=0, spacing=5)
             btnPlot = QPushButton()
             self.layout().addWidget(btnPlot, alignment=Qt.AlignmentFlag.AlignLeft)
 
@@ -2470,6 +2489,8 @@ class _ScenePlotAssociationsWidget(QWidget):
             line.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         btnPlot.setText(self.plot.text)
+        incr_font(btnPlot)
+        bold(btnPlot)
         if self.plot.icon:
             btnPlot.setIcon(IconRegistry.from_name(self.plot.icon, self.plot.icon_color))
         transparent(btnPlot)
@@ -2484,11 +2505,19 @@ class _ScenePlotAssociationsWidget(QWidget):
         for scene in self.novel.scenes:
             pv = next((x for x in scene.plot_values if x.plot.id == self.plot.id), None)
             if pv:
-                wdg = QTextEdit()
-                wdg.setText(pv.data.comment)
-                wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, pv))
+                wdg = self.__initCommentWidget(scene, pv)
             else:
                 wdg = QWidget()
+                btnPlus = QToolButton()
+                transparent(btnPlus)
+                pointy(btnPlus)
+                btnPlus.setIcon(IconRegistry.plus_circle_icon('grey'))
+                btnPlus.setToolTip('Associate to plot')
+                btnPlus.setIconSize(QSize(32, 32))
+                btnPlus.installEventFilter(OpacityEventFilter(btnPlus, enterOpacity=0.7, leaveOpacity=0.2))
+                btnPlus.installEventFilter(ButtonPressResizeEventFilter(btnPlus))
+                btnPlus.clicked.connect(partial(self._linkToPlot, wdg, scene))
+                vbox(wdg).addWidget(btnPlus, alignment=Qt.AlignmentFlag.AlignCenter)
 
             wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
             self.wdgReferences.layout().addWidget(wdg)
@@ -2505,6 +2534,43 @@ class _ScenePlotAssociationsWidget(QWidget):
     def _commentChanged(self, editor: QTextEdit, scene: Scene, scenePlotRef: ScenePlotReference):
         scenePlotRef.data.comment = editor.toPlainText()
         self.repo.update_scene(scene)
+
+    def _linkToPlot(self, placeholder: QWidget, scene: Scene):
+        ref = ScenePlotReference(self.plot)
+        scene.plot_values.append(ref)
+
+        wdg = self.__initCommentWidget(scene, ref)
+        wdg.setFixedSize(GRID_ITEM_SIZE, GRID_ITEM_SIZE)
+        self.wdgReferences.layout().replaceWidget(placeholder, wdg)
+        qtanim.fade_in(wdg)
+
+        self.repo.update_scene(scene)
+
+    def __initCommentWidget(self, scene: Scene, ref: ScenePlotReference) -> QWidget:
+        wdg = QTextEdit()
+        wdg.setContentsMargins(5, 5, 5, 5)
+        wdg.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        wdg.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        wdg.setPlaceholderText('How is the plot related to this scene?')
+        wdg.setTabChangesFocus(True)
+        if self._vertical:
+            wdg.setStyleSheet(f'''
+                                border:1px solid {self.plot.icon_color};
+                                border-left: 0px;
+                                border-bottom-right-radius: 12px;
+                                border-top-right-radius: 12px;
+                            ''')
+        else:
+            wdg.setStyleSheet(f'''
+                                border:1px solid {self.plot.icon_color};
+                                border-top: 0px;
+                                border-bottom-left-radius: 12px;
+                                border-bottom-right-radius: 12px;
+                            ''')
+        wdg.setText(ref.data.comment)
+        wdg.textChanged.connect(partial(self._commentChanged, wdg, scene, ref))
+
+        return wdg
 
 
 class StoryMap(QWidget):

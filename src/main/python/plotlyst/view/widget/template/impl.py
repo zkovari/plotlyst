@@ -454,6 +454,7 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
         self.wdgEditor = AutoAdjustableTextEdit(height=60)
         self.wdgEditor.setAcceptRichText(False)
+        self.wdgEditor.setTabChangesFocus(True)
         self.wdgEditor.setPlaceholderText(field.placeholder)
         self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
         self.setMaximumWidth(600)

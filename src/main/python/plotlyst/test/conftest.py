@@ -24,6 +24,7 @@ import pytest
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Character, Scene, Chapter, \
     Novel, Conflict, ConflictType, Plot, PlotType, ScenePlotReference, SceneType, SceneStructureAgenda
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.stylesheet import APP_STYLESHEET
@@ -68,6 +69,7 @@ def get_main_window(qtbot):
 
 def init_project():
     novel = Novel(title='Test Novel')
+    app_env.novel = novel
     char_a = Character(name='Alfred')
     char_b = Character(name='Babel')
     char_c = Character(name='Celine')
