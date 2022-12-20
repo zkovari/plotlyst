@@ -73,6 +73,7 @@ jobs:
           pip install git+https://github.com/plotlyst/qt-handy.git
           pip install git+https://github.com/plotlyst/qt-emojipicker.git
           pip install git+https://github.com/plotlyst/qt-frames.git
+          pip install git+https://github.com/plotlyst/qt-toolbox-widget.git
           pip install git+https://github.com/plotlyst/language_tool_python.git@feature/macos-awt-flag
       - name: Test with pytest
         run: |
