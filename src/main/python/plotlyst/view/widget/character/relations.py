@@ -23,10 +23,10 @@ from typing import Optional
 from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPainter
 from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
-    QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton
+    QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton, QGraphicsSceneDragDropEvent
 from overrides import overrides
 from qthandy import flow, transparent
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qttoolbox import ToolBox
 
 from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork
@@ -65,6 +65,26 @@ class RelationsEditorScene(QGraphicsScene):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
 
+    @overrides
+    def dragEnterEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
+        if event.mimeData().hasFormat(CHARACTER_AVATAR_MIME_TYPE):
+            event.accept()
+
+    @overrides
+    def dragMoveEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
+        if event.mimeData().hasFormat(CHARACTER_AVATAR_MIME_TYPE):
+            event.accept()
+
+    @overrides
+    def dropEvent(self, event: 'QGraphicsSceneDragDropEvent') -> None:
+        if event.mimeData().hasFormat(CHARACTER_AVATAR_MIME_TYPE):
+            event.accept()
+
+            character: Character = event.mimeData().reference()
+            item = CharacterItem(character)
+            item.setPos(event.scenePos())
+            self.addItem(item)
+
 
 class RelationsView(BaseGraphicsView):
     def __init__(self, novel: Novel, parent=None):
@@ -73,6 +93,7 @@ class RelationsView(BaseGraphicsView):
         self._scene = RelationsEditorScene(self._novel)
         self.setScene(self._scene)
         self.scale(0.6, 0.6)
+        self.setAcceptDrops(True)
 
     def refresh(self, network: RelationsNetwork):
         self._scene.clear()
@@ -84,6 +105,9 @@ class RelationsView(BaseGraphicsView):
         self.centerOn(0, 0)
 
 
+CHARACTER_AVATAR_MIME_TYPE = 'application/character-avatar'
+
+
 class _CharacterSelectorAvatar(QToolButton):
     def __init__(self, character: Character, parent=None):
         super(_CharacterSelectorAvatar, self).__init__(parent)
@@ -93,6 +117,8 @@ class _CharacterSelectorAvatar(QToolButton):
         self.setIcon(avatars.avatar(character))
         self.setToolTip(character.name)
         self.installEventFilter(OpacityEventFilter(self, enterOpacity=0.8, leaveOpacity=1.0))
+        self.installEventFilter(
+            DragEventFilter(self, CHARACTER_AVATAR_MIME_TYPE, dataFunc=lambda wdg: character, hideTarget=True))
         self.setCursor(Qt.CursorShape.OpenHandCursor)
 
 
