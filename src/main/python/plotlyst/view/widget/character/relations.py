@@ -20,14 +20,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt6.QtCore import QRectF
+from PyQt6.QtCore import QRectF, pyqtSignal
 from PyQt6.QtGui import QPainter
 from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
     QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem
 from overrides import overrides
+from qttoolbox import ToolBox
 
-from src.main.python.plotlyst.core.domain import Character, Novel
-from src.main.python.plotlyst.view.icons import avatars
+from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 
 
@@ -62,14 +63,6 @@ class RelationsEditorScene(QGraphicsScene):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
 
-        item = CharacterItem(novel.characters[0])
-        item.setPos(0, 0)
-        self.addItem(item)
-
-        item = CharacterItem(novel.characters[1])
-        item.setPos(200, 100)
-        self.addItem(item)
-
 
 class RelationsView(BaseGraphicsView):
     def __init__(self, novel: Novel, parent=None):
@@ -77,3 +70,34 @@ class RelationsView(BaseGraphicsView):
         self._novel = novel
         self._scene = RelationsEditorScene(self._novel)
         self.setScene(self._scene)
+        self.scale(0.6, 0.6)
+
+    def refresh(self, network: RelationsNetwork):
+        self._scene.clear()
+        for node in network.nodes:
+            item = CharacterItem(node.character(self._novel))
+            self._scene.addItem(item)
+            item.setPos(node.x, node.y)
+
+        self.centerOn(0, 0)
+
+
+class NetworkPanel(QWidget):
+    def __init__(self, network: RelationsNetwork, parent=None):
+        super(NetworkPanel, self).__init__(parent)
+        self._network = network
+
+    def network(self) -> RelationsNetwork:
+        return self._network
+
+
+class RelationsSelectorBox(ToolBox):
+    relationsSelected = pyqtSignal(RelationsNetwork)
+
+    def __init__(self, novel: Novel, parent=None):
+        super(RelationsSelectorBox, self).__init__(parent)
+        self._novel = novel
+
+    def addNetwork(self, network: RelationsNetwork):
+        wdg = NetworkPanel(network)
+        self.addItem(wdg, network.title, icon=IconRegistry.from_name(network.icon, network.icon_color))

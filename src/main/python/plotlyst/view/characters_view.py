@@ -23,10 +23,10 @@ from typing import Optional
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox
+from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox, vspacer
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, ToggleOutlineViewTitle, \
@@ -41,7 +41,7 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.character.relations import RelationsView
+from src.main.python.plotlyst.view.widget.character.relations import RelationsView, RelationsSelectorBox
 from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget, \
     CharacterComparisonWidget
 
@@ -127,7 +127,19 @@ class CharactersView(AbstractNovelView):
 
         self._relations = RelationsView(self.novel)
         self.ui.relationsParent.layout().addWidget(self._relations)
-        vbox(self.ui.wdgGraphSelectorParent)
+
+        self._relationsSelector = RelationsSelectorBox(self.novel)
+        vbox(self.ui.wdgGraphSelectorParent).addWidget(self._relationsSelector)
+        self.ui.wdgGraphSelectorParent.layout().addWidget(vspacer())
+        self._relationsSelector.currentChanged.connect(lambda i, w: self._relations.refresh(w.network()))
+
+        node = CharacterNode(50, 50)
+        node.set_character(self.novel.characters[0])
+        network1 = RelationsNetwork('Network 1', icon='ph.share-network-bold', nodes=[node])
+        self._relationsSelector.addNetwork(network1)
+        self._relationsSelector.addNetwork(RelationsNetwork('Network 2', icon='ph.share-network-bold'))
+
+        self.ui.networkSplitter.setSizes([100, 500])
 
         self._progress = CharactersProgressWidget()
         self.ui.pageProgressView.layout().addWidget(self._progress)
