@@ -20,11 +20,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional
 
-from PyQt6.QtCore import QRectF, pyqtSignal
+from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPainter
 from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
-    QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem
+    QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton
 from overrides import overrides
+from qthandy import flow, transparent
+from qthandy.filter import OpacityEventFilter
 from qttoolbox import ToolBox
 
 from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork
@@ -82,10 +84,28 @@ class RelationsView(BaseGraphicsView):
         self.centerOn(0, 0)
 
 
+class _CharacterSelectorAvatar(QToolButton):
+    def __init__(self, character: Character, parent=None):
+        super(_CharacterSelectorAvatar, self).__init__(parent)
+        self._character = character
+        transparent(self)
+        self.setIconSize(QSize(20, 20))
+        self.setIcon(avatars.avatar(character))
+        self.setToolTip(character.name)
+        self.installEventFilter(OpacityEventFilter(self, enterOpacity=0.8, leaveOpacity=1.0))
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
+
+
 class NetworkPanel(QWidget):
-    def __init__(self, network: RelationsNetwork, parent=None):
+    def __init__(self, novel: Novel, network: RelationsNetwork, parent=None):
         super(NetworkPanel, self).__init__(parent)
+        self._novel = novel
         self._network = network
+
+        flow(self)
+        for character in self._novel.characters:
+            avatar = _CharacterSelectorAvatar(character)
+            self.layout().addWidget(avatar)
 
     def network(self) -> RelationsNetwork:
         return self._network
@@ -99,5 +119,5 @@ class RelationsSelectorBox(ToolBox):
         self._novel = novel
 
     def addNetwork(self, network: RelationsNetwork):
-        wdg = NetworkPanel(network)
+        wdg = NetworkPanel(self._novel, network)
         self.addItem(wdg, network.title, icon=IconRegistry.from_name(network.icon, network.icon_color))
