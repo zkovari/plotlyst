@@ -1297,6 +1297,27 @@ def default_tags() -> Dict[TagType, List[Tag]]:
 
 
 @dataclass
+class Node:
+    x: float
+    y: float
+
+
+@dataclass
+class CharacterNode(Node, CharacterBased):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    character_id: Optional[uuid.UUID] = None
+
+
+@dataclass
+class RelationsNetwork:
+    title: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    nodes: List[CharacterNode] = field(default_factory=list)
+
+
+@dataclass
 class DocsPreferences:
     grammar_check: bool = True
 
