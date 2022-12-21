@@ -20,18 +20,66 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from typing import Optional, Set, Any
 
+import qtanim
 from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt, QTimer
 from PyQt6.QtGui import QPainter, QPen, QKeyEvent
 from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
-    QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton, QGraphicsSceneDragDropEvent
+    QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton, QGraphicsSceneDragDropEvent, \
+    QGraphicsObject
 from overrides import overrides
-from qthandy import flow, transparent
+from qthandy import flow, transparent, pointy
 from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qttoolbox import ToolBox
 
 from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
+
+
+class PlusItem(QAbstractGraphicsShapeItem, QGraphicsObject):
+    def __init__(self, parent: 'CharacterItem'):
+        super(PlusItem, self).__init__(parent)
+        self._parent = parent
+        self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
+        self._iconSize = 25
+        self.setAcceptHoverEvents(True)
+        pointy(self)
+        self.setToolTip('Add new relation')
+
+    @overrides
+    def boundingRect(self):
+        return QRectF(0, 0, self._iconSize, self._iconSize)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        self._plusIcon.paint(painter, 0, 0, self._iconSize, self._iconSize)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._plusIcon = IconRegistry.plus_circle_icon('#457b9d')
+        self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if self.relationsScene().linkMode():
+            self._plusIcon = IconRegistry.plus_circle_icon('#457b9d')
+        else:
+            self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
+        self.update()
+
+    @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        event.accept()
+
+    def reset(self):
+        self._plusIcon = IconRegistry.plus_circle_icon('lightgrey')
+
+    def relationsScene(self) -> 'RelationsEditorScene':
+        return self.scene()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self.relationsScene().startLink()
 
 
 class CharacterItem(QAbstractGraphicsShapeItem):
@@ -41,26 +89,37 @@ class CharacterItem(QAbstractGraphicsShapeItem):
         self._character = character
         self._node = node
         self._size: int = 128
+        self._margin: int = 25
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setAcceptHoverEvents(True)
 
         self._posChangedTimer = QTimer()
         self._posChangedTimer.setInterval(1000)
         self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
+        self._plusItem = PlusItem(self)
+        self._plusItem.setPos(50, -self._margin)
+        self._plusItem.setVisible(False)
+        self._animation = None
+        self._linkMode: bool = False
 
     def character(self) -> Character:
         return self._character
 
     @overrides
     def boundingRect(self) -> QRectF:
-        return QRectF(0, 0, self._size, self._size)
+        return QRectF(0, -self._margin, self._size, self._size + self._margin)
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        if self.isSelected():
-            painter.setPen(QPen(Qt.GlobalColor.black, 2, Qt.PenStyle.DashLine))
-            painter.drawRoundedRect(option.rect, 2, 2)
+        if self._linkMode:
+            painter.setPen(QPen(Qt.GlobalColor.darkBlue, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(0, 0, self._size, self._size, 2, 2)
+        elif self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(0, 0, self._size, self._size, 2, 2)
+
         avatar = avatars.avatar(self._character)
         avatar.paint(painter, 0, 0, self._size, self._size)
 
@@ -68,7 +127,25 @@ class CharacterItem(QAbstractGraphicsShapeItem):
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self._posChangedTimer.start(1000)
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            self._plusItem.setVisible(bool(value))
+            if value:
+                self._animation = qtanim.fade_in(self._plusItem)
+            else:
+                self.relationsScene().endLink()
+                self._plusItem.reset()
         return super(CharacterItem, self).itemChange(change, value)
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if self.relationsScene().linkMode():
+            self._linkMode = True
+        self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._linkMode = False
+        self.update()
 
     def relationsScene(self) -> 'RelationsEditorScene':
         return self.scene()
@@ -91,6 +168,7 @@ class RelationsEditorScene(QGraphicsScene):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
         self._network: Optional[RelationsNetwork] = None
+        self._linkMode: bool = False
 
     def setNetwork(self, network: RelationsNetwork):
         self._network = network
@@ -129,6 +207,15 @@ class RelationsEditorScene(QGraphicsScene):
                                               node.character_id != item.character().id]
                     self.removeItem(item)
                     self.charactersChanged.emit(self._network)
+
+    def linkMode(self) -> bool:
+        return self._linkMode
+
+    def startLink(self):
+        self._linkMode = True
+
+    def endLink(self):
+        self._linkMode = False
 
 
 class RelationsView(BaseGraphicsView):
