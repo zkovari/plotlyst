@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, Set
 
 from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt
-from PyQt6.QtGui import QPainter
+from PyQt6.QtGui import QPainter, QPen, QKeyEvent
 from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
     QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton, QGraphicsSceneDragDropEvent
 from overrides import overrides
@@ -51,6 +51,9 @@ class CharacterItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        if self.isSelected():
+            painter.setPen(QPen(Qt.GlobalColor.black, 2, Qt.PenStyle.DashLine))
+            painter.drawRoundedRect(option.rect, 2, 2)
         avatar = avatars.avatar(self._character)
         avatar.paint(painter, 0, 0, self._size, self._size)
 
@@ -94,6 +97,16 @@ class RelationsEditorScene(QGraphicsScene):
             node.set_character(character)
             self._network.nodes.append(node)
             self.charactersChanged.emit(self._network)
+
+    @overrides
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            for item in self.selectedItems():
+                if isinstance(item, CharacterItem):
+                    self._network.nodes[:] = [node for node in self._network.nodes if
+                                              node.character_id != item.character().id]
+                    self.removeItem(item)
+                    self.charactersChanged.emit(self._network)
 
 
 class RelationsView(BaseGraphicsView):
