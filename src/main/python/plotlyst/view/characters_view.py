@@ -133,6 +133,8 @@ class CharactersView(AbstractNovelView):
         self.ui.wdgGraphSelectorParent.layout().addWidget(vspacer())
         self._relationsSelector.currentChanged.connect(lambda i, w: self._relations.refresh(w.network()))
 
+        self._relations.relationsScene().charactersChanged.connect(self._relationsSelector.refreshCharacters)
+
         node = CharacterNode(50, 50)
         node.set_character(self.novel.characters[0])
         network1 = RelationsNetwork('Network 1', icon='ph.share-network-bold', nodes=[node])

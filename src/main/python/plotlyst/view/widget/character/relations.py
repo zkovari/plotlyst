@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Optional
+from typing import Optional, Set
 
 from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPainter
@@ -29,7 +29,7 @@ from qthandy import flow, transparent
 from qthandy.filter import OpacityEventFilter, DragEventFilter
 from qttoolbox import ToolBox
 
-from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork
+from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 
@@ -61,9 +61,15 @@ class RelationItem(QGraphicsPathItem):
 
 
 class RelationsEditorScene(QGraphicsScene):
+    charactersChanged = pyqtSignal(RelationsNetwork)
+
     def __init__(self, novel: Novel, parent=None):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
+        self._network: Optional[RelationsNetwork] = None
+
+    def setNetwork(self, network: RelationsNetwork):
+        self._network = network
 
     @overrides
     def dragEnterEvent(self, event: QGraphicsSceneDragDropEvent) -> None:
@@ -84,6 +90,10 @@ class RelationsEditorScene(QGraphicsScene):
             item = CharacterItem(character)
             item.setPos(event.scenePos())
             self.addItem(item)
+            node = CharacterNode(event.scenePos().x(), event.scenePos().y())
+            node.set_character(character)
+            self._network.nodes.append(node)
+            self.charactersChanged.emit(self._network)
 
 
 class RelationsView(BaseGraphicsView):
@@ -95,8 +105,12 @@ class RelationsView(BaseGraphicsView):
         self.scale(0.6, 0.6)
         self.setAcceptDrops(True)
 
+    def relationsScene(self) -> RelationsEditorScene:
+        return self._scene
+
     def refresh(self, network: RelationsNetwork):
         self._scene.clear()
+        self._scene.setNetwork(network)
         for node in network.nodes:
             item = CharacterItem(node.character(self._novel))
             self._scene.addItem(item)
@@ -118,8 +132,11 @@ class _CharacterSelectorAvatar(QToolButton):
         self.setToolTip(character.name)
         self.installEventFilter(OpacityEventFilter(self, enterOpacity=0.8, leaveOpacity=1.0))
         self.installEventFilter(
-            DragEventFilter(self, CHARACTER_AVATAR_MIME_TYPE, dataFunc=lambda wdg: character, hideTarget=True))
+            DragEventFilter(self, CHARACTER_AVATAR_MIME_TYPE, dataFunc=lambda wdg: character))
         self.setCursor(Qt.CursorShape.OpenHandCursor)
+
+    def character(self) -> Character:
+        return self._character
 
 
 class NetworkPanel(QWidget):
@@ -128,13 +145,23 @@ class NetworkPanel(QWidget):
         self._novel = novel
         self._network = network
 
-        flow(self)
+        flow(self, spacing=0)
         for character in self._novel.characters:
             avatar = _CharacterSelectorAvatar(character)
             self.layout().addWidget(avatar)
 
+        self.updateAvatars()
+
     def network(self) -> RelationsNetwork:
         return self._network
+
+    def updateAvatars(self):
+        occupied_character_ids: Set[str] = set([str(x.character_id) for x in self._network.nodes])
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i)
+            if item.widget() and isinstance(item.widget(), _CharacterSelectorAvatar):
+                wdg: _CharacterSelectorAvatar = item.widget()
+                wdg.setHidden(str(wdg.character().id) in occupied_character_ids)
 
 
 class RelationsSelectorBox(ToolBox):
@@ -147,3 +174,8 @@ class RelationsSelectorBox(ToolBox):
     def addNetwork(self, network: RelationsNetwork):
         wdg = NetworkPanel(self._novel, network)
         self.addItem(wdg, network.title, icon=IconRegistry.from_name(network.icon, network.icon_color))
+
+    def refreshCharacters(self, network: RelationsNetwork):
+        panel = self.currentWidget()
+        if panel.network() is network:
+            panel.updateAvatars()
