@@ -18,9 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Optional, Set
+from typing import Optional, Set, Any
 
-from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt
+from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt, QTimer
 from PyQt6.QtGui import QPainter, QPen, QKeyEvent
 from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
     QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton, QGraphicsSceneDragDropEvent
@@ -35,12 +35,19 @@ from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 
 
 class CharacterItem(QAbstractGraphicsShapeItem):
-    def __init__(self, character: Character, parent=None):
+
+    def __init__(self, character: Character, node: CharacterNode, parent=None):
         super(CharacterItem, self).__init__(parent)
         self._character = character
+        self._node = node
         self._size: int = 128
         self.setFlag(
-            QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+        self._posChangedTimer = QTimer()
+        self._posChangedTimer.setInterval(1000)
+        self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
 
     def character(self) -> Character:
         return self._character
@@ -56,6 +63,20 @@ class CharacterItem(QAbstractGraphicsShapeItem):
             painter.drawRoundedRect(option.rect, 2, 2)
         avatar = avatars.avatar(self._character)
         avatar.paint(painter, 0, 0, self._size, self._size)
+
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            self._posChangedTimer.start(1000)
+        return super(CharacterItem, self).itemChange(change, value)
+
+    def relationsScene(self) -> 'RelationsEditorScene':
+        return self.scene()
+
+    def _posChangedOnTimeout(self):
+        self._posChangedTimer.stop()
+        self._node.x = self.scenePos().x()
+        self._node.y = self.scenePos().y()
 
 
 class RelationItem(QGraphicsPathItem):
@@ -90,12 +111,13 @@ class RelationsEditorScene(QGraphicsScene):
             event.accept()
 
             character: Character = event.mimeData().reference()
-            item = CharacterItem(character)
-            item.setPos(event.scenePos())
-            self.addItem(item)
             node = CharacterNode(event.scenePos().x(), event.scenePos().y())
             node.set_character(character)
             self._network.nodes.append(node)
+
+            item = CharacterItem(character, node)
+            item.setPos(event.scenePos())
+            self.addItem(item)
             self.charactersChanged.emit(self._network)
 
     @overrides
@@ -125,7 +147,7 @@ class RelationsView(BaseGraphicsView):
         self._scene.clear()
         self._scene.setNetwork(network)
         for node in network.nodes:
-            item = CharacterItem(node.character(self._novel))
+            item = CharacterItem(node.character(self._novel), node)
             self._scene.addItem(item)
             item.setPos(node.x, node.y)
 
