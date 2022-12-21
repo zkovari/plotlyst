@@ -25,7 +25,7 @@ from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt, QTimer
 from PyQt6.QtGui import QPainter, QPen, QKeyEvent
 from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
     QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton, QGraphicsSceneDragDropEvent, \
-    QGraphicsObject
+    QGraphicsObject, QMenu
 from overrides import overrides
 from qthandy import flow, transparent, pointy
 from qthandy.filter import OpacityEventFilter, DragEventFilter
@@ -124,15 +124,22 @@ class CharacterItem(QAbstractGraphicsShapeItem):
         avatar.paint(painter, 0, 0, self._size, self._size)
 
     @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self.relationsScene().linkMode():
+            self.relationsScene().link(self)
+        super(CharacterItem, self).mousePressEvent(event)
+
+    @overrides
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self._posChangedTimer.start(1000)
         elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
-            self._plusItem.setVisible(bool(value))
             if value:
+                self._plusItem.setVisible(True)
                 self._animation = qtanim.fade_in(self._plusItem)
             else:
                 self.relationsScene().endLink()
+                self._plusItem.setVisible(False)
                 self._plusItem.reset()
         return super(CharacterItem, self).itemChange(change, value)
 
@@ -163,6 +170,7 @@ class RelationItem(QGraphicsPathItem):
 
 class RelationsEditorScene(QGraphicsScene):
     charactersChanged = pyqtSignal(RelationsNetwork)
+    charactersLinked = pyqtSignal(CharacterItem)
 
     def __init__(self, novel: Novel, parent=None):
         super(RelationsEditorScene, self).__init__(parent)
@@ -217,6 +225,9 @@ class RelationsEditorScene(QGraphicsScene):
     def endLink(self):
         self._linkMode = False
 
+    def link(self, item: CharacterItem):
+        self.charactersLinked.emit(item)
+
 
 class RelationsView(BaseGraphicsView):
     def __init__(self, novel: Novel, parent=None):
@@ -226,6 +237,13 @@ class RelationsView(BaseGraphicsView):
         self.setScene(self._scene)
         self.scale(0.6, 0.6)
         self.setAcceptDrops(True)
+
+        self._linkEditorMenu = QMenu(self)
+        self._linkEditorMenu.addAction('Friendship')
+        self._linkEditorMenu.addAction('Colleagues')
+        self._linkEditorMenu.addAction('Love')
+
+        self._scene.charactersLinked.connect(self._charactersLinked)
 
     def relationsScene(self) -> RelationsEditorScene:
         return self._scene
@@ -239,6 +257,10 @@ class RelationsView(BaseGraphicsView):
             item.setPos(node.x, node.y)
 
         self.centerOn(0, 0)
+
+    def _charactersLinked(self, item: CharacterItem):
+        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
+        self._linkEditorMenu.popup(self.mapToGlobal(view_pos))
 
 
 CHARACTER_AVATAR_MIME_TYPE = 'application/character-avatar'
