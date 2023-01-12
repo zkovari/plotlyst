@@ -25,7 +25,7 @@ from PyQt6.QtCore import QRectF, pyqtSignal, QSize, Qt, QTimer
 from PyQt6.QtGui import QPainter, QPen, QKeyEvent
 from PyQt6.QtWidgets import QWidget, QGraphicsScene, QAbstractGraphicsShapeItem, \
     QStyleOptionGraphicsItem, QGraphicsPathItem, QGraphicsItem, QToolButton, QGraphicsSceneDragDropEvent, \
-    QGraphicsObject, QMenu
+    QGraphicsObject, QMenu, QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent
 from overrides import overrides
 from qthandy import flow, transparent, pointy
 from qthandy.filter import OpacityEventFilter, DragEventFilter
@@ -55,7 +55,7 @@ class PlusItem(QAbstractGraphicsShapeItem, QGraphicsObject):
         self._plusIcon.paint(painter, 0, 0, self._iconSize, self._iconSize)
 
     @overrides
-    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         self._plusIcon = IconRegistry.plus_circle_icon('#457b9d')
         self.update()
 
@@ -68,7 +68,7 @@ class PlusItem(QAbstractGraphicsShapeItem, QGraphicsObject):
         self.update()
 
     @overrides
-    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         event.accept()
 
     def reset(self):
