@@ -1,11 +1,11 @@
 [![Test](https://github.com/plotlyst/plotlyst-app/actions/workflows/test.yml/badge.svg)](https://github.com/plotlyst/plotlyst-app/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/plotlyst/plotlyst-app/badge.svg?branch=main)](https://coveralls.io/github/plotlyst/plotlyst-app?branch=main)
-# Plotlyst
 
+# Plotlyst
 
 # Author
 
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023 Zsolt Kovari
 
 # License
 
