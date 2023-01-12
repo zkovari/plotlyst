@@ -384,6 +384,7 @@ class ScenesOutlineView(AbstractNovelView):
             builder.popup()
 
         self.selected_card = None
+        bar_value = self.ui.scrollArea.verticalScrollBar().value()
         self.ui.cards.clear()
 
         for scene in self.novel.scenes:
@@ -393,6 +394,10 @@ class ScenesOutlineView(AbstractNovelView):
             card.doubleClicked.connect(self._on_edit)
             card.cursorEntered.connect(partial(self.ui.wdgStoryStructure.highlightScene, card.scene))
             card.customContextMenuRequested.connect(partial(custom_menu, card))
+
+        # restore scrollbar that might have moved
+        if bar_value <= self.ui.scrollArea.verticalScrollBar().maximum():
+            self.ui.scrollArea.verticalScrollBar().setValue(bar_value)
 
         self._filter_cards()
 
