@@ -136,7 +136,8 @@ class CharactersView(AbstractNovelView):
         self._relations.relationsScene().charactersChanged.connect(self._relationsSelector.refreshCharacters)
 
         node = CharacterNode(50, 50)
-        node.set_character(self.novel.characters[0])
+        if self.novel.characters:
+            node.set_character(self.novel.characters[0])
         network1 = RelationsNetwork('Network 1', icon='ph.share-network-bold', nodes=[node])
         self._relationsSelector.addNetwork(network1)
         self._relationsSelector.addNetwork(RelationsNetwork('Network 2', icon='ph.share-network-bold'))
