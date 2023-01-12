@@ -338,6 +338,11 @@ class CardSizeRatio(Enum):
     RATIO_3_4 = 1
 
 
+class CardFilter:
+    def filter(self, card: Card) -> bool:
+        return True
+
+
 class CardsView(QFrame):
     swapped = pyqtSignal(object, object)
     selectionCleared = pyqtSignal()
@@ -394,6 +399,10 @@ class CardsView(QFrame):
     def setCardsSizeRatio(self, ratio: CardSizeRatio):
         self._cardsRatio = ratio
         self._resizeAllCards()
+
+    def applyFilter(self, cardFilter: CardFilter):
+        for card in self._cards:
+            card.setVisible(cardFilter.filter(card))
 
     def _resizeAllCards(self):
         for card in self._cards:
