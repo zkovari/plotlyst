@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from abc import abstractmethod
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Dict, Iterable, Set
 
 import qtanim
 from PyQt6 import QtGui
@@ -33,6 +33,7 @@ from qthandy import FlowLayout, clear_layout, retain_when_hidden, transparent, m
 
 from src.main.python.plotlyst.common import act_color
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
+from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
 from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
@@ -341,6 +342,32 @@ class CardSizeRatio(Enum):
 class CardFilter:
     def filter(self, card: Card) -> bool:
         return True
+
+
+class SceneCardFilter(CardFilter):
+
+    def __init__(self):
+        super(SceneCardFilter, self).__init__()
+        self._actsFilter: Dict[int, bool] = {}
+        self._povs: Set[Character] = set()
+
+    @overrides
+    def filter(self, card: SceneCard) -> bool:
+        if not self._actsFilter[acts_registry.act(card.scene)]:
+            return False
+
+        if card.scene.pov and card.scene.pov not in self._povs:
+            return False
+
+        return True
+
+    def setActsFilter(self, actsFilter: Dict[int, bool]):
+        self._actsFilter.clear()
+        self._actsFilter.update(actsFilter)
+
+    def setActivePovs(self, characters: Iterable[Character]):
+        self._povs.clear()
+        self._povs.update(set(characters))
 
 
 class CardsView(QFrame):
