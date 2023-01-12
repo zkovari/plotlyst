@@ -160,7 +160,7 @@ class CharactersView(AbstractNovelView):
                                                         (self.ui.btnRelationsView, self.ui.pageRelationsView),
                                                         (self.ui.btnComparison, self.ui.pageComparison),
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
-        self.ui.btnRelationsView.setChecked(True)
+        self.ui.btnCardsView.setChecked(True)
 
         self.ui.cards.swapped.connect(self._characters_swapped)
 
