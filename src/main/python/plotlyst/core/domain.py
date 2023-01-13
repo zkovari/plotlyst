@@ -280,6 +280,12 @@ class Character:
 
         return ''
 
+    def set_summary(self, summary: str):
+        for tmpl_value in self.template_values:
+            if tmpl_value.id == summary_field.id:
+                tmpl_value.value = summary
+                break
+
     def is_major(self):
         return self.role and self.role.is_major()
 

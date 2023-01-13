@@ -706,7 +706,7 @@
                <item>
                 <widget class="QToolButton" name="btnVerticalComparison">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
