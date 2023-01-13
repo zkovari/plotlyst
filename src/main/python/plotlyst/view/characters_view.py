@@ -23,7 +23,7 @@ from typing import Optional
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox, vspacer
+from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
@@ -121,6 +121,18 @@ class CharactersView(AbstractNovelView):
         self._update_cards()
 
         self.ui.wdgComparisonCharacterSelector.setExclusive(False)
+        transparent(self.ui.btnCharactersLabel)
+        self.ui.btnCharactersLabel.setIcon(IconRegistry.character_icon())
+        underline(self.ui.btnCharactersLabel)
+        transparent(self.ui.btnComparisonLabel)
+        underline(self.ui.btnComparisonLabel)
+        self.ui.btnComparisonLabel.setIcon(IconRegistry.from_name('mdi.compare-horizontal'))
+        self.ui.btnHorizontalComparison.setIcon(IconRegistry.from_name('ph.columns-bold'))
+        self.ui.btnVerticalComparison.setIcon(IconRegistry.from_name('ph.rows-bold'))
+        self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
+        self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon())
+        self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon())
+
         self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
         self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
