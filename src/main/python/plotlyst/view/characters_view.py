@@ -23,7 +23,7 @@ from typing import Optional
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox, vspacer
+from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
@@ -41,9 +41,10 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
+from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
+    CharacterComparisonAttribute
 from src.main.python.plotlyst.view.widget.character.relations import RelationsView, RelationsSelectorBox
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget, \
-    CharacterComparisonWidget
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -121,9 +122,28 @@ class CharactersView(AbstractNovelView):
         self._update_cards()
 
         self.ui.wdgComparisonCharacterSelector.setExclusive(False)
+        transparent(self.ui.btnCharactersLabel)
+        self.ui.btnCharactersLabel.setIcon(IconRegistry.character_icon())
+        underline(self.ui.btnCharactersLabel)
+        transparent(self.ui.btnComparisonLabel)
+        underline(self.ui.btnComparisonLabel)
+        self.ui.btnComparisonLabel.setIcon(IconRegistry.from_name('mdi.compare-horizontal'))
+        self.ui.btnHorizontalComparison.setIcon(IconRegistry.from_name('ph.columns-bold'))
+        self.ui.btnVerticalComparison.setIcon(IconRegistry.from_name('ph.rows-bold'))
+        self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
+        self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon())
+        self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon())
+
         self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
         self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
+        self.ui.btnHorizontalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
+        self.ui.btnVerticalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
+        self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
+        self.ui.btnSummaryComparison.clicked.connect(
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.SUMMARY))
+        self.ui.btnBigFiveComparison.clicked.connect(
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
 
         self._relations = RelationsView(self.novel)
         self.ui.relationsParent.layout().addWidget(self._relations)

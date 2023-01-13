@@ -1,5 +1,6 @@
 # from abc import abstractmethod
 # from functools import partial
+# from enum import Enum
 # from typing import Optional, List, Dict, Tuple, Any, Set
 #
 # import qtanim

@@ -562,13 +562,17 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.card-account-details-star-outline', color, color_on)
 
     @staticmethod
+    def big_five_icon() -> QIcon:
+        return IconRegistry.from_name('ph.number-square-five-bold', color_on='#7209b7')
+
+    @staticmethod
     def from_selection_item(item: SelectionItem) -> QIcon:
         return IconRegistry.from_name(item.icon, item.icon_color)
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
-        if name.startswith('md') or name.startswith('ri'):
+        if name.startswith('md') or name.startswith('ri') or name.startswith('ph'):
             return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, options=[{'scale_factor': mdi_scale}]))
         return QIcon(qtawesome.icon(name, color=color, color_on=_color_on))
 
