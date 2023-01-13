@@ -1,1 +1,1 @@
-from .comp import CharacterComparisonWidget, LayoutType
+from .comp import CharacterComparisonWidget, LayoutType, ComparisonAttribute
