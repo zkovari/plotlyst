@@ -21,20 +21,26 @@ from functools import partial
 from typing import Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QMimeData
+from PyQt6.QtCore import Qt, pyqtSignal, QMimeData, QObject, QEvent
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, QPushButton, \
     QLineEdit, QMenu
+from overrides import overrides
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
     btn_popup_menu, gc
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
 
-from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel
+from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.event.core import Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import CollapseButton
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 
 TASK_WIDGET_MAX_WIDTH = 350
 
@@ -47,7 +53,7 @@ class TaskWidget(QFrame):
 
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
-        self._task = task
+        self._task: Task = task
         self.setStyleSheet('TaskWidget {background: white; border: 1px solid lightGrey; border-radius: 6px;}')
 
         vbox(self, margin=5)
@@ -63,7 +69,17 @@ class TaskWidget(QFrame):
         font.setWeight(QFont.Weight.Medium)
         self._lineTitle.setFont(font)
         incr_font(self._lineTitle)
-        self.layout().addWidget(self._lineTitle, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self._charSelector = CharacterSelectorButton(app_env.novel, self, opacityEffectEnabled=False, iconSize=24)
+        self._charSelector.setToolTip('Link character')
+        if self._task.character_id:
+            self._charSelector.setCharacter(self._task.character(app_env.novel))
+        else:
+            self._charSelector.setHidden(True)
+        retain_when_hidden(self._charSelector)
+        self._charSelector.characterSelected.connect(self._linkCharacter)
+        top_wdg = group(self._lineTitle, self._charSelector, margin=0, spacing=1)
+        self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
         retain_when_hidden(self._wdgBottom)
@@ -94,8 +110,20 @@ class TaskWidget(QFrame):
         self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
 
         self.installEventFilter(VisibilityToggleEventFilter(self._btnMenu, self))
+        self.installEventFilter(self)
         self._lineTitle.textEdited.connect(self._titleEdited)
         self._lineTitle.editingFinished.connect(self._titleEditingFinished)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Enter:
+            if not self._task.character_id:
+                self._charSelector.setVisible(True)
+        elif event.type() == QEvent.Type.Leave:
+            if not self._task.character_id and not self._charSelector.menu().isVisible():
+                self._charSelector.setHidden(True)
+
+        return super(TaskWidget, self).eventFilter(watched, event)
 
     def task(self) -> Task:
         return self._task
@@ -115,6 +143,15 @@ class TaskWidget(QFrame):
     def _activated(self):
         self._lineTitle.setFocus()
         shadow(self, 3)
+
+    def _linkCharacter(self, character: Character):
+        self._task.set_character(character)
+        self._charSelector.setVisible(True)
+        self.changed.emit()
+
+    def resetCharacter(self):
+        self._task.reset_character()
+        self._charSelector.clear()
 
 
 class _StatusHeader(QFrame):
@@ -208,6 +245,18 @@ class StatusColumnWidget(QFrame):
 
         self._btnAdd.clicked.connect(self._addNewTask)
         self._header.addTask.connect(self._addNewTask)
+
+        event_dispatcher.register(self, CharacterDeletedEvent)
+
+    def event_received(self, event: Event):
+        if isinstance(event, CharacterDeletedEvent):
+            for i in range(self._container.layout().count() - 1):
+                item = self._container.layout().itemAt(i)
+                if item.widget():
+                    taskWdg: TaskWidget = item.widget()
+                    if taskWdg.task().character_id == event.character.id:
+                        taskWdg.resetCharacter()
+                        self.taskChanged.emit(taskWdg.task())
 
     def status(self) -> TaskStatus:
         return self._status

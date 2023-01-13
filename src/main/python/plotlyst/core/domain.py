@@ -445,6 +445,10 @@ class PlotPrinciple:
     is_set: bool = False
 
 
+# must add to the subclass:
+#    character_id: Optional[uuid.UUID] = None
+#    def __post_init__(self):
+#        self._character: Optional[Character] = None
 class CharacterBased(ABC):
     def set_character(self, character: Optional[Character]):
         if character is None:
@@ -861,10 +865,14 @@ class TaskStatus(SelectionItem):
 
 
 @dataclass
-class Task:
+class Task(CharacterBased):
     title: str
     status_ref: uuid.UUID
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    character_id: Optional[uuid.UUID] = None
+
+    def __post_init__(self):
+        self._character: Optional[Character] = None
 
 
 def default_task_statues() -> List[TaskStatus]:
