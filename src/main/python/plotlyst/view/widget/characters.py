@@ -636,27 +636,28 @@ class CharacterGoalSelector(QWidget):
 class CharacterSelectorButton(QToolButton):
     characterSelected = pyqtSignal(Character)
 
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None, opacityEffectEnabled: bool = True, iconSize: int = 32):
         super().__init__(parent)
+        self._novel = novel
+        self._iconSize = iconSize
         pointy(self)
-        self._opacityFilter = OpacityEventFilter(self)
+        self._opacityEffectEnabled = opacityEffectEnabled
+        if self._opacityEffectEnabled:
+            self._opacityFilter = OpacityEventFilter(self)
+        else:
+            self._opacityFilter = None
         self._menu = QMenu(self)
         btn_popup_menu(self, self._menu)
+        self._menu.aboutToShow.connect(self._fillUpMenu)
         self.clear()
-
-    def setAvailableCharacters(self, characters: List[Character]):
-        self._menu.clear()
-
-        for char in characters:
-            self._menu.addAction(
-                action(char.name, avatars.avatar(char), slot=partial(self._selected, char), parent=self._menu))
 
     def setCharacter(self, character: Character):
         self.setIcon(avatars.avatar(character))
         transparent(self)
-        self.removeEventFilter(self._opacityFilter)
-        translucent(self, 1.0)
-        self.setIconSize(QSize(35, 35))
+        if self._opacityEffectEnabled:
+            self.removeEventFilter(self._opacityFilter)
+            translucent(self, 1.0)
+        self.setIconSize(QSize(self._iconSize, self._iconSize))
 
     def clear(self):
         self.setStyleSheet('''
@@ -669,12 +670,20 @@ class CharacterSelectorButton(QToolButton):
                                 }
                             ''')
         self.setIcon(IconRegistry.character_icon('grey'))
-        self.setIconSize(QSize(32, 32))
-        self.installEventFilter(self._opacityFilter)
+        self.setIconSize(QSize(self._iconSize, self._iconSize))
+        if self._opacityEffectEnabled:
+            self.installEventFilter(self._opacityFilter)
 
     def _selected(self, character: Character):
         self.setCharacter(character)
         self.characterSelected.emit(character)
+
+    def _fillUpMenu(self):
+        self._menu.clear()
+
+        for char in self._novel.characters:
+            self._menu.addAction(
+                action(char.name, avatars.avatar(char), slot=partial(self._selected, char), parent=self._menu))
 
 
 class CharacterLinkWidget(QWidget):
