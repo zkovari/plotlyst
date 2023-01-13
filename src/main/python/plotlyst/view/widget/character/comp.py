@@ -23,7 +23,7 @@ from typing import Dict, Optional
 from PyQt6 import sip
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
-from qthandy import vbox, hbox, line, flow, gc
+from qthandy import vbox, hbox, line, flow, gc, vspacer
 
 from src.main.python.plotlyst.core.domain import Character
 from src.main.python.plotlyst.view.icons import set_avatar
@@ -31,7 +31,7 @@ from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimensio
 from src.main.python.plotlyst.view.widget.display import RoleIcon, ChartView
 
 
-class ComparisonAttribute(Enum):
+class CharacterComparisonAttribute(Enum):
     SUMMARY = 0
     BIG_FIVE = 1
 
@@ -44,6 +44,16 @@ class BigFiveDisplay(ChartView):
         for bf, values in character.big_five.items():
             self._bigFive.refreshDimension(dimension_from(bf), values)
         self.setChart(self._bigFive)
+
+        self.setMinimumSize(250, 250)
+
+
+class SummaryDisplay(QTextEdit):
+    def __init__(self, character: Character, parent=None):
+        super(SummaryDisplay, self).__init__(parent)
+        self.setText(character.summary())
+        self.setReadOnly(True)
+        self.setMaximumSize(250, 100)
 
 
 class CharacterOverviewWidget(QWidget):
@@ -63,30 +73,24 @@ class CharacterOverviewWidget(QWidget):
         self.layout().addWidget(line())
 
         self._display: Optional[QWidget] = None
+        self._displayContainer = QWidget()
+        hbox(self._displayContainer, 0, 0)
 
-        # self._bigFive = BigFiveChart()
-        # self._bigFive.setTitle('')
-        # for bf, values in character.big_five.items():
-        #     self._bigFive.refreshDimension(dimension_from(bf), values)
-        # self._bigFiveChartView = ChartView(self)
-        # self._bigFiveChartView.setChart(self._bigFive)
+        self.layout().addWidget(self._displayContainer)
+        self.layout().addWidget(vspacer())
 
-        # self.layout().addWidget(self._bigFiveChartView)
-
-    def display(self, attribute: ComparisonAttribute):
+    def display(self, attribute: CharacterComparisonAttribute):
         if self._display:
-            self.layout().removeWidget(self._display)
+            self._displayContainer.layout().removeWidget(self._display)
             gc(self._display)
             self._display = None
 
-        if attribute == ComparisonAttribute.BIG_FIVE:
+        if attribute == CharacterComparisonAttribute.BIG_FIVE:
             self._display = BigFiveDisplay(self._character)
-        elif attribute == ComparisonAttribute.SUMMARY:
-            self._display = QTextEdit()
-            self._display.setText(self._character.summary())
-            self._display.setReadOnly(True)
-
-        self.layout().addWidget(self._display)
+            self._displayContainer.layout().addWidget(self._display)
+        elif attribute == CharacterComparisonAttribute.SUMMARY:
+            self._display = SummaryDisplay(self._character)
+            self._displayContainer.layout().addWidget(self._display, alignment=Qt.AlignmentFlag.AlignCenter)
 
 
 class LayoutType(Enum):
@@ -100,7 +104,7 @@ class CharacterComparisonWidget(QWidget):
         super().__init__(parent)
         self._characters: Dict[Character, CharacterOverviewWidget] = {}
         hbox(self, spacing=0)
-        self._currentDisplay: ComparisonAttribute = ComparisonAttribute.BIG_FIVE
+        self._currentDisplay: CharacterComparisonAttribute = CharacterComparisonAttribute.BIG_FIVE
 
     def updateCharacter(self, character: Character, enabled: bool):
         if enabled:
@@ -129,7 +133,7 @@ class CharacterComparisonWidget(QWidget):
         for wdg in widgets:
             self.layout().addWidget(wdg)
 
-    def displayAttribute(self, attribute: ComparisonAttribute):
+    def displayAttribute(self, attribute: CharacterComparisonAttribute):
         for wdg in self._characters.values():
             wdg.display(attribute)
 

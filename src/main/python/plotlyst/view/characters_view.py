@@ -41,7 +41,8 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, ComparisonAttribute
+from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
+    CharacterComparisonAttribute
 from src.main.python.plotlyst.view.widget.character.relations import RelationsView, RelationsSelectorBox
 from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
 
@@ -140,9 +141,9 @@ class CharactersView(AbstractNovelView):
         self.ui.btnVerticalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
         self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
         self.ui.btnSummaryComparison.clicked.connect(
-            lambda: self._wdgComparison.displayAttribute(ComparisonAttribute.SUMMARY))
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.SUMMARY))
         self.ui.btnBigFiveComparison.clicked.connect(
-            lambda: self._wdgComparison.displayAttribute(ComparisonAttribute.BIG_FIVE))
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
 
         self._relations = RelationsView(self.novel)
         self.ui.relationsParent.layout().addWidget(self._relations)
