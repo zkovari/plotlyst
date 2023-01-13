@@ -675,7 +675,7 @@
                <item>
                 <widget class="QToolButton" name="btnHorizontalComparison">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
@@ -706,7 +706,7 @@
                <item>
                 <widget class="QToolButton" name="btnVerticalComparison">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>
@@ -737,7 +737,7 @@
                <item>
                 <widget class="QToolButton" name="btnGridComparison">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="cursor">
                   <cursorShape>PointingHandCursor</cursorShape>

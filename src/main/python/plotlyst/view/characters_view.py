@@ -41,9 +41,9 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
+from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType
 from src.main.python.plotlyst.view.widget.character.relations import RelationsView, RelationsSelectorBox
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget, \
-    CharacterComparisonWidget
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -136,6 +136,9 @@ class CharactersView(AbstractNovelView):
         self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
         self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
+        self.ui.btnHorizontalComparison.toggled.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
+        self.ui.btnVerticalComparison.toggled.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
+        self.ui.btnGridComparison.toggled.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
 
         self._relations = RelationsView(self.novel)
         self.ui.relationsParent.layout().addWidget(self._relations)
