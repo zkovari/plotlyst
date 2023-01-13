@@ -195,9 +195,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         for value in self.plot.values:
             self._addValue(value)
 
-        self._characterSelector = CharacterSelectorButton(self)
+        self._characterSelector = CharacterSelectorButton(novel, self)
         self._characterSelector.setGeometry(5, 5, 40, 40)
-        self._characterSelector.setAvailableCharacters(novel.characters)
         character = self.plot.character(novel)
         if character is not None:
             self._characterSelector.setCharacter(character)
@@ -237,7 +236,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         event_dispatcher.register(self, CharacterDeletedEvent)
 
     def event_received(self, event: Event):
-        self._characterSelector.setAvailableCharacters(self.novel.characters)
         if isinstance(event, CharacterDeletedEvent):
             if self.plot.character_id == event.character.id:
                 self.plot.reset_character()
