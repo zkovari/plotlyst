@@ -95,7 +95,8 @@ class Subtitle(QWidget):
         self.lblDescription.setStyleSheet('color: #8d99ae;')
         self.lblDescription.setWordWrap(True)
         self.lblDescription.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self.layout().addWidget(group(self.icon, self.lblTitle, parent=self))
+        self._top = group(self.icon, self.lblTitle, spacer(), parent=self)
+        self.layout().addWidget(self._top)
         self.layout().addWidget(group(self._descSpacer, self.lblDescription, parent=self))
 
     def setIconName(self, icon: str, color: str = 'black'):
@@ -135,6 +136,9 @@ class Subtitle(QWidget):
         else:
             self.icon.setHidden(True)
             self._descSpacer.setMaximumWidth(5)
+
+    def addWidget(self, widget: QWidget):
+        self._top.layout().insertWidget(self._top.layout().count() - 1, widget)
 
 
 class Emoji(QLabel):
