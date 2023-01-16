@@ -566,6 +566,10 @@ class IconRegistry:
         return IconRegistry.from_name('ph.number-square-five-bold', color_on='#7209b7')
 
     @staticmethod
+    def expand_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.expand-alt')
+
+    @staticmethod
     def from_selection_item(item: SelectionItem) -> QIcon:
         return IconRegistry.from_name(item.icon, item.icon_color)
 

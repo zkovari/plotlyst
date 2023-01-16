@@ -35,6 +35,7 @@ from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.plot import PlotEditor
 
 
@@ -70,6 +71,21 @@ class NovelView(AbstractNovelView):
         self.ui.textPremise.textEdit.setFont(font)
         self.ui.textPremise.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ui.textPremise.textEdit.setAcceptRichText(False)
+
+        self._btnPremiseVariants = SecondaryActionToolButton()
+        self._btnPremiseVariants.setToolTip('Premise variants')
+        self._btnPremiseVariants.setIcon(IconRegistry.from_name('mdi.list-status'))
+        self._btnPremiseVariants.installEventFilter(OpacityEventFilter(self._btnPremiseVariants, leaveOpacity=0.55))
+        self._btnPremiseVariants.setDisabled(True)
+        self._btnPremiseVariants.setHidden(True)
+        self.ui.subtitlePremise.addWidget(self._btnPremiseVariants)
+
+        self._btnSynopsisExtendEdit = SecondaryActionToolButton()
+        self._btnSynopsisExtendEdit.setToolTip('Edit in full view')
+        self._btnSynopsisExtendEdit.setIcon(IconRegistry.expand_icon())
+        self._btnSynopsisExtendEdit.installEventFilter(
+            OpacityEventFilter(self._btnSynopsisExtendEdit, leaveOpacity=0.55))
+        self.ui.subtitleSynopsis.addWidget(self._btnSynopsisExtendEdit)
 
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
