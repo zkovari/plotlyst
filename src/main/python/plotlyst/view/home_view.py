@@ -73,6 +73,7 @@ class HomeView(AbstractView):
 
         self._shelvesTreeView = ShelvesTreeView()
         hbox(self.ui.wdgShelvesParent, 2, 3)
+        self.ui.splitterLibrary.setSizes([100, 500])
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
 
         incr_font(self.ui.btnAddNewStoryMain, 8)

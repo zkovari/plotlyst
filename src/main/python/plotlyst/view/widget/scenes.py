@@ -30,7 +30,7 @@ from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEve
     QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath, QEnterEvent
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
-    QAbstractItemView, QApplication, QScrollArea
+    QAbstractItemView, QApplication
 from overrides import overrides
 from qthandy import busy, margins, vspacer, btn_popup_menu, bold, incr_font
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
@@ -77,6 +77,7 @@ from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation,
     DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
     PlotLabel, PlotValueLabel, SceneLabel
+from src.main.python.plotlyst.view.widget.tree import TreeView
 
 
 class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
@@ -1752,7 +1753,7 @@ class ChapterWidget(QWidget):
             self._wdgTitle.setStyleSheet('')
 
 
-class ScenesTreeView(QScrollArea, EventListener):
+class ScenesTreeView(TreeView, EventListener):
     SCENE_MIME_TYPE = 'application/tree-scene-widget'
     CHAPTER_MIME_TYPE = 'application/tree-chapter-widget'
     sceneSelected = pyqtSignal(Scene)
