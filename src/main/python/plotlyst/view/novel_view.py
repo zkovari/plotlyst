@@ -32,7 +32,7 @@ from src.main.python.plotlyst.events import NovelUpdatedEvent, \
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages
-from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
+from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
@@ -86,6 +86,7 @@ class NovelView(AbstractNovelView):
         self._btnSynopsisExtendEdit.installEventFilter(
             OpacityEventFilter(self._btnSynopsisExtendEdit, leaveOpacity=0.55))
         self.ui.subtitleSynopsis.addWidget(self._btnSynopsisExtendEdit)
+        self._btnSynopsisExtendEdit.clicked.connect(self._expandSynopsisEditor)
 
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
@@ -182,6 +183,10 @@ class NovelView(AbstractNovelView):
         self.novel.premise = text
         self.ui.lblLoglineWords.calculateWordCount(self.novel.premise)
         self.repo.update_novel(self.novel)
+
+    def _expandSynopsisEditor(self):
+        synopsis = SynopsisEditorDialog.display(self.novel)
+        self.ui.textSynopsis.setText(synopsis)
 
     def _synopsis_changed(self):
         if self.novel.synopsis is None:
