@@ -1765,6 +1765,7 @@ class ScenesTreeView(QScrollArea, EventListener):
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setFrameShape(QFrame.Shape.NoFrame)
         self._centralWidget = QWidget(self)
         self.setWidget(self._centralWidget)
         vbox(self._centralWidget, spacing=0)

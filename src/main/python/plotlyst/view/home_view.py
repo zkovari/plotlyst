@@ -22,7 +22,7 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QPixmap
 from overrides import overrides
-from qthandy import ask_confirmation, clear_layout, flow, transparent, gc
+from qthandy import ask_confirmation, clear_layout, flow, transparent, gc, incr_font, hbox
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Event
@@ -38,6 +38,7 @@ from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import NovelCard
+from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 
 
 class HomeView(AbstractView):
@@ -69,12 +70,18 @@ class HomeView(AbstractView):
         self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self.selected_card.novel))
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAdd.clicked.connect(self._add_new_novel)
-        self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
-        self.ui.btnEdit.clicked.connect(self._on_edit)
-        self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
-        self.ui.btnDelete.clicked.connect(self._on_delete)
-        self.ui.btnDelete.setDisabled(True)
-        self.ui.btnEdit.setDisabled(True)
+
+        self._shelvesTreeView = ShelvesTreeView()
+        hbox(self.ui.wdgShelvesParent, 2, 3)
+        self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
+
+        incr_font(self.ui.btnAddNewStoryMain, 8)
+        # self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
+        # self.ui.btnEdit.clicked.connect(self._on_edit)
+        # self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
+        # self.ui.btnDelete.clicked.connect(self._on_delete)
+        # self.ui.btnDelete.setDisabled(True)
+        # self.ui.btnEdit.setDisabled(True)
         self.ui.btnActivate.setDisabled(True)
 
         link_buttons_to_pages(self.ui.stackedWidget,
@@ -82,6 +89,8 @@ class HomeView(AbstractView):
                                (self.ui.btnNotes, self.ui.pageNotes), (self.ui.btnRoadmap, self.ui.pageRoadmap)])
 
         self.ui.btnLibrary.setChecked(True)
+
+        self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
 
         event_dispatcher.register(self, NovelUpdatedEvent)
 
@@ -139,7 +148,7 @@ class HomeView(AbstractView):
             emit_event(NovelDeletedEvent(self, novel))
             gc(self.selected_card)
             self.selected_card = None
-            self.ui.btnDelete.setDisabled(True)
+            # self.ui.btnDelete.setDisabled(True)
             self.refresh()
 
     def _card_selected(self, card: NovelCard):
@@ -149,6 +158,6 @@ class HomeView(AbstractView):
         self._toggle_novel_buttons(True)
 
     def _toggle_novel_buttons(self, toggled: bool):
-        self.ui.btnDelete.setEnabled(toggled)
-        self.ui.btnEdit.setEnabled(toggled)
+        # self.ui.btnDelete.setEnabled(toggled)
+        # self.ui.btnEdit.setEnabled(toggled)
         self.ui.btnActivate.setEnabled(toggled)
