@@ -67,7 +67,7 @@ class ManuscriptView(AbstractNovelView):
 
         bold(self.ui.lblWordCount)
 
-        self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
+        self.ui.btnDistractionFree.setIcon(IconRegistry.expand_icon())
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
         self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
         self.ui.btnContext.setIcon(IconRegistry.context_icon())

@@ -23,15 +23,16 @@ from typing import Optional
 import qtanim
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox
+from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication
 from qthandy import flow
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
-from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue
+from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue, Novel
 from src.main.python.plotlyst.view.common import link_editor_to_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
 from src.main.python.plotlyst.view.generated.plot_value_editor_dialog_ui import Ui_PlotValueEditorDialog
+from src.main.python.plotlyst.view.generated.synopsis_editor_dialog_ui import Ui_SynopsisEditorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -139,3 +140,34 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
             self._value.icon_color = result[1].name()
             self.btnIcon.setIcon(IconRegistry.from_name(self._value.icon, self._value.icon_color))
             self.btnIcon.setBorderColor(self._value.icon_color)
+
+
+class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
+    def __init__(self, parent=None):
+        super(SynopsisEditorDialog, self).__init__(parent,
+                                                   Qt.WindowType.CustomizeWindowHint
+                                                   | Qt.WindowType.Window
+                                                   | Qt.WindowType.WindowMaximizeButtonHint
+                                                   | Qt.WindowType.WindowCloseButtonHint)
+        self.setupUi(self)
+        self.textSynopsis.setPlaceholderText("Write down your story's main events")
+        self.textSynopsis.setMargins(0, 10, 0, 10)
+        self.textSynopsis.setGrammarCheckEnabled(True)
+
+        self.textSynopsis.setToolbarVisible(False)
+        self.textSynopsis.setTitleVisible(False)
+
+    @staticmethod
+    def display(novel: Novel) -> str:
+        dialog = SynopsisEditorDialog()
+        dialog.textSynopsis.setText(novel.synopsis.content)
+
+        screen = QApplication.screenAt(dialog.pos())
+        if screen:
+            dialog.resize(screen.size().width(), screen.size().height())
+        else:
+            dialog.resize(600, 500)
+
+        dialog.exec()
+
+        return dialog.textSynopsis.textEdit.toHtml()
