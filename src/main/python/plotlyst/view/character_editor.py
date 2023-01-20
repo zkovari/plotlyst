@@ -92,14 +92,11 @@ class CharacterEditor:
             self._roleSelector.setActiveRole(self.character.role)
         btn_popup(self.ui.btnRole, self._roleSelector)
 
-        # self._sbAge = QSpinBox()
         self._ageEditor = CharacterAgeEditor()
-        # self._sbAge.setMinimum(0)
-        # self._sbAge.setMaximum(65000)
-        # self._ageEditor.valueChanged.connect(self._age_changed)
+        self._ageEditor.valueChanged.connect(self._age_changed)
         menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
         menu.aboutToShow.connect(self._ageEditor.setFocus)
-        # self._sbAge.editingFinished.connect(menu.hide)
+        self._ageEditor.editingFinished.connect(menu.hide)
 
         self._lineOccupation = QLineEdit()
         self._lineOccupation.setPlaceholderText('Fill out occupation')
@@ -213,8 +210,7 @@ class CharacterEditor:
             self.ui.wdgAvatar.updateAvatar()
 
     def _age_changed(self, age: int):
-        if self._sbAge.minimum() == 0:
-            self._sbAge.setMinimum(1)
+        if self._ageEditor.minimum() == 0:
             incr_font(self.ui.btnAge, 2)
             italic(self.ui.btnAge, False)
             bold(self.ui.btnAge)
