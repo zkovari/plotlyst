@@ -30,7 +30,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Document, MAL
 from src.main.python.plotlyst.core.template import protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon
+from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -95,7 +95,7 @@ class CharacterEditor:
         self._sbAge.setMinimum(0)
         self._sbAge.setMaximum(65000)
         self._sbAge.valueChanged.connect(self._age_changed)
-        menu = btn_popup(self.ui.btnAge, self._sbAge)
+        menu = btn_popup(self.ui.btnAge, wrap(self._sbAge, margin_bottom=4))
         menu.aboutToShow.connect(self._sbAge.setFocus)
         self._sbAge.editingFinished.connect(menu.hide)
 
@@ -105,7 +105,7 @@ class CharacterEditor:
         occupations = set([x.occupation for x in self.novel.characters])
         if occupations:
             self._lineOccupation.setCompleter(QCompleter(occupations))
-        menu = btn_popup(self.ui.btnOccupation, self._lineOccupation)
+        menu = btn_popup(self.ui.btnOccupation, wrap(self._lineOccupation, margin_bottom=2))
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
 
