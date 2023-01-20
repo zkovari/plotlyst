@@ -96,7 +96,6 @@ class CharacterEditor:
         self._ageEditor.valueChanged.connect(self._age_changed)
         menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
         menu.aboutToShow.connect(self._ageEditor.setFocus)
-        self._ageEditor.editingFinished.connect(menu.hide)
 
         self._lineOccupation = QLineEdit()
         self._lineOccupation.setPlaceholderText('Fill out occupation')
