@@ -395,6 +395,10 @@ class IconRegistry:
         return IconRegistry.from_name('ei.adult')
 
     @staticmethod
+    def elderly_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.human-cane')
+
+    @staticmethod
     def cog_icon(color: str = 'black') -> QIcon:
         return IconRegistry.from_name('fa5s.cog', color=color)
 
