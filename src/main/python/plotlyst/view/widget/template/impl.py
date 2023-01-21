@@ -402,6 +402,10 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         value = self.progress.value()
         self.progress.setValue(value + 1)
 
+        # toggle collapse before display when editor is opened
+        if not self.isVisible():
+            self.collapse(self.progress.isFinished())
+
     def _valueReset(self, widget: TemplateWidgetBase):
         if not self.progressStatuses[widget]:
             return

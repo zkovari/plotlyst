@@ -219,6 +219,9 @@ class CircularProgressBar(QWidget):
 
         self._updateTooltip()
 
+    def isFinished(self) -> bool:
+        return self.value() == self.maxValue()
+
     def addValue(self, value: int):
         self.setValue(self.value() + value)
 
