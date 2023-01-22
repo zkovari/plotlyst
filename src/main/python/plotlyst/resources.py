@@ -85,6 +85,7 @@ class ResourceDescriptor:
     folder: str
     web_url: str
     extension: str = 'zip'
+    version: str = ''
     description: str = ''
 
     def filename(self) -> str:
@@ -117,7 +118,7 @@ class ResourceStatus(Enum):
 class ResourceInfo:
     resource: ResourceDescriptor
     status: ResourceStatus = ResourceStatus.MISSING
-    version: str = str(date.today())
+    updated: str = str(date.today())
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -162,10 +163,15 @@ class ResourceManager(EventListener):
         if resource_type.name.startswith('NLTK'):
             return _nltk_resources[resource_type]
         if resource_type == ResourceType.JRE_8:
-            version = 'jdk8u345-b01'
-            distr = 'OpenJDK8U-jre_x64_linux_hotspot_8u345b01.tar.gz'
+            version = 'jdk8u362-b09'
+            if app_env.is_linux():
+                distr = 'OpenJDK8U-jre_x64_linux_hotspot_8u362b09.tar.gz'
+            elif app_env.is_mac():
+                distr = 'OpenJDK8U-jre_x64_mac_hotspot_8u362b09.tar.gz'
+            else:
+                raise IOError('Not supported platform for JRE')
             url = f'https://github.com/adoptium/temurin8-binaries/releases/download/{version}/{distr}'
-            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz')
+            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz', version=version)
 
     def nltk_resource_types(self) -> List[ResourceType]:
         return [x for x in ResourceType if x.name.startswith('NLTK')]
@@ -175,6 +181,7 @@ class ResourceManager(EventListener):
             f.write(self._resources_config.to_json())
 
     def _update_resource_status(self, type_: ResourceType, status: ResourceStatus):
+        print(f'update status {type_} {status}')
         info = self.__get_resource_info(type_)
         info.status = status
         self.save()

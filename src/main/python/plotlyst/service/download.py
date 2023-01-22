@@ -72,10 +72,12 @@ class JreResourceDownloadWorker(QRunnable):
 
     @overrides
     def run(self) -> None:
+        print('run jre download')
         if resource_manager.has_resource(self._type):
+            print('already has resource. skip')
             return
         resource = resource_manager.resource(self._type)
-        resource_path = os.path.join(app_env.nltk_data, resource.folder)
+        resource_path = os.path.join(app_env.cache_dir, resource.folder)
         os.makedirs(resource_path, exist_ok=True)
 
         resource_tar_path = os.path.join(resource_path, resource.filename())
