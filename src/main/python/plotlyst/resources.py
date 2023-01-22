@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import os
 from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
@@ -141,6 +142,11 @@ class ResourceManager(EventListener):
                 self._resources_config = ResourcesConfig.from_json(data)
         else:
             self._resources_config = ResourcesConfig()
+
+        jre = self.resource(ResourceType.JRE_8)
+        if app_env.is_mac():
+            os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir,
+                                                       f'jre/{jre.version}-jre/Contents/Home/bin/java')
 
         event_dispatcher.register(self, ResourceDownloadedEvent)
 
