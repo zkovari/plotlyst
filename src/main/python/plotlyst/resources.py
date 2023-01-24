@@ -189,7 +189,6 @@ class ResourceManager(EventListener):
             f.write(self._resources_config.to_json())
 
     def _update_resource_status(self, type_: ResourceType, status: ResourceStatus):
-        print(f'update status {type_} {status}')
         info = self.__get_resource_info(type_)
         info.status = status
         self.save()
