@@ -124,7 +124,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         nltk_download_worker = NltkResourceDownloadWorker()
         jre_download_worker = JreResourceDownloadWorker()
         if not app_env.test_env():
-            # self._threadpool.start(nltk_download_worker)
+            self._threadpool.start(nltk_download_worker)
             self._threadpool.start(jre_download_worker)
 
         if self.novel:
