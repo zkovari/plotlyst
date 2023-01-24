@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, QSize
 from PyQt6.QtGui import QPixmap
 from overrides import overrides
 from qthandy import ask_confirmation, clear_layout, flow, transparent, gc, incr_font, hbox
@@ -69,7 +69,9 @@ class HomeView(AbstractView):
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self.selected_card.novel))
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
+        self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAdd.clicked.connect(self._add_new_novel)
+        self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
 
         self._shelvesTreeView = ShelvesTreeView()
         hbox(self.ui.wdgShelvesParent, 2, 3)
@@ -77,6 +79,7 @@ class HomeView(AbstractView):
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
 
         incr_font(self.ui.btnAddNewStoryMain, 8)
+        self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
         # self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         # self.ui.btnEdit.clicked.connect(self._on_edit)
         # self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
