@@ -77,7 +77,7 @@ from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation,
     DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
     PlotLabel, PlotValueLabel, SceneLabel
-from src.main.python.plotlyst.view.widget.tree import TreeView
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
 class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
@@ -1652,41 +1652,22 @@ class SceneWidget(QFrame):
             self.setStyleSheet('')
 
 
-class ChapterWidget(QWidget):
-    selectionChanged = pyqtSignal(bool)
+class ChapterWidget(ContainerNode):
     deleted = pyqtSignal()
 
     def __init__(self, chapter: Chapter, novel: Novel, parent=None):
-        super(ChapterWidget, self).__init__(parent)
+        super(ChapterWidget, self).__init__(chapter.title_index(novel), IconRegistry.chapter_icon(), parent)
         self._chapter = chapter
         self._novel = novel
-        vbox(self)
 
-        self._wdgTitle = QWidget(self)
-        hbox(self._wdgTitle, 0, 2)
-
-        self._selected: bool = False
-        self._chapterIcon = Icon(self._wdgTitle)
-        self._chapterIcon.setIcon(IconRegistry.chapter_icon())
         self._btnSettings = QToolButton(self._wdgTitle)
         self._btnSettings.setIcon(IconRegistry.dots_icon(vertical=True))
         self._btnSettings.setProperty('transparent', True)
         menu = QMenu(self._btnSettings)
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.deleted.emit)
         btn_popup_menu(self._btnSettings, menu)
-        self._lblTitle = QLabel(self._wdgTitle)
-        self.refresh()
-        self._wdgTitle.layout().addWidget(self._chapterIcon)
-        self._wdgTitle.layout().addWidget(self._lblTitle)
         self._wdgTitle.layout().addWidget(self._btnSettings, alignment=Qt.AlignmentFlag.AlignRight)
-        self._wdgTitle.installEventFilter(self)
         self._wdgTitle.installEventFilter(VisibilityToggleEventFilter(self._btnSettings, self._wdgTitle))
-
-        self._scenesContainer = QWidget(self)
-        vbox(self._scenesContainer)
-        margins(self._scenesContainer, left=10)
-        self.layout().addWidget(self._wdgTitle)
-        self.layout().addWidget(self._scenesContainer)
 
         self._reStyle()
 
@@ -1699,16 +1680,10 @@ class ChapterWidget(QWidget):
     def novel(self) -> Novel:
         return self._novel
 
-    def containerWidget(self) -> QWidget:
-        return self._scenesContainer
-
-    def titleWidget(self) -> QWidget:
-        return self._wdgTitle
-
     def sceneWidgets(self) -> List[SceneWidget]:
         scenes_ = []
-        for i in range(self._scenesContainer.layout().count()):
-            item = self._scenesContainer.layout().itemAt(i)
+        for i in range(self._container.layout().count()):
+            item = self._container.layout().itemAt(i)
             if item is None:
                 continue
             if isinstance(item.widget(), SceneWidget):
@@ -1717,40 +1692,40 @@ class ChapterWidget(QWidget):
         return scenes_
 
     def addSceneWidget(self, wdg: SceneWidget):
-        self._scenesContainer.layout().addWidget(wdg)
+        self._container.layout().addWidget(wdg)
 
     def insertSceneWidget(self, i: int, wdg: SceneWidget):
-        self._scenesContainer.layout().insertWidget(i, wdg)
+        self._container.layout().insertWidget(i, wdg)
 
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Enter:
-            qtanim.glow(self._wdgTitle, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
-        elif event.type() == QEvent.Type.MouseButtonRelease:
-            self._toggleSelection(not self._selected)
-            self.selectionChanged.emit(self._selected)
-        return super(ChapterWidget, self).eventFilter(watched, event)
+    # @overrides
+    # def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+    #     if event.type() == QEvent.Type.Enter:
+    #         qtanim.glow(self._wdgTitle, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
+    #     elif event.type() == QEvent.Type.MouseButtonRelease:
+    #         self._toggleSelection(not self._selected)
+    #         self.selectionChanged.emit(self._selected)
+    #     return super(ChapterWidget, self).eventFilter(watched, event)
 
-    def select(self):
-        self._toggleSelection(True)
+    # def select(self):
+    #     self._toggleSelection(True)
+    #
+    # def deselect(self):
+    #     self._toggleSelection(False)
 
-    def deselect(self):
-        self._toggleSelection(False)
-
-    def _toggleSelection(self, selected: bool):
-        self._selected = selected
-        bold(self._lblTitle, self._selected)
-        self._reStyle()
-
-    def _reStyle(self):
-        if self._selected:
-            self._wdgTitle.setStyleSheet('''
-                QWidget {
-                    background-color: #D8D5D5;
-                }
-            ''')
-        else:
-            self._wdgTitle.setStyleSheet('')
+    # def _toggleSelection(self, selected: bool):
+    #     self._selected = selected
+    #     bold(self._lblTitle, self._selected)
+    #     self._reStyle()
+    #
+    # def _reStyle(self):
+    #     if self._selected:
+    #         self._wdgTitle.setStyleSheet('''
+    #             QWidget {
+    #                 background-color: #D8D5D5;
+    #             }
+    #         ''')
+    #     else:
+    #         self._wdgTitle.setStyleSheet('')
 
 
 class ScenesTreeView(TreeView, EventListener):

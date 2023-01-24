@@ -25,7 +25,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QScrollArea
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, bold
+from qthandy import vbox, hbox, bold, margins
 
 from src.main.python.plotlyst.view.widget.display import Icon
 
@@ -51,7 +51,11 @@ class ContainerNode(QWidget):
         self._wdgTitle.layout().addWidget(self._icon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
 
+        self._container = QWidget(self)
+        vbox(self._container)
+        margins(self._container, left=10)
         self.layout().addWidget(self._wdgTitle)
+        self.layout().addWidget(self._container)
 
         self._wdgTitle.installEventFilter(self)
 
@@ -63,6 +67,12 @@ class ContainerNode(QWidget):
             self._toggleSelection(not self._selected)
             self.selectionChanged.emit(self._selected)
         return super(ContainerNode, self).eventFilter(watched, event)
+
+    def titleWidget(self) -> QWidget:
+        return self._wdgTitle
+
+    def containerWidget(self) -> QWidget:
+        return self._container
 
     def select(self):
         self._toggleSelection(True)
