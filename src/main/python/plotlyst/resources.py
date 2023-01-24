@@ -147,6 +147,8 @@ class ResourceManager(EventListener):
         if app_env.is_mac():
             os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir,
                                                        f'jre/{jre.version}-jre/Contents/Home/bin/java')
+        elif app_env.is_linux():
+            os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir, f'jre/{jre.version}-jre/bin/java')
 
         event_dispatcher.register(self, ResourceDownloadedEvent)
 
