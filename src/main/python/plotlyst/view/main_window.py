@@ -42,7 +42,7 @@ from src.main.python.plotlyst.events import NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
-from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
+from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker, JreResourceDownloadWorker
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.settings import settings
@@ -122,10 +122,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._threadpool = QThreadPool()
         language_tool_setup_worker = LanguageToolServerSetupWorker()
         nltk_download_worker = NltkResourceDownloadWorker()
-        # jre_download_worker = JreResourceDownloadWorker()
+        jre_download_worker = JreResourceDownloadWorker()
         if not app_env.test_env():
-            self._threadpool.start(nltk_download_worker)
-            # self._threadpool.start(jre_download_worker)
+            # self._threadpool.start(nltk_download_worker)
+            self._threadpool.start(jre_download_worker)
 
         if self.novel:
             language_tool_setup_worker.lang = self.novel.lang_settings.lang
