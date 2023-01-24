@@ -51,7 +51,6 @@ class HomeView(AbstractView):
         self._layout = flow(self.ui.novels, margin=5, spacing=9)
         self.novel_cards: List[NovelCard] = []
         self.selected_card: Optional[NovelCard] = None
-        self.refresh()
 
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', 'white'))
@@ -94,6 +93,8 @@ class HomeView(AbstractView):
 
         self.ui.btnLibrary.setChecked(True)
 
+        self.refresh()
+
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
 
         event_dispatcher.register(self, NovelUpdatedEvent)
@@ -115,12 +116,15 @@ class HomeView(AbstractView):
         self._toggle_novel_buttons(False)
         self.selected_card = None
         flush_or_fail()
-        for novel in client.novels():
+        novels: List[NovelDescriptor] = client.novels()
+        for novel in novels:
             card = NovelCard(novel)
             self._layout.addWidget(card)
             self.novel_cards.append(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self.ui.btnActivate.click)
+
+        self._shelvesTreeView.setNovels(novels)
 
     def _add_new_novel(self):
         if self.selected_card:

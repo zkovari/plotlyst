@@ -17,77 +17,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QFrame, QWidget
-from qthandy import vbox, vspacer
+from typing import List
 
+from qthandy import vspacer
+
+from src.main.python.plotlyst.core.domain import NovelDescriptor
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, ChildNode
 
 
-# class TopLevelWidget(ContainerNode):
-#     selectionChanged = pyqtSignal(bool)
-#
-#     def __init__(self, title: str, icon: QIcon, parent=None):
-#         super(TopLevelWidget, self).__init__(parent)
-#         vbox(self)
-#         self._selected: bool = False
-#
-#         self._wdgTitle = QWidget(self)
-#         hbox(self._wdgTitle, 0, 2)
-#
-#         self._lblTitle = QLabel(title)
-#         self._icon = Icon(self._wdgTitle)
-#         self._icon.setIcon(icon)
-#
-#         self._wdgTitle.layout().addWidget(self._icon)
-#         self._wdgTitle.layout().addWidget(self._lblTitle)
-#
-#         self.layout().addWidget(self._wdgTitle)
-#
-#         self._wdgTitle.installEventFilter(self)
-#
-#     @overrides
-#     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-#         if event.type() == QEvent.Type.Enter:
-#             qtanim.glow(self._wdgTitle, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
-#         elif event.type() == QEvent.Type.MouseButtonRelease:
-#             self._toggleSelection(not self._selected)
-#             self.selectionChanged.emit(self._selected)
-#         return super(TopLevelWidget, self).eventFilter(watched, event)
-#
-#     def select(self):
-#         self._toggleSelection(True)
-#
-#     def deselect(self):
-#         self._toggleSelection(False)
-#
-#     def _toggleSelection(self, selected: bool):
-#         self._selected = selected
-#         bold(self._lblTitle, self._selected)
-#         self._reStyle()
-#
-#     def _reStyle(self):
-#         if self._selected:
-#             self._wdgTitle.setStyleSheet('''
-#                     QWidget {
-#                         background-color: #D8D5D5;
-#                     }
-#                 ''')
-#         else:
-#             self._wdgTitle.setStyleSheet('')
+class NovelNode(ChildNode):
+    def __init__(self, novel: NovelDescriptor, parent=None):
+        super(NovelNode, self).__init__(novel.title, parent=parent)
 
 
 class ShelvesTreeView(TreeView):
     def __init__(self, parent=None):
         super(ShelvesTreeView, self).__init__(parent)
-        self.setWidgetResizable(True)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setFrameShape(QFrame.Shape.NoFrame)
-        self._centralWidget = QWidget(self)
-        self.setWidget(self._centralWidget)
-        vbox(self._centralWidget, spacing=0)
 
         self._wdgNovels = ContainerNode('Novels', IconRegistry.book_icon())
         self._wdgShortStories = ContainerNode('Short stories', IconRegistry.from_name('ph.file-text'))
@@ -99,3 +45,8 @@ class ShelvesTreeView(TreeView):
         self._centralWidget.layout().addWidget(self._wdgIdeas)
         self._centralWidget.layout().addWidget(self._wdgNotes)
         self._centralWidget.layout().addWidget(vspacer())
+
+    def setNovels(self, novels: List[NovelDescriptor]):
+        self._wdgNovels.clearChildren()
+        for novel in novels:
+            self._wdgNovels.addChild(NovelNode(novel))
