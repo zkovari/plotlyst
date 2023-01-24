@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import os
 from dataclasses import dataclass, field
 from datetime import date
 from enum import Enum
@@ -85,6 +86,7 @@ class ResourceDescriptor:
     folder: str
     web_url: str
     extension: str = 'zip'
+    version: str = ''
     description: str = ''
 
     def filename(self) -> str:
@@ -117,7 +119,7 @@ class ResourceStatus(Enum):
 class ResourceInfo:
     resource: ResourceDescriptor
     status: ResourceStatus = ResourceStatus.MISSING
-    version: str = str(date.today())
+    updated: str = str(date.today())
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -141,6 +143,13 @@ class ResourceManager(EventListener):
         else:
             self._resources_config = ResourcesConfig()
 
+        jre = self.resource(ResourceType.JRE_8)
+        if app_env.is_mac():
+            os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir,
+                                                       f'jre/{jre.version}-jre/Contents/Home/bin/java')
+        elif app_env.is_linux():
+            os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir, f'jre/{jre.version}-jre/bin/java')
+
         event_dispatcher.register(self, ResourceDownloadedEvent)
 
     @overrides
@@ -162,10 +171,15 @@ class ResourceManager(EventListener):
         if resource_type.name.startswith('NLTK'):
             return _nltk_resources[resource_type]
         if resource_type == ResourceType.JRE_8:
-            version = 'jdk8u345-b01'
-            distr = 'OpenJDK8U-jre_x64_linux_hotspot_8u345b01.tar.gz'
+            version = 'jdk8u362-b09'
+            if app_env.is_linux():
+                distr = 'OpenJDK8U-jre_x64_linux_hotspot_8u362b09.tar.gz'
+            elif app_env.is_mac():
+                distr = 'OpenJDK8U-jre_x64_mac_hotspot_8u362b09.tar.gz'
+            else:
+                raise IOError('Not supported platform for JRE')
             url = f'https://github.com/adoptium/temurin8-binaries/releases/download/{version}/{distr}'
-            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz')
+            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz', version=version)
 
     def nltk_resource_types(self) -> List[ResourceType]:
         return [x for x in ResourceType if x.name.startswith('NLTK')]

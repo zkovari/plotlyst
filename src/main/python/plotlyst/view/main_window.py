@@ -40,9 +40,10 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
+from src.main.python.plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
-from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
+from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker, JreResourceDownloadWorker
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.settings import settings
@@ -120,18 +121,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.repo = RepositoryPersistenceManager.instance()
 
         self._threadpool = QThreadPool()
-        language_tool_setup_worker = LanguageToolServerSetupWorker()
+        self._language_tool_setup_worker = LanguageToolServerSetupWorker()
         nltk_download_worker = NltkResourceDownloadWorker()
-        # jre_download_worker = JreResourceDownloadWorker()
+        jre_download_worker = JreResourceDownloadWorker()
         if not app_env.test_env():
             self._threadpool.start(nltk_download_worker)
-            # self._threadpool.start(jre_download_worker)
+            self._threadpool.start(jre_download_worker)
 
         if self.novel:
-            language_tool_setup_worker.lang = self.novel.lang_settings.lang
+            self._language_tool_setup_worker.lang = self.novel.lang_settings.lang
         if not app_env.test_env():
-            emit_info('Start initializing grammar checker...')
-            self._threadpool.start(language_tool_setup_worker)
+            if resource_manager.has_resource(ResourceType.JRE_8):
+                emit_info('Start initializing grammar checker...')
+                self._threadpool.start(self._language_tool_setup_worker)
 
             QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
 
@@ -191,6 +193,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._toggle_fullscreen(on=False)
         elif isinstance(event, ToggleOutlineViewTitle):
             self.wdgTitle.setVisible(event.visible)
+        elif isinstance(event, ResourceDownloadedEvent):
+            if event.type == ResourceType.JRE_8:
+                emit_info('Start initializing grammar checker...')
+                self._threadpool.start(self._language_tool_setup_worker)
 
     def _toggle_fullscreen(self, on: bool):
         self.statusbar.setHidden(on)
@@ -478,6 +484,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, OpenDistractionFreeMode)
         event_dispatcher.register(self, ExitDistractionFreeMode)
         event_dispatcher.register(self, ToggleOutlineViewTitle)
+        event_dispatcher.register(self, ResourceDownloadedEvent)
 
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)
