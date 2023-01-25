@@ -61,7 +61,13 @@ class ShelvesTreeView(TreeView):
         self._centralWidget.layout().addWidget(self._wdgNotes)
         self._centralWidget.layout().addWidget(vspacer())
 
+    def novels(self) -> List[NovelDescriptor]:
+        return list(self._novels.keys())
+
     def setNovels(self, novels: List[NovelDescriptor]):
+        self.clearSelection()
+        self._novels.clear()
+
         self._wdgNovels.clearChildren()
         for novel in novels:
             node = NovelNode(novel)

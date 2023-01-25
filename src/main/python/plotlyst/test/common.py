@@ -23,6 +23,7 @@ from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import Qt, QPoint, QAbstractItemModel, QCoreApplication, QTimer
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QAbstractItemView, QMenu, QMessageBox, QDialog, QApplication
+from qttextedit import RichTextEditor
 
 from src.main.python.plotlyst.core.domain import PlotType
 from src.main.python.plotlyst.view.characters_view import CharactersView
@@ -202,3 +203,12 @@ def start_new_scene_editor(window: MainWindow) -> ScenesOutlineView:
     assert scenes.editor
     assert scenes.ui.stackedWidget.currentWidget() == scenes.ui.pageEditor
     return scenes
+
+
+def type_text(qtbot, editor, text: str):
+    if isinstance(editor, RichTextEditor):
+        textedit = editor.textEdit
+    else:
+        textedit = editor
+    for c in text:
+        qtbot.keyPress(textedit, c)
