@@ -119,9 +119,9 @@ class ContainerNode(QWidget):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Enter:
+        if event.type() == QEvent.Type.Enter and self.isEnabled():
             qtanim.glow(self._wdgTitle, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
-        elif event.type() == QEvent.Type.MouseButtonRelease:
+        elif event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
             self._toggleSelection(not self._selected)
             self.selectionChanged.emit(self._selected)
         return super(ContainerNode, self).eventFilter(watched, event)

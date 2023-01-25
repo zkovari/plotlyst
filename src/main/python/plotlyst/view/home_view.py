@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSignal, QSize
+from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap
 from overrides import overrides
 from qthandy import ask_confirmation, clear_layout, flow, transparent, gc, incr_font, hbox
@@ -72,6 +72,12 @@ class HomeView(AbstractView):
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAdd.clicked.connect(self._add_new_novel)
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
+
+        transparent(self.ui.lineNovelTitle)
+        self.ui.lineNovelTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        incr_font(self.ui.lineNovelTitle, 10)
+        # transparent(self.ui.btnNovelSettings)
+        self.ui.btnNovelSettings.setIcon(IconRegistry.dots_icon(vertical=True))
 
         self._shelvesTreeView = ShelvesTreeView()
         hbox(self.ui.wdgShelvesParent, 2, 3)
@@ -131,6 +137,10 @@ class HomeView(AbstractView):
     def _novel_selected(self, novel: NovelDescriptor):
         self._selected_novel = novel
         self._toggle_novel_buttons(True)
+
+        self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageNovelDisplay)
+
+        self.ui.lineNovelTitle.setText(novel.title)
 
     def _add_new_novel(self):
         if self.selected_card:

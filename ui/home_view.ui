@@ -318,7 +318,7 @@
            <property name="childrenCollapsible">
             <bool>false</bool>
            </property>
-           <widget class="QWidget" name="">
+           <widget class="QWidget" name="layoutWidget">
             <layout class="QVBoxLayout" name="verticalLayout_9">
              <item>
               <widget class="QWidget" name="wdgShelvesBar" native="true">
@@ -384,7 +384,7 @@
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="">
+           <widget class="QWidget" name="layoutWidget">
             <layout class="QVBoxLayout" name="verticalLayout_4">
              <item>
               <widget class="QWidget" name="wdgLibraryBar" native="true">
@@ -404,31 +404,6 @@
                 <property name="bottomMargin">
                  <number>1</number>
                 </property>
-                <item>
-                 <widget class="QPushButton" name="btnActivate">
-                  <property name="minimumSize">
-                   <size>
-                    <width>140</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="cursor">
-                   <cursorShape>PointingHandCursor</cursorShape>
-                  </property>
-                  <property name="toolTip">
-                   <string>Open story</string>
-                  </property>
-                  <property name="text">
-                   <string>Open</string>
-                  </property>
-                  <property name="highlighted" stdset="0">
-                   <bool>true</bool>
-                  </property>
-                  <property name="base" stdset="0">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
                 <item>
                  <spacer name="horizontalSpacer">
                   <property name="orientation">
@@ -532,6 +507,83 @@
                  </item>
                  <item>
                   <spacer name="verticalSpacer_2">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="pageNovelDisplay">
+                <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <item alignment="Qt::AlignRight">
+                  <widget class="QToolButton" name="btnNovelSettings">
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="transparent" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="lineNovelTitle"/>
+                 </item>
+                 <item>
+                  <spacer name="verticalSpacer_5">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Preferred</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item alignment="Qt::AlignHCenter">
+                  <widget class="QPushButton" name="btnActivate">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>140</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
+                   <property name="toolTip">
+                    <string>Open story</string>
+                   </property>
+                   <property name="text">
+                    <string>Open</string>
+                   </property>
+                   <property name="highlighted" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <property name="base" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="verticalSpacer_4">
                    <property name="orientation">
                     <enum>Qt::Vertical</enum>
                    </property>
