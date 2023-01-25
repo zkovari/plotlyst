@@ -1135,6 +1135,10 @@ class NovelDescriptor:
     import_origin: Optional[ImportOrigin] = None
     migrated_to_new_location: bool = True
 
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
+
 
 @dataclass
 class CausalityItem(SelectionItem):

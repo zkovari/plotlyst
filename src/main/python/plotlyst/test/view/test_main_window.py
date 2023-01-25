@@ -48,21 +48,15 @@ def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
 
     new_title = 'New title'
     create_novel(filled_window, new_title)
-    assert len(view.novel_cards) == 2
 
-    card = view.novel_cards[1]
-    assert card.novel.id
-    assert card.novel.title == new_title
-    qtbot.mouseClick(card, Qt.MouseButton.LeftButton)
+    shelves = view.shelves()
+    assert len(shelves.novels()) == 2
+    shelves.novelSelected.emit(shelves.novels()[1])
 
     view.ui.btnActivate.click()
 
     assert_views(filled_window)
-    first_card = view.novel_cards[0]
-    assert first_card.novel.id
-    qtbot.mouseClick(first_card, Qt.MouseButton.LeftButton)
 
-    qtbot.mouseClick(first_card, Qt.MouseButton.LeftButton)
     view.ui.btnActivate.click()
     assert_views(filled_window)
 

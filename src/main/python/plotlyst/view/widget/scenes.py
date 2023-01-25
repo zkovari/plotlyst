@@ -27,10 +27,10 @@ import qtanim
 from PyQt6.QtCore import QPoint, QTimeLine, QRectF, QMimeData, QPointF
 from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QIcon, \
-    QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath, QEnterEvent
+    QDragMoveEvent, QLinearGradient, QPaintEvent, QPainter, QPen, QPainterPath
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
-    QAbstractItemView, QApplication, QScrollArea
+    QAbstractItemView, QApplication
 from overrides import overrides
 from qthandy import busy, margins, vspacer, btn_popup_menu, bold, incr_font
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
@@ -77,6 +77,7 @@ from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation,
     DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, ScenePlotValueLabel, \
     PlotLabel, PlotValueLabel, SceneLabel
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, ChildNode
 
 
 class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
@@ -1573,27 +1574,18 @@ class ScenesPreferencesWidget(QWidget, Ui_ScenesViewPreferences):
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabCards), IconRegistry.cards_icon())
 
 
-class SceneWidget(QFrame):
-    selectionChanged = pyqtSignal(bool)
+class SceneWidget(ChildNode):
 
     def __init__(self, scene: Scene, novel: Novel, animation: bool = True, parent=None):
-        super(SceneWidget, self).__init__(parent)
+        super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent, animation=animation)
         self._scene = scene
         self._novel = novel
-        self._animation = animation
-        hbox(self)
-
-        self._selected: bool = False
 
         self._scenePovIcon = Icon(self)
         retain_when_hidden(self._scenePovIcon)
         self._sceneTypeIcon = Icon(self)
-        self._lblTitle = QLabel(self)
-        self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
-        self.layout().addWidget(self._scenePovIcon)
-        self.layout().addWidget(self._sceneTypeIcon)
-        self.layout().addWidget(self._lblTitle)
+        self.layout().insertWidget(0, self._scenePovIcon)
 
         self.refresh()
         self._reStyle()
@@ -1606,8 +1598,8 @@ class SceneWidget(QFrame):
 
     def refresh(self):
         if self._scene.type != SceneType.DEFAULT:
-            self._sceneTypeIcon.setIcon(IconRegistry.scene_type_icon(self._scene))
-        self._sceneTypeIcon.setVisible(self._scene.type != SceneType.DEFAULT)
+            self._icon.setIcon(IconRegistry.scene_type_icon(self._scene))
+        self._icon.setVisible(self._scene.type != SceneType.DEFAULT)
 
         if self._scene.pov:
             avatar = avatars.avatar(self._scene.pov, fallback=False)
@@ -1619,73 +1611,23 @@ class SceneWidget(QFrame):
 
         self._lblTitle.setText(self._scene.title_or_index(self._novel))
 
-    @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        self._toggleSelection(not self._selected)
-        self.selectionChanged.emit(self._selected)
 
-    @overrides
-    def enterEvent(self, event: QEnterEvent) -> None:
-        if self._animation:
-            qtanim.glow(self, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
-
-    def select(self):
-        self._toggleSelection(True)
-
-    def deselect(self):
-        self._toggleSelection(False)
-
-    def _toggleSelection(self, selected: bool):
-        self._selected = selected
-        bold(self._lblTitle, self._selected)
-        self._reStyle()
-
-    def _reStyle(self):
-        if self._selected:
-            self.setStyleSheet('''
-                SceneWidget {
-                    background-color: #D8D5D5;
-                }
-            ''')
-        else:
-            self.setStyleSheet('')
-
-
-class ChapterWidget(QWidget):
-    selectionChanged = pyqtSignal(bool)
+class ChapterWidget(ContainerNode):
     deleted = pyqtSignal()
 
     def __init__(self, chapter: Chapter, novel: Novel, parent=None):
-        super(ChapterWidget, self).__init__(parent)
+        super(ChapterWidget, self).__init__(chapter.title_index(novel), IconRegistry.chapter_icon(), parent)
         self._chapter = chapter
         self._novel = novel
-        vbox(self)
 
-        self._wdgTitle = QWidget(self)
-        hbox(self._wdgTitle, 0, 2)
-
-        self._selected: bool = False
-        self._chapterIcon = Icon(self._wdgTitle)
-        self._chapterIcon.setIcon(IconRegistry.chapter_icon())
         self._btnSettings = QToolButton(self._wdgTitle)
         self._btnSettings.setIcon(IconRegistry.dots_icon(vertical=True))
         self._btnSettings.setProperty('transparent', True)
         menu = QMenu(self._btnSettings)
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.deleted.emit)
         btn_popup_menu(self._btnSettings, menu)
-        self._lblTitle = QLabel(self._wdgTitle)
-        self.refresh()
-        self._wdgTitle.layout().addWidget(self._chapterIcon)
-        self._wdgTitle.layout().addWidget(self._lblTitle)
         self._wdgTitle.layout().addWidget(self._btnSettings, alignment=Qt.AlignmentFlag.AlignRight)
-        self._wdgTitle.installEventFilter(self)
         self._wdgTitle.installEventFilter(VisibilityToggleEventFilter(self._btnSettings, self._wdgTitle))
-
-        self._scenesContainer = QWidget(self)
-        vbox(self._scenesContainer)
-        margins(self._scenesContainer, left=10)
-        self.layout().addWidget(self._wdgTitle)
-        self.layout().addWidget(self._scenesContainer)
 
         self._reStyle()
 
@@ -1698,16 +1640,10 @@ class ChapterWidget(QWidget):
     def novel(self) -> Novel:
         return self._novel
 
-    def containerWidget(self) -> QWidget:
-        return self._scenesContainer
-
-    def titleWidget(self) -> QWidget:
-        return self._wdgTitle
-
     def sceneWidgets(self) -> List[SceneWidget]:
         scenes_ = []
-        for i in range(self._scenesContainer.layout().count()):
-            item = self._scenesContainer.layout().itemAt(i)
+        for i in range(self._container.layout().count()):
+            item = self._container.layout().itemAt(i)
             if item is None:
                 continue
             if isinstance(item.widget(), SceneWidget):
@@ -1715,44 +1651,8 @@ class ChapterWidget(QWidget):
 
         return scenes_
 
-    def addSceneWidget(self, wdg: SceneWidget):
-        self._scenesContainer.layout().addWidget(wdg)
 
-    def insertSceneWidget(self, i: int, wdg: SceneWidget):
-        self._scenesContainer.layout().insertWidget(i, wdg)
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Enter:
-            qtanim.glow(self._wdgTitle, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
-        elif event.type() == QEvent.Type.MouseButtonRelease:
-            self._toggleSelection(not self._selected)
-            self.selectionChanged.emit(self._selected)
-        return super(ChapterWidget, self).eventFilter(watched, event)
-
-    def select(self):
-        self._toggleSelection(True)
-
-    def deselect(self):
-        self._toggleSelection(False)
-
-    def _toggleSelection(self, selected: bool):
-        self._selected = selected
-        bold(self._lblTitle, self._selected)
-        self._reStyle()
-
-    def _reStyle(self):
-        if self._selected:
-            self._wdgTitle.setStyleSheet('''
-                QWidget {
-                    background-color: #D8D5D5;
-                }
-            ''')
-        else:
-            self._wdgTitle.setStyleSheet('')
-
-
-class ScenesTreeView(QScrollArea, EventListener):
+class ScenesTreeView(TreeView, EventListener):
     SCENE_MIME_TYPE = 'application/tree-scene-widget'
     CHAPTER_MIME_TYPE = 'application/tree-chapter-widget'
     sceneSelected = pyqtSignal(Scene)
@@ -1762,13 +1662,6 @@ class ScenesTreeView(QScrollArea, EventListener):
     def __init__(self, parent=None):
         super(ScenesTreeView, self).__init__(parent)
         self._novel: Optional[Novel] = None
-        self.setWidgetResizable(True)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._centralWidget = QWidget(self)
-        self.setWidget(self._centralWidget)
-        vbox(self._centralWidget, spacing=0)
-        # self.clicked.connect(self._on_chapter_clicked)
 
         self._chapters: Dict[Chapter, ChapterWidget] = {}
         self._scenes: Dict[Scene, SceneWidget] = {}
@@ -1817,7 +1710,7 @@ class ScenesTreeView(QScrollArea, EventListener):
                 if scene.chapter not in self._chapters.keys():
                     chapter_wdg = self.__initChapterWidget(scene.chapter)
                     self._centralWidget.layout().addWidget(chapter_wdg)
-                self._chapters[scene.chapter].addSceneWidget(sceneWdg)
+                self._chapters[scene.chapter].addChild(sceneWdg)
             else:
                 self._centralWidget.layout().addWidget(sceneWdg)
 
@@ -1997,7 +1890,7 @@ class ScenesTreeView(QScrollArea, EventListener):
                 ref.chapter = chapter_wdg.chapter()
                 new_widget.setParent(chapter_wdg)
                 i = chapter_wdg.containerWidget().layout().indexOf(self._dummyWdg)
-                chapter_wdg.insertSceneWidget(i, new_widget)
+                chapter_wdg.insertChild(i, new_widget)
             self.repo.update_scene(ref)
         elif isinstance(ref, Chapter):
             chapter_wdg = self._chapters[ref]
@@ -2005,7 +1898,7 @@ class ScenesTreeView(QScrollArea, EventListener):
             new_widget = self.__initChapterWidget(ref)
 
             for wdg in chapter_wdg.sceneWidgets():
-                new_widget.addSceneWidget(self.__initSceneWidget(wdg.scene()))
+                new_widget.addChild(self.__initSceneWidget(wdg.scene()))
 
             new_widget.setParent(self._centralWidget)
             i = self._centralWidget.layout().indexOf(self._dummyWdg)
@@ -2084,65 +1977,6 @@ class ScenesTreeView(QScrollArea, EventListener):
 
         )
         return sceneWdg
-
-    # def setModel(self, model: ChaptersTreeModel) -> None:
-    #     return
-    # super(ScenesTreeView, self).setModel(model)
-    # self.expandAll()
-    # self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-    # self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
-    # model.orderChanged.connect(self._on_scene_moved)
-    # model.modelReset.connect(self.expandAll)
-
-    # def insertChapter(self, index: int = -1):
-    #     self.model().newChapter(index)
-    #     self.repo.update_novel(app_env.novel)
-    #     emit_event(ChapterChangedEvent(self))
-    #
-    # def insertSceneAfter(self, scene: Scene, chapter: Optional[Chapter] = None):
-    #     new_scene = app_env.novel.insert_scene_after(scene, chapter)
-    #     self.model().update()
-    #     self.model().modelReset.emit()
-    #     self.repo.insert_scene(app_env.novel, new_scene)
-    #     emit_event(SceneChangedEvent(self))
-    #
-    # def selectedChapter(self) -> Optional[Chapter]:
-    #     indexes = self.selectionModel().selectedIndexes()
-    #     if indexes:
-    #         node = indexes[0].data(ChaptersTreeModel.NodeRole)
-    #         if isinstance(node, ChapterNode):
-    #             return node.chapter
-    #
-    # def _on_chapter_clicked(self, index: QModelIndex):
-    #     if index.column() == 0:
-    #         return
-    #
-    #     indexes = self.selectionModel().selectedIndexes()
-    #     if not indexes:
-    #         return
-    #     node = indexes[0].data(ChaptersTreeModel.NodeRole)
-    #
-    #     novel = app_env.novel
-    #     if isinstance(node, ChapterNode):
-    #         builder = PopupMenuBuilder.from_index(self, index)
-    #
-    #         scenes = novel.scenes_in_chapter(node.chapter)
-    #         if scenes:
-    #             builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self.insertSceneAfter(scenes[-1]))
-    #             builder.add_separator()
-    #
-    #         builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
-    #                            slot=lambda: self.insertChapter(novel.chapters.index(node.chapter)))
-    #         builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
-    #                            slot=lambda: self.insertChapter(novel.chapters.index(node.chapter) + 1))
-    #         builder.popup()
-    #     elif isinstance(node, SceneNode):
-    #         if node.scene and node.scene.chapter:
-    #             self.insertSceneAfter(node.scene)
-    #
-    # def _on_scene_moved(self):
-    #     self.repo.update_novel(app_env.novel)
-    #     emit_event(SceneChangedEvent(self))
 
 
 class StoryMapDisplayMode(Enum):
