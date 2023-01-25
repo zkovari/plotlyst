@@ -51,6 +51,7 @@ class HomeView(AbstractView):
         self._layout = flow(self.ui.novels, margin=5, spacing=9)
         self.novel_cards: List[NovelCard] = []
         self.selected_card: Optional[NovelCard] = None
+        self._selected_novel: Optional[NovelDescriptor] = None
 
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', 'white'))
@@ -66,7 +67,7 @@ class HomeView(AbstractView):
         self.ui.btnRoadmap.setIcon(IconRegistry.from_name('fa5s.road'))
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
-        self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self.selected_card.novel))
+        self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self._selected_novel))
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAdd.clicked.connect(self._add_new_novel)
@@ -76,6 +77,7 @@ class HomeView(AbstractView):
         hbox(self.ui.wdgShelvesParent, 2, 3)
         self.ui.splitterLibrary.setSizes([100, 500])
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
+        self._shelvesTreeView.novelSelected.connect(self._novel_selected)
 
         incr_font(self.ui.btnAddNewStoryMain, 8)
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
@@ -125,6 +127,10 @@ class HomeView(AbstractView):
             card.doubleClicked.connect(self.ui.btnActivate.click)
 
         self._shelvesTreeView.setNovels(novels)
+
+    def _novel_selected(self, novel: NovelDescriptor):
+        self._selected_novel = novel
+        self._toggle_novel_buttons(True)
 
     def _add_new_novel(self):
         if self.selected_card:
