@@ -49,7 +49,7 @@ class HomeView(AbstractView):
         self.ui.setupUi(self.widget)
         self._layout = flow(self.ui.novels, margin=5, spacing=9)
         self.novel_cards: List[NovelCard] = []
-        self.selected_card: Optional[NovelCard] = None
+        # self.selected_card: Optional[NovelCard] = None
         self._selected_novel: Optional[NovelDescriptor] = None
 
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
@@ -116,8 +116,10 @@ class HomeView(AbstractView):
     def refresh(self):
         clear_layout(self._layout)
         self.novel_cards.clear()
+        self._selected_novel = None
+        self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
         self._toggle_novel_buttons(False)
-        self.selected_card = None
+        # self.selected_card = None
         flush_or_fail()
         novels: List[NovelDescriptor] = client.novels()
         for novel in novels:
@@ -138,9 +140,9 @@ class HomeView(AbstractView):
         self.ui.lineNovelTitle.setText(novel.title)
 
     def _add_new_novel(self):
-        if self.selected_card:
-            self.selected_card.clearSelection()
-            self._toggle_novel_buttons(False)
+        # if self.selected_card:
+        #     self.selected_card.clearSelection()
+        #     self._toggle_novel_buttons(False)
         novel = StoryCreationDialog(self.widget).display()
         if novel:
             self.repo.insert_novel(novel)
