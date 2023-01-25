@@ -285,6 +285,8 @@ class SceneLabel(Label):
 class LabelsEditorWidget(QFrame):
     def __init__(self, alignment=Qt.Orientation.Horizontal, checkable: bool = True, parent=None):
         super(LabelsEditorWidget, self).__init__(parent)
+        self._frozen: bool = False
+
         self.checkable = checkable
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Shape.Box)
@@ -335,11 +337,13 @@ class LabelsEditorWidget(QFrame):
 
     def setValue(self, values: List[str]):
         self._model.uncheckAll()
+        self._frozen = True
         for v in values:
             item = self._labels_index.get(v)
             if item:
                 self._model.checkItem(item)
         self._model.modelReset.emit()
+        self._frozen = False
         self._selectionChanged()
 
     def _initPopupWidget(self) -> QWidget:
@@ -348,6 +352,8 @@ class LabelsEditorWidget(QFrame):
         return wdg
 
     def _selectionChanged(self):
+        if self._frozen:
+            return
         self._wdgLabels.clear()
         self._addItems(self._model.selections())
 
