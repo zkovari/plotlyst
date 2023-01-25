@@ -34,7 +34,6 @@ from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
-from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import NovelCard
@@ -76,7 +75,7 @@ class HomeView(AbstractView):
         transparent(self.ui.lineNovelTitle)
         self.ui.lineNovelTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         incr_font(self.ui.lineNovelTitle, 10)
-        # transparent(self.ui.btnNovelSettings)
+        self.ui.lineNovelTitle.textEdited.connect(self._on_edit_title)
         self.ui.btnNovelSettings.setIcon(IconRegistry.dots_icon(vertical=True))
 
         self._shelvesTreeView = ShelvesTreeView()
@@ -87,12 +86,8 @@ class HomeView(AbstractView):
 
         incr_font(self.ui.btnAddNewStoryMain, 8)
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
-        # self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
-        # self.ui.btnEdit.clicked.connect(self._on_edit)
         # self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         # self.ui.btnDelete.clicked.connect(self._on_delete)
-        # self.ui.btnDelete.setDisabled(True)
-        # self.ui.btnEdit.setDisabled(True)
         self.ui.btnActivate.setDisabled(True)
 
         link_buttons_to_pages(self.ui.stackedWidget,
@@ -129,7 +124,7 @@ class HomeView(AbstractView):
             card = NovelCard(novel)
             self._layout.addWidget(card)
             self.novel_cards.append(card)
-            card.selected.connect(self._card_selected)
+            # card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self.ui.btnActivate.click)
 
         self._shelvesTreeView.setNovels(novels)
@@ -157,13 +152,19 @@ class HomeView(AbstractView):
                     self.repo.update_doc(novel, scene.manuscript)
             self.refresh()
 
-    def _on_edit(self):
-        title = NovelEditionDialog().display(self.selected_card.novel)
+    def _on_edit_title(self, title: str):
         if title:
-            self.selected_card.novel.title = title
-            self.selected_card.refresh()
-            self.repo.update_project_novel(self.selected_card.novel)
-            emit_event(NovelUpdatedEvent(self, self.selected_card.novel))
+            self._selected_novel.title = title
+            self.repo.update_project_novel(self._selected_novel)
+            emit_event(NovelUpdatedEvent(self, self._selected_novel))
+
+    # def _on_edit(self):
+    #     title = NovelEditionDialog().display(self.selected_card.novel)
+    #     if title:
+    #         self.selected_card.novel.title = title
+    #         self.selected_card.refresh()
+    #         self.repo.update_project_novel(self.selected_card.novel)
+    #         emit_event(NovelUpdatedEvent(self, self.selected_card.novel))
 
     def _on_delete(self):
         if ask_confirmation(f'Are you sure you want to delete the novel "{self.selected_card.novel.title}"?'):
@@ -175,11 +176,11 @@ class HomeView(AbstractView):
             # self.ui.btnDelete.setDisabled(True)
             self.refresh()
 
-    def _card_selected(self, card: NovelCard):
-        if self.selected_card and self.selected_card is not card:
-            self.selected_card.clearSelection()
-        self.selected_card = card
-        self._toggle_novel_buttons(True)
+    # def _card_selected(self, card: NovelCard):
+    #     if self.selected_card and self.selected_card is not card:
+    #         self.selected_card.clearSelection()
+    #     self.selected_card = card
+    #     self._toggle_novel_buttons(True)
 
     def _toggle_novel_buttons(self, toggled: bool):
         # self.ui.btnDelete.setEnabled(toggled)
