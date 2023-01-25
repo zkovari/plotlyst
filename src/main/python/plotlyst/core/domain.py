@@ -592,7 +592,7 @@ class SceneStructureItemType(Enum):
     BEAT = 6
     INCITING_INCIDENT = 7
     RISING_ACTION = 8
-    CRISIS = 9
+    CHOICE = 9
     TICKING_CLOCK = 10
     HOOK = 11
     EXPOSITION = 12

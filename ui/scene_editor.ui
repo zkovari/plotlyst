@@ -847,7 +847,7 @@
   <customwidget>
    <class>SceneStructureWidget</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <header>src.main.python.plotlyst.view.widget.scene</header>
    <container>1</container>
   </customwidget>
   <customwidget>
