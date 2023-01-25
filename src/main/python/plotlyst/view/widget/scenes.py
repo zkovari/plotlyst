@@ -1978,65 +1978,6 @@ class ScenesTreeView(TreeView, EventListener):
         )
         return sceneWdg
 
-    # def setModel(self, model: ChaptersTreeModel) -> None:
-    #     return
-    # super(ScenesTreeView, self).setModel(model)
-    # self.expandAll()
-    # self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-    # self.setColumnWidth(ChaptersTreeModel.ColPlus, 24)
-    # model.orderChanged.connect(self._on_scene_moved)
-    # model.modelReset.connect(self.expandAll)
-
-    # def insertChapter(self, index: int = -1):
-    #     self.model().newChapter(index)
-    #     self.repo.update_novel(app_env.novel)
-    #     emit_event(ChapterChangedEvent(self))
-    #
-    # def insertSceneAfter(self, scene: Scene, chapter: Optional[Chapter] = None):
-    #     new_scene = app_env.novel.insert_scene_after(scene, chapter)
-    #     self.model().update()
-    #     self.model().modelReset.emit()
-    #     self.repo.insert_scene(app_env.novel, new_scene)
-    #     emit_event(SceneChangedEvent(self))
-    #
-    # def selectedChapter(self) -> Optional[Chapter]:
-    #     indexes = self.selectionModel().selectedIndexes()
-    #     if indexes:
-    #         node = indexes[0].data(ChaptersTreeModel.NodeRole)
-    #         if isinstance(node, ChapterNode):
-    #             return node.chapter
-    #
-    # def _on_chapter_clicked(self, index: QModelIndex):
-    #     if index.column() == 0:
-    #         return
-    #
-    #     indexes = self.selectionModel().selectedIndexes()
-    #     if not indexes:
-    #         return
-    #     node = indexes[0].data(ChaptersTreeModel.NodeRole)
-    #
-    #     novel = app_env.novel
-    #     if isinstance(node, ChapterNode):
-    #         builder = PopupMenuBuilder.from_index(self, index)
-    #
-    #         scenes = novel.scenes_in_chapter(node.chapter)
-    #         if scenes:
-    #             builder.add_action('Add scene', IconRegistry.scene_icon(), lambda: self.insertSceneAfter(scenes[-1]))
-    #             builder.add_separator()
-    #
-    #         builder.add_action('Add chapter before', IconRegistry.chapter_icon(),
-    #                            slot=lambda: self.insertChapter(novel.chapters.index(node.chapter)))
-    #         builder.add_action('Add chapter after', IconRegistry.chapter_icon(),
-    #                            slot=lambda: self.insertChapter(novel.chapters.index(node.chapter) + 1))
-    #         builder.popup()
-    #     elif isinstance(node, SceneNode):
-    #         if node.scene and node.scene.chapter:
-    #             self.insertSceneAfter(node.scene)
-    #
-    # def _on_scene_moved(self):
-    #     self.repo.update_novel(app_env.novel)
-    #     emit_event(SceneChangedEvent(self))
-
 
 class StoryMapDisplayMode(Enum):
     DOTS = 0

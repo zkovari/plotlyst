@@ -164,6 +164,7 @@ class ContainerNode(QWidget):
 
 
 class TreeView(QScrollArea):
+
     def __init__(self, parent=None):
         super(TreeView, self).__init__(parent)
         self.setWidgetResizable(True)
