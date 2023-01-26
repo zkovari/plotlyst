@@ -596,6 +596,10 @@ class SceneStructureItemType(Enum):
     TICKING_CLOCK = 10
     HOOK = 11
     EXPOSITION = 12
+    TURN = 13
+    MYSTERY = 14
+    REVELATION = 15
+    SETUP = 16
 
 
 class SceneOutcome(Enum):

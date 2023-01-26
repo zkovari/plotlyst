@@ -44,19 +44,23 @@ from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButt
 from src.main.python.plotlyst.view.widget.input import MenuWithDescription
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
-BeatDescriptions = {SceneStructureItemType.BEAT: 'Beat: a new action, reaction, thought, or emotion in this scene',
-                    SceneStructureItemType.ACTION: 'The character takes an action to achieve their goal',
-                    SceneStructureItemType.CONFLICT: "Conflict arises that hinders the character's goals",
+BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
+                    SceneStructureItemType.ACTION: 'Character takes an action to achieve their goal',
+                    SceneStructureItemType.CONFLICT: "Conflict hinders the character's goals",
                     SceneStructureItemType.OUTCOME: 'Outcome of the scene, typically ending with disaster',
-                    SceneStructureItemType.REACTION: "Initial reaction to a previous scene's outcome",
+                    SceneStructureItemType.REACTION: "Initial reaction to a prior scene's outcome",
                     SceneStructureItemType.DILEMMA: 'Dilemma throughout the scene. What to do next?',
-                    SceneStructureItemType.DECISION: 'The character makes a decision and might act right away',
-                    SceneStructureItemType.HOOK: 'Initial hook of the scene to raise curiosity',
-                    SceneStructureItemType.INCITING_INCIDENT: 'An inciting incident that triggers events in this scene',
+                    SceneStructureItemType.DECISION: 'Character makes a decision and may act right away',
+                    SceneStructureItemType.HOOK: "Initial hook to raise readers' curiosity",
+                    SceneStructureItemType.INCITING_INCIDENT: 'Triggers events in this scene',
                     SceneStructureItemType.TICKING_CLOCK: 'Ticking clock is activated to add urgency',
-                    SceneStructureItemType.RISING_ACTION: 'Increasing complication throughout the scene',
-                    SceneStructureItemType.CHOICE: 'The impossible choice between two equally good or bad outcomes',
-                    SceneStructureItemType.EXPOSITION: 'Exposition beat with character or imaginary exposition',
+                    SceneStructureItemType.RISING_ACTION: 'Increasing progress or setback throughout the scene',
+                    SceneStructureItemType.CHOICE: 'Impossible choice between two equally good or bad outcomes',
+                    SceneStructureItemType.EXPOSITION: 'Description, explanation, or introduction of normal world',
+                    SceneStructureItemType.TURN: 'Shift in plot arc: small victory or setback',
+                    SceneStructureItemType.MYSTERY: "An unanswered question raises reader's curiosity",
+                    SceneStructureItemType.REVELATION: 'Key information is revealed or discovered',
+                    SceneStructureItemType.SETUP: 'Event that sets up a later payoff. May put the scene in motion',
                     }
 
 
@@ -87,6 +91,14 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.exposition_icon()
     elif beat_type == SceneStructureItemType.BEAT:
         return IconRegistry.beat_icon()
+    elif beat_type == SceneStructureItemType.TURN:
+        return IconRegistry.from_name('mdi.boom-gate-up-outline', '#8338ec')
+    elif beat_type == SceneStructureItemType.MYSTERY:
+        return IconRegistry.from_name('ri.question-mark')
+    elif beat_type == SceneStructureItemType.REVELATION:
+        return IconRegistry.from_name('fa5s.binoculars')
+    elif beat_type == SceneStructureItemType.SETUP:
+        return IconRegistry.from_name('mdi.motion')
     else:
         return IconRegistry.circle_icon()
 
@@ -162,26 +174,28 @@ class _SceneBeatPlaceholderButton(QToolButton):
         self.setToolTip('Insert new beat')
 
         self._menu = MenuWithDescription(self)
-        self._addAction('Action', SceneStructureItemType.ACTION, description='')
-        self._addAction('Conflict', SceneStructureItemType.CONFLICT, description='')
-        self._addAction('Outcome', SceneStructureItemType.OUTCOME, description='')
-        self._addAction('Reaction', SceneStructureItemType.REACTION, description='')
-        self._addAction('Dilemma', SceneStructureItemType.DILEMMA, description='')
-        self._addAction('Decision', SceneStructureItemType.DECISION, description='')
-        self._addAction('Hook', SceneStructureItemType.HOOK, description='')
-        self._addAction('Inciting incident', SceneStructureItemType.INCITING_INCIDENT,
-                        description='')
-        self._addAction('Rising action', SceneStructureItemType.RISING_ACTION, description='')
-        self._addAction('Ticking clock', SceneStructureItemType.TICKING_CLOCK, description='')
-        self._addAction('Choice', SceneStructureItemType.CHOICE, description='')
-        self._addAction('Exposition', SceneStructureItemType.EXPOSITION, description='')
-        self._addAction('Beat', SceneStructureItemType.BEAT, description='')
+        self._addAction('Action', SceneStructureItemType.ACTION)
+        self._addAction('Conflict', SceneStructureItemType.CONFLICT)
+        self._addAction('Outcome', SceneStructureItemType.OUTCOME)
+        self._addAction('Reaction', SceneStructureItemType.REACTION)
+        self._addAction('Dilemma', SceneStructureItemType.DILEMMA)
+        self._addAction('Decision', SceneStructureItemType.DECISION)
+        self._addAction('Hook', SceneStructureItemType.HOOK)
+        self._addAction('Inciting incident', SceneStructureItemType.INCITING_INCIDENT)
+        self._addAction('Rising action', SceneStructureItemType.RISING_ACTION)
+        self._addAction('Choice', SceneStructureItemType.CHOICE)
+        self._addAction('Exposition', SceneStructureItemType.EXPOSITION)
+        self._addAction('Beat', SceneStructureItemType.BEAT)
+        self._addAction('Turn', SceneStructureItemType.TURN)
+        self._addAction('Mystery', SceneStructureItemType.MYSTERY)
+        self._addAction('Revelation', SceneStructureItemType.REVELATION)
+        self._addAction('Setup', SceneStructureItemType.SETUP)
 
         btn_popup_menu(self, self._menu)
 
-    def _addAction(self, text: str, beat_type: SceneStructureItemType, description: str):
-        if not description:
-            description = BeatDescriptions[beat_type]
+    def _addAction(self, text: str, beat_type: SceneStructureItemType):
+        # if not description:
+        description = BeatDescriptions[beat_type]
         self._menu.addAction(action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type)),
                              description)
 

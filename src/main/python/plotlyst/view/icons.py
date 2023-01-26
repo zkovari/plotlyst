@@ -256,7 +256,7 @@ class IconRegistry:
 
     @staticmethod
     def dilemma_icon() -> QIcon:
-        return qtawesome.icon('fa5s.question-circle')
+        return IconRegistry.from_name('fa5s.map-signs', '#ba6f4d')
 
     @staticmethod
     def conflict_icon(color: str = '#f3a712', color_on: str = '#f3a712') -> QIcon:
