@@ -539,7 +539,8 @@ class SceneStructureTimeline(QWidget):
         if not self.width():
             return 0
         w = self.width() - self._margin * 2
-        return max(sum([x.maximumWidth() for x in self._beatWidgets]) // w, 0)
+        placeholder_size = 24
+        return max(sum([x.maximumWidth() + placeholder_size for x in self._beatWidgets]) // w, 0)
 
     def _drawLine(self, path: QPainterPath, width: int, y: int, forward: bool):
         if forward:
