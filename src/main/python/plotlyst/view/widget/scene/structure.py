@@ -22,9 +22,9 @@ from functools import partial
 from typing import Optional, List
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint, QEvent
 from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QResizeEvent, \
-    QPen, QPainterPath, QPaintEvent, QLinearGradient
+    QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QApplication
 from overrides import overrides
 from qthandy import pointy, gc, translucent, bold, transparent, btn_popup_menu, \
@@ -158,18 +158,9 @@ class _SceneBeatPlaceholderButton(QToolButton):
     def __init__(self, parent=None):
         super(_SceneBeatPlaceholderButton, self).__init__(parent)
         self.setIcon(IconRegistry.plus_circle_icon('grey'))
-        # self.installEventFilter(OpacityEventFilter(parent=self, 0.5, 0.12))
+        self.installEventFilter(OpacityEventFilter(self))
         self.setIconSize(QSize(24, 24))
         transparent(self)
-        # self.setStyleSheet('''
-        #     QToolButton {
-        #         border: 1px hidden black;
-        #         border-radius: 19px; padding: 2px;
-        #     }
-        #     QToolButton:pressed {
-        #         border: 1px solid grey;
-        #     }
-        #     ''')
         pointy(self)
         self.setToolTip('Insert new beat')
 
@@ -194,13 +185,13 @@ class _SceneBeatPlaceholderButton(QToolButton):
         btn_popup_menu(self, self._menu)
 
     def _addAction(self, text: str, beat_type: SceneStructureItemType):
-        # if not description:
         description = BeatDescriptions[beat_type]
         self._menu.addAction(action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type)),
                              description)
 
 
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
+    entered = pyqtSignal()
     removed = pyqtSignal(object)
     emotionChanged = pyqtSignal()
 
@@ -258,6 +249,10 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.btnIcon.setGeometry(self.width() // 2 - 18, 0, 36, 36)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self.entered.emit()
 
     def _beatDataFunc(self, btn):
         return id(self)
@@ -345,11 +340,13 @@ class SceneStructureTimeline(QWidget):
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
         self.novel = app_env.novel
+        self._topMargin = 20
         self._margin = 80
         self._lineDistance = 140
         self._arcWidth = 80
         self._beatWidth: int = 180
         self._emotionSize: int = 32
+        self._penSize: int = 10
         self._path: Optional[QPainterPath] = None
         self._agenda: Optional[SceneStructureAgenda] = None
         self._beatWidgets: List[SceneStructureItemWidget] = []
@@ -436,7 +433,7 @@ class SceneStructureTimeline(QWidget):
             gradient = QLinearGradient(0, first_el.y, last_el.x, last_el.y)
         gradient.setColorAt(0, QColor(emotion_color(self._agenda.beginning_emotion)))
         gradient.setColorAt(1, QColor(emotion_color(self._agenda.ending_emotion)))
-        pen = QPen(gradient, 10, Qt.PenStyle.SolidLine)
+        pen = QPen(gradient, self._penSize, Qt.PenStyle.SolidLine)
         painter.setPen(pen)
         path = QPainterPath()
 
@@ -489,23 +486,32 @@ class SceneStructureTimeline(QWidget):
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if self._contains(event.pos()) and self._intersects(event.pos()):
-            if not QApplication.overrideCursor():
-                QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
-            self._placeholder.setVisible(True)
-            self._placeholder.setGeometry(event.pos().x() - 12, event.pos().y() - 12, 24, 24)
-            self.update()
+        if event.pos().y() > (self._curves() * 2 + 1) * self._lineDistance or event.pos().y() < self._topMargin:
+            if self._placeholder.isVisible():
+                self._placeholder.setVisible(False)
+                self.update()
+                if QApplication.overrideCursor():
+                    QApplication.restoreOverrideCursor()
             return
 
-        if QApplication.overrideCursor():
-            self._placeholder.setVisible(False)
-            self.update()
-            QApplication.restoreOverrideCursor()
+        if not QApplication.overrideCursor():
+            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
-    def _contains(self, pos: QPoint) -> bool:
-        if not self._path:
-            return False
-        return self._path.intersects(QRectF(pos.x(), pos.y(), 1, 1))
+        self._placeholder.setVisible(True)
+        vertical_index = (event.pos().y() - self._topMargin) // self._lineDistance
+        self._placeholder.setGeometry(event.pos().x() - 12,
+                                      vertical_index * self._lineDistance + self._lineDistance / 2 + self._penSize, 24,
+                                      24)
+        self.update()
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._placeholder.setVisible(False)
+
+    # def _contains(self, pos: QPoint) -> bool:
+    #     if not self._path:
+    #         return False
+    #     return self._path.intersects(QRectF(pos.x(), pos.y(), 1, 1))
 
     def _intersects(self, pos: QPoint) -> bool:
         for i in range(self._path.elementCount()):
@@ -560,7 +566,7 @@ class SceneStructureTimeline(QWidget):
             return
         trackedPath = QPainterPath()
 
-        y = 20
+        y = self._topMargin
         trackedPath.moveTo(self._margin + self._beatWidth // 2, y)
         trackedPath.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
         curves = self._curves()
@@ -621,7 +627,13 @@ class SceneStructureTimeline(QWidget):
         self.timelineChanged.emit()
 
     def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
+        def entered():
+            self._placeholder.setHidden(True)
+            if QApplication.overrideCursor():
+                QApplication.restoreOverrideCursor()
+
         widget = SceneStructureItemWidget(self.novel, item, parent=self)
+        widget.entered.connect(entered)
         widget.removed.connect(self._beatRemoved)
         widget.emotionChanged.connect(self.emotionChanged.emit)
 
