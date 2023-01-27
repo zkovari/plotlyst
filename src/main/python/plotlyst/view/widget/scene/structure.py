@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint, QEvent
 from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QResizeEvent, \
     QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QApplication
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy
 from overrides import overrides
 from qthandy import pointy, gc, translucent, bold, transparent, btn_popup_menu, \
     retain_when_hidden, flow, clear_layout, decr_font
@@ -629,13 +629,8 @@ class SceneStructureTimeline(QWidget):
         self.timelineChanged.emit()
 
     def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
-        def entered():
-            self._placeholder.setHidden(True)
-            if QApplication.overrideCursor():
-                QApplication.restoreOverrideCursor()
-
         widget = SceneStructureItemWidget(self.novel, item, parent=self)
-        widget.entered.connect(entered)
+        widget.entered.connect(lambda: self._placeholder.setHidden(True))
         widget.removed.connect(self._beatRemoved)
         widget.emotionChanged.connect(self.emotionChanged.emit)
 
