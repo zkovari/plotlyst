@@ -243,7 +243,7 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.target', color=color, color_on=color_on)
 
     @staticmethod
-    def decision_icon(color: str = '#3cdbd3', color_on='darkBlue') -> QIcon:
+    def decision_icon(color: str = '#219ebc', color_on='darkBlue') -> QIcon:
         return IconRegistry.from_name('fa5.lightbulb', color=color, color_on=color_on)
 
     @staticmethod

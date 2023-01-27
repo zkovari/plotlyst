@@ -94,11 +94,11 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
     elif beat_type == SceneStructureItemType.TURN:
         return IconRegistry.from_name('mdi.boom-gate-up-outline', '#8338ec')
     elif beat_type == SceneStructureItemType.MYSTERY:
-        return IconRegistry.from_name('ri.question-mark')
+        return IconRegistry.from_name('ri.question-mark', '#b8c0ff')
     elif beat_type == SceneStructureItemType.REVELATION:
-        return IconRegistry.from_name('fa5s.binoculars')
+        return IconRegistry.from_name('fa5s.binoculars', '#588157')
     elif beat_type == SceneStructureItemType.SETUP:
-        return IconRegistry.from_name('mdi.motion')
+        return IconRegistry.from_name('mdi.motion', '#ddbea9')
     else:
         return IconRegistry.circle_icon()
 
@@ -302,7 +302,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
             else:
                 return '#fe4a49'
         elif self.beat.type == SceneStructureItemType.DECISION:
-            return '#3cdbd3'
+            return '#219ebc'
         elif self.beat.type == SceneStructureItemType.HOOK:
             return '#829399'
         elif self.beat.type == SceneStructureItemType.INCITING_INCIDENT:
@@ -315,6 +315,14 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
             return '#ce2d4f'
         elif self.beat.type == SceneStructureItemType.EXPOSITION:
             return '#1ea896'
+        elif self.beat.type == SceneStructureItemType.TURN:
+            return '#8338ec'
+        elif self.beat.type == SceneStructureItemType.MYSTERY:
+            return '#b8c0ff'
+        elif self.beat.type == SceneStructureItemType.REVELATION:
+            return '#588157'
+        elif self.beat.type == SceneStructureItemType.SETUP:
+            return '#ddbea9'
         else:
             return 'black'
 
