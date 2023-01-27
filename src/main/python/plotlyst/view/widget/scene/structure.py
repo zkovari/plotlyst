@@ -367,9 +367,11 @@ class SceneStructureTimeline(QWidget):
         self._dragPlaceholder: Optional[SceneStructureItemWidget] = None
 
         self._emotionStart = CharacterEmotionButton(self)
+        self._emotionStart.setToolTip('Beginning emotion')
         self._emotionStart.setVisible(False)
         self._emotionStart.emotionChanged.connect(self._emotionChanged)
         self._emotionEnd = CharacterEmotionButton(self)
+        self._emotionEnd.setToolTip('Ending emotion')
         self._emotionEnd.setVisible(False)
         self._emotionEnd.emotionChanged.connect(self._emotionChanged)
 
