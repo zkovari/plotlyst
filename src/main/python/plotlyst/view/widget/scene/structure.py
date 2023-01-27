@@ -193,6 +193,8 @@ class _SceneBeatPlaceholderButton(QToolButton):
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     entered = pyqtSignal()
     removed = pyqtSignal(object)
+    dragStarted = pyqtSignal()
+    dragStopped = pyqtSignal()
     emotionChanged = pyqtSignal()
 
     SceneBeatMimeType: str = 'application/scene-beat'
@@ -208,8 +210,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
         self.btnIcon = QToolButton(self)
         self.btnIcon.setIconSize(QSize(24, 24))
-        self.btnIcon.installEventFilter(OpacityEventFilter(parent=self.btnIcon, enterOpacity=0.9, leaveOpacity=1.0))
-        pointy(self.btnIcon)
+        self.btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
 
         bold(self.btnName)
 
@@ -220,11 +221,13 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
         self.btnDelete.clicked.connect(self._remove)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
-        self.btnDrag.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
-                                                        grabbed=self.btnIcon, hideTarget=True))
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnDrag, parent=self))
+        self.btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
+                                                        grabbed=self.btnIcon, startedSlot=self.dragStarted.emit,
+                                                        finishedSlot=self.dragStopped.emit,
+                                                        hideTarget=True))
         retain_when_hidden(self.btnDelete)
         retain_when_hidden(self.btnDrag)
+        self.btnDrag.setHidden(True)
 
     def outcomeVisible(self) -> bool:
         return self._outcome.isVisible()
@@ -279,9 +282,6 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
                                     border: 2px solid {color};
                                     border-radius: 18px; padding: 4px;
                                 }}
-                    QToolButton:pressed {{
-                        border: 2px solid white;
-                    }}
                     ''')
         self.btnName.setStyleSheet(f'QPushButton {{border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};}}')
         self.text.setStyleSheet(f'''
@@ -358,10 +358,14 @@ class SceneStructureTimeline(QWidget):
         self._path: Optional[QPainterPath] = None
         self._agenda: Optional[SceneStructureAgenda] = None
         self._beatWidgets: List[SceneStructureItemWidget] = []
+
         self._placeholder = _SceneBeatPlaceholderButton(self)
         self._placeholder.setVisible(False)
         self._placeholder.menu().aboutToHide.connect(lambda: self._placeholder.setVisible(False))
         self._placeholder.selected.connect(self._insertBeatWidget)
+
+        self._dragPlaceholder: Optional[SceneStructureItemWidget] = None
+
         self._emotionStart = CharacterEmotionButton(self)
         self._emotionStart.setVisible(False)
         self._emotionStart.emotionChanged.connect(self._emotionChanged)
@@ -472,6 +476,13 @@ class SceneStructureTimeline(QWidget):
         if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType) and self._intersects(
                 event.position()):
             event.accept()
+            if self._dragPlaceholder:
+                vertical_index = self._verticalTimelineIndex(event.position())
+                self._dragPlaceholder.setGeometry(event.position().x() - self._dragPlaceholder.width() / 2,
+                                                  vertical_index * self._lineDistance,
+                                                  self._dragPlaceholder.width(),
+                                                  self._dragPlaceholder.height())
+                self._dragPlaceholder.setVisible(True)
         else:
             event.ignore()
 
@@ -494,35 +505,29 @@ class SceneStructureTimeline(QWidget):
 
     @overrides
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if event.pos().y() > (self._curves() * 2 + 1) * self._lineDistance or event.pos().y() < self._topMargin:
+        if not self._intersects(event.pos()):
             if self._placeholder.isVisible():
                 self._placeholder.setVisible(False)
                 self.update()
-                # if QApplication.overrideCursor():
-                #     QApplication.restoreOverrideCursor()
             return
 
-        # if not QApplication.overrideCursor():
-        #     QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
-
         self._placeholder.setVisible(True)
-        vertical_index = (event.pos().y() - self._topMargin) // self._lineDistance
-        self._placeholder.setGeometry(event.pos().x() - 12,
-                                      vertical_index * self._lineDistance + self._lineDistance / 2 + self._penSize, 24,
-                                      24)
+        vertical_index = self._verticalTimelineIndex(event.pos())
+        self._placeholder.setGeometry(event.pos().x() - self._placeholder.width() / 2,
+                                      vertical_index * self._lineDistance + self._lineDistance / 2 + self._penSize,
+                                      self._placeholder.width(),
+                                      self._placeholder.height())
         self.update()
 
+    def _verticalTimelineIndex(self, pos: QPoint) -> int:
+        return (pos.y() - self._topMargin) // self._lineDistance
+
     def _intersects(self, pos: QPoint) -> bool:
-        for i in range(self._path.elementCount()):
-            el = self._path.elementAt(i)
-            if el.y - 10 < pos.y() < el.y + 10:
-                if el.isLineTo():
-                    return True
-        return False
+        return pos.y() <= (self._curves() * 2 + 1) * self._lineDistance or pos.y() > self._topMargin
 
     def _percentage(self, pos: QPoint) -> float:
         length = 0
-        vertical_index = (pos.y() - self._topMargin) // self._lineDistance
+        vertical_index = self._verticalTimelineIndex(pos)
         y_pos = vertical_index * self._lineDistance + self._topMargin
         for i in range(self._path.elementCount()):
             el = self._path.elementAt(i)
@@ -632,6 +637,8 @@ class SceneStructureTimeline(QWidget):
         widget.entered.connect(lambda: self._placeholder.setHidden(True))
         widget.removed.connect(self._beatRemoved)
         widget.emotionChanged.connect(self.emotionChanged.emit)
+        widget.dragStarted.connect(partial(self._initDragPlaceholder, widget))
+        widget.dragStopped.connect(self._resetDragPlaceholder)
 
         return widget
 
@@ -663,6 +670,18 @@ class SceneStructureTimeline(QWidget):
         self.update()
 
         self.timelineChanged.emit()
+
+    def _initDragPlaceholder(self, widget: SceneStructureItemWidget):
+        self._dragPlaceholder = SceneStructureItemWidget(self.novel, widget.sceneStructureItem(), parent=self)
+        self._dragPlaceholder.setDisabled(True)
+        translucent(self._dragPlaceholder)
+        self._dragPlaceholder.setHidden(True)
+
+    def _resetDragPlaceholder(self):
+        if self._dragPlaceholder is not None:
+            self._dragPlaceholder.setHidden(True)
+            gc(self._dragPlaceholder)
+            self._dragPlaceholder = None
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
