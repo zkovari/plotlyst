@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional, List
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint, QEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint
 from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QResizeEvent, \
     QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy
@@ -503,15 +503,6 @@ class SceneStructureTimeline(QWidget):
                                       vertical_index * self._lineDistance + self._lineDistance / 2 + self._penSize, 24,
                                       24)
         self.update()
-
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        self._placeholder.setVisible(False)
-
-    # def _contains(self, pos: QPoint) -> bool:
-    #     if not self._path:
-    #         return False
-    #     return self._path.intersects(QRectF(pos.x(), pos.y(), 1, 1))
 
     def _intersects(self, pos: QPoint) -> bool:
         for i in range(self._path.elementCount()):
