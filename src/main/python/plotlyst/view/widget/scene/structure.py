@@ -490,12 +490,12 @@ class SceneStructureTimeline(QWidget):
             if self._placeholder.isVisible():
                 self._placeholder.setVisible(False)
                 self.update()
-                if QApplication.overrideCursor():
-                    QApplication.restoreOverrideCursor()
+                # if QApplication.overrideCursor():
+                #     QApplication.restoreOverrideCursor()
             return
 
-        if not QApplication.overrideCursor():
-            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+        # if not QApplication.overrideCursor():
+        #     QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
         self._placeholder.setVisible(True)
         vertical_index = (event.pos().y() - self._topMargin) // self._lineDistance
@@ -523,6 +523,8 @@ class SceneStructureTimeline(QWidget):
 
     def _percentage(self, pos: QPoint) -> float:
         length = 0
+        vertical_index = (pos.y() - self._topMargin) // self._lineDistance
+        y_pos = vertical_index * self._lineDistance + self._topMargin
         for i in range(self._path.elementCount()):
             el = self._path.elementAt(i)
             if i > 0:
@@ -531,7 +533,7 @@ class SceneStructureTimeline(QWidget):
                     length += abs(el.x - prev_el.x)
                 elif prev_el.isCurveTo():
                     length += self._lineDistance / 2
-            if el.y - 10 < pos.y() < el.y + 10:
+            if el.y - 10 < y_pos < el.y + 10:
                 if pos.x() <= el.x:
                     length += abs(el.x - pos.x())
                 if pos.x() >= el.x:
