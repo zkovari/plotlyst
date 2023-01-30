@@ -620,7 +620,7 @@ class SceneStructureItem:
     text: str = ''
     percentage: float = 0.0
     outcome: Optional[SceneOutcome] = None
-    emotion: Optional[int] = None
+    emotion: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
 
 @dataclass

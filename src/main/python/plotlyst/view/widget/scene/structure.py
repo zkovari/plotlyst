@@ -19,13 +19,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
 from functools import partial
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint
 from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QResizeEvent, \
     QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMenu
 from overrides import overrides
 from qthandy import pointy, gc, translucent, bold, transparent, btn_popup_menu, \
     retain_when_hidden, flow, clear_layout, decr_font
@@ -39,9 +39,11 @@ from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton, CharacterGoalSelector, \
     CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import MenuWithDescription
+from src.main.python.plotlyst.view.widget.labels import EmotionLabel
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
@@ -101,6 +103,37 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.from_name('mdi.motion', '#ddbea9')
     else:
         return IconRegistry.circle_icon()
+
+
+emotions: Dict[str, str] = {'Admiration': '#006d77', 'Adoration': '#3f37c9', 'Amusement': '#ef476f', 'Anger': '#d62828',
+                            'Anxiety': '#fb8b24',
+                            'Awe': '#ffcfd2',
+                            'Awkwardness': '#f15bb5', 'Boredom': '#84a59d',
+                            'Calmness': '#669bbc', 'Confusion': '#ee9b00',
+                            'Craving': '#ffbf69', 'Disgust': '#ffaa00', 'Empathic': '#468faf', 'Pain': '#9d0208',
+                            'Entrancement': '#0096c7',
+                            'Excitement': '#b5838d',
+                            'Fear': '#312244', 'Horror': '#d80032',
+                            'Interest': '#4c956c', 'Joy': '#00afb9', 'Nostalgia': '#deab90', 'Relief': '#83c5be',
+                            'Sadness': '#c3baba',
+                            'Satisfaction': '#3a5a40',
+                            'Surprise': '#e5989b'}
+
+
+class EmotionSelectorButton(SecondaryActionToolButton):
+    emotionSelected = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super(EmotionSelectorButton, self).__init__(parent)
+        self.setIcon(IconRegistry.from_name('ri.emotion-sad-line'))
+        self.setPadding(1)
+        menuEmotions = QMenu(self)
+        for emotion in ['Admiration', 'Adoration', 'Amusement', 'Anger', 'Anxiety', 'Awe', 'Awkwardness', 'Boredom',
+                        'Calmness', 'Confusion',
+                        'Craving', 'Disgust', 'Empathic', 'Pain', 'Entrancement', 'Excitement', 'Fear', 'Horror',
+                        'Interest', 'Joy', 'Nostalgia', 'Relief', 'Sadness', 'Satisfaction', 'Surprise']:
+            menuEmotions.addAction(emotion, partial(self.emotionSelected.emit, emotion))
+        btn_popup_menu(self, menuEmotions)
 
 
 class _SceneTypeButton(QPushButton):
@@ -217,17 +250,30 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         decr_font(self.text)
         self.text.setText(self.beat.text)
 
+        self.lblEmotion = EmotionLabel()
+        if self.beat.emotion:
+            self.lblEmotion.setEmotion(self.beat.emotion, color=emotions.get(self.beat.emotion, 'red'))
+        else:
+            self.lblEmotion.setHidden(True)
+        self.wdgEmotion.layout().addWidget(self.lblEmotion, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._btnEmotion = EmotionSelectorButton(self)
+        self._btnEmotion.emotionSelected.connect(self._emotionSelected)
+        self.wdgEmotion.layout().addWidget(self._btnEmotion, alignment=Qt.AlignmentFlag.AlignLeft)
+
         self._initStyle()
 
         self.btnDelete.clicked.connect(self._remove)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnEmotion, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnTag, parent=self))
         self.btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
                                                         grabbed=self.btnIcon, startedSlot=self.dragStarted.emit,
                                                         finishedSlot=self.dragStopped.emit,
                                                         hideTarget=True))
         retain_when_hidden(self.btnDelete)
-        retain_when_hidden(self.btnDrag)
-        self.btnDrag.setHidden(True)
+        self.btnTag.setHidden(True)
+        retain_when_hidden(self.btnTag)
+        retain_when_hidden(self._btnEmotion)
 
     def outcomeVisible(self) -> bool:
         return self._outcome.isVisible()
@@ -335,6 +381,11 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self._initStyle()
         self._glow()
 
+    def _emotionSelected(self, emotion: str):
+        self.lblEmotion.setEmotion(emotion, color=emotions.get(emotion, 'red'))
+        self.lblEmotion.setVisible(True)
+        self.beat.emotion = emotion
+
     def _glow(self):
         color = QColor(self._color())
         qtanim.glow(self.btnName, color=color)
@@ -350,7 +401,7 @@ class SceneStructureTimeline(QWidget):
         self.novel = app_env.novel
         self._topMargin = 20
         self._margin = 80
-        self._lineDistance = 140
+        self._lineDistance = 160
         self._arcWidth = 80
         self._beatWidth: int = 180
         self._emotionSize: int = 32

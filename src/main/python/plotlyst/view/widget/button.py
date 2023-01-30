@@ -77,6 +77,7 @@ class _SecondaryActionButton(QAbstractButton):
         self._iconName: str = ''
         self._iconColor: str = 'black'
         self._checkedColor: str = 'black'
+        self._padding: int = 2
         self.initStyleSheet()
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
@@ -88,7 +89,7 @@ class _SecondaryActionButton(QAbstractButton):
                     border: 2px {border_style} {border_color};
                     border-radius: 6px;
                     color: {color};
-                    padding: 2px;
+                    padding: {self._padding}px;
                 }}
                 {self.__class__.__name__}:pressed {{
                     border: 2px solid {border_color};
@@ -101,6 +102,13 @@ class _SecondaryActionButton(QAbstractButton):
 
     def setBorderColor(self, color_name: str):
         self.initStyleSheet(color_name)
+        self.update()
+
+    def setPadding(self, value: int):
+        if not value:
+            return
+        self._padding = value
+        self.initStyleSheet()
         self.update()
 
     def _setIcon(self):
