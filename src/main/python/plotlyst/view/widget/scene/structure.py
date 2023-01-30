@@ -39,7 +39,7 @@ from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
+from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton, FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton, CharacterGoalSelector, \
     CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import MenuWithDescription
@@ -767,6 +767,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
+        self._btnGroupType = FadeOutButtonGroup()
+        self._btnGroupType.addButton(self.btnScene)
+        self._btnGroupType.addButton(self.btnSequel)
 
         self.wdgAgendaCharacter.setDefaultText('Select character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
@@ -843,30 +846,13 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self.btnSequel.setChecked(False)
             self.btnSequel.setVisible(True)
 
-    def _typeClicked(self, type: SceneType, checked: bool, lazy: bool = True):
-        if lazy and type == self.scene.type and checked:
-            return
-
+    def _typeClicked(self, type: SceneType, checked: bool):
         if type == SceneType.ACTION and checked:
             self.scene.type = type
-            self.btnSequel.setChecked(False)
-            qtanim.fade_out(self.btnSequel)
         elif type == SceneType.REACTION and checked:
             self.scene.type = type
-            self.btnScene.setChecked(False)
-            qtanim.fade_out(self.btnScene)
         else:
             self.scene.type = SceneType.DEFAULT
-            # top = SceneStructureItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.BEAT),
-            #                                placeholder='Describe the beginning event')
-            # middle = SceneStructureItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.BEAT),
-            #                                   placeholder='Describe the middle part of this scene')
-            # bottom = SceneStructureItemWidget(self.novel, SceneStructureItem(SceneStructureItemType.BEAT),
-            #                                   placeholder='Describe the ending of this scene')
-            if self.btnScene.isHidden():
-                qtanim.fade_in(self.btnScene)
-            if self.btnSequel.isHidden():
-                qtanim.fade_in(self.btnSequel)
 
         self.timeline.setSceneType(self.scene.type)
 
