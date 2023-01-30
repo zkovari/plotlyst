@@ -251,20 +251,22 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.text.setText(self.beat.text)
 
         self.lblEmotion = EmotionLabel()
+        decr_font(self.lblEmotion)
         if self.beat.emotion:
             self.lblEmotion.setEmotion(self.beat.emotion, color=emotions.get(self.beat.emotion, 'red'))
         else:
             self.lblEmotion.setHidden(True)
         self.wdgEmotion.layout().addWidget(self.lblEmotion, alignment=Qt.AlignmentFlag.AlignLeft)
-        self._btnEmotion = EmotionSelectorButton(self)
-        self._btnEmotion.emotionSelected.connect(self._emotionSelected)
-        self.wdgEmotion.layout().addWidget(self._btnEmotion, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._btnEmotionSelector = EmotionSelectorButton(self)
+        self._btnEmotionSelector.setIconSize(QSize(15, 15))
+        self._btnEmotionSelector.emotionSelected.connect(self._emotionSelected)
+        self.wdgEmotion.layout().addWidget(self._btnEmotionSelector, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self._initStyle()
 
         self.btnDelete.clicked.connect(self._remove)
         self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnEmotion, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnEmotionSelector, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(self.btnTag, parent=self))
         self.btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
                                                         grabbed=self.btnIcon, startedSlot=self.dragStarted.emit,
@@ -273,7 +275,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         retain_when_hidden(self.btnDelete)
         self.btnTag.setHidden(True)
         retain_when_hidden(self.btnTag)
-        retain_when_hidden(self._btnEmotion)
+        retain_when_hidden(self._btnEmotionSelector)
 
     def outcomeVisible(self) -> bool:
         return self._outcome.isVisible()
@@ -314,9 +316,12 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         self.text.setToolTip(desc)
         self.btnIcon.setToolTip(desc)
         if self.beat.type == SceneStructureItemType.OUTCOME:
+            if self.beat.outcome is None:
+                self.beat.outcome = SceneOutcome.DISASTER
             name = SceneOutcome.to_str(self.beat.outcome)
         else:
             name = self.beat.type.name
+        self.wdgEmotion.setHidden(self.beat.type == SceneStructureItemType.OUTCOME)
         self.btnName.setText(name.lower().capitalize().replace('_', ' '))
         self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
                                        trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
@@ -401,7 +406,7 @@ class SceneStructureTimeline(QWidget):
         self.novel = app_env.novel
         self._topMargin = 20
         self._margin = 80
-        self._lineDistance = 160
+        self._lineDistance = 170
         self._arcWidth = 80
         self._beatWidth: int = 180
         self._emotionSize: int = 32
@@ -649,7 +654,7 @@ class SceneStructureTimeline(QWidget):
 
         self._emotionStart.setGeometry(10, 25, self._emotionSize, self._emotionSize)
         self._emotionEnd.setGeometry(width - 30, y + 5, self._emotionSize, self._emotionSize)
-        self.setMinimumHeight(y + 150)
+        self.setMinimumHeight(y + self._lineDistance)
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)

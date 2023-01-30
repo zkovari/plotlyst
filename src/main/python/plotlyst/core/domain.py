@@ -619,8 +619,18 @@ class SceneStructureItem:
     type: SceneStructureItemType
     text: str = ''
     percentage: float = 0.0
-    outcome: Optional[SceneOutcome] = None
+    # outcome: Optional[SceneOutcome] = None
     emotion: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    meta: Dict[str, Any] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+
+    @property
+    def outcome(self) -> Optional[SceneOutcome]:
+        if 'outcome' in self.meta.keys():
+            return SceneOutcome(self.meta['outcome'])
+
+    @outcome.setter
+    def outcome(self, value: SceneOutcome):
+        self.meta['outcome'] = value.value
 
 
 @dataclass
