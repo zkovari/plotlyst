@@ -314,8 +314,11 @@ class StatusColumnWidget(QFrame):
         task: Task = mimeData.reference()
         if task.status_ref == self._status.id:
             return
-        self.taskChanged.emit(task)
         task.status_ref = self._status.id
+        if self._status.resolves:
+            task.update_resolved_date()
+
+        self.taskChanged.emit(task)
         wdg = self.addTask(task)
         wdg.setHidden(self._header.toggled())
 

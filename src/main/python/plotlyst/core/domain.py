@@ -858,6 +858,8 @@ class WorldBuilding:
 @dataclass
 class TaskStatus(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    wip: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    resolves: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     @overrides
     def __hash__(self):
@@ -868,16 +870,29 @@ class TaskStatus(SelectionItem):
 class Task(CharacterBased):
     title: str
     status_ref: uuid.UUID
+    creation_date: Optional[datetime] = None
+    resolved_date: Optional[datetime] = None
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
     character_id: Optional[uuid.UUID] = None
 
     def __post_init__(self):
+        if self.creation_date is None:
+            self.creation_date = datetime.now()
         self._character: Optional[Character] = None
+
+    def creation_date_str(self):
+        return self.creation_date.strftime("%Y-%m-%d %H:%M:%S")
+
+    def resolved_date_str(self):
+        return self.resolved_date.strftime("%Y-%m-%d %H:%M:%S") if self.resolved_date else ''
+
+    def update_resolved_date(self):
+        self.resolved_date = datetime.now()
 
 
 def default_task_statues() -> List[TaskStatus]:
-    return [TaskStatus('To Do', color_hexa='#0077b6'), TaskStatus('In Progress', color_hexa='#9f86c0'),
-            TaskStatus('Done', color_hexa='#588157')]
+    return [TaskStatus('To Do', color_hexa='#0077b6'), TaskStatus('In Progress', color_hexa='#9f86c0', wip=True),
+            TaskStatus('Done', color_hexa='#588157', resolves=True)]
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
