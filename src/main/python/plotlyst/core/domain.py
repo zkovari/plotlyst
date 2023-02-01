@@ -870,6 +870,7 @@ class TaskStatus(SelectionItem):
 class Task(CharacterBased):
     title: str
     status_ref: uuid.UUID
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
     creation_date: Optional[datetime] = None
     resolved_date: Optional[datetime] = None
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
@@ -888,6 +889,10 @@ class Task(CharacterBased):
 
     def update_resolved_date(self):
         self.resolved_date = datetime.now()
+
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
 
 
 def default_task_statues() -> List[TaskStatus]:
