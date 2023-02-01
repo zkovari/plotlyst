@@ -80,38 +80,39 @@ class TaskWidget(QFrame):
             self._charSelector.setHidden(True)
         retain_when_hidden(self._charSelector)
         self._charSelector.characterSelected.connect(self._linkCharacter)
+        self._charSelector.menu().aboutToHide.connect(self._onLeave)
         top_wdg = group(self._lineTitle, self._charSelector, margin=0, spacing=1)
         self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
         retain_when_hidden(self._wdgBottom)
-        vbox(self._wdgBottom)
+        hbox(self._wdgBottom)
+        self._btnResolve = QToolButton(self._wdgBottom)
+        self._btnResolve.setIcon(IconRegistry.from_name('fa5s.check', 'grey'))
+        self._btnResolve.setToolTip('Resolve task')
+        pointy(self._btnResolve)
+        self._btnResolve.setProperty('transparent-circle-bg-on-hover', True)
+        self._btnResolve.setProperty('positive', True)
+        self._btnResolve.installEventFilter(ButtonPressResizeEventFilter(self._btnResolve))
+
         self._btnMenu = QToolButton(self._wdgBottom)
         self._btnMenu.setIcon(IconRegistry.dots_icon('grey'))
-        self._btnMenu.setStyleSheet('''
-                    QToolButton {
-                        border-radius: 12px;
-                        border: 1px hidden lightgrey;
-                        padding: 2px;
-                    }
-                    QToolButton::menu-indicator {
-                        width:0px;
-                    }
-
-                    QToolButton:hover {
-                        background: lightgrey;
-                    }
-                ''')
+        self._btnMenu.setProperty('transparent-circle-bg-on-hover', True)
         pointy(self._btnMenu)
         menu = QMenu(self._btnMenu)
         menu.addAction(IconRegistry.edit_icon(), 'Rename', self._lineTitle.setFocus)
         menu.addSeparator()
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', lambda: self.removalRequested.emit(self))
         btn_popup_menu(self._btnMenu, menu)
+        menu.aboutToHide.connect(self._onLeave)
+        self._wdgBottom.layout().addWidget(spacer())
+        self._wdgBottom.layout().addWidget(self._btnResolve, alignment=Qt.AlignmentFlag.AlignRight)
         self._wdgBottom.layout().addWidget(self._btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
 
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnMenu, self))
+        self._btnResolve.setHidden(True)
+        self._btnMenu.setHidden(True)
+
         self.installEventFilter(self)
         self._lineTitle.textEdited.connect(self._titleEdited)
         self._lineTitle.editingFinished.connect(self._titleEditingFinished)
@@ -121,10 +122,12 @@ class TaskWidget(QFrame):
         if event.type() == QEvent.Type.Enter:
             if not self._task.character_id:
                 self._charSelector.setVisible(True)
+            self._btnMenu.setVisible(True)
+            self._btnResolve.setVisible(True)
         elif event.type() == QEvent.Type.Leave:
-            if not self._task.character_id and not self._charSelector.menu().isVisible():
-                self._charSelector.setHidden(True)
-
+            if self._charSelector.menu().isVisible() or self._btnMenu.menu().isVisible():
+                return True
+            self._onLeave()
         return super(TaskWidget, self).eventFilter(watched, event)
 
     def task(self) -> Task:
@@ -145,6 +148,12 @@ class TaskWidget(QFrame):
     def _activated(self):
         self._lineTitle.setFocus()
         shadow(self, 3)
+
+    def _onLeave(self):
+        if not self._task.character_id:
+            self._charSelector.setHidden(True)
+        self._btnMenu.setVisible(False)
+        self._btnResolve.setVisible(False)
 
     def _linkCharacter(self, character: Character):
         self._task.set_character(character)
