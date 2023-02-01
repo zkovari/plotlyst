@@ -52,6 +52,7 @@ TASK_MIME_TYPE: str = 'application/task'
 class TaskWidget(QFrame):
     removalRequested = pyqtSignal(object)
     changed = pyqtSignal()
+    resolved = pyqtSignal()
 
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
@@ -80,38 +81,40 @@ class TaskWidget(QFrame):
             self._charSelector.setHidden(True)
         retain_when_hidden(self._charSelector)
         self._charSelector.characterSelected.connect(self._linkCharacter)
+        self._charSelector.menu().aboutToHide.connect(self._onLeave)
         top_wdg = group(self._lineTitle, self._charSelector, margin=0, spacing=1)
         self.layout().addWidget(top_wdg, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBottom = QWidget()
         retain_when_hidden(self._wdgBottom)
-        vbox(self._wdgBottom)
+        hbox(self._wdgBottom)
+        self._btnResolve = QToolButton(self._wdgBottom)
+        self._btnResolve.setIcon(IconRegistry.from_name('fa5s.check', 'grey'))
+        self._btnResolve.setToolTip('Resolve task')
+        pointy(self._btnResolve)
+        self._btnResolve.setProperty('transparent-circle-bg-on-hover', True)
+        self._btnResolve.setProperty('positive', True)
+        self._btnResolve.installEventFilter(ButtonPressResizeEventFilter(self._btnResolve))
+        self._btnResolve.clicked.connect(self.resolved.emit)
+
         self._btnMenu = QToolButton(self._wdgBottom)
         self._btnMenu.setIcon(IconRegistry.dots_icon('grey'))
-        self._btnMenu.setStyleSheet('''
-                    QToolButton {
-                        border-radius: 12px;
-                        border: 1px hidden lightgrey;
-                        padding: 2px;
-                    }
-                    QToolButton::menu-indicator {
-                        width:0px;
-                    }
-
-                    QToolButton:hover {
-                        background: lightgrey;
-                    }
-                ''')
+        self._btnMenu.setProperty('transparent-circle-bg-on-hover', True)
         pointy(self._btnMenu)
         menu = QMenu(self._btnMenu)
         menu.addAction(IconRegistry.edit_icon(), 'Rename', self._lineTitle.setFocus)
         menu.addSeparator()
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', lambda: self.removalRequested.emit(self))
         btn_popup_menu(self._btnMenu, menu)
+        menu.aboutToHide.connect(self._onLeave)
+        self._wdgBottom.layout().addWidget(spacer())
+        self._wdgBottom.layout().addWidget(self._btnResolve, alignment=Qt.AlignmentFlag.AlignRight)
         self._wdgBottom.layout().addWidget(self._btnMenu, alignment=Qt.AlignmentFlag.AlignRight)
         self.layout().addWidget(self._wdgBottom, alignment=Qt.AlignmentFlag.AlignBottom)
 
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnMenu, self))
+        self._btnResolve.setHidden(True)
+        self._btnMenu.setHidden(True)
+
         self.installEventFilter(self)
         self._lineTitle.textEdited.connect(self._titleEdited)
         self._lineTitle.editingFinished.connect(self._titleEditingFinished)
@@ -121,10 +124,12 @@ class TaskWidget(QFrame):
         if event.type() == QEvent.Type.Enter:
             if not self._task.character_id:
                 self._charSelector.setVisible(True)
+            self._btnMenu.setVisible(True)
+            self._btnResolve.setVisible(True)
         elif event.type() == QEvent.Type.Leave:
-            if not self._task.character_id and not self._charSelector.menu().isVisible():
-                self._charSelector.setHidden(True)
-
+            if self._charSelector.menu().isVisible() or self._btnMenu.menu().isVisible():
+                return True
+            self._onLeave()
         return super(TaskWidget, self).eventFilter(watched, event)
 
     def task(self) -> Task:
@@ -145,6 +150,12 @@ class TaskWidget(QFrame):
     def _activated(self):
         self._lineTitle.setFocus()
         shadow(self, 3)
+
+    def _onLeave(self):
+        if not self._task.character_id:
+            self._charSelector.setHidden(True)
+        self._btnMenu.setVisible(False)
+        self._btnResolve.setVisible(False)
 
     def _linkCharacter(self, character: Character):
         self._task.set_character(character)
@@ -214,6 +225,7 @@ class _StatusHeader(QFrame):
 class StatusColumnWidget(QFrame):
     taskChanged = pyqtSignal(Task)
     taskDeleted = pyqtSignal(Task)
+    taskResolved = pyqtSignal(Task)
 
     def __init__(self, novel: Novel, status: TaskStatus, parent=None):
         super(StatusColumnWidget, self).__init__(parent)
@@ -273,6 +285,8 @@ class StatusColumnWidget(QFrame):
                             finishedSlot=lambda: self._dragFinished(wdg)))
         wdg.removalRequested.connect(self._deleteTask)
         wdg.changed.connect(partial(self.taskChanged.emit, task))
+        wdg.resolved.connect(partial(self.__removeTaskWidget, wdg))
+        wdg.resolved.connect(partial(self.taskResolved.emit, task))
         if edit:
             wdg.activate()
 
@@ -312,8 +326,6 @@ class StatusColumnWidget(QFrame):
         if taskWidget.task().status_ref == self._status.id:
             taskWidget.setEnabled(True)
         else:
-            if self._status.wip:
-                emit_event(TaskChangedFromWip(self, taskWidget.task()))
             self.__removeTaskWidget(taskWidget)
 
     def _dropped(self, mimeData: QMimeData):
@@ -330,6 +342,9 @@ class StatusColumnWidget(QFrame):
         wdg.setHidden(self._header.toggled())
 
     def __removeTaskWidget(self, taskWidget):
+        if self._status.wip:
+            emit_event(TaskChangedFromWip(self, taskWidget.task()))
+
         taskWidget.setHidden(True)
         self._container.layout().removeWidget(taskWidget)
         gc(taskWidget)
@@ -347,6 +362,7 @@ class BoardWidget(QWidget):
             column = StatusColumnWidget(novel, status)
             column.taskChanged.connect(self._taskChanged)
             column.taskDeleted.connect(self._taskDeleted)
+            column.taskResolved.connect(self._taskResolved)
             self.layout().addWidget(column)
             self._statusColumns[str(status.id)] = column
 
@@ -380,6 +396,16 @@ class BoardWidget(QWidget):
     def _taskDeleted(self, task: Task):
         self._saveBoard()
         emit_event(TaskDeleted(self, task))
+
+    def _taskResolved(self, task: Task):
+        for status in self._novel.board.statuses:
+            if status.resolves:
+                task.status_ref = status.id
+                task.update_resolved_date()
+                wdg = self._statusColumns[str(status.id)]
+                wdg.addTask(task)
+                break
+        self._saveBoard()
 
     def _saveBoard(self):
         self.repo.update_novel(self._novel)
@@ -434,7 +460,6 @@ class TasksQuickAccessWidget(QWidget, EventListener):
     def addTask(self, task: Task):
         self._tasks.add(task)
         if self._currentTask is None:
-            # self._currentTask = task
             self._updateCurrentTask(task)
 
         self._toggleSelector()
@@ -443,7 +468,6 @@ class TasksQuickAccessWidget(QWidget, EventListener):
         if task in self._tasks:
             self._tasks.remove(task)
         if self._currentTask == task:
-            # self._currentTask = next(iter(self._tasks), None)
             self._updateCurrentTask()
 
         self._toggleSelector()
