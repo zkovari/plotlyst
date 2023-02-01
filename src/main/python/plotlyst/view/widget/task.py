@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import CollapseButton
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
+from src.main.python.plotlyst.view.widget.display import Icon
 
 TASK_WIDGET_MAX_WIDTH = 350
 
@@ -389,12 +390,21 @@ class TasksQuickAccessWidget(QWidget, EventListener):
         super(TasksQuickAccessWidget, self).__init__(parent)
         hbox(self)
         self._title = QLabel('Test')
+        self._icon = Icon()
+        self._icon.setIcon(IconRegistry.board_icon())
+        self._icon.setToolTip('Pinned in-progress task')
         self._btnSelector = QToolButton()
         self._btnSelector.setProperty('transparent', True)
+        pointy(self._btnSelector)
+        self._btnSelector.setToolTip('Select an other in-progress task')
         self._btnSelector.setIcon(IconRegistry.from_name('fa5s.tasks'))
+        self._menu = QMenu(self._btnSelector)
+        btn_popup_menu(self._btnSelector, self._menu)
+        self._menu.aboutToShow.connect(self._fillSelectorPopup)
 
-        self.layout().addWidget(self._btnSelector)
+        self.layout().addWidget(self._icon)
         self.layout().addWidget(vline())
+        self.layout().addWidget(self._btnSelector)
         self.layout().addWidget(self._title)
 
         self._tasks: Set[Task] = set()
@@ -412,14 +422,20 @@ class TasksQuickAccessWidget(QWidget, EventListener):
             self.addTask(event.task)
         elif isinstance(event, TaskChangedFromWip):
             self.removeTask(event.task)
+        elif isinstance(event, TaskChanged):
+            if event.task not in self._tasks:
+                return
+            if event.task == self._currentTask:
+                self._updateCurrentTask()
+
         elif isinstance(event, TaskDeleted):
             self.removeTask(event.task)
 
     def addTask(self, task: Task):
         self._tasks.add(task)
         if self._currentTask is None:
-            self._currentTask = task
-            self._updateCurrentTask()
+            # self._currentTask = task
+            self._updateCurrentTask(task)
 
         self._toggleSelector()
 
@@ -427,7 +443,7 @@ class TasksQuickAccessWidget(QWidget, EventListener):
         if task in self._tasks:
             self._tasks.remove(task)
         if self._currentTask == task:
-            self._currentTask = next(iter(self._tasks), None)
+            # self._currentTask = next(iter(self._tasks), None)
             self._updateCurrentTask()
 
         self._toggleSelector()
@@ -437,7 +453,12 @@ class TasksQuickAccessWidget(QWidget, EventListener):
         self._tasks.clear()
         self._updateCurrentTask()
 
-    def _updateCurrentTask(self):
+    def _updateCurrentTask(self, task: Optional[Task] = None):
+        if task:
+            self._currentTask = task
+        else:
+            self._currentTask = next(iter(self._tasks), None)
+
         if self._currentTask:
             self._title.setText(self._currentTask.title)
         else:
@@ -447,3 +468,8 @@ class TasksQuickAccessWidget(QWidget, EventListener):
 
     def _toggleSelector(self):
         self._btnSelector.setVisible(len(self._tasks) > 1)
+
+    def _fillSelectorPopup(self):
+        self._menu.clear()
+        for task in self._tasks:
+            self._menu.addAction(task.title, partial(self._updateCurrentTask, task))
