@@ -65,6 +65,7 @@ from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
+from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
 from src.main.python.plotlyst.view.world_building_view import WorldBuildingView
 
 textstat.sentence_count = sentence_count
@@ -109,7 +110,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._init_menubar()
         self._init_toolbar()
-        self._init_views()
+        self._tasks_widget = TasksQuickAccessWidget()
+        self._init_statusbar()
 
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.info.connect(self.event_log_handler.on_info_event)
@@ -117,6 +119,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_sender.send.connect(event_dispatcher.dispatch)
         QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
+
+        self._init_views()
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -397,6 +401,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.manuscript_mode.setDisabled(True)
             self.reports_mode.setDisabled(True)
 
+    def _init_statusbar(self):
+        self.statusbar.addPermanentWidget(self._tasks_widget)
+
     def _panel_toggled(self):
         if self.home_mode.isChecked():
             self.stackMainPanels.setCurrentWidget(self.pageHome)
@@ -514,6 +521,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setDisabled(True)
         self.manuscript_mode.setDisabled(True)
         self.reports_mode.setDisabled(True)
+
+        self._tasks_widget.reset()
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
         if isinstance(current_widget, (QLineEdit, QTextEdit)):
