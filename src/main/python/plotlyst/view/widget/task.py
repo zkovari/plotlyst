@@ -326,8 +326,6 @@ class StatusColumnWidget(QFrame):
         if taskWidget.task().status_ref == self._status.id:
             taskWidget.setEnabled(True)
         else:
-            if self._status.wip:
-                emit_event(TaskChangedFromWip(self, taskWidget.task()))
             self.__removeTaskWidget(taskWidget)
 
     def _dropped(self, mimeData: QMimeData):
@@ -344,6 +342,9 @@ class StatusColumnWidget(QFrame):
         wdg.setHidden(self._header.toggled())
 
     def __removeTaskWidget(self, taskWidget):
+        if self._status.wip:
+            emit_event(TaskChangedFromWip(self, taskWidget.task()))
+
         taskWidget.setHidden(True)
         self._container.layout().removeWidget(taskWidget)
         gc(taskWidget)
@@ -459,7 +460,6 @@ class TasksQuickAccessWidget(QWidget, EventListener):
     def addTask(self, task: Task):
         self._tasks.add(task)
         if self._currentTask is None:
-            # self._currentTask = task
             self._updateCurrentTask(task)
 
         self._toggleSelector()
@@ -468,7 +468,6 @@ class TasksQuickAccessWidget(QWidget, EventListener):
         if task in self._tasks:
             self._tasks.remove(task)
         if self._currentTask == task:
-            # self._currentTask = next(iter(self._tasks), None)
             self._updateCurrentTask()
 
         self._toggleSelector()
