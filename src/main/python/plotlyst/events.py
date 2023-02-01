@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 from language_tool_python import LanguageTool
 
-from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage
+from src.main.python.plotlyst.core.domain import Character, NovelDescriptor, Scene, SceneStage, Task
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -123,3 +123,23 @@ class LanguageToolSet(Event):
 @dataclass
 class ToggleOutlineViewTitle(Event):
     visible: bool
+
+
+@dataclass
+class TaskChanged(Event):
+    task: Task
+
+
+@dataclass
+class TaskDeleted(Event):
+    task: Task
+
+
+@dataclass
+class TaskChangedToWip(Event):
+    task: Task
+
+
+@dataclass
+class TaskChangedFromWip(Event):
+    task: Task

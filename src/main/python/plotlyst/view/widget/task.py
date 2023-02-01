@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Dict
+from typing import Dict, Set, Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QMimeData, QObject, QEvent
@@ -27,14 +27,15 @@ from PyQt6.QtWidgets import QWidget, QFrame, QSizePolicy, QLabel, QToolButton, Q
     QLineEdit, QMenu
 from overrides import overrides
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
-    btn_popup_menu, gc
+    btn_popup_menu, gc, vline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import Event
+from src.main.python.plotlyst.event.core import Event, emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import CharacterDeletedEvent
+from src.main.python.plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, TaskChangedToWip, \
+    TaskChangedFromWip
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -274,6 +275,9 @@ class StatusColumnWidget(QFrame):
         if edit:
             wdg.activate()
 
+        if self._status.wip:
+            emit_event(TaskChangedToWip(self, task))
+
         self._header.updateTitle(self._container.layout().count() - 1)
         return wdg
 
@@ -307,6 +311,8 @@ class StatusColumnWidget(QFrame):
         if taskWidget.task().status_ref == self._status.id:
             taskWidget.setEnabled(True)
         else:
+            if self._status.wip:
+                emit_event(TaskChangedFromWip(self, taskWidget.task()))
             self.__removeTaskWidget(taskWidget)
 
     def _dropped(self, mimeData: QMimeData):
@@ -338,7 +344,7 @@ class BoardWidget(QWidget):
         self._statusColumns: Dict[str, StatusColumnWidget] = {}
         for status in self._novel.board.statuses:
             column = StatusColumnWidget(novel, status)
-            column.taskChanged.connect(self._saveBoard)
+            column.taskChanged.connect(self._taskChanged)
             column.taskDeleted.connect(self._taskDeleted)
             self.layout().addWidget(column)
             self._statusColumns[str(status.id)] = column
@@ -366,8 +372,78 @@ class BoardWidget(QWidget):
     def _firstStatusColumn(self) -> StatusColumnWidget:
         return self._statusColumns[str(self._novel.board.statuses[0].id)]
 
-    def _saveBoard(self):
-        self.repo.update_novel(self._novel)
+    def _taskChanged(self, task: Task):
+        self._saveBoard()
+        emit_event(TaskChanged(self, task))
 
     def _taskDeleted(self, task: Task):
         self._saveBoard()
+        emit_event(TaskDeleted(self, task))
+
+    def _saveBoard(self):
+        self.repo.update_novel(self._novel)
+
+
+class TasksQuickAccessWidget(QWidget, EventListener):
+    def __init__(self, parent=None):
+        super(TasksQuickAccessWidget, self).__init__(parent)
+        hbox(self)
+        self._title = QLabel('Test')
+        self._btnSelector = QToolButton()
+        self._btnSelector.setProperty('transparent', True)
+        self._btnSelector.setIcon(IconRegistry.from_name('fa5s.tasks'))
+
+        self.layout().addWidget(self._btnSelector)
+        self.layout().addWidget(vline())
+        self.layout().addWidget(self._title)
+
+        self._tasks: Set[Task] = set()
+        self._currentTask: Optional[Task] = None
+        self._updateCurrentTask()
+
+        event_dispatcher.register(self, TaskChanged)
+        event_dispatcher.register(self, TaskDeleted)
+        event_dispatcher.register(self, TaskChangedToWip)
+        event_dispatcher.register(self, TaskChangedFromWip)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, TaskChangedToWip):
+            self.addTask(event.task)
+        elif isinstance(event, TaskChangedFromWip):
+            self.removeTask(event.task)
+        elif isinstance(event, TaskDeleted):
+            self.removeTask(event.task)
+
+    def addTask(self, task: Task):
+        self._tasks.add(task)
+        if self._currentTask is None:
+            self._currentTask = task
+            self._updateCurrentTask()
+
+        self._toggleSelector()
+
+    def removeTask(self, task: Task):
+        if task in self._tasks:
+            self._tasks.remove(task)
+        if self._currentTask == task:
+            self._currentTask = next(iter(self._tasks), None)
+            self._updateCurrentTask()
+
+        self._toggleSelector()
+
+    def reset(self):
+        self._currentTask = None
+        self._tasks.clear()
+        self._updateCurrentTask()
+
+    def _updateCurrentTask(self):
+        if self._currentTask:
+            self._title.setText(self._currentTask.title)
+        else:
+            self._title.clear()
+
+        self.setHidden(self._currentTask is None)
+
+    def _toggleSelector(self):
+        self._btnSelector.setVisible(len(self._tasks) > 1)
