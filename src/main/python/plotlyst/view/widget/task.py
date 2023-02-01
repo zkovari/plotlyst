@@ -52,6 +52,7 @@ TASK_MIME_TYPE: str = 'application/task'
 class TaskWidget(QFrame):
     removalRequested = pyqtSignal(object)
     changed = pyqtSignal()
+    resolved = pyqtSignal()
 
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
@@ -94,6 +95,7 @@ class TaskWidget(QFrame):
         self._btnResolve.setProperty('transparent-circle-bg-on-hover', True)
         self._btnResolve.setProperty('positive', True)
         self._btnResolve.installEventFilter(ButtonPressResizeEventFilter(self._btnResolve))
+        self._btnResolve.clicked.connect(self.resolved.emit)
 
         self._btnMenu = QToolButton(self._wdgBottom)
         self._btnMenu.setIcon(IconRegistry.dots_icon('grey'))
@@ -223,6 +225,7 @@ class _StatusHeader(QFrame):
 class StatusColumnWidget(QFrame):
     taskChanged = pyqtSignal(Task)
     taskDeleted = pyqtSignal(Task)
+    taskResolved = pyqtSignal(Task)
 
     def __init__(self, novel: Novel, status: TaskStatus, parent=None):
         super(StatusColumnWidget, self).__init__(parent)
@@ -282,6 +285,8 @@ class StatusColumnWidget(QFrame):
                             finishedSlot=lambda: self._dragFinished(wdg)))
         wdg.removalRequested.connect(self._deleteTask)
         wdg.changed.connect(partial(self.taskChanged.emit, task))
+        wdg.resolved.connect(partial(self.__removeTaskWidget, wdg))
+        wdg.resolved.connect(partial(self.taskResolved.emit, task))
         if edit:
             wdg.activate()
 
@@ -356,6 +361,7 @@ class BoardWidget(QWidget):
             column = StatusColumnWidget(novel, status)
             column.taskChanged.connect(self._taskChanged)
             column.taskDeleted.connect(self._taskDeleted)
+            column.taskResolved.connect(self._taskResolved)
             self.layout().addWidget(column)
             self._statusColumns[str(status.id)] = column
 
@@ -389,6 +395,16 @@ class BoardWidget(QWidget):
     def _taskDeleted(self, task: Task):
         self._saveBoard()
         emit_event(TaskDeleted(self, task))
+
+    def _taskResolved(self, task: Task):
+        for status in self._novel.board.statuses:
+            if status.resolves:
+                task.status_ref = status.id
+                task.update_resolved_date()
+                wdg = self._statusColumns[str(status.id)]
+                wdg.addTask(task)
+                break
+        self._saveBoard()
 
     def _saveBoard(self):
         self.repo.update_novel(self._novel)
