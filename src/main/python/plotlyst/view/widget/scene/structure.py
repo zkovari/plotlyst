@@ -512,7 +512,11 @@ class SceneStructureTimeline(QWidget):
 
     def reset(self):
         clear_layout(self)
+        for wdg in self._beatWidgets:
+            gc(wdg)
         self._beatWidgets.clear()
+        self._rearrangeBeats()
+        self.update()
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:

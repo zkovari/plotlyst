@@ -207,6 +207,8 @@ class FadeOutButtonGroup(QButtonGroup):
         self._fadeInDuration = duration
 
     def toggle(self, btn: QAbstractButton):
+        btn.setVisible(True)
+        btn.setEnabled(True)
         btn.setChecked(not btn.isChecked())
         self._toggled(btn, animated=False)
 
