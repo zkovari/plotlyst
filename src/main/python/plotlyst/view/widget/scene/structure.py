@@ -151,13 +151,25 @@ class _SceneTypeButton(QPushButton):
             borderColorChecked = '#fb5607'
             self.setText('Scene (action)')
             self.setIcon(IconRegistry.action_scene_icon())
-        else:
+        elif type == SceneType.REACTION:
             bgColor = '#bee1e6'
             borderColor = '#168aad'
             bgColorChecked = '#89c2d9'
             borderColorChecked = '#1a759f'
             self.setText('Sequel (reaction)')
             self.setIcon(IconRegistry.reaction_scene_icon())
+        else:
+            bgColor = 'lightgrey'
+            borderColor = 'grey'
+            bgColorChecked = 'darkGrey'
+            borderColorChecked = 'grey'
+            self.setText(type.name.capitalize())
+        if type == SceneType.EXPOSITION:
+            self.setIcon(IconRegistry.exposition_scene_icon())
+        elif type == SceneType.SUMMARY:
+            self.setIcon(IconRegistry.summary_scene_icon())
+        elif type == SceneType.HAPPENING:
+            self.setIcon(IconRegistry.happening_scene_icon())
 
         self.setStyleSheet(f'''
             QPushButton {{
@@ -753,9 +765,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.btnScene = _SceneTypeButton(SceneType.ACTION)
         self.btnSequel = _SceneTypeButton(SceneType.REACTION)
+        self.btnHappening = _SceneTypeButton(SceneType.HAPPENING)
+        self.btnExposition = _SceneTypeButton(SceneType.EXPOSITION)
+        self.btnSummary = _SceneTypeButton(SceneType.SUMMARY)
 
         self.wdgTypes.layout().addWidget(self.btnScene)
         self.wdgTypes.layout().addWidget(self.btnSequel)
+        self.wdgTypes.layout().addWidget(self.btnHappening)
+        self.wdgTypes.layout().addWidget(self.btnExposition)
+        self.wdgTypes.layout().addWidget(self.btnSummary)
 
         flow(self.wdgGoalConflictContainer)
 
@@ -767,9 +785,16 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
         self.btnScene.clicked.connect(partial(self._typeClicked, SceneType.ACTION))
         self.btnSequel.clicked.connect(partial(self._typeClicked, SceneType.REACTION))
+        self.btnHappening.clicked.connect(partial(self._typeClicked, SceneType.HAPPENING))
+        self.btnExposition.clicked.connect(partial(self._typeClicked, SceneType.EXPOSITION))
+        self.btnSummary.clicked.connect(partial(self._typeClicked, SceneType.SUMMARY))
+
         self._btnGroupType = FadeOutButtonGroup()
         self._btnGroupType.addButton(self.btnScene)
         self._btnGroupType.addButton(self.btnSequel)
+        self._btnGroupType.addButton(self.btnHappening)
+        self._btnGroupType.addButton(self.btnExposition)
+        self._btnGroupType.addButton(self.btnSummary)
 
         self.wdgAgendaCharacter.setDefaultText('Select character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
@@ -831,28 +856,27 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _checkSceneType(self):
         if self.scene.type == SceneType.ACTION:
-            self.btnScene.setChecked(True)
-            self.btnScene.setVisible(True)
-            self.btnSequel.setChecked(False)
-            self.btnSequel.setHidden(True)
+            self._btnGroupType.toggle(self.btnScene)
         elif self.scene.type == SceneType.REACTION:
-            self.btnSequel.setChecked(True)
-            self.btnSequel.setVisible(True)
-            self.btnScene.setChecked(False)
-            self.btnScene.setHidden(True)
+            self._btnGroupType.toggle(self.btnSequel)
+        elif self.scene.type == SceneType.HAPPENING:
+            self._btnGroupType.toggle(self.btnHappening)
+        elif self.scene.type == SceneType.EXPOSITION:
+            self._btnGroupType.toggle(self.btnExposition)
+        elif self.scene.type == SceneType.SUMMARY:
+            self._btnGroupType.toggle(self.btnSummary)
         else:
-            self.btnScene.setChecked(False)
-            self.btnScene.setVisible(True)
-            self.btnSequel.setChecked(False)
-            self.btnSequel.setVisible(True)
+            self._btnGroupType.reset()
 
     def _typeClicked(self, type: SceneType, checked: bool):
-        if type == SceneType.ACTION and checked:
-            self.scene.type = type
-        elif type == SceneType.REACTION and checked:
-            self.scene.type = type
-        else:
-            self.scene.type = SceneType.DEFAULT
+        if not checked:
+            return
+        # if type == SceneType.ACTION and checked:
+        self.scene.type = type
+        # elif type == SceneType.REACTION and checked:
+        #     self.scene.type = type
+        # else:
+        #     self.scene.type = SceneType.DEFAULT
 
         self.timeline.setSceneType(self.scene.type)
 
