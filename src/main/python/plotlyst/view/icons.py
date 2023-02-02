@@ -182,6 +182,12 @@ class IconRegistry:
             return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
         elif scene.type == SceneType.REACTION:
             return IconRegistry.reaction_scene_icon()
+        elif scene.type == SceneType.HAPPENING:
+            return IconRegistry.happening_scene_icon()
+        elif scene.type == SceneType.EXPOSITION:
+            return IconRegistry.exposition_scene_icon()
+        elif scene.type == SceneType.SUMMARY:
+            return IconRegistry.summary_scene_icon()
         else:
             return IconRegistry.empty_icon()
 
@@ -189,6 +195,18 @@ class IconRegistry:
     def reaction_scene_icon() -> QIcon:
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1}, {'color': '#4b86b4'}])
+
+    @staticmethod
+    def happening_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.motion-outline', 'grey', 'black')
+
+    @staticmethod
+    def exposition_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.information-outline', 'grey', 'black')
+
+    @staticmethod
+    def summary_scene_icon() -> QIcon:
+        return IconRegistry.from_name('ei.list-alt', 'grey', 'black')
 
     @staticmethod
     def hashtag_icon() -> QIcon:
@@ -243,7 +261,7 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.target', color=color, color_on=color_on)
 
     @staticmethod
-    def decision_icon(color: str = '#3cdbd3', color_on='darkBlue') -> QIcon:
+    def decision_icon(color: str = '#219ebc', color_on='darkBlue') -> QIcon:
         return IconRegistry.from_name('fa5.lightbulb', color=color, color_on=color_on)
 
     @staticmethod
@@ -256,7 +274,7 @@ class IconRegistry:
 
     @staticmethod
     def dilemma_icon() -> QIcon:
-        return qtawesome.icon('fa5s.question-circle')
+        return IconRegistry.from_name('fa5s.map-signs', '#ba6f4d')
 
     @staticmethod
     def conflict_icon(color: str = '#f3a712', color_on: str = '#f3a712') -> QIcon:

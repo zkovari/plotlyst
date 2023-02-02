@@ -27,7 +27,7 @@ from overrides import overrides
 from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow
 from qthandy.filter import VisibilityToggleEventFilter
 
-from src.main.python.plotlyst.common import truncate_string
+from src.main.python.plotlyst.common import truncate_string, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
     CharacterGoal, PlotValue, Scene, GoalReference
 from src.main.python.plotlyst.env import app_env
@@ -280,6 +280,27 @@ class SceneLabel(Label):
     def setScene(self, scene: Scene):
         self.btnTypeIcon.setIcon(IconRegistry.scene_type_icon(scene))
         self.lblTitle.setText(scene.title_or_index(app_env.novel))
+
+
+class EmotionLabel(Label):
+    def __init__(self, parent=None):
+        super(EmotionLabel, self).__init__(parent)
+        self.lblTitle = QLabel(self)
+        self.layout().addWidget(self.lblTitle)
+
+    def setEmotion(self, emotion: str, color: str):
+        self.lblTitle.setText(emotion)
+        self.setStyleSheet(f'''
+                        EmotionLabel {{
+                            border: 2px solid {color};
+                            border-radius: 12px;
+                            padding-left: 3px; padding-right: 3px;
+                            background-color: {RELAXED_WHITE_COLOR};
+                            }}
+                        QLabel {{
+                            color: {color};
+                        }}
+                        ''')
 
 
 class LabelsEditorWidget(QFrame):

@@ -77,6 +77,7 @@ class _SecondaryActionButton(QAbstractButton):
         self._iconName: str = ''
         self._iconColor: str = 'black'
         self._checkedColor: str = 'black'
+        self._padding: int = 2
         self.initStyleSheet()
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
@@ -88,7 +89,7 @@ class _SecondaryActionButton(QAbstractButton):
                     border: 2px {border_style} {border_color};
                     border-radius: 6px;
                     color: {color};
-                    padding: 2px;
+                    padding: {self._padding}px;
                 }}
                 {self.__class__.__name__}:pressed {{
                     border: 2px solid {border_color};
@@ -101,6 +102,13 @@ class _SecondaryActionButton(QAbstractButton):
 
     def setBorderColor(self, color_name: str):
         self.initStyleSheet(color_name)
+        self.update()
+
+    def setPadding(self, value: int):
+        if not value:
+            return
+        self._padding = value
+        self.initStyleSheet()
         self.update()
 
     def _setIcon(self):
@@ -199,18 +207,10 @@ class FadeOutButtonGroup(QButtonGroup):
         self._fadeInDuration = duration
 
     def toggle(self, btn: QAbstractButton):
+        btn.setVisible(True)
+        btn.setEnabled(True)
         btn.setChecked(not btn.isChecked())
-        for other_btn in self.buttons():
-            if other_btn is btn:
-                continue
-
-            if btn.isChecked():
-                other_btn.setChecked(False)
-                other_btn.setDisabled(True)
-                other_btn.setHidden(True)
-            else:
-                other_btn.setEnabled(True)
-                other_btn.setVisible(True)
+        self._toggled(btn, animated=False)
 
     def reset(self):
         for btn in self.buttons():
@@ -220,6 +220,9 @@ class FadeOutButtonGroup(QButtonGroup):
             translucent(btn, self._opacity)
 
     def _clicked(self, btn: QAbstractButton):
+        self._toggled(btn)
+
+    def _toggled(self, btn: QAbstractButton, animated: bool = True):
         for other_btn in self.buttons():
             if other_btn is btn:
                 continue
@@ -227,11 +230,17 @@ class FadeOutButtonGroup(QButtonGroup):
             if btn.isChecked():
                 other_btn.setChecked(False)
                 other_btn.setDisabled(True)
-                qtanim.fade_out(other_btn)
+                if animated:
+                    qtanim.fade_out(other_btn)
+                else:
+                    other_btn.setHidden(True)
             else:
                 other_btn.setEnabled(True)
-                anim = qtanim.fade_in(other_btn, duration=self._fadeInDuration)
-                anim.finished.connect(partial(translucent, other_btn, self._opacity))
+                if animated:
+                    anim = qtanim.fade_in(other_btn, duration=self._fadeInDuration)
+                    anim.finished.connect(partial(translucent, other_btn, self._opacity))
+                else:
+                    other_btn.setVisible(True)
 
 
 class ToolbarButton(QToolButton):

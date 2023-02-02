@@ -580,6 +580,9 @@ class SceneType(Enum):
     DEFAULT = ''
     ACTION = 'action'
     REACTION = 'reaction'
+    HAPPENING = 'happening'
+    EXPOSITION = 'exposition'
+    SUMMARY = 'summary'
 
 
 class SceneStructureItemType(Enum):
@@ -592,10 +595,14 @@ class SceneStructureItemType(Enum):
     BEAT = 6
     INCITING_INCIDENT = 7
     RISING_ACTION = 8
-    CRISIS = 9
+    CHOICE = 9
     TICKING_CLOCK = 10
     HOOK = 11
     EXPOSITION = 12
+    TURN = 13
+    MYSTERY = 14
+    REVELATION = 15
+    SETUP = 16
 
 
 class SceneOutcome(Enum):
@@ -615,8 +622,18 @@ class SceneStructureItem:
     type: SceneStructureItemType
     text: str = ''
     percentage: float = 0.0
-    outcome: Optional[SceneOutcome] = None
-    emotion: Optional[int] = None
+    # outcome: Optional[SceneOutcome] = None
+    emotion: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    meta: Dict[str, Any] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+
+    @property
+    def outcome(self) -> Optional[SceneOutcome]:
+        if 'outcome' in self.meta.keys():
+            return SceneOutcome(self.meta['outcome'])
+
+    @outcome.setter
+    def outcome(self, value: SceneOutcome):
+        self.meta['outcome'] = value.value
 
 
 @dataclass
