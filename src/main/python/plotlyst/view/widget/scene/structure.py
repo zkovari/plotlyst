@@ -105,6 +105,14 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.circle_icon()
 
 
+HAPPENING_BEATS = (SceneStructureItemType.BEAT, SceneStructureItemType.EXPOSITION, SceneStructureItemType.SETUP,
+                   SceneStructureItemType.HOOK, SceneStructureItemType.MYSTERY, SceneStructureItemType.EXPOSITION)
+
+
+def is_happening_beat(beat: SceneStructureItem) -> bool:
+    return beat.type in HAPPENING_BEATS
+
+
 emotions: Dict[str, str] = {'Admiration': '#006d77', 'Adoration': '#3f37c9', 'Amusement': '#ef476f', 'Anger': '#d62828',
                             'Anxiety': '#fb8b24',
                             'Awe': '#ffcfd2',
@@ -487,6 +495,13 @@ class SceneStructureTimeline(QWidget):
             self._beatWidgets[0].swap(SceneStructureItemType.REACTION)
             self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
             self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
+        elif sceneTyoe == SceneType.HAPPENING:
+            for wdg in self._beatWidgets:
+                if not is_happening_beat(wdg.beat):
+                    wdg.swap(SceneStructureItemType.BEAT)
+        elif sceneTyoe == SceneType.EXPOSITION:
+            for wdg in self._beatWidgets:
+                wdg.swap(SceneStructureItemType.EXPOSITION)
         else:
             self._beatWidgets[0].swap(SceneStructureItemType.BEAT)
             self._beatWidgets[1].swap(SceneStructureItemType.BEAT)
