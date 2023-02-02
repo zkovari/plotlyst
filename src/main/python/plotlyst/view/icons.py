@@ -182,6 +182,12 @@ class IconRegistry:
             return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
         elif scene.type == SceneType.REACTION:
             return IconRegistry.reaction_scene_icon()
+        elif scene.type == SceneType.HAPPENING:
+            return IconRegistry.happening_scene_icon()
+        elif scene.type == SceneType.EXPOSITION:
+            return IconRegistry.exposition_scene_icon()
+        elif scene.type == SceneType.SUMMARY:
+            return IconRegistry.summary_scene_icon()
         else:
             return IconRegistry.empty_icon()
 
@@ -189,6 +195,18 @@ class IconRegistry:
     def reaction_scene_icon() -> QIcon:
         return qtawesome.icon('fa5s.circle', 'fa5s.yin-yang',
                               options=[{'color': 'white', 'scale_factor': 1}, {'color': '#4b86b4'}])
+
+    @staticmethod
+    def happening_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.motion-outline', 'grey', 'black')
+
+    @staticmethod
+    def exposition_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.information-outline', 'grey', 'black')
+
+    @staticmethod
+    def summary_scene_icon() -> QIcon:
+        return IconRegistry.from_name('ei.list-alt', 'grey', 'black')
 
     @staticmethod
     def hashtag_icon() -> QIcon:

@@ -580,6 +580,9 @@ class SceneType(Enum):
     DEFAULT = ''
     ACTION = 'action'
     REACTION = 'reaction'
+    HAPPENING = 'happening'
+    EXPOSITION = 'exposition'
+    SUMMARY = 'summary'
 
 
 class SceneStructureItemType(Enum):
