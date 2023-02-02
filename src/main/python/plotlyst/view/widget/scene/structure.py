@@ -890,13 +890,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def _typeClicked(self, type: SceneType, checked: bool):
         if not checked:
             return
-        # if type == SceneType.ACTION and checked:
         self.scene.type = type
-        # elif type == SceneType.REACTION and checked:
-        #     self.scene.type = type
-        # else:
-        #     self.scene.type = SceneType.DEFAULT
-
         self.timeline.setSceneType(self.scene.type)
 
     def _initSelectors(self):
