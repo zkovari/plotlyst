@@ -226,7 +226,7 @@ class CharacterContentAssistMenu(QMenu):
         action = QWidgetAction(self)
 
         action.setDefaultWidget(self.lstCharacters)
-        self._proxy.setFilterRegExp(f'^{text}')
+        self._proxy.setFilterRegularExpression(f'^{text}')
         if self._proxy.rowCount():
             self.lstCharacters.selectionModel().select(self._proxy.index(0, 0), QItemSelectionModel.Select)
         self.addAction(action)
