@@ -113,19 +113,13 @@ def is_happening_beat(beat: SceneStructureItem) -> bool:
     return beat.type in HAPPENING_BEATS
 
 
-emotions: Dict[str, str] = {'Admiration': '#006d77', 'Adoration': '#3f37c9', 'Amusement': '#ef476f', 'Anger': '#d62828',
-                            'Anxiety': '#fb8b24',
-                            'Awe': '#ffcfd2',
-                            'Awkwardness': '#f15bb5', 'Boredom': '#84a59d',
-                            'Calmness': '#669bbc', 'Confusion': '#ee9b00',
-                            'Craving': '#ffbf69', 'Disgust': '#ffaa00', 'Empathic': '#468faf', 'Pain': '#9d0208',
-                            'Entrancement': '#0096c7',
-                            'Excitement': '#b5838d',
-                            'Fear': '#312244', 'Horror': '#d80032',
-                            'Interest': '#4c956c', 'Joy': '#00afb9', 'Nostalgia': '#deab90', 'Relief': '#83c5be',
-                            'Sadness': '#c3baba',
-                            'Satisfaction': '#3a5a40',
-                            'Surprise': '#e5989b'}
+emotions: Dict[str, str] = {'Admiration': '#008744', 'Adoration': '#7048e8', 'Amusement': '#ff6961', 'Anger': '#ff3333',
+                            'Anxiety': '#ffbf00', 'Awe': '#87ceeb', 'Awkwardness': '#ff69b4', 'Boredom': '#778899',
+                            'Calmness': '#1e90ff', 'Confusion': '#ffc107', 'Craving': '#ffdb58', 'Disgust': '#ffa500',
+                            'Empathic': '#4da6ff', 'Pain': '#ff5050', 'Entrancement': '#00bfff',
+                            'Excitement': '#ff5c5c', 'Fear': '#1f1f1f', 'Horror': '#ff4d4d', 'Interest': '#3cb371',
+                            'Joy': '#00ff7f', 'Nostalgia': '#ffb347', 'Relief': '#00ff00', 'Sadness': '#999999',
+                            'Satisfaction': '#228b22', 'Surprise': '#ff69b4'}
 
 
 class EmotionSelectorButton(SecondaryActionToolButton):
