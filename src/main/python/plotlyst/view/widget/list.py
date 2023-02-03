@@ -17,20 +17,41 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import sys
+from functools import partial
 
-from typing import Optional
+from PyQt6.QtCore import Qt, QSize, pyqtSignal
+from PyQt6.QtWidgets import QScrollArea, QFrame, QApplication, QMainWindow, QLineEdit
+from PyQt6.QtWidgets import QWidget
+from qthandy import vbox, vspacer, hbox, gc, clear_layout
 
-import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent
-from PyQt6.QtGui import QIcon, QMouseEvent
-from PyQt6.QtWidgets import QScrollArea, QSizePolicy, QFrame
-from PyQt6.QtWidgets import QWidget, QLabel
-from overrides import overrides
-from qthandy import vbox, hbox, bold, margins, clear_layout
-
+from src.main.python.plotlyst.core.template import SelectionItem
+from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Icon
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 
-is sd
+
+class ListItemWidget(QWidget):
+    deleted = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(ListItemWidget, self).__init__(parent)
+        hbox(self)
+        self._btnDrag = Icon()
+        self._btnDrag.setIcon(IconRegistry.hashtag_icon())
+        self._btnDrag.setIconSize(QSize(14, 14))
+
+        self._lineEdit = QLineEdit()
+        self._lineEdit.setPlaceholderText('Fill out...')
+
+        self._btnRemoval = RemovalButton(self)
+        self._btnRemoval.clicked.connect(self.deleted.emit)
+
+        self.layout().addWidget(self._btnDrag)
+        self.layout().addWidget(self._lineEdit)
+        self.layout().addWidget(self._btnRemoval)
+
 
 class ListView(QScrollArea):
 
@@ -44,3 +65,46 @@ class ListView(QScrollArea):
         self._centralWidget = QWidget(self)
         self.setWidget(self._centralWidget)
         vbox(self._centralWidget, spacing=0)
+
+        self._btnAdd = SecondaryActionPushButton('Add new')
+        self._centralWidget.layout().addWidget(self._btnAdd)
+        self._centralWidget.layout().addWidget(vspacer())
+
+        self._btnAdd.clicked.connect(self._addNewItem)
+
+    def addItem(self, item: SelectionItem):
+        wdg = ListItemWidget()
+        wdg.deleted.connect(partial(self._deleteItemWidget, wdg))
+        self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 2, wdg)
+
+    def clear(self):
+        clear_layout(self._centralWidget, auto_delete=False)
+        self._centralWidget.layout().addWidget(self._btnAdd)
+        self._centralWidget.layout().addWidget(vspacer())
+
+    def _addNewItem(self):
+        item = SelectionItem('')
+        self.addItem(item)
+
+    def _deleteItemWidget(self, widget: ListItemWidget):
+        widget.setHidden(True)
+        self._centralWidget.layout().removeWidget(widget)
+        gc(widget)
+
+
+if __name__ == '__main__':
+    class MainWindow(QMainWindow):
+        def __init__(self, parent=None):
+            super(MainWindow, self).__init__(parent)
+
+            self.resize(500, 500)
+
+            self.widget = ListView(self)
+            self.setCentralWidget(self.widget)
+
+
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+
+    app.exec()
