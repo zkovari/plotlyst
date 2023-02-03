@@ -23,6 +23,7 @@ from functools import partial
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from PyQt6.QtWidgets import QScrollArea, QFrame, QApplication, QMainWindow, QLineEdit
 from PyQt6.QtWidgets import QWidget
+from qtanim import fade_in, fade_out
 from qthandy import vbox, vspacer, hbox, gc, clear_layout
 
 from src.main.python.plotlyst.core.template import SelectionItem
@@ -76,6 +77,8 @@ class ListView(QScrollArea):
         wdg = ListItemWidget()
         wdg.deleted.connect(partial(self._deleteItemWidget, wdg))
         self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 2, wdg)
+        if self.isVisible():
+            fade_in(wdg, 150)
 
     def clear(self):
         clear_layout(self._centralWidget, auto_delete=False)
@@ -87,16 +90,19 @@ class ListView(QScrollArea):
         self.addItem(item)
 
     def _deleteItemWidget(self, widget: ListItemWidget):
-        widget.setHidden(True)
-        self._centralWidget.layout().removeWidget(widget)
-        gc(widget)
+        def destroy():
+            widget.setHidden(True)
+            self._centralWidget.layout().removeWidget(widget)
+            gc(widget)
+
+        anim = fade_out(widget, 200)
+        anim.finished.connect(destroy)
 
 
 if __name__ == '__main__':
     class MainWindow(QMainWindow):
         def __init__(self, parent=None):
             super(MainWindow, self).__init__(parent)
-
             self.resize(500, 500)
 
             self.widget = ListView(self)
