@@ -20,11 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import sys
 from functools import partial
 
-from PyQt6.QtCore import Qt, QSize, pyqtSignal
+from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent, QObject
 from PyQt6.QtWidgets import QScrollArea, QFrame, QApplication, QMainWindow, QLineEdit
 from PyQt6.QtWidgets import QWidget
+from overrides import overrides
 from qtanim import fade_in, fade_out
-from qthandy import vbox, vspacer, hbox, gc, clear_layout
+from qthandy import vbox, vspacer, hbox, gc, clear_layout, retain_when_hidden, margins
 
 from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -38,10 +39,12 @@ class ListItemWidget(QWidget):
 
     def __init__(self, parent=None):
         super(ListItemWidget, self).__init__(parent)
-        hbox(self)
+        hbox(self, spacing=1)
+        margins(self, left=0)
         self._btnDrag = Icon()
-        self._btnDrag.setIcon(IconRegistry.hashtag_icon())
-        self._btnDrag.setIconSize(QSize(14, 14))
+        self._btnDrag.setIcon(IconRegistry.hashtag_icon('grey'))
+        self._btnDrag.setIconSize(QSize(12, 12))
+        self._btnDrag.setCursor(Qt.CursorShape.OpenHandCursor)
 
         self._lineEdit = QLineEdit()
         self._lineEdit.setPlaceholderText('Fill out...')
@@ -52,6 +55,25 @@ class ListItemWidget(QWidget):
         self.layout().addWidget(self._btnDrag)
         self.layout().addWidget(self._lineEdit)
         self.layout().addWidget(self._btnRemoval)
+        retain_when_hidden(self._btnDrag)
+        retain_when_hidden(self._btnRemoval)
+        self._btnDrag.setHidden(True)
+        self._btnRemoval.setHidden(True)
+
+        self.installEventFilter(self)
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Enter:
+            self._btnDrag.setVisible(True)
+            self._btnRemoval.setVisible(True)
+        elif event.type() == QEvent.Type.Leave:
+            self._btnDrag.setHidden(True)
+            self._btnRemoval.setHidden(True)
+        return super(ListItemWidget, self).eventFilter(watched, event)
+
+    def activate(self):
+        self._lineEdit.setFocus()
 
 
 class ListView(QScrollArea):
@@ -78,7 +100,8 @@ class ListView(QScrollArea):
         wdg.deleted.connect(partial(self._deleteItemWidget, wdg))
         self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 2, wdg)
         if self.isVisible():
-            fade_in(wdg, 150)
+            anim = fade_in(wdg, 150)
+            anim.finished.connect(wdg.activate)
 
     def clear(self):
         clear_layout(self._centralWidget, auto_delete=False)

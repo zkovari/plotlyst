@@ -209,8 +209,8 @@ class IconRegistry:
         return IconRegistry.from_name('ei.list-alt', 'grey', 'black')
 
     @staticmethod
-    def hashtag_icon() -> QIcon:
-        return qtawesome.icon('fa5s.hashtag')
+    def hashtag_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.hashtag', color)
 
     @staticmethod
     def tag_plus_icon() -> QIcon:
