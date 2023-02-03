@@ -30,7 +30,8 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
     QGraphicsDropShadowEffect, QTableView
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import hbox, vbox, margins
+from qtanim import fade_out
+from qthandy import hbox, vbox, margins, gc
 
 from src.main.python.plotlyst.env import app_env
 
@@ -259,3 +260,13 @@ def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWi
 def set_tab_icon(tabs: QTabWidget, widget: QWidget, icon: QIcon):
     i = tabs.indexOf(widget)
     tabs.setTabIcon(i, icon)
+
+
+def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
+    def destroy():
+        widget.setHidden(True)
+        parent.layout().removeWidget(widget)
+        gc(widget)
+
+    anim = fade_out(widget, duration)
+    anim.finished.connect(destroy)
