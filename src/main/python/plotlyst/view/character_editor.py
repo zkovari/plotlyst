@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
-from PyQt6.QtWidgets import QWidget, QAbstractButton, QSpinBox, QLineEdit, QCompleter
+from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from fbs_runtime import platform
 from qthandy import translucent, btn_popup, incr_font, bold, italic
 from qthandy.filter import OpacityEventFilter
@@ -30,11 +30,12 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Document, MAL
 from src.main.python.plotlyst.core.template import protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon
+from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
+from src.main.python.plotlyst.view.widget.character.control import CharacterAgeEditor
 from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor, CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 
@@ -91,13 +92,10 @@ class CharacterEditor:
             self._roleSelector.setActiveRole(self.character.role)
         btn_popup(self.ui.btnRole, self._roleSelector)
 
-        self._sbAge = QSpinBox()
-        self._sbAge.setMinimum(0)
-        self._sbAge.setMaximum(65000)
-        self._sbAge.valueChanged.connect(self._age_changed)
-        menu = btn_popup(self.ui.btnAge, self._sbAge)
-        menu.aboutToShow.connect(self._sbAge.setFocus)
-        self._sbAge.editingFinished.connect(menu.hide)
+        self._ageEditor = CharacterAgeEditor()
+        self._ageEditor.valueChanged.connect(self._age_changed)
+        menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
+        menu.aboutToShow.connect(self._ageEditor.setFocus)
 
         self._lineOccupation = QLineEdit()
         self._lineOccupation.setPlaceholderText('Fill out occupation')
@@ -105,12 +103,12 @@ class CharacterEditor:
         occupations = set([x.occupation for x in self.novel.characters])
         if occupations:
             self._lineOccupation.setCompleter(QCompleter(occupations))
-        menu = btn_popup(self.ui.btnOccupation, self._lineOccupation)
+        menu = btn_popup(self.ui.btnOccupation, wrap(self._lineOccupation, margin_bottom=2))
         menu.aboutToShow.connect(self._lineOccupation.setFocus)
         self._lineOccupation.editingFinished.connect(menu.hide)
 
         if self.character.age:
-            self._sbAge.setValue(self.character.age)
+            self._ageEditor.setValue(self.character.age)
         if self.character.occupation:
             self._lineOccupation.setText(self.character.occupation)
 
@@ -133,8 +131,7 @@ class CharacterEditor:
 
         set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory, IconRegistry.backstory_icon('black'))
         set_tab_icon(self.ui.tabAttributes, self.ui.tabTopics, IconRegistry.topics_icon())
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabBigFive,
-                     IconRegistry.from_name('ph.number-square-five-bold', color_on='#7209b7'))
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabBigFive, IconRegistry.big_five_icon())
         set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
         set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black'))
 
@@ -212,8 +209,7 @@ class CharacterEditor:
             self.ui.wdgAvatar.updateAvatar()
 
     def _age_changed(self, age: int):
-        if self._sbAge.minimum() == 0:
-            self._sbAge.setMinimum(1)
+        if self._ageEditor.minimum() == 0:
             incr_font(self.ui.btnAge, 2)
             italic(self.ui.btnAge, False)
             bold(self.ui.btnAge)

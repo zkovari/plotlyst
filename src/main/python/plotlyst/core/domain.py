@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -280,6 +280,12 @@ class Character:
 
         return ''
 
+    def set_summary(self, summary: str):
+        for tmpl_value in self.template_values:
+            if tmpl_value.id == summary_field.id:
+                tmpl_value.value = summary
+                break
+
     def is_major(self):
         return self.role and self.role.is_major()
 
@@ -439,6 +445,10 @@ class PlotPrinciple:
     is_set: bool = False
 
 
+# must add to the subclass:
+#    character_id: Optional[uuid.UUID] = None
+#    def __post_init__(self):
+#        self._character: Optional[Character] = None
 class CharacterBased(ABC):
     def set_character(self, character: Optional[Character]):
         if character is None:
@@ -570,6 +580,9 @@ class SceneType(Enum):
     DEFAULT = ''
     ACTION = 'action'
     REACTION = 'reaction'
+    HAPPENING = 'happening'
+    EXPOSITION = 'exposition'
+    SUMMARY = 'summary'
 
 
 class SceneStructureItemType(Enum):
@@ -582,10 +595,14 @@ class SceneStructureItemType(Enum):
     BEAT = 6
     INCITING_INCIDENT = 7
     RISING_ACTION = 8
-    CRISIS = 9
+    CHOICE = 9
     TICKING_CLOCK = 10
     HOOK = 11
     EXPOSITION = 12
+    TURN = 13
+    MYSTERY = 14
+    REVELATION = 15
+    SETUP = 16
 
 
 class SceneOutcome(Enum):
@@ -605,8 +622,18 @@ class SceneStructureItem:
     type: SceneStructureItemType
     text: str = ''
     percentage: float = 0.0
-    outcome: Optional[SceneOutcome] = None
-    emotion: Optional[int] = None
+    # outcome: Optional[SceneOutcome] = None
+    emotion: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    meta: Dict[str, Any] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
+
+    @property
+    def outcome(self) -> Optional[SceneOutcome]:
+        if 'outcome' in self.meta.keys():
+            return SceneOutcome(self.meta['outcome'])
+
+    @outcome.setter
+    def outcome(self, value: SceneOutcome):
+        self.meta['outcome'] = value.value
 
 
 @dataclass
@@ -848,6 +875,8 @@ class WorldBuilding:
 @dataclass
 class TaskStatus(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    wip: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+    resolves: bool = field(default=False, metadata=config(exclude=exclude_if_false))
 
     @overrides
     def __hash__(self):
@@ -855,15 +884,37 @@ class TaskStatus(SelectionItem):
 
 
 @dataclass
-class Task:
+class Task(CharacterBased):
     title: str
     status_ref: uuid.UUID
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    creation_date: Optional[datetime] = None
+    resolved_date: Optional[datetime] = None
     summary: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    character_id: Optional[uuid.UUID] = None
+
+    def __post_init__(self):
+        if self.creation_date is None:
+            self.creation_date = datetime.now()
+        self._character: Optional[Character] = None
+
+    def creation_date_str(self):
+        return self.creation_date.strftime("%Y-%m-%d %H:%M:%S")
+
+    def resolved_date_str(self):
+        return self.resolved_date.strftime("%Y-%m-%d %H:%M:%S") if self.resolved_date else ''
+
+    def update_resolved_date(self):
+        self.resolved_date = datetime.now()
+
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
 
 
 def default_task_statues() -> List[TaskStatus]:
-    return [TaskStatus('To Do', color_hexa='#0077b6'), TaskStatus('In Progress', color_hexa='#9f86c0'),
-            TaskStatus('Done', color_hexa='#588157')]
+    return [TaskStatus('To Do', color_hexa='#0077b6'), TaskStatus('In Progress', color_hexa='#9f86c0', wip=True),
+            TaskStatus('Done', color_hexa='#588157', resolves=True)]
 
 
 @dataclass_json(undefined=Undefined.EXCLUDE)
@@ -1216,6 +1267,10 @@ class NovelDescriptor:
     import_origin: Optional[ImportOrigin] = None
     migrated_to_new_location: bool = True
 
+    @overrides
+    def __hash__(self):
+        return hash(str(id))
+
 
 @dataclass
 class CausalityItem(SelectionItem):
@@ -1389,6 +1444,27 @@ def default_tags() -> Dict[TagType, List[Tag]]:
             tags[t] = []
 
     return tags
+
+
+@dataclass
+class Node:
+    x: float
+    y: float
+
+
+@dataclass
+class CharacterNode(Node, CharacterBased):
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    character_id: Optional[uuid.UUID] = None
+
+
+@dataclass
+class RelationsNetwork:
+    title: str
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    nodes: List[CharacterNode] = field(default_factory=list)
 
 
 @dataclass

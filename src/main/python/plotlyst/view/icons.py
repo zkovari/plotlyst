@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -182,6 +182,12 @@ class IconRegistry:
             return IconRegistry.action_scene_icon(scene.outcome_resolution(), scene.outcome_trade_off())
         elif scene.type == SceneType.REACTION:
             return IconRegistry.reaction_scene_icon()
+        elif scene.type == SceneType.HAPPENING:
+            return IconRegistry.happening_scene_icon()
+        elif scene.type == SceneType.EXPOSITION:
+            return IconRegistry.exposition_scene_icon()
+        elif scene.type == SceneType.SUMMARY:
+            return IconRegistry.summary_scene_icon()
         else:
             return IconRegistry.empty_icon()
 
@@ -191,8 +197,20 @@ class IconRegistry:
                               options=[{'color': 'white', 'scale_factor': 1}, {'color': '#4b86b4'}])
 
     @staticmethod
-    def hashtag_icon() -> QIcon:
-        return qtawesome.icon('fa5s.hashtag')
+    def happening_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.motion-outline', 'grey', 'black')
+
+    @staticmethod
+    def exposition_scene_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.information-outline', 'grey', 'black')
+
+    @staticmethod
+    def summary_scene_icon() -> QIcon:
+        return IconRegistry.from_name('ei.list-alt', 'grey', 'black')
+
+    @staticmethod
+    def hashtag_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('fa5s.hashtag', color)
 
     @staticmethod
     def tag_plus_icon() -> QIcon:
@@ -243,7 +261,7 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.target', color=color, color_on=color_on)
 
     @staticmethod
-    def decision_icon(color: str = '#3cdbd3', color_on='darkBlue') -> QIcon:
+    def decision_icon(color: str = '#219ebc', color_on='darkBlue') -> QIcon:
         return IconRegistry.from_name('fa5.lightbulb', color=color, color_on=color_on)
 
     @staticmethod
@@ -256,7 +274,7 @@ class IconRegistry:
 
     @staticmethod
     def dilemma_icon() -> QIcon:
-        return qtawesome.icon('fa5s.question-circle')
+        return IconRegistry.from_name('fa5s.map-signs', '#ba6f4d')
 
     @staticmethod
     def conflict_icon(color: str = '#f3a712', color_on: str = '#f3a712') -> QIcon:
@@ -393,6 +411,10 @@ class IconRegistry:
     @staticmethod
     def adult_icon() -> QIcon:
         return IconRegistry.from_name('ei.adult')
+
+    @staticmethod
+    def elderly_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.human-cane')
 
     @staticmethod
     def cog_icon(color: str = 'black') -> QIcon:
@@ -562,13 +584,21 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.card-account-details-star-outline', color, color_on)
 
     @staticmethod
+    def big_five_icon() -> QIcon:
+        return IconRegistry.from_name('ph.number-square-five-bold', color_on='#7209b7')
+
+    @staticmethod
+    def expand_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.expand-alt')
+
+    @staticmethod
     def from_selection_item(item: SelectionItem) -> QIcon:
         return IconRegistry.from_name(item.icon, item.icon_color)
 
     @staticmethod
     def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
         _color_on = color_on if color_on else color
-        if name.startswith('md') or name.startswith('ri'):
+        if name.startswith('md') or name.startswith('ri') or name.startswith('ph'):
             return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, options=[{'scale_factor': mdi_scale}]))
         return QIcon(qtawesome.icon(name, color=color, color_on=_color_on))
 

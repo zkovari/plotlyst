@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -402,6 +402,10 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         value = self.progress.value()
         self.progress.setValue(value + 1)
 
+        # toggle collapse before display when editor is opened
+        if not self.isVisible():
+            self.collapse(self.progress.isFinished())
+
     def _valueReset(self, widget: TemplateWidgetBase):
         if not self.progressStatuses[widget]:
             return
@@ -454,6 +458,7 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
         self.wdgEditor = AutoAdjustableTextEdit(height=60)
         self.wdgEditor.setAcceptRichText(False)
+        self.wdgEditor.setTabChangesFocus(True)
         self.wdgEditor.setPlaceholderText(field.placeholder)
         self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
         self.setMaximumWidth(600)

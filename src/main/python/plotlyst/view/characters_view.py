@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -23,10 +23,10 @@ from typing import Optional
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import ask_confirmation, busy, gc, incr_font, bold
+from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, ToggleOutlineViewTitle, \
@@ -41,8 +41,10 @@ from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_Chara
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
-from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget, \
-    CharacterComparisonWidget
+from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
+    CharacterComparisonAttribute
+from src.main.python.plotlyst.view.widget.character.relations import RelationsView, RelationsSelectorBox
+from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
 
 
 class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
@@ -95,7 +97,10 @@ class CharactersView(AbstractNovelView):
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
         self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
         self.ui.btnComparison.setIcon(IconRegistry.from_name('mdi.compare-horizontal', color_on='darkBlue'))
+        self.ui.btnRelationsView.setIcon(IconRegistry.from_name('ph.share-network-bold', color_on='darkBlue'))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
+        self.setNavigableButtonGroup(self.ui.btnGroupViews)
+
         self.ui.wdgCharacterSelector.setExclusive(False)
         self.ui.wdgCharacterSelector.characterToggled.connect(self._backstory_character_toggled)
 
@@ -117,9 +122,47 @@ class CharactersView(AbstractNovelView):
         self._update_cards()
 
         self.ui.wdgComparisonCharacterSelector.setExclusive(False)
+        transparent(self.ui.btnCharactersLabel)
+        self.ui.btnCharactersLabel.setIcon(IconRegistry.character_icon())
+        underline(self.ui.btnCharactersLabel)
+        transparent(self.ui.btnComparisonLabel)
+        underline(self.ui.btnComparisonLabel)
+        self.ui.btnComparisonLabel.setIcon(IconRegistry.from_name('mdi.compare-horizontal'))
+        self.ui.btnHorizontalComparison.setIcon(IconRegistry.from_name('ph.columns-bold'))
+        self.ui.btnVerticalComparison.setIcon(IconRegistry.from_name('ph.rows-bold'))
+        self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
+        self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon())
+        self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon())
+
         self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
         self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
+        self.ui.btnHorizontalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
+        self.ui.btnVerticalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
+        self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
+        self.ui.btnSummaryComparison.clicked.connect(
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.SUMMARY))
+        self.ui.btnBigFiveComparison.clicked.connect(
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
+
+        self._relations = RelationsView(self.novel)
+        self.ui.relationsParent.layout().addWidget(self._relations)
+
+        self._relationsSelector = RelationsSelectorBox(self.novel)
+        vbox(self.ui.wdgGraphSelectorParent).addWidget(self._relationsSelector)
+        self.ui.wdgGraphSelectorParent.layout().addWidget(vspacer())
+        self._relationsSelector.currentChanged.connect(lambda i, w: self._relations.refresh(w.network()))
+
+        self._relations.relationsScene().charactersChanged.connect(self._relationsSelector.refreshCharacters)
+
+        node = CharacterNode(50, 50)
+        if self.novel.characters:
+            node.set_character(self.novel.characters[0])
+        network1 = RelationsNetwork('Network 1', icon='ph.share-network-bold', nodes=[node])
+        self._relationsSelector.addNetwork(network1)
+        self._relationsSelector.addNetwork(RelationsNetwork('Network 2', icon='ph.share-network-bold'))
+
+        self.ui.networkSplitter.setSizes([100, 500])
 
         self._progress = CharactersProgressWidget()
         self.ui.pageProgressView.layout().addWidget(self._progress)
@@ -135,6 +178,7 @@ class CharactersView(AbstractNovelView):
         link_buttons_to_pages(self.ui.stackCharacters, [(self.ui.btnCardsView, self.ui.pageCardsView),
                                                         (self.ui.btnTableView, self.ui.pageTableView),
                                                         (self.ui.btnBackstoryView, self.ui.pageBackstory),
+                                                        (self.ui.btnRelationsView, self.ui.pageRelationsView),
                                                         (self.ui.btnComparison, self.ui.pageComparison),
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
         self.ui.btnCardsView.setChecked(True)

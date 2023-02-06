@@ -485,6 +485,12 @@ QToolButton:checked {
               </property>
               <item alignment="Qt::AlignLeft">
                <widget class="SecondaryActionPushButton" name="btnAge">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="font">
                  <font>
                   <italic>true</italic>
@@ -503,6 +509,12 @@ QToolButton:checked {
               </item>
               <item>
                <widget class="SecondaryActionPushButton" name="btnOccupation">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="font">
                  <font>
                   <italic>true</italic>
@@ -614,8 +626,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>384</width>
-             <height>555</height>
+             <width>452</width>
+             <height>539</height>
             </rect>
            </property>
           </widget>
@@ -707,8 +719,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>376</width>
-             <height>508</height>
+             <width>98</width>
+             <height>156</height>
             </rect>
            </property>
            <property name="styleSheet">

@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -67,7 +67,7 @@ class ManuscriptView(AbstractNovelView):
 
         bold(self.ui.lblWordCount)
 
-        self.ui.btnDistractionFree.setIcon(IconRegistry.from_name('fa5s.expand-alt'))
+        self.ui.btnDistractionFree.setIcon(IconRegistry.expand_icon())
         self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
         self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
         self.ui.btnContext.setIcon(IconRegistry.context_icon())
@@ -187,7 +187,7 @@ class ManuscriptView(AbstractNovelView):
     def _editChapter(self, chapter: Chapter):
         self.ui.textEdit.setGrammarCheckEnabled(False)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
-        
+
         scenes = self.novel.scenes_in_chapter(chapter)
         for scene in scenes:
             if not scene.manuscript:

@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -128,13 +128,21 @@ QToolButton:pressed[transparent=true] {
     border: 1px solid grey
 }
 
-QDockWidget::float-button {
-    subcontrol-position: top left;
-    subcontrol-origin: margin;
-    position: absolute;
-    top: 0px; left: 4px; bottom: 0px;
-    width: 16px;
+QToolButton[transparent-circle-bg-on-hover] {
+    border-radius: 12px;
+    border: 1px hidden lightgrey;
+    padding: 2px;
 }
+QToolButton::menu-indicator[transparent-circle-bg-on-hover] {
+    width:0px;
+}
+QToolButton:hover[transparent-circle-bg-on-hover] {
+    background: lightgrey;
+}
+QToolButton:hover[transparent-circle-bg-on-hover][positive] {
+    background: #d8f3dc;
+}
+
 
 QHeaderView::section {
     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,

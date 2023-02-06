@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -21,7 +21,7 @@ from typing import Optional
 
 import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QCloseEvent, QPalette, QColor
+from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
     QProgressDialog
 from fbs_runtime import platform
@@ -40,12 +40,14 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
+from src.main.python.plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
-from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker
+from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker, JreResourceDownloadWorker
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.settings import settings
+from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.board_view import BoardView
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
@@ -63,6 +65,7 @@ from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
+from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
 from src.main.python.plotlyst.view.world_building_view import WorldBuildingView
 
 textstat.sentence_count = sentence_count
@@ -107,7 +110,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._init_menubar()
         self._init_toolbar()
-        self._init_views()
+        self._tasks_widget = TasksQuickAccessWidget()
+        self._init_statusbar()
 
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.info.connect(self.event_log_handler.on_info_event)
@@ -116,21 +120,24 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         QApplication.instance().focusChanged.connect(self._focus_changed)
         self._register_events()
 
+        self._init_views()
+
         self.repo = RepositoryPersistenceManager.instance()
 
         self._threadpool = QThreadPool()
-        language_tool_setup_worker = LanguageToolServerSetupWorker()
+        self._language_tool_setup_worker = LanguageToolServerSetupWorker()
         nltk_download_worker = NltkResourceDownloadWorker()
-        # jre_download_worker = JreResourceDownloadWorker()
+        jre_download_worker = JreResourceDownloadWorker()
         if not app_env.test_env():
             self._threadpool.start(nltk_download_worker)
-            # self._threadpool.start(jre_download_worker)
+            self._threadpool.start(jre_download_worker)
 
         if self.novel:
-            language_tool_setup_worker.lang = self.novel.lang_settings.lang
+            self._language_tool_setup_worker.lang = self.novel.lang_settings.lang
         if not app_env.test_env():
-            emit_info('Start initializing grammar checker...')
-            self._threadpool.start(language_tool_setup_worker)
+            if resource_manager.has_resource(ResourceType.JRE_8):
+                emit_info('Start initializing grammar checker...')
+                self._threadpool.start(self._language_tool_setup_worker)
 
             QApplication.instance().installEventFilter(CapitalizationEventFilter(self))
 
@@ -161,6 +168,20 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 language_tool_proxy.tool.close()
 
     @overrides
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Tab and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            if self._current_view is not None:
+                self._current_view.jumpToNext()
+        elif event.key() == Qt.Key.Key_Backtab and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            if self._current_view is not None:
+                self._current_view.jumpToPrevious()
+        else:
+            super(MainWindow, self).keyPressEvent(event)
+            return
+
+        event.ignore()
+
+    @overrides
     def event_received(self, event: Event):
         if isinstance(event, NovelDeletedEvent):
             if self.novel and event.novel.id == self.novel.id:
@@ -176,6 +197,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._toggle_fullscreen(on=False)
         elif isinstance(event, ToggleOutlineViewTitle):
             self.wdgTitle.setVisible(event.visible)
+        elif isinstance(event, ResourceDownloadedEvent):
+            if event.type == ResourceType.JRE_8:
+                emit_info('Start initializing grammar checker...')
+                self._threadpool.start(self._language_tool_setup_worker)
 
     def _toggle_fullscreen(self, on: bool):
         self.statusbar.setHidden(on)
@@ -204,6 +229,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.manuscript_mode.setEnabled(True)
         self.reports_mode.setEnabled(True)
 
+        self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel)
         self.scenes_outline_view = ScenesOutlineView(self.novel)
@@ -251,23 +277,31 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         title = None
         if self.btnBoard.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageBoard)
+            self._current_view = self.board_view
         elif self.btnNovel.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNovel)
             self.novel_view.activate()
+            self._current_view = self.novel_view
         elif self.btnCharacters.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageCharacters)
             title = self.characters_view.title if self.characters_view.can_show_title() else None
             self.characters_view.activate()
+            self._current_view = self.characters_view
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
             title = self.scenes_outline_view.title if self.scenes_outline_view.can_show_title() else None
             self.scenes_outline_view.activate()
+            self._current_view = self.scenes_outline_view
         elif self.btnWorld.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageWorld)
+            self._current_view = self.world_building_view
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
             title = self.notes_view.title
             self.notes_view.activate()
+            self._current_view = self.notes_view
+        else:
+            self._current_view = None
 
         if title:
             clear_layout(self.wdgTitle.layout(), auto_delete=False)
@@ -367,6 +401,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.manuscript_mode.setDisabled(True)
             self.reports_mode.setDisabled(True)
 
+    def _init_statusbar(self):
+        self.statusbar.addPermanentWidget(self._tasks_widget)
+
     def _panel_toggled(self):
         if self.home_mode.isChecked():
             self.stackMainPanels.setCurrentWidget(self.pageHome)
@@ -454,6 +491,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, OpenDistractionFreeMode)
         event_dispatcher.register(self, ExitDistractionFreeMode)
         event_dispatcher.register(self, ToggleOutlineViewTitle)
+        event_dispatcher.register(self, ResourceDownloadedEvent)
 
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)
@@ -464,6 +502,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         gc(self.scenes_outline_view.widget)
         self.pageNotes.layout().removeWidget(self.notes_view.widget)
         gc(self.notes_view.widget)
+        self.pageWorld.layout().removeWidget(self.world_building_view.widget)
+        gc(self.world_building_view.widget)
+        self.pageBoard.layout().removeWidget(self.board_view.widget)
+        gc(self.board_view.widget)
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         gc(self.comments_view.widget)
 
@@ -479,6 +521,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setDisabled(True)
         self.manuscript_mode.setDisabled(True)
         self.reports_mode.setDisabled(True)
+
+        self._tasks_widget.reset()
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
         if isinstance(current_widget, (QLineEdit, QTextEdit)):

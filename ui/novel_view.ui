@@ -305,9 +305,6 @@
        <property name="base" stdset="0">
         <bool>false</bool>
        </property>
-       <attribute name="buttonGroup">
-        <string notr="true">buttonGroup</string>
-       </attribute>
       </widget>
      </item>
      <item>
@@ -341,7 +338,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -441,7 +438,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="Subtitle" name="widget" native="true">
+           <widget class="Subtitle" name="subtitlePremise" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -455,7 +452,7 @@
              <string>Summarize your story in one or two sentences</string>
             </property>
             <property name="icon" stdset="0">
-             <string>mdi.elevator-passenger</string>
+             <string>ph.megaphone-bold</string>
             </property>
            </widget>
           </item>
@@ -515,7 +512,7 @@
           <number>3</number>
          </property>
          <item>
-          <widget class="Subtitle" name="widget_2" native="true">
+          <widget class="Subtitle" name="subtitleSynopsis" native="true">
            <property name="title" stdset="0">
             <string>Synopsis</string>
            </property>

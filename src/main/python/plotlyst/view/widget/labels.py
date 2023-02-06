@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -27,7 +27,7 @@ from overrides import overrides
 from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow
 from qthandy.filter import VisibilityToggleEventFilter
 
-from src.main.python.plotlyst.common import truncate_string
+from src.main.python.plotlyst.common import truncate_string, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
     CharacterGoal, PlotValue, Scene, GoalReference
 from src.main.python.plotlyst.env import app_env
@@ -282,9 +282,32 @@ class SceneLabel(Label):
         self.lblTitle.setText(scene.title_or_index(app_env.novel))
 
 
+class EmotionLabel(Label):
+    def __init__(self, parent=None):
+        super(EmotionLabel, self).__init__(parent)
+        self.lblTitle = QLabel(self)
+        self.layout().addWidget(self.lblTitle)
+
+    def setEmotion(self, emotion: str, color: str):
+        self.lblTitle.setText(emotion)
+        self.setStyleSheet(f'''
+                        EmotionLabel {{
+                            border: 2px solid {color};
+                            border-radius: 12px;
+                            padding-left: 3px; padding-right: 3px;
+                            background-color: {RELAXED_WHITE_COLOR};
+                            }}
+                        QLabel {{
+                            color: {color};
+                        }}
+                        ''')
+
+
 class LabelsEditorWidget(QFrame):
     def __init__(self, alignment=Qt.Orientation.Horizontal, checkable: bool = True, parent=None):
         super(LabelsEditorWidget, self).__init__(parent)
+        self._frozen: bool = False
+
         self.checkable = checkable
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Shape.Box)
@@ -335,11 +358,13 @@ class LabelsEditorWidget(QFrame):
 
     def setValue(self, values: List[str]):
         self._model.uncheckAll()
+        self._frozen = True
         for v in values:
             item = self._labels_index.get(v)
             if item:
                 self._model.checkItem(item)
         self._model.modelReset.emit()
+        self._frozen = False
         self._selectionChanged()
 
     def _initPopupWidget(self) -> QWidget:
@@ -348,6 +373,8 @@ class LabelsEditorWidget(QFrame):
         return wdg
 
     def _selectionChanged(self):
+        if self._frozen:
+            return
         self._wdgLabels.clear()
         self._addItems(self._model.selections())
 

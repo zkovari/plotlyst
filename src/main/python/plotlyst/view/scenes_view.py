@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -39,7 +39,6 @@ from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
-from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import PopupMenuBuilder
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
@@ -48,7 +47,7 @@ from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTit
 from src.main.python.plotlyst.view.generated.scenes_view_ui import Ui_ScenesView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.scene_editor import SceneEditor
-from src.main.python.plotlyst.view.widget.cards import SceneCard
+from src.main.python.plotlyst.view.widget.cards import SceneCard, SceneCardFilter
 from src.main.python.plotlyst.view.widget.characters import CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.widget.chart import ActDistributionChart
 from src.main.python.plotlyst.view.widget.display import ChartView
@@ -164,6 +163,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon('black'))
         self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
         self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.transit-connection-horizontal', color_on='darkBlue'))
+        self.setNavigableButtonGroup(self.ui.btnGroupViews)
 
         self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))
         self.ui.rbTitles.setIcon(IconRegistry.from_name('ei.text-width'))
@@ -176,9 +176,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
 
         self.selected_card: Optional[SceneCard] = None
-        self.ui.btnAct1.toggled.connect(self._update_cards)
-        self.ui.btnAct2.toggled.connect(self._update_cards)
-        self.ui.btnAct3.toggled.connect(self._update_cards)
+        self._card_filter = SceneCardFilter()
+        self.ui.btnAct1.toggled.connect(self._filter_cards)
+        self.ui.btnAct2.toggled.connect(self._filter_cards)
+        self.ui.btnAct3.toggled.connect(self._filter_cards)
         self.ui.cards.selectionCleared.connect(self._selection_cleared)
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
@@ -199,9 +200,9 @@ class ScenesOutlineView(AbstractNovelView):
         self._scene_filter = SceneFilterWidget(self.novel)
         btn_popup(self.ui.btnFilter, self._scene_filter)
         self._scene_filter.povFilter.characterToggled.connect(self._proxy.setCharacterFilter)
-        self._scene_filter.povFilter.characterToggled.connect(self._update_cards)
+        self._scene_filter.povFilter.characterToggled.connect(self._filter_cards)
 
-        self._update_cards()
+        self._init_cards()
 
         self.ui.tblScenes.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.ui.tblScenes.customContextMenuRequested.connect(self._on_custom_menu_requested)
@@ -289,7 +290,7 @@ class ScenesOutlineView(AbstractNovelView):
         if self.characters_distribution:
             self.characters_distribution.refresh()
 
-        self._update_cards()
+        self._init_cards()
 
     @overrides
     def can_show_title(self) -> bool:
@@ -372,7 +373,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor = SceneEditor(self.novel)
         self._switch_to_editor()
 
-    def _update_cards(self):
+    def _init_cards(self):
         def custom_menu(card: SceneCard, pos: QPoint):
             builder = PopupMenuBuilder.from_widget_position(card, pos)
             builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
@@ -383,21 +384,28 @@ class ScenesOutlineView(AbstractNovelView):
             builder.popup()
 
         self.selected_card = None
+        bar_value = self.ui.scrollArea.verticalScrollBar().value()
         self.ui.cards.clear()
 
-        acts_filter = {1: self.ui.btnAct1.isChecked(), 2: self.ui.btnAct2.isChecked(), 3: self.ui.btnAct3.isChecked()}
-        active_povs = self._scene_filter.povFilter.characters(all=False)
         for scene in self.novel.scenes:
-            if not acts_filter[acts_registry.act(scene)]:
-                continue
-            if scene.pov and scene.pov not in active_povs:
-                continue
             card = SceneCard(scene, self.novel, self.ui.cards)
             self.ui.cards.addCard(card)
             card.selected.connect(self._card_selected)
             card.doubleClicked.connect(self._on_edit)
             card.cursorEntered.connect(partial(self.ui.wdgStoryStructure.highlightScene, card.scene))
             card.customContextMenuRequested.connect(partial(custom_menu, card))
+
+        # restore scrollbar that might have moved
+        if bar_value <= self.ui.scrollArea.verticalScrollBar().maximum():
+            self.ui.scrollArea.verticalScrollBar().setValue(bar_value)
+
+        self._filter_cards()
+
+    def _filter_cards(self):
+        self._card_filter.setActsFilter(
+            {1: self.ui.btnAct1.isChecked(), 2: self.ui.btnAct2.isChecked(), 3: self.ui.btnAct3.isChecked()})
+        self._card_filter.setActivePovs(self._scene_filter.povFilter.characters(all=False))
+        self.ui.cards.applyFilter(self._card_filter)
 
     def _card_selected(self, card: SceneCard):
         if self.selected_card and self.selected_card is not card:

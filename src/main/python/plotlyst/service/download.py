@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -75,7 +75,7 @@ class JreResourceDownloadWorker(QRunnable):
         if resource_manager.has_resource(self._type):
             return
         resource = resource_manager.resource(self._type)
-        resource_path = os.path.join(app_env.nltk_data, resource.folder)
+        resource_path = os.path.join(app_env.cache_dir, resource.folder)
         os.makedirs(resource_path, exist_ok=True)
 
         resource_tar_path = os.path.join(resource_path, resource.filename())

@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -230,8 +230,9 @@ positive_traits = sorted([
     'Faithful', 'Flexible', 'Focused', 'Forgiving', 'Friendly', 'Gallant', 'Generous', 'Gentle', 'Genuine', 'Gracious',
     'Hard-working', 'Healthy', 'Hearty', 'Helpful', 'Honest', 'Honorable', 'Humble', 'Humorous', 'Idealistic',
     'Imaginative', 'Impressive', 'Incorruptible', 'Independent', 'Individualistic', 'Innovative', 'Insightful',
-    'Intelligent', 'Intuitive', 'Invulnerable', 'Just', 'Kind', 'Knowledge', 'Leaderly', 'Logical', 'Lovable', 'Loyal',
-    'Mature', 'Methodical', 'Maticulous', 'Moderate', 'Modest', 'Neat', 'Objective', 'Observant', 'Open', 'Optimistic',
+    'Intelligent', 'Intuitive', 'Invulnerable', 'Just', 'Kind', 'Knowledgeable', 'Leaderly', 'Logical', 'Lovable',
+    'Loyal',
+    'Mature', 'Methodical', 'Meticulous', 'Moderate', 'Modest', 'Neat', 'Objective', 'Observant', 'Open', 'Optimistic',
     'Orderly', 'Organized', 'Original', 'Passionate', 'Patient', 'Peaceful', 'Perceptive', 'Perfectionist',
     'Persuasive', 'Playful', 'Popular', 'Powerful', 'Practical', 'Pragmatic', 'Precise', 'Principled', 'Protective',
     'Punctual',

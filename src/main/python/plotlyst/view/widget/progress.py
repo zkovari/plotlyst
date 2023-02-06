@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -218,6 +218,9 @@ class CircularProgressBar(QWidget):
             qtanim.glow(self, color=QColor('#2a9d8f'))
 
         self._updateTooltip()
+
+    def isFinished(self) -> bool:
+        return self.value() == self.maxValue()
 
     def addValue(self, value: int):
         self.setValue(self.value() + value)

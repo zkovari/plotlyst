@@ -1,6 +1,6 @@
 """
 Plotlyst
-Copyright (C) 2021-2022  Zsolt Kovari
+Copyright (C) 2021-2023  Zsolt Kovari
 
 This file is part of Plotlyst.
 
@@ -70,9 +70,8 @@ from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import 
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
-from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
-from src.main.python.plotlyst.view.widget.display import IconText, Icon, RoleIcon, ChartView
+from src.main.python.plotlyst.view.widget.display import IconText, Icon
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
@@ -637,27 +636,28 @@ class CharacterGoalSelector(QWidget):
 class CharacterSelectorButton(QToolButton):
     characterSelected = pyqtSignal(Character)
 
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None, opacityEffectEnabled: bool = True, iconSize: int = 32):
         super().__init__(parent)
+        self._novel = novel
+        self._iconSize = iconSize
         pointy(self)
-        self._opacityFilter = OpacityEventFilter(self)
+        self._opacityEffectEnabled = opacityEffectEnabled
+        if self._opacityEffectEnabled:
+            self._opacityFilter = OpacityEventFilter(self)
+        else:
+            self._opacityFilter = None
         self._menu = QMenu(self)
         btn_popup_menu(self, self._menu)
+        self._menu.aboutToShow.connect(self._fillUpMenu)
         self.clear()
-
-    def setAvailableCharacters(self, characters: List[Character]):
-        self._menu.clear()
-
-        for char in characters:
-            self._menu.addAction(
-                action(char.name, avatars.avatar(char), slot=partial(self._selected, char), parent=self._menu))
 
     def setCharacter(self, character: Character):
         self.setIcon(avatars.avatar(character))
         transparent(self)
-        self.removeEventFilter(self._opacityFilter)
-        translucent(self, 1.0)
-        self.setIconSize(QSize(35, 35))
+        if self._opacityEffectEnabled:
+            self.removeEventFilter(self._opacityFilter)
+            translucent(self, 1.0)
+        self.setIconSize(QSize(self._iconSize, self._iconSize))
 
     def clear(self):
         self.setStyleSheet('''
@@ -670,12 +670,20 @@ class CharacterSelectorButton(QToolButton):
                                 }
                             ''')
         self.setIcon(IconRegistry.character_icon('grey'))
-        self.setIconSize(QSize(32, 32))
-        self.installEventFilter(self._opacityFilter)
+        self.setIconSize(QSize(self._iconSize, self._iconSize))
+        if self._opacityEffectEnabled:
+            self.installEventFilter(self._opacityFilter)
 
     def _selected(self, character: Character):
         self.setCharacter(character)
         self.characterSelected.emit(character)
+
+    def _fillUpMenu(self):
+        self._menu.clear()
+
+        for char in self._novel.characters:
+            self._menu.addAction(
+                action(char.name, avatars.avatar(char), slot=partial(self._selected, char), parent=self._menu))
 
 
 class CharacterLinkWidget(QWidget):
@@ -1939,44 +1947,3 @@ class CharacterTopicsEditor(QWidget):
                 self.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
             self.setText(topic.text)
             self.setToolTip(topic.description)
-
-
-class CharacterOverviewWidget(QWidget):
-    def __init__(self, character: Character, parent=None):
-        super().__init__(parent)
-        self._character = character
-
-        self._avatar = QLabel(self)
-        set_avatar(self._avatar, self._character, size=118)
-        self._roleIcon = RoleIcon(self)
-        if self._character.role:
-            self._roleIcon.setRole(self._character.role, showText=True)
-
-        vbox(self, 0)
-        self.layout().addWidget(self._avatar, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(self._roleIcon, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.layout().addWidget(line())
-        self._bigFive = BigFiveChart()
-        self._bigFive.setTitle('')
-        for bf, values in character.big_five.items():
-            self._bigFive.refreshDimension(dimension_from(bf), values)
-        self._bigFiveChartView = ChartView(self)
-        self._bigFiveChartView.setChart(self._bigFive)
-
-        self.layout().addWidget(self._bigFiveChartView)
-
-
-class CharacterComparisonWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._characters: Dict[Character, CharacterOverviewWidget] = {}
-        hbox(self, spacing=0)
-
-    def updateCharacter(self, character: Character, enabled: bool):
-        if enabled:
-            wdg = CharacterOverviewWidget(character)
-            self._characters[character] = wdg
-            self.layout().addWidget(wdg)
-        else:
-            wdg = self._characters.pop(character)
-            self.layout().removeWidget(wdg)
