@@ -28,13 +28,13 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGr
     QScrollArea, QApplication, QDialogButtonBox
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_layout, flow, vbox, incr_font, \
-    margins, retain_when_hidden, grid
+    retain_when_hidden, grid
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat
+    StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -296,6 +296,11 @@ class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
         super(_SaveTheCatActStructureEditorWidget, self).__init__(novel, structure, parent)
 
 
+class _HerosJourneyStructureEditorWidget(_AbstractStructureEditorWidget):
+    def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
+        super(_HerosJourneyStructureEditorWidget, self).__init__(novel, structure, parent)
+
+
 class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
     def __init__(self, novel: Novel, structure: Optional[StoryStructure] = None, parent=None):
         super(StoryStructureSelectorDialog, self).__init__(parent)
@@ -304,10 +309,11 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.setWindowIcon(IconRegistry.story_structure_icon())
         self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
+        self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask'))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
 
-        margins(self.pageThreeAct, 0, 0, 0, 0)
-        margins(self.pageSaveTheCat, 0, 0, 0, 0)
+        # margins(self.pageThreeAct, 0, 0, 0, 0)
+        # margins(self.pageSaveTheCat, 0, 0, 0, 0)
 
         self._structure: Optional[StoryStructure] = None
         if structure:
@@ -343,6 +349,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             self.__initEditor(three_act_structure, self.pageThreeAct, _ThreeActStructureEditorWidget)
         elif self.btnSaveTheCat.isChecked():
             self.__initEditor(save_the_cat, self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget)
+        elif self.btnHerosJourney.isChecked():
+            self.__initEditor(heros_journey, self.pageHerosJourney, _HerosJourneyStructureEditorWidget)
 
     def __initEditor(self, structure: StoryStructure, page: QWidget, clazz, copyStructure: bool = True):
         self.stackedWidget.setCurrentWidget(page)
@@ -360,6 +368,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
             return self.pageThreeAct, _ThreeActStructureEditorWidget
         elif structure.title == save_the_cat.title:
             return self.pageSaveTheCat, _SaveTheCatActStructureEditorWidget
+        elif structure.title == heros_journey.title:
+            return self.pageHerosJourney, _HerosJourneyStructureEditorWidget
 
 
 class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
