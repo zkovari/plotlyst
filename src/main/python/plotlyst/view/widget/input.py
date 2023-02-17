@@ -454,7 +454,6 @@ class DocumentTextEditor(RichTextEditor):
         # self._lblPlaceholder.setFont(font)
         # self._lblPlaceholder.setStyleSheet('color: #118ab2;')
 
-        self.textEdit.installEventFilter(self)
         self.setWidthPercentage(90)
 
         self.layout().insertWidget(1, self._wdgTitle)
@@ -525,35 +524,6 @@ class DocumentTextEditor(RichTextEditor):
 
     def statistics(self) -> TextStatistics:
         return self.textEdit.statistics()
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if isinstance(event, QKeyEvent) and event.type() == QEvent.Type.KeyPress:
-            if event.key() == Qt.Key.Key_Slash:
-                if self.textEdit.textCursor().atBlockStart():
-                    self._showCommands()
-
-            # elif event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key_Tab:
-            #     self._lblPlaceholder.setText(' said ')
-            #     self._lblPlaceholder.show()
-            #     rect = self.textEdit.cursorRect(cursor)
-            #     self._lblPlaceholder.move(rect.x() + self.textEdit.viewportMargins().left(),
-            #                               rect.y() + self.textEdit.viewportMargins().top())
-
-        return super(DocumentTextEditor, self).eventFilter(watched, event)
-
-    def _showCommands(self):
-        def trigger(func):
-            self.textEdit.textCursor().deletePreviousChar()
-            func()
-
-        rect = self.textEdit.cursorRect(self.textEdit.textCursor())
-
-        menu = QMenu(self.textEdit)
-        menu.addAction(IconRegistry.heading_1_icon(), '', partial(trigger, lambda: self.textEdit.setHeading(1)))
-        menu.addAction(IconRegistry.heading_2_icon(), '', partial(trigger, lambda: self.textEdit.setHeading(2)))
-
-        menu.popup(self.textEdit.viewport().mapToGlobal(QPoint(rect.x(), rect.y())))
 
 
 class RotatedButtonOrientation(Enum):
