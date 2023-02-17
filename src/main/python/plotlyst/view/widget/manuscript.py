@@ -499,7 +499,7 @@ class ManuscriptTextEditor(RichTextEditor):
         self.textEdit.textCursor().insertHtml(scene.manuscript.content)
 
     def _format(self):
-        self.textEdit.setFormat(130, textIndent=20)
+        self.textEdit.setBlockFormat(130, textIndent=20)
 
     def document(self) -> QTextDocument:
         return self.textEdit.document()
