@@ -591,7 +591,7 @@ border: 0px;
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabTopics">
        <attribute name="title">
@@ -626,8 +626,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>452</width>
-             <height>539</height>
+             <width>384</width>
+             <height>555</height>
             </rect>
            </property>
           </widget>
@@ -719,8 +719,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
-             <height>156</height>
+             <width>376</width>
+             <height>508</height>
             </rect>
            </property>
            <property name="styleSheet">
@@ -791,7 +791,7 @@ border: 0px;
       </widget>
       <widget class="QWidget" name="tabGoals">
        <attribute name="title">
-        <string>Agency</string>
+        <string>Plan</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <property name="spacing">
@@ -843,6 +843,11 @@ border: 0px;
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DocumentTextEditor</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
    <class>SecondaryActionPushButton</class>
    <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.button</header>
@@ -851,11 +856,6 @@ border: 0px;
    <class>CharacterAvatar</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.characters</header>
-  </customwidget>
-  <customwidget>
-   <class>DocumentTextEditor</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>CharacterTimelineWidget</class>
