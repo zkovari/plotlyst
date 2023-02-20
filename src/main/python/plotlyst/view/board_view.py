@@ -21,6 +21,7 @@ from overrides import overrides
 from qthandy import bold
 from qthandy.filter import InstantTooltipEventFilter
 
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.board_view_ui import Ui_BoardView
@@ -38,8 +39,8 @@ class BoardView(AbstractNovelView):
         self.widget.setStyleSheet('#boardParentWidget {background: #f3f3f6;}')
 
         self.ui.btnNew.setIcon(IconRegistry.plus_icon('white'))
-        self.ui.btnBoard.setIcon(IconRegistry.from_name('fa5s.columns', color_on='darkBlue'))
-        self.ui.btnChart.setIcon(IconRegistry.from_name('mdi.chart-areaspline'))
+        self.ui.btnBoard.setIcon(IconRegistry.from_name('fa5s.columns', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnChart.setIcon(IconRegistry.from_name('mdi.chart-areaspline', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnSettings.setIcon(IconRegistry.cog_icon())
         self.ui.btnChart.installEventFilter(InstantTooltipEventFilter(self.ui.btnChart))
         self.ui.btnSettings.installEventFilter(InstantTooltipEventFilter(self.ui.btnSettings))

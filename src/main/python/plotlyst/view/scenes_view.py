@@ -21,14 +21,13 @@ import copy
 from functools import partial
 from typing import Optional
 
-import qtawesome
 from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout, busy, bold, gc
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -159,10 +158,12 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
-        self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on='darkBlue'))
+        self.ui.btnStoryStructure.setIcon(IconRegistry.story_structure_icon(color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnStatusView.setIcon(IconRegistry.progress_check_icon('black'))
-        self.ui.btnCharactersDistributionView.setIcon(qtawesome.icon('fa5s.chess-board'))
-        self.ui.btnStorymap.setIcon(IconRegistry.from_name('mdi.transit-connection-horizontal', color_on='darkBlue'))
+        self.ui.btnCharactersDistributionView.setIcon(
+            IconRegistry.from_name('fa5s.chess-board', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnStorymap.setIcon(
+            IconRegistry.from_name('mdi.transit-connection-horizontal', color_on=PLOTLYST_SECONDARY_COLOR))
         self.setNavigableButtonGroup(self.ui.btnGroupViews)
 
         self.ui.rbDots.setIcon(IconRegistry.from_name('fa5s.circle'))

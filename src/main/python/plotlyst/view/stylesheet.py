@@ -55,23 +55,23 @@ QPushButton:disabled[base=true] {
 }
 
 QPushButton[positive=true]:!disabled {
-    background-color: #4fb477;
+    background-color: #4B0763;
     color: #fff;
     font: bold;
 }
 
 QPushButton[positive=true]:hover {
-    background-color: #27ae60;
+    background-color: #37065D;
 }
 
 QPushButton[highlighted=true]:!disabled {
-    background-color: #384e77;
+    background-color: #071064;
     color: #fff;
     font: bold;
 }
 
 QPushButton[highlighted=true]:hover {
-    background-color: #18314f;
+    background-color: #060F5D;
 }
 
 QPushButton[deconstructive=true]:!disabled {

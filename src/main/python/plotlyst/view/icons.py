@@ -26,7 +26,8 @@ from PyQt6.QtWidgets import QLabel
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
-    CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR
+    CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
+    PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
     Scene, SceneType, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
 from src.main.python.plotlyst.core.template import SelectionItem
@@ -118,7 +119,7 @@ class IconRegistry:
         return qtawesome.icon('fa5s.history')
 
     @staticmethod
-    def character_icon(color: str = 'black', color_on: str = 'darkBlue') -> QIcon:
+    def character_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
         return qtawesome.icon('fa5s.user', color=color, color_on=color_on)
 
     @staticmethod
@@ -139,7 +140,7 @@ class IconRegistry:
 
     @staticmethod
     def world_building_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.globe-model', color_on='#40916c')
+        return IconRegistry.from_name('mdi.globe-model', color_on=PLOTLYST_SECONDARY_COLOR)
 
     @staticmethod
     def board_icon() -> QIcon:
@@ -147,14 +148,14 @@ class IconRegistry:
 
     @staticmethod
     def scene_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.movie-open', color_on='darkBlue', mdi_scale=1.1)
+        return IconRegistry.from_name('mdi.movie-open', color_on=PLOTLYST_SECONDARY_COLOR, mdi_scale=1.1)
 
     @staticmethod
     def chapter_icon() -> QIcon:
         return qtawesome.icon('ei.book')
 
     @staticmethod
-    def book_icon(color='black', color_on='darkBlue') -> QIcon:
+    def book_icon(color='black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
         return qtawesome.icon('fa5s.book-open', color_on=color_on, color=color)
 
     @staticmethod
@@ -237,7 +238,7 @@ class IconRegistry:
         return qtawesome.icon('fa5.chart-bar', color_on=color_on)
 
     @staticmethod
-    def document_edition_icon(color: str = 'black', color_on='darkBlue') -> QIcon:
+    def document_edition_icon(color: str = 'black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
         return qtawesome.icon('ei.file-edit', color=color, color_on=color_on)
 
     @staticmethod
@@ -254,7 +255,7 @@ class IconRegistry:
 
     @staticmethod
     def table_icon() -> QIcon:
-        return qtawesome.icon('fa5.list-alt', color_on='darkBlue')
+        return qtawesome.icon('fa5.list-alt', color_on=PLOTLYST_SECONDARY_COLOR)
 
     @staticmethod
     def goal_icon(color: str = 'darkBlue', color_on: str = 'darkBlue') -> QIcon:
@@ -338,7 +339,7 @@ class IconRegistry:
         return qtawesome.icon('fa5s.portrait')
 
     @staticmethod
-    def progress_check_icon(color: str = 'darkBlue', color_on='darkBlue') -> QIcon:
+    def progress_check_icon(color: str = 'darkBlue', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
         return IconRegistry.from_name('mdi.progress-check', color=color, color_on=color_on)
 
     @staticmethod
@@ -351,7 +352,7 @@ class IconRegistry:
 
     @staticmethod
     def cards_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.cards', color_on='darkBlue')
+        return IconRegistry.from_name('mdi.cards', color_on=PLOTLYST_SECONDARY_COLOR)
 
     @staticmethod
     def conflict_type_icon(type: ConflictType) -> QIcon:
