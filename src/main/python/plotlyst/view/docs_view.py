@@ -70,7 +70,7 @@ class DocumentsView(AbstractNovelView):
 
         self.textEditor: Optional[DocumentTextEditor] = None
 
-        self.ui.btnAdd.setIcon(IconRegistry.plus_icon())
+        self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
         self.ui.btnAdd.clicked.connect(self._add_doc)
 
     @overrides
