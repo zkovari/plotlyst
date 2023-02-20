@@ -115,7 +115,7 @@ QToolButton:checked {
       </size>
      </property>
      <property name="placeholderText">
-      <string>What is this plot's main dramatic question?</string>
+      <string>Summarize this plot</string>
      </property>
     </widget>
    </item>
