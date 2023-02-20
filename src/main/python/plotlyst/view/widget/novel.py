@@ -378,8 +378,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.setupUi(self)
         flow(self.wdgTemplates)
 
-        self.btnTemplateEditor.setIcon(IconRegistry.plus_icon('darkBlue'))
-        self.btnTemplateEditor.clicked.connect(self._selectTemplateStructure)
+        self.btnNew.setIcon(IconRegistry.plus_icon('white'))
+        self.btnNew.clicked.connect(self._selectTemplateStructure)
 
         self.btnDelete.setIcon(IconRegistry.minus_icon())
         self.btnDelete.installEventFilter(ButtonPressResizeEventFilter(self.btnDelete))
@@ -390,7 +390,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnEdit.setIcon(IconRegistry.edit_icon())
         self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
         self.btnEdit.clicked.connect(self._editStructure)
-        self.horizontalLayout.addWidget(self.btnDelete)
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
