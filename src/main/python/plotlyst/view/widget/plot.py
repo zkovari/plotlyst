@@ -400,7 +400,18 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             icon = 'mdi.ray-start-arrow'
         plot = Plot(name, plot_type=plot_type, icon=icon)
         self.novel.plots.append(plot)
-        plot.icon_color = STORY_LINE_COLOR_CODES[(len(self.novel.plots) - 1) % len(STORY_LINE_COLOR_CODES)]
+
+        plot_colors = list(STORY_LINE_COLOR_CODES[plot_type.value])
+        for plot in self.novel.plots:
+            if plot.plot_type == plot_type and plot.icon_color in plot_colors:
+                plot_colors.remove(plot.icon_color)
+        if plot_colors:
+            plot.icon_color = plot_colors[0]
+        else:
+            plot_colors = STORY_LINE_COLOR_CODES[plot_type.value]
+            number_of_plots = len([x for x in self.novel.plots if x.plot_type == plot_type])
+            plot.icon_color = plot_colors[(number_of_plots - 1) % len(plot_colors)]
+
         widget = self._addPlotWidget(plot)
         widget.lineName.setFocus()
 

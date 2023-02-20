@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from PyQt6.QtCore import QCoreApplication, QSettings
 
@@ -69,16 +69,29 @@ class AppSettings:
 
 settings = AppSettings()
 
-STORY_LINE_COLOR_CODES: List[str] = [
-    '#03396c',
-    '#0e9aa7',
-    '#62c370',
-    '#cc3363',
-    '#f5e960',
-    '#3c4f76',
-    '#b388eb',
-    '#8093f1',
-]
+STORY_LINE_COLOR_CODES: Dict[str, List[str]] = {
+    'main': [
+        '#03396c',  # yale blue
+        '#338740',  # sea green
+        '#cc3363',  # dogwood rose
+        '#b388eb',  # lavender
+        '#6d597a',  # chinese violate
+        '#FAAE4A',  # princeton orange
+        '#F50574',  # rose
+    ],
+    'internal': [
+        '#0FADBB',  # moonstone
+        '#e8c2ca',  # fairy tale
+        '#fcd5ce',  # pale dogwood
+    ],
+    'subplot': [
+        '#d4a373',  # buff
+        '#b7b7a4',  # ash grey
+        '#D48172',  # coral pink
+        '#93a8ac',  # cadet grey
+    ],
+
+}
 
 CHARACTER_INITIAL_AVATAR_COLOR_CODES: List[str] = [
     '#03396c',
