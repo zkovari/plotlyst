@@ -117,8 +117,7 @@ class ManuscriptView(AbstractNovelView):
 
     @overrides
     def refresh(self):
-        self.chaptersModel.update()
-        self.chaptersModel.modelReset.emit()
+        self.ui.treeChapters.refresh()
 
     def _enter_distraction_free(self):
         emit_event(OpenDistractionFreeMode(self))
