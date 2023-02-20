@@ -76,7 +76,7 @@ QPushButton[highlighted=true]:hover {
 }
 
 QPushButton[deconstructive=true]:!disabled {
-    background-color: #e74c3c;
+    background-color: #EE8074;
     color: #fff;
     font: bold;
 }
