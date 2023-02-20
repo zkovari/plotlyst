@@ -445,6 +445,7 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setStyleSheet('QTextEdit {background: white; border: 0px;}')
         self.textEdit.setFont(QFont(family))
         self.textEdit.zoomIn(self.textEdit.font().pointSize() * 0.34)
+        self.textEdit.setBlockFormat(lineSpacing=120)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setPlaceholderText('Write your notes...')
 
