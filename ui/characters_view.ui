@@ -165,11 +165,14 @@
           </item>
           <item>
            <widget class="QToolButton" name="btnRelationsView">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="toolTip">
-             <string>Relations view</string>
+             <string>Relations view (Not implemented yet)</string>
             </property>
             <property name="text">
              <string/>
@@ -531,7 +534,7 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>98</width>
+                <width>84</width>
                 <height>16</height>
                </rect>
               </property>
