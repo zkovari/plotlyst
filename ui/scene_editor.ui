@@ -767,19 +767,19 @@
          <widget class="QWidget" name="pageNotes">
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <property name="spacing">
-            <number>2</number>
+            <number>0</number>
            </property>
            <property name="leftMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
            <property name="topMargin">
-            <number>2</number>
+            <number>20</number>
            </property>
            <property name="rightMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
            <property name="bottomMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
            <item>
             <widget class="DocumentTextEditor" name="textNotes" native="true"/>
