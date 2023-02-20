@@ -56,6 +56,7 @@ QPushButton:disabled[base=true] {
 
 QPushButton[positive=true]:!disabled {
     background-color: #4B0763;
+    border: 2px solid #37065D;
     color: #fff;
     font: bold;
 }
