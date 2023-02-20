@@ -28,7 +28,7 @@ from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEve
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMenu
 from overrides import overrides
 from qthandy import pointy, gc, translucent, bold, transparent, btn_popup_menu, \
-    retain_when_hidden, flow, clear_layout, decr_font
+    retain_when_hidden, flow, clear_layout, decr_font, margins
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DragEventFilter, DisabledClickEventFilter
 
 from src.main.python.plotlyst.common import emotion_color, RELAXED_WHITE_COLOR
@@ -44,6 +44,7 @@ from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButt
     CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import MenuWithDescription
 from src.main.python.plotlyst.view.widget.labels import EmotionLabel
+from src.main.python.plotlyst.view.widget.list import ListView
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
@@ -767,6 +768,11 @@ class SceneStructureTimeline(QWidget):
             self._dragPlaceholder = None
 
 
+class SceneStructureList(ListView):
+    def __init__(self, parent=None):
+        super(SceneStructureList, self).__init__(parent)
+
+
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def __init__(self, parent=None):
@@ -784,15 +790,19 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.wdgTypes.layout().addWidget(self.btnScene)
         self.wdgTypes.layout().addWidget(self.btnSequel)
+        self.wdgTypes.layout().addWidget(self.btnSummary)
         self.wdgTypes.layout().addWidget(self.btnHappening)
         self.wdgTypes.layout().addWidget(self.btnExposition)
-        self.wdgTypes.layout().addWidget(self.btnSummary)
 
         flow(self.wdgGoalConflictContainer)
+        margins(self.wdgGoalConflictContainer, left=40)
 
         self.timeline = SceneStructureTimeline(self)
         self.timeline.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.scrollAreaWidgetContents.layout().addWidget(self.timeline)
+        self.scrollAreaTimeline.layout().addWidget(self.timeline)
+
+        self.listEvents = SceneStructureList()
+        self.pageList.layout().addWidget(self.listEvents)
 
         self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
@@ -829,6 +839,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._checkSceneType()
 
         self.timeline.setAgenda(scene.agendas[0], self.scene.type)
+        self._initEditor(self.scene.type)
 
     def updateAvailableAgendaCharacters(self):
         chars = []
@@ -883,9 +894,26 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _typeClicked(self, type: SceneType, checked: bool):
         if not checked:
+            self._initEditor(SceneType.DEFAULT)
             return
+
         self.scene.type = type
-        self.timeline.setSceneType(self.scene.type)
+        self._initEditor(type)
+
+    def _initEditor(self, type: SceneType):
+        if type == SceneType.EXPOSITION:
+            self.stackStructure.setCurrentWidget(self.pageList)
+            self.lblSummary.setHidden(True)
+            self.lblExposition.setVisible(True)
+        elif type == SceneType.SUMMARY:
+            self.stackStructure.setCurrentWidget(self.pageList)
+            self.lblSummary.setVisible(True)
+            self.lblExposition.setHidden(True)
+        else:
+            self.stackStructure.setCurrentWidget(self.pageTimetilne)
+            self.timeline.setSceneType(self.scene.type)
+
+        self.wdgAgenda.setHidden(type == SceneType.EXPOSITION)
 
     def _initSelectors(self):
         if not self.scene.agendas[0].character_id:
@@ -906,8 +934,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                 if conflict:
                     self._addConfictSelector(conflict, conflict_ref)
 
-            # for conflict in self.scene.agendas[0].conflicts(self.novel):
-            #     self._addConfictSelector(conflict=conflict)
             self._addConfictSelector()
         else:
             self._addConfictSelector()

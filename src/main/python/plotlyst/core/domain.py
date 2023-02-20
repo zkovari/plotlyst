@@ -622,7 +622,6 @@ class SceneStructureItem:
     type: SceneStructureItemType
     text: str = ''
     percentage: float = 0.0
-    # outcome: Optional[SceneOutcome] = None
     emotion: str = field(default='', metadata=config(exclude=exclude_if_empty))
     meta: Dict[str, Any] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 

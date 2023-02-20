@@ -38,15 +38,14 @@ from src.main.python.plotlyst.view.widget.input import RemovalButton
 LIST_ITEM_MIME_TYPE = 'application/list-item'
 
 
-class ListItemWidget(QWidget):
+class BaseListItemWidget(QWidget):
     deleted = pyqtSignal()
     changed = pyqtSignal()
     dragStarted = pyqtSignal()
     dragFinished = pyqtSignal()
 
-    def __init__(self, item: SelectionItem, parent=None):
-        super(ListItemWidget, self).__init__(parent)
-        self._item = item
+    def __init__(self, parent=None):
+        super(BaseListItemWidget, self).__init__(parent)
         hbox(self, spacing=1)
         margins(self, left=0)
         self._btnDrag = Icon()
@@ -56,7 +55,6 @@ class ListItemWidget(QWidget):
 
         self._lineEdit = QLineEdit()
         self._lineEdit.setPlaceholderText('Fill out...')
-        self._lineEdit.setText(self._item.text)
         self._lineEdit.textChanged.connect(self._textChanged)
 
         self._btnRemoval = RemovalButton(self)
@@ -85,17 +83,29 @@ class ListItemWidget(QWidget):
         elif event.type() == QEvent.Type.Leave:
             self._btnDrag.setHidden(True)
             self._btnRemoval.setHidden(True)
-        return super(ListItemWidget, self).eventFilter(watched, event)
-
-    def item(self) -> SelectionItem:
-        return self._item
+        return super(BaseListItemWidget, self).eventFilter(watched, event)
 
     def activate(self):
         self._lineEdit.setFocus()
 
     def _textChanged(self, text: str):
-        self._item.text = text
         self.changed.emit()
+
+
+class ListItemWidget(BaseListItemWidget):
+
+    def __init__(self, item: SelectionItem, parent=None):
+        super(ListItemWidget, self).__init__(parent)
+        self._item = item
+
+        self._lineEdit.setText(self._item.text)
+
+    def item(self) -> SelectionItem:
+        return self._item
+
+    def _textChanged(self, text: str):
+        super(ListItemWidget, self)._textChanged(text)
+        self._item.text = text
 
 
 class ListView(QScrollArea):
