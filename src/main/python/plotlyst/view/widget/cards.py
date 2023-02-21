@@ -32,11 +32,10 @@ from qtframes import Frame
 from qthandy import FlowLayout, clear_layout, retain_when_hidden, transparent, margins
 
 from src.main.python.plotlyst.common import act_color
-from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Document, Novel
+from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Novel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
-from src.main.python.plotlyst.view.generated.journal_card_ui import Ui_JournalCard
 from src.main.python.plotlyst.view.generated.novel_card_ui import Ui_NovelCard
 from src.main.python.plotlyst.view.generated.scene_card_ui import Ui_SceneCard
 from src.main.python.plotlyst.view.icons import IconRegistry, set_avatar, avatars
@@ -212,27 +211,6 @@ class CharacterCard(Ui_CharacterCard, Card):
     @overrides
     def mimeType(self) -> str:
         return 'application/character-card'
-
-
-class JournalCard(Card, Ui_JournalCard):
-
-    def __init__(self, journal: Document, parent=None):
-        super(JournalCard, self).__init__(parent)
-        self.setupUi(self)
-        self.journal = journal
-
-        self.refresh()
-        self.textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self._setStyleSheet()
-        self.setDragEnabled(False)
-
-    @overrides
-    def mimeType(self) -> str:
-        return 'application/journal-card'
-
-    def refresh(self):
-        self.textTitle.setText(self.journal.title)
 
 
 class SceneCard(Ui_SceneCard, Card):
