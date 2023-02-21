@@ -34,7 +34,7 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import PopupMenuBuilder
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.doc.mice import MiceQuotientDoc
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
@@ -71,6 +71,7 @@ class DocumentsView(AbstractNovelView):
         self.textEditor: Optional[DocumentTextEditor] = None
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
+        self.ui.btnAdd.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAdd))
         self.ui.btnAdd.clicked.connect(self._add_doc)
 
     @overrides

@@ -73,7 +73,6 @@ class ChildNode(QWidget):
         self._toggleSelection(False)
 
     def _toggleSelection(self, selected: bool):
-        print(f'toggle selection {selected}')
         self._selected = selected
         bold(self._lblTitle, self._selected)
         self._reStyle()
