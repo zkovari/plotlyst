@@ -19,9 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QModelIndex, Qt, QSize
-from PyQt6.QtWidgets import QHeaderView, QWidgetAction, QListView
-from fbs_runtime import platform
+from PyQt6.QtCore import QModelIndex, Qt
+from PyQt6.QtWidgets import QWidgetAction, QListView
 from overrides import overrides
 from qthandy import clear_layout, bold
 
@@ -56,17 +55,15 @@ class DocumentsView(AbstractNovelView):
         self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
         bold(self.ui.lblTitle)
 
-        self.model = DocumentsTreeModel(self.novel)
-        self.ui.treeDocuments.setModel(self.model)
-        self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColMenu, 20)
-        self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColPlus, 24)
-        self.ui.treeDocuments.clicked.connect(self._doc_clicked)
-        self.ui.treeDocuments.expandAll()
-        self.model.modelReset.connect(self.refresh)
-
-        if platform.is_mac():
-            self.ui.btnAdd.setIconSize(QSize(15, 15))
+        # self.model = DocumentsTreeModel(self.novel)
+        # self.ui.treeDocuments.setModel(self.model)
+        # self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        # self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColMenu, 20)
+        # self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColPlus, 24)
+        self.ui.treeDocuments.setNovel(self.novel)
+        self.ui.treeDocuments.documentSelected.connect(self._doc_selected)
+        # self.ui.treeDocuments.expandAll()
+        # self.model.modelReset.connect(self.refresh)
 
         self.textEditor: Optional[DocumentTextEditor] = None
 
@@ -76,7 +73,8 @@ class DocumentsView(AbstractNovelView):
 
     @overrides
     def refresh(self):
-        self.ui.treeDocuments.expandAll()
+        pass
+        # self.ui.treeDocuments.expandAll()
 
     def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None,
                  doc_type: DocumentType = DocumentType.DOCUMENT):
@@ -114,13 +112,14 @@ class DocumentsView(AbstractNovelView):
             self.textEditor.textEdit.insertHtml(parse_structure_to_richtext(self.novel.active_story_structure))
             self._save()
 
-    def _doc_clicked(self, index: QModelIndex):
-        if index.column() == 0:
-            self._edit(index)
-        elif index.column() == DocumentsTreeModel.ColMenu:
-            self._show_menu_popup(index)
-        elif index.column() == DocumentsTreeModel.ColPlus:
-            self._show_docs_popup(index)
+    def _doc_selected(self, doc: Document):
+        pass
+        # if index.column() == 0:
+        #     self._edit(index)
+        # elif index.column() == DocumentsTreeModel.ColMenu:
+        #     self._show_menu_popup(index)
+        # elif index.column() == DocumentsTreeModel.ColPlus:
+        #     self._show_docs_popup(index)
 
     def _init_text_editor(self):
         self._clear_text_editor()

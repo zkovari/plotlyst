@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent
 from PyQt6.QtGui import QIcon, QMouseEvent
 from PyQt6.QtWidgets import QScrollArea, QSizePolicy, QFrame
@@ -119,9 +118,7 @@ class ContainerNode(QWidget):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Enter and self.isEnabled():
-            qtanim.glow(self._wdgTitle, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
-        elif event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
+        if event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
             self._toggleSelection(not self._selected)
             self.selectionChanged.emit(self._selected)
         return super(ContainerNode, self).eventFilter(watched, event)

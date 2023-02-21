@@ -57,7 +57,6 @@ class SceneWidget(ChildNode):
         self._wdgTitle.layout().insertWidget(0, self._scenePovIcon)
 
         self.refresh()
-        self._reStyle()
 
     def scene(self) -> Scene:
         return self._scene
