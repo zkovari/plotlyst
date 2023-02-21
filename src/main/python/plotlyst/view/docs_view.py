@@ -55,15 +55,8 @@ class DocumentsView(AbstractNovelView):
         self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
         bold(self.ui.lblTitle)
 
-        # self.model = DocumentsTreeModel(self.novel)
-        # self.ui.treeDocuments.setModel(self.model)
-        # self.ui.treeDocuments.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        # self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColMenu, 20)
-        # self.ui.treeDocuments.setColumnWidth(DocumentsTreeModel.ColPlus, 24)
         self.ui.treeDocuments.setNovel(self.novel)
-        self.ui.treeDocuments.documentSelected.connect(self._doc_selected)
-        # self.ui.treeDocuments.expandAll()
-        # self.model.modelReset.connect(self.refresh)
+        self.ui.treeDocuments.documentSelected.connect(self._edit)
 
         self.textEditor: Optional[DocumentTextEditor] = None
 
@@ -73,8 +66,7 @@ class DocumentsView(AbstractNovelView):
 
     @overrides
     def refresh(self):
-        pass
-        # self.ui.treeDocuments.expandAll()
+        self.ui.treeDocuments.refresh()
 
     def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None,
                  doc_type: DocumentType = DocumentType.DOCUMENT):
@@ -111,15 +103,6 @@ class DocumentsView(AbstractNovelView):
         if doc_type == DocumentType.STORY_STRUCTURE:
             self.textEditor.textEdit.insertHtml(parse_structure_to_richtext(self.novel.active_story_structure))
             self._save()
-
-    def _doc_selected(self, doc: Document):
-        pass
-        # if index.column() == 0:
-        #     self._edit(index)
-        # elif index.column() == DocumentsTreeModel.ColMenu:
-        #     self._show_menu_popup(index)
-        # elif index.column() == DocumentsTreeModel.ColPlus:
-        #     self._show_docs_popup(index)
 
     def _init_text_editor(self):
         self._clear_text_editor()
@@ -160,12 +143,6 @@ class DocumentsView(AbstractNovelView):
         builder.add_action('MICE threads', IconRegistry.from_name('mdi.rodent', '#6c757d'),
                            lambda: self._add_doc(index, doc_type=DocumentType.MICE))
 
-        # builder.add_action('Reversed Cause and Effect', IconRegistry.reversed_cause_and_effect_icon(),
-        #                    lambda: self._add_doc(index, doc_type=DocumentType.REVERSED_CAUSE_AND_EFFECT))
-        # struc = self.novel.active_story_structure
-        # builder.add_action(struc.title, IconRegistry.from_name(struc.icon, color=struc.icon_color),
-        #                    lambda: self._add_doc(index, doc_type=DocumentType.STORY_STRUCTURE))
-
         builder.popup()
 
     def _remove_doc(self):
@@ -175,15 +152,14 @@ class DocumentsView(AbstractNovelView):
         self.model.removeDoc(selected[0])
         self._clear_text_editor()
 
-    def _edit(self, index: QModelIndex):
+    def _edit(self, doc: Document):
         self._init_text_editor()
-        node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
-        self._current_doc = node.document
+        self._current_doc = doc
 
         if not self._current_doc.loaded:
             json_client.load_document(self.novel, self._current_doc)
 
-        char = node.document.character(self.novel)
+        char = doc.character(self.novel)
 
         if self._current_doc.type in [DocumentType.DOCUMENT, DocumentType.STORY_STRUCTURE]:
             self.ui.stackedEditor.setCurrentWidget(self.ui.docEditorPage)
