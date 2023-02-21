@@ -47,9 +47,13 @@ class ShelvesTreeView(TreeView):
         self._novels: Dict[NovelDescriptor, NovelNode] = {}
 
         self._wdgNovels = ContainerNode('Novels', IconRegistry.book_icon())
+        self._wdgNovels.setMenuEnabled(False)
         self._wdgShortStories = ContainerNode('Short stories', IconRegistry.from_name('ph.file-text'))
+        self._wdgShortStories.setMenuEnabled(False)
         self._wdgIdeas = ContainerNode('Ideas', IconRegistry.decision_icon())
+        self._wdgIdeas.setMenuEnabled(False)
         self._wdgNotes = ContainerNode('Notes', IconRegistry.document_edition_icon())
+        self._wdgNotes.setMenuEnabled(False)
 
         self._wdgShortStories.setDisabled(True)
         self._wdgIdeas.setDisabled(True)

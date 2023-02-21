@@ -20,20 +20,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent
-from PyQt6.QtGui import QIcon, QMouseEvent
-from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy
+from PyQt6.QtGui import QIcon, QMouseEvent, QEnterEvent
+from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton, QMenu
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, bold, margins, clear_layout
+from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, btn_popup_menu
 
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
 
 
 class BaseTreeWidget(QWidget):
     selectionChanged = pyqtSignal(bool)
+    deleted = pyqtSignal()
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
         super(BaseTreeWidget, self).__init__(parent)
+        self._menuEnabled: bool = True
 
         self._selected: bool = False
         self._wdgTitle = QWidget(self)
@@ -47,20 +51,37 @@ class BaseTreeWidget(QWidget):
         else:
             self._icon.setHidden(True)
 
+        self._btnMenu = QToolButton()
+        transparent(self._btnMenu)
+        self._btnMenu.setIcon(IconRegistry.dots_icon('grey', vertical=True))
+        self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
+        self._btnMenu.setHidden(True)
+        self._initMenu()
+
         self._wdgTitle.layout().addWidget(self._icon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
+        self._wdgTitle.layout().addWidget(self._btnMenu)
+
+    def _initMenu(self):
+        menu = QMenu(self._btnMenu)
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.deleted.emit)
+        menu.aboutToHide.connect(lambda: self._btnMenu.setHidden(True))
+        btn_popup_menu(self._btnMenu, menu)
 
     def titleWidget(self) -> QWidget:
         return self._wdgTitle
 
     def titleLabel(self) -> QLabel:
         return self._lblTitle
-    
+
     def select(self):
         self._toggleSelection(True)
 
     def deselect(self):
         self._toggleSelection(False)
+
+    def setMenuEnabled(self, enabled: bool):
+        self._menuEnabled = enabled
 
     def _toggleSelection(self, selected: bool):
         self._selected = selected
@@ -68,7 +89,14 @@ class BaseTreeWidget(QWidget):
         self._reStyle()
 
     def _reStyle(self):
-        pass
+        if self._selected:
+            self._wdgTitle.setStyleSheet('''
+                    .QWidget {
+                        background-color: #D8D5D5;
+                    }
+                ''')
+        else:
+            self._wdgTitle.setStyleSheet('')
 
 
 class ChildNode(BaseTreeWidget):
@@ -79,19 +107,29 @@ class ChildNode(BaseTreeWidget):
         self.layout().addWidget(self._wdgTitle)
 
     @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self._menuEnabled:
+            self._btnMenu.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if self._menuEnabled and not self._btnMenu.menu().isVisible():
+            self._btnMenu.setHidden(True)
+
+    @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self._toggleSelection(not self._selected)
         self.selectionChanged.emit(self._selected)
 
-    def _reStyle(self):
-        if self._selected:
-            self.setStyleSheet('''
-                   ChildNode {
-                       background-color: #D8D5D5;
-                   }
-               ''')
-        else:
-            self.setStyleSheet('')
+    # def _reStyle(self):
+    #     if self._selected:
+    #         self.setStyleSheet('''
+    #                ChildNode {
+    #                    background-color: #D8D5D5;
+    #                }
+    #            ''')
+    #     else:
+    #         self.setStyleSheet('')
 
 
 class ContainerNode(BaseTreeWidget):
@@ -111,7 +149,11 @@ class ContainerNode(BaseTreeWidget):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
+        if event.type() == QEvent.Type.Enter and self._menuEnabled:
+            self._btnMenu.setVisible(True)
+        elif event.type() == QEvent.Type.Leave and self._menuEnabled and not self._btnMenu.menu().isVisible():
+            self._btnMenu.setHidden(True)
+        elif event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
             self._toggleSelection(not self._selected)
             self.selectionChanged.emit(self._selected)
         return super(ContainerNode, self).eventFilter(watched, event)
@@ -131,15 +173,16 @@ class ContainerNode(BaseTreeWidget):
         clear_layout(self._container)
         self._container.setHidden(True)
 
-    def _reStyle(self):
-        if self._selected:
-            self._wdgTitle.setStyleSheet('''
-                       QWidget {
-                           background-color: #D8D5D5;
-                       }
-                   ''')
-        else:
-            self._wdgTitle.setStyleSheet('')
+    # @overrides
+    # def _reStyle(self):
+    #     if self._selected:
+    #         self._wdgTitle.setStyleSheet('''
+    #                 .QWidget {
+    #                     background-color: #D8D5D5;
+    #                 }
+    #             ''')
+    #     else:
+    #         self._wdgTitle.setStyleSheet('')
 
 
 class TreeView(QScrollArea):

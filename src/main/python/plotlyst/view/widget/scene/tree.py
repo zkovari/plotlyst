@@ -24,12 +24,11 @@ from typing import List
 
 from PyQt6.QtCore import QMimeData, QPointF
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QToolButton, QMenu
+from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import gc, retain_when_hidden, translucent, clear_layout, vbox
-from qthandy import vspacer, btn_popup_menu
-from qthandy.filter import VisibilityToggleEventFilter, \
-    DragEventFilter, DropEventFilter
+from qthandy import vspacer
+from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     Chapter
@@ -87,15 +86,6 @@ class ChapterWidget(ContainerNode):
         super(ChapterWidget, self).__init__(chapter.title_index(novel), IconRegistry.chapter_icon(), parent)
         self._chapter = chapter
         self._novel = novel
-
-        self._btnSettings = QToolButton(self._wdgTitle)
-        self._btnSettings.setIcon(IconRegistry.dots_icon(vertical=True))
-        self._btnSettings.setProperty('transparent', True)
-        menu = QMenu(self._btnSettings)
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.deleted.emit)
-        btn_popup_menu(self._btnSettings, menu)
-        self._wdgTitle.layout().addWidget(self._btnSettings, alignment=Qt.AlignmentFlag.AlignRight)
-        self._wdgTitle.installEventFilter(VisibilityToggleEventFilter(self._btnSettings, self._wdgTitle))
 
         self._reStyle()
 
