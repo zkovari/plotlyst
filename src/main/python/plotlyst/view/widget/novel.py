@@ -102,8 +102,9 @@ class _StoryStructureButton(QPushButton):
 
 
 class BeatsPreview(QFrame):
-    def __init__(self, parent=None):
+    def __init__(self, checkOccupiedBeats: bool = True, parent=None):
         super().__init__(parent)
+        self._checkOccupiedBeats = checkOccupiedBeats
         self._layout: QGridLayout = grid(self)
         self._structurePreview: Optional[SceneStoryStructureWidget] = None
 
@@ -118,7 +119,7 @@ class BeatsPreview(QFrame):
         for beat in structure.beats:
             if beat.type != StoryBeatType.BEAT:
                 continue
-            wdg = BeatWidget(beat)
+            wdg = BeatWidget(beat, self._checkOccupiedBeats)
             wdg.setMinimumSize(200, 50)
             if beat.act - 1 > col:  # new act
                 self._layout.addWidget(vspacer(), row + 1, col)
@@ -134,10 +135,12 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     beatHighlighted = pyqtSignal(StoryBeat)
     beatToggled = pyqtSignal(StoryBeat)
 
-    def __init__(self, beat: StoryBeat, parent=None):
+    def __init__(self, beat: StoryBeat, checkOccupiedBeats: bool = True, parent=None):
         super(BeatWidget, self).__init__(parent)
         self.setupUi(self)
         self.beat = beat
+        self._checkOccupiedBeats = checkOccupiedBeats
+
         self.lblTitle.setText(self.beat.text)
         bold(self.lblTitle)
         bold(self.lblSceneTitle)
@@ -178,6 +181,8 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
     def refresh(self):
         self.stackedWidget.setCurrentWidget(self.pageInfo)
+        if not self._checkOccupiedBeats:
+            return
         for b in acts_registry.occupied_beats():
             if b.id == self.beat.id:
                 self.stackedWidget.setCurrentWidget(self.pageScene)
@@ -270,7 +275,7 @@ class _AbstractStructureEditorWidget(QWidget):
         self._scroll.setWidgetResizable(True)
         vbox(self._scroll)
 
-        self.beatsPreview = BeatsPreview()
+        self.beatsPreview = BeatsPreview(checkOccupiedBeats=False)
         self._scroll.setWidget(self.beatsPreview)
         self.beatsPreview.attachStructurePreview(self.wdgPreview)
         self.wdgPreview.setStructure(novel, self._structure)
@@ -311,9 +316,6 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
         self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask'))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
-
-        # margins(self.pageThreeAct, 0, 0, 0, 0)
-        # margins(self.pageSaveTheCat, 0, 0, 0, 0)
 
         self._structure: Optional[StoryStructure] = None
         if structure:
@@ -393,7 +395,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.btnGroupStructure = QButtonGroup()
         self.btnGroupStructure.setExclusive(True)
 
-        self.__initWdgPReview()
+        self.__initWdgPreview()
 
         self.novel: Optional[Novel] = None
         self.beats.installEventFilter(self)
@@ -467,8 +469,8 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
         self._activeStructureToggled(self.novel.active_story_structure, True)
 
-    def _selectTemplateStructure(self, structure: Optional[StoryStructure] = None):
-        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel, structure)
+    def _selectTemplateStructure(self):
+        structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
         if structure:
             self._addNewStructure(structure)
 
@@ -486,7 +488,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             item = self.layout().takeAt(1)
             gc(item.widget())
             self.wdgPreview = SceneStoryStructureWidget(self)
-            self.__initWdgPReview()
+            self.__initWdgPreview()
             self.layout().insertWidget(1, self.wdgPreview)
         self.wdgPreview.setStructure(self.novel)
         row = 0
@@ -504,7 +506,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
             wdg.beatHighlighted.connect(self.wdgPreview.highlightBeat)
             wdg.beatToggled.connect(self._beatToggled)
 
-    def __initWdgPReview(self):
+    def __initWdgPreview(self):
         self.wdgPreview.setCheckOccupiedBeats(False)
         self.wdgPreview.setBeatCursor(Qt.CursorShape.ArrowCursor)
         self.wdgPreview.setBeatsMoveable(True)
