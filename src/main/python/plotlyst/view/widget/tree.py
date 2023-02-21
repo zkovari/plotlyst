@@ -21,7 +21,7 @@ from typing import Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent
 from PyQt6.QtGui import QIcon, QMouseEvent
-from PyQt6.QtWidgets import QScrollArea, QSizePolicy, QFrame
+from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
 from qthandy import vbox, hbox, bold, margins, clear_layout
@@ -29,21 +29,17 @@ from qthandy import vbox, hbox, bold, margins, clear_layout
 from src.main.python.plotlyst.view.widget.display import Icon
 
 
-class ChildNode(QWidget):
+class BaseTreeWidget(QWidget):
     selectionChanged = pyqtSignal(bool)
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, animation: bool = True):
-        super(ChildNode, self).__init__(parent)
-        self._animation = animation
-        hbox(self)
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
+        super(BaseTreeWidget, self).__init__(parent)
 
         self._selected: bool = False
-
         self._wdgTitle = QWidget(self)
         hbox(self._wdgTitle, 0, 2)
 
         self._lblTitle = QLabel(title)
-
         self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         self._icon = Icon(self._wdgTitle)
         if icon:
@@ -53,18 +49,13 @@ class ChildNode(QWidget):
 
         self._wdgTitle.layout().addWidget(self._icon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
-        self.layout().addWidget(self._wdgTitle)
 
-    @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        self._toggleSelection(not self._selected)
-        self.selectionChanged.emit(self._selected)
+    def titleWidget(self) -> QWidget:
+        return self._wdgTitle
 
-    # @overrides
-    # def enterEvent(self, event: QEnterEvent) -> None:
-    #     if self._animation:
-    #         qtanim.glow(self, radius=4, duration=100, color=Qt.GlobalColor.lightGray)
-
+    def titleLabel(self) -> QLabel:
+        return self._lblTitle
+    
     def select(self):
         self._toggleSelection(True)
 
@@ -77,6 +68,22 @@ class ChildNode(QWidget):
         self._reStyle()
 
     def _reStyle(self):
+        pass
+
+
+class ChildNode(BaseTreeWidget):
+
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
+        super(ChildNode, self).__init__(title, icon, parent)
+        hbox(self)
+        self.layout().addWidget(self._wdgTitle)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self._toggleSelection(not self._selected)
+        self.selectionChanged.emit(self._selected)
+
+    def _reStyle(self):
         if self._selected:
             self.setStyleSheet('''
                    ChildNode {
@@ -87,29 +94,15 @@ class ChildNode(QWidget):
             self.setStyleSheet('')
 
 
-class ContainerNode(QWidget):
-    selectionChanged = pyqtSignal(bool)
+class ContainerNode(BaseTreeWidget):
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
-        super(ContainerNode, self).__init__(parent)
-        vbox(self)
-        self._selected: bool = False
-
-        self._wdgTitle = QWidget(self)
-        hbox(self._wdgTitle, 0, 2)
-
-        self._lblTitle = QLabel(title)
-        self._icon = Icon(self._wdgTitle)
-        if icon:
-            self._icon.setIcon(icon)
-        else:
-            self._icon.setHidden(True)
-
-        self._wdgTitle.layout().addWidget(self._icon)
-        self._wdgTitle.layout().addWidget(self._lblTitle)
+        super(ContainerNode, self).__init__(title, icon, parent)
+        vbox(self, margin=1, spacing=3)
 
         self._container = QWidget(self)
-        vbox(self._container)
+        self._container.setHidden(True)
+        vbox(self._container, 1)
         margins(self._container, left=10)
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._container)
@@ -123,31 +116,20 @@ class ContainerNode(QWidget):
             self.selectionChanged.emit(self._selected)
         return super(ContainerNode, self).eventFilter(watched, event)
 
-    def titleWidget(self) -> QWidget:
-        return self._wdgTitle
-
     def containerWidget(self) -> QWidget:
         return self._container
 
-    def select(self):
-        self._toggleSelection(True)
-
-    def deselect(self):
-        self._toggleSelection(False)
-
     def addChild(self, wdg: QWidget):
+        self._container.setVisible(True)
         self._container.layout().addWidget(wdg)
 
     def insertChild(self, i: int, wdg: QWidget):
+        self._container.setVisible(True)
         self._container.layout().insertWidget(i, wdg)
 
     def clearChildren(self):
         clear_layout(self._container)
-
-    def _toggleSelection(self, selected: bool):
-        self._selected = selected
-        bold(self._lblTitle, self._selected)
-        self._reStyle()
+        self._container.setHidden(True)
 
     def _reStyle(self):
         if self._selected:
