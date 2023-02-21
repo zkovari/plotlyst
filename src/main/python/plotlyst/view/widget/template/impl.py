@@ -24,7 +24,7 @@ from typing import Optional, List, Any, Dict, Set, Tuple
 import emoji
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize, QItemSelectionModel
 from PyQt6.QtGui import QMouseEvent, QIcon
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
     QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QMenu, QVBoxLayout, QWidgetAction
@@ -87,6 +87,7 @@ class TextSelectionWidget(SecondaryActionPushButton):
 
     def setValue(self, value: str):
         self._selected = self._items.get(value)
+        self._popup.setValue(value)
         if self._selected:
             self.setText(self._selected.text)
             if self._selected.icon:
@@ -131,6 +132,14 @@ class TextSelectionWidget(SecondaryActionPushButton):
         @overrides
         def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
             pass  # catch event not to close the popup
+
+        def setValue(self, value: str):
+            if not value:
+                return
+            indexes = self.model.match(self.model.index(0, TemplateFieldSelectionModel.ColName),
+                                       Qt.ItemDataRole.DisplayRole, value)
+            if indexes:
+                self.tblItems.selectionModel().select(indexes[0], QItemSelectionModel.SelectionFlag.Select)
 
         def _selection_changed(self):
             item = self._current_item()
