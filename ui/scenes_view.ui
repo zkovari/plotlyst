@@ -662,7 +662,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>4</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="pageCards">
               <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -825,81 +825,92 @@
                </property>
                <item>
                 <layout class="QVBoxLayout" name="verticalLayout_6">
+                 <property name="leftMargin">
+                  <number>5</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>5</number>
+                 </property>
                  <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_3">
-                   <property name="spacing">
-                    <number>1</number>
+                  <widget class="QWidget" name="wdgProgressTop" native="true">
+                   <property name="white-bg" stdset="0">
+                    <bool>true</bool>
                    </property>
-                   <item>
-                    <widget class="RotatedButton" name="btnStageSelector">
-                     <property name="text">
-                      <string/>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>20</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                     <property name="base" stdset="0">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QWidget" name="wdgProgressCharts" native="true">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <layout class="QHBoxLayout" name="horizontalLayout_5">
-                      <property name="spacing">
-                       <number>0</number>
+                   <layout class="QHBoxLayout" name="horizontalLayout_3">
+                    <property name="spacing">
+                     <number>1</number>
+                    </property>
+                    <item>
+                     <widget class="RotatedButton" name="btnStageSelector">
+                      <property name="text">
+                       <string/>
                       </property>
-                      <property name="leftMargin">
-                       <number>0</number>
+                      <property name="iconSize">
+                       <size>
+                        <width>20</width>
+                        <height>20</height>
+                       </size>
                       </property>
-                      <property name="topMargin">
-                       <number>0</number>
+                      <property name="base" stdset="0">
+                       <bool>true</bool>
                       </property>
-                      <property name="rightMargin">
-                       <number>0</number>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QWidget" name="wdgProgressCharts" native="true">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
                       </property>
-                      <property name="bottomMargin">
-                       <number>0</number>
+                      <layout class="QHBoxLayout" name="horizontalLayout_5">
+                       <property name="spacing">
+                        <number>0</number>
+                       </property>
+                       <property name="leftMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="topMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="rightMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="bottomMargin">
+                        <number>0</number>
+                       </property>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
                       </property>
-                     </layout>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item alignment="Qt::AlignLeft|Qt::AlignBottom">
-                    <widget class="QToolButton" name="btnStageCustomize">
-                     <property name="cursor">
-                      <cursorShape>PointingHandCursor</cursorShape>
-                     </property>
-                     <property name="text">
-                      <string/>
-                     </property>
-                     <property name="base" stdset="0">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item alignment="Qt::AlignLeft|Qt::AlignBottom">
+                     <widget class="QToolButton" name="btnStageCustomize">
+                      <property name="cursor">
+                       <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="base" stdset="0">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
                  </item>
                  <item>
                   <widget class="QTableView" name="tblSceneStages">
@@ -1162,6 +1173,12 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>SceneStoryStructureWidget</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>CardsView</class>
    <extends>QFrame</extends>
    <header>src.main.python.plotlyst.view.widget.cards</header>
@@ -1176,12 +1193,6 @@
    <class>ScenesTreeView</class>
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.scene</header>
-  </customwidget>
-  <customwidget>
-   <class>SceneStoryStructureWidget</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

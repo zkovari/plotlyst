@@ -302,4 +302,12 @@ QSlider::handle:horizontal {
 }
 
 
+.QWidget[white-bg] {
+    background-color: white;
+}
+
+.QWidget[relaxed-white-bg] {
+    background-color: #f8f9fa;
+}
+
 '''
