@@ -102,6 +102,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
 
         self.ui.textEdit.setMargins(30, 30, 30, 30)
+        self.ui.textEdit.textEdit.setSidebarEnabled(False)
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
