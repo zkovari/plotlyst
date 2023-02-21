@@ -46,8 +46,8 @@ from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, C
 
 class SceneWidget(ChildNode):
 
-    def __init__(self, scene: Scene, novel: Novel, animation: bool = True, parent=None):
-        super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent, animation=animation)
+    def __init__(self, scene: Scene, novel: Novel, parent=None):
+        super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent)
         self._scene = scene
         self._novel = novel
 
@@ -287,7 +287,7 @@ class ScenesTreeView(TreeView, EventListener):
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
         if isinstance(wdg, SceneWidget):
-            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel(), animation=False)
+            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel())
         elif isinstance(wdg, ChapterWidget):
             self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel())
             for v in self._scenes.values():
@@ -306,6 +306,7 @@ class ScenesTreeView(TreeView, EventListener):
         if self._dummyWdg:
             gc(self._dummyWdg)
             self._dummyWdg = None
+
         if self._toBeRemoved:
             gc(self._toBeRemoved)
             self._toBeRemoved = None
@@ -371,6 +372,7 @@ class ScenesTreeView(TreeView, EventListener):
             new_widget.setParent(self._centralWidget)
             i = self._centralWidget.layout().indexOf(self._dummyWdg)
             self._centralWidget.layout().insertWidget(i, new_widget)
+            # novel is saved later caught in dragStopped -> reorderScenes
 
         self._dummyWdg.setHidden(True)
 
