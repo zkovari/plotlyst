@@ -46,7 +46,7 @@ def test_change_structure(qtbot, filled_window: MainWindow, monkeypatch):
     assert btn.isChecked() and btn.text() == 'Three Act Structure'
 
     monkeypatch.setattr(StoryStructureSelectorDialog, "display", lambda *args: save_the_cat)
-    view.ui.wdgStructure.btnTemplateEditor.click()
+    view.ui.wdgStructure.btnNew.click()
     btn = view.ui.wdgStructure.btnGroupStructure.buttons()[1]
     btn.click()
 
