@@ -1,9 +1,11 @@
 import sys
+from functools import partial
 from typing import Set, Optional, Dict
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF
 from PyQt6.QtWidgets import QMainWindow, QApplication
-from qthandy import clear_layout, vspacer, retain_when_hidden
+from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc
+from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.core.domain import Document, Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -52,6 +54,9 @@ class DocumentsTreeView(TreeView):
         self._docs: Dict[Document, DocumentWidget] = {}
         self._selectedDocuments: Set[Document] = set()
 
+        self._dummyWdg: Optional[DocumentWidget] = None
+        self._toBeRemoved: Optional[DocumentWidget] = None
+
         self.setStyleSheet('DocumentsTreeView {background-color: rgb(244, 244, 244);}')
 
         self.repo = RepositoryPersistenceManager.instance()
@@ -66,7 +71,7 @@ class DocumentsTreeView(TreeView):
         clear_layout(self)
 
         for doc in self._novel.documents:
-            wdg = DocumentWidget(doc)
+            wdg = self.__initDocWidget(doc)
             self._centralWidget.layout().addWidget(wdg)
             self._traverseChildren(doc, wdg)
 
@@ -79,9 +84,94 @@ class DocumentsTreeView(TreeView):
 
     def _traverseChildren(self, doc: Document, wdg: DocumentWidget):
         for child in doc.children:
-            childWdg = DocumentWidget(child)
+            childWdg = self.__initDocWidget(child)
             wdg.addChild(childWdg)
             self._traverseChildren(child, childWdg)
+
+    def _docSelectionChanged(self, wdg: DocumentWidget, selected: bool):
+        if selected:
+            self.clearSelection()
+            self._selectedDocuments.add(wdg.doc())
+            self.documentSelected.emit(wdg.doc())
+        elif wdg.doc() in self._selectedDocuments:
+            self._selectedDocuments.remove(wdg.doc())
+
+    def _dragStarted(self, wdg: DocumentWidget):
+        wdg.setHidden(True)
+        self._dummyWdg = DocumentWidget(wdg.doc())
+        translucent(self._dummyWdg)
+        self._dummyWdg.setHidden(True)
+        self._dummyWdg.setParent(self._centralWidget)
+        self._dummyWdg.setAcceptDrops(True)
+        self._dummyWdg.installEventFilter(
+            DropEventFilter(self._dummyWdg, [self.DOC_MIME_TYPE], droppedSlot=self._drop))
+
+    def _dragStopped(self, wdg: DocumentWidget):
+        if self._dummyWdg:
+            gc(self._dummyWdg)
+            self._dummyWdg = None
+
+        if self._toBeRemoved:
+            gc(self._toBeRemoved)
+            self._toBeRemoved = None
+        else:
+            wdg.setVisible(True)
+
+    def _dragMovedOnDoc(self, wdg: DocumentWidget, edge: Qt.Edge, point: QPointF):
+        i = wdg.parent().layout().indexOf(wdg)
+        if edge == Qt.Edge.TopEdge:
+            wdg.parent().layout().insertWidget(i, self._dummyWdg)
+        elif point.x() > 50:
+            wdg.insertChild(0, self._dummyWdg)
+        else:
+            wdg.parent().layout().insertWidget(i + 1, self._dummyWdg)
+
+        self._dummyWdg.setVisible(True)
+
+    def _drop(self, mimeData: QMimeData):
+        self.clearSelection()
+
+        if self._dummyWdg.isHidden():
+            return
+        ref: Document = mimeData.reference()
+        self._toBeRemoved = self._docs[ref]
+        new_widget = self.__initDocWidget(ref)
+        if self._dummyWdg.parent() is self._centralWidget:
+            # ref = None
+            # new_widget.setParent(self._centralWidget)
+            i = self._centralWidget.layout().indexOf(self._dummyWdg)
+            self._centralWidget.layout().insertWidget(i, new_widget)
+        elif isinstance(self._dummyWdg.parent().parent(), DocumentWidget):
+            doc_wdg: DocumentWidget = self._dummyWdg.parent().parent()
+            # ref.chapter = chapter_wdg.chapter()
+            # new_widget.setParent(doc_wdg)
+            i = doc_wdg.containerWidget().layout().indexOf(self._dummyWdg)
+            doc_wdg.insertChild(i, new_widget)
+
+        self._dummyWdg.setHidden(True)
+        # self.repo.update_novel(self._novel)
+
+    def __initDocWidget(self, doc: Document) -> DocumentWidget:
+        wdg = DocumentWidget(doc)
+        wdg.selectionChanged.connect(partial(self._docSelectionChanged, wdg))
+        # wdg.deleted.connect(partial(self._deleteChapterWidget, chapterWdg))
+        wdg.installEventFilter(
+            DragEventFilter(wdg, self.DOC_MIME_TYPE, dataFunc=lambda wdg: wdg.doc(),
+                            grabbed=wdg.titleLabel(),
+                            startedSlot=partial(self._dragStarted, wdg),
+                            finishedSlot=partial(self._dragStopped, wdg)))
+        wdg.titleWidget().setAcceptDrops(True)
+        wdg.titleWidget().installEventFilter(
+            DropEventFilter(wdg, [self.DOC_MIME_TYPE, self.DOC_MIME_TYPE],
+                            motionDetection=Qt.Orientation.Vertical,
+                            motionSlot=partial(self._dragMovedOnDoc, wdg),
+                            droppedSlot=self._drop
+                            )
+        )
+
+        self._docs[doc] = wdg
+
+        return wdg
 
 
 if __name__ == '__main__':
