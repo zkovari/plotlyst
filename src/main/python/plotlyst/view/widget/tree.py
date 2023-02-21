@@ -121,16 +121,6 @@ class ChildNode(BaseTreeWidget):
         self._toggleSelection(not self._selected)
         self.selectionChanged.emit(self._selected)
 
-    # def _reStyle(self):
-    #     if self._selected:
-    #         self.setStyleSheet('''
-    #                ChildNode {
-    #                    background-color: #D8D5D5;
-    #                }
-    #            ''')
-    #     else:
-    #         self.setStyleSheet('')
-
 
 class ContainerNode(BaseTreeWidget):
 
@@ -172,17 +162,6 @@ class ContainerNode(BaseTreeWidget):
     def clearChildren(self):
         clear_layout(self._container)
         self._container.setHidden(True)
-
-    # @overrides
-    # def _reStyle(self):
-    #     if self._selected:
-    #         self._wdgTitle.setStyleSheet('''
-    #                 .QWidget {
-    #                     background-color: #D8D5D5;
-    #                 }
-    #             ''')
-    #     else:
-    #         self._wdgTitle.setStyleSheet('')
 
 
 class TreeView(QScrollArea):
