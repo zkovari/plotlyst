@@ -17,19 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import pickle
 from abc import abstractmethod
 from enum import Enum
-from typing import Optional, List, Dict, Iterable, Set
+from functools import partial
+from typing import Optional, List, Dict, Iterable, Set, Any
 
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QByteArray
-from PyQt6.QtGui import QMouseEvent, QDrag, QDragEnterEvent, QDragMoveEvent, QDropEvent, QColor, QAction
+from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData
+from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction
 from PyQt6.QtWidgets import QFrame, QApplication, QToolButton
 from overrides import overrides
 from qtframes import Frame
-from qthandy import FlowLayout, clear_layout, retain_when_hidden, transparent, margins
+from qthandy import clear_layout, retain_when_hidden, transparent, margins, flow
+from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import act_color
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Novel
@@ -72,32 +73,6 @@ class Card(QFrame):
         qtanim.glow(self, color=QColor('#0096c7'))
 
     @overrides
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        if self._dragEnabled and event.button() == Qt.MouseButton.LeftButton:
-            self.dragStartPosition = event.pos()
-        else:
-            self.dragStartPosition = None
-        super(Card, self).mousePressEvent(event)
-
-    @overrides
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if not self._dragEnabled:
-            return
-        if not event.buttons() & Qt.MouseButton.LeftButton:
-            return
-        if not self.dragStartPosition:
-            return
-        if (event.pos() - self.dragStartPosition).manhattanLength() < QApplication.startDragDistance():
-            return
-
-        drag = QDrag(self)
-        mimeData = CardMimeData(self)
-        mimeData.setData(self.mimeType(), QByteArray(pickle.dumps(self.objectName())))
-        drag.setPixmap(self.grab())
-        drag.setMimeData(mimeData)
-        drag.exec(Qt.MoveAction)
-
-    @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         self.select()
 
@@ -105,29 +80,6 @@ class Card(QFrame):
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
         self.select()
         self.doubleClicked.emit(self)
-
-    @overrides
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        event.acceptProposedAction()
-
-    @overrides
-    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
-        if event.mimeData().hasFormat(self.mimeType()):
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-
-    @overrides
-    def dropEvent(self, event: QDropEvent) -> None:
-        if isinstance(event.mimeData(), CardMimeData):
-            if event.mimeData().card is self:
-                event.ignore()
-                return
-
-            self.dropped.emit(event.mimeData().card, self)
-            event.acceptProposedAction()
-        else:
-            event.ignore()
 
     def select(self):
         self._setStyleSheet(selected=True)
@@ -138,6 +90,10 @@ class Card(QFrame):
 
     @abstractmethod
     def mimeType(self) -> str:
+        pass
+
+    @abstractmethod
+    def data(self) -> Any:
         pass
 
     def _setStyleSheet(self, selected: bool = False):
@@ -178,6 +134,10 @@ class NovelCard(Ui_NovelCard, Card):
     def mimeType(self) -> str:
         return 'application/novel-card'
 
+    @overrides
+    def data(self) -> Any:
+        return self.novel
+
 
 class CharacterCard(Ui_CharacterCard, Card):
 
@@ -211,6 +171,10 @@ class CharacterCard(Ui_CharacterCard, Card):
     @overrides
     def mimeType(self) -> str:
         return 'application/character-card'
+
+    @overrides
+    def data(self) -> Any:
+        return self.character
 
 
 class SceneCard(Ui_SceneCard, Card):
@@ -255,11 +219,6 @@ class SceneCard(Ui_SceneCard, Card):
         else:
             self._beatFrame.setHidden(True)
 
-        # if any([x.major for x in scene.comments]):
-        #     self.btnComments.setIcon(IconRegistry.from_name('fa5s.comment', color='#fb8b24'))
-        # else:
-        #     self.btnComments.setHidden(True)
-
         icon = IconRegistry.scene_type_icon(self.scene)
         if icon:
             self.lblType.setPixmap(icon.pixmap(QSize(24, 24)))
@@ -275,6 +234,10 @@ class SceneCard(Ui_SceneCard, Card):
     @overrides
     def mimeType(self) -> str:
         return 'application/scene-card'
+
+    @overrides
+    def data(self) -> Any:
+        return self.scene
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
@@ -354,9 +317,8 @@ class CardsView(QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._layout = FlowLayout(9, 15)
-        self._cards: List[Card] = []
-        self.setLayout(self._layout)
+        self._cards: Dict[Any, Card] = {}
+        self._layout = flow(self, 9, 15)
         self.setAcceptDrops(True)
         self._selected: Optional[Card] = None
         self._cardsWidth: int = 135
@@ -385,11 +347,14 @@ class CardsView(QFrame):
 
     def addCard(self, card: Card):
         card.setAcceptDrops(True)
+        if card.isDragEnabled():
+            card.installEventFilter(DragEventFilter(card, card.mimeType(), lambda x: card.data(), hideTarget=True))
         card.selected.connect(self._cardSelected)
+        card.installEventFilter(DropEventFilter(card, [card.mimeType()], droppedSlot=partial(self._dropped, card)))
         card.dropped.connect(self.swapped.emit)
 
         self._layout.addWidget(card)
-        self._cards.append(card)
+        self._cards[card.data()] = card
         self._resizeCard(card)
 
     def cardAt(self, pos: int) -> Optional[Card]:
@@ -406,11 +371,11 @@ class CardsView(QFrame):
         self._resizeAllCards()
 
     def applyFilter(self, cardFilter: CardFilter):
-        for card in self._cards:
+        for card in self._cards.values():
             card.setVisible(cardFilter.filter(card))
 
     def _resizeAllCards(self):
-        for card in self._cards:
+        for card in self._cards.values():
             self._resizeCard(card)
 
     def _resizeCard(self, card: Card):
@@ -422,3 +387,7 @@ class CardsView(QFrame):
 
     def _cardSelected(self, card: Card):
         self._selected = card
+
+    def _dropped(self, card: Card, mimeData: QMimeData):
+        data = mimeData.reference()
+        self.swapped.emit(self._cards[data], card)
