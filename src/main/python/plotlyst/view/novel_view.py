@@ -71,6 +71,8 @@ class NovelView(AbstractNovelView):
         self.ui.textPremise.textEdit.setFont(font)
         self.ui.textPremise.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ui.textPremise.textEdit.setAcceptRichText(False)
+        self.ui.textPremise.textEdit.setSidebarEnabled(False)
+        self.ui.textPremise.textEdit.setDocumentMargin(0)
 
         self._btnPremiseVariants = SecondaryActionToolButton()
         self._btnPremiseVariants.setToolTip('Premise variants')
@@ -94,6 +96,7 @@ class NovelView(AbstractNovelView):
         self._premise_changed()
         self.ui.textSynopsis.setPlaceholderText("Write down your story's main events")
         self.ui.textSynopsis.setMargins(0, 10, 0, 10)
+        self.ui.textSynopsis.textEdit.setSidebarEnabled(False)
         self.ui.textSynopsis.setGrammarCheckEnabled(True)
         self.ui.textPremise.setGrammarCheckEnabled(True)
 
