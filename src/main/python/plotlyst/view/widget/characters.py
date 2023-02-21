@@ -118,6 +118,8 @@ class CharactersScenesDistributionWidget(QWidget, Ui_CharactersScenesDistributio
         self.btnConflicts.toggled.connect(self._toggle_conflicts)
         self.btnTags.toggled.connect(self._toggle_tags)
 
+        transparent(self.spinAverage)
+
         self.btnCharacters.setChecked(True)
 
         self.refresh()
