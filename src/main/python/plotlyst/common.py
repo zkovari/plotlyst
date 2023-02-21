@@ -53,6 +53,8 @@ PLOTLYST_MAIN_COMPLEMENTARY_COLOR: str = '#2C5D06'  # Dark moss green
 PLOTLYST_SECONDARY_COLOR: str = '#4B0763'  # Persian indigo
 PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
 
+RELAXED_WHITE_COLOR: str = '#f8f9fa'
+
 
 def emotion_color(emotion_value: int) -> str:
     if emotion_value == VERY_UNHAPPY:
@@ -66,8 +68,6 @@ def emotion_color(emotion_value: int) -> str:
     else:
         return NEUTRAL_EMOTION_COLOR
 
-
-RELAXED_WHITE_COLOR: str = '#f8f9fa'
 
 EM_DASH = u'\u2014'
 EN_DASH = u'\u2013'

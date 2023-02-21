@@ -56,7 +56,7 @@ QPushButton:disabled[base=true] {
 
 QPushButton[positive=true]:!disabled {
     background-color: #4B0763;
-    border: 2px solid #37065D;
+    border: 2px solid black;
     color: #fff;
     font: bold;
 }
@@ -147,14 +147,14 @@ QToolButton:hover[transparent-circle-bg-on-hover][positive] {
 
 QHeaderView::section {
     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                      stop:0 #2177b0, stop: 0.5 #185b87,
-                                      stop: 0.6 #124669, stop:1 #1d608c);
+                                      stop:0 #D4B8E0, stop: 0.5 #4B0763,
+                                      stop: 0.6 #4B0763, stop:1 #3C0764);
     color: white;
     padding-left: 4px;
-    border: 1px solid #6c6c6c;
-    border-radius: 6px;
+    padding-bottom: 2px;
+    border: 1px solid #3C0764;
+    border-radius: 0px;
     font-size: 16px;
-    font: bold;
 }
 
 QToolBar {
