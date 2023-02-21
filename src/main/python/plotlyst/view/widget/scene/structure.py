@@ -792,7 +792,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.timeline = SceneStructureTimeline(self)
         self.timeline.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.scrollAreaWidgetContents.layout().addWidget(self.timeline)
+        self.scrollAreaTimeline.layout().addWidget(self.timeline)
 
         self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
