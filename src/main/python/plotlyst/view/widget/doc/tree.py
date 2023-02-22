@@ -4,11 +4,12 @@ from typing import Set, Optional, Dict
 
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF
 from PyQt6.QtWidgets import QMainWindow, QApplication
-from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc
+from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc, ask_confirmation
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.core.domain import Document, Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.view.common import fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
@@ -151,10 +152,20 @@ class DocumentsTreeView(TreeView):
         self._dummyWdg.setHidden(True)
         # self.repo.update_novel(self._novel)
 
+    def _deleteDocWidget(self, wdg: DocumentWidget):
+        doc = wdg.doc()
+        if not ask_confirmation(f"Delete document '{doc.title}'?", self._centralWidget):
+            return
+        if doc in self._selectedDocuments:
+            self._selectedDocuments.remove(doc)
+        self._docs.pop(doc)
+
+        fade_out_and_gc(wdg.parent(), wdg)
+
     def __initDocWidget(self, doc: Document) -> DocumentWidget:
         wdg = DocumentWidget(doc)
         wdg.selectionChanged.connect(partial(self._docSelectionChanged, wdg))
-        # wdg.deleted.connect(partial(self._deleteChapterWidget, chapterWdg))
+        wdg.deleted.connect(partial(self._deleteDocWidget, wdg))
         wdg.installEventFilter(
             DragEventFilter(wdg, self.DOC_MIME_TYPE, dataFunc=lambda wdg: wdg.doc(),
                             grabbed=wdg.titleLabel(),
