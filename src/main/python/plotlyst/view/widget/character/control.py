@@ -17,12 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QDial, QSpinBox
 from qthandy import vbox, line, vspacer
 
-from src.main.python.plotlyst.view.common import pointy
+from src.main.python.plotlyst.view.common import pointy, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.display import Icon
 
 
@@ -57,13 +59,13 @@ class CharacterAgeEditor(QWidget):
 
         vbox(self, spacing=0)
         self.layout().addWidget(vspacer(20))
-        self.layout().addWidget(self._dial, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(
+            group(wrap(self._iconAdult, margin_bottom=25), self._dial, wrap(self._iconOld, margin_bottom=20),
+                  spacing=1),
+            alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._iconBaby, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(line())
         self.layout().addWidget(self._spinbox)
-
-        self._iconAdult.setGeometry(3, 1, 20, 20)
-        self._iconOld.setGeometry(70, 10, 22, 22)
 
         self._dial.valueChanged.connect(self._dialValueChanged)
         self._spinbox.valueChanged.connect(self._spinboxValueChanged)

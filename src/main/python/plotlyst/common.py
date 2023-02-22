@@ -48,6 +48,13 @@ UNHAPPY_EMOTION_COLOR: str = '#ff8e2b'
 HAPPY_EMOTION_COLOR: str = '#93e5ab'
 VERY_HAPPY_EMOTION_COLOR: str = '#00ca94'
 
+PLOTLYST_MAIN_COLOR: str = '#3C0764'  # Persian indigo, #4B0763: Indigo, #37065D: Russian violet
+PLOTLYST_MAIN_COMPLEMENTARY_COLOR: str = '#2C5D06'  # Dark moss green
+PLOTLYST_SECONDARY_COLOR: str = '#4B0763'  # Persian indigo
+PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
+
+RELAXED_WHITE_COLOR: str = '#f8f9fa'
+
 
 def emotion_color(emotion_value: int) -> str:
     if emotion_value == VERY_UNHAPPY:
@@ -61,8 +68,6 @@ def emotion_color(emotion_value: int) -> str:
     else:
         return NEUTRAL_EMOTION_COLOR
 
-
-RELAXED_WHITE_COLOR: str = '#f8f9fa'
 
 EM_DASH = u'\u2014'
 EN_DASH = u'\u2013'
@@ -83,3 +88,14 @@ def act_color(act: int, translucent: bool = False) -> str:
         return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
     else:
         return '#DBF5FA'
+
+
+def recursive(parent, children_func, action, action_first: bool = True):
+    for child in children_func(parent):
+        if action_first:
+            action(parent, child)
+
+        recursive(child, children_func, action)
+
+        if not action_first:
+            action(parent, child)

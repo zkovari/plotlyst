@@ -55,27 +55,28 @@ QPushButton:disabled[base=true] {
 }
 
 QPushButton[positive=true]:!disabled {
-    background-color: #4fb477;
+    background-color: #4B0763;
+    border: 2px solid black;
     color: #fff;
     font: bold;
 }
 
 QPushButton[positive=true]:hover {
-    background-color: #27ae60;
+    background-color: #37065D;
 }
 
 QPushButton[highlighted=true]:!disabled {
-    background-color: #384e77;
+    background-color: #071064;
     color: #fff;
     font: bold;
 }
 
 QPushButton[highlighted=true]:hover {
-    background-color: #18314f;
+    background-color: #060F5D;
 }
 
 QPushButton[deconstructive=true]:!disabled {
-    background-color: #e74c3c;
+    background-color: #EE8074;
     color: #fff;
     font: bold;
 }
@@ -146,14 +147,14 @@ QToolButton:hover[transparent-circle-bg-on-hover][positive] {
 
 QHeaderView::section {
     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                      stop:0 #2177b0, stop: 0.5 #185b87,
-                                      stop: 0.6 #124669, stop:1 #1d608c);
+                                      stop:0 #D4B8E0, stop: 0.5 #4B0763,
+                                      stop: 0.6 #4B0763, stop:1 #3C0764);
     color: white;
     padding-left: 4px;
-    border: 1px solid #6c6c6c;
-    border-radius: 6px;
+    padding-bottom: 2px;
+    border: 1px solid #3C0764;
+    border-radius: 0px;
     font-size: 16px;
-    font: bold;
 }
 
 QToolBar {
@@ -300,5 +301,13 @@ QSlider::handle:horizontal {
     border-radius: 3px;
 }
 
+
+.QWidget[white-bg] {
+    background-color: white;
+}
+
+.QWidget[relaxed-white-bg] {
+    background-color: #f8f9fa;
+}
 
 '''

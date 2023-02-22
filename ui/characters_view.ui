@@ -165,11 +165,14 @@
           </item>
           <item>
            <widget class="QToolButton" name="btnRelationsView">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="toolTip">
-             <string>Relations view</string>
+             <string>Relations view (Not implemented yet)</string>
             </property>
             <property name="text">
              <string/>
@@ -349,29 +352,16 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_2">
+           <spacer name="horizontalSpacer_5">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
             <property name="sizeType">
-             <enum>QSizePolicy::Preferred</enum>
+             <enum>QSizePolicy::Fixed</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
+              <width>2</width>
               <height>20</height>
              </size>
             </property>
@@ -404,6 +394,35 @@
              <bool>true</bool>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Preferred</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>
@@ -936,8 +955,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>727</width>
-                <height>570</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -996,23 +1015,23 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CharacterSelectorButtons</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.characters</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>CardsView</class>
    <extends>QFrame</extends>
    <header>src.main.python.plotlyst.view.widget.cards</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CharacterSelectorButtons</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.characters</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupComparison"/>
+  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupComparisonView"/>
  </buttongroups>
 </ui>

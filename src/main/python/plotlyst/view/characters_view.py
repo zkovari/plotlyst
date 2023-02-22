@@ -25,7 +25,7 @@ from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -36,7 +36,7 @@ from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, PopupMenuBuilder
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, PopupMenuBuilder, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -95,9 +95,11 @@ class CharactersView(AbstractNovelView):
         self.ui.tblCharacters.doubleClicked.connect(self.ui.btnEdit.click)
         self.ui.btnCardsView.setIcon(IconRegistry.cards_icon())
         self.ui.btnTableView.setIcon(IconRegistry.table_icon())
-        self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on='darkBlue'))
-        self.ui.btnComparison.setIcon(IconRegistry.from_name('mdi.compare-horizontal', color_on='darkBlue'))
-        self.ui.btnRelationsView.setIcon(IconRegistry.from_name('ph.share-network-bold', color_on='darkBlue'))
+        self.ui.btnBackstoryView.setIcon(IconRegistry.from_name('mdi.timeline', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnComparison.setIcon(
+            IconRegistry.from_name('mdi.compare-horizontal', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnRelationsView.setIcon(
+            IconRegistry.from_name('ph.share-network-bold', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnProgressView.setIcon(IconRegistry.progress_check_icon('black'))
         self.setNavigableButtonGroup(self.ui.btnGroupViews)
 
@@ -107,6 +109,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
+        self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
         self.ui.btnNew.clicked.connect(self._on_new)
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)

@@ -220,6 +220,9 @@
            </item>
            <item>
             <widget class="QToolButton" name="btnWorld">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="minimumSize">
               <size>
                <width>50</width>
@@ -236,7 +239,7 @@
               <cursorShape>PointingHandCursor</cursorShape>
              </property>
              <property name="toolTip">
-              <string>World building</string>
+              <string>World building (Not implemented yet)</string>
              </property>
              <property name="text">
               <string/>

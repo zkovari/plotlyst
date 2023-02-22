@@ -182,6 +182,7 @@ class BigFivePersonalityWidget(QWidget):
         self._chart = BigFiveChart()
         self._chartView = ChartView(self)
         self._chartView.setChart(self._chart)
+        self._chartView.setMinimumSize(256, 256)
         self.layout().addWidget(self._chartView)
         self.layout().addWidget(self._scrollArea)
 

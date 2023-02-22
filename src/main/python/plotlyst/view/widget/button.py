@@ -28,6 +28,7 @@ from overrides import overrides
 from qthandy import hbox, translucent, bold, incr_font, transparent
 from qthandy.filter import OpacityEventFilter
 
+from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import SelectionItem
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -252,11 +253,11 @@ class ToolbarButton(QToolButton):
 
         self.toggled.connect(lambda x: bold(self, x))
 
-        self.setStyleSheet('''
-            QToolButton:checked {
+        self.setStyleSheet(f'''
+            QToolButton:checked {{
                 color: #240046;
-                background-color: #e2cfea;
-            }
+                background-color: {PLOTLYST_TERTIARY_COLOR};
+            }}
         ''')
 
         incr_font(self, 1)
