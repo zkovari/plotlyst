@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
 from functools import partial
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent, QObject, QPoint
 from PyQt6.QtWidgets import QScrollArea, QFrame, QLineEdit
@@ -116,6 +116,7 @@ class ListView(QScrollArea):
         self._btnAdd.clicked.connect(self._addNewItem)
 
         self._dragPlaceholder: Optional[ListItemWidget] = None
+        self._dragged: Optional[ListItemWidget] = None
         self._toBeRemoved = False
 
     def addItem(self, item: Any):
@@ -131,6 +132,16 @@ class ListView(QScrollArea):
         self._centralWidget.layout().addWidget(self._btnAdd)
         self._centralWidget.layout().addWidget(vspacer())
 
+    def widgets(self) -> List[ListItemWidget]:
+        wdgs = []
+        for i in range(self._centralWidget.layout().count() - 2):
+            wdg = self._centralWidget.layout().itemAt(i).widget()
+            if wdg is self._dragPlaceholder or wdg is self._dragged:
+                continue
+            wdgs.append(wdg)
+
+        return wdgs
+
     @abstractmethod
     def _addNewItem(self):
         pass
@@ -143,6 +154,7 @@ class ListView(QScrollArea):
         fade_out_and_gc(self._centralWidget, widget)
 
     def _dragStarted(self, widget: ListItemWidget):
+        self._dragged = widget
         self._dragPlaceholder = ListItemWidget(widget.item(), self)
         margins(self._dragPlaceholder, left=3)
         translucent(self._dragPlaceholder)
@@ -157,6 +169,8 @@ class ListView(QScrollArea):
             self._centralWidget.layout().removeWidget(self._dragPlaceholder)
             gc(self._dragPlaceholder)
             self._dragPlaceholder = None
+
+        self._dragged = None
         if self._toBeRemoved:
             widget.setHidden(True)
             self._centralWidget.layout().removeWidget(widget)
