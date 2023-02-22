@@ -28,8 +28,9 @@ from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEve
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMenu
 from overrides import overrides
 from qthandy import pointy, gc, translucent, bold, transparent, btn_popup_menu, \
-    retain_when_hidden, flow, clear_layout, decr_font, margins
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DragEventFilter, DisabledClickEventFilter
+    retain_when_hidden, flow, clear_layout, decr_font, margins, spacer
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DragEventFilter, DisabledClickEventFilter, \
+    ObjectReferenceMimeData
 
 from src.main.python.plotlyst.common import emotion_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
@@ -110,8 +111,14 @@ HAPPENING_BEATS = (SceneStructureItemType.BEAT, SceneStructureItemType.EXPOSITIO
                    SceneStructureItemType.HOOK, SceneStructureItemType.MYSTERY, SceneStructureItemType.EXPOSITION)
 
 
-def is_happening_beat(beat: SceneStructureItem) -> bool:
-    return beat.type in HAPPENING_BEATS
+def normalize_beat_percentages(agenda, forced: bool = False):
+    for i in range(1, len(agenda.items) - 1):
+        beat = agenda.items[i]
+        if beat.percentage == 0.0 or forced:
+            beat.percentage = i * (0.9 / (len(agenda.items) - 1))
+    last_beat = agenda.items[-1]
+    if last_beat.percentage == 0.0 or forced:
+        last_beat.percentage = 0.9
 
 
 emotions: Dict[str, str] = {'Admiration': '#008744', 'Adoration': '#7048e8', 'Amusement': '#ff6961', 'Anger': '#ff3333',
@@ -463,13 +470,7 @@ class SceneStructureTimeline(QWidget):
         if not agenda.items:
             self._initBeatsFromType(sceneTyoe)
 
-        for i in range(1, len(agenda.items) - 1):
-            beat = agenda.items[i]
-            if beat.percentage == 0.0:
-                beat.percentage = i * (0.9 / (len(agenda.items) - 1))
-        last_beat = agenda.items[-1]
-        if last_beat.percentage == 0.0:
-            last_beat.percentage = 0.9
+        normalize_beat_percentages(agenda)
 
         self._rearrangeBeats()
 
@@ -761,6 +762,8 @@ class BeatListItemWidget(ListItemWidget):
     def __init__(self, beat: SceneStructureItem, parent=None):
         super(BeatListItemWidget, self).__init__(beat, parent)
         self._beat = beat
+        self._lineEdit.setMaximumWidth(600)
+        self.layout().addWidget(spacer())
         self.refresh()
 
     def refresh(self):
@@ -789,11 +792,30 @@ class SceneStructureList(ListView):
 
     @overrides
     def _addNewItem(self):
-        pass
+        beat = SceneStructureItem(SceneStructureItemType.EXPOSITION)
+        self._agenda.items.append(beat)
+        normalize_beat_percentages(self._agenda, forced=True)
+        self.addItem(beat)
 
     @overrides
     def _listItemWidgetClass(self):
         return BeatListItemWidget
+
+    @overrides
+    def _deleteItemWidget(self, widget: ListItemWidget):
+        super(SceneStructureList, self)._deleteItemWidget(widget)
+        self._agenda.items.remove(widget.item())
+        normalize_beat_percentages(self._agenda, forced=True)
+
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        super(SceneStructureList, self)._dropped(mimeData)
+        self._agenda.items.clear()
+
+        for wdg in self.widgets():
+            self._agenda.items.append(wdg.item())
+
+        normalize_beat_percentages(self._agenda, forced=True)
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
