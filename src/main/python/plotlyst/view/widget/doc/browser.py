@@ -9,10 +9,11 @@ from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, Character
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import fade_out_and_gc
-from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.common import fade_out_and_gc, pointy
+from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
@@ -27,6 +28,7 @@ class DocumentAdditionMenu(QMenu):
 
         character_menu = self.addMenu(IconRegistry.character_icon(), 'Characters')
         _view = QListView()
+        pointy(_view)
         _view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         _view.clicked.connect(self._characterSelected)
         _view.setModel(CharactersTableModel(self._novel))
@@ -37,6 +39,7 @@ class DocumentAdditionMenu(QMenu):
     def _characterSelected(self, char_index: QModelIndex):
         char = char_index.data(CharactersTableModel.CharacterRole)
         self._documentSelected(character=char)
+        self.hide()
 
     def _documentSelected(self, docType=DocumentType.DOCUMENT, character: Optional[Character] = None):
         doc = Document('New Document', type=docType)
@@ -63,20 +66,14 @@ class DocumentWidget(ContainerNode):
         if self._doc.icon:
             self._icon.setIcon(IconRegistry.from_name(self._doc.icon, self._doc.icon_color))
             self._icon.setVisible(True)
+        elif self._doc.character_id:
+            char = self._doc.character(app_env.novel)
+            self._icon.setIcon(avatars.avatar(char))
+            self._icon.setVisible(True)
         else:
             self._icon.setHidden(True)
 
         self._lblTitle.setText(self._doc.title)
-
-    # @overrides
-    # def eventFilter(self, watched: 'QObject', event: 'QEvent') -> bool:
-    #     if event.type() == QEvent.Type.Enter:
-    #         if not self._icon.isVisible():
-    #             self._icon.setVisible(True)
-    #     elif event.type() == QEvent.Type.Leave:
-    #         if not self._doc.icon:
-    #             self._icon.setHidden(True)
-    #     return super().eventFilter(watched, event)
 
 
 class DocumentsTreeView(TreeView):
@@ -124,6 +121,9 @@ class DocumentsTreeView(TreeView):
             recursive(doc, lambda parent: parent.children, addChildWdg)
 
         self._centralWidget.layout().addWidget(vspacer())
+
+    def updateDocument(self, doc: Document):
+        self._docs[doc].refresh()
 
     def clearSelection(self):
         for doc in self._selectedDocuments:

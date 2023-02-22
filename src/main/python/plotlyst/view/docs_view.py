@@ -26,10 +26,9 @@ from qthandy import clear_layout, bold, btn_popup_menu
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
-from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.doc.mice import MiceQuotientDoc
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
@@ -82,21 +81,6 @@ class DocumentsView(AbstractNovelView):
 
     def _clear_text_editor(self):
         clear_layout(self.ui.docEditorPage.layout())
-
-    def _show_menu_popup(self, index: QModelIndex):
-        builder = PopupMenuBuilder.from_index(self.ui.treeDocuments, index)
-        builder.add_action('Edit icon', IconRegistry.icons_icon(), lambda: self._change_icon(index))
-        builder.add_separator()
-        builder.add_action('Delete', IconRegistry.minus_icon(), self._remove_doc)
-
-        builder.popup()
-
-    def _remove_doc(self):
-        selected = self.ui.treeDocuments.selectionModel().selectedIndexes()
-        if not selected:
-            return
-        self.model.removeDoc(selected[0])
-        self._clear_text_editor()
 
     def _edit(self, doc: Document):
         self._init_text_editor()
@@ -155,5 +139,6 @@ class DocumentsView(AbstractNovelView):
         if self._current_doc:
             if title and title != self._current_doc.title:
                 self._current_doc.title = title
-                emit_column_changed_in_tree(self.model, 0, QModelIndex())
+                # emit_column_changed_in_tree(self.model, 0, QModelIndex())
+                self.ui.treeDocuments.updateDocument(self._current_doc)
                 self.repo.update_novel(self.novel)
