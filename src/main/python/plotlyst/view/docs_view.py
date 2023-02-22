@@ -28,7 +28,6 @@ from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
-from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.doc.mice import MiceQuotientDoc
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
@@ -119,7 +118,8 @@ class DocumentsView(AbstractNovelView):
             self.ui.customEditorPage.layout().addWidget(widget)
 
     def _change_icon(self, index: QModelIndex):
-        result = IconSelectorDialog().display()
+        # result = IconSelectorDialog().display()
+        pass
         # if result:
         #     node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
         #     node.document.icon = result[0]
