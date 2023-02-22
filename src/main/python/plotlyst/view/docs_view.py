@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QModelIndex
 from overrides import overrides
 from qthandy import clear_layout, bold, btn_popup_menu
 
@@ -52,6 +51,7 @@ class DocumentsView(AbstractNovelView):
         self.ui.treeDocuments.setNovel(self.novel)
         self.ui.treeDocuments.documentSelected.connect(self._edit)
         self.ui.treeDocuments.documentDeleted.connect(self._clear_text_editor)
+        self.ui.treeDocuments.documentIconChanged.connect(self._icon_changed)
 
         self.textEditor: Optional[DocumentTextEditor] = None
 
@@ -117,15 +117,9 @@ class DocumentsView(AbstractNovelView):
                 return
             self.ui.customEditorPage.layout().addWidget(widget)
 
-    def _change_icon(self, index: QModelIndex):
-        # result = IconSelectorDialog().display()
-        pass
-        # if result:
-        #     node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
-        #     node.document.icon = result[0]
-        #     node.document.icon_color = result[1].name()
-        #     self.repo.update_novel(self.novel)
-        #     self.textEditor.setTitleIcon(IconRegistry.from_name(node.document.icon, node.document.icon_color))
+    def _icon_changed(self, doc: Document):
+        if doc is self._current_doc:
+            self.textEditor.setTitleIcon(IconRegistry.from_name(doc.icon, doc.icon_color))
 
     def _save(self):
         if not self._current_doc:

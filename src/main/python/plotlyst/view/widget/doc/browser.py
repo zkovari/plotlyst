@@ -56,6 +56,8 @@ class DocumentWidget(ContainerNode):
         self._doc = doc
 
         retain_when_hidden(self._icon)
+
+        self._actionChangeIcon.setVisible(True)
         self.refresh()
 
     def doc(self) -> Document:
@@ -74,11 +76,16 @@ class DocumentWidget(ContainerNode):
 
         self._lblTitle.setText(self._doc.title)
 
+    def _iconChanged(self, iconName: str, iconColor: str):
+        self._doc.icon = iconName
+        self._doc.icon_color = iconColor
+
 
 class DocumentsTreeView(TreeView):
     DOC_MIME_TYPE: str = 'application/document'
     documentSelected = pyqtSignal(Document)
     documentDeleted = pyqtSignal(Document)
+    documentIconChanged = pyqtSignal(Document)
 
     def __init__(self, parent=None):
         super(DocumentsTreeView, self).__init__(parent)
@@ -103,7 +110,7 @@ class DocumentsTreeView(TreeView):
         wdg = self.__initDocWidget(doc)
         self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, wdg)
 
-        self.repo.update_novel(self._novel)
+        self._save()
 
     def refresh(self):
         def addChildWdg(parent: Document, child: Document):
@@ -212,7 +219,7 @@ class DocumentsTreeView(TreeView):
             doc_parent_wdg.insertChild(new_index, new_widget)
 
         self._dummyWdg.setHidden(True)
-        self.repo.update_novel(self._novel)
+        self._save()
 
     def _deleteDocWidget(self, wdg: DocumentWidget):
         doc = wdg.doc()
@@ -228,7 +235,7 @@ class DocumentsTreeView(TreeView):
         self.documentDeleted.emit(doc)
 
         self._removeFromParentDoc(doc, wdg)
-        self.repo.update_novel(self._novel)
+        self._save()
 
     def _removeFromParentDoc(self, doc: Document, wdg: DocumentWidget):
         if wdg.parent() is self._centralWidget:
@@ -237,10 +244,18 @@ class DocumentsTreeView(TreeView):
             parent: DocumentWidget = wdg.parent().parent()
             parent.doc().children.remove(doc)
 
+    def _save(self):
+        self.repo.update_novel(self._novel)
+
+    def _iconChanged(self, doc: Document):
+        self._save()
+        self.documentIconChanged.emit(doc)
+
     def __initDocWidget(self, doc: Document) -> DocumentWidget:
         wdg = DocumentWidget(doc)
         wdg.selectionChanged.connect(partial(self._docSelectionChanged, wdg))
         wdg.deleted.connect(partial(self._deleteDocWidget, wdg))
+        wdg.iconChanged.connect(partial(self._iconChanged, doc))
         wdg.installEventFilter(
             DragEventFilter(wdg, self.DOC_MIME_TYPE, dataFunc=lambda wdg: wdg.doc(),
                             grabbed=wdg.titleLabel(),

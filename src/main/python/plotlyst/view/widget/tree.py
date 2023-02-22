@@ -26,7 +26,8 @@ from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
 from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, btn_popup_menu
 
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
 
@@ -34,6 +35,7 @@ from src.main.python.plotlyst.view.widget.display import Icon
 class BaseTreeWidget(QWidget):
     selectionChanged = pyqtSignal(bool)
     deleted = pyqtSignal()
+    iconChanged = pyqtSignal()
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
         super(BaseTreeWidget, self).__init__(parent)
@@ -56,6 +58,9 @@ class BaseTreeWidget(QWidget):
         self._btnMenu.setIcon(IconRegistry.dots_icon('grey', vertical=True))
         self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
         self._btnMenu.setHidden(True)
+
+        self._actionChangeIcon = action('Change icon', IconRegistry.icons_icon(), self._changeIcon)
+        self._actionDelete = action('Delete', IconRegistry.trash_can_icon(), self.deleted.emit)
         self._initMenu()
 
         self._wdgTitle.layout().addWidget(self._icon)
@@ -64,8 +69,13 @@ class BaseTreeWidget(QWidget):
 
     def _initMenu(self):
         menu = QMenu(self._btnMenu)
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.deleted.emit)
+        menu.addAction(self._actionChangeIcon)
+        menu.addSeparator()
+        menu.addAction(self._actionDelete)
         menu.aboutToHide.connect(lambda: self._btnMenu.setHidden(True))
+
+        self._actionChangeIcon.setVisible(False)
+
         btn_popup_menu(self._btnMenu, menu)
 
     def titleWidget(self) -> QWidget:
@@ -87,6 +97,17 @@ class BaseTreeWidget(QWidget):
         self._selected = selected
         bold(self._lblTitle, self._selected)
         self._reStyle()
+
+    def _changeIcon(self):
+        result = IconSelectorDialog().display()
+        if result:
+            self._icon.setIcon(IconRegistry.from_name(result[0], result[1].name()))
+            self._icon.setVisible(True)
+            self._iconChanged(result[0], result[1].name())
+            self.iconChanged.emit()
+
+    def _iconChanged(self, iconName: str, iconColor: str):
+        pass
 
     def _reStyle(self):
         if self._selected:
