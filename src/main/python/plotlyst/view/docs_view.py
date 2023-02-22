@@ -26,7 +26,6 @@ from qthandy import clear_layout, bold, btn_popup_menu
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
-from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
@@ -121,12 +120,12 @@ class DocumentsView(AbstractNovelView):
 
     def _change_icon(self, index: QModelIndex):
         result = IconSelectorDialog().display()
-        if result:
-            node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
-            node.document.icon = result[0]
-            node.document.icon_color = result[1].name()
-            self.repo.update_novel(self.novel)
-            self.textEditor.setTitleIcon(IconRegistry.from_name(node.document.icon, node.document.icon_color))
+        # if result:
+        #     node: DocumentNode = index.data(DocumentsTreeModel.NodeRole)
+        #     node.document.icon = result[0]
+        #     node.document.icon_color = result[1].name()
+        #     self.repo.update_novel(self.novel)
+        #     self.textEditor.setTitleIcon(IconRegistry.from_name(node.document.icon, node.document.icon_color))
 
     def _save(self):
         if not self._current_doc:

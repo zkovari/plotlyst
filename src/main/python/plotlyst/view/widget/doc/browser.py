@@ -1,5 +1,4 @@
 from functools import partial
-from functools import partial
 from typing import Set, Optional, Dict
 
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
