@@ -34,7 +34,6 @@ from src.main.python.plotlyst.view.widget.display import Icon
 
 class BaseTreeWidget(QWidget):
     selectionChanged = pyqtSignal(bool)
-    added = pyqtSignal()
     deleted = pyqtSignal()
     iconChanged = pyqtSignal()
 
@@ -65,7 +64,6 @@ class BaseTreeWidget(QWidget):
         transparent(self._btnAdd)
         self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
-        self._btnAdd.clicked.connect(self.added.emit)
         self._btnAdd.setHidden(True)
 
         self._actionChangeIcon = action('Change icon', IconRegistry.icons_icon(), self._changeIcon)

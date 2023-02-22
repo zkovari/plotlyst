@@ -3,6 +3,7 @@ from typing import Set, Optional, Dict
 
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
 from PyQt6.QtWidgets import QMenu, QListView, QWidgetAction
+from overrides import overrides
 from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc, ask_confirmation
 from qthandy.filter import DragEventFilter, DropEventFilter
 
@@ -51,13 +52,19 @@ class DocumentAdditionMenu(QMenu):
 
 
 class DocumentWidget(ContainerNode):
-    def __init__(self, doc: Document, parent=None):
+    added = pyqtSignal(Document)
+
+    def __init__(self, novel: Novel, doc: Document, parent=None):
         super(DocumentWidget, self).__init__(doc.title, parent)
+        self._novel = novel
         self._doc = doc
 
         retain_when_hidden(self._icon)
 
         self._actionChangeIcon.setVisible(True)
+        menu = DocumentAdditionMenu(self._novel)
+        menu.documentTriggered.connect(self.added.emit)
+        self.setPlusMenu(menu)
         self.refresh()
 
     def doc(self) -> Document:
@@ -76,6 +83,7 @@ class DocumentWidget(ContainerNode):
 
         self._lblTitle.setText(self._doc.title)
 
+    @overrides
     def _iconChanged(self, iconName: str, iconColor: str):
         self._doc.icon = iconName
         self._doc.icon_color = iconColor
@@ -146,7 +154,9 @@ class DocumentsTreeView(TreeView):
 
     def _dragStarted(self, wdg: DocumentWidget):
         wdg.setHidden(True)
-        self._dummyWdg = DocumentWidget(wdg.doc())
+        self._dummyWdg = DocumentWidget(self._novel, wdg.doc())
+        self._dummyWdg.setPlusButtonEnabled(False)
+        self._dummyWdg.setMenuEnabled(False)
         translucent(self._dummyWdg)
         self._dummyWdg.setHidden(True)
         self._dummyWdg.setParent(self._centralWidget)
@@ -221,6 +231,12 @@ class DocumentsTreeView(TreeView):
         self._dummyWdg.setHidden(True)
         self._save()
 
+    def _addDoc(self, wdg: DocumentWidget, newDoc: Document):
+        newWdg = self.__initDocWidget(newDoc)
+        wdg.addChild(newWdg)
+        wdg.doc().children.append(newDoc)
+        self._save()
+
     def _deleteDocWidget(self, wdg: DocumentWidget):
         doc = wdg.doc()
         if not ask_confirmation(f"Delete document '{doc.title}'?", self._centralWidget):
@@ -252,9 +268,10 @@ class DocumentsTreeView(TreeView):
         self.documentIconChanged.emit(doc)
 
     def __initDocWidget(self, doc: Document) -> DocumentWidget:
-        wdg = DocumentWidget(doc)
+        wdg = DocumentWidget(self._novel, doc)
         wdg.selectionChanged.connect(partial(self._docSelectionChanged, wdg))
         wdg.deleted.connect(partial(self._deleteDocWidget, wdg))
+        wdg.added.connect(partial(self._addDoc, wdg))
         wdg.iconChanged.connect(partial(self._iconChanged, doc))
         wdg.installEventFilter(
             DragEventFilter(wdg, self.DOC_MIME_TYPE, dataFunc=lambda wdg: wdg.doc(),
