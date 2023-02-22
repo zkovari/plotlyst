@@ -24,12 +24,11 @@ from typing import List
 
 from PyQt6.QtCore import QMimeData, QPointF
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QToolButton, QMenu
+from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import gc, retain_when_hidden, translucent, clear_layout, vbox
-from qthandy import vspacer, btn_popup_menu
-from qthandy.filter import VisibilityToggleEventFilter, \
-    DragEventFilter, DropEventFilter
+from qthandy import vspacer
+from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     Chapter
@@ -46,8 +45,8 @@ from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, C
 
 class SceneWidget(ChildNode):
 
-    def __init__(self, scene: Scene, novel: Novel, animation: bool = True, parent=None):
-        super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent, animation=animation)
+    def __init__(self, scene: Scene, novel: Novel, parent=None):
+        super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent)
         self._scene = scene
         self._novel = novel
 
@@ -57,7 +56,6 @@ class SceneWidget(ChildNode):
         self._wdgTitle.layout().insertWidget(0, self._scenePovIcon)
 
         self.refresh()
-        self._reStyle()
 
     def scene(self) -> Scene:
         return self._scene
@@ -89,15 +87,6 @@ class ChapterWidget(ContainerNode):
         self._chapter = chapter
         self._novel = novel
 
-        self._btnSettings = QToolButton(self._wdgTitle)
-        self._btnSettings.setIcon(IconRegistry.dots_icon(vertical=True))
-        self._btnSettings.setProperty('transparent', True)
-        menu = QMenu(self._btnSettings)
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.deleted.emit)
-        btn_popup_menu(self._btnSettings, menu)
-        self._wdgTitle.layout().addWidget(self._btnSettings, alignment=Qt.AlignmentFlag.AlignRight)
-        self._wdgTitle.installEventFilter(VisibilityToggleEventFilter(self._btnSettings, self._wdgTitle))
-
         self._reStyle()
 
     def refresh(self):
@@ -110,15 +99,7 @@ class ChapterWidget(ContainerNode):
         return self._novel
 
     def sceneWidgets(self) -> List[SceneWidget]:
-        scenes_ = []
-        for i in range(self._container.layout().count()):
-            item = self._container.layout().itemAt(i)
-            if item is None:
-                continue
-            if isinstance(item.widget(), SceneWidget):
-                scenes_.append(item.widget())
-
-        return scenes_
+        return self.childrenWidgets()
 
 
 class ScenesTreeView(TreeView, EventListener):
@@ -288,7 +269,7 @@ class ScenesTreeView(TreeView, EventListener):
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
         if isinstance(wdg, SceneWidget):
-            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel(), animation=False)
+            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel())
         elif isinstance(wdg, ChapterWidget):
             self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel())
             for v in self._scenes.values():
@@ -307,6 +288,7 @@ class ScenesTreeView(TreeView, EventListener):
         if self._dummyWdg:
             gc(self._dummyWdg)
             self._dummyWdg = None
+
         if self._toBeRemoved:
             gc(self._toBeRemoved)
             self._toBeRemoved = None
@@ -372,6 +354,7 @@ class ScenesTreeView(TreeView, EventListener):
             new_widget.setParent(self._centralWidget)
             i = self._centralWidget.layout().indexOf(self._dummyWdg)
             self._centralWidget.layout().insertWidget(i, new_widget)
+            # novel is saved later caught in dragStopped -> reorderScenes
 
         self._dummyWdg.setHidden(True)
 

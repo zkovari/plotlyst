@@ -204,7 +204,7 @@
         <number>1</number>
        </property>
        <item>
-        <widget class="ActionBasedTreeView" name="treeDocuments">
+        <widget class="DocumentsTreeView" name="treeDocuments">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -235,24 +235,6 @@
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
          </property>
-         <property name="dragEnabled">
-          <bool>true</bool>
-         </property>
-         <property name="dragDropMode">
-          <enum>QAbstractItemView::DragDrop</enum>
-         </property>
-         <property name="defaultDropAction">
-          <enum>Qt::MoveAction</enum>
-         </property>
-         <property name="indentation">
-          <number>10</number>
-         </property>
-         <attribute name="headerVisible">
-          <bool>false</bool>
-         </attribute>
-         <attribute name="headerStretchLastSection">
-          <bool>false</bool>
-         </attribute>
         </widget>
        </item>
       </layout>
@@ -312,9 +294,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ActionBasedTreeView</class>
+   <class>DocumentsTreeView</class>
    <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.tree_view</header>
+   <header>src.main.python.plotlyst.view.widget.doc</header>
   </customwidget>
  </customwidgets>
  <resources/>

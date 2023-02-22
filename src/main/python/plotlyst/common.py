@@ -88,3 +88,14 @@ def act_color(act: int, translucent: bool = False) -> str:
         return TRANS_ACT_THREE_COLOR if translucent else ACT_THREE_COLOR
     else:
         return '#DBF5FA'
+
+
+def recursive(parent, children_func, action, action_first: bool = True):
+    for child in children_func(parent):
+        if action_first:
+            action(parent, child)
+
+        recursive(child, children_func, action)
+
+        if not action_first:
+            action(parent, child)

@@ -32,6 +32,7 @@ from atomicwrites import atomic_write
 from dataclasses_json import dataclass_json, Undefined, config
 from qthandy import busy
 
+from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapter, SceneStage, \
     default_stages, StoryStructure, \
     default_story_structures, NovelDescriptor, ProfileTemplate, default_character_profiles, TemplateValue, \
@@ -704,6 +705,8 @@ class JsonClient:
         doc_file_path = novel_doc_dir.joinpath(self.__doc_file(doc.id))
         if os.path.exists(doc_file_path):
             os.remove(doc_file_path)
+
+        recursive(doc, lambda parent: parent.children, lambda p, child: self.__delete_doc(novel, child))
 
 
 json_client = JsonClient()

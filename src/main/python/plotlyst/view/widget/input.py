@@ -449,12 +449,6 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setPlaceholderText('Write your notes...')
 
-        # self._lblPlaceholder = QLabel(self.textEdit)
-        # font = QFont(family)
-        # font.setItalic(True)
-        # self._lblPlaceholder.setFont(font)
-        # self._lblPlaceholder.setStyleSheet('color: #118ab2;')
-
         self.setWidthPercentage(90)
 
         self.layout().insertWidget(1, self._wdgTitle)
