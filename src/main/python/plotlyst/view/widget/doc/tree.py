@@ -136,6 +136,8 @@ class DocumentsTreeView(TreeView):
         ref: Document = mimeData.reference()
         self._toBeRemoved = self._docs[ref]
         new_widget = self.__initDocWidget(ref)
+        for child in self._toBeRemoved.childrenWidgets():
+            new_widget.addChild(child)
         if self._dummyWdg.parent() is self._centralWidget:
             # ref = None
             # new_widget.setParent(self._centralWidget)
