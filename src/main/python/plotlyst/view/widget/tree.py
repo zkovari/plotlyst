@@ -82,7 +82,7 @@ class BaseTreeWidget(QWidget):
         menu.addAction(self._actionChangeIcon)
         menu.addSeparator()
         menu.addAction(self._actionDelete)
-        menu.aboutToHide.connect(lambda: self._btnMenu.setHidden(True))
+        menu.aboutToHide.connect(self._hideAll)
 
         self._actionChangeIcon.setVisible(False)
 
@@ -107,7 +107,8 @@ class BaseTreeWidget(QWidget):
         self._plusEnabled = enabled
 
     def setPlusMenu(self, menu: QMenu):
-        self._btnAdd.setMenu(menu)
+        menu.aboutToHide.connect(self._hideAll)
+        btn_popup_menu(self._btnAdd, menu)
 
     def _toggleSelection(self, selected: bool):
         self._selected = selected
@@ -124,6 +125,10 @@ class BaseTreeWidget(QWidget):
 
     def _iconChanged(self, iconName: str, iconColor: str):
         pass
+
+    def _hideAll(self):
+        self._btnMenu.setHidden(True)
+        self._btnAdd.setHidden(True)
 
     def _reStyle(self):
         if self._selected:
@@ -152,11 +157,11 @@ class ChildNode(BaseTreeWidget):
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
-        if self._menuEnabled and not self._btnMenu.menu().isVisible():
+        if self._btnMenu.menu().isVisible() or self._btnAdd.menu() and self._btnAdd.menu().isVisible():
+            return
+        if self._menuEnabled:
             self._btnMenu.setHidden(True)
         if self._plusEnabled:
-            if self._btnAdd.menu() and self._btnAdd.menu().isVisible():
-                return
             self._btnAdd.setHidden(True)
 
     @overrides
@@ -188,10 +193,11 @@ class ContainerNode(BaseTreeWidget):
             if self._plusEnabled:
                 self._btnAdd.setVisible(True)
         elif event.type() == QEvent.Type.Leave:
-            if self._menuEnabled and not self._btnMenu.menu().isVisible():
-                self._btnMenu.setHidden(True)
-            if self._plusEnabled and (self._btnAdd.menu() is None or not self._btnAdd.menu().isVisible()):
-                self._btnAdd.setHidden(True)
+            if (self._menuEnabled and self._btnMenu.menu().isVisible()) or \
+                    (self._plusEnabled and self._btnAdd.menu() and self._btnAdd.menu().isVisible()):
+                return super(ContainerNode, self).eventFilter(watched, event)
+            self._btnMenu.setHidden(True)
+            self._btnAdd.setHidden(True)
         elif event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
             self._toggleSelection(not self._selected)
             self.selectionChanged.emit(self._selected)
