@@ -18,9 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Optional
 
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QIcon
 from qthandy import vspacer
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor
@@ -32,9 +33,17 @@ class NovelNode(ChildNode):
     def __init__(self, novel: NovelDescriptor, parent=None):
         super(NovelNode, self).__init__(novel.title, parent=parent)
         self._novel = novel
+        self.setPlusButtonEnabled(False)
 
     def novel(self) -> NovelDescriptor:
         return self._novel
+
+
+class ShelveNode(ContainerNode):
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
+        super(ShelveNode, self).__init__(title, icon, parent)
+        self.setMenuEnabled(False)
+        self.setPlusButtonEnabled(False)
 
 
 class ShelvesTreeView(TreeView):
@@ -46,14 +55,10 @@ class ShelvesTreeView(TreeView):
         self._selectedNovels: Set[NovelDescriptor] = set()
         self._novels: Dict[NovelDescriptor, NovelNode] = {}
 
-        self._wdgNovels = ContainerNode('Novels', IconRegistry.book_icon())
-        self._wdgNovels.setMenuEnabled(False)
-        self._wdgShortStories = ContainerNode('Short stories', IconRegistry.from_name('ph.file-text'))
-        self._wdgShortStories.setMenuEnabled(False)
-        self._wdgIdeas = ContainerNode('Ideas', IconRegistry.decision_icon())
-        self._wdgIdeas.setMenuEnabled(False)
-        self._wdgNotes = ContainerNode('Notes', IconRegistry.document_edition_icon())
-        self._wdgNotes.setMenuEnabled(False)
+        self._wdgNovels = ShelveNode('Novels', IconRegistry.book_icon())
+        self._wdgShortStories = ShelveNode('Short stories', IconRegistry.from_name('ph.file-text'))
+        self._wdgIdeas = ShelveNode('Ideas', IconRegistry.decision_icon())
+        self._wdgNotes = ShelveNode('Notes', IconRegistry.document_edition_icon())
 
         self._wdgShortStories.setDisabled(True)
         self._wdgIdeas.setDisabled(True)

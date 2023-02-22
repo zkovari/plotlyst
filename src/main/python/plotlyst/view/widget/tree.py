@@ -34,12 +34,14 @@ from src.main.python.plotlyst.view.widget.display import Icon
 
 class BaseTreeWidget(QWidget):
     selectionChanged = pyqtSignal(bool)
+    added = pyqtSignal()
     deleted = pyqtSignal()
     iconChanged = pyqtSignal()
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
         super(BaseTreeWidget, self).__init__(parent)
         self._menuEnabled: bool = True
+        self._plusEnabled: bool = True
 
         self._selected: bool = False
         self._wdgTitle = QWidget(self)
@@ -59,6 +61,13 @@ class BaseTreeWidget(QWidget):
         self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
         self._btnMenu.setHidden(True)
 
+        self._btnAdd = QToolButton()
+        transparent(self._btnAdd)
+        self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
+        self._btnAdd.clicked.connect(self.added.emit)
+        self._btnAdd.setHidden(True)
+
         self._actionChangeIcon = action('Change icon', IconRegistry.icons_icon(), self._changeIcon)
         self._actionDelete = action('Delete', IconRegistry.trash_can_icon(), self.deleted.emit)
         self._initMenu()
@@ -66,6 +75,7 @@ class BaseTreeWidget(QWidget):
         self._wdgTitle.layout().addWidget(self._icon)
         self._wdgTitle.layout().addWidget(self._lblTitle)
         self._wdgTitle.layout().addWidget(self._btnMenu)
+        self._wdgTitle.layout().addWidget(self._btnAdd)
 
     def _initMenu(self):
         menu = QMenu(self._btnMenu)
@@ -92,6 +102,12 @@ class BaseTreeWidget(QWidget):
 
     def setMenuEnabled(self, enabled: bool):
         self._menuEnabled = enabled
+
+    def setPlusButtonEnabled(self, enabled: bool):
+        self._plusEnabled = enabled
+
+    def setPlusMenu(self, menu: QMenu):
+        self._btnAdd.setMenu(menu)
 
     def _toggleSelection(self, selected: bool):
         self._selected = selected
@@ -131,11 +147,17 @@ class ChildNode(BaseTreeWidget):
     def enterEvent(self, event: QEnterEvent) -> None:
         if self._menuEnabled:
             self._btnMenu.setVisible(True)
+        if self._plusEnabled:
+            self._btnAdd.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
         if self._menuEnabled and not self._btnMenu.menu().isVisible():
             self._btnMenu.setHidden(True)
+        if self._plusEnabled:
+            if self._btnAdd.menu() and self._btnAdd.menu().isVisible():
+                return
+            self._btnAdd.setHidden(True)
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -160,10 +182,16 @@ class ContainerNode(BaseTreeWidget):
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Enter and self._menuEnabled:
-            self._btnMenu.setVisible(True)
-        elif event.type() == QEvent.Type.Leave and self._menuEnabled and not self._btnMenu.menu().isVisible():
-            self._btnMenu.setHidden(True)
+        if event.type() == QEvent.Type.Enter:
+            if self._menuEnabled:
+                self._btnMenu.setVisible(True)
+            if self._plusEnabled:
+                self._btnAdd.setVisible(True)
+        elif event.type() == QEvent.Type.Leave:
+            if self._menuEnabled and not self._btnMenu.menu().isVisible():
+                self._btnMenu.setHidden(True)
+            if self._plusEnabled and (self._btnAdd.menu() is None or not self._btnAdd.menu().isVisible()):
+                self._btnAdd.setHidden(True)
         elif event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
             self._toggleSelection(not self._selected)
             self.selectionChanged.emit(self._selected)
