@@ -8,7 +8,7 @@ from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc, 
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import recursive
-from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, Character, default_documents
+from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, Character
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import fade_out_and_gc
@@ -99,6 +99,7 @@ class DocumentsTreeView(TreeView):
 
     def setNovel(self, novel: Novel):
         self._novel = novel
+
         self.refresh()
 
     def addDocument(self, doc: Document):
@@ -179,15 +180,40 @@ class DocumentsTreeView(TreeView):
         new_widget = self.__initDocWidget(ref)
         for child in self._toBeRemoved.childrenWidgets():
             new_widget.addChild(child)
+
         if self._dummyWdg.parent() is self._centralWidget:
-            i = self._centralWidget.layout().indexOf(self._dummyWdg)
-            self._centralWidget.layout().insertWidget(i, new_widget)
+            new_index = self._centralWidget.layout().indexOf(self._dummyWdg)
+            if self._toBeRemoved.parent() is self._centralWidget:  # swap order on top
+                old_index = self._centralWidget.layout().indexOf(self._toBeRemoved)
+                self._novel.documents.remove(ref)
+                if old_index < new_index:
+                    self._novel.documents.insert(new_index - 1, ref)
+                else:
+                    self._novel.documents.insert(new_index, ref)
+            else:
+                self._removeFromParentDoc(ref, self._toBeRemoved)
+                self._novel.documents.insert(new_index, ref)
+
+            self._centralWidget.layout().insertWidget(new_index, new_widget)
         elif isinstance(self._dummyWdg.parent().parent(), DocumentWidget):
-            doc_wdg: DocumentWidget = self._dummyWdg.parent().parent()
-            i = doc_wdg.containerWidget().layout().indexOf(self._dummyWdg)
-            doc_wdg.insertChild(i, new_widget)
+            doc_parent_wdg: DocumentWidget = self._dummyWdg.parent().parent()
+            new_index = doc_parent_wdg.containerWidget().layout().indexOf(self._dummyWdg)
+            if self._toBeRemoved.parent() is not self._centralWidget and \
+                    self._toBeRemoved.parent().parent() is self._dummyWdg.parent().parent():  # swap under same parent doc
+                old_index = doc_parent_wdg.layout().indexOf(self._toBeRemoved)
+                doc_parent_wdg.doc().children.remove(ref)
+                if old_index < new_index:
+                    doc_parent_wdg.insertChild(new_index - 1, new_widget)
+                else:
+                    doc_parent_wdg.doc().children.insert(new_index, ref)
+            else:
+                self._removeFromParentDoc(ref, self._toBeRemoved)
+                doc_parent_wdg.doc().children.insert(new_index, ref)
+
+            doc_parent_wdg.insertChild(new_index, new_widget)
 
         self._dummyWdg.setHidden(True)
+        self.repo.update_novel(self._novel)
 
     def _deleteDocWidget(self, wdg: DocumentWidget):
         doc = wdg.doc()
@@ -211,24 +237,6 @@ class DocumentsTreeView(TreeView):
         else:
             parent: DocumentWidget = wdg.parent().parent()
             parent.doc().children.remove(doc)
-
-    # def _updateDomain(self):
-    #     for doc in self._novel.documents:
-    #         recursive(doc, lambda parent: parent.children, lambda parent, child: child.children.clear(),
-    #                   action_first=False)
-    #     self._novel.documents.clear()
-    #
-    #     for i in range(self._centralWidget.layout().count()):
-    #         item = self._centralWidget.layout().itemAt(i)
-    #         if item is None:
-    #             continue
-    #         wdg = item.widget()
-    #         if isinstance(wdg, DocumentWidget):
-    #             self._novel.documents.append(wdg.doc())
-    #             recursive(wdg, lambda parent: parent.childrenWidgets(),
-    #                       lambda parent, child: parent.doc().children.append(
-    #                           child.doc()) if child is not self._toBeRemoved else None)
-    #     self.repo.update_novel(self._novel)
 
     def __initDocWidget(self, doc: Document) -> DocumentWidget:
         wdg = DocumentWidget(doc)
