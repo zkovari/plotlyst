@@ -1,9 +1,9 @@
-import sys
+from functools import partial
 from functools import partial
 from typing import Set, Optional, Dict
 
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
-from PyQt6.QtWidgets import QMainWindow, QApplication, QMenu, QListView, QWidgetAction
+from PyQt6.QtWidgets import QMenu, QListView, QWidgetAction
 from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc, ask_confirmation
 from qthandy.filter import DragEventFilter, DropEventFilter
 
@@ -259,25 +259,3 @@ class DocumentsTreeView(TreeView):
         self._docs[doc] = wdg
 
         return wdg
-
-
-if __name__ == '__main__':
-    class MainWindow(QMainWindow):
-        def __init__(self, parent=None):
-            super(MainWindow, self).__init__(parent)
-
-            self.resize(500, 500)
-
-            self.widget = DocumentsTreeView(self)
-            novel = Novel('test')
-            doc1 = Document('Doc 1')
-            novel.documents.append(doc1)
-            self.widget.setNovel(novel)
-            self.setCentralWidget(self.widget)
-
-
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-
-    app.exec()
