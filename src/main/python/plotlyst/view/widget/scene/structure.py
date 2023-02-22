@@ -852,14 +852,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._toggleCharacterStatus()
         self._initSelectors()
 
-    def updateAgendas(self):
-        if not self.scene.agendas:
-            return
-        self.scene.agendas[0].items.clear()
-        self.scene.agendas[0].items.extend(self.timeline.agendaItems())
-        # self.scene.agendas[0].beginning_emotion = self.btnEmotionStart.value()
-        # self.scene.agendas[0].ending_emotion = self.btnEmotionEnd.value()
-
     def _toggleCharacterStatus(self):
         if self.scene.agendas[0].character_id:
             self.wdgAgendaCharacter.setEnabled(True)
