@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QMainWindow, QApplication
 from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc, ask_confirmation
 from qthandy.filter import DragEventFilter, DropEventFilter
 
+from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Document, Novel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import fade_out_and_gc
@@ -67,6 +68,10 @@ class DocumentsTreeView(TreeView):
         self.refresh()
 
     def refresh(self):
+        def addChildWdg(parent: Document, child: Document):
+            childWdg = self.__initDocWidget(child)
+            self._docs[parent].addChild(childWdg)
+
         self.clearSelection()
         self._docs.clear()
         clear_layout(self)
@@ -74,7 +79,7 @@ class DocumentsTreeView(TreeView):
         for doc in self._novel.documents:
             wdg = self.__initDocWidget(doc)
             self._centralWidget.layout().addWidget(wdg)
-            self._traverseChildren(doc, wdg)
+            recursive(doc, lambda parent: parent.children, addChildWdg)
 
         self._centralWidget.layout().addWidget(vspacer())
 
@@ -82,12 +87,6 @@ class DocumentsTreeView(TreeView):
         for doc in self._selectedDocuments:
             self._docs[doc].deselect()
         self._selectedDocuments.clear()
-
-    def _traverseChildren(self, doc: Document, wdg: DocumentWidget):
-        for child in doc.children:
-            childWdg = self.__initDocWidget(child)
-            wdg.addChild(childWdg)
-            self._traverseChildren(child, childWdg)
 
     def _docSelectionChanged(self, wdg: DocumentWidget, selected: bool):
         if selected:
