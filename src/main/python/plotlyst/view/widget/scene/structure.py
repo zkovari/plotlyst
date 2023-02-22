@@ -44,7 +44,7 @@ from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButt
     CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import MenuWithDescription
 from src.main.python.plotlyst.view.widget.labels import EmotionLabel
-from src.main.python.plotlyst.view.widget.list import ListView
+from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
@@ -768,9 +768,43 @@ class SceneStructureTimeline(QWidget):
             self._dragPlaceholder = None
 
 
+class BeatListItemWidget(ListItemWidget):
+    def __init__(self, beat: SceneStructureItem, parent=None):
+        super(BeatListItemWidget, self).__init__(beat, parent)
+        self._beat = beat
+        self.refresh()
+
+    def refresh(self):
+        self._lineEdit.setText(self._beat.text)
+
+    @overrides
+    def _textChanged(self, text: str):
+        super(BeatListItemWidget, self)._textChanged(text)
+        self._beat.text = text
+
+
 class SceneStructureList(ListView):
     def __init__(self, parent=None):
         super(SceneStructureList, self).__init__(parent)
+        self._agenda: Optional[SceneStructureAgenda] = None
+
+    def setAgenda(self, agenda: SceneStructureAgenda, sceneType: SceneType):
+        self._agenda = agenda
+        self.refresh(sceneType)
+
+    def refresh(self, sceneType: SceneType):
+        self.clear()
+
+        for beat in self._agenda.items:
+            self.addItem(beat)
+
+    @overrides
+    def _addNewItem(self):
+        pass
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return BeatListItemWidget
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
@@ -839,6 +873,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._checkSceneType()
 
         self.timeline.setAgenda(scene.agendas[0], self.scene.type)
+        self.listEvents.setAgenda(scene.agendas[0], self.scene.type)
         self._initEditor(self.scene.type)
 
     def updateAvailableAgendaCharacters(self):
@@ -897,10 +932,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self.stackStructure.setCurrentWidget(self.pageList)
             self.lblSummary.setHidden(True)
             self.lblExposition.setVisible(True)
+            self.listEvents.refresh(type)
         elif type == SceneType.SUMMARY:
             self.stackStructure.setCurrentWidget(self.pageList)
             self.lblSummary.setVisible(True)
             self.lblExposition.setHidden(True)
+            self.listEvents.refresh(type)
         else:
             self.stackStructure.setCurrentWidget(self.pageTimetilne)
             self.timeline.setSceneType(self.scene.type)
