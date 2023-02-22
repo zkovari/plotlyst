@@ -19,17 +19,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QModelIndex, Qt
-from PyQt6.QtWidgets import QWidgetAction, QListView
+from PyQt6.QtCore import QModelIndex
 from overrides import overrides
-from qthandy import clear_layout, bold
+from qthandy import clear_layout, bold, btn_popup_menu
 
 from src.main.python.plotlyst.core.client import json_client
-from src.main.python.plotlyst.core.domain import Novel, Document, Character, DocumentType, \
-    Causality, CausalityItem, MiceQuotient
-from src.main.python.plotlyst.core.text import parse_structure_to_richtext
+from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
-from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import emit_column_changed_in_tree
 from src.main.python.plotlyst.model.docs_model import DocumentsTreeModel, DocumentNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -39,6 +35,7 @@ from src.main.python.plotlyst.view.doc.mice import MiceQuotientDoc
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
+from src.main.python.plotlyst.view.widget.doc.browser import DocumentAdditionMenu
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 
 
@@ -57,52 +54,23 @@ class DocumentsView(AbstractNovelView):
 
         self.ui.treeDocuments.setNovel(self.novel)
         self.ui.treeDocuments.documentSelected.connect(self._edit)
+        self.ui.treeDocuments.documentDeleted.connect(self._clear_text_editor)
 
         self.textEditor: Optional[DocumentTextEditor] = None
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
         self.ui.btnAdd.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAdd))
-        self.ui.btnAdd.clicked.connect(self._add_doc)
+        menu = DocumentAdditionMenu(self.novel)
+        menu.documentTriggered.connect(self._add_doc)
+        btn_popup_menu(self.ui.btnAdd, menu)
 
     @overrides
     def refresh(self):
         self.ui.treeDocuments.refresh()
 
-    def _add_doc(self, parent: Optional[QModelIndex] = None, character: Optional[Character] = None,
-                 doc_type: DocumentType = DocumentType.DOCUMENT):
-        doc = Document('New Document', type=doc_type)
-        if character:
-            doc.title = ''
-            doc.character_id = character.id
-        if doc_type == DocumentType.CAUSE_AND_EFFECT or doc_type == DocumentType.REVERSED_CAUSE_AND_EFFECT:
-            casuality = Causality(items=[CausalityItem('Story ending')])
-            doc.data = casuality
-            doc.data_id = casuality.id
-            self.repo.update_doc(self.novel, doc)
-        elif doc_type == DocumentType.MICE:
-            doc.title = 'MICE Threads'
-            doc.icon = 'mdi.rodent'
-            doc.icon_color = '#6c757d'
-            doc.data = MiceQuotient()
-            doc.data_id = doc.data.id
-            self.repo.update_doc(self.novel, doc)
-        elif doc_type == DocumentType.STORY_STRUCTURE:
-            doc.title = self.novel.active_story_structure.title
-            doc.icon = self.novel.active_story_structure.icon
-            doc.icon_color = self.novel.active_story_structure.icon_color
-
-        doc.loaded = True
-
-        if parent:
-            index = self.model.insertDocUnder(doc, parent)
-        else:
-            index = self.model.insertDoc(doc)
-        self.ui.treeDocuments.select(index)
-        self._edit(index)
-
-        if doc_type == DocumentType.STORY_STRUCTURE:
-            self.textEditor.textEdit.insertHtml(parse_structure_to_richtext(self.novel.active_story_structure))
-            self._save()
+    def _add_doc(self, doc: Document):
+        self.ui.treeDocuments.addDocument(doc)
+        self._edit(doc)
 
     def _init_text_editor(self):
         self._clear_text_editor()
@@ -120,28 +88,6 @@ class DocumentsView(AbstractNovelView):
         builder.add_action('Edit icon', IconRegistry.icons_icon(), lambda: self._change_icon(index))
         builder.add_separator()
         builder.add_action('Delete', IconRegistry.minus_icon(), self._remove_doc)
-
-        builder.popup()
-
-    def _show_docs_popup(self, index: QModelIndex):
-        def add_character(char_index: QModelIndex):
-            char = char_index.data(CharactersTableModel.CharacterRole)
-            self._add_doc(index, character=char)
-
-        builder = PopupMenuBuilder.from_index(self.ui.treeDocuments, index)
-        builder.add_action('Document', IconRegistry.document_edition_icon(), lambda: self._add_doc(index))
-
-        character_menu = builder.add_submenu('Characters', IconRegistry.character_icon())
-        _view = QListView()
-        _view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        _view.clicked.connect(add_character)
-        _view.setModel(CharactersTableModel(self.novel))
-        action = QWidgetAction(character_menu)
-        action.setDefaultWidget(_view)
-        character_menu.addAction(action)
-
-        builder.add_action('MICE threads', IconRegistry.from_name('mdi.rodent', '#6c757d'),
-                           lambda: self._add_doc(index, doc_type=DocumentType.MICE))
 
         builder.popup()
 

@@ -2,17 +2,50 @@ import sys
 from functools import partial
 from typing import Set, Optional, Dict
 
-from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF
-from PyQt6.QtWidgets import QMainWindow, QApplication
+from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
+from PyQt6.QtWidgets import QMainWindow, QApplication, QMenu, QListView, QWidgetAction
 from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc, ask_confirmation
 from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import recursive
-from src.main.python.plotlyst.core.domain import Document, Novel
+from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, Character, default_documents
+from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
+
+
+class DocumentAdditionMenu(QMenu):
+    documentTriggered = pyqtSignal(Document)
+
+    def __init__(self, novel: Novel, parent=None):
+        super(DocumentAdditionMenu, self).__init__(parent)
+        self._novel = novel
+
+        self.addAction(IconRegistry.document_edition_icon(), 'Document', self._documentSelected)
+
+        character_menu = self.addMenu(IconRegistry.character_icon(), 'Characters')
+        _view = QListView()
+        _view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        _view.clicked.connect(self._characterSelected)
+        _view.setModel(CharactersTableModel(self._novel))
+        action = QWidgetAction(character_menu)
+        action.setDefaultWidget(_view)
+        character_menu.addAction(action)
+
+    def _characterSelected(self, char_index: QModelIndex):
+        char = char_index.data(CharactersTableModel.CharacterRole)
+        self._documentSelected(character=char)
+
+    def _documentSelected(self, docType=DocumentType.DOCUMENT, character: Optional[Character] = None):
+        doc = Document('New Document', type=docType)
+        if character:
+            doc.title = ''
+            doc.character_id = character.id
+        doc.loaded = True
+
+        self.documentTriggered.emit(doc)
 
 
 class DocumentWidget(ContainerNode):
@@ -49,6 +82,7 @@ class DocumentWidget(ContainerNode):
 class DocumentsTreeView(TreeView):
     DOC_MIME_TYPE: str = 'application/document'
     documentSelected = pyqtSignal(Document)
+    documentDeleted = pyqtSignal(Document)
 
     def __init__(self, parent=None):
         super(DocumentsTreeView, self).__init__(parent)
@@ -66,6 +100,13 @@ class DocumentsTreeView(TreeView):
     def setNovel(self, novel: Novel):
         self._novel = novel
         self.refresh()
+
+    def addDocument(self, doc: Document):
+        self._novel.documents.append(doc)
+        wdg = self.__initDocWidget(doc)
+        self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, wdg)
+
+        self.repo.update_novel(self._novel)
 
     def refresh(self):
         def addChildWdg(parent: Document, child: Document):
@@ -139,19 +180,14 @@ class DocumentsTreeView(TreeView):
         for child in self._toBeRemoved.childrenWidgets():
             new_widget.addChild(child)
         if self._dummyWdg.parent() is self._centralWidget:
-            # ref = None
-            # new_widget.setParent(self._centralWidget)
             i = self._centralWidget.layout().indexOf(self._dummyWdg)
             self._centralWidget.layout().insertWidget(i, new_widget)
         elif isinstance(self._dummyWdg.parent().parent(), DocumentWidget):
             doc_wdg: DocumentWidget = self._dummyWdg.parent().parent()
-            # ref.chapter = chapter_wdg.chapter()
-            # new_widget.setParent(doc_wdg)
             i = doc_wdg.containerWidget().layout().indexOf(self._dummyWdg)
             doc_wdg.insertChild(i, new_widget)
 
         self._dummyWdg.setHidden(True)
-        # self.repo.update_novel(self._novel)
 
     def _deleteDocWidget(self, wdg: DocumentWidget):
         doc = wdg.doc()
@@ -162,6 +198,37 @@ class DocumentsTreeView(TreeView):
         self._docs.pop(doc)
 
         fade_out_and_gc(wdg.parent(), wdg)
+
+        self.repo.delete_doc(self._novel, doc)
+        self.documentDeleted.emit(doc)
+
+        self._removeFromParentDoc(doc, wdg)
+        self.repo.update_novel(self._novel)
+
+    def _removeFromParentDoc(self, doc: Document, wdg: DocumentWidget):
+        if wdg.parent() is self._centralWidget:
+            self._novel.documents.remove(doc)
+        else:
+            parent: DocumentWidget = wdg.parent().parent()
+            parent.doc().children.remove(doc)
+
+    # def _updateDomain(self):
+    #     for doc in self._novel.documents:
+    #         recursive(doc, lambda parent: parent.children, lambda parent, child: child.children.clear(),
+    #                   action_first=False)
+    #     self._novel.documents.clear()
+    #
+    #     for i in range(self._centralWidget.layout().count()):
+    #         item = self._centralWidget.layout().itemAt(i)
+    #         if item is None:
+    #             continue
+    #         wdg = item.widget()
+    #         if isinstance(wdg, DocumentWidget):
+    #             self._novel.documents.append(wdg.doc())
+    #             recursive(wdg, lambda parent: parent.childrenWidgets(),
+    #                       lambda parent, child: parent.doc().children.append(
+    #                           child.doc()) if child is not self._toBeRemoved else None)
+    #     self.repo.update_novel(self._novel)
 
     def __initDocWidget(self, doc: Document) -> DocumentWidget:
         wdg = DocumentWidget(doc)

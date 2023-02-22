@@ -1,1 +1,1 @@
-from .tree import DocumentsTreeView
+from .browser import DocumentsTreeView
