@@ -100,15 +100,6 @@ class ChapterWidget(ContainerNode):
 
     def sceneWidgets(self) -> List[SceneWidget]:
         return self.childrenWidgets()
-        # scenes_ = []
-        # for i in range(self._container.layout().count()):
-        #     item = self._container.layout().itemAt(i)
-        #     if item is None:
-        #         continue
-        #     if isinstance(item.widget(), SceneWidget):
-        #         scenes_.append(item.widget())
-        #
-        # return scenes_
 
 
 class ScenesTreeView(TreeView, EventListener):
