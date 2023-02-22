@@ -90,7 +90,12 @@ def act_color(act: int, translucent: bool = False) -> str:
         return '#DBF5FA'
 
 
-def recursive(parent, children_func, action):
+def recursive(parent, children_func, action, action_first: bool = True):
     for child in children_func(parent):
-        action(parent, child)
+        if action_first:
+            action(parent, child)
+
         recursive(child, children_func, action)
+
+        if not action_first:
+            action(parent, child)
