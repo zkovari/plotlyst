@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent
 from PyQt6.QtGui import QIcon, QMouseEvent, QEnterEvent
@@ -162,6 +162,16 @@ class ContainerNode(BaseTreeWidget):
     def clearChildren(self):
         clear_layout(self._container)
         self._container.setHidden(True)
+
+    def childrenWidgets(self) -> List[QWidget]:
+        widgets = []
+        for i in range(self._container.layout().count()):
+            item = self._container.layout().itemAt(i)
+            if item is None:
+                continue
+            widgets.append(item.widget())
+
+        return widgets
 
 
 class TreeView(QScrollArea):
