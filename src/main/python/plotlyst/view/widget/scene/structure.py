@@ -112,13 +112,17 @@ HAPPENING_BEATS = (SceneStructureItemType.BEAT, SceneStructureItemType.EXPOSITIO
 
 
 def normalize_beat_percentages(agenda, forced: bool = False):
+    if len(agenda.items) > 0 and forced:
+        agenda.items[0].percentage = 0.0
+    if len(agenda.items) > 1:
+        last_beat = agenda.items[-1]
+        if last_beat.percentage == 0.0 or forced:
+            last_beat.percentage = 0.9
+
     for i in range(1, len(agenda.items) - 1):
         beat = agenda.items[i]
         if beat.percentage == 0.0 or forced:
             beat.percentage = i * (0.9 / (len(agenda.items) - 1))
-    last_beat = agenda.items[-1]
-    if last_beat.percentage == 0.0 or forced:
-        last_beat.percentage = 0.9
 
 
 emotions: Dict[str, str] = {'Admiration': '#008744', 'Adoration': '#7048e8', 'Amusement': '#ff6961', 'Anger': '#ff3333',
