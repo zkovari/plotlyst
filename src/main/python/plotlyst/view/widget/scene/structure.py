@@ -271,6 +271,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
         decr_font(self.text)
         self.text.setText(self.beat.text)
+        self.text.textChanged.connect(self._textChanged)
 
         self.lblEmotion = EmotionLabel()
         decr_font(self.lblEmotion)
@@ -303,7 +304,6 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         return self._outcome.isVisible()
 
     def sceneStructureItem(self) -> SceneStructureItem:
-        self.beat.text = self.text.toPlainText()
         return self.beat
 
     def activate(self):
@@ -404,6 +404,9 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
             anim = qtanim.fade_out(self, duration=150)
             anim.finished.connect(lambda: self.removed.emit(self))
 
+    def _textChanged(self):
+        self.beat.text = self.text.toPlainText()
+
     def _outcomeChanged(self):
         self._initStyle()
         self._glow()
@@ -491,9 +494,6 @@ class SceneStructureTimeline(QWidget):
             self._beatWidgets[0].swap(SceneStructureItemType.REACTION)
             self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
             self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
-
-    def agendaItems(self) -> List[SceneStructureItem]:
-        return [x.sceneStructureItem() for x in self._beatWidgets]
 
     def reset(self):
         clear_layout(self)
