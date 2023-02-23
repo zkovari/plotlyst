@@ -17,8 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from functools import partial
-from typing import Optional
+from typing import Optional, Any, List
 
 from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent, QObject, QPoint
 from PyQt6.QtWidgets import QScrollArea, QFrame, QLineEdit
@@ -28,7 +29,6 @@ from qtanim import fade_in
 from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent
 from qthandy.filter import DragEventFilter, DropEventFilter, ObjectReferenceMimeData
 
-from src.main.python.plotlyst.core.template import SelectionItem
 from src.main.python.plotlyst.view.common import fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
@@ -44,11 +44,11 @@ class ListItemWidget(QWidget):
     dragStarted = pyqtSignal()
     dragFinished = pyqtSignal()
 
-    def __init__(self, item: SelectionItem, parent=None):
+    def __init__(self, item: Any, parent=None):
         super(ListItemWidget, self).__init__(parent)
-        self._item = item
         hbox(self, spacing=1)
         margins(self, left=0)
+        self._item = item
         self._btnDrag = Icon()
         self._btnDrag.setIcon(IconRegistry.hashtag_icon('grey'))
         self._btnDrag.setIconSize(QSize(12, 12))
@@ -56,7 +56,6 @@ class ListItemWidget(QWidget):
 
         self._lineEdit = QLineEdit()
         self._lineEdit.setPlaceholderText('Fill out...')
-        self._lineEdit.setText(self._item.text)
         self._lineEdit.textChanged.connect(self._textChanged)
 
         self._btnRemoval = RemovalButton(self)
@@ -71,7 +70,7 @@ class ListItemWidget(QWidget):
         self._btnRemoval.setHidden(True)
 
         self._btnDrag.installEventFilter(
-            DragEventFilter(self, LIST_ITEM_MIME_TYPE, dataFunc=lambda x: self._item, hideTarget=True,
+            DragEventFilter(self, LIST_ITEM_MIME_TYPE, dataFunc=lambda x: self.item(), hideTarget=True,
                             grabbed=self._lineEdit, startedSlot=self.dragStarted.emit,
                             finishedSlot=self.dragFinished.emit))
 
@@ -87,14 +86,13 @@ class ListItemWidget(QWidget):
             self._btnRemoval.setHidden(True)
         return super(ListItemWidget, self).eventFilter(watched, event)
 
-    def item(self) -> SelectionItem:
+    def item(self) -> Any:
         return self._item
 
     def activate(self):
         self._lineEdit.setFocus()
 
     def _textChanged(self, text: str):
-        self._item.text = text
         self.changed.emit()
 
 
@@ -118,9 +116,10 @@ class ListView(QScrollArea):
         self._btnAdd.clicked.connect(self._addNewItem)
 
         self._dragPlaceholder: Optional[ListItemWidget] = None
+        self._dragged: Optional[ListItemWidget] = None
         self._toBeRemoved = False
 
-    def addItem(self, item: SelectionItem):
+    def addItem(self, item: Any):
         wdg = self.__newItemWidget(item)
 
         self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 2, wdg)
@@ -133,14 +132,29 @@ class ListView(QScrollArea):
         self._centralWidget.layout().addWidget(self._btnAdd)
         self._centralWidget.layout().addWidget(vspacer())
 
+    def widgets(self) -> List[ListItemWidget]:
+        wdgs = []
+        for i in range(self._centralWidget.layout().count() - 2):
+            wdg = self._centralWidget.layout().itemAt(i).widget()
+            if wdg is self._dragPlaceholder or wdg is self._dragged:
+                continue
+            wdgs.append(wdg)
+
+        return wdgs
+
+    @abstractmethod
     def _addNewItem(self):
-        item = SelectionItem('')
-        self.addItem(item)
+        pass
+
+    @abstractmethod
+    def _listItemWidgetClass(self):
+        pass
 
     def _deleteItemWidget(self, widget: ListItemWidget):
         fade_out_and_gc(self._centralWidget, widget)
 
     def _dragStarted(self, widget: ListItemWidget):
+        self._dragged = widget
         self._dragPlaceholder = ListItemWidget(widget.item(), self)
         margins(self._dragPlaceholder, left=3)
         translucent(self._dragPlaceholder)
@@ -155,6 +169,8 @@ class ListView(QScrollArea):
             self._centralWidget.layout().removeWidget(self._dragPlaceholder)
             gc(self._dragPlaceholder)
             self._dragPlaceholder = None
+
+        self._dragged = None
         if self._toBeRemoved:
             widget.setHidden(True)
             self._centralWidget.layout().removeWidget(widget)
@@ -178,8 +194,8 @@ class ListView(QScrollArea):
 
         self._toBeRemoved = True
 
-    def __newItemWidget(self, item: SelectionItem):
-        wdg = ListItemWidget(item)
+    def __newItemWidget(self, item: Any):
+        wdg = self._listItemWidgetClass()(item)
         wdg.deleted.connect(partial(self._deleteItemWidget, wdg))
         wdg.dragStarted.connect(partial(self._dragStarted, wdg))
         wdg.dragFinished.connect(partial(self._dragFinished, wdg))

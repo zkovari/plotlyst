@@ -28,8 +28,9 @@ from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEve
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMenu
 from overrides import overrides
 from qthandy import pointy, gc, translucent, bold, transparent, btn_popup_menu, \
-    retain_when_hidden, flow, clear_layout, decr_font
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DragEventFilter, DisabledClickEventFilter
+    retain_when_hidden, flow, clear_layout, decr_font, margins, spacer
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DragEventFilter, DisabledClickEventFilter, \
+    ObjectReferenceMimeData
 
 from src.main.python.plotlyst.common import emotion_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
@@ -44,6 +45,7 @@ from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButt
     CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.input import MenuWithDescription
 from src.main.python.plotlyst.view.widget.labels import EmotionLabel
+from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
@@ -109,8 +111,14 @@ HAPPENING_BEATS = (SceneStructureItemType.BEAT, SceneStructureItemType.EXPOSITIO
                    SceneStructureItemType.HOOK, SceneStructureItemType.MYSTERY, SceneStructureItemType.EXPOSITION)
 
 
-def is_happening_beat(beat: SceneStructureItem) -> bool:
-    return beat.type in HAPPENING_BEATS
+def normalize_beat_percentages(agenda, forced: bool = False):
+    for i in range(1, len(agenda.items) - 1):
+        beat = agenda.items[i]
+        if beat.percentage == 0.0 or forced:
+            beat.percentage = i * (0.9 / (len(agenda.items) - 1))
+    last_beat = agenda.items[-1]
+    if last_beat.percentage == 0.0 or forced:
+        last_beat.percentage = 0.9
 
 
 emotions: Dict[str, str] = {'Admiration': '#008744', 'Adoration': '#7048e8', 'Amusement': '#ff6961', 'Anger': '#ff3333',
@@ -263,6 +271,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
 
         decr_font(self.text)
         self.text.setText(self.beat.text)
+        self.text.textChanged.connect(self._textChanged)
 
         self.lblEmotion = EmotionLabel()
         decr_font(self.lblEmotion)
@@ -295,7 +304,6 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
         return self._outcome.isVisible()
 
     def sceneStructureItem(self) -> SceneStructureItem:
-        self.beat.text = self.text.toPlainText()
         return self.beat
 
     def activate(self):
@@ -396,6 +404,9 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
             anim = qtanim.fade_out(self, duration=150)
             anim.finished.connect(lambda: self.removed.emit(self))
 
+    def _textChanged(self):
+        self.beat.text = self.text.toPlainText()
+
     def _outcomeChanged(self):
         self._initStyle()
         self._glow()
@@ -462,13 +473,7 @@ class SceneStructureTimeline(QWidget):
         if not agenda.items:
             self._initBeatsFromType(sceneTyoe)
 
-        for i in range(1, len(agenda.items) - 1):
-            beat = agenda.items[i]
-            if beat.percentage == 0.0:
-                beat.percentage = i * (0.9 / (len(agenda.items) - 1))
-        last_beat = agenda.items[-1]
-        if last_beat.percentage == 0.0:
-            last_beat.percentage = 0.9
+        normalize_beat_percentages(agenda)
 
         self._rearrangeBeats()
 
@@ -489,20 +494,6 @@ class SceneStructureTimeline(QWidget):
             self._beatWidgets[0].swap(SceneStructureItemType.REACTION)
             self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
             self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
-        elif sceneTyoe == SceneType.HAPPENING:
-            for wdg in self._beatWidgets:
-                if not is_happening_beat(wdg.beat):
-                    wdg.swap(SceneStructureItemType.BEAT)
-        elif sceneTyoe == SceneType.EXPOSITION:
-            for wdg in self._beatWidgets:
-                wdg.swap(SceneStructureItemType.EXPOSITION)
-        else:
-            self._beatWidgets[0].swap(SceneStructureItemType.BEAT)
-            self._beatWidgets[1].swap(SceneStructureItemType.BEAT)
-            self._beatWidgets[-1].swap(SceneStructureItemType.BEAT)
-
-    def agendaItems(self) -> List[SceneStructureItem]:
-        return [x.sceneStructureItem() for x in self._beatWidgets]
 
     def reset(self):
         clear_layout(self)
@@ -767,6 +758,66 @@ class SceneStructureTimeline(QWidget):
             self._dragPlaceholder = None
 
 
+class BeatListItemWidget(ListItemWidget):
+    def __init__(self, beat: SceneStructureItem, parent=None):
+        super(BeatListItemWidget, self).__init__(beat, parent)
+        self._beat = beat
+        self._lineEdit.setMaximumWidth(600)
+        self.layout().addWidget(spacer())
+        self.refresh()
+
+    def refresh(self):
+        self._lineEdit.setText(self._beat.text)
+
+    @overrides
+    def _textChanged(self, text: str):
+        super(BeatListItemWidget, self)._textChanged(text)
+        self._beat.text = text
+
+
+class SceneStructureList(ListView):
+    def __init__(self, parent=None):
+        super(SceneStructureList, self).__init__(parent)
+        self._agenda: Optional[SceneStructureAgenda] = None
+
+    def setAgenda(self, agenda: SceneStructureAgenda, sceneType: SceneType):
+        self._agenda = agenda
+        self.refresh(sceneType)
+
+    def refresh(self, sceneType: SceneType):
+        self.clear()
+
+        for beat in self._agenda.items:
+            self.addItem(beat)
+
+    @overrides
+    def _addNewItem(self):
+        beat = SceneStructureItem(SceneStructureItemType.EXPOSITION)
+        self._agenda.items.append(beat)
+        normalize_beat_percentages(self._agenda, forced=True)
+        self.addItem(beat)
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return BeatListItemWidget
+
+    @overrides
+    def _deleteItemWidget(self, widget: ListItemWidget):
+        super(SceneStructureList, self)._deleteItemWidget(widget)
+        self._agenda.items.remove(widget.item())
+        normalize_beat_percentages(self._agenda, forced=True)
+
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        super(SceneStructureList, self)._dropped(mimeData)
+        self._agenda.items.clear()
+
+        for wdg in self.widgets():
+            self._agenda.items.append(wdg.item())
+
+        normalize_beat_percentages(self._agenda, forced=True)
+
+
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def __init__(self, parent=None):
@@ -784,15 +835,19 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.wdgTypes.layout().addWidget(self.btnScene)
         self.wdgTypes.layout().addWidget(self.btnSequel)
+        self.wdgTypes.layout().addWidget(self.btnSummary)
         self.wdgTypes.layout().addWidget(self.btnHappening)
         self.wdgTypes.layout().addWidget(self.btnExposition)
-        self.wdgTypes.layout().addWidget(self.btnSummary)
 
         flow(self.wdgGoalConflictContainer)
+        margins(self.wdgGoalConflictContainer, left=40)
 
         self.timeline = SceneStructureTimeline(self)
         self.timeline.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.scrollAreaTimeline.layout().addWidget(self.timeline)
+
+        self.listEvents = SceneStructureList()
+        self.pageList.layout().addWidget(self.listEvents)
 
         self.btnScene.installEventFilter(OpacityEventFilter(parent=self.btnScene, ignoreCheckedButton=True))
         self.btnSequel.installEventFilter(OpacityEventFilter(parent=self.btnSequel, ignoreCheckedButton=True))
@@ -829,6 +884,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._checkSceneType()
 
         self.timeline.setAgenda(scene.agendas[0], self.scene.type)
+        self.listEvents.setAgenda(scene.agendas[0], self.scene.type)
+        self._initEditor(self.scene.type)
 
     def updateAvailableAgendaCharacters(self):
         chars = []
@@ -840,14 +897,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def updateAgendaCharacter(self):
         self._toggleCharacterStatus()
         self._initSelectors()
-
-    def updateAgendas(self):
-        if not self.scene.agendas:
-            return
-        self.scene.agendas[0].items.clear()
-        self.scene.agendas[0].items.extend(self.timeline.agendaItems())
-        # self.scene.agendas[0].beginning_emotion = self.btnEmotionStart.value()
-        # self.scene.agendas[0].ending_emotion = self.btnEmotionEnd.value()
 
     def _toggleCharacterStatus(self):
         if self.scene.agendas[0].character_id:
@@ -883,9 +932,32 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _typeClicked(self, type: SceneType, checked: bool):
         if not checked:
+            if type in [SceneType.EXPOSITION, SceneType.SUMMARY]:
+                self.timeline.reset()
+                self.timeline.setAgenda(self.scene.agendas[0], self.scene.type)
+            self.scene.type = SceneType.DEFAULT
+            self._initEditor(SceneType.DEFAULT)
             return
+
         self.scene.type = type
-        self.timeline.setSceneType(self.scene.type)
+        self._initEditor(type)
+
+    def _initEditor(self, type: SceneType):
+        if type == SceneType.EXPOSITION:
+            self.stackStructure.setCurrentWidget(self.pageList)
+            self.lblSummary.setHidden(True)
+            self.lblExposition.setVisible(True)
+            self.listEvents.refresh(type)
+        elif type == SceneType.SUMMARY:
+            self.stackStructure.setCurrentWidget(self.pageList)
+            self.lblSummary.setVisible(True)
+            self.lblExposition.setHidden(True)
+            self.listEvents.refresh(type)
+        else:
+            self.stackStructure.setCurrentWidget(self.pageTimetilne)
+            self.timeline.setSceneType(self.scene.type)
+
+        self.wdgAgenda.setHidden(type == SceneType.EXPOSITION)
 
     def _initSelectors(self):
         if not self.scene.agendas[0].character_id:
@@ -906,8 +978,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                 if conflict:
                     self._addConfictSelector(conflict, conflict_ref)
 
-            # for conflict in self.scene.agendas[0].conflicts(self.novel):
-            #     self._addConfictSelector(conflict=conflict)
             self._addConfictSelector()
         else:
             self._addConfictSelector()

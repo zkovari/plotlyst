@@ -279,7 +279,6 @@ class SceneEditor(QObject):
     def _save_scene(self):
         self.scene.title = self.ui.lineTitle.text()
         self.scene.synopsis = self.ui.textSynopsis.toPlainText()
-        self.ui.wdgSceneStructure.updateAgendas()
         self.scene.day = self.ui.sbDay.value()
 
         self.scene.tag_references.clear()
