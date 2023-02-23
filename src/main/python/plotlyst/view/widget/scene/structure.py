@@ -932,6 +932,10 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _typeClicked(self, type: SceneType, checked: bool):
         if not checked:
+            if type in [SceneType.EXPOSITION, SceneType.SUMMARY]:
+                self.timeline.reset()
+                self.timeline.setAgenda(self.scene.agendas[0], self.scene.type)
+            self.scene.type = SceneType.DEFAULT
             self._initEditor(SceneType.DEFAULT)
             return
 
