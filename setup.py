@@ -23,6 +23,7 @@ REQUIREMENTS: dict = {
         'textstat==0.7.2',
         'nltk==3.7',
         'requests==2.27.1',
+        'qt-handy',
     ],
     'test': [
         'pytest==6.2.4',
