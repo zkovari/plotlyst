@@ -1425,8 +1425,8 @@ def default_tag_types() -> List[TagType]:
         TagType('Items', icon='mdi.ring', icon_color='#b6a6ca',
                 description='Relevant items that reappear throughout the story.'
                             + ' They do not have symbolic meaning unlike Symbols or Motifs.'),
-        TagType('Themes', icon='ei.idea-alt', icon_color='#f72585',
-                description='The main ideas or lessons that the story explores.')
+        # TagType('Themes', icon='ei.idea-alt', icon_color='#f72585',
+        #         description='The main ideas or lessons that the story explores.')
     ]
 
 
