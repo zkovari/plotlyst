@@ -28,7 +28,7 @@ import qtanim
 from PyQt6 import QtCore
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QPalette, QMouseEvent, QCursor, QAction
+    QPalette, QMouseEvent, QCursor, QAction, QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
     QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
 from fbs_runtime import platform
@@ -48,7 +48,9 @@ from src.main.python.plotlyst.core.template import secondary_role, guide_role, l
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
     promote_role, demote_role
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_critical
+from src.main.python.plotlyst.event.core import emit_critical, EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import CharacterSummaryChangedEvent
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
     ConflictScenesDistributionTableModel, TagScenesDistributionTableModel, GoalScenesDistributionTableModel
@@ -1653,7 +1655,7 @@ class CharacterRoleSelector(QWidget, Ui_CharacterRoleSelector):
         self.roleSelected.emit(self._currentRole)
 
 
-class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
+class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListener):
     characterClicked = pyqtSignal(Character)
 
     RowOverall: int = 1
@@ -1677,6 +1679,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         self.scrollAreaProgress.setLayout(self._layout)
         margins(self, 2, 2, 2, 2)
         self._layout.setSpacing(5)
+        self._refreshNext: bool = False
 
         self.novel: Optional[Novel] = None
 
@@ -1695,8 +1698,21 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget):
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
 
+        event_dispatcher.register(self, CharacterSummaryChangedEvent)
+
     def setNovel(self, novel: Novel):
         self.novel = novel
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, CharacterSummaryChangedEvent):
+            self._refreshNext = True
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if self._refreshNext:
+            self._refreshNext = False
+            self.refresh()
 
     def refresh(self):
         if not self.novel:

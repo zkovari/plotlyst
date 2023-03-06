@@ -26,6 +26,8 @@ from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
 from qthandy import vbox, hbox, line, flow, gc, vspacer
 
 from src.main.python.plotlyst.core.domain import Character
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import CharacterSummaryChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.icons import set_avatar
 from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
@@ -65,6 +67,7 @@ class SummaryDisplay(QTextEdit):
     def _save(self):
         self._character.set_summary(self.toPlainText())
         self.repo.update_character(self._character)
+        emit_event(CharacterSummaryChangedEvent(self, self._character))
 
 
 class CharacterOverviewWidget(QWidget):
