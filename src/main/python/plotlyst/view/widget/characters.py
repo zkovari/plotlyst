@@ -1249,11 +1249,11 @@ class CharacterEmotionButton(QToolButton):
             self._emoji_font = emoji_font(20)
         self.setFont(self._emoji_font)
         menu.setFont(self._emoji_font)
-        menu.addAction(emoji.emojize(':smiling_face_with_smiling_eyes:'), lambda: self.setValue(VERY_HAPPY))
-        menu.addAction(emoji.emojize(':slightly_smiling_face:'), lambda: self.setValue(HAPPY))
-        menu.addAction(emoji.emojize(':neutral_face:'), lambda: self.setValue(NEUTRAL))
-        menu.addAction(emoji.emojize(':worried_face:'), lambda: self.setValue(UNHAPPY))
-        menu.addAction(emoji.emojize(':fearful_face:'), lambda: self.setValue(VERY_UNHAPPY))
+        menu.addAction(emoji.emojize(':smiling_face_with_smiling_eyes:'), lambda: self._emotionClicked(VERY_HAPPY))
+        menu.addAction(emoji.emojize(':slightly_smiling_face:'), lambda: self._emotionClicked(HAPPY))
+        menu.addAction(emoji.emojize(':neutral_face:'), lambda: self._emotionClicked(NEUTRAL))
+        menu.addAction(emoji.emojize(':worried_face:'), lambda: self._emotionClicked(UNHAPPY))
+        menu.addAction(emoji.emojize(':fearful_face:'), lambda: self._emotionClicked(VERY_UNHAPPY))
 
         self._setAlready: bool = False
 
@@ -1279,10 +1279,13 @@ class CharacterEmotionButton(QToolButton):
             qtanim.glow(self, duration=300, radius=100, color=QColor(self._color))
         else:
             self._setAlready = True
-        self.emotionChanged.emit()
 
     def color(self) -> str:
         return self._color
+
+    def _emotionClicked(self, value: int):
+        self.setValue(value)
+        self.emotionChanged.emit()
 
 
 class JournalTextEdit(DocumentTextEditor):
