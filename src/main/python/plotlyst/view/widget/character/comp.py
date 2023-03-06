@@ -17,17 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from enum import Enum
 from typing import Dict, Optional
 
 from PyQt6 import sip
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
+from overrides import overrides
 from qthandy import vbox, hbox, line, flow, gc, vspacer
 
 from src.main.python.plotlyst.core.domain import Character
-from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import CharacterSummaryChangedEvent
+from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.icons import set_avatar
 from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
@@ -94,7 +97,7 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
         emit_event(CharacterSummaryChangedEvent(self, self._character))
 
 
-class CharacterOverviewWidget(QWidget):
+class CharacterOverviewWidget(QWidget, EventListener):
     def __init__(self, character: Character, parent=None):
         super().__init__(parent)
         self._character = character
@@ -149,7 +152,7 @@ class CharacterComparisonWidget(QWidget):
         super().__init__(parent)
         self._characters: Dict[Character, CharacterOverviewWidget] = {}
         hbox(self, spacing=0)
-        self._currentDisplay: CharacterComparisonAttribute = CharacterComparisonAttribute.BIG_FIVE
+        self._currentDisplay: CharacterComparisonAttribute = CharacterComparisonAttribute.SUMMARY
 
     def updateCharacter(self, character: Character, enabled: bool):
         if enabled:
