@@ -1416,12 +1416,12 @@ def default_general_tags() -> List[Tag]:
 def default_tag_types() -> List[TagType]:
     return [
         TagType('General', icon='ei.tags', icon_color='#2a2a72',
-                description='General tags that can be tracked for each scenes.'),
+                description='General tags that can be tracked for each scene.'),
         TagType('Symbols', icon='fa5s.dove', icon_color='#5995ed',
                 description='A symbol can be anything that represents something beyond their literal meaning.'),
         TagType('Motifs', icon='mdi6.glass-fragile', icon_color='#8ac6d0',
-                description='A motif is a recurring object, sound, situation, phrase, or idea throughout the story.'
-                            + ' A motif might remind the reader to the theme.'),
+                description='A motif is a recurring object, sound, situation, phrase, or idea throughout the story'
+                            + ' that empowers the theme.'),
         TagType('Items', icon='mdi.ring', icon_color='#b6a6ca',
                 description='Relevant items that reappear throughout the story.'
                             + ' They do not have symbolic meaning unlike Symbols or Motifs.'),
