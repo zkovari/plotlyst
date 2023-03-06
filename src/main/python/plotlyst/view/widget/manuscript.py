@@ -24,7 +24,7 @@ from typing import Optional, List
 import nltk
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent
+from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen
 from PyQt6.QtMultimedia import QSoundEffect
@@ -268,6 +268,10 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
     @overrides
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
         pass
+
+    @overrides
+    def sizeHint(self) -> QSize:
+        return QSize(self.maximumWidth(), 500)
 
     def _changed(self, lang: str, checked: bool):
         if not checked:
