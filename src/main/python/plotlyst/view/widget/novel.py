@@ -594,6 +594,7 @@ class TagsEditor(QWidget):
 
         for tag_type in self.novel.tags.keys():
             self.layout().addWidget(TagTypeDisplay(self.novel, tag_type, self))
+        self.layout().addWidget(vspacer())
 
 
 class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
