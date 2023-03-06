@@ -163,6 +163,7 @@ class CharacterComparisonWidget(QWidget):
         else:
             wdg = self._characters.pop(character)
             self.layout().removeWidget(wdg)
+            gc(wdg)
 
     def updateLayout(self, layoutType: LayoutType):
         widgets = []
