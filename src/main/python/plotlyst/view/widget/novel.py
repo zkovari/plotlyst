@@ -150,9 +150,10 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         transparent(self.btnIcon)
         if beat.icon:
             self.btnIcon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-        self.lblTitle.setStyleSheet(f'color: {beat.icon_color};')
+        self.lblTitle.setStyleSheet(f'QLabel:enabled {{color: {beat.icon_color};}}')
 
         self.btnSceneSelector = SceneSelector(app_env.novel)
+        retain_when_hidden(self.btnSceneSelector)
         self.layoutRight.insertWidget(0, self.btnSceneSelector,
                                       alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         self.btnSceneSelector.setHidden(True)
@@ -210,7 +211,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         if event.type() == QEvent.Type.Enter:
             if self._canBeToggled() and self._infoPage():
                 self.cbToggle.setVisible(True)
-            self.btnSceneSelector.setVisible(self._infoPage())
+            self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
             self.setStyleSheet(f'.BeatWidget {{background-color: {act_color(self.beat.act, translucent=True)};}}')
             self.beatHighlighted.emit(self.beat)
         elif event.type() == QEvent.Type.Leave:
@@ -232,12 +233,16 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         return True
 
     def _beatToggled(self, toggled: bool):
-        translucent(self, 1 if toggled else 0.5)
+        translucent(self.lblDescription, 1 if toggled else 0.5)
+        self.lblTitle.setEnabled(toggled)
+        self.btnIcon.setEnabled(toggled)
+        self.lblDescription.setEnabled(toggled)
         bold(self.lblTitle, toggled)
 
     def _beatClicked(self, checked: bool):
         self.beat.enabled = checked
         self.beatToggled.emit(self.beat)
+        self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
 
     def _sceneLinked(self, scene: Scene):
         scene.beats.append(SceneStoryBeat.of(app_env.novel.active_story_structure, self.beat))
