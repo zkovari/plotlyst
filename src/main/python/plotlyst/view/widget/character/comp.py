@@ -76,6 +76,7 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
         self.setToolTip('Character summary')
         self.setPlaceholderText('Character summary...')
         self.setMaximumSize(250, 100)
+        self.setMinimumWidth(200)
 
         self.repo = RepositoryPersistenceManager.instance()
         self.refresh()
@@ -151,7 +152,7 @@ class CharacterComparisonWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._characters: Dict[Character, CharacterOverviewWidget] = {}
-        hbox(self, spacing=0)
+        hbox(self)
         self._currentDisplay: CharacterComparisonAttribute = CharacterComparisonAttribute.SUMMARY
 
     def updateCharacter(self, character: Character, enabled: bool):
@@ -173,11 +174,11 @@ class CharacterComparisonWidget(QWidget):
         sip.delete(self.layout())
 
         if layoutType == LayoutType.HORIZONTAL:
-            hbox(self, spacing=0)
+            hbox(self)
         elif layoutType == LayoutType.VERTICAL:
-            vbox(self, spacing=0)
+            vbox(self)
         elif layoutType == LayoutType.FLOW:
-            flow(self, spacing=0)
+            flow(self)
 
         for wdg in widgets:
             self.layout().addWidget(wdg)
