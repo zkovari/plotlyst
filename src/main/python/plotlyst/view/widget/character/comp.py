@@ -183,6 +183,9 @@ class CharacterComparisonWidget(QWidget):
         for wdg in widgets:
             self.layout().addWidget(wdg)
 
+        for wdg in self._characters.values():
+            wdg.display(self._currentDisplay)
+
     def displayAttribute(self, attribute: CharacterComparisonAttribute):
         for wdg in self._characters.values():
             wdg.display(attribute)
