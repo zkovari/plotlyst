@@ -550,6 +550,7 @@ class ManuscriptTextEditor(RichTextEditor):
                 scene.manuscript.statistics.wc = wc
                 self.repo.update_scene(scene)
             scene.manuscript.content = self.textEdit.toHtml()
+            self.repo.update_doc(app_env.novel, scene.manuscript)
         else:
             scene_i = 0
             block: QTextBlock = self.textEdit.document().begin()
