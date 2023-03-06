@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
 from qthandy.filter import OpacityEventFilter
+from qttextedit.ops import TextEditorSettingsWidget
 
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
 from src.main.python.plotlyst.core.domain import Scene
@@ -72,9 +73,13 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
         self.ui.btnContext.setIcon(IconRegistry.context_icon())
         self.ui.btnContext.installEventFilter(OpacityEventFilter(self.ui.btnContext, leaveOpacity=0.7))
-        self._contextMenuWidget = ManuscriptContextMenuWidget(novel, self.widget)
+        self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
+        self._contextMenuWidget = TextEditorSettingsWidget()
+        self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
         btn_popup(self.ui.btnContext, self._contextMenuWidget)
-        self._contextMenuWidget.languageChanged.connect(self._language_changed)
+        self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
+
+        self._langSelectionWidget.languageChanged.connect(self._language_changed)
         self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
         self.ui.btnAnalysis.toggled.connect(self._analysis_toggled)
