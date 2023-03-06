@@ -184,6 +184,8 @@ class ManuscriptView(AbstractNovelView):
 
         self._recheckDocument()
 
+        self.ui.textEdit.setFocus()
+
     def _editChapter(self, chapter: Chapter):
         self.ui.textEdit.setGrammarCheckEnabled(False)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
@@ -206,6 +208,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnStage.setDisabled(True)
 
         self._recheckDocument()
+        self.ui.textEdit.setFocus()
 
     def _recheckDocument(self):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
