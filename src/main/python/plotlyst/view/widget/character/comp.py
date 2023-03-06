@@ -39,32 +39,56 @@ class CharacterComparisonAttribute(Enum):
     BIG_FIVE = 1
 
 
-class BigFiveDisplay(ChartView):
+class BaseDisplay:
+
+    @abstractmethod
+    def refresh(self):
+        pass
+
+
+class BigFiveDisplay(ChartView, BaseDisplay):
     def __init__(self, character: Character, parent=None):
         super(BigFiveDisplay, self).__init__(parent)
+        self._character = character
         self._bigFive = BigFiveChart()
         self._bigFive.setTitle('')
-        for bf, values in character.big_five.items():
-            self._bigFive.refreshDimension(dimension_from(bf), values)
+
         self.setChart(self._bigFive)
+        self.refresh()
 
         self.setMinimumSize(250, 250)
 
+    @overrides
+    def refresh(self):
+        for bf, values in self._character.big_five.items():
+            self._bigFive.refreshDimension(dimension_from(bf), values)
+            self.update()
 
-class SummaryDisplay(QTextEdit):
+
+class SummaryDisplay(QTextEdit, BaseDisplay):
     def __init__(self, character: Character, parent=None):
         super(SummaryDisplay, self).__init__(parent)
         self._character = character
-        self.setText(character.summary())
+        self._blockSave = False
         self.setToolTip('Character summary')
         self.setPlaceholderText('Character summary...')
         self.setMaximumSize(250, 100)
 
         self.repo = RepositoryPersistenceManager.instance()
+        self.refresh()
 
         self.textChanged.connect(self._save)
 
+    @overrides
+    def refresh(self):
+        self._blockSave = True
+        self.setText(self._character.summary())
+        self._blockSave = False
+
     def _save(self):
+        if self._blockSave:
+            return
+
         self._character.set_summary(self.toPlainText())
         self.repo.update_character(self._character)
         emit_event(CharacterSummaryChangedEvent(self, self._character))
@@ -86,12 +110,19 @@ class CharacterOverviewWidget(QWidget):
         self.layout().addWidget(self._roleIcon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(line())
 
-        self._display: Optional[QWidget] = None
+        self._display: Optional[BaseDisplay] = None
         self._displayContainer = QWidget()
         hbox(self._displayContainer, 0, 0)
 
         self.layout().addWidget(self._displayContainer)
         self.layout().addWidget(vspacer())
+        event_dispatcher.register(self, CharacterChangedEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, CharacterChangedEvent):
+            if event.character is self._character and self._display is not None:
+                self._display.refresh()
 
     def display(self, attribute: CharacterComparisonAttribute):
         if self._display:
