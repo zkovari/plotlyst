@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout, gc
-from qthandy.filter import OpacityEventFilter
+from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState
 from textstat import textstat
 
@@ -593,6 +593,9 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         self.btnRefresh.setHidden(True)
         self._updatedDoc: Optional[QTextDocument] = None
         self.btnRefresh.clicked.connect(lambda: self.checkTextDocument(self._updatedDoc))
+
+        self.cbAdverbs.setToolTip('Not available yet')
+        self.cbAdverbs.installEventFilter(InstantTooltipEventFilter(self.cbAdverbs))
 
     def checkTextDocument(self, doc: QTextDocument):
         text = doc.toPlainText()

@@ -103,7 +103,6 @@ QToolButton:pressed {
       <widget class="QLabel" name="lblAvgSentenceLength">
        <property name="font">
         <font>
-         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -128,6 +127,9 @@ QToolButton:pressed {
     <layout class="QFormLayout" name="formLayout_2">
      <item row="0" column="0">
       <widget class="QLabel" name="label_2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Highlight adverbs</string>
        </property>
@@ -135,6 +137,9 @@ QToolButton:pressed {
      </item>
      <item row="0" column="1">
       <widget class="Toggle" name="cbAdverbs">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
          <horstretch>0</horstretch>
