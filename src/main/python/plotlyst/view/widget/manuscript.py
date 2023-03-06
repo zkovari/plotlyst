@@ -600,28 +600,34 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
     def checkTextDocument(self, doc: QTextDocument):
         text = doc.toPlainText()
         cleaned_text = clean_text(text)
+        word_count = wc(text)
         spin(self.btnResult)
-
-        score = textstat.flesch_reading_ease(cleaned_text)
-        self.btnResult.setToolTip(f'Flesch–Kincaid readability score: {score}')
-
-        if score >= 80:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-a-circle-outline', color='#2d6a4f'))
-            result_text = 'Very easy to read' if score >= 90 else 'Easy to read'
-            self.lblResult.setText(f'<i style="color:#2d6a4f">{result_text}</i>')
-        elif score >= 60:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-b-circle-outline', color='#52b788'))
-            result_text = 'Fairly easy to read. 7th grade' if score >= 70 else 'Fairly easy to read. 8-9th grade'
-            self.lblResult.setText(f'<i style="color:#52b788">{result_text}</i>')
-        elif score >= 50:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-c-circle-outline', color='#f77f00'))
-            self.lblResult.setText('<i style="color:#f77f00">Fairly difficult to read. 10-12th grade</i>')
-        elif score >= 30:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-d-circle-outline', color='#bd1f36'))
-            self.lblResult.setText('<i style="color:#bd1f36">Difficult to read</i>')
+        if word_count < 30:
+            msg = 'Text is too short for calculating readability score'
+            self.btnResult.setToolTip(msg)
+            self.btnResult.setIcon(IconRegistry.from_name('ei.question'))
+            self.lblResult.setText(f'<i style="color:grey">{msg}</i>')
         else:
-            self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-e-circle-outline', color='#85182a'))
-            self.lblResult.setText('<i style="color:#85182a">Very difficult to read</i>')
+            score = textstat.flesch_reading_ease(cleaned_text)
+            self.btnResult.setToolTip(f'Flesch–Kincaid readability score: {score}')
+
+            if score >= 80:
+                self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-a-circle-outline', color='#2d6a4f'))
+                result_text = 'Very easy to read' if score >= 90 else 'Easy to read'
+                self.lblResult.setText(f'<i style="color:#2d6a4f">{result_text}</i>')
+            elif score >= 60:
+                self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-b-circle-outline', color='#52b788'))
+                result_text = 'Fairly easy to read. 7th grade' if score >= 70 else 'Fairly easy to read. 8-9th grade'
+                self.lblResult.setText(f'<i style="color:#52b788">{result_text}</i>')
+            elif score >= 50:
+                self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-c-circle-outline', color='#f77f00'))
+                self.lblResult.setText('<i style="color:#f77f00">Fairly difficult to read. 10-12th grade</i>')
+            elif score >= 30:
+                self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-d-circle-outline', color='#bd1f36'))
+                self.lblResult.setText('<i style="color:#bd1f36">Difficult to read</i>')
+            else:
+                self.btnResult.setIcon(IconRegistry.from_name('mdi.alpha-e-circle-outline', color='#85182a'))
+                self.lblResult.setText('<i style="color:#85182a">Very difficult to read</i>')
 
         sentences_count = 0
         for i in range(doc.blockCount()):
@@ -633,7 +639,7 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         if not sentences_count:
             sentence_length = 0
         else:
-            sentence_length = wc(text) / sentences_count
+            sentence_length = word_count / sentences_count
         self.lblAvgSentenceLength.setText("%.2f" % round(sentence_length, 1))
 
         self.btnRefresh.setHidden(True)
