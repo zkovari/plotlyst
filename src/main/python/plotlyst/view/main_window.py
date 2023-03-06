@@ -550,6 +550,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _restart(self):
         if self.novel:
             self._persist_last_novel_state()
+        if language_tool_proxy.is_set():
+            language_tool_proxy.tool.close()
         QApplication.instance().exit(EXIT_CODE_RESTART)
 
     def _persist_last_novel_state(self):
