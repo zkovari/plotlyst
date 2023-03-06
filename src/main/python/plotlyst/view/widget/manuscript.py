@@ -26,7 +26,7 @@ import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QTextCursor, QFont
+    QMouseEvent, QTextCursor, QFont, QScreen
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
@@ -768,7 +768,9 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
     def _toggle_typewriter_mode(self, toggled: bool):
         if toggled:
-            self.editor.setViewportMargins(0, 0, 0, QApplication.desktop().height() // 2)
+            screen: QScreen = QApplication.screenAt(self.editor.pos())
+            self.editor.setViewportMargins(0, 0, 0, screen.size().height() // 2)
+            self.editor.textEdit.ensureCursorVisible()
         else:
             self.editor.setViewportMargins(0, 0, 0, 0)
 
