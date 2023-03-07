@@ -315,7 +315,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.selected_card.clearSelection()
             self.selected_card = None
 
-        self.ui.btnDelete.setEnabled(True)
+        self.ui.btnDelete.setEnabled(False)
         self.ui.btnEdit.setEnabled(False)
 
     def _hide_chapters_toggled(self, toggled: bool):
