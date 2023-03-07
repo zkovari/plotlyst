@@ -294,10 +294,12 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._setPrincipleTooltip(btn, principle)
 
     def _setPrincipleTooltip(self, btn: QAbstractButton, principle: PlotPrinciple):
+        tooltip = f'<html><body style="font-size:{btn.font().pointSize() + 2}pt;">'
+        tooltip += f'{icon_to_html_img(btn.icon())} {principle.type.name.lower().capitalize()}'
+
         if principle.is_set:
-            btn.setToolTip(f'<html>{principle.type.name.lower().capitalize()}<hr/>{principle.value}')
-        else:
-            btn.setToolTip(principle.type.name.lower().capitalize())
+            tooltip += f'<hr/>{principle.value}'
+        btn.setToolTip(tooltip)
 
     def _principleEdited(self, principle: PlotPrinciple):
         self.repo.update_novel(self.novel)
