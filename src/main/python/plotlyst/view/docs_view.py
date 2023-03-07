@@ -30,7 +30,6 @@ from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.doc.mice import MiceQuotientDoc
 from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.causality import CauseAndEffectDiagram
 from src.main.python.plotlyst.view.widget.doc.browser import DocumentAdditionMenu
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
 
@@ -107,10 +106,7 @@ class DocumentsView(AbstractNovelView):
         else:
             self.ui.stackedEditor.setCurrentWidget(self.ui.customEditorPage)
             clear_layout(self.ui.customEditorPage)
-            if self._current_doc.type == DocumentType.REVERSED_CAUSE_AND_EFFECT:
-                widget = CauseAndEffectDiagram(self._current_doc.data, reversed_=True)
-                widget.model.changed.connect(self._save)
-            elif self._current_doc.type == DocumentType.MICE:
+            if self._current_doc.type == DocumentType.MICE:
                 widget = MiceQuotientDoc(self._current_doc, self._current_doc.data)
                 widget.changed.connect(self._save)
             else:
