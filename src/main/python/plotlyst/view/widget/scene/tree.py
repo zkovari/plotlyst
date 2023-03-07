@@ -37,7 +37,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from src.main.python.plotlyst.events import SceneSelectedEvent, SceneDeletedEvent, \
     SceneChangedEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, ChildNode
@@ -239,7 +239,7 @@ class ScenesTreeView(TreeView, EventListener):
         elif chapterWdg.chapter() in self._selectedChapters:
             self._selectedChapters.remove(chapterWdg.chapter())
 
-    def _deleteChapterWidget(self, chapterWdg: ChapterWidget):
+    def _deleteChapter(self, chapterWdg: ChapterWidget):
         chapter = chapterWdg.chapter()
         if chapter in self._selectedChapters:
             self._selectedChapters.remove(chapter)
@@ -265,6 +265,18 @@ class ScenesTreeView(TreeView, EventListener):
             wdg.refresh()
 
         emit_event(ChapterChangedEvent(self))
+
+    def _deleteScene(self, sceneWdg: SceneWidget):
+        scene = sceneWdg.scene()
+        if delete_scene(self._novel, scene):
+            if scene in self._selectedScenes:
+                self._selectedScenes.remove(scene)
+            self._scenes.pop(scene)
+
+            sceneWdg.setHidden(True)
+            gc(sceneWdg)
+
+            emit_event(SceneDeletedEvent(self, scene))
 
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
@@ -392,7 +404,7 @@ class ScenesTreeView(TreeView, EventListener):
     def __initChapterWidget(self, chapter):
         chapterWdg = ChapterWidget(chapter, self._novel)
         chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
-        chapterWdg.deleted.connect(partial(self._deleteChapterWidget, chapterWdg))
+        chapterWdg.deleted.connect(partial(self._deleteChapter, chapterWdg))
         chapterWdg.installEventFilter(
             DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
                             grabbed=chapterWdg.titleWidget(),
@@ -415,6 +427,7 @@ class ScenesTreeView(TreeView, EventListener):
         sceneWdg = SceneWidget(scene, self._novel)
         self._scenes[scene] = sceneWdg
         sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
+        sceneWdg.deleted.connect(partial(self._deleteScene, sceneWdg))
         sceneWdg.installEventFilter(
             DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(),
                             startedSlot=partial(self._dragStarted, sceneWdg),
