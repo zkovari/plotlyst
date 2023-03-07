@@ -164,8 +164,9 @@ class ChildNode(BaseTreeWidget):
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        self._toggleSelection(not self._selected)
-        self.selectionChanged.emit(self._selected)
+        if not self._selected:
+            self.select()
+            self.selectionChanged.emit(self._selected)
 
 
 class ContainerNode(BaseTreeWidget):
@@ -197,8 +198,9 @@ class ContainerNode(BaseTreeWidget):
             self._btnMenu.setHidden(True)
             self._btnAdd.setHidden(True)
         elif event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
-            self._toggleSelection(not self._selected)
-            self.selectionChanged.emit(self._selected)
+            if not self._selected:
+                self.select()
+                self.selectionChanged.emit(self._selected)
         return super(ContainerNode, self).eventFilter(watched, event)
 
     def containerWidget(self) -> QWidget:
