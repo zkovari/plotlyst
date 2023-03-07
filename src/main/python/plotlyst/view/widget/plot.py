@@ -27,8 +27,8 @@ from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, 
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup, vbox, transparent
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, InstantTooltipEventFilter, \
-    DisabledClickEventFilter
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DisabledClickEventFilter, \
+    InstantTooltipEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -40,7 +40,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, restyle, pointy
+from src.main.python.plotlyst.view.common import action, restyle, pointy, icon_to_html_img
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -71,6 +71,17 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.crisis_icon('grey')
 
 
+principle_hints = {PlotPrincipleType.GOAL: "What's the main goal that drives this plot?",
+                   PlotPrincipleType.ANTAGONIST: "Who or what is against achieving that goal?",
+                   PlotPrincipleType.CONFLICT: "How the antagonist creates conflict and hinders the goal?",
+                   PlotPrincipleType.CONSEQUENCES: "What if the goal won't be achieved? What is at stake?",
+                   PlotPrincipleType.PROGRESS: "How the character makes progress and gets closer to accomplishing the goal?",
+                   PlotPrincipleType.SETBACK: "How the character gets further away from accomplishing the goal.",
+                   PlotPrincipleType.TURNS: "When progress suddenly turns to setback or vice versa.",
+                   PlotPrincipleType.CRISIS: "The lowest moment." +
+                                             " Often an impossible choice between two equally good or bad outcomes."}
+
+
 class PlotPrincipleEditor(QWidget):
     principleEdited = pyqtSignal(PlotPrinciple)
     principleSet = pyqtSignal(PlotPrinciple, bool)
@@ -80,7 +91,7 @@ class PlotPrincipleEditor(QWidget):
         self._principle = principle
 
         vbox(self)
-        margins(self, bottom=5)
+        margins(self, bottom=5, top=5)
         self._label = QPushButton()
         transparent(self._label)
         bold(self._label)
@@ -89,7 +100,11 @@ class PlotPrincipleEditor(QWidget):
         self._label.setCheckable(True)
 
         self._textedit = QTextEdit(self)
+        hint = principle_hints[principle.type]
+        self._textedit.setPlaceholderText(hint)
+        self._textedit.setToolTip(hint)
         self._textedit.setText(principle.value)
+        self._textedit.setMinimumSize(175, 100)
         self._textedit.setMaximumSize(200, 100)
         self._textedit.textChanged.connect(self._valueChanged)
 
@@ -177,8 +192,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             principle = self._principle(principle_type)
             btn = self._btnPrinciple(principle_type)
             btn.setChecked(principle.is_set)
-            if principle.is_set:
-                self._setPrincipleTooltip(btn, principle)
+            self._setPrincipleTooltip(btn, principle)
 
             editor = PlotPrincipleEditor(principle, btn)
             editor.principleSet.connect(self._principleSet)
