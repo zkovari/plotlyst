@@ -26,6 +26,7 @@ from typing import List, Optional, Set
 
 from PyQt6.QtCore import QTimer, QRunnable, QThreadPool, QObject
 from overrides import overrides
+from qthandy import ask_confirmation
 
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, NovelDescriptor, Document, Plot
@@ -226,3 +227,13 @@ def delete_plot(novel: Novel, plot: Plot):
         scene.plot_values = [x for x in scene.plot_values if x.plot.id != plot.id]
         if before != len(scene.plot_values):
             repo.update_scene(scene)
+
+
+def delete_scene(novel: Novel, scene: Scene) -> bool:
+    if ask_confirmation(f'Are you sure you want to delete scene "{scene.title_or_index(novel)}"?'):
+        novel.scenes.remove(scene)
+        repo = RepositoryPersistenceManager.instance()
+        repo.delete_scene(novel, scene)
+        return True
+
+    return False

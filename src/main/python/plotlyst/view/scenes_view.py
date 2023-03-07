@@ -25,7 +25,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, incr_font, translucent, btn_popup, clear_layout, busy, bold, gc
+from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
@@ -38,6 +38,7 @@ from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
+from src.main.python.plotlyst.service.persistence import delete_scene
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import PopupMenuBuilder, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
@@ -602,11 +603,10 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _on_delete(self):
         scene: Optional[Scene] = self._selected_scene()
-        if scene and ask_confirmation(f'Are you sure you want to delete scene {scene.title_or_index(self.novel)}?'):
-            self.novel.scenes.remove(scene)
-            self.repo.delete_scene(self.novel, scene)
+        if scene and delete_scene(self.novel, scene):
             self.refresh()
             emit_event(SceneDeletedEvent(self, scene))
+
         # elif not scene:
         #     chapters = self.ui.treeChapters.selectedChapters()
         #     title = chapters[0].title_index(self.novel)
