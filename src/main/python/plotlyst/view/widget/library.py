@@ -25,6 +25,7 @@ from PyQt6.QtGui import QIcon
 from overrides import overrides
 from qthandy import vspacer
 
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, ChildNode
@@ -56,16 +57,20 @@ class NovelNode(ChildNode):
 
 
 class ShelveNode(ContainerNode):
+    newNovelRequested = pyqtSignal()
+
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
         super(ShelveNode, self).__init__(title, icon, parent)
         self.setMenuEnabled(False)
-        self.setPlusButtonEnabled(False)
+        self._btnAdd.setIcon(IconRegistry.plus_icon(PLOTLYST_MAIN_COLOR))
+        self._btnAdd.clicked.connect(self.newNovelRequested.emit)
 
 
 class ShelvesTreeView(TreeView):
     novelSelected = pyqtSignal(NovelDescriptor)
     novelChanged = pyqtSignal(NovelDescriptor)
     novelsShelveSelected = pyqtSignal()
+    newNovelRequested = pyqtSignal()
 
     def __init__(self, parent=None):
         super(ShelvesTreeView, self).__init__(parent)
@@ -75,6 +80,7 @@ class ShelvesTreeView(TreeView):
 
         self._wdgNovels = ShelveNode('Novels', IconRegistry.book_icon())
         self._wdgNovels.selectionChanged.connect(self._novelsShelveSelectionChanged)
+        self._wdgNovels.newNovelRequested.connect(self.newNovelRequested.emit)
         self._wdgShortStories = ShelveNode('Short stories', IconRegistry.from_name('ph.file-text'))
         self._wdgIdeas = ShelveNode('Ideas', IconRegistry.decision_icon())
         self._wdgNotes = ShelveNode('Notes', IconRegistry.document_edition_icon())

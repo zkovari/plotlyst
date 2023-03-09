@@ -101,6 +101,7 @@ class HomeView(AbstractView):
         self._shelvesTreeView.novelSelected.connect(self._novel_selected)
         self._shelvesTreeView.novelChanged.connect(self._novel_changed_in_browser)
         self._shelvesTreeView.novelsShelveSelected.connect(self.reset)
+        self._shelvesTreeView.newNovelRequested.connect(self._add_new_novel)
 
         incr_font(self.ui.btnAddNewStoryMain, 8)
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
