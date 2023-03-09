@@ -177,7 +177,7 @@ def create_story_dialog(new_title: str):
 def create_novel(window: MainWindow, title: str):
     view: HomeView = go_to_home(window)
     QTimer.singleShot(40, lambda: create_story_dialog(title))
-    view.ui.btnAdd.click()
+    view.ui.btnAddNewStoryMain.click()
 
 
 def create_character(qtbot, window: MainWindow, name: str):

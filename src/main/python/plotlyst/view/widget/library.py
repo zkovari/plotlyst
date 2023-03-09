@@ -22,8 +22,10 @@ from typing import List, Set, Dict, Optional
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
+from overrides import overrides
 from qthandy import vspacer
 
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, ChildNode
@@ -34,20 +36,42 @@ class NovelNode(ChildNode):
         super(NovelNode, self).__init__(novel.title, parent=parent)
         self._novel = novel
         self.setPlusButtonEnabled(False)
+        self._actionChangeIcon.setVisible(True)
+        self.refresh()
 
     def novel(self) -> NovelDescriptor:
         return self._novel
 
+    def refresh(self):
+        self._lblTitle.setText(self._novel.title)
+        if self._novel.icon:
+            self._icon.setIcon(IconRegistry.from_name(self._novel.icon, self._novel.icon_color))
+            self._icon.setVisible(True)
+        else:
+            self._icon.setHidden(True)
+
+    @overrides
+    def _iconChanged(self, iconName: str, iconColor: str):
+        self._novel.icon = iconName
+        self._novel.icon_color = iconColor
+
 
 class ShelveNode(ContainerNode):
+    newNovelRequested = pyqtSignal()
+
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
         super(ShelveNode, self).__init__(title, icon, parent)
         self.setMenuEnabled(False)
-        self.setPlusButtonEnabled(False)
+        self._btnAdd.setIcon(IconRegistry.plus_icon(PLOTLYST_MAIN_COLOR))
+        self._btnAdd.clicked.connect(self.newNovelRequested.emit)
 
 
 class ShelvesTreeView(TreeView):
     novelSelected = pyqtSignal(NovelDescriptor)
+    novelChanged = pyqtSignal(NovelDescriptor)
+    novelDeletionRequested = pyqtSignal(NovelDescriptor)
+    novelsShelveSelected = pyqtSignal()
+    newNovelRequested = pyqtSignal()
 
     def __init__(self, parent=None):
         super(ShelvesTreeView, self).__init__(parent)
@@ -56,6 +80,8 @@ class ShelvesTreeView(TreeView):
         self._novels: Dict[NovelDescriptor, NovelNode] = {}
 
         self._wdgNovels = ShelveNode('Novels', IconRegistry.book_icon())
+        self._wdgNovels.selectionChanged.connect(self._novelsShelveSelectionChanged)
+        self._wdgNovels.newNovelRequested.connect(self.newNovelRequested.emit)
         self._wdgShortStories = ShelveNode('Short stories', IconRegistry.from_name('ph.file-text'))
         self._wdgIdeas = ShelveNode('Ideas', IconRegistry.decision_icon())
         self._wdgNotes = ShelveNode('Notes', IconRegistry.document_edition_icon())
@@ -83,6 +109,11 @@ class ShelvesTreeView(TreeView):
             self._wdgNovels.addChild(node)
             self._novels[novel] = node
             node.selectionChanged.connect(partial(self._novelSelectionChanged, node))
+            node.iconChanged.connect(partial(self.novelChanged.emit, novel))
+            node.deleted.connect(partial(self.novelDeletionRequested.emit, novel))
+
+    def updateNovel(self, novel: NovelDescriptor):
+        self._novels[novel].refresh()
 
     def clearSelection(self):
         for novel in self._selectedNovels:
@@ -92,5 +123,11 @@ class ShelvesTreeView(TreeView):
     def _novelSelectionChanged(self, novelNode: NovelNode, selected: bool):
         if selected:
             self.clearSelection()
+            self._wdgNovels.deselect()
             self._selectedNovels.add(novelNode.novel())
             self.novelSelected.emit(novelNode.novel())
+
+    def _novelsShelveSelectionChanged(self, selected: bool):
+        if selected:
+            self.clearSelection()
+            self.novelsShelveSelected.emit()

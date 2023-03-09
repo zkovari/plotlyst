@@ -1,4 +1,3 @@
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication
 
 from src.main.python.plotlyst.core.client import client
@@ -8,18 +7,18 @@ from src.main.python.plotlyst.view.main_window import MainWindow
 
 
 def assert_views(window: MainWindow, visible: bool = True):
-    assert window.btnNovel.isVisible() == visible
-    assert window.btnCharacters.isVisible() == visible
-    assert window.btnScenes.isVisible() == visible
-    assert window.btnNotes.isVisible() == visible
+    assert window.btnNovel.isVisible() == visible, 'Novel'
+    assert window.btnCharacters.isVisible() == visible, 'Characters'
+    assert window.btnScenes.isVisible() == visible, 'Scenes'
+    assert window.btnNotes.isVisible() == visible, 'Notes'
 
     if not visible:
         return
 
-    assert window.btnNovel.isEnabled()
-    assert window.btnCharacters.isEnabled()
-    assert window.btnScenes.isEnabled()
-    assert window.btnNotes.isEnabled()
+    assert window.btnNovel.isEnabled(), 'Novel enabled'
+    assert window.btnCharacters.isEnabled(), 'Characters enabled'
+    assert window.btnScenes.isEnabled(), 'Scenes enabled'
+    assert window.btnNotes.isEnabled(), 'Notes enabled'
 
 
 def test_empty_window(qtbot, window: MainWindow):
@@ -44,7 +43,7 @@ def test_change_font_size(qtbot, window: MainWindow):
 
 def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
     view: HomeView = go_to_home(filled_window)
-    assert len(view.novel_cards) == 1
+    assert len(view.novels()) == 1
 
     new_title = 'New title'
     create_novel(filled_window, new_title)
@@ -59,22 +58,6 @@ def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
 
     view.ui.btnActivate.click()
     assert_views(filled_window)
-
-
-def _test_sidebar_toggle(qtbot, filled_window: MainWindow):
-    view: HomeView = go_to_home(filled_window)
-    assert len(view.novel_cards) == 1
-
-    card = view.novel_cards[0]
-    qtbot.mouseClick(card, Qt.MouseButton.LeftButton)
-
-    view.ui.btnActivate.click()
-
-    filled_window.btnComments.click()
-    assert filled_window.wdgSidebar.isVisible()
-
-    filled_window.btnDocs.click()
-    assert filled_window.wdgDocs.isVisible()
 
 
 def test_manuscript_mode(qtbot, filled_window: MainWindow):
