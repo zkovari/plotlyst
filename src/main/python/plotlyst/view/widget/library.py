@@ -38,6 +38,9 @@ class NovelNode(ChildNode):
     def novel(self) -> NovelDescriptor:
         return self._novel
 
+    def refresh(self):
+        self._lblTitle.setText(self._novel.title)
+
 
 class ShelveNode(ContainerNode):
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
@@ -83,6 +86,9 @@ class ShelvesTreeView(TreeView):
             self._wdgNovels.addChild(node)
             self._novels[novel] = node
             node.selectionChanged.connect(partial(self._novelSelectionChanged, node))
+
+    def updateNovel(self, novel: NovelDescriptor):
+        self._novels[novel].refresh()
 
     def clearSelection(self):
         for novel in self._selectedNovels:
