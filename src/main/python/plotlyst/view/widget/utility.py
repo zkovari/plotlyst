@@ -23,12 +23,13 @@ from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QBrush
 from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
 from overrides import overrides
-from qthandy import flow
+from qthandy import flow, btn_popup
 
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget._icons import icons_registry
+from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 
 
 class ColorButton(QToolButton):
@@ -204,3 +205,18 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         def setColor(self, color: QColor):
             self.color = color.name()
             self.modelReset.emit()
+
+
+class IconSelectorButton(SecondaryActionToolButton):
+    iconSelected = pyqtSignal(str, QColor)
+
+    def __init__(self, parent=None):
+        super(IconSelectorButton, self).__init__(parent)
+        self._selector = IconSelectorWidget()
+        btn_popup(self, self._selector)
+        self.setIcon(IconRegistry.icons_icon())
+        self._selector.iconSelected.connect(self._iconSelected)
+
+    def _iconSelected(self, icon: str, color: QColor):
+        self.iconSelected.emit(icon, color)
+        self.menu().hide()

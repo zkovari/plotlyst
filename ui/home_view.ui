@@ -522,7 +522,7 @@
                      <number>2</number>
                     </property>
                     <property name="topMargin">
-                     <number>2</number>
+                     <number>15</number>
                     </property>
                     <property name="rightMargin">
                      <number>2</number>
@@ -559,13 +559,13 @@
                         <number>3</number>
                        </property>
                        <property name="leftMargin">
-                        <number>2</number>
+                        <number>100</number>
                        </property>
                        <property name="topMargin">
                         <number>2</number>
                        </property>
                        <property name="rightMargin">
-                        <number>2</number>
+                        <number>100</number>
                        </property>
                        <property name="bottomMargin">
                         <number>2</number>
