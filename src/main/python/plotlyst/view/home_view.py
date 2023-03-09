@@ -32,7 +32,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -62,9 +62,16 @@ class HomeView(AbstractView):
         self.ui.btnRoadmap.setIcon(IconRegistry.from_name('fa5s.road'))
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
+        self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
+        self.ui.btnActivate.setIconSize(QSize(24, 24))
+        incr_font(self.ui.btnActivate, 4)
         self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self._selected_novel))
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
+
+        self.ui.wdgTitle.setFixedHeight(150)
+        self.ui.wdgTitle.setStyleSheet(
+            f'#wdgTitle {{border-image: url({resource_registry.frame1}) 0 0 0 0 stretch stretch;}}')
 
         transparent(self.ui.lineNovelTitle)
         self.ui.lineNovelTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)

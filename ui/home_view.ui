@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>588</width>
-    <height>465</height>
+    <width>644</width>
+    <height>492</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>2</number>
+    <number>0</number>
    </property>
    <property name="leftMargin">
     <number>2</number>
@@ -114,8 +114,14 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="spacing">
+      <number>6</number>
+     </property>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="topMargin">
+        <number>5</number>
+       </property>
        <item>
         <widget class="QToolButton" name="btnLibrary">
          <property name="minimumSize">
@@ -256,7 +262,7 @@
        <widget class="QWidget" name="pageLibrary">
         <layout class="QVBoxLayout" name="verticalLayout_10">
          <property name="spacing">
-          <number>3</number>
+          <number>0</number>
          </property>
          <property name="leftMargin">
           <number>10</number>
@@ -280,33 +286,9 @@
            </property>
            <widget class="QWidget" name="layoutWidget">
             <layout class="QVBoxLayout" name="verticalLayout_9">
-             <item>
-              <widget class="QWidget" name="wdgShelvesBar" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayout_8">
-                <property name="spacing">
-                 <number>0</number>
-                </property>
-                <property name="leftMargin">
-                 <number>2</number>
-                </property>
-                <property name="topMargin">
-                 <number>2</number>
-                </property>
-                <property name="rightMargin">
-                 <number>2</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>2</number>
-                </property>
-               </layout>
-              </widget>
-             </item>
+             <property name="topMargin">
+              <number>5</number>
+             </property>
              <item>
               <widget class="QWidget" name="wdgShelvesParent" native="true">
                <property name="sizePolicy">
@@ -339,26 +321,28 @@
                 <property name="bottomMargin">
                  <number>1</number>
                 </property>
-                <item>
-                 <spacer name="horizontalSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
                </layout>
               </widget>
              </item>
              <item>
               <widget class="QStackedWidget" name="stackWdgNovels">
                <widget class="QWidget" name="pageEmpty">
+                <property name="white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
                 <layout class="QVBoxLayout" name="verticalLayout_12">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
                  <item>
                   <spacer name="verticalSpacer_3">
                    <property name="orientation">
@@ -416,7 +400,25 @@
                 </layout>
                </widget>
                <widget class="QWidget" name="pageNovelDisplay">
+                <property name="white-bg" stdset="0">
+                 <bool>true</bool>
+                </property>
                 <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <property name="spacing">
+                  <number>3</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>2</number>
+                 </property>
                  <item alignment="Qt::AlignRight">
                   <widget class="QToolButton" name="btnNovelSettings">
                    <property name="text">
@@ -428,7 +430,87 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="lineNovelTitle"/>
+                  <widget class="QWidget" name="wdgTitleParent" native="true">
+                   <layout class="QHBoxLayout" name="horizontalLayout_4">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>10</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>10</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <spacer name="horizontalSpacer">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Fixed</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QWidget" name="wdgTitle" native="true">
+                      <property name="maximumSize">
+                       <size>
+                        <width>1000</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <layout class="QHBoxLayout" name="horizontalLayout_2">
+                       <property name="spacing">
+                        <number>3</number>
+                       </property>
+                       <property name="leftMargin">
+                        <number>40</number>
+                       </property>
+                       <property name="topMargin">
+                        <number>2</number>
+                       </property>
+                       <property name="rightMargin">
+                        <number>40</number>
+                       </property>
+                       <property name="bottomMargin">
+                        <number>2</number>
+                       </property>
+                       <item>
+                        <widget class="QLineEdit" name="lineNovelTitle"/>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_3">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Fixed</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </widget>
                  </item>
                  <item>
                   <spacer name="verticalSpacer_5">
