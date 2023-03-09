@@ -102,6 +102,7 @@ class HomeView(AbstractView):
         self._shelvesTreeView.novelChanged.connect(self._novel_changed_in_browser)
         self._shelvesTreeView.novelsShelveSelected.connect(self.reset)
         self._shelvesTreeView.newNovelRequested.connect(self._add_new_novel)
+        self._shelvesTreeView.novelDeletionRequested.connect(self._on_delete)
 
         incr_font(self.ui.btnAddNewStoryMain, 8)
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
@@ -197,11 +198,14 @@ class HomeView(AbstractView):
                 self._iconSelector.reset()
         self.repo.update_project_novel(novel)
 
-    def _on_delete(self):
-        if ask_confirmation(f'Are you sure you want to delete the novel "{self._selected_novel.title}"?'):
-            self.repo.delete_novel(self._selected_novel)
-            self._novels.remove(self._selected_novel)
-            emit_event(NovelDeletedEvent(self, self._selected_novel))
-            self._selected_novel = None
-            self.reset()
+    def _on_delete(self, novel: Optional[NovelDescriptor] = None):
+        if novel is None:
+            novel = self._selected_novel
+        if ask_confirmation(f'Are you sure you want to delete the novel "{novel.title}"?'):
+            self.repo.delete_novel(novel)
+            self._novels.remove(novel)
+            emit_event(NovelDeletedEvent(self, novel))
+            if novel.id == self._selected_novel.id:
+                self._selected_novel = None
+                self.reset()
             self.refresh()
