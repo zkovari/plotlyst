@@ -22,6 +22,7 @@ from typing import List, Set, Dict, Optional
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
+from overrides import overrides
 from qthandy import vspacer
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor
@@ -34,12 +35,24 @@ class NovelNode(ChildNode):
         super(NovelNode, self).__init__(novel.title, parent=parent)
         self._novel = novel
         self.setPlusButtonEnabled(False)
+        self._actionChangeIcon.setVisible(True)
+        self.refresh()
 
     def novel(self) -> NovelDescriptor:
         return self._novel
 
     def refresh(self):
         self._lblTitle.setText(self._novel.title)
+        if self._novel.icon:
+            self._icon.setIcon(IconRegistry.from_name(self._novel.icon, self._novel.icon_color))
+            self._icon.setVisible(True)
+        else:
+            self._icon.setHidden(True)
+
+    @overrides
+    def _iconChanged(self, iconName: str, iconColor: str):
+        self._novel.icon = iconName
+        self._novel.icon_color = iconColor
 
 
 class ShelveNode(ContainerNode):
@@ -51,6 +64,7 @@ class ShelveNode(ContainerNode):
 
 class ShelvesTreeView(TreeView):
     novelSelected = pyqtSignal(NovelDescriptor)
+    novelChanged = pyqtSignal(NovelDescriptor)
     novelsShelveSelected = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -88,6 +102,7 @@ class ShelvesTreeView(TreeView):
             self._wdgNovels.addChild(node)
             self._novels[novel] = node
             node.selectionChanged.connect(partial(self._novelSelectionChanged, node))
+            node.iconChanged.connect(partial(self.novelChanged.emit, novel))
 
     def updateNovel(self, novel: NovelDescriptor):
         self._novels[novel].refresh()

@@ -23,7 +23,7 @@ from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QBrush
 from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
 from overrides import overrides
-from qthandy import flow, btn_popup
+from qthandy import flow, btn_popup, transparent
 
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
@@ -214,9 +214,20 @@ class IconSelectorButton(SecondaryActionToolButton):
         super(IconSelectorButton, self).__init__(parent)
         self._selector = IconSelectorWidget()
         btn_popup(self, self._selector)
-        self.setIcon(IconRegistry.icons_icon())
+        self.reset()
         self._selector.iconSelected.connect(self._iconSelected)
 
+    def selectIcon(self, icon: str, icon_color: str):
+        self.setIcon(IconRegistry.from_name(icon, icon_color))
+        transparent(self)
+        self.setIconSize(QSize(32, 32))
+
+    def reset(self):
+        self.setIconSize(QSize(24, 24))
+        self.setIcon(IconRegistry.icons_icon())
+        self.initStyleSheet()
+
     def _iconSelected(self, icon: str, color: QColor):
+        self.selectIcon(icon, color.name())
         self.iconSelected.emit(icon, color)
         self.menu().hide()

@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, QSize, Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtWidgets import QMenu
 from overrides import overrides
 from qthandy import ask_confirmation, transparent, incr_font, hbox, btn_popup_menu, italic
@@ -87,6 +87,7 @@ class HomeView(AbstractView):
         self.ui.lineSubtitle.textEdited.connect(self._subtitle_edited)
         self.ui.iconSubtitle.setIcon(IconRegistry.from_name('mdi.send'))
         self._iconSelector = IconSelectorButton()
+        self._iconSelector.iconSelected.connect(self._icon_changed)
         self.ui.wdgSubtitleParent.layout().insertWidget(0, self._iconSelector)
 
         menu = QMenu(self.ui.btnNovelSettings)
@@ -98,6 +99,7 @@ class HomeView(AbstractView):
         self.ui.splitterLibrary.setSizes([100, 500])
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
         self._shelvesTreeView.novelSelected.connect(self._novel_selected)
+        self._shelvesTreeView.novelChanged.connect(self._novel_changed_in_browser)
         self._shelvesTreeView.novelsShelveSelected.connect(self.reset)
 
         incr_font(self.ui.btnAddNewStoryMain, 8)
@@ -149,6 +151,10 @@ class HomeView(AbstractView):
 
         self.ui.lineNovelTitle.setText(novel.title)
         self.ui.lineSubtitle.setText(novel.subtitle)
+        if novel.icon:
+            self._iconSelector.selectIcon(novel.icon, novel.icon_color)
+        else:
+            self._iconSelector.reset()
 
     def _add_new_novel(self):
         novel = StoryCreationDialog(self.widget).display()
@@ -167,13 +173,28 @@ class HomeView(AbstractView):
     def _title_edited(self, title: str):
         if title:
             self._selected_novel.title = title
-            self.repo.update_project_novel(self._selected_novel)
             self._shelvesTreeView.updateNovel(self._selected_novel)
+            self.repo.update_project_novel(self._selected_novel)
             emit_event(NovelUpdatedEvent(self, self._selected_novel))
 
     def _subtitle_edited(self, subtitle: str):
         self._selected_novel.subtitle = subtitle
         self.repo.update_project_novel(self._selected_novel)
+
+    def _icon_changed(self, icon: str, color: QColor):
+        self._selected_novel.icon = icon
+        self._selected_novel.icon_color = color.name()
+        self._shelvesTreeView.updateNovel(self._selected_novel)
+        self.repo.update_project_novel(self._selected_novel)
+
+    def _novel_changed_in_browser(self, novel: NovelDescriptor):
+        if self._selected_novel and self._selected_novel.id == novel.id:
+            self.ui.lineNovelTitle.setText(self._selected_novel.title)
+            if novel.icon:
+                self._iconSelector.selectIcon(novel.icon, novel.icon_color)
+            else:
+                self._iconSelector.reset()
+        self.repo.update_project_novel(novel)
 
     def _on_delete(self):
         if ask_confirmation(f'Are you sure you want to delete the novel "{self._selected_novel.title}"?'):
