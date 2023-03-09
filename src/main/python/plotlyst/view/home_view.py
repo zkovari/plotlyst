@@ -78,6 +78,9 @@ class HomeView(AbstractView):
         incr_font(self.ui.lineNovelTitle, 10)
         self.ui.lineNovelTitle.textEdited.connect(self._on_edit_title)
         self.ui.btnNovelSettings.setIcon(IconRegistry.dots_icon(vertical=True))
+
+        transparent(self.ui.lineSubtitle)
+        
         menu = QMenu(self.ui.btnNovelSettings)
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self._on_delete)
         btn_popup_menu(self.ui.btnNovelSettings, menu)
