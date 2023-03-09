@@ -571,6 +571,22 @@
                         <number>2</number>
                        </property>
                        <item>
+                        <spacer name="horizontalSpacer_6">
+                         <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
+                         </property>
+                         <property name="sizeType">
+                          <enum>QSizePolicy::Fixed</enum>
+                         </property>
+                         <property name="sizeHint" stdset="0">
+                          <size>
+                           <width>20</width>
+                           <height>20</height>
+                          </size>
+                         </property>
+                        </spacer>
+                       </item>
+                       <item>
                         <widget class="QToolButton" name="iconSubtitle">
                          <property name="text">
                           <string/>
@@ -638,7 +654,7 @@
                    </property>
                    <property name="minimumSize">
                     <size>
-                     <width>140</width>
+                     <width>200</width>
                      <height>0</height>
                     </size>
                    </property>
@@ -649,12 +665,12 @@
                     <string>Open story</string>
                    </property>
                    <property name="text">
-                    <string>Open</string>
-                   </property>
-                   <property name="highlighted" stdset="0">
-                    <bool>true</bool>
+                    <string>Open story</string>
                    </property>
                    <property name="base" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <property name="positive" stdset="0">
                     <bool>true</bool>
                    </property>
                   </widget>

@@ -42,7 +42,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
     CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values
-from src.main.python.plotlyst.core.template import Role, exclude_if_empty
+from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
 from src.main.python.plotlyst.env import app_env
 
 
@@ -206,6 +206,9 @@ class ProjectNovelInfo:
     lang_settings: LanguageSettings = LanguageSettings()
     import_origin: Optional[ImportOrigin] = None
     migrated_to_new_location: bool = False
+    subtitle: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
+    icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
 
 
 def _default_story_structures():
@@ -257,7 +260,9 @@ class JsonClient:
             os.mkdir(self.images_dir)
 
     def novels(self) -> List[NovelDescriptor]:
-        return [NovelDescriptor(title=x.title, id=x.id) for x in self.project.novels]
+        return [NovelDescriptor(title=x.title, id=x.id, lang_settings=x.lang_settings,
+                                subtitle=x.subtitle, icon=x.icon, icon_color=x.icon_color)
+                for x in self.project.novels]
 
     def has_novel(self, id: uuid.UUID):
         for novel in self.project.novels:
@@ -308,12 +313,16 @@ class JsonClient:
         novel_info.lang_settings = novel.lang_settings
         novel_info.import_origin = novel.import_origin
         novel_info.migrated_to_new_location = novel.migrated_to_new_location
+        novel_info.subtitle = novel.subtitle
+        novel_info.icon = novel.icon
+        novel_info.icon_color = novel.icon_color
         self._persist_project()
 
     def insert_novel(self, novel: Novel):
         project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id, lang_settings=novel.lang_settings,
                                               import_origin=novel.import_origin,
-                                              migrated_to_new_location=novel.migrated_to_new_location)
+                                              migrated_to_new_location=novel.migrated_to_new_location,
+                                              subtitle=novel.subtitle, icon=novel.icon, icon_color=novel.icon_color)
         self.project.novels.append(project_novel_info)
         self._persist_project()
         self._persist_novel(novel)
@@ -526,6 +535,8 @@ class JsonClient:
         novel = Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
                       import_origin=project_novel_info.import_origin,
                       migrated_to_new_location=project_novel_info.migrated_to_new_location,
+                      subtitle=project_novel_info.subtitle, icon=project_novel_info.icon,
+                      icon_color=project_novel_info.icon_color,
                       plots=novel_info.plots, characters=characters,
                       scenes=scenes, chapters=chapters, stages=novel_info.stages,
                       story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,

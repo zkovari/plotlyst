@@ -64,8 +64,8 @@ class HomeView(AbstractView):
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
-        self.ui.btnActivate.setIconSize(QSize(24, 24))
-        incr_font(self.ui.btnActivate, 4)
+        self.ui.btnActivate.setIconSize(QSize(28, 28))
+        incr_font(self.ui.btnActivate, 6)
         self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self._selected_novel))
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
@@ -77,13 +77,14 @@ class HomeView(AbstractView):
         transparent(self.ui.lineNovelTitle)
         self.ui.lineNovelTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         incr_font(self.ui.lineNovelTitle, 10)
-        self.ui.lineNovelTitle.textEdited.connect(self._on_edit_title)
+        self.ui.lineNovelTitle.textEdited.connect(self._title_edited)
         self.ui.btnNovelSettings.setIcon(IconRegistry.dots_icon(vertical=True))
 
         transparent(self.ui.lineSubtitle)
         italic(self.ui.lineSubtitle)
         incr_font(self.ui.lineSubtitle, 2)
         transparent(self.ui.iconSubtitle)
+        self.ui.lineSubtitle.textEdited.connect(self._subtitle_edited)
         self.ui.iconSubtitle.setIcon(IconRegistry.from_name('mdi.send'))
         self._iconSelector = IconSelectorButton()
         self.ui.wdgSubtitleParent.layout().insertWidget(0, self._iconSelector)
@@ -147,6 +148,7 @@ class HomeView(AbstractView):
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageNovelDisplay)
 
         self.ui.lineNovelTitle.setText(novel.title)
+        self.ui.lineSubtitle.setText(novel.subtitle)
 
     def _add_new_novel(self):
         novel = StoryCreationDialog(self.widget).display()
@@ -162,12 +164,16 @@ class HomeView(AbstractView):
 
             self.refresh()
 
-    def _on_edit_title(self, title: str):
+    def _title_edited(self, title: str):
         if title:
             self._selected_novel.title = title
             self.repo.update_project_novel(self._selected_novel)
             self._shelvesTreeView.updateNovel(self._selected_novel)
             emit_event(NovelUpdatedEvent(self, self._selected_novel))
+
+    def _subtitle_edited(self, subtitle: str):
+        self._selected_novel.subtitle = subtitle
+        self.repo.update_project_novel(self._selected_novel)
 
     def _on_delete(self):
         if ask_confirmation(f'Are you sure you want to delete the novel "{self._selected_novel.title}"?'):
