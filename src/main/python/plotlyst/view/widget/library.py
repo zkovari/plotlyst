@@ -51,6 +51,7 @@ class ShelveNode(ContainerNode):
 
 class ShelvesTreeView(TreeView):
     novelSelected = pyqtSignal(NovelDescriptor)
+    novelsShelveSelected = pyqtSignal()
 
     def __init__(self, parent=None):
         super(ShelvesTreeView, self).__init__(parent)
@@ -59,6 +60,7 @@ class ShelvesTreeView(TreeView):
         self._novels: Dict[NovelDescriptor, NovelNode] = {}
 
         self._wdgNovels = ShelveNode('Novels', IconRegistry.book_icon())
+        self._wdgNovels.selectionChanged.connect(self._novelsShelveSelectionChanged)
         self._wdgShortStories = ShelveNode('Short stories', IconRegistry.from_name('ph.file-text'))
         self._wdgIdeas = ShelveNode('Ideas', IconRegistry.decision_icon())
         self._wdgNotes = ShelveNode('Notes', IconRegistry.document_edition_icon())
@@ -98,5 +100,11 @@ class ShelvesTreeView(TreeView):
     def _novelSelectionChanged(self, novelNode: NovelNode, selected: bool):
         if selected:
             self.clearSelection()
+            self._wdgNovels.deselect()
             self._selectedNovels.add(novelNode.novel())
             self.novelSelected.emit(novelNode.novel())
+
+    def _novelsShelveSelectionChanged(self, selected: bool):
+        if selected:
+            self.clearSelection()
+            self.novelsShelveSelected.emit()

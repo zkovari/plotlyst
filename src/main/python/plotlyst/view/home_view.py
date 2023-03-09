@@ -80,6 +80,7 @@ class HomeView(AbstractView):
         self.ui.splitterLibrary.setSizes([100, 500])
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
         self._shelvesTreeView.novelSelected.connect(self._novel_selected)
+        self._shelvesTreeView.novelsShelveSelected.connect(self.reset)
 
         incr_font(self.ui.btnAddNewStoryMain, 8)
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
