@@ -344,31 +344,6 @@
                 <property name="bottomMargin">
                  <number>2</number>
                 </property>
-                <item>
-                 <widget class="QPushButton" name="btnAdd">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="cursor">
-                   <cursorShape>PointingHandCursor</cursorShape>
-                  </property>
-                  <property name="toolTip">
-                   <string>Add new story</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="positive" stdset="0">
-                   <bool>true</bool>
-                  </property>
-                  <property name="base" stdset="0">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
                </layout>
               </widget>
              </item>

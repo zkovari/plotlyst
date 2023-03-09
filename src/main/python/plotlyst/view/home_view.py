@@ -67,9 +67,9 @@ class HomeView(AbstractView):
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self._selected_novel))
-        self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
+        # self.ui.btnAdd.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
-        self.ui.btnAdd.clicked.connect(self._add_new_novel)
+        # self.ui.btnAdd.clicked.connect(self._add_new_novel)
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
 
         transparent(self.ui.lineNovelTitle)
