@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
     QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QTableView, QSizePolicy, QAbstractItemView
 from language_tool_python import LanguageTool
 from overrides import overrides
-from qthandy import transparent, hbox, margins, vspacer
+from qthandy import transparent, hbox, margins
 from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode
 
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
@@ -430,6 +430,7 @@ class DocumentTextEditor(RichTextEditor):
 
         self._wdgTitle = group(self._btnIcon, self._textTitle, margin=0, spacing=0)
         self._wdgTitle.setStyleSheet('background: white;')
+        margins(self._wdgTitle, top=20, bottom=5)
         self.setStyleSheet('DocumentTextEditor {background: white;}')
 
         self.textEdit.setViewportMargins(5, 5, 5, 5)
@@ -452,9 +453,6 @@ class DocumentTextEditor(RichTextEditor):
         self.setWidthPercentage(90)
 
         self.layout().insertWidget(1, self._wdgTitle)
-        spacer = vspacer(max_height=5)
-        spacer.setStyleSheet('background: white;')
-        self.layout().insertWidget(2, spacer)
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
