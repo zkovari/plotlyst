@@ -244,6 +244,7 @@ class StatusColumnWidget(QFrame):
 
         self._btnAdd = QPushButton('New Task', self)
         self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        retain_when_hidden(self._btnAdd)
         transparent(self._btnAdd)
         pointy(self._btnAdd)
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
