@@ -19,12 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional, List
 
-from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize
 from PyQt6.QtGui import QIcon, QMouseEvent, QEnterEvent
 from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton, QMenu
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, btn_popup_menu
+from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, btn_popup_menu, retain_when_hidden
 
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
@@ -57,8 +57,10 @@ class BaseTreeWidget(QWidget):
         self._btnMenu = QToolButton()
         transparent(self._btnMenu)
         self._btnMenu.setIcon(IconRegistry.dots_icon('grey', vertical=True))
+        self._btnMenu.setIconSize(QSize(18, 18))
         self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
         self._btnMenu.setHidden(True)
+        retain_when_hidden(self._btnMenu)
 
         self._btnAdd = QToolButton()
         transparent(self._btnAdd)
