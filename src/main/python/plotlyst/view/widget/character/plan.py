@@ -18,12 +18,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import sys
+from typing import Dict
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit
-from qthandy import vbox, vspacer, hbox, spacer, flow, transparent, margins, line
+import emoji
+from PyQt6.QtCore import Qt, QPointF
+from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QResizeEvent, QShowEvent
+from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy
+from overrides import overrides
+from qthandy import vbox, vspacer, hbox, spacer, flow, transparent, margins, line, retain_when_hidden
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
+from src.main.python.plotlyst.view.common import emoji_font
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
@@ -35,19 +40,25 @@ class CharacterGoalWidget(QWidget):
         self._novel = novel
         self._goal = goal
 
-        vbox(self)
+        vbox(self, 0)
         self._wdgCenter = QWidget()
-        hbox(self._wdgCenter, spacing=0)
-        self._iconSelector = IconSelectorButton()
-        self._iconSelector.selectIcon('mdi.target', 'darkBlue')
-        self._lineText = QLineEdit()
-        self._lineText.setPlaceholderText('Objective')
-        transparent(self._lineText)
+        hbox(self._wdgCenter, 0, 0)
+        self.iconSelector = IconSelectorButton()
+        self.iconSelector.selectIcon('mdi.target', 'darkBlue')
+        self.lineText = QLineEdit()
+        self.lineText.setPlaceholderText('Objective')
+        self.hLine = line()
+        retain_when_hidden(self.hLine)
+        self.hLine.setHidden(True)
+        transparent(self.lineText)
 
-        self._wdgCenter.layout().addWidget(self._iconSelector)
-        self._wdgCenter.layout().addWidget(group(self._lineText, line(color='darkBlue'), vertical=False))
+        self._wdgCenter.layout().addWidget(self.iconSelector)
+        self._wdgCenter.layout().addWidget(group(self.lineText, self.hLine, vertical=False))
 
         self.layout().addWidget(self._wdgCenter)
+
+    def entryPoint(self) -> QPointF:
+        return self.hLine.mapToGlobal(self.hLine.pos()).toPointF()
 
 
 class CharacterPlanBarWidget(QWidget):
@@ -57,10 +68,16 @@ class CharacterPlanBarWidget(QWidget):
         self._character = character
         self._plan = plan
         vbox(self)
+        self._firstShow = True
 
         self._wdgHeader = QWidget()
         hbox(self._wdgHeader)
-        self._lblEmoji = QLabel('emoji')
+        self._lblEmoji = QLabel()
+        self._lblEmoji.setFont(emoji_font())
+        if self._plan.external:
+            self._lblEmoji.setText(emoji.emojize(':bullseye:'))
+        else:
+            self._lblEmoji.setText(emoji.emojize(':smiling_face_with_hearts:'))
         self._textSummary = AutoAdjustableTextEdit()
         transparent(self._textSummary)
         self._textSummary.setPlaceholderText('Summarize this goal')
@@ -69,14 +86,71 @@ class CharacterPlanBarWidget(QWidget):
         self._wdgHeader.layout().addWidget(spacer())
 
         self._wdgBar = QWidget()
-        flow(self._wdgBar)
+        self._wdgBar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        flow(self._wdgBar, spacing=0)
         margins(self._wdgBar, left=20, top=10, bottom=10)
+        self._goalWidgets: Dict[CharacterGoal, CharacterGoalWidget] = {}
         for goal in self._plan.goals:
             goalWdg = CharacterGoalWidget(self._novel, goal)
+            self._goalWidgets[goal] = goalWdg
             self._wdgBar.layout().addWidget(goalWdg)
 
         self.layout().addWidget(self._wdgHeader)
         self.layout().addWidget(self._wdgBar)
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        pen = QPen()
+        pen.setColor(QColor('darkBlue'))
+        pen.setWidth(3)
+        painter.setPen(pen)
+
+        path = QPainterPath()
+
+        for i, goal in enumerate(self._plan.goals):
+            wdg = self._goalWidgets[goal]
+            pos: QPointF = wdg.mapTo(self, wdg.hLine.pos()).toPointF()
+            pos.setY(pos.y() + wdg.layout().contentsMargins().top())
+            pos.setX(pos.x() + wdg.layout().contentsMargins().left())
+            if i == 0:
+                path.moveTo(pos)
+            else:
+                path.lineTo(pos)
+            pos.setX(pos.x() + wdg.hLine.width() + wdg.iconSelector.width())
+            path.lineTo(pos)
+
+        painter.drawPath(path)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if self._firstShow:
+            self._rearrange()
+            self._firstShow = False
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self._rearrange()
+
+    def _rearrange(self):
+        first_y = 0
+        last_y = 0
+        for i, goal in enumerate(self._plan.goals):
+            wdg = self._goalWidgets[goal]
+            if i == 0:
+                first_y = wdg.pos().y()
+                last_y = first_y
+                continue
+
+            margins(wdg, top=40 if wdg.pos().y() > first_y else 0)
+
+            if wdg.pos().y() > last_y:
+                last_y = wdg.pos().y()
+                margins(wdg, left=40, top=40)
+            else:
+                margins(wdg, left=0)
 
 
 class CharacterPlansWidget(QWidget):
@@ -104,7 +178,12 @@ if __name__ == '__main__':
             plan = CharacterPlan()
             goal = Goal('Goal 1')
             plan.goals.append(CharacterGoal(goal_id=goal.id))
+            plan.goals.append(CharacterGoal(goal_id=goal.id))
+            plan.goals.append(CharacterGoal(goal_id=goal.id))
+            plan.goals.append(CharacterGoal(goal_id=goal.id))
+
             character.plans.append(plan)
+            character.plans.append(CharacterPlan(external=False))
             self.widget = CharacterPlansWidget(novel, character)
             self.setCentralWidget(self.widget)
 
