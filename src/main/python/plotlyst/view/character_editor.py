@@ -21,7 +21,6 @@ from functools import partial
 
 import qtanim
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
-from fbs_runtime import platform
 from qthandy import translucent, btn_popup, incr_font, bold, italic
 from qthandy.filter import OpacityEventFilter
 
@@ -50,10 +49,7 @@ class CharacterEditor:
         self.novel = novel
         self.character = character
 
-        if platform.is_windows():
-            self._emoji_font = emoji_font(14)
-        else:
-            self._emoji_font = emoji_font(20)
+        self._emoji_font = emoji_font()
         self.ui.btnCustomize.setIcon(IconRegistry.customization_icon())
         self.ui.btnCustomize.clicked.connect(self._customize_profile)
         self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon())

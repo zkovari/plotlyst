@@ -25,7 +25,6 @@ import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
     Qt
 from PyQt6.QtWidgets import QWidget, QWidgetAction, QTableView, QMenu
-from fbs_runtime import platform
 from qthandy import flow, clear_layout
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -57,10 +56,7 @@ class SceneEditor(QObject):
         self.scene: Optional[Scene] = None
         self.notes_updated: bool = False
 
-        if platform.is_windows():
-            self._emoji_font = emoji_font(14)
-        else:
-            self._emoji_font = emoji_font(20)
+        self._emoji_font = emoji_font()
 
         self.ui.btnAttributes.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
         self.ui.btnAttributes.setIcon(IconRegistry.from_name('fa5s.yin-yang'))

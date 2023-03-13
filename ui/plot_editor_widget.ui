@@ -36,9 +36,24 @@
     <number>2</number>
    </property>
    <item>
-    <widget class="SecondaryActionPushButton" name="btnAdd">
+    <widget class="QPushButton" name="btnAdd">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
      <property name="text">
       <string>Add new plot</string>
+     </property>
+     <property name="base" stdset="0">
+      <bool>true</bool>
+     </property>
+     <property name="positive" stdset="0">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -67,13 +82,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>SecondaryActionPushButton</class>
-   <extends>QPushButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

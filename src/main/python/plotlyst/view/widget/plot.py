@@ -381,7 +381,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             self._addPlotWidget(plot)
 
         italic(self.btnAdd)
-        self.btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
         menu = QMenu(self.btnAdd)
         menu.addAction(IconRegistry.cause_and_effect_icon(), 'Main plot', lambda: self.newPlot(PlotType.Main))
         menu.addAction(IconRegistry.conflict_self_icon(), 'Internal plot', lambda: self.newPlot(PlotType.Internal))

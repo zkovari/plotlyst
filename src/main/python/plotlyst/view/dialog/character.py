@@ -23,7 +23,6 @@ import emoji
 import qtanim
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import QDialog, QToolButton, QButtonGroup, QDialogButtonBox
-from fbs_runtime import platform
 from qthandy import FlowLayout
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter
 
@@ -85,10 +84,7 @@ class BackstoryEditorDialog(QDialog, Ui_BackstoryEditorDialog):
         super(BackstoryEditorDialog, self).__init__(parent)
         self.setupUi(self)
 
-        if platform.is_windows():
-            self._emoji_font = emoji_font(14)
-        else:
-            self._emoji_font = emoji_font(20)
+        self._emoji_font = emoji_font()
 
         self.btnVeryUnhappy.setFont(self._emoji_font)
         self.btnVeryUnhappy.setText(emoji.emojize(':fearful_face:'))

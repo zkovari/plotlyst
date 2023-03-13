@@ -79,7 +79,7 @@ class CharacterProfileEditorDialog(Ui_CharacterProfileEditorDialog, QDialog):
         self.btnRemove.clicked.connect(self._remove_field)
 
         self.lineLabel.textEdited.connect(self._label_edited)
-        self.lineEmoji.setFont(emoji_font(16))
+        self.lineEmoji.setFont(emoji_font())
         self.lineEmoji.textEdited.connect(self._emoji_edited)
 
         self.btnAge.installEventFilter(self)

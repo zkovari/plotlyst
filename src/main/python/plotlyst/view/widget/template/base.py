@@ -110,12 +110,7 @@ class TemplateFieldWidgetBase(EditableTemplateWidget):
                 item.widget().setEnabled(enabled)
 
     def updateEmoji(self, emoji: str):
-        if app_env.is_windows():
-            emoji_size = 14
-        else:
-            emoji_size = 20
-
-        self.lblEmoji.setFont(emoji_font(emoji_size))
+        self.lblEmoji.setFont(emoji_font())
         self.lblEmoji.setText(emoji)
         self.lblEmoji.setVisible(True)
 

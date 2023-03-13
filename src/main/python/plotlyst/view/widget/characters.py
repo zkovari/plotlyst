@@ -31,7 +31,6 @@ from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QCol
     QPalette, QMouseEvent, QCursor, QAction, QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
     QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
-from fbs_runtime import platform
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold
@@ -1243,10 +1242,7 @@ class CharacterEmotionButton(QToolButton):
         self.setMenu(menu)
         menu.setMaximumWidth(64)
         self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        if platform.is_windows():
-            self._emoji_font = emoji_font(14)
-        else:
-            self._emoji_font = emoji_font(20)
+        self._emoji_font = emoji_font()
         self.setFont(self._emoji_font)
         menu.setFont(self._emoji_font)
         menu.addAction(emoji.emojize(':smiling_face_with_smiling_eyes:'), lambda: self._emotionClicked(VERY_HAPPY))
