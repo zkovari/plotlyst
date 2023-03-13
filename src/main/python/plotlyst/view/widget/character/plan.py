@@ -20,10 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import sys
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel
-from qthandy import vbox, vspacer, hbox, spacer, flow, transparent, margins
+from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit
+from qthandy import vbox, vspacer, hbox, spacer, flow, transparent, margins, line
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -36,10 +37,15 @@ class CharacterGoalWidget(QWidget):
 
         vbox(self)
         self._wdgCenter = QWidget()
-        hbox(self._wdgCenter)
+        hbox(self._wdgCenter, spacing=0)
         self._iconSelector = IconSelectorButton()
         self._iconSelector.selectIcon('mdi.target', 'darkBlue')
+        self._lineText = QLineEdit()
+        self._lineText.setPlaceholderText('Objective')
+        transparent(self._lineText)
+
         self._wdgCenter.layout().addWidget(self._iconSelector)
+        self._wdgCenter.layout().addWidget(group(self._lineText, line(color='darkBlue'), vertical=False))
 
         self.layout().addWidget(self._wdgCenter)
 
