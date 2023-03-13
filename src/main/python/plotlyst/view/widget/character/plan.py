@@ -23,14 +23,14 @@ from typing import Dict
 
 import emoji
 from PyQt6.QtCore import Qt, QPointF, pyqtSignal
-from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QResizeEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QToolButton
+from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent
+from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QToolButton, QMenu
 from overrides import overrides
-from qthandy import vbox, vspacer, hbox, spacer, flow, transparent, margins, line, retain_when_hidden
+from qthandy import vbox, vspacer, hbox, spacer, flow, transparent, margins, line, retain_when_hidden, btn_popup_menu
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
@@ -39,11 +39,13 @@ from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
 class CharacterGoalWidget(QWidget):
     addNew = pyqtSignal()
+    selectExisting = pyqtSignal()
 
-    def __init__(self, novel: Novel, goal: CharacterGoal, parent=None):
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None):
         super(CharacterGoalWidget, self).__init__(parent)
         self._novel = novel
-        self._goal = goal
+        self._goalRef = goalRef
+        self._goal = goalRef.goal(self._novel)
 
         vbox(self, 0)
         self._wdgCenter = QWidget()
@@ -52,6 +54,7 @@ class CharacterGoalWidget(QWidget):
         self.iconSelector.selectIcon('mdi.target', 'darkBlue')
         self.lineText = QLineEdit()
         self.lineText.setPlaceholderText('Objective')
+        self.lineText.setText(self._goal.text)
         self.hLine = line()
         retain_when_hidden(self.hLine)
         self.hLine.setHidden(True)
@@ -64,7 +67,13 @@ class CharacterGoalWidget(QWidget):
         pointy(self._btnAdd)
         retain_when_hidden(self._btnAdd)
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
-        self._btnAdd.clicked.connect(self.addNew.emit)
+        menu = QMenu(self._btnAdd)
+        menu.addAction(action('Add new objective', IconRegistry.goal_icon(), self.addNew.emit, parent=menu))
+        menu.addSeparator()
+        menu.addAction(
+            action('Select objective from a character', IconRegistry.character_icon(), self.selectExisting.emit,
+                   parent=menu))
+        btn_popup_menu(self._btnAdd, menu)
 
         self._wdgCenter.layout().addWidget(self.iconSelector)
         self._wdgCenter.layout().addWidget(group(
@@ -76,7 +85,7 @@ class CharacterGoalWidget(QWidget):
         self.layout().addWidget(self._wdgCenter)
 
     def goal(self) -> CharacterGoal:
-        return self._goal
+        return self._goalRef
 
 
 class CharacterPlanBarWidget(QWidget):
@@ -109,9 +118,7 @@ class CharacterPlanBarWidget(QWidget):
         margins(self._wdgBar, left=20, top=10, bottom=10)
         self._goalWidgets: Dict[CharacterGoal, CharacterGoalWidget] = {}
         for goal in self._plan.goals:
-            goalWdg = CharacterGoalWidget(self._novel, goal)
-            goalWdg.addNew.connect(partial(self._addNewGoal, goalWdg))
-            self._goalWidgets[goal] = goalWdg
+            goalWdg = self._initGoalWidget(goal)
             self._wdgBar.layout().addWidget(goalWdg)
 
         self.layout().addWidget(self._wdgHeader)
@@ -149,30 +156,56 @@ class CharacterPlanBarWidget(QWidget):
             self._rearrange()
             self._firstShow = False
 
-    @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self._rearrange()
+    # @overrides
+    # def resizeEvent(self, event: QResizeEvent) -> None:
+    #     self._rearrange()
 
     def _rearrange(self):
-        first_y = 0
-        last_y = 0
+        # first_y = 0
+        # last_y = 0
         for i, goal in enumerate(self._plan.goals):
             wdg = self._goalWidgets[goal]
             if i == 0:
-                first_y = wdg.pos().y()
-                last_y = first_y
-                continue
-
-            margins(wdg, top=40 if wdg.pos().y() > first_y else 0)
-
-            if wdg.pos().y() > last_y:
-                last_y = wdg.pos().y()
-                margins(wdg, left=40, top=40)
+                margins(wdg, left=0, top=40)
             else:
-                margins(wdg, left=0)
+                margins(wdg, left=40, top=40)
+        #         first_y = wdg.pos().y()
+        #         last_y = first_y
+        #         continue
+        #
+        #     margins(wdg, top=40 if wdg.pos().y() > first_y else 0)
+        #
+        #     print(wdg.pos().y())
+        #     if wdg.pos().y() != last_y:
+        #         last_y = wdg.pos().y()
+        #         margins(wdg, left=40, top=40)
+        #     else:
+        #         margins(wdg, left=0)
+
+    def _initGoalWidget(self, goal: CharacterGoal):
+        goalWdg = CharacterGoalWidget(self._novel, goal)
+        goalWdg.addNew.connect(partial(self._addNewGoal, goalWdg))
+        self._goalWidgets[goal] = goalWdg
+        return goalWdg
 
     def _addNewGoal(self, ref: CharacterGoalWidget):
-        print('new goal')
+        goal = Goal('')
+        self._novel.goals.append(goal)
+
+        char_goal = CharacterGoal(goal.id)
+        i = self._plan.goals.index(ref.goal())
+
+        goalWidget = self._initGoalWidget(char_goal)
+        if i == len(self._plan.goals) - 1:
+            self._wdgBar.layout().addWidget(goalWidget)
+        else:
+            self._wdgBar.layout().insertWidget(i + 1, goalWidget)
+
+        self._plan.goals.insert(i + 1, char_goal)
+
+        self._rearrange()
+        self.update()
+        # self.repo.update_novel(self.novel)
 
 
 class CharacterPlansWidget(QWidget):
@@ -199,10 +232,11 @@ if __name__ == '__main__':
             character = Character('Name')
             plan = CharacterPlan()
             goal = Goal('Goal 1')
+            novel.goals.append(goal)
             plan.goals.append(CharacterGoal(goal_id=goal.id))
             plan.goals.append(CharacterGoal(goal_id=goal.id))
-            plan.goals.append(CharacterGoal(goal_id=goal.id))
-            plan.goals.append(CharacterGoal(goal_id=goal.id))
+            # plan.goals.append(CharacterGoal(goal_id=goal.id))
+            # plan.goals.append(CharacterGoal(goal_id=goal.id))
 
             character.plans.append(plan)
             character.plans.append(CharacterPlan(external=False))
