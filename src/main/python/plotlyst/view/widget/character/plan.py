@@ -18,23 +18,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import sys
+from functools import partial
 from typing import Dict
 
 import emoji
-from PyQt6.QtCore import Qt, QPointF
+from PyQt6.QtCore import Qt, QPointF, pyqtSignal
 from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QResizeEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, flow, transparent, margins, line, retain_when_hidden
+from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
 
 class CharacterGoalWidget(QWidget):
+    addNew = pyqtSignal()
+
     def __init__(self, novel: Novel, goal: CharacterGoal, parent=None):
         super(CharacterGoalWidget, self).__init__(parent)
         self._novel = novel
@@ -52,13 +57,26 @@ class CharacterGoalWidget(QWidget):
         self.hLine.setHidden(True)
         transparent(self.lineText)
 
+        self._btnAdd = QToolButton()
+        self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
+        self._btnAdd.setToolTip('Add new objective')
+        transparent(self._btnAdd)
+        pointy(self._btnAdd)
+        retain_when_hidden(self._btnAdd)
+        self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
+        self._btnAdd.clicked.connect(self.addNew.emit)
+
         self._wdgCenter.layout().addWidget(self.iconSelector)
-        self._wdgCenter.layout().addWidget(group(self.lineText, self.hLine, vertical=False))
+        self._wdgCenter.layout().addWidget(group(
+            group(self.lineText, self._btnAdd),
+            self.hLine, vertical=False))
+
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
 
         self.layout().addWidget(self._wdgCenter)
 
-    def entryPoint(self) -> QPointF:
-        return self.hLine.mapToGlobal(self.hLine.pos()).toPointF()
+    def goal(self) -> CharacterGoal:
+        return self._goal
 
 
 class CharacterPlanBarWidget(QWidget):
@@ -92,6 +110,7 @@ class CharacterPlanBarWidget(QWidget):
         self._goalWidgets: Dict[CharacterGoal, CharacterGoalWidget] = {}
         for goal in self._plan.goals:
             goalWdg = CharacterGoalWidget(self._novel, goal)
+            goalWdg.addNew.connect(partial(self._addNewGoal, goalWdg))
             self._goalWidgets[goal] = goalWdg
             self._wdgBar.layout().addWidget(goalWdg)
 
@@ -151,6 +170,9 @@ class CharacterPlanBarWidget(QWidget):
                 margins(wdg, left=40, top=40)
             else:
                 margins(wdg, left=0)
+
+    def _addNewGoal(self, ref: CharacterGoalWidget):
+        print('new goal')
 
 
 class CharacterPlansWidget(QWidget):
