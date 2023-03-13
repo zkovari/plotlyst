@@ -22,11 +22,12 @@ from functools import partial
 from typing import Dict
 
 import emoji
-from PyQt6.QtCore import Qt, QPointF, pyqtSignal
+from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize
 from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent
 from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QToolButton, QMenu
 from overrides import overrides
-from qthandy import vbox, vspacer, hbox, spacer, flow, transparent, margins, line, retain_when_hidden, btn_popup_menu
+from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, btn_popup_menu, \
+    decr_font, curved_flow
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
@@ -58,6 +59,27 @@ class _AddObjectiveButton(QToolButton):
         btn_popup_menu(self, menu)
 
 
+class CharacterSubtaskWidget(QWidget):
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None):
+        super(CharacterSubtaskWidget, self).__init__(parent)
+        self._novel = novel
+        self._goalRef = goalRef
+        self._goal = goalRef.goal(self._novel)
+
+        self.iconSelector = IconSelectorButton()
+        self.iconSelector.selectIcon('mdi.target', 'darkBlue')
+        self.iconSelector.setIconSize(QSize(15, 15))
+        self.lineText = QLineEdit()
+        self.lineText.setPlaceholderText('Subtask')
+        transparent(self.lineText)
+        decr_font(self.lineText)
+        self.lineText.setText(self._goal.text)
+
+        hbox(self)
+        self.layout().addWidget(self.iconSelector)
+        self.layout().addWidget(self.lineText)
+
+
 class CharacterGoalWidget(QWidget):
     addNew = pyqtSignal()
     selectExisting = pyqtSignal()
@@ -76,10 +98,10 @@ class CharacterGoalWidget(QWidget):
         self.lineText = QLineEdit()
         self.lineText.setPlaceholderText('Objective')
         self.lineText.setText(self._goal.text)
+        transparent(self.lineText)
         self.hLine = line()
         retain_when_hidden(self.hLine)
         self.hLine.setHidden(True)
-        transparent(self.lineText)
 
         self.btnAdd = _AddObjectiveButton()
         self.btnAddBefore = _AddObjectiveButton()
@@ -90,10 +112,18 @@ class CharacterGoalWidget(QWidget):
             group(self.lineText, self.btnAdd),
             self.hLine, vertical=False))
 
+        self._wdgBottom = QWidget()
+        vbox(self._wdgBottom, 0, 0)
+        for child in self._goalRef.children:
+            subtaskWdg = CharacterSubtaskWidget(self._novel, child)
+            margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
+            self._wdgBottom.layout().addWidget(subtaskWdg)
+
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAddBefore, self))
 
         self.layout().addWidget(self._wdgCenter)
+        self.layout().addWidget(self._wdgBottom)
 
     def goal(self) -> CharacterGoal:
         return self._goalRef
@@ -125,7 +155,7 @@ class CharacterPlanBarWidget(QWidget):
 
         self._wdgBar = QWidget()
         self._wdgBar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
-        flow(self._wdgBar, spacing=0)
+        curved_flow(self._wdgBar, spacing=0)
         margins(self._wdgBar, left=20, top=10, bottom=10)
         self._goalWidgets: Dict[CharacterGoal, CharacterGoalWidget] = {}
         for goal in self._plan.goals:
@@ -268,9 +298,12 @@ if __name__ == '__main__':
             goal = Goal('Goal 1')
             novel.goals.append(goal)
             plan.goals.append(CharacterGoal(goal_id=goal.id))
+            plan.goals.append(CharacterGoal(goal_id=goal.id,
+                                            children=[CharacterGoal(goal_id=goal.id),
+                                                      CharacterGoal(goal_id=goal.id),
+                                                      CharacterGoal(goal_id=goal.id)]))
             plan.goals.append(CharacterGoal(goal_id=goal.id))
-            # plan.goals.append(CharacterGoal(goal_id=goal.id))
-            # plan.goals.append(CharacterGoal(goal_id=goal.id))
+            plan.goals.append(CharacterGoal(goal_id=goal.id))
 
             character.plans.append(plan)
             character.plans.append(CharacterPlan(external=False))
