@@ -788,16 +788,15 @@ class WorldBuildingEditorScene(QGraphicsScene):
             _font = QFont('Helvetica', font_size)
             _metrics = QFontMetrics(_font)
 
-        font_size = 12
-        _emoji_font = emoji_font(font_size)
+        _emoji_font = emoji_font()
         _metrics = QFontMetrics(_emoji_font)
         if app_env.is_mac():
             threshold = 35
         else:
             threshold = 25
         while _metrics.boundingRect('🙂').height() < threshold:
-            font_size += 1
-            _emoji_font = emoji_font(font_size)
+            _emoji_font.setPointSize(_emoji_font.pointSize() + 1)
+
             _metrics = QFontMetrics(_emoji_font)
 
         self._rootItem = WorldBuildingItemGroup(self._root, _font, _emoji_font)

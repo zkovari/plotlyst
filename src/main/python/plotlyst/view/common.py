@@ -55,12 +55,12 @@ def rounded_pixmap(original: QPixmap) -> QPixmap:
     return rounded
 
 
-def emoji_font(size: int = 13) -> QFont:
+def emoji_font() -> QFont:
     if platform.is_mac():
-        return QFont('Apple Color Emoji', size)
+        return QFont('Apple Color Emoji', 20)
     if platform.is_windows():
-        return QFont('Segoe UI Emoji', size)
-    return QFont('Noto Emoji', size)
+        return QFont('Segoe UI Emoji', 14)
+    return QFont('Noto Emoji', 18)
 
 
 def show_color_picker(default_color: QColor = QColor('white')) -> QColor:

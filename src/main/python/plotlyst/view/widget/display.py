@@ -26,7 +26,6 @@ from PyQt6.QtCharts import QChartView
 from PyQt6.QtCore import QPropertyAnimation, pyqtProperty, QSize
 from PyQt6.QtGui import QPainter, QShowEvent, QColor
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
-from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, incr_font, bold, transparent, vbox
 
@@ -144,10 +143,7 @@ class Subtitle(QWidget):
 class Emoji(QLabel):
     def __init__(self, parent=None):
         super(Emoji, self).__init__(parent)
-        if platform.is_windows():
-            self._emojiFont = emoji_font(14)
-        else:
-            self._emojiFont = emoji_font(20)
+        self._emojiFont = emoji_font()
 
         self.setFont(self._emojiFont)
 
