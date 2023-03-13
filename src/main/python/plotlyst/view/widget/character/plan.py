@@ -37,6 +37,27 @@ from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
 
+class _AddObjectiveButton(QToolButton):
+    addNew = pyqtSignal()
+    selectExisting = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(_AddObjectiveButton, self).__init__(parent)
+        self.setIcon(IconRegistry.plus_icon('grey'))
+        self.setToolTip('Add new objective')
+        transparent(self)
+        pointy(self)
+        retain_when_hidden(self)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        menu = QMenu(self)
+        menu.addAction(action('Add new objective', IconRegistry.goal_icon(), self.addNew.emit, parent=menu))
+        menu.addSeparator()
+        menu.addAction(
+            action('Select objective from a character', IconRegistry.character_icon(), self.selectExisting.emit,
+                   parent=menu))
+        btn_popup_menu(self, menu)
+
+
 class CharacterGoalWidget(QWidget):
     addNew = pyqtSignal()
     selectExisting = pyqtSignal()
@@ -60,27 +81,14 @@ class CharacterGoalWidget(QWidget):
         self.hLine.setHidden(True)
         transparent(self.lineText)
 
-        self._btnAdd = QToolButton()
-        self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
-        self._btnAdd.setToolTip('Add new objective')
-        transparent(self._btnAdd)
-        pointy(self._btnAdd)
-        retain_when_hidden(self._btnAdd)
-        self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
-        menu = QMenu(self._btnAdd)
-        menu.addAction(action('Add new objective', IconRegistry.goal_icon(), self.addNew.emit, parent=menu))
-        menu.addSeparator()
-        menu.addAction(
-            action('Select objective from a character', IconRegistry.character_icon(), self.selectExisting.emit,
-                   parent=menu))
-        btn_popup_menu(self._btnAdd, menu)
+        self.btnAdd = _AddObjectiveButton()
 
         self._wdgCenter.layout().addWidget(self.iconSelector)
         self._wdgCenter.layout().addWidget(group(
-            group(self.lineText, self._btnAdd),
+            group(self.lineText, self.btnAdd),
             self.hLine, vertical=False))
 
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnAdd, self))
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
 
         self.layout().addWidget(self._wdgCenter)
 
@@ -184,7 +192,7 @@ class CharacterPlanBarWidget(QWidget):
 
     def _initGoalWidget(self, goal: CharacterGoal):
         goalWdg = CharacterGoalWidget(self._novel, goal)
-        goalWdg.addNew.connect(partial(self._addNewGoal, goalWdg))
+        goalWdg.btnAdd.addNew.connect(partial(self._addNewGoal, goalWdg))
         self._goalWidgets[goal] = goalWdg
         return goalWdg
 
@@ -206,6 +214,9 @@ class CharacterPlanBarWidget(QWidget):
         self._rearrange()
         self.update()
         # self.repo.update_novel(self.novel)
+
+    def _addNewFirstGoal(self):
+        pass
 
 
 class CharacterPlansWidget(QWidget):
