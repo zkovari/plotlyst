@@ -82,13 +82,16 @@ class CharacterGoalWidget(QWidget):
         transparent(self.lineText)
 
         self.btnAdd = _AddObjectiveButton()
+        self.btnAddBefore = _AddObjectiveButton()
 
+        self._wdgCenter.layout().addWidget(self.btnAddBefore)
         self._wdgCenter.layout().addWidget(self.iconSelector)
         self._wdgCenter.layout().addWidget(group(
             group(self.lineText, self.btnAdd),
             self.hLine, vertical=False))
 
         self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnAddBefore, self))
 
         self.layout().addWidget(self._wdgCenter)
 
@@ -193,30 +196,50 @@ class CharacterPlanBarWidget(QWidget):
     def _initGoalWidget(self, goal: CharacterGoal):
         goalWdg = CharacterGoalWidget(self._novel, goal)
         goalWdg.btnAdd.addNew.connect(partial(self._addNewGoal, goalWdg))
+        goalWdg.btnAddBefore.addNew.connect(partial(self._addNewGoalBefore, goalWdg))
         self._goalWidgets[goal] = goalWdg
         return goalWdg
 
     def _addNewGoal(self, ref: CharacterGoalWidget):
+        i = self._plan.goals.index(ref.goal())
+        self._addNewGoalAt(i + 1)
+        # goal = Goal('')
+        # self._novel.goals.append(goal)
+        #
+        # char_goal = CharacterGoal(goal.id)
+        #
+        # goalWidget = self._initGoalWidget(char_goal)
+        # if i == len(self._plan.goals) - 1:
+        #     self._wdgBar.layout().addWidget(goalWidget)
+        # else:
+        #     self._wdgBar.layout().insertWidget(i + 1, goalWidget)
+        #
+        # self._plan.goals.insert(i + 1, char_goal)
+        #
+        # self._rearrange()
+        # self.update()
+        # self.repo.update_novel(self.novel)
+
+    def _addNewGoalBefore(self, ref: CharacterGoalWidget):
+        i = self._plan.goals.index(ref.goal())
+        self._addNewGoalAt(i)
+
+    def _addNewGoalAt(self, i: int):
         goal = Goal('')
         self._novel.goals.append(goal)
 
         char_goal = CharacterGoal(goal.id)
-        i = self._plan.goals.index(ref.goal())
 
         goalWidget = self._initGoalWidget(char_goal)
-        if i == len(self._plan.goals) - 1:
+        if i >= len(self._plan.goals):
             self._wdgBar.layout().addWidget(goalWidget)
         else:
-            self._wdgBar.layout().insertWidget(i + 1, goalWidget)
+            self._wdgBar.layout().insertWidget(i, goalWidget)
 
-        self._plan.goals.insert(i + 1, char_goal)
+        self._plan.goals.insert(i, char_goal)
 
         self._rearrange()
         self.update()
-        # self.repo.update_novel(self.novel)
-
-    def _addNewFirstGoal(self):
-        pass
 
 
 class CharacterPlansWidget(QWidget):
