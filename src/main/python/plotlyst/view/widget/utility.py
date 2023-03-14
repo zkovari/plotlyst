@@ -212,18 +212,27 @@ class IconSelectorButton(SecondaryActionToolButton):
 
     def __init__(self, parent=None):
         super(IconSelectorButton, self).__init__(parent)
+        self._selectedIconSize = QSize(32, 32)
+        self._defaultIconSize = QSize(24, 24)
+
         self._selector = IconSelectorWidget()
         btn_popup(self, self._selector)
         self.reset()
         self._selector.iconSelected.connect(self._iconSelected)
 
+    def setSelectedIconSize(self, size: QSize):
+        self._selectedIconSize = size
+
+    def setDefaultIconSize(self, size: QSize):
+        self._defaultIconSize = size
+
     def selectIcon(self, icon: str, icon_color: str):
         self.setIcon(IconRegistry.from_name(icon, icon_color))
         transparent(self)
-        self.setIconSize(QSize(32, 32))
+        self.setIconSize(self._selectedIconSize)
 
     def reset(self):
-        self.setIconSize(QSize(24, 24))
+        self.setIconSize(self._defaultIconSize)
         self.setIcon(IconRegistry.icons_icon())
         self.initStyleSheet()
 
