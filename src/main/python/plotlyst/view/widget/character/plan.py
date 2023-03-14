@@ -96,8 +96,11 @@ class CharacterGoalWidget(QWidget):
         self.iconSelector = IconSelectorButton()
         self.iconSelector.selectIcon('mdi.target', 'darkBlue')
         self.lineText = QLineEdit()
+        self.lineText.setMinimumWidth(150)
         self.lineText.setPlaceholderText('Objective')
         self.lineText.setText(self._goal.text)
+        self.lineText.setToolTip(self._goal.text)
+        self.lineText.textEdited.connect(self._textEdited)
         transparent(self.lineText)
         self.hLine = line()
         retain_when_hidden(self.hLine)
@@ -109,7 +112,7 @@ class CharacterGoalWidget(QWidget):
         self._wdgCenter.layout().addWidget(self.btnAddBefore)
         self._wdgCenter.layout().addWidget(self.iconSelector)
         self._wdgCenter.layout().addWidget(group(
-            group(self.lineText, self.btnAdd),
+            group(self.lineText, self.btnAdd, margin=0),
             self.hLine, vertical=False))
 
         self._wdgBottom = QWidget()
@@ -119,14 +122,20 @@ class CharacterGoalWidget(QWidget):
             margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
             self._wdgBottom.layout().addWidget(subtaskWdg)
 
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnAddBefore, self))
+        self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+        self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAddBefore, self))
 
         self.layout().addWidget(self._wdgCenter)
         self.layout().addWidget(self._wdgBottom)
 
     def goal(self) -> CharacterGoal:
         return self._goalRef
+
+    def _textEdited(self, text: str):
+        self.btnAdd.setHidden(True)
+        self.btnAddBefore.setHidden(True)
+        self._goal.text = text
+        self.lineText.setToolTip(text)
 
 
 class CharacterPlanBarWidget(QWidget):
