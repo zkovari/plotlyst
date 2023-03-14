@@ -22,7 +22,7 @@ from functools import partial
 from typing import Dict
 
 import emoji
-from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize
+from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize, QRectF
 from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent
 from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QToolButton, QMenu
 from overrides import overrides
@@ -177,16 +177,29 @@ class CharacterPlanBarWidget(QWidget):
 
         path = QPainterPath()
 
+        forward = True
+        y = 0
         for i, goal in enumerate(self._plan.goals):
             wdg = self._goalWidgets[goal]
             pos: QPointF = wdg.mapTo(self, wdg.hLine.pos()).toPointF()
             pos.setY(pos.y() + wdg.layout().contentsMargins().top())
             pos.setX(pos.x() + wdg.layout().contentsMargins().left())
             if i == 0:
+                y = pos.y()
                 path.moveTo(pos)
             else:
-                path.lineTo(pos)
-            pos.setX(pos.x() + wdg.hLine.width() + wdg.iconSelector.width())
+                if pos.y() > y:
+                    if forward:
+                        path.arcTo(QRectF(pos.x() + wdg.hLine.width() + wdg.iconSelector.width(), y, 60, pos.y() - y),
+                                   90, -180)
+                    else:
+                        path.arcTo(QRectF(pos.x() - wdg.btnAddBefore.width(), y, 60, pos.y() - y), -270, 180)
+                        path.lineTo(pos)
+                    forward = not forward
+                    y = pos.y()
+
+            if forward:
+                pos.setX(pos.x() + wdg.hLine.width() + wdg.iconSelector.width())
             path.lineTo(pos)
 
         painter.drawPath(path)
@@ -197,31 +210,13 @@ class CharacterPlanBarWidget(QWidget):
             self._rearrange()
             self._firstShow = False
 
-    # @overrides
-    # def resizeEvent(self, event: QResizeEvent) -> None:
-    #     self._rearrange()
-
     def _rearrange(self):
-        # first_y = 0
-        # last_y = 0
         for i, goal in enumerate(self._plan.goals):
             wdg = self._goalWidgets[goal]
             if i == 0:
                 margins(wdg, left=0, top=40)
             else:
-                margins(wdg, left=40, top=40)
-        #         first_y = wdg.pos().y()
-        #         last_y = first_y
-        #         continue
-        #
-        #     margins(wdg, top=40 if wdg.pos().y() > first_y else 0)
-        #
-        #     print(wdg.pos().y())
-        #     if wdg.pos().y() != last_y:
-        #         last_y = wdg.pos().y()
-        #         margins(wdg, left=40, top=40)
-        #     else:
-        #         margins(wdg, left=0)
+                margins(wdg, left=10, top=40)
 
     def _initGoalWidget(self, goal: CharacterGoal):
         goalWdg = CharacterGoalWidget(self._novel, goal)
