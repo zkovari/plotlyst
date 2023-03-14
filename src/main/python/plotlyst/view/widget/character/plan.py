@@ -51,7 +51,6 @@ class _AddObjectiveButton(QPushButton):
         self.setStyleSheet(f'{self.styleSheet()}\nQPushButton{{ color: grey;}}')
         pointy(self)
         retain_when_hidden(self)
-        self.installEventFilter(ButtonPressResizeEventFilter(self))
         menu = QMenu(self)
         menu.addAction(action('Add new objective', IconRegistry.goal_icon(), self.addNew.emit, parent=menu))
         menu.addSeparator()
@@ -59,6 +58,8 @@ class _AddObjectiveButton(QPushButton):
             action('Select objective from a character', IconRegistry.character_icon(), self.selectExisting.emit,
                    parent=menu))
         btn_popup_menu(self, menu)
+
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
 
 
 class CharacterSubtaskWidget(QWidget):

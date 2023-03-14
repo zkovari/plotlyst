@@ -27,7 +27,7 @@ from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, Q
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
-    QGraphicsDropShadowEffect, QTableView
+    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
@@ -142,6 +142,9 @@ class ButtonPressResizeEventFilter(QObject):
         super(ButtonPressResizeEventFilter, self).__init__(parent)
         self._originalSize: Optional[QSize] = None
         self._reducedSize: Optional[QSize] = None
+        if isinstance(parent, (QPushButton, QToolButton)):
+            if parent.menu():
+                parent.menu().aboutToHide.connect(lambda: self._resetSize(parent))
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
@@ -151,9 +154,8 @@ class ButtonPressResizeEventFilter(QObject):
                     self._calculateSize(watched)
                 watched.setIconSize(self._reducedSize)
             elif event.type() == QEvent.Type.MouseButtonRelease and watched.isEnabled():
-                if self._originalSize is None:
-                    self._calculateSize(watched)
-                watched.setIconSize(self._originalSize)
+                self._resetSize(watched)
+
         return super(ButtonPressResizeEventFilter, self).eventFilter(watched, event)
 
     def _calculateSize(self, watched):
@@ -161,6 +163,11 @@ class ButtonPressResizeEventFilter(QObject):
         self._reducedSize = watched.iconSize()
         self._reducedSize.setWidth(self._originalSize.width() - 1)
         self._reducedSize.setHeight(self._originalSize.height() - 1)
+
+    def _resetSize(self, watched):
+        if self._originalSize is None:
+            self._calculateSize(watched)
+        watched.setIconSize(self._originalSize)
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
