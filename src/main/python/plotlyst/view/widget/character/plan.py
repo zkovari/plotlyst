@@ -64,6 +64,8 @@ class _AddObjectiveButton(QPushButton):
 
 
 class CharacterSubtaskWidget(QWidget):
+    delete = pyqtSignal()
+
     def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None):
         super(CharacterSubtaskWidget, self).__init__(parent)
         self._novel = novel
@@ -79,9 +81,19 @@ class CharacterSubtaskWidget(QWidget):
         decr_font(self.lineText)
         self.lineText.setText(self._goal.text)
 
+        menu = QMenu()
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.delete.emit)
+        self.btnMenu = DotsMenuButton(menu)
+
         hbox(self)
         self.layout().addWidget(self.iconSelector)
         self.layout().addWidget(self.lineText)
+        self.layout().addWidget(self.btnMenu)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+
+    def subtask(self) -> CharacterGoal:
+        return self._goalRef
 
 
 class CharacterGoalWidget(QWidget):
@@ -175,8 +187,17 @@ class CharacterGoalWidget(QWidget):
 
     def _addSubtaskWidget(self, charGoal: CharacterGoal):
         subtaskWdg = CharacterSubtaskWidget(self._novel, charGoal)
+        subtaskWdg.delete.connect(partial(self._deleteSubtask, subtaskWdg))
         margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
         self._wdgBottom.layout().insertWidget(self._wdgBottom.layout().count() - 1, subtaskWdg)
+
+    def _deleteSubtask(self, wdg: CharacterSubtaskWidget):
+        goal = wdg.subtask()
+        self._goalRef.children.remove(goal)
+        self._wdgBottom.layout().removeWidget(wdg)
+        gc(wdg)
+
+        self.subtasksChanged.emit()
 
 
 class CharacterPlanBarWidget(QWidget):
