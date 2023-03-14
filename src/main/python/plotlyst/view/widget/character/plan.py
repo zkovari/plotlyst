@@ -87,6 +87,7 @@ class CharacterSubtaskWidget(QWidget):
 class CharacterGoalWidget(QWidget):
     addNew = pyqtSignal()
     delete = pyqtSignal()
+    subtasksChanged = pyqtSignal()
     selectExisting = pyqtSignal()
 
     def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None):
@@ -126,14 +127,20 @@ class CharacterGoalWidget(QWidget):
 
         self._wdgBottom = QWidget()
         vbox(self._wdgBottom, 0, 0)
+        self._btnAddSubtask = _AddObjectiveButton()
+        self._btnAddSubtask.setText('Add subtask')
+        self._btnAddSubtask.addNew.connect(self._addNewSubtask)
+        decr_font(self._btnAddSubtask)
+        self._wdgBottom.layout().addWidget(wrap(self._btnAddSubtask, margin_left=30),
+                                           alignment=Qt.AlignmentFlag.AlignLeft)
+
         for child in self._goalRef.children:
-            subtaskWdg = CharacterSubtaskWidget(self._novel, child)
-            margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
-            self._wdgBottom.layout().addWidget(subtaskWdg)
+            self._addSubtaskWidget(child)
 
         self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
         self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAddBefore, self))
         self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+        self.installEventFilter(VisibilityToggleEventFilter(self._btnAddSubtask, self))
 
         self.layout().addWidget(self._wdgCenter)
         self.layout().addWidget(self._wdgBottom)
@@ -153,6 +160,23 @@ class CharacterGoalWidget(QWidget):
         self._goal.icon = icon
         self._goal.icon_color = color.name()
         # self.repo.update_novel(self.novel)
+
+    def _addNewSubtask(self):
+        goal = Goal('')
+        self._novel.goals.append(goal)
+
+        char_goal = CharacterGoal(goal.id)
+        self._goalRef.children.append(char_goal)
+        self._addSubtaskWidget(char_goal)
+
+        self.subtasksChanged.emit()
+
+        # self.repo.update_novel(self.novel)
+
+    def _addSubtaskWidget(self, charGoal: CharacterGoal):
+        subtaskWdg = CharacterSubtaskWidget(self._novel, charGoal)
+        margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
+        self._wdgBottom.layout().insertWidget(self._wdgBottom.layout().count() - 1, subtaskWdg)
 
 
 class CharacterPlanBarWidget(QWidget):
@@ -202,6 +226,7 @@ class CharacterPlanBarWidget(QWidget):
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setOpacity(0.7)
 
         pen = QPen()
         pen.setColor(QColor('darkBlue'))
@@ -255,6 +280,7 @@ class CharacterPlanBarWidget(QWidget):
         goalWdg = CharacterGoalWidget(self._novel, goal)
         goalWdg.btnAdd.addNew.connect(partial(self._addNewGoal, goalWdg))
         goalWdg.btnAddBefore.addNew.connect(partial(self._addNewGoalBefore, goalWdg))
+        goalWdg.subtasksChanged.connect(self.update)
         goalWdg.delete.connect(partial(self._deleteGoal, goalWdg))
         self._goalWidgets[goal] = goalWdg
         return goalWdg
