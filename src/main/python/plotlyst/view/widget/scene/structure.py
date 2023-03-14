@@ -991,8 +991,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         selector = CharacterGoalSelector(self.novel, self.scene, simplified=simplified)
         self.wdgGoalConflictContainer.layout().addWidget(selector)
         selector.goalSelected.connect(self._initSelectors)
-        if goal and goalRef:
-            selector.setGoal(goal, goalRef)
+        # if goal and goalRef:
+        #     selector.setGoal(goal, goalRef)
 
     def _addConfictSelector(self, conflict: Optional[Conflict] = None,
                             conflict_ref: Optional[ConflictReference] = None):
