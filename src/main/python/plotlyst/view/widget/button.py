@@ -23,14 +23,14 @@ from typing import Optional
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
 from PyQt6.QtGui import QColor, QIcon
-from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup
+from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu
 from overrides import overrides
-from qthandy import hbox, translucent, bold, incr_font, transparent
+from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, btn_popup_menu
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import SelectionItem
-from src.main.python.plotlyst.view.common import pointy
+from src.main.python.plotlyst.view.common import pointy, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -295,3 +295,15 @@ class CollapseButton(QToolButton):
             return IconRegistry.from_name('fa5s.chevron-right')
         else:
             return IconRegistry.from_name('fa5s.chevron-down')
+
+
+class DotsMenuButton(QToolButton):
+    def __init__(self, menu: QMenu, vertical: bool = True, parent=None):
+        super(DotsMenuButton, self).__init__(parent)
+        transparent(self)
+        retain_when_hidden(self)
+        pointy(self)
+        self.setIcon(IconRegistry.dots_icon('grey', vertical=vertical))
+
+        btn_popup_menu(self, menu)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))

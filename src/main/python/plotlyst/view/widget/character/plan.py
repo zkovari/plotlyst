@@ -25,16 +25,17 @@ import emoji
 from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize, QRectF
 from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent
 from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QMenu, \
-    QPushButton, QToolButton
+    QPushButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, btn_popup_menu, \
-    decr_font, curved_flow
+    decr_font, curved_flow, gc
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
 from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.button import DotsMenuButton
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -85,6 +86,7 @@ class CharacterSubtaskWidget(QWidget):
 
 class CharacterGoalWidget(QWidget):
     addNew = pyqtSignal()
+    delete = pyqtSignal()
     selectExisting = pyqtSignal()
 
     def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None):
@@ -111,10 +113,9 @@ class CharacterGoalWidget(QWidget):
 
         self.btnAdd = _AddObjectiveButton()
         self.btnAddBefore = _AddObjectiveButton()
-        self.btnMenu = QToolButton()
-        transparent(self.btnMenu)
-        retain_when_hidden(self.btnMenu)
-        self.btnMenu.setIcon(IconRegistry.dots_icon('grey', vertical=True))
+        menu = QMenu()
+        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.delete.emit)
+        self.btnMenu = DotsMenuButton(menu)
 
         self._wdgCenter.layout().addWidget(self.btnAddBefore)
         self._wdgCenter.layout().addWidget(self.iconSelector)
@@ -246,6 +247,7 @@ class CharacterPlanBarWidget(QWidget):
         goalWdg = CharacterGoalWidget(self._novel, goal)
         goalWdg.btnAdd.addNew.connect(partial(self._addNewGoal, goalWdg))
         goalWdg.btnAddBefore.addNew.connect(partial(self._addNewGoalBefore, goalWdg))
+        goalWdg.delete.connect(partial(self._deleteGoal, goalWdg))
         self._goalWidgets[goal] = goalWdg
         return goalWdg
 
@@ -288,6 +290,16 @@ class CharacterPlanBarWidget(QWidget):
         self.update()
 
         self._btnAdd.setHidden(True)
+
+    def _deleteGoal(self, wdg: CharacterGoalWidget):
+        goal = wdg.goal()
+        self._plan.goals.remove(goal)
+        self._goalWidgets.pop(goal)
+        self._wdgBar.layout().removeWidget(wdg)
+        gc(wdg)
+
+        if not self._plan.goals:
+            self._btnAdd.setVisible(True)
 
 
 class CharacterPlansWidget(QWidget):
