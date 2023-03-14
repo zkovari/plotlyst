@@ -72,7 +72,7 @@ class CharacterSubtaskWidget(QWidget):
 
         self.iconSelector = IconSelectorButton()
         self.iconSelector.selectIcon('mdi.target', 'darkBlue')
-        self.iconSelector.setIconSize(QSize(15, 15))
+        self.iconSelector.setIconSize(QSize(16, 16))
         self.lineText = QLineEdit()
         self.lineText.setPlaceholderText('Subtask')
         transparent(self.lineText)
@@ -100,6 +100,7 @@ class CharacterGoalWidget(QWidget):
         hbox(self._wdgCenter, 0, 0)
         self.iconSelector = IconSelectorButton()
         self.iconSelector.selectIcon('mdi.target', 'darkBlue')
+        self.iconSelector.iconSelected.connect(self._iconSelected)
         self.lineText = QLineEdit()
         self.lineText.setMinimumWidth(150)
         self.lineText.setPlaceholderText('Objective')
@@ -145,6 +146,13 @@ class CharacterGoalWidget(QWidget):
         self.btnAddBefore.setHidden(True)
         self._goal.text = text
         self.lineText.setToolTip(text)
+
+        # self.repo.update_novel(self.novel)
+
+    def _iconSelected(self, icon: str, color: QColor):
+        self._goal.icon = icon
+        self._goal.icon_color = color.name()
+        # self.repo.update_novel(self.novel)
 
 
 class CharacterPlanBarWidget(QWidget):
