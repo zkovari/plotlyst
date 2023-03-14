@@ -532,7 +532,7 @@ class JsonClient:
 
         goal_ids = set()
         for char in characters:
-            self.__collect_goal_ids(goal_ids, char.goals)
+            self.__collect_goal_ids(goal_ids, char.plans)
 
         novel = Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
                       import_origin=project_novel_info.import_origin,
@@ -639,10 +639,12 @@ class JsonClient:
     def __id_or_none(item):
         return item.id if item else None
 
-    def __collect_goal_ids(self, goal_ids: Set[str], goals: List[CharacterGoal]):
-        for goal in goals:
-            goal_ids.add(str(goal.goal_id))
-            self.__collect_goal_ids(goal_ids, goal.children)
+    def __collect_goal_ids(self, goal_ids: Set[str], plans: List[CharacterPlan]):
+        for plan in plans:
+            for goal in plan.goals:
+                goal_ids.add(str(goal.goal_id))
+                for child in goal.children:
+                    goal_ids.add(str(child.goal_id))
 
     def __json_file(self, uuid: uuid.UUID) -> str:
         return f'{uuid}.json'

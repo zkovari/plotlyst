@@ -21,7 +21,7 @@ from functools import partial
 
 import qtanim
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
-from qthandy import translucent, btn_popup, incr_font, bold, italic
+from qthandy import translucent, btn_popup, incr_font, bold, italic, margins
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
@@ -35,7 +35,8 @@ from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_Chara
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from src.main.python.plotlyst.view.widget.character.control import CharacterAgeEditor
-from src.main.python.plotlyst.view.widget.characters import CharacterGoalsEditor, CharacterRoleSelector
+from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
+from src.main.python.plotlyst.view.widget.characters import CharacterRoleSelector
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 
 
@@ -145,8 +146,9 @@ class CharacterEditor:
         self.ui.lineName.textEdited.connect(self._name_edited)
         self.ui.lineName.setText(self.character.name)
 
-        self._character_goals = CharacterGoalsEditor(self.novel, self.character)
+        self._character_goals = CharacterPlansWidget(self.novel, self.character)
         self.ui.tabGoals.layout().addWidget(self._character_goals)
+        margins(self.ui.tabGoals.layout(), left=5)
 
         self.ui.wdgTopicsEditor.setCharacter(self.character)
 

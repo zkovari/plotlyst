@@ -32,6 +32,7 @@ from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, ret
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -94,6 +95,8 @@ class CharacterSubtaskWidget(QWidget):
 
         self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     def subtask(self) -> CharacterGoal:
         return self._goalRef
 
@@ -101,12 +104,12 @@ class CharacterSubtaskWidget(QWidget):
         self._goal.text = text
         self.lineText.setToolTip(text)
 
-        # self.repo.update_novel(self.novel)
+        self.repo.update_novel(self._novel)
 
     def _iconSelected(self, icon: str, color: QColor):
         self._goal.icon = icon
         self._goal.icon_color = color.name()
-        # self.repo.update_novel(self.novel)
+        self.repo.update_novel(self._novel)
 
 
 class CharacterGoalWidget(QWidget):
@@ -170,6 +173,8 @@ class CharacterGoalWidget(QWidget):
         self.layout().addWidget(self._wdgCenter)
         self.layout().addWidget(self._wdgBottom)
 
+        self.repo = RepositoryPersistenceManager.instance()
+
     def goal(self) -> CharacterGoal:
         return self._goalRef
 
@@ -179,12 +184,12 @@ class CharacterGoalWidget(QWidget):
         self._goal.text = text
         self.lineText.setToolTip(text)
 
-        # self.repo.update_novel(self.novel)
+        self.repo.update_novel(self._novel)
 
     def _iconSelected(self, icon: str, color: QColor):
         self._goal.icon = icon
         self._goal.icon_color = color.name()
-        # self.repo.update_novel(self.novel)
+        self.repo.update_novel(self._novel)
 
     def _addNewSubtask(self):
         goal = Goal('')
@@ -196,7 +201,7 @@ class CharacterGoalWidget(QWidget):
 
         self.subtasksChanged.emit()
 
-        # self.repo.update_novel(self.novel)
+        self.repo.update_novel(self._novel)
 
     def _addSubtaskWidget(self, charGoal: CharacterGoal):
         subtaskWdg = CharacterSubtaskWidget(self._novel, charGoal)
@@ -254,7 +259,10 @@ class CharacterPlanBarWidget(QWidget):
             self._btnAdd.setHidden(True)
 
         self.layout().addWidget(self._wdgHeader)
+        self.layout().addWidget(line())
         self.layout().addWidget(self._wdgBar)
+
+        self.repo = RepositoryPersistenceManager.instance()
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -322,22 +330,6 @@ class CharacterPlanBarWidget(QWidget):
     def _addNewGoal(self, ref: CharacterGoalWidget):
         i = self._plan.goals.index(ref.goal())
         self._addNewGoalAt(i + 1)
-        # goal = Goal('')
-        # self._novel.goals.append(goal)
-        #
-        # char_goal = CharacterGoal(goal.id)
-        #
-        # goalWidget = self._initGoalWidget(char_goal)
-        # if i == len(self._plan.goals) - 1:
-        #     self._wdgBar.layout().addWidget(goalWidget)
-        # else:
-        #     self._wdgBar.layout().insertWidget(i + 1, goalWidget)
-        #
-        # self._plan.goals.insert(i + 1, char_goal)
-        #
-        # self._rearrange()
-        # self.update()
-        # self.repo.update_novel(self.novel)
 
     def _addNewGoalBefore(self, ref: CharacterGoalWidget):
         i = self._plan.goals.index(ref.goal())
@@ -359,6 +351,8 @@ class CharacterPlanBarWidget(QWidget):
 
         self._btnAdd.setHidden(True)
 
+        self.repo.update_novel(self._novel)
+
     def _deleteGoal(self, wdg: CharacterGoalWidget):
         goal = wdg.goal()
         self._plan.goals.remove(goal)
@@ -377,10 +371,30 @@ class CharacterPlansWidget(QWidget):
         self._character = character
         vbox(self)
 
+        self._btnAdd = QPushButton()
+        self._btnAdd.setProperty('base', True)
+        self._btnAdd.setProperty('positive', True)
+        self._btnAdd.setIcon(IconRegistry.plus_icon('white'))
+        pointy(self._btnAdd)
+        self._btnAdd.setText('Add new goal')
+        menu = QMenu()
+        menu.addAction('External goal', self._addNewPlan)
+        menu.addAction('Internal goal', lambda: self._addNewPlan(external=False))
+        self._btnAdd.setMenu(menu)
+        self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
+        self.layout().addWidget(group(self._btnAdd, spacer()))
+
         for plan in self._character.plans:
             bar = CharacterPlanBarWidget(self._novel, self._character, plan)
             self.layout().addWidget(bar)
         self.layout().addWidget(vspacer())
+
+    def _addNewPlan(self, external: bool = True):
+        plan = CharacterPlan(external=external)
+        self._character.plans.append(plan)
+
+        bar = CharacterPlanBarWidget(self._novel, self._character, plan)
+        self.layout().insertWidget(self.layout().count() - 1, bar)
 
 
 if __name__ == '__main__':
