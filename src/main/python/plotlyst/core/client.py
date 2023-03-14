@@ -41,7 +41,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
     CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
-    default_big_five_values
+    default_big_five_values, CharacterPlan
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
 from src.main.python.plotlyst.env import app_env
 
@@ -127,6 +127,7 @@ class CharacterInfo:
     disabled_template_headers: Dict[str, bool] = field(default_factory=dict)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     goals: List[CharacterGoal] = field(default_factory=list)
+    plans: List[CharacterPlan] = field(default_factory=list)
     document: Optional[Document] = None
     journals: List[Document] = field(default_factory=list)
     prefs: CharacterPreferences = CharacterPreferences()
@@ -444,7 +445,8 @@ class JsonClient:
                                       occupation=info.occupation,
                                       template_values=info.template_values,
                                       disabled_template_headers=info.disabled_template_headers,
-                                      backstory=info.backstory, goals=info.goals, document=info.document,
+                                      backstory=info.backstory, goals=info.goals, plans=info.plans,
+                                      document=info.document,
                                       journals=info.journals, prefs=info.prefs, topics=info.topics,
                                       big_five=info.big_five)
                 if info.avatar_id:
@@ -530,7 +532,7 @@ class JsonClient:
 
         goal_ids = set()
         for char in characters:
-            self.__collect_goal_ids(goal_ids, char.goals)
+            self.__collect_goal_ids(goal_ids, char.plans)
 
         novel = Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
                       import_origin=project_novel_info.import_origin,
@@ -615,7 +617,7 @@ class JsonClient:
                                   template_values=char.template_values,
                                   disabled_template_headers=char.disabled_template_headers,
                                   avatar_id=avatar_id,
-                                  backstory=char.backstory, goals=char.goals, document=char.document,
+                                  backstory=char.backstory, goals=char.goals, plans=char.plans, document=char.document,
                                   journals=char.journals, prefs=char.prefs, topics=char.topics, big_five=char.big_five)
         self.__persist_info(self.characters_dir(), char_info)
 
@@ -637,10 +639,12 @@ class JsonClient:
     def __id_or_none(item):
         return item.id if item else None
 
-    def __collect_goal_ids(self, goal_ids: Set[str], goals: List[CharacterGoal]):
-        for goal in goals:
-            goal_ids.add(str(goal.goal_id))
-            self.__collect_goal_ids(goal_ids, goal.children)
+    def __collect_goal_ids(self, goal_ids: Set[str], plans: List[CharacterPlan]):
+        for plan in plans:
+            for goal in plan.goals:
+                goal_ids.add(str(goal.goal_id))
+                for child in goal.children:
+                    goal_ids.add(str(child.goal_id))
 
     def __json_file(self, uuid: uuid.UUID) -> str:
         return f'{uuid}.json'

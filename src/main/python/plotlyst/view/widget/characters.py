@@ -592,10 +592,10 @@ class CharacterGoalSelector(QWidget):
         scrollArea.setWidgetResizable(True)
         scrollArea.setMinimumSize(400, 300)
         self._goalSelector = _GoalSelectionObject()
-        self.selectorWidget = CharacterGoalsEditor(self.novel, self.scene.agendas[0].character(self.novel),
-                                                   selector=self._goalSelector)
+        # self.selectorWidget = CharacterGoalsEditor(self.novel, self.scene.agendas[0].character(self.novel),
+        #                                            selector=self._goalSelector)
         scrollArea.setBackgroundRole(QPalette.ColorRole.Light)
-        scrollArea.setWidget(self.selectorWidget)
+        # scrollArea.setWidget(self.selectorWidget)
         btn_popup(self.btnLinkGoal, scrollArea)
 
         self._goalSelector.goalSelected.connect(self._goalSelected)

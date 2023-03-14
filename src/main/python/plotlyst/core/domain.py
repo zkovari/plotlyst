@@ -130,6 +130,21 @@ class CharacterGoal:
             if goal_.id == self.goal_id:
                 return goal_
 
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
+
+@dataclass
+class CharacterPlan:
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    external: bool = True
+    goals: List[CharacterGoal] = field(default_factory=list)
+
+    @overrides
+    def __hash__(self):
+        return hash(str(self.id))
+
 
 MALE = 'male'
 FEMALE = 'female'
@@ -178,6 +193,7 @@ class BigFiveDimension:
     icon: str = ''
     facets: List[BigFiveFacet] = field(default_factory=list)
 
+    @overrides
     def __hash__(self):
         return hash(self.name)
 
@@ -257,6 +273,7 @@ class Character:
     disabled_template_headers: Dict[str, bool] = field(default_factory=dict)
     backstory: List[BackstoryEvent] = field(default_factory=list)
     goals: List[CharacterGoal] = field(default_factory=list)
+    plans: List[CharacterPlan] = field(default_factory=list)
     document: Optional['Document'] = None
     journals: List['Document'] = field(default_factory=list)
     prefs: CharacterPreferences = CharacterPreferences()
