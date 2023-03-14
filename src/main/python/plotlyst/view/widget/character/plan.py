@@ -24,21 +24,22 @@ from typing import Dict
 import emoji
 from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize, QRectF
 from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent
-from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QToolButton, QMenu
+from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QMenu, \
+    QPushButton, QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, btn_popup_menu, \
     decr_font, curved_flow
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
 
-class _AddObjectiveButton(QToolButton):
+class _AddObjectiveButton(QPushButton):
     addNew = pyqtSignal()
     selectExisting = pyqtSignal()
 
@@ -47,6 +48,7 @@ class _AddObjectiveButton(QToolButton):
         self.setIcon(IconRegistry.plus_icon('grey'))
         self.setToolTip('Add new objective')
         transparent(self)
+        self.setStyleSheet(f'{self.styleSheet()}\nQPushButton{{ color: grey;}}')
         pointy(self)
         retain_when_hidden(self)
         self.installEventFilter(ButtonPressResizeEventFilter(self))
@@ -108,11 +110,15 @@ class CharacterGoalWidget(QWidget):
 
         self.btnAdd = _AddObjectiveButton()
         self.btnAddBefore = _AddObjectiveButton()
+        self.btnMenu = QToolButton()
+        transparent(self.btnMenu)
+        retain_when_hidden(self.btnMenu)
+        self.btnMenu.setIcon(IconRegistry.dots_icon('grey', vertical=True))
 
         self._wdgCenter.layout().addWidget(self.btnAddBefore)
         self._wdgCenter.layout().addWidget(self.iconSelector)
         self._wdgCenter.layout().addWidget(group(
-            group(self.lineText, self.btnAdd, margin=0),
+            group(self.lineText, self.btnMenu, self.btnAdd, margin=0, spacing=0),
             self.hLine, vertical=False))
 
         self._wdgBottom = QWidget()
@@ -124,6 +130,7 @@ class CharacterGoalWidget(QWidget):
 
         self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
         self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAddBefore, self))
+        self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
 
         self.layout().addWidget(self._wdgCenter)
         self.layout().addWidget(self._wdgBottom)
@@ -170,6 +177,13 @@ class CharacterPlanBarWidget(QWidget):
         for goal in self._plan.goals:
             goalWdg = self._initGoalWidget(goal)
             self._wdgBar.layout().addWidget(goalWdg)
+
+        self._btnAdd = _AddObjectiveButton()
+        self._btnAdd.setText('Add new objective')
+        self._btnAdd.addNew.connect(lambda: self._addNewGoalAt(0))
+        self._wdgBar.layout().addWidget(wrap(self._btnAdd, margin_top=50))
+        if self._plan.goals:
+            self._btnAdd.setHidden(True)
 
         self.layout().addWidget(self._wdgHeader)
         self.layout().addWidget(self._wdgBar)
@@ -265,15 +279,14 @@ class CharacterPlanBarWidget(QWidget):
         char_goal = CharacterGoal(goal.id)
 
         goalWidget = self._initGoalWidget(char_goal)
-        if i >= len(self._plan.goals):
-            self._wdgBar.layout().addWidget(goalWidget)
-        else:
-            self._wdgBar.layout().insertWidget(i, goalWidget)
+        self._wdgBar.layout().insertWidget(i, goalWidget)
 
         self._plan.goals.insert(i, char_goal)
 
         self._rearrange()
         self.update()
+
+        self._btnAdd.setHidden(True)
 
 
 class CharacterPlansWidget(QWidget):
