@@ -97,7 +97,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.novel = None
         self._current_text_widget = None
         self.manuscript_view: Optional[ManuscriptView] = None
-        # self.reports_view: Optional[ReportsView] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
