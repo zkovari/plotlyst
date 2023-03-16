@@ -27,12 +27,11 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize, QItemSelectionModel
 from PyQt6.QtGui import QMouseEvent, QIcon
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QTextEdit, QMenu, QVBoxLayout, QWidgetAction
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout, QWidgetAction
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, translucent, btn_popup_menu, vspacer, gc, italic
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qttextedit import EnhancedTextEdit
+    decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
@@ -471,29 +470,29 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
         self.setMaximumWidth(600)
 
-        self.btnNotes = QToolButton()
+        # self.btnNotes = QToolButton()
 
-        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer(), self.btnNotes))
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
         _layout.addWidget(self.wdgEditor)
 
         self.wdgEditor.textChanged.connect(self._textChanged)
-        if field.has_notes:
-            self.btnNotes.setIcon(IconRegistry.from_name('mdi6.note-plus-outline'))
-            pointy(self.btnNotes)
-            transparent(self.btnNotes)
-            translucent(self.btnNotes)
-            self._notesEditor = EnhancedTextEdit()
-            self._notesEditor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            self._notesEditor.setMinimumSize(400, 300)
-            self._notesEditor.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
-            self._notesEditor.setPlaceholderText(f'Add notes to {field.name}')
-            self._notesEditor.setViewportMargins(5, 5, 5, 5)
-            menu = btn_popup(self.btnNotes, self._notesEditor)
-            menu.aboutToShow.connect(self._notesEditor.setFocus)
-            self.installEventFilter(VisibilityToggleEventFilter(self.btnNotes, self))
-            retain_when_hidden(self.btnNotes)
-        else:
-            self.btnNotes.setHidden(True)
+        # if field.has_notes:
+        #     self.btnNotes.setIcon(IconRegistry.from_name('mdi6.note-plus-outline'))
+        #     pointy(self.btnNotes)
+        #     transparent(self.btnNotes)
+        #     translucent(self.btnNotes)
+        #     self._notesEditor = EnhancedTextEdit()
+        #     self._notesEditor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        #     self._notesEditor.setMinimumSize(400, 300)
+        #     self._notesEditor.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
+        #     self._notesEditor.setPlaceholderText(f'Add notes to {field.name}')
+        #     self._notesEditor.setViewportMargins(5, 5, 5, 5)
+        #     menu = btn_popup(self.btnNotes, self._notesEditor)
+        #     menu.aboutToShow.connect(self._notesEditor.setFocus)
+        #     self.installEventFilter(VisibilityToggleEventFilter(self.btnNotes, self))
+        #     retain_when_hidden(self.btnNotes)
+        # else:
+        #     self.btnNotes.setHidden(True)
 
     @overrides
     def value(self) -> Any:
