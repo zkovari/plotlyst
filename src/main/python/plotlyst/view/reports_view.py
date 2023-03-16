@@ -17,23 +17,70 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum, auto
+from typing import Optional
 
+from PyQt6.QtGui import QShowEvent
+from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import clear_layout
+from qthandy import bold, vbox
+from qthandy.filter import OpacityEventFilter
 
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
     PlotCreatedEvent
-from src.main.python.plotlyst.model.report import ReportsTreeModel, CharacterReportNode, CharacterArcReportNode, \
-    ConflictReportNode, PlotReportNode, StakesReportNode, WorldBuildingReportNode
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
-from src.main.python.plotlyst.view.report.character import CharacterReport, CharacterArcReport
-from src.main.python.plotlyst.view.report.conflict import ConflictReport
-from src.main.python.plotlyst.view.report.plot import PlotReport
-from src.main.python.plotlyst.view.report.stakes import StakesReport
-from src.main.python.plotlyst.view.report.world_building import WorldBuildingReport
+from src.main.python.plotlyst.view.report.character import CharacterReport
+
+
+class ReportType(Enum):
+    CHARACTERS = auto()
+    SCENES = auto()
+    ARC = auto()
+    MANUSCRIPT = auto()
+
+
+report_classes = {ReportType.CHARACTERS: CharacterReport}
+
+
+class ReportPage(QWidget):
+    def __init__(self, novel: Novel, parent=None):
+        super(ReportPage, self).__init__(parent)
+        self._novel: Novel = novel
+        self._report: Optional[AbstractReport] = None
+
+        vbox(self)
+
+
+class CharactersReportPage(ReportPage):
+    def __init__(self, novel: Novel, parent=None):
+        super(CharactersReportPage, self).__init__(novel, parent)
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if self._report is None:
+            self._report = CharacterReport(self._novel)
+            self.layout().addWidget(self._report)
+
+
+class ScenesReportPage(ReportPage):
+    def __init__(self, novel: Novel, parent=None):
+        super(ScenesReportPage, self).__init__(novel, parent)
+
+
+class ArcReportPage(ReportPage):
+    def __init__(self, novel: Novel, parent=None):
+        super(ArcReportPage, self).__init__(novel, parent)
+
+
+class ManuscriptReportPage(ReportPage):
+    def __init__(self, novel: Novel, parent=None):
+        super(ManuscriptReportPage, self).__init__(novel, parent)
 
 
 class ReportsView(AbstractNovelView):
@@ -41,57 +88,34 @@ class ReportsView(AbstractNovelView):
         super().__init__(novel, [CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, PlotCreatedEvent])
         self.ui = Ui_ReportsView()
         self.ui.setupUi(self.widget)
-        self.scene_selected = None
 
-        self._treeModel = ReportsTreeModel()
-        self.ui.treeReports.setModel(self._treeModel)
-        self.ui.treeReports.expandAll()
-        self.ui.treeReports.clicked.connect(self._reportClicked)
+        bold(self.ui.lblTitle)
 
-        self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
-        self.ui.splitter.setSizes([100, 500])
+        self.ui.iconReports.setIcon(IconRegistry.reports_icon())
+        self.ui.btnCharacters.setIcon(IconRegistry.character_icon())
+        self.ui.btnScenes.setIcon(IconRegistry.scene_icon())
+        self.ui.btnArc.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
+
+        for btn in self.ui.buttonGroup.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
+
+        self._page_characters = CharactersReportPage(self.novel)
+        self.ui.stackedWidget.addWidget(self._page_characters)
+        self._page_scenes = ScenesReportPage(self.novel)
+        self.ui.stackedWidget.addWidget(self._page_scenes)
+        self._page_arc = ArcReportPage(self.novel)
+        self.ui.stackedWidget.addWidget(self._page_arc)
+        self._page_manuscript = ManuscriptReportPage(self.novel)
+        self.ui.stackedWidget.addWidget(self._page_manuscript)
+
+        link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnCharacters, self._page_characters),
+                                                      (self.ui.btnScenes, self._page_scenes),
+                                                      (self.ui.btnArc, self._page_arc),
+                                                      (self.ui.btnManuscript, self._page_manuscript)])
+
+        self.ui.btnCharacters.setChecked(True)
 
     @overrides
     def refresh(self):
         pass
-
-    def displayCharactersReport(self):
-        self._displayReport(CharacterReport(self.novel, self.ui.wdgReportContainer))
-
-    def displayArcReport(self):
-        self._displayReport(CharacterArcReport(self.novel, self.ui.wdgReportContainer))
-
-    def displayStakesReport(self):
-        self._displayReport(StakesReport(self.novel, self.ui.wdgReportContainer))
-
-    def displayConflictReport(self):
-        self._displayReport(ConflictReport(self.novel, self.ui.wdgReportContainer))
-
-    def displayPlotReport(self):
-        self._displayReport(PlotReport(self.novel, self.ui.wdgReportContainer))
-
-    def displayWorldBuildingReport(self):
-        self._displayReport(WorldBuildingReport(self.novel, self.ui.wdgReportContainer))
-
-    def _displayReport(self, report: AbstractReport):
-        self.ui.stackedWidget.setCurrentWidget(self.ui.pageReport)
-        clear_layout(self.ui.wdgReportContainer.layout())
-        self.ui.wdgReportContainer.layout().addWidget(report)
-
-    def _reportClicked(self):
-        index = self.ui.treeReports.selectedIndexes()[0]
-        node = index.data(ReportsTreeModel.NodeRole)
-        if isinstance(node, CharacterReportNode):
-            self.displayCharactersReport()
-        elif isinstance(node, CharacterArcReportNode):
-            self.displayArcReport()
-        elif isinstance(node, StakesReportNode):
-            self.displayStakesReport()
-        elif isinstance(node, ConflictReportNode):
-            self.displayConflictReport()
-        elif isinstance(node, PlotReportNode):
-            self.displayPlotReport()
-        elif isinstance(node, WorldBuildingReportNode):
-            self.displayWorldBuildingReport()
-        else:
-            self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
