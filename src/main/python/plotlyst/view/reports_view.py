@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
     PlotCreatedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, scrolled
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
@@ -56,6 +56,9 @@ class ReportPage(QWidget):
 
         vbox(self)
 
+        self._scrollarea, self._wdgCenter = scrolled(self)
+        vbox(self._wdgCenter)
+
 
 class CharactersReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
@@ -65,7 +68,7 @@ class CharactersReportPage(ReportPage):
     def showEvent(self, event: QShowEvent) -> None:
         if self._report is None:
             self._report = CharacterReport(self._novel)
-            self.layout().addWidget(self._report)
+            self._wdgCenter.layout().addWidget(self._report)
 
 
 class ScenesReportPage(ReportPage):

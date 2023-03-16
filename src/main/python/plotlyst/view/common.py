@@ -254,7 +254,7 @@ def scrolled(parent: QWidget, frameless: bool = False) -> Tuple[QScrollArea, QWi
 
     widget = QWidget(scrollArea)
     scrollArea.setWidget(widget)
-    if not parent.layout():
+    if parent.layout() is None:
         hbox(parent, 0, 0)
     parent.layout().addWidget(scrollArea)
 

@@ -256,7 +256,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnScenes.setIcon(IconRegistry.scene_icon())
         self.btnWorld.setIcon(IconRegistry.world_building_icon())
         self.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.btnManuscript.setIcon(IconRegistry.edit_icon())
+        self.btnManuscript.setIcon(IconRegistry.manuscript_icon())
         self.btnReports.setIcon(IconRegistry.reports_icon())
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
