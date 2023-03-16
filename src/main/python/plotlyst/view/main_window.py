@@ -21,7 +21,7 @@ from typing import Optional
 
 import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent
+from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QFont
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
     QProgressDialog
 from fbs_runtime import platform
@@ -30,7 +30,7 @@ from qthandy import spacer, busy, gc, clear_layout
 from qthandy.filter import InstantTooltipEventFilter
 from textstat import textstat
 
-from src.main.python.plotlyst.common import EXIT_CODE_RESTART
+from src.main.python.plotlyst.common import EXIT_CODE_RESTART, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
@@ -85,10 +85,18 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#8E9AAF'))
         QApplication.setPalette(palette)
 
+        for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze]:
+            lbl.setStyleSheet(f'color: {PLOTLYST_MAIN_COLOR};')
+            font: QFont = lbl.font()
+            font.setPointSize(font.pointSize() - 2)
+            font.setFamily('Arial')
+            font.setUnderline(True)
+            font.setBold(True)
+            lbl.setFont(font)
+
         self.novel = None
         self._current_text_widget = None
         self.manuscript_view: Optional[ManuscriptView] = None
-        self.reports_view: Optional[ReportsView] = None
         last_novel_id = settings.last_novel_id()
         if last_novel_id is not None:
             has_novel = client.has_novel(last_novel_id)
@@ -227,7 +235,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.outline_mode.setEnabled(True)
         self.manuscript_mode.setEnabled(True)
-        self.reports_mode.setEnabled(True)
 
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
@@ -235,6 +242,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.scenes_outline_view = ScenesOutlineView(self.novel)
         self.world_building_view = WorldBuildingView(self.novel)
         self.board_view = BoardView(self.novel)
+        self.reports_view = ReportsView(self.novel)
         self.comments_view = CommentsView(self.novel)
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
@@ -247,6 +255,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnScenes.setIcon(IconRegistry.scene_icon())
         self.btnWorld.setIcon(IconRegistry.world_building_icon())
         self.btnNotes.setIcon(IconRegistry.document_edition_icon())
+        self.btnManuscript.setIcon(IconRegistry.manuscript_icon())
+        self.btnReports.setIcon(IconRegistry.reports_icon())
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)
@@ -254,6 +264,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageWorld.layout().addWidget(self.world_building_view.widget)
         self.pageNotes.layout().addWidget(self.notes_view.widget)
         self.pageBoard.layout().addWidget(self.board_view.widget)
+        self.pageAnalysis.layout().addWidget(self.reports_view.widget)
 
         if self.novel.prefs.panels.scenes_view == ScenesView.NOVEL:
             self.btnNovel.setChecked(True)
@@ -265,6 +276,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnNotes.setChecked(True)
         elif self.novel.prefs.panels.scenes_view == ScenesView.BOARD:
             self.btnBoard.setChecked(True)
+        elif self.novel.prefs.panels.scenes_view == ScenesView.REPORTS:
+            self.btnReports.setChecked(True)
         elif self.novel.scenes:
             self.btnScenes.setChecked(True)
         else:
@@ -300,6 +313,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             title = self.notes_view.title
             self.notes_view.activate()
             self._current_view = self.notes_view
+        elif self.btnReports.isChecked():
+            self.stackedWidget.setCurrentWidget(self.pageAnalysis)
         else:
             self._current_view = None
 
@@ -353,15 +368,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.manuscript_mode.setText('Write')
         self.manuscript_mode.setIcon(IconRegistry.edit_icon(color_on='#240046'))
 
-        self.reports_mode = ToolbarButton(self.toolBar)
-        self.reports_mode.setText('Analyze')
-        self.reports_mode.setIcon(IconRegistry.reports_icon(color_on='#240046'))
-
         self._mode_btn_group = QButtonGroup()
         self._mode_btn_group.addButton(self.home_mode)
         self._mode_btn_group.addButton(self.outline_mode)
         self._mode_btn_group.addButton(self.manuscript_mode)
-        self._mode_btn_group.addButton(self.reports_mode)
         self._mode_btn_group.setExclusive(True)
         self._mode_btn_group.buttonToggled.connect(self._panel_toggled)
 
@@ -381,7 +391,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(spacer(5))
         self.toolBar.addWidget(self.outline_mode)
         self.toolBar.addWidget(self.manuscript_mode)
-        self.toolBar.addWidget(self.reports_mode)
         self.toolBar.addWidget(spacer())
         self.toolBar.addWidget(self.btnComments)
 
@@ -391,15 +400,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if self.novel:
             if self.novel.prefs.panels.panel == NovelPanel.MANUSCRIPT:
                 self.manuscript_mode.setChecked(True)
-            elif self.novel.prefs.panels.panel == NovelPanel.REPORTS:
-                self.reports_mode.setChecked(True)
             else:
                 self.outline_mode.setChecked(True)
         else:
             self.home_mode.setChecked(True)
             self.outline_mode.setDisabled(True)
             self.manuscript_mode.setDisabled(True)
-            self.reports_mode.setDisabled(True)
 
     def _init_statusbar(self):
         self.statusbar.addPermanentWidget(self._tasks_widget)
@@ -416,12 +422,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 self.manuscript_view = ManuscriptView(self.novel)
                 self.pageManuscript.layout().addWidget(self.manuscript_view.widget)
             self.manuscript_view.activate()
-        elif self.reports_mode.isChecked():
-            self.stackMainPanels.setCurrentWidget(self.pageReports)
-            if not self.reports_view:
-                self.reports_view = ReportsView(self.novel)
-                self.pageReports.layout().addWidget(self.reports_view.widget)
-            self.reports_view.activate()
 
     def _change_project_dir(self):
         workspace = select_new_project_directory()
@@ -464,7 +464,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.outline_mode.setEnabled(True)
         self.manuscript_mode.setEnabled(True)
-        self.reports_mode.setEnabled(True)
 
         self.repo.flush()
         event_dispatcher.clear()
@@ -520,7 +519,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.outline_mode.setDisabled(True)
         self.manuscript_mode.setDisabled(True)
-        self.reports_mode.setDisabled(True)
 
         self._tasks_widget.reset()
 
@@ -576,6 +574,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             scenes_view = ScenesView.DOCS
         elif self.stackedWidget.currentWidget() == self.pageBoard:
             scenes_view = ScenesView.BOARD
+        elif self.stackedWidget.currentWidget() == self.pageAnalysis:
+            scenes_view = ScenesView.REPORTS
         else:
             scenes_view = None
         self.novel.prefs.panels.scenes_view = scenes_view

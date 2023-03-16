@@ -1501,6 +1501,7 @@ class ScenesView(Enum):
     WORLD_BUILDING = 'world_building'
     DOCS = 'docs'
     BOARD = 'board'
+    REPORTS = 'reports'
 
 
 @dataclass

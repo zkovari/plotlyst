@@ -27,7 +27,6 @@ def test_empty_window(qtbot, window: MainWindow):
     assert window.home_mode.isChecked()
     assert not window.manuscript_mode.isEnabled()
     assert not window.outline_mode.isEnabled()
-    assert not window.reports_mode.isEnabled()
     assert_views(window, visible=False)
 
 

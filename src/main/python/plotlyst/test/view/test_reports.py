@@ -11,22 +11,17 @@ from src.main.python.plotlyst.view.reports_view import ReportsView
 
 def test_character_report_display(qtbot, filled_window: MainWindow):
     view: ReportsView = go_to_reports(filled_window)
-    view.displayCharactersReport()
+    view.ui.btnCharacters.click()
+
+
+def test_scenes_report_display(qtbot, filled_window: MainWindow):
+    view: ReportsView = go_to_reports(filled_window)
+    view.ui.btnScenes.click()
 
 
 def test_arc_report_display(qtbot, filled_window: MainWindow):
     view: ReportsView = go_to_reports(filled_window)
-    view.displayArcReport()
-
-
-def test_conflict_report_display(qtbot, filled_window: MainWindow):
-    view: ReportsView = go_to_reports(filled_window)
-    view.displayConflictReport()
-
-
-def test_plot_report_display(qtbot, filled_window: MainWindow):
-    view: ReportsView = go_to_reports(filled_window)
-    view.displayPlotReport()
+    view.ui.btnArc.click()
 
 
 def _edit_arc(value: int, editor: QComboBox):
