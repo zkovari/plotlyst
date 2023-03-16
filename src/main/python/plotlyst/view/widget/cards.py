@@ -34,6 +34,7 @@ from qthandy.filter import DragEventFilter, DropEventFilter
 
 from src.main.python.plotlyst.common import act_color
 from src.main.python.plotlyst.core.domain import NovelDescriptor, Character, Scene, Novel
+from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.generated.character_card_ui import Ui_CharacterCard
@@ -155,11 +156,13 @@ class CharacterCard(Ui_CharacterCard, Card):
         enneagram = self.character.enneagram()
         if enneagram:
             self.btnEnneagram.setIcon(IconRegistry.from_name(enneagram.icon, enneagram.icon_color))
+            self.btnEnneagram.setToolTip(enneagram_help[enneagram.text])
         mbti = self.character.mbti()
         if mbti:
             self.btnMbti.setStyleSheet(f'color: {mbti.icon_color};border:0px;')
             self.btnMbti.setText(mbti.text)
             self.btnMbti.setIcon(IconRegistry.from_name(mbti.icon, mbti.icon_color))
+            self.btnMbti.setToolTip(mbti_help[mbti.text])
 
         retain_when_hidden(self.iconRole)
         self.iconRole.setHidden(self.character.prefs.avatar.use_role)
