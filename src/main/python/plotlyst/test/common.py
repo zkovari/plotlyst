@@ -143,7 +143,7 @@ def go_to_home(window: MainWindow) -> HomeView:
 
 
 def go_to_reports(window: MainWindow) -> ReportsView:
-    window.reports_mode.setChecked(True)
+    window.btnReports.setChecked(True)
     return window.reports_view
 
 
