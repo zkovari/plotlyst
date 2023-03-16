@@ -1901,6 +1901,7 @@ default_topics: List[Topic] = [
     Topic('Hobby', uuid.UUID('97c66076-e97d-4f11-a20d-1ae6ff6ba246'), 'fa5s.book-reader', ''),
     Topic('Art', uuid.UUID('ed6749da-d1b0-49cd-becf-c7ddc67725d2'), 'ei.picture', ''),
 ]
+default_topics.sort(key=lambda x: x.text)
 
 
 class CharacterTopicsEditor(QWidget):
