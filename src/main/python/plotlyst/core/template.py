@@ -331,9 +331,12 @@ methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoj
 need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
                            placeholder='What does the character actually need?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
-weaknesses_field = TemplateField('Flaws and weaknesses', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
-                                 placeholder="What are the character's weaknesses or flaws in the story?",
+weaknesses_field = TemplateField('Weakness', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
+                                 placeholder="What are the character's weaknesses in the story?",
                                  id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
+strength_field = TemplateField('Strength', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_sunglasses:',
+                               placeholder="What are the character's strengths in the story?",
+                               id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
 ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
                             placeholder="What's the character's ghost from their past that haunts them?",
                             id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
@@ -546,7 +549,7 @@ def default_character_profiles() -> List[ProfileTemplate]:
     gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
     wounds_title = TemplateField('Wounds', type=TemplateFieldType.DISPLAY_HEADER)
     arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
-    story_title = TemplateField('Story attributes', type=TemplateFieldType.DISPLAY_HEADER)
+    weakness_strength = TemplateField('Weakness and strength', type=TemplateFieldType.DISPLAY_HEADER)
 
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
               ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
@@ -554,15 +557,17 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(enneagram_field, 3, 0, margins=Margins(left=15)),
               ProfileElement(mbti_field, 3, 1),
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(gmc_title, 6, 0, col_span=2),
-              ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(wounds_title, 8, 0, col_span=2),
-              ProfileElement(wounds_field, 9, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(arcs_title, 10, 0, col_span=2),
-              ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(story_title, 14, 0, col_span=2),
-              ProfileElement(weaknesses_field, 16, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(values_field, 18, 0, col_span=2, margins=Margins(left=15))
+              ProfileElement(values_field, 6, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(gmc_title, 7, 0, col_span=2),
+              ProfileElement(gmc_field, 8, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(wounds_title, 9, 0, col_span=2),
+              ProfileElement(wounds_field, 10, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(arcs_title, 12, 0, col_span=2),
+              ProfileElement(arcs_field, 13, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(weakness_strength, 14, 0, col_span=2),
+              ProfileElement(weaknesses_field, 15, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(strength_field, 16, 0, col_span=2, margins=Margins(left=15)),
+
               ]
     return [ProfileTemplate(title='Default character template',
                             id=uuid.UUID('6e89c683-c132-469b-a75c-6712af7c339d'),
