@@ -28,8 +28,10 @@ from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
-    PlotCreatedEvent
+    PlotCreatedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, scrolled
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
@@ -53,6 +55,7 @@ class ReportPage(QWidget):
         super(ReportPage, self).__init__(parent)
         self._novel: Novel = novel
         self._report: Optional[AbstractReport] = None
+        self._refreshNext: bool = False
 
         vbox(self)
 
@@ -60,15 +63,27 @@ class ReportPage(QWidget):
         vbox(self._wdgCenter)
 
 
-class CharactersReportPage(ReportPage):
+class CharactersReportPage(ReportPage, EventListener):
     def __init__(self, novel: Novel, parent=None):
         super(CharactersReportPage, self).__init__(novel, parent)
+        event_dispatcher.register(self, CharacterChangedEvent)
+        event_dispatcher.register(self, CharacterDeletedEvent)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
         if self._report is None:
             self._report = CharacterReport(self._novel)
             self._wdgCenter.layout().addWidget(self._report)
+        elif self._refreshNext:
+            self._report.refresh()
+            self._refreshNext = False
+
+    @overrides
+    def event_received(self, event: Event):
+        if self.isVisible():
+            self._report.refresh()
+        else:
+            self._refreshNext = True
 
 
 class ScenesReportPage(ReportPage):

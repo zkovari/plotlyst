@@ -34,5 +34,5 @@ class AbstractReport(QWidget):
         self.repo = RepositoryPersistenceManager.instance()
 
     @abstractmethod
-    def display(self):
+    def refresh(self):
         pass
