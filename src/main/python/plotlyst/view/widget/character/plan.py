@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdi
     QPushButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, btn_popup_menu, \
-    decr_font, curved_flow, gc, sp
+    decr_font, curved_flow, gc, sp, decr_icon
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
@@ -164,7 +164,9 @@ class CharacterGoalWidget(QWidget):
         self._wdgBottom = QWidget()
         vbox(self._wdgBottom, 0, 0)
         self._btnAddSubtask = _AddObjectiveButton()
-        self._btnAddSubtask.setText('Add subtask')
+        decr_icon(self._btnAddSubtask)
+        if not self._goalRef.children:
+            self._btnAddSubtask.setText('Add subtask')
         self._btnAddSubtask.addNew.connect(self._addNewSubtask)
         decr_font(self._btnAddSubtask)
         self._wdgBottom.layout().addWidget(wrap(self._btnAddSubtask, margin_left=30),
@@ -216,6 +218,7 @@ class CharacterGoalWidget(QWidget):
         subtaskWdg.delete.connect(partial(self._deleteSubtask, subtaskWdg))
         margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
         self._wdgBottom.layout().insertWidget(self._wdgBottom.layout().count() - 1, subtaskWdg)
+        self._btnAddSubtask.setText('')
 
     def _deleteSubtask(self, wdg: CharacterSubtaskWidget):
         goal = wdg.subtask()
@@ -224,6 +227,8 @@ class CharacterGoalWidget(QWidget):
         gc(wdg)
 
         self.subtasksChanged.emit()
+        if not self._goalRef.children:
+            self._btnAddSubtask.setText('Add subtask')
 
 
 class CharacterPlanBarWidget(QWidget):
