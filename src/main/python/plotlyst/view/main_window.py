@@ -177,10 +177,16 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Tab and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+        def modifier() -> Qt.KeyboardModifier:
+            if app_env.is_mac():
+                return Qt.KeyboardModifier.AltModifier
+            else:
+                return Qt.KeyboardModifier.ControlModifier
+
+        if event.key() == Qt.Key.Key_Tab and event.modifiers() & modifier():
             if self._current_view is not None:
                 self._current_view.jumpToNext()
-        elif event.key() == Qt.Key.Key_Backtab and event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+        elif event.key() == Qt.Key.Key_Backtab and event.modifiers() & modifier():
             if self._current_view is not None:
                 self._current_view.jumpToPrevious()
         else:
