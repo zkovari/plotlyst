@@ -23,7 +23,7 @@ from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QBrush
 from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
 from overrides import overrides
-from qthandy import flow, btn_popup, transparent
+from qthandy import flow, btn_popup, transparent, pointy
 
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
@@ -36,6 +36,19 @@ class ColorButton(QToolButton):
     def __init__(self, color: str, parent=None):
         super(ColorButton, self).__init__(parent)
         self.color = color
+        self.setCheckable(True)
+        pointy(self)
+        self.setStyleSheet(f'''
+                    QToolButton {{
+                        background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
+                                              stop: 0 {self.color});
+                        border: 1px solid darkGrey;
+                        border-radius: 12px;
+                    }}
+                    QToolButton:pressed {{
+                        border: 1px solid white;
+                    }}
+                    ''')
 
 
 class ColorPicker(QWidget):
@@ -53,20 +66,7 @@ class ColorPicker(QWidget):
                       '#dc2f02',
                       '#ffc6ff', '#b5179e', '#7209b7', '#d6ccc2', '#6c757d', '#dda15e', '#bc6c25', 'black', 'white']:
             btn = ColorButton(color, self)
-            btn.setIconSize(QSize(22, 22))
-            btn.setCheckable(True)
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setStyleSheet(f'''
-            QToolButton {{
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
-                                      stop: 0 {color});
-                border: 1px solid darkGrey;
-                border-radius: 12px;
-            }}
-            QToolButton:pressed {{
-                border: 1px solid white;
-            }}
-            ''')
+
             self.btnGroup.addButton(btn)
             self.layout().addWidget(btn)
         self.btnGroup.buttonClicked.connect(self._clicked)
