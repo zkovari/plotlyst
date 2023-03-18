@@ -76,7 +76,10 @@ class CharacterSubtaskWidget(QWidget):
 
         self.iconSelector = IconSelectorButton()
         self.iconSelector.setSelectedIconSize(QSize(16, 16))
-        self.iconSelector.selectIcon('mdi.target', 'darkBlue')
+        if self._goal.icon:
+            self.iconSelector.selectIcon(self._goal.icon, self._goal.icon_color)
+        else:
+            self.iconSelector.selectIcon('mdi.target', 'darkBlue')
         self.iconSelector.iconSelected.connect(self._iconSelected)
         self.lineText = QLineEdit()
         self.lineText.setPlaceholderText('Subtask')
@@ -130,7 +133,10 @@ class CharacterGoalWidget(QWidget):
         hbox(self._wdgCenter, 0, 0)
         self.iconSelector = IconSelectorButton()
         self.iconSelector.setSelectedIconSize(QSize(28, 28))
-        self.iconSelector.selectIcon('mdi.target', 'darkBlue')
+        if self._goal.icon:
+            self.iconSelector.selectIcon(self._goal.icon, self._goal.icon_color)
+        else:
+            self.iconSelector.selectIcon('mdi.target', 'darkBlue')
         self.iconSelector.iconSelected.connect(self._iconSelected)
         self.lineText = QLineEdit()
         self.lineText.setMinimumWidth(150)
