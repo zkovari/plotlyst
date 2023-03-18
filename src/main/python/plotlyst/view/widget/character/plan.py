@@ -47,6 +47,7 @@ class _AddObjectiveButton(QPushButton):
 
     def __init__(self, parent=None):
         super(_AddObjectiveButton, self).__init__(parent)
+        self.setIconSize(QSize(18, 18))
         self.setIcon(IconRegistry.plus_icon('grey'))
         self.setToolTip('Add new objective')
         transparent(self)
@@ -128,6 +129,7 @@ class CharacterGoalWidget(QWidget):
         self._wdgCenter = QWidget()
         hbox(self._wdgCenter, 0, 0)
         self.iconSelector = IconSelectorButton()
+        self.iconSelector.setSelectedIconSize(QSize(28, 28))
         self.iconSelector.selectIcon('mdi.target', 'darkBlue')
         self.iconSelector.iconSelected.connect(self._iconSelected)
         self.lineText = QLineEdit()
