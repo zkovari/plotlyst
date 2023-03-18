@@ -68,7 +68,7 @@ class CharactersTableModel(AbstractHorizontalHeaderBasedTableModel):
         if index.column() == self.ColEnneagram:
             enneagram = character.enneagram()
             if role == self.SortRole:
-                return enneagram_field.selections.index(enneagram)
+                return enneagram_field.selections.index(enneagram) if enneagram else -1
             return self._dataForSelectionItem(enneagram, role, displayText=False)
         if index.column() == self.ColMbti:
             return self._dataForSelectionItem(character.mbti(), role)
