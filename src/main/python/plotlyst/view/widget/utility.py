@@ -128,6 +128,7 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self.lineFilter.textChanged.connect(self._textChanged)
 
         self.buttonGroup.buttonToggled.connect(self._filterToggled)
+        self.lineFilter.setFocus()
 
     def setColor(self, color: QColor):
         self.model.setColor(color)
@@ -141,7 +142,6 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self._proxy.setFilterRegularExpression(text)
 
     def _filterToggled(self):
-        self.lineFilter.clear()
         self._proxy.setFilterRole(self._Model.IconTypeRole)
         if self.btnPeople.isChecked():
             self._proxy.setFilterFixedString('People')
@@ -214,9 +214,11 @@ class IconSelectorButton(SecondaryActionToolButton):
         super(IconSelectorButton, self).__init__(parent)
         self._selectedIconSize = QSize(32, 32)
         self._defaultIconSize = QSize(24, 24)
+        self._firstShow = True
 
         self._selector = IconSelectorWidget()
-        btn_popup(self, self._selector)
+        self._menu = btn_popup(self, self._selector)
+        self._menu.aboutToShow.connect(self._aboutToShow)
         self.reset()
         self._selector.iconSelected.connect(self._iconSelected)
 
@@ -240,3 +242,9 @@ class IconSelectorButton(SecondaryActionToolButton):
         self.selectIcon(icon, color.name())
         self.iconSelected.emit(icon, color)
         self.menu().hide()
+
+    def _aboutToShow(self):
+        if self._firstShow:
+            self._selector.model.modelReset.emit()
+            self._firstShow = False
+        self._selector.lineFilter.setFocus()
