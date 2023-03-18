@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdi
     QPushButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, btn_popup_menu, \
-    decr_font, curved_flow, gc
+    decr_font, curved_flow, gc, sp
 from qthandy.filter import VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
@@ -236,8 +236,12 @@ class CharacterPlanBarWidget(QWidget):
         else:
             self._lblEmoji.setText(emoji.emojize(':smiling_face_with_hearts:'))
         self._textSummary = AutoAdjustableTextEdit()
+        sp(self._textSummary).h_exp()
         transparent(self._textSummary)
         self._textSummary.setPlaceholderText('Summarize this goal')
+        self._textSummary.setAcceptRichText(False)
+        self._textSummary.setText(self._plan.summary)
+        self._textSummary.textChanged.connect(self._summaryChanged)
         self._wdgHeader.layout().addWidget(self._lblEmoji, alignment=Qt.AlignmentFlag.AlignTop)
         self._wdgHeader.layout().addWidget(self._textSummary, alignment=Qt.AlignmentFlag.AlignTop)
         self._wdgHeader.layout().addWidget(spacer())
@@ -362,6 +366,9 @@ class CharacterPlanBarWidget(QWidget):
 
         if not self._plan.goals:
             self._btnAdd.setVisible(True)
+
+    def _summaryChanged(self):
+        self._plan.summary = self._textSummary.toPlainText()
 
 
 class CharacterPlansWidget(QWidget):

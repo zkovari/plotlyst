@@ -138,6 +138,7 @@ class CharacterGoal:
 @dataclass
 class CharacterPlan:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+    summary: str = ''
     external: bool = True
     goals: List[CharacterGoal] = field(default_factory=list)
 
