@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt6.QtCore import QObject, QEvent, Qt
 from PyQt6.QtGui import QFont
 from overrides import overrides
-from qthandy import retain_when_hidden, transparent
+from qthandy import retain_when_hidden, transparent, decr_icon
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
@@ -85,6 +85,7 @@ class NovelView(AbstractNovelView):
         self._btnSynopsisExtendEdit = SecondaryActionToolButton()
         self._btnSynopsisExtendEdit.setToolTip('Edit in full view')
         self._btnSynopsisExtendEdit.setIcon(IconRegistry.expand_icon())
+        decr_icon(self._btnSynopsisExtendEdit, 2)
         self._btnSynopsisExtendEdit.installEventFilter(
             OpacityEventFilter(self._btnSynopsisExtendEdit, leaveOpacity=0.55))
         self.ui.subtitleSynopsis.addWidget(self._btnSynopsisExtendEdit)
@@ -97,6 +98,7 @@ class NovelView(AbstractNovelView):
         self.ui.textSynopsis.setPlaceholderText("Write down your story's main events")
         self.ui.textSynopsis.setMargins(0, 10, 0, 10)
         self.ui.textSynopsis.textEdit.setSidebarEnabled(False)
+        self.ui.textSynopsis.textEdit.setTabChangesFocus(True)
         self.ui.textSynopsis.setGrammarCheckEnabled(True)
         self.ui.textPremise.setGrammarCheckEnabled(True)
 
