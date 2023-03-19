@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGr
     QScrollArea, QApplication, QDialogButtonBox
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_layout, flow, vbox, incr_font, \
-    retain_when_hidden, grid
+    retain_when_hidden, grid, decr_icon
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color
@@ -153,6 +153,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.lblTitle.setStyleSheet(f'QLabel:enabled {{color: {beat.icon_color};}}')
 
         self.btnSceneSelector = SceneSelector(app_env.novel)
+        decr_icon(self.btnSceneSelector, 2)
         retain_when_hidden(self.btnSceneSelector)
         self.layoutRight.insertWidget(0, self.btnSceneSelector,
                                       alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
