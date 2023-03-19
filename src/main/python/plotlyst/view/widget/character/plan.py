@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdi
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, btn_popup_menu, \
     decr_font, curved_flow, gc, sp, decr_icon
-from qthandy.filter import VisibilityToggleEventFilter
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -52,6 +52,7 @@ class _AddObjectiveButton(QPushButton):
         self.setToolTip('Add new objective')
         transparent(self)
         self.setStyleSheet(f'{self.styleSheet()}\nQPushButton{{ color: grey;}}')
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
         pointy(self)
         retain_when_hidden(self)
         menu = QMenu(self)
@@ -91,6 +92,7 @@ class CharacterSubtaskWidget(QWidget):
         menu = QMenu()
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.delete.emit)
         self.btnMenu = DotsMenuButton(menu)
+        self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu, leaveOpacity=0.7))
 
         hbox(self)
         self.layout().addWidget(self.iconSelector)
@@ -154,6 +156,7 @@ class CharacterGoalWidget(QWidget):
         menu = QMenu()
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.delete.emit)
         self.btnMenu = DotsMenuButton(menu)
+        self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu, leaveOpacity=0.7))
 
         self._wdgCenter.layout().addWidget(self.btnAddBefore)
         self._wdgCenter.layout().addWidget(self.iconSelector)
@@ -219,6 +222,7 @@ class CharacterGoalWidget(QWidget):
         margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
         self._wdgBottom.layout().insertWidget(self._wdgBottom.layout().count() - 1, subtaskWdg)
         self._btnAddSubtask.setText('')
+        subtaskWdg.lineText.setFocus()
 
     def _deleteSubtask(self, wdg: CharacterSubtaskWidget):
         goal = wdg.subtask()
@@ -367,6 +371,7 @@ class CharacterPlanBarWidget(QWidget):
         self.update()
 
         self._btnAdd.setHidden(True)
+        goalWidget.lineText.setFocus()
 
         self.repo.update_novel(self._novel)
 
