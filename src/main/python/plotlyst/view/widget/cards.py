@@ -323,6 +323,7 @@ class CardsView(QFrame):
         self._cards: Dict[Any, Card] = {}
         self._layout = flow(self, 9, 15)
         self.setAcceptDrops(True)
+        self._droppedTo: Optional[Card] = None
         self._selected: Optional[Card] = None
         self._cardsWidth: int = 135
         self._cardsRatio = CardSizeRatio.RATIO_3_4
@@ -351,7 +352,8 @@ class CardsView(QFrame):
     def addCard(self, card: Card):
         card.setAcceptDrops(True)
         if card.isDragEnabled():
-            card.installEventFilter(DragEventFilter(card, card.mimeType(), lambda x: card.data(), hideTarget=True))
+            card.installEventFilter(DragEventFilter(card, card.mimeType(), lambda x: card.data(), hideTarget=True,
+                                                    finishedSlot=partial(self._dragFinished, card)))
         card.selected.connect(self._cardSelected)
         card.installEventFilter(DropEventFilter(card, [card.mimeType()], droppedSlot=partial(self._dropped, card)))
         card.dropped.connect(self.swapped.emit)
@@ -391,6 +393,11 @@ class CardsView(QFrame):
     def _cardSelected(self, card: Card):
         self._selected = card
 
-    def _dropped(self, card: Card, mimeData: QMimeData):
-        data = mimeData.reference()
-        self.swapped.emit(self._cards[data], card)
+    def _dropped(self, card: Card, _: QMimeData):
+        self._droppedTo = card
+
+    def _dragFinished(self, card: Card):
+        if self._droppedTo is not None:
+            card.setHidden(True)
+            self.swapped.emit(card, self._droppedTo)
+            self._droppedTo = None
