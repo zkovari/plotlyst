@@ -208,10 +208,14 @@ class CharacterToolButton(QToolButton):
     def __init__(self, character: Character, parent=None):
         super(CharacterToolButton, self).__init__(parent)
         self.character = character
-        self.setToolTip(character.name)
-        self.setIcon(avatars.avatar(self.character))
         self.setCheckable(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        pointy(self)
+        self.refresh()
+
+    def refresh(self):
+        self.setToolTip(self.character.name)
+        self.setIcon(avatars.avatar(self.character))
 
 
 class CharacterSelectorButtons(QWidget):
@@ -229,8 +233,8 @@ class CharacterSelectorButtons(QWidget):
         self.layout().addWidget(self.container)
 
         self._btn_group = QButtonGroup()
-        self._buttons: List[QToolButton] = []
-        self._buttonsPerCharacters: Dict[Character, QToolButton] = {}
+        self._buttons: List[CharacterToolButton] = []
+        self._buttonsPerCharacters: Dict[Character, CharacterToolButton] = {}
         self.setExclusive(exclusive)
 
     def exclusive(self) -> bool:
@@ -268,6 +272,9 @@ class CharacterSelectorButtons(QWidget):
         for c in current_characters:
             self.removeCharacter(c)
 
+        for btn in self._buttons:
+            btn.refresh()
+
     def addCharacter(self, character: Character, checked: bool = True):
         tool_btn = CharacterToolButton(character)
 
@@ -287,6 +294,9 @@ class CharacterSelectorButtons(QWidget):
             return
 
         btn = self._buttonsPerCharacters.pop(character)
+        if btn.isChecked():
+            btn.setChecked(False)
+
         self._btn_group.removeButton(btn)
         self._buttons.remove(btn)
         self._layout.removeWidget(btn)
