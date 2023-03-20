@@ -336,7 +336,7 @@ weaknesses_field = TemplateField('Weakness', type=TemplateFieldType.SMALL_TEXT, 
                                  id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
 strength_field = TemplateField('Strength', type=TemplateFieldType.SMALL_TEXT, emoji=':smiling_face_with_sunglasses:',
                                placeholder="What are the character's strengths in the story?",
-                               id=uuid.UUID('f2aa5655-88b2-41ae-a630-c7e56795a858'))
+                               id=uuid.UUID('4bc4269d-9ce7-47cf-aa65-23e7f8b1a250'))
 ghost_field = TemplateField('Ghost', type=TemplateFieldType.SMALL_TEXT, emoji=':ghost:',
                             placeholder="What's the character's ghost from their past that haunts them?",
                             id=uuid.UUID("12a61aa5-ffc0-4309-9b65-c6f26ab5bcf5"))
