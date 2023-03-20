@@ -188,6 +188,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct2.toggled.connect(self._filter_cards)
         self.ui.btnAct3.toggled.connect(self._filter_cards)
         self.ui.cards.selectionCleared.connect(self._selection_cleared)
+        self.ui.cards.cardSelected.connect(self._card_selected)
+        self.ui.cards.cardDoubleClicked.connect(self._on_edit)
+        self.ui.cards.cardEntered.connect(lambda x: self.ui.wdgStoryStructure.highlightScene(x.scene))
+        self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
@@ -335,16 +339,16 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor = SceneEditor(self.novel)
         self._switch_to_editor()
 
-    def _init_cards(self):
-        def custom_menu(card: SceneCard, pos: QPoint):
-            builder = PopupMenuBuilder.from_widget_position(card, pos)
-            builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
-            builder.add_action('Insert new scene', IconRegistry.plus_icon('black'),
-                               partial(self._insert_scene_after, card.scene))
-            builder.add_separator()
-            builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
-            builder.popup()
+    def _show_card_menu(self, card: SceneCard, pos: QPoint):
+        builder = PopupMenuBuilder.from_widget_position(card, pos)
+        builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
+        builder.add_action('Insert new scene', IconRegistry.plus_icon('black'),
+                           partial(self._insert_scene_after, card.scene))
+        builder.add_separator()
+        builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        builder.popup()
 
+    def _init_cards(self):
         self.selected_card = None
         bar_value = self.ui.scrollArea.verticalScrollBar().value()
         self.ui.cards.clear()
@@ -352,10 +356,6 @@ class ScenesOutlineView(AbstractNovelView):
         for scene in self.novel.scenes:
             card = SceneCard(scene, self.novel, self.ui.cards)
             self.ui.cards.addCard(card)
-            card.selected.connect(self._card_selected)
-            card.doubleClicked.connect(self._on_edit)
-            card.cursorEntered.connect(partial(self.ui.wdgStoryStructure.highlightScene, card.scene))
-            card.customContextMenuRequested.connect(partial(custom_menu, card))
 
         # restore scrollbar that might have moved
         if bar_value <= self.ui.scrollArea.verticalScrollBar().maximum():

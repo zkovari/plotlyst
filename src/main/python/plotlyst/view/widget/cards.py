@@ -50,8 +50,9 @@ class CardMimeData(QMimeData):
 
 
 class Card(QFrame):
-    selected = pyqtSignal(object)
-    doubleClicked = pyqtSignal(object)
+    selected = pyqtSignal()
+    doubleClicked = pyqtSignal()
+    cursorEntered = pyqtSignal()
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -70,6 +71,7 @@ class Card(QFrame):
     @overrides
     def enterEvent(self, event: QEvent) -> None:
         qtanim.glow(self, color=QColor('#0096c7'))
+        self.cursorEntered.emit()
 
     @overrides
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -78,11 +80,11 @@ class Card(QFrame):
     @overrides
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
         self.select()
-        self.doubleClicked.emit(self)
+        self.doubleClicked.emit()
 
     def select(self):
         self._setStyleSheet(selected=True)
-        self.selected.emit(self)
+        self.selected.emit()
 
     def clearSelection(self):
         self._setStyleSheet()
@@ -165,8 +167,6 @@ class CharacterCard(Ui_CharacterCard, Card):
 
 
 class SceneCard(Ui_SceneCard, Card):
-    cursorEntered = pyqtSignal()
-
     def __init__(self, scene: Scene, novel: Novel, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -236,7 +236,6 @@ class SceneCard(Ui_SceneCard, Card):
         self.wdgCharacters.setEnabled(True)
         if not self.btnStage.stageOk():
             self.btnStage.setVisible(True)
-        self.cursorEntered.emit()
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
@@ -303,6 +302,10 @@ class SceneCardFilter(CardFilter):
 
 
 class CardsView(QFrame):
+    cardSelected = pyqtSignal(Card)
+    cardEntered = pyqtSignal(Card)
+    cardDoubleClicked = pyqtSignal(Card)
+    cardCustomContextMenuRequested = pyqtSignal(Card, QPoint)
     orderChanged = pyqtSignal(list)
     selectionCleared = pyqtSignal()
 
@@ -367,7 +370,10 @@ class CardsView(QFrame):
             card.installEventFilter(DragEventFilter(card, card.mimeType(), lambda x: card.data(), hideTarget=True,
                                                     startedSlot=partial(self._dragStarted, card),
                                                     finishedSlot=partial(self._dragFinished, card)))
-        card.selected.connect(self._cardSelected)
+        card.selected.connect(lambda: self._cardSelected(card))
+        card.doubleClicked.connect(lambda: self.cardDoubleClicked.emit(card))
+        card.cursorEntered.connect(lambda: self.cardEntered.emit(card))
+        card.customContextMenuRequested.connect(partial(self.cardCustomContextMenuRequested.emit, card))
         card.installEventFilter(DropEventFilter(card, [card.mimeType()], motionDetection=Qt.Orientation.Horizontal,
                                                 motionSlot=partial(self._dragMoved, card),
                                                 droppedSlot=self._dropped))
@@ -387,6 +393,7 @@ class CardsView(QFrame):
 
     def _cardSelected(self, card: Card):
         self._selected = card
+        self.cardSelected.emit(card)
 
     def _dragStarted(self, card: Card):
         self._dragged = card
@@ -434,3 +441,5 @@ class CardsView(QFrame):
             self._layout.removeWidget(card)
             gc(card)
         self._dragged = None
+
+        self._wasDropped = False
