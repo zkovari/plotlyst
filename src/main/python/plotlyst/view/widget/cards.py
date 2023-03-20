@@ -317,7 +317,7 @@ class CardsView(QFrame):
         self._cardsRatio = CardSizeRatio.RATIO_3_4
         self._dragPlaceholder: Optional[Card] = None
         self._dragged: Optional[Card] = None
-        self._toBeRemoved = False
+        self._wasDropped = False
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
@@ -412,7 +412,6 @@ class CardsView(QFrame):
 
         i = self._layout.indexOf(self._dragPlaceholder)
         self._layout.insertWidget(i, card)
-        self._resizeCard(card)
 
         data = []
         for i in range(self._layout.count()):
@@ -424,13 +423,13 @@ class CardsView(QFrame):
         gc(self._dragPlaceholder)
         self._dragPlaceholder = None
 
-        self._toBeRemoved = True
+        self._wasDropped = True
 
     def _dragFinished(self, card: Card):
         if self._dragPlaceholder:
             gc(self._dragPlaceholder)
             self._dragPlaceholder = None
-        if self._toBeRemoved:
+        if self._wasDropped:
             card.setHidden(True)
             self._layout.removeWidget(card)
             gc(card)
