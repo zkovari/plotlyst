@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
@@ -142,6 +142,10 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.splitterLeft.setSizes([120, 500])
 
+        self._addSceneMenu = QMenu(self.ui.btnNew)
+        self._addSceneMenu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
+        self._addSceneMenu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
+
         self.ui.treeChapters.setNovel(self.novel)
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
 
@@ -221,7 +225,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-        self.ui.cards.swapped.connect(self._scenes_swapped)
+        self.ui.cards.orderChanged.connect(self._on_scene_cards_swapped)
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
 
@@ -278,10 +282,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _hide_chapters_toggled(self, toggled: bool):
         if toggled:
-            menu = QMenu(self.ui.btnNew)
-            menu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
-            menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
-            self.ui.btnNew.setMenu(menu)
+            self.ui.btnNew.setMenu(self._addSceneMenu)
         else:
             self.ui.btnNew.setMenu(None)
 
@@ -574,15 +575,23 @@ class ScenesOutlineView(AbstractNovelView):
         #             self.chaptersModel.removeChapter(index)
         #             emit_event(ChapterChangedEvent(self))
 
-    def _scenes_swapped(self, removed: SceneCard, moved_to: SceneCard):
-        self.novel.scenes.remove(removed.scene)
-        pos = self.novel.scenes.index(moved_to.scene)
-        self.novel.scenes.insert(pos, removed.scene)
+    def _on_scene_cards_swapped(self, scenes: List[Scene]):
+        self.novel.scenes.clear()
+        self.novel.scenes.extend(scenes)
 
-        emit_event(SceneChangedEvent(self, removed.scene))
-        emit_event(SceneChangedEvent(self, moved_to.scene))
-        self.refresh()
+        self.tblModel.modelReset.emit()
+
+        if self.stagesModel:
+            self.stagesModel.modelReset.emit()
+        if self.stagesProgress:
+            self.stagesProgress.refresh()
+        if self.characters_distribution:
+            self.characters_distribution.refresh()
+        self.ui.treeChapters.refresh()
+
         self.repo.update_novel(self.novel)
+
+        emit_event(SceneOrderChangedEvent(self))
 
     def _on_scene_moved(self):
         self.repo.update_novel(self.novel)

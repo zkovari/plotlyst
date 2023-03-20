@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
@@ -187,7 +187,7 @@ class CharactersView(AbstractNovelView):
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
         self.ui.btnCardsView.setChecked(True)
 
-        self.ui.cards.swapped.connect(self._characters_swapped)
+        self.ui.cards.orderChanged.connect(self._characters_swapped)
 
     @overrides
     def refresh(self):
@@ -230,10 +230,9 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
 
-    def _characters_swapped(self, removed: CharacterCard, moved_to: CharacterCard):
-        self.novel.characters.remove(removed.character)
-        pos = self.novel.characters.index(moved_to.character)
-        self.novel.characters.insert(pos, removed.character)
+    def _characters_swapped(self, characters: List[Character]):
+        self.novel.characters.clear()
+        self.novel.characters.extend(characters)
 
         self.refresh()
         self.repo.update_novel(self.novel)
