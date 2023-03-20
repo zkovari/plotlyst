@@ -27,7 +27,7 @@ import qtanim
 from PyQt6.QtCore import QPoint, QTimeLine
 from PyQt6.QtCore import Qt, QObject, QEvent, QSize, pyqtSignal, QModelIndex
 from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEvent, QMouseEvent, QPaintEvent, QPainter, \
-    QPen, QPainterPath
+    QPen, QPainterPath, QShowEvent
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView
@@ -49,7 +49,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
-    ActiveSceneStageChanged, AvailableSceneStagesChanged
+    ActiveSceneStageChanged, AvailableSceneStagesChanged, SceneOrderChangedEvent
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -1222,7 +1222,7 @@ class _ScenePlotAssociationsWidget(QWidget):
         return wdg
 
 
-class StoryMap(QWidget):
+class StoryMap(QWidget, EventListener):
     sceneSelected = pyqtSignal(Scene)
 
     def __init__(self, parent=None):
@@ -1235,10 +1235,25 @@ class StoryMap(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
+        self._refreshOnShow = False
+        event_dispatcher.register(self, SceneOrderChangedEvent)
 
     def setNovel(self, novel: Novel):
         self.novel = novel
         self.refresh()
+
+    @overrides
+    def event_received(self, event: Event):
+        if self.isVisible():
+            self.refresh()
+        else:
+            self._refreshOnShow = True
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if self._refreshOnShow:
+            self._refreshOnShow = False
+            self.refresh()
 
     def refresh(self, animated: bool = True):
         if not self.novel:

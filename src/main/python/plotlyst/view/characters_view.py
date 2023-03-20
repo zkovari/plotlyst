@@ -17,8 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
@@ -121,9 +120,12 @@ class CharactersView(AbstractNovelView):
 
         self.selected_card: Optional[CharacterCard] = None
         self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))
+        self.ui.cards.cardSelected.connect(self._card_selected)
+        self.ui.cards.cardDoubleClicked.connect(self._on_edit)
+        self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
         self.ui.cards.setCardsSizeRatio(CardSizeRatio.RATIO_2_3)
         self.ui.cards.setCardsWidth(142)
-        self._update_cards()
+        self._init_cards()
 
         self.ui.wdgComparisonCharacterSelector.setExclusive(False)
         transparent(self.ui.btnCharactersLabel)
@@ -187,7 +189,7 @@ class CharactersView(AbstractNovelView):
                                                         (self.ui.btnProgressView, self.ui.pageProgressView)])
         self.ui.btnCardsView.setChecked(True)
 
-        self.ui.cards.swapped.connect(self._characters_swapped)
+        self.ui.cards.orderChanged.connect(self._characters_swapped)
 
     @overrides
     def refresh(self):
@@ -195,26 +197,23 @@ class CharactersView(AbstractNovelView):
         self.ui.btnEdit.setDisabled(True)
         self.ui.btnDelete.setDisabled(True)
 
-        self._update_cards()
+        self._init_cards()
         self._progress.refresh()
 
-    def _update_cards(self):
-        def custom_menu(card: CharacterCard, pos: QPoint):
-            builder = PopupMenuBuilder.from_widget_position(card, pos)
-            builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
-            builder.add_separator()
-            builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
-            builder.popup()
+    def _show_card_menu(self, card: CharacterCard, pos: QPoint):
+        builder = PopupMenuBuilder.from_widget_position(card, pos)
+        builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
+        builder.add_separator()
+        builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        builder.popup()
 
+    def _init_cards(self):
         self.selected_card = None
         self.ui.cards.clear()
 
         for character in self.novel.characters:
             card = CharacterCard(character, self.ui.cards)
             self.ui.cards.addCard(card)
-            card.selected.connect(self._card_selected)
-            card.doubleClicked.connect(self._on_edit)
-            card.customContextMenuRequested.connect(partial(custom_menu, card))
 
     def _on_character_selected(self, selection: QItemSelection):
         self._enable_action_buttons(len(selection.indexes()) > 0)
@@ -230,10 +229,8 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
 
-    def _characters_swapped(self, removed: CharacterCard, moved_to: CharacterCard):
-        self.novel.characters.remove(removed.character)
-        pos = self.novel.characters.index(moved_to.character)
-        self.novel.characters.insert(pos, removed.character)
+    def _characters_swapped(self, characters: List[Character]):
+        self.novel.characters[:] = characters
 
         self.refresh()
         self.repo.update_novel(self.novel)

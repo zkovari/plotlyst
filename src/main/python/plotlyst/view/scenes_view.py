@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
 from functools import partial
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
@@ -142,6 +142,10 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.splitterLeft.setSizes([120, 500])
 
+        self._addSceneMenu = QMenu(self.ui.btnNew)
+        self._addSceneMenu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
+        self._addSceneMenu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
+
         self.ui.treeChapters.setNovel(self.novel)
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
 
@@ -184,6 +188,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnAct2.toggled.connect(self._filter_cards)
         self.ui.btnAct3.toggled.connect(self._filter_cards)
         self.ui.cards.selectionCleared.connect(self._selection_cleared)
+        self.ui.cards.cardSelected.connect(self._card_selected)
+        self.ui.cards.cardDoubleClicked.connect(self._on_edit)
+        self.ui.cards.cardEntered.connect(lambda x: self.ui.wdgStoryStructure.highlightScene(x.scene))
+        self.ui.cards.cardCustomContextMenuRequested.connect(self._show_card_menu)
 
         self.ui.btnGroupViews.buttonToggled.connect(self._switch_view)
         self.ui.btnCardsView.setChecked(True)
@@ -221,7 +229,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-        self.ui.cards.swapped.connect(self._scenes_swapped)
+        self.ui.cards.orderChanged.connect(self._on_scene_cards_swapped)
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
 
@@ -278,10 +286,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     def _hide_chapters_toggled(self, toggled: bool):
         if toggled:
-            menu = QMenu(self.ui.btnNew)
-            menu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
-            menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
-            self.ui.btnNew.setMenu(menu)
+            self.ui.btnNew.setMenu(self._addSceneMenu)
         else:
             self.ui.btnNew.setMenu(None)
 
@@ -334,16 +339,16 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor = SceneEditor(self.novel)
         self._switch_to_editor()
 
-    def _init_cards(self):
-        def custom_menu(card: SceneCard, pos: QPoint):
-            builder = PopupMenuBuilder.from_widget_position(card, pos)
-            builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
-            builder.add_action('Insert new scene', IconRegistry.plus_icon('black'),
-                               partial(self._insert_scene_after, card.scene))
-            builder.add_separator()
-            builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
-            builder.popup()
+    def _show_card_menu(self, card: SceneCard, pos: QPoint):
+        builder = PopupMenuBuilder.from_widget_position(card, pos)
+        builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
+        builder.add_action('Insert new scene', IconRegistry.plus_icon('black'),
+                           partial(self._insert_scene_after, card.scene))
+        builder.add_separator()
+        builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        builder.popup()
 
+    def _init_cards(self):
         self.selected_card = None
         bar_value = self.ui.scrollArea.verticalScrollBar().value()
         self.ui.cards.clear()
@@ -351,10 +356,6 @@ class ScenesOutlineView(AbstractNovelView):
         for scene in self.novel.scenes:
             card = SceneCard(scene, self.novel, self.ui.cards)
             self.ui.cards.addCard(card)
-            card.selected.connect(self._card_selected)
-            card.doubleClicked.connect(self._on_edit)
-            card.cursorEntered.connect(partial(self.ui.wdgStoryStructure.highlightScene, card.scene))
-            card.customContextMenuRequested.connect(partial(custom_menu, card))
 
         # restore scrollbar that might have moved
         if bar_value <= self.ui.scrollArea.verticalScrollBar().maximum():
@@ -574,15 +575,22 @@ class ScenesOutlineView(AbstractNovelView):
         #             self.chaptersModel.removeChapter(index)
         #             emit_event(ChapterChangedEvent(self))
 
-    def _scenes_swapped(self, removed: SceneCard, moved_to: SceneCard):
-        self.novel.scenes.remove(removed.scene)
-        pos = self.novel.scenes.index(moved_to.scene)
-        self.novel.scenes.insert(pos, removed.scene)
+    def _on_scene_cards_swapped(self, scenes: List[Scene]):
+        self.novel.scenes[:] = scenes
 
-        emit_event(SceneChangedEvent(self, removed.scene))
-        emit_event(SceneChangedEvent(self, moved_to.scene))
-        self.refresh()
+        self.tblModel.modelReset.emit()
+
+        if self.stagesModel:
+            self.stagesModel.modelReset.emit()
+        if self.stagesProgress:
+            self.stagesProgress.refresh()
+        if self.characters_distribution:
+            self.characters_distribution.refresh()
+        self.ui.treeChapters.refresh()
+
         self.repo.update_novel(self.novel)
+
+        emit_event(SceneOrderChangedEvent(self))
 
     def _on_scene_moved(self):
         self.repo.update_novel(self.novel)
