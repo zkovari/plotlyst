@@ -23,7 +23,7 @@ from typing import Optional
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import ask_confirmation, busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
+from qthandy import busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
@@ -33,6 +33,7 @@ from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDele
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.service.persistence import delete_character
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, PopupMenuBuilder, ButtonPressResizeEventFilter
@@ -304,13 +305,10 @@ class CharactersView(AbstractNovelView):
         else:
             character = self.selected_card.character
 
-        if not ask_confirmation(f'Are you sure you want to delete character {character.name}?'):
-            return
-        self.novel.characters.remove(character)
-        self.ui.wdgCharacterSelector.removeCharacter(character)
-        self.repo.delete_character(self.novel, character)
-        emit_event(CharacterDeletedEvent(self, character))
-        self.refresh()
+        if character and delete_character(self.novel, character):
+            self.ui.wdgCharacterSelector.removeCharacter(character)
+            emit_event(CharacterDeletedEvent(self, character))
+            self.refresh()
 
     @busy
     def _backstory_character_toggled(self, character: Character, toggled: bool):

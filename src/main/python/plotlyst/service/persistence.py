@@ -237,3 +237,52 @@ def delete_scene(novel: Novel, scene: Scene) -> bool:
         return True
 
     return False
+
+
+def delete_character(novel: Novel, character: Character) -> bool:
+    if ask_confirmation(f'Are you sure you want to delete character "{character.name}"?'):
+        novel.characters.remove(character)
+        repo = RepositoryPersistenceManager.instance()
+        repo.delete_character(novel, character)
+
+        char_id = character.id
+        removed_conflicts = []
+        for conflict in novel.conflicts:
+            if conflict.character_id == char_id or conflict.conflicting_character_id == char_id:
+                removed_conflicts.append(conflict)
+        for conf in removed_conflicts:
+            novel.conflicts.remove(conf)
+        if removed_conflicts:
+            repo.update_novel(novel)
+        removed_conflicts = [x.id for x in removed_conflicts]
+
+        for scene in novel.scenes:
+            update_scene = False
+            if scene.pov is not None and scene.pov.id == char_id:
+                scene.pov = None
+                update_scene = True
+            for char in scene.characters:
+                if char.id == char_id:
+                    scene.characters.remove(char)
+                    update_scene = True
+                    break
+            for agenda in scene.agendas:
+                if agenda.character_id == char_id:
+                    agenda.reset_character()
+                    agenda.conflict_references.clear()
+                    agenda.goal_references.clear()
+                    update_scene = True
+                    continue
+                if removed_conflicts:
+                    before = len(agenda.conflict_references)
+                    agenda.conflict_references[:] = [x for x in agenda.conflict_references
+                                                     if x.conflict_id not in removed_conflicts]
+                    if before != len(agenda.conflict_references):
+                        update_scene = True
+
+            if update_scene:
+                repo.update_scene(scene)
+
+        return True
+
+    return False
