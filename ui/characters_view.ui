@@ -24,11 +24,32 @@
     <number>0</number>
    </property>
    <property name="rightMargin">
-    <number>2</number>
+    <number>9</number>
    </property>
    <property name="bottomMargin">
     <number>2</number>
    </property>
+   <item>
+    <widget class="QWidget" name="wdgTitleParent" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_10">
+      <property name="spacing">
+       <number>4</number>
+      </property>
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+     </layout>
+    </widget>
+   </item>
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
@@ -902,8 +923,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>727</width>
-                <height>510</height>
+                <width>720</width>
+                <height>504</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -1033,8 +1054,8 @@
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="btnGroupComparisonView"/>
   <buttongroup name="btnGroupComparison"/>
   <buttongroup name="btnGroupViews"/>
-  <buttongroup name="btnGroupComparisonView"/>
  </buttongroups>
 </ui>

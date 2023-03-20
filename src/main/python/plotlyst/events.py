@@ -126,11 +126,6 @@ class LanguageToolSet(Event):
 
 
 @dataclass
-class ToggleOutlineViewTitle(Event):
-    visible: bool
-
-
-@dataclass
 class TaskChanged(Event):
     task: Task
 

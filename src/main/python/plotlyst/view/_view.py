@@ -72,9 +72,6 @@ class AbstractView(QObject, EventListener):
             self.refresh()
             self._refresh_on_activation = False
 
-    def can_show_title(self) -> bool:
-        return True
-
     @abstractmethod
     def refresh(self):
         pass

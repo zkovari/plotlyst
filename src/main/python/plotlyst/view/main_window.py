@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QText
     QProgressDialog
 from fbs_runtime import platform
 from overrides import overrides
-from qthandy import spacer, busy, gc, clear_layout
+from qthandy import spacer, busy, gc
 from qthandy.filter import InstantTooltipEventFilter
 from textstat import textstat
 
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
     emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, \
-    NovelUpdatedEvent, OpenDistractionFreeMode, ToggleOutlineViewTitle, ExitDistractionFreeMode
+    NovelUpdatedEvent, OpenDistractionFreeMode, ExitDistractionFreeMode
 from src.main.python.plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
@@ -209,8 +209,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._toggle_fullscreen(on=True)
         elif isinstance(event, ExitDistractionFreeMode):
             self._toggle_fullscreen(on=False)
-        elif isinstance(event, ToggleOutlineViewTitle):
-            self.wdgTitle.setVisible(event.visible)
         elif isinstance(event, ResourceDownloadedEvent):
             if event.type == ResourceType.JRE_8:
                 emit_info('Start initializing grammar checker...')
@@ -293,7 +291,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not checked:
             return
 
-        title = None
         if self.btnBoard.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageBoard)
             self._current_view = self.board_view
@@ -303,12 +300,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._current_view = self.novel_view
         elif self.btnCharacters.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageCharacters)
-            title = self.characters_view.title if self.characters_view.can_show_title() else None
             self.characters_view.activate()
             self._current_view = self.characters_view
         elif self.btnScenes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageScenes)
-            title = self.scenes_outline_view.title if self.scenes_outline_view.can_show_title() else None
             self.scenes_outline_view.activate()
             self._current_view = self.scenes_outline_view
         elif self.btnWorld.isChecked():
@@ -316,20 +311,12 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._current_view = self.world_building_view
         elif self.btnNotes.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageNotes)
-            title = self.notes_view.title
             self.notes_view.activate()
             self._current_view = self.notes_view
         elif self.btnReports.isChecked():
             self.stackedWidget.setCurrentWidget(self.pageAnalysis)
         else:
             self._current_view = None
-
-        if title:
-            clear_layout(self.wdgTitle.layout(), auto_delete=False)
-            self.wdgTitle.layout().addWidget(title)
-            self.wdgTitle.setVisible(True)
-        else:
-            self.wdgTitle.setHidden(True)
 
     def _init_menubar(self):
         self.menubar.setContextMenuPolicy(Qt.ContextMenuPolicy.PreventContextMenu)
@@ -495,7 +482,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, NovelUpdatedEvent)
         event_dispatcher.register(self, OpenDistractionFreeMode)
         event_dispatcher.register(self, ExitDistractionFreeMode)
-        event_dispatcher.register(self, ToggleOutlineViewTitle)
         event_dispatcher.register(self, ResourceDownloadedEvent)
 
     def _clear_novel_views(self):

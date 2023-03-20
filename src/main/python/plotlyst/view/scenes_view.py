@@ -32,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneSta
 from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
-    SceneSelectedEvent, SceneSelectionClearedEvent, ToggleOutlineViewTitle, ActiveSceneStageChanged, \
+    SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
@@ -104,6 +104,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.setupUi(self.widget)
 
         self.title = ScenesTitle(self.novel)
+        self.ui.wdgTitleParent.layout().addWidget(self.title)
 
         self.editor: Optional[SceneEditor] = None
         self.storymap_view: Optional[StoryLinesMapWidget] = None
@@ -295,10 +296,6 @@ class ScenesOutlineView(AbstractNovelView):
 
         self._init_cards()
 
-    @overrides
-    def can_show_title(self) -> bool:
-        return self.ui.stackedWidget.currentWidget() is self.ui.pageView
-
     def _on_scene_selected(self):
         indexes = self.ui.tblScenes.selectedIndexes()
         selection = len(indexes) > 0
@@ -355,7 +352,7 @@ class ScenesOutlineView(AbstractNovelView):
 
     @busy
     def _switch_to_editor(self):
-        emit_event(ToggleOutlineViewTitle(self, visible=False))
+        self.title.setHidden(True)
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
@@ -365,10 +362,10 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
+        self.title.setVisible(True)
         gc(self.editor.widget)
 
         emit_event(SceneChangedEvent(self, self.editor.scene))
-        emit_event(ToggleOutlineViewTitle(self, visible=True))
         self.editor = None
         self.refresh()
 

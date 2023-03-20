@@ -29,8 +29,7 @@ from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECOND
 from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import CharacterChangedEvent, ToggleOutlineViewTitle, \
-    CharacterDeletedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
@@ -80,6 +79,7 @@ class CharactersView(AbstractNovelView):
         self.ui.setupUi(self.widget)
         self.editor: Optional[CharacterEditor] = None
         self.title = CharactersTitle(self.novel)
+        self.ui.wdgTitleParent.layout().addWidget(self.title)
 
         self.model = CharactersTableModel(novel)
         self._proxy = proxy(self.model)
@@ -197,10 +197,6 @@ class CharactersView(AbstractNovelView):
         self._update_cards()
         self._progress.refresh()
 
-    @overrides
-    def can_show_title(self) -> bool:
-        return self.ui.stackedWidget.currentWidget() is self.ui.pageView
-
     def _update_cards(self):
         def custom_menu(card: CharacterCard, pos: QPoint):
             builder = PopupMenuBuilder.from_widget_position(card, pos)
@@ -275,7 +271,7 @@ class CharactersView(AbstractNovelView):
         self._switch_to_editor()
 
     def _switch_to_editor(self):
-        emit_event(ToggleOutlineViewTitle(self, visible=False))
+        self.title.setHidden(True)
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
@@ -285,10 +281,10 @@ class CharactersView(AbstractNovelView):
         character = self.editor.character
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
+        self.title.setVisible(True)
         gc(self.editor.widget)
         self.editor = None
         emit_event(CharacterChangedEvent(self, character))
-        emit_event(ToggleOutlineViewTitle(self, visible=True))
         self.refresh()
 
     def _on_new(self):
