@@ -576,8 +576,7 @@ class ScenesOutlineView(AbstractNovelView):
         #             emit_event(ChapterChangedEvent(self))
 
     def _on_scene_cards_swapped(self, scenes: List[Scene]):
-        self.novel.scenes.clear()
-        self.novel.scenes.extend(scenes)
+        self.novel.scenes[:] = scenes
 
         self.tblModel.modelReset.emit()
 

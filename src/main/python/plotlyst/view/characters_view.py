@@ -231,8 +231,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnEdit.setEnabled(True)
 
     def _characters_swapped(self, characters: List[Character]):
-        self.novel.characters.clear()
-        self.novel.characters.extend(characters)
+        self.novel.characters[:] = characters
 
         self.refresh()
         self.repo.update_novel(self.novel)
