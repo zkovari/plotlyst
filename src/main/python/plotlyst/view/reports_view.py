@@ -40,6 +40,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.report.character import CharacterReport
 from src.main.python.plotlyst.view.report.manuscript import ManuscriptReport
+from src.main.python.plotlyst.view.report.scene import SceneReport
 
 
 class ReportType(Enum):
@@ -63,11 +64,13 @@ class ReportPage(QWidget, EventListener):
 
         self._scrollarea, self._wdgCenter = scrolled(self)
         vbox(self._wdgCenter)
+        self._wdgCenter.setProperty('white-bg', True)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
         if self._report is None:
-            self._initReport()
+            self._report = self._initReport()
+            self._wdgCenter.layout().addWidget(self._report)
         elif self._refreshNext:
             self.refresh()
             self._refreshNext = False
@@ -83,7 +86,7 @@ class ReportPage(QWidget, EventListener):
         self._report.refresh()
 
     @abstractmethod
-    def _initReport(self):
+    def _initReport(self) -> AbstractReport:
         pass
 
 
@@ -96,8 +99,7 @@ class CharactersReportPage(ReportPage):
 
     @overrides
     def _initReport(self):
-        self._report = CharacterReport(self._novel)
-        self._wdgCenter.layout().addWidget(self._report)
+        return CharacterReport(self._novel)
 
 
 class ScenesReportPage(ReportPage):
@@ -110,8 +112,7 @@ class ScenesReportPage(ReportPage):
 
     @overrides
     def _initReport(self):
-        self._report = CharacterReport(self._novel)
-        self._wdgCenter.layout().addWidget(self._report)
+        return SceneReport(self._novel)
 
 
 class ArcReportPage(ReportPage):
@@ -120,8 +121,7 @@ class ArcReportPage(ReportPage):
 
     @overrides
     def _initReport(self):
-        self._report = CharacterReport(self._novel)
-        self._wdgCenter.layout().addWidget(self._report)
+        return CharacterReport(self._novel)
 
 
 class ManuscriptReportPage(ReportPage):
@@ -133,9 +133,7 @@ class ManuscriptReportPage(ReportPage):
 
     @overrides
     def _initReport(self):
-        self._report = ManuscriptReport(self._novel)
-        self._wdgCenter.layout().addWidget(self._report)
-        self._cacheWordCounts()
+        return ManuscriptReport(self._novel)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
