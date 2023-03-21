@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Image crop</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -54,19 +54,12 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item alignment="Qt::AlignHCenter|Qt::AlignTop">
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="lblPreviewTitle">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
-         </property>
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-           <underline>true</underline>
-          </font>
          </property>
          <property name="text">
           <string>Preview</string>

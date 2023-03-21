@@ -31,7 +31,7 @@ from PyQt6.QtGui import QColor, QPixmap, QIcon, QDesktopServices, QPainter
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt6.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
 from overrides import overrides
-from qthandy import hbox, FlowLayout
+from qthandy import hbox, FlowLayout, bold, underline
 from qthandy.filter import InstantTooltipEventFilter
 
 from src.main.python.plotlyst.env import app_env
@@ -177,6 +177,8 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         super(ImageCropDialog, self).__init__(parent)
         self.setupUi(self)
 
+        bold(self.lblPreviewTitle)
+        underline(self.lblPreviewTitle)
         self.frame = self.CropFrame(self.lblImage)
         self.frame.cropped.connect(self._updatePreview)
         self.scaled = None
