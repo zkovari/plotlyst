@@ -30,164 +30,95 @@
     <number>2</number>
    </property>
    <item>
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="currentIndex">
-      <number>0</number>
+    <widget class="CharacterSelectorButtons" name="wdgCharacterSelector" native="true"/>
+   </item>
+   <item>
+    <widget class="ChartView" name="chartViewConflictTypes">
+     <property name="minimumSize">
+      <size>
+       <width>240</width>
+       <height>240</height>
+      </size>
      </property>
-     <widget class="QWidget" name="tabTypes">
-      <attribute name="title">
-       <string>Types</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="spacing">
-        <number>0</number>
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustIgnored</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Subtitle" name="subtitle" native="true">
+     <property name="title" stdset="0">
+      <string>Personal conflicts</string>
+     </property>
+     <property name="icon" stdset="0">
+      <string>fa5s.user</string>
+     </property>
+     <property name="description" stdset="0">
+      <string>Personal conflicts grouped by gender, supporter role, and Enneagram</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>1</number>
+     </property>
+     <property name="leftMargin">
+      <number>20</number>
+     </property>
+     <item>
+      <widget class="ChartView" name="chartViewGender">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
        </property>
-       <property name="leftMargin">
-        <number>0</number>
+      </widget>
+     </item>
+     <item>
+      <widget class="ChartView" name="chartViewRole">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
        </property>
-       <property name="topMargin">
-        <number>0</number>
+      </widget>
+     </item>
+     <item>
+      <widget class="ChartView" name="chartViewEnneagram">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>150</height>
+        </size>
        </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="CharacterSelectorButtons" name="wdgCharacterSelector" native="true"/>
-       </item>
-       <item>
-        <widget class="ChartView" name="chartViewConflictTypes">
-         <property name="minimumSize">
-          <size>
-           <width>240</width>
-           <height>240</height>
-          </size>
-         </property>
-         <property name="sizeAdjustPolicy">
-          <enum>QAbstractScrollArea::AdjustIgnored</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="Subtitle" name="subtitle" native="true">
-         <property name="title" stdset="0">
-          <string>Personal conflicts</string>
-         </property>
-         <property name="icon" stdset="0">
-          <string>fa5s.user</string>
-         </property>
-         <property name="description" stdset="0">
-          <string>Personal conflicts grouped by gender, supporter role, and Enneagram</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <property name="spacing">
-          <number>1</number>
-         </property>
-         <property name="leftMargin">
-          <number>20</number>
-         </property>
-         <item>
-          <widget class="ChartView" name="chartViewGender">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>150</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="ChartView" name="chartViewRole">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>150</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="ChartView" name="chartViewEnneagram">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>150</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabIntensity">
-      <attribute name="title">
-       <string>Intensity</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="ChartView" name="chartViewIntensity"/>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab">
-      <attribute name="title">
-       <string>Tension</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <property name="spacing">
-        <number>3</number>
-       </property>
-       <property name="leftMargin">
-        <number>2</number>
-       </property>
-       <property name="topMargin">
-        <number>2</number>
-       </property>
-       <property name="rightMargin">
-        <number>2</number>
-       </property>
-       <property name="bottomMargin">
-        <number>2</number>
-       </property>
-       <item>
-        <widget class="ChartView" name="chartViewTension"/>
-       </item>
-      </layout>
-     </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="ChartView" name="chartViewIntensity">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>200</height>
+      </size>
+     </property>
     </widget>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Subtitle</class>
-   <extends>QWidget</extends>
+   <class>ChartView</class>
+   <extends>QGraphicsView</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>
-   <class>ChartView</class>
-   <extends>QGraphicsView</extends>
+   <class>Subtitle</class>
+   <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
   <customwidget>

@@ -53,18 +53,13 @@ class ConflictReport(AbstractReport, Ui_ConflictReport):
         self.chartViewEnneagram.setChart(self.chartEnneagram)
         self.chartIntensity = ConflictIntensityChart(self.novel)
         self.chartViewIntensity.setChart(self.chartIntensity)
-        self.chartTension = TensionChart(self.novel)
-        self.chartViewTension.setChart(self.chartTension)
 
-        self.tabWidget.setCurrentWidget(self.tabTypes)
-
-        self.display()
+        self.refresh()
 
     @overrides
-    def display(self):
+    def refresh(self):
         self.wdgCharacterSelector.setCharacters(self.novel.agenda_characters(), checkAll=False)
         self.chartIntensity.refresh()
-        self.chartTension.refresh()
 
     def _characterChanged(self, character: Character, toggled: bool):
         if not toggled:

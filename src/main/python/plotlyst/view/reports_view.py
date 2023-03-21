@@ -39,6 +39,7 @@ from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsVi
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.report.character import CharacterReport
+from src.main.python.plotlyst.view.report.conflict import ConflictReport
 from src.main.python.plotlyst.view.report.manuscript import ManuscriptReport
 from src.main.python.plotlyst.view.report.scene import SceneReport
 
@@ -115,6 +116,19 @@ class ScenesReportPage(ReportPage):
         return SceneReport(self._novel)
 
 
+class ConflictsReportPage(ReportPage):
+    def __init__(self, novel: Novel, parent=None):
+        super(ConflictsReportPage, self).__init__(novel, parent)
+        event_dispatcher.register(self, SceneChangedEvent)
+        event_dispatcher.register(self, SceneDeletedEvent)
+        event_dispatcher.register(self, CharacterChangedEvent)
+        event_dispatcher.register(self, CharacterDeletedEvent)
+
+    @overrides
+    def _initReport(self):
+        return ConflictReport(self._novel)
+
+
 class ArcReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ArcReportPage, self).__init__(novel, parent)
@@ -167,6 +181,7 @@ class ReportsView(AbstractNovelView):
         self.ui.iconReports.setIcon(IconRegistry.reports_icon())
         self.ui.btnCharacters.setIcon(IconRegistry.character_icon())
         self.ui.btnScenes.setIcon(IconRegistry.scene_icon())
+        self.ui.btnConflict.setIcon(IconRegistry.conflict_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnArc.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
         self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
 
@@ -177,6 +192,8 @@ class ReportsView(AbstractNovelView):
         self.ui.stackedWidget.addWidget(self._page_characters)
         self._page_scenes = ScenesReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_scenes)
+        self._page_conflicts = ConflictsReportPage(self.novel)
+        self.ui.stackedWidget.addWidget(self._page_conflicts)
         self._page_arc = ArcReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_arc)
         self._page_manuscript = ManuscriptReportPage(self.novel)
@@ -184,6 +201,7 @@ class ReportsView(AbstractNovelView):
 
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnCharacters, self._page_characters),
                                                       (self.ui.btnScenes, self._page_scenes),
+                                                      (self.ui.btnConflict, self._page_conflicts),
                                                       (self.ui.btnArc, self._page_arc),
                                                       (self.ui.btnManuscript, self._page_manuscript)])
 
