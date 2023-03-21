@@ -205,7 +205,7 @@ class HomeView(AbstractView):
             self.repo.delete_novel(novel)
             self._novels.remove(novel)
             emit_event(NovelDeletedEvent(self, novel))
-            if novel.id == self._selected_novel.id:
+            if self._selected_novel and novel.id == self._selected_novel.id:
                 self._selected_novel = None
                 self.reset()
             self.refresh()
