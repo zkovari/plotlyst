@@ -163,12 +163,16 @@ class ContainerNode(BaseTreeWidget):
                 self._btnMenu.setVisible(True)
             if self._plusEnabled:
                 self._btnAdd.setVisible(True)
+            if not self._selected and self.isEnabled():
+                self._wdgTitle.setStyleSheet('.QWidget {background-color: #E9E7E7;}')
         elif event.type() == QEvent.Type.Leave:
             if (self._menuEnabled and self._btnMenu.menu().isVisible()) or \
                     (self._plusEnabled and self._btnAdd.menu() and self._btnAdd.menu().isVisible()):
                 return super(ContainerNode, self).eventFilter(watched, event)
             self._btnMenu.setHidden(True)
             self._btnAdd.setHidden(True)
+            if not self._selected:
+                self._wdgTitle.setStyleSheet('')
         elif event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
             if not self._selected:
                 self.select()
