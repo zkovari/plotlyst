@@ -23,7 +23,7 @@ from typing import List, Set, Dict, Optional
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from overrides import overrides
-from qthandy import vspacer
+from qthandy import vspacer, spacer, sp
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor
@@ -62,6 +62,8 @@ class ShelveNode(ContainerNode):
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
         super(ShelveNode, self).__init__(title, icon, parent)
         self.setMenuEnabled(False)
+        sp(self._lblTitle).h_min()
+        self._wdgTitle.layout().addWidget(spacer())
         self._btnAdd.setIcon(IconRegistry.plus_icon(PLOTLYST_MAIN_COLOR))
         self._btnAdd.clicked.connect(self.newNovelRequested.emit)
 
