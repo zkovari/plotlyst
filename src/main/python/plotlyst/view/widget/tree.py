@@ -159,9 +159,9 @@ class ContainerNode(BaseTreeWidget):
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         if event.type() == QEvent.Type.Enter:
-            if self._menuEnabled:
+            if self._menuEnabled and self.isEnabled():
                 self._btnMenu.setVisible(True)
-            if self._plusEnabled:
+            if self._plusEnabled and self.isEnabled():
                 self._btnAdd.setVisible(True)
             if not self._selected and self.isEnabled():
                 self._wdgTitle.setStyleSheet('.QWidget {background-color: #E9E7E7;}')
