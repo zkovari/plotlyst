@@ -23,7 +23,7 @@ from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtWidgets import QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, transparent, incr_font, hbox, btn_popup_menu, italic
+from qthandy import ask_confirmation, transparent, incr_font, hbox, btn_popup_menu, italic, busy
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor
@@ -171,6 +171,7 @@ class HomeView(AbstractView):
                     self.repo.update_doc(novel, scene.manuscript)
 
             self.refresh()
+            self._shelvesTreeView.selectNovel(novel)
 
     def _title_edited(self, title: str):
         if title:

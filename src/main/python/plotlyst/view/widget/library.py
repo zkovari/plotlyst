@@ -133,3 +133,7 @@ class ShelvesTreeView(TreeView):
         if selected:
             self.clearSelection()
             self.novelsShelveSelected.emit()
+
+    def selectNovel(self, novel: NovelDescriptor):
+        self._novels[novel].select()
+        self.novelSelected.emit(novel)
