@@ -146,7 +146,7 @@ class DocumentsTreeView(TreeView):
 
         self.clearSelection()
         self._docs.clear()
-        clear_layout(self)
+        clear_layout(self._centralWidget)
 
         for doc in self._novel.documents:
             wdg = self.__initDocWidget(doc)
