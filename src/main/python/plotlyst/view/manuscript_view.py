@@ -35,7 +35,6 @@ from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.chart import ManuscriptLengthChart
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
@@ -56,10 +55,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnStoryGoal.setText('80,000')
         self.ui.btnTitle.clicked.connect(self._homepage)
         self.ui.btnStoryGoal.clicked.connect(self._homepage)
-
-        self.chart_manuscript = ManuscriptLengthChart()
-        self.ui.chartChaptersLength.setChart(self.chart_manuscript)
-        self.chart_manuscript.refresh(self.novel)
 
         bold(self.ui.lineSceneTitle)
         incr_font(self.ui.lineSceneTitle)
@@ -245,8 +240,6 @@ class ManuscriptView(AbstractNovelView):
     def _homepage(self):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
         self.ui.treeChapters.clearSelection()
-
-        self.chart_manuscript.refresh(self.novel)
 
     def _spellcheck_toggled(self, toggled: bool):
         translucent(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)

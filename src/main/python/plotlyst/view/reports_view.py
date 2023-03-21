@@ -17,8 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from enum import Enum, auto
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import QWidget
@@ -38,6 +39,7 @@ from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsVi
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.report.character import CharacterReport
+from src.main.python.plotlyst.view.report.manuscript import ManuscriptReport
 
 
 class ReportType(Enum):
@@ -50,7 +52,7 @@ class ReportType(Enum):
 report_classes = {ReportType.CHARACTERS: CharacterReport}
 
 
-class ReportPage(QWidget):
+class ReportPage(QWidget, EventListener):
     def __init__(self, novel: Novel, parent=None):
         super(ReportPage, self).__init__(parent)
         self._novel: Novel = novel
@@ -62,43 +64,98 @@ class ReportPage(QWidget):
         self._scrollarea, self._wdgCenter = scrolled(self)
         vbox(self._wdgCenter)
 
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if self._report is None:
+            self._initReport()
+        elif self._refreshNext:
+            self.refresh()
+            self._refreshNext = False
 
-class CharactersReportPage(ReportPage, EventListener):
+    @overrides
+    def event_received(self, event: Event):
+        if self.isVisible():
+            self.refresh()
+        else:
+            self._refreshNext = True
+
+    def refresh(self):
+        self._report.refresh()
+
+    @abstractmethod
+    def _initReport(self):
+        pass
+
+
+class CharactersReportPage(ReportPage):
+
     def __init__(self, novel: Novel, parent=None):
         super(CharactersReportPage, self).__init__(novel, parent)
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
 
     @overrides
-    def showEvent(self, event: QShowEvent) -> None:
-        if self._report is None:
-            self._report = CharacterReport(self._novel)
-            self._wdgCenter.layout().addWidget(self._report)
-        elif self._refreshNext:
-            self._report.refresh()
-            self._refreshNext = False
-
-    @overrides
-    def event_received(self, event: Event):
-        if self.isVisible():
-            self._report.refresh()
-        else:
-            self._refreshNext = True
+    def _initReport(self):
+        self._report = CharacterReport(self._novel)
+        self._wdgCenter.layout().addWidget(self._report)
 
 
 class ScenesReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ScenesReportPage, self).__init__(novel, parent)
+        event_dispatcher.register(self, SceneChangedEvent)
+        event_dispatcher.register(self, SceneDeletedEvent)
+        event_dispatcher.register(self, CharacterChangedEvent)
+        event_dispatcher.register(self, CharacterDeletedEvent)
+
+    @overrides
+    def _initReport(self):
+        self._report = CharacterReport(self._novel)
+        self._wdgCenter.layout().addWidget(self._report)
 
 
 class ArcReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ArcReportPage, self).__init__(novel, parent)
 
+    @overrides
+    def _initReport(self):
+        self._report = CharacterReport(self._novel)
+        self._wdgCenter.layout().addWidget(self._report)
+
 
 class ManuscriptReportPage(ReportPage):
     def __init__(self, novel: Novel, parent=None):
         super(ManuscriptReportPage, self).__init__(novel, parent)
+        event_dispatcher.register(self, SceneChangedEvent)
+        event_dispatcher.register(self, SceneDeletedEvent)
+        self._wc_cache: List[int] = []
+
+    @overrides
+    def _initReport(self):
+        self._report = ManuscriptReport(self._novel)
+        self._wdgCenter.layout().addWidget(self._report)
+        self._cacheWordCounts()
+
+    @overrides
+    def showEvent(self, event: QShowEvent) -> None:
+        if not self._refreshNext:
+            prev_wc = []
+            prev_wc.extend(self._wc_cache)
+            self._cacheWordCounts()
+            if prev_wc != self._wc_cache:
+                self._refreshNext = True
+        super(ManuscriptReportPage, self).showEvent(event)
+
+    @overrides
+    def refresh(self):
+        super(ManuscriptReportPage, self).refresh()
+        self._cacheWordCounts()
+
+    def _cacheWordCounts(self):
+        self._wc_cache.clear()
+        for scene in self._novel.scenes:
+            self._wc_cache.append(scene.manuscript.statistics.wc if scene.manuscript else 0)
 
 
 class ReportsView(AbstractNovelView):
