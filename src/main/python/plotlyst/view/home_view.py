@@ -96,7 +96,7 @@ class HomeView(AbstractView):
 
         self._shelvesTreeView = ShelvesTreeView()
         hbox(self.ui.wdgShelvesParent)
-        self.ui.splitterLibrary.setSizes([100, 500])
+        self.ui.splitterLibrary.setSizes([150, 500])
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
         self._shelvesTreeView.novelSelected.connect(self._novel_selected)
         self._shelvesTreeView.novelChanged.connect(self._novel_changed_in_browser)
