@@ -17,10 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from functools import partial
 from typing import Optional, List
 
-from PyQt6.QtCharts import QPieSeries, QPolarChart, QCategoryAxis, QLineSeries, QAreaSeries
+from PyQt6.QtCharts import QPolarChart, QCategoryAxis, QLineSeries, QAreaSeries
 from PyQt6.QtCharts import QValueAxis, QSplineSeries
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QPen
@@ -30,7 +29,6 @@ from qthandy import clear_layout, vspacer, hbox, transparent, vbox
 
 from src.main.python.plotlyst.core.domain import Novel, Character, Scene, SceneType
 from src.main.python.plotlyst.core.text import html
-from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.character_arc_report_ui import Ui_CharacterArcReport
 from src.main.python.plotlyst.view.generated.report.character_report_ui import Ui_CharacterReport
@@ -46,88 +44,40 @@ class CharacterReport(AbstractReport, Ui_CharacterReport):
     def __init__(self, novel: Novel, parent=None):
         super(CharacterReport, self).__init__(novel, parent)
 
-        self.btnAct1.setIcon(IconRegistry.act_one_icon())
-        self.btnAct2.setIcon(IconRegistry.act_two_icon())
-        self.btnAct3.setIcon(IconRegistry.act_three_icon())
-
-        self._povChart = PovDistributionChart()
-        self.chartView.setChart(self._povChart)
-        self.btnAct1.toggled.connect(partial(self._povChart.toggleAct, 1))
-        self.btnAct2.toggled.connect(partial(self._povChart.toggleAct, 2))
-        self.btnAct3.toggled.connect(partial(self._povChart.toggleAct, 3))
-        self._povChart.refresh(novel)
-
         self._chartRoles = SupporterRoleChart()
-        self._chartRoles.refresh(novel.characters)
         self.chartViewRoles.setChart(self._chartRoles)
 
         self._chartGenderAll = GenderCharacterChart()
-        self._chartGenderAll.refresh(novel.characters)
         self.chartViewGenderAll.setChart(self._chartGenderAll)
 
         self._chartGenderMajor = GenderCharacterChart()
         self._chartGenderMajor.setTitle(html('Gender per major roles').bold())
         self._chartGenderMajor.setLabelsVisible(False)
-        self._chartGenderMajor.refresh(novel.major_characters())
         self.chartViewGenderMajor.setChart(self._chartGenderMajor)
 
         self._chartGenderSecondary = GenderCharacterChart()
         self._chartGenderSecondary.setTitle(html('Gender per secondary roles').bold())
         self._chartGenderSecondary.setLabelsVisible(False)
-        self._chartGenderSecondary.refresh(novel.secondary_characters())
         self.chartViewGenderSecondary.setChart(self._chartGenderSecondary)
 
         self._chartGenderMinor = GenderCharacterChart()
         self._chartGenderMinor.setTitle(html('Gender per minor roles').bold())
         self._chartGenderMinor.setLabelsVisible(False)
-        self._chartGenderMinor.refresh(novel.minor_characters())
         self.chartViewGenderMinor.setChart(self._chartGenderMinor)
 
         self._chartAge = AgeChart()
         self.chartViewAge.setChart(self._chartAge)
-        self._chartAge.refresh(novel.characters)
 
-    @overrides
-    def display(self):
-        pass
-
-
-class PovDistributionChart(BaseChart):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.createDefaultAxes()
-        self.setTitle("POV Distribution")
-
-        self.pov_number = {}
-        self._acts_filter = {1: True, 2: True, 3: True}
-
-    def toggleAct(self, act: int, toggled: bool):
-        self._acts_filter[act] = toggled
         self.refresh()
 
-    def refresh(self, novel: Novel):
-        for k in self.pov_number.keys():
-            self.pov_number[k] = 0
-
-        for scene in novel.scenes:
-            if not self._acts_filter[acts_registry.act(scene)]:
-                continue
-            if scene.pov and scene.pov.name not in self.pov_number.keys():
-                self.pov_number[scene.pov.name] = 0
-            if scene.pov:
-                self.pov_number[scene.pov.name] += 1
-
-        series = QPieSeries()
-        for k, v in self.pov_number.items():
-            if v:
-                slice = series.append(k, v)
-                slice.setLabelVisible()
-
-        for slice in series.slices():
-            slice.setLabel(slice.label() + " {:.1f}%".format(100 * slice.percentage()))
-
-        self.removeAllSeries()
-        self.addSeries(series)
+    @overrides
+    def refresh(self):
+        self._chartRoles.refresh(self.novel.characters)
+        self._chartGenderAll.refresh(self.novel.characters)
+        self._chartGenderMajor.refresh(self.novel.major_characters())
+        self._chartGenderSecondary.refresh(self.novel.secondary_characters())
+        self._chartGenderMinor.refresh(self.novel.minor_characters())
+        self._chartAge.refresh(self.novel.characters)
 
 
 class AgeChart(PolarBaseChart):
@@ -137,18 +87,18 @@ class AgeChart(PolarBaseChart):
 
         self._rad_axis = QValueAxis()
         self._rad_axis.setLabelsVisible(False)
-        self.addAxis(self._rad_axis, QPolarChart.PolarOrientation.PolarOrientationRadial)
         self._angular_axis = QCategoryAxis()
         self._angular_axis.setRange(0, 45)
         self._angular_axis.append(icon_to_html_img(IconRegistry.baby_icon()), 3)
         self._angular_axis.append(icon_to_html_img(IconRegistry.child_icon()), 10)
         self._angular_axis.append(icon_to_html_img(IconRegistry.teenager_icon()), 15)
         self._angular_axis.append(icon_to_html_img(IconRegistry.adult_icon()), 35)
-        self.addAxis(self._angular_axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
 
     def refresh(self, characters: List[Character]):
-        if self.series():
-            self.removeAllSeries()
+        self.reset()
+
+        self.addAxis(self._rad_axis, QPolarChart.PolarOrientation.PolarOrientationRadial)
+        self.addAxis(self._angular_axis, QPolarChart.PolarOrientation.PolarOrientationAngular)
 
         pen = QPen()
         pen.setWidth(2)
@@ -178,10 +128,6 @@ class AgeChart(PolarBaseChart):
         if ages:
             self._rad_axis.setRange(0, max(ages.values()))
 
-        # scatter_series = QScatterSeries()
-        # scatter_series.append(18, 3)
-
-        # self.addSeries(scatter_series)
         self.addSeries(upper_series)
         self.addSeries(lower_series)
 
@@ -190,8 +136,6 @@ class AgeChart(PolarBaseChart):
         series.setPen(pen)
 
         self.addSeries(series)
-        # scatter_series.attachAxis(self._rad_axis)
-        # scatter_series.attachAxis(self._angular_axis)
         series.attachAxis(self._rad_axis)
         series.attachAxis(self._angular_axis)
 
@@ -235,10 +179,10 @@ class CharacterArcReport(AbstractReport, Ui_CharacterArcReport):
 
         self.character: Optional[Character] = None
 
-        self.display()
+        self.refresh()
 
     @overrides
-    def display(self):
+    def refresh(self):
         self.wdgCharacterSelector.setCharacters(self.novel.agenda_characters(), checkAll=False)
 
     def _characterChanged(self, character: Character, toggled: bool):
