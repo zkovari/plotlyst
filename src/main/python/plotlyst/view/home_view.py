@@ -31,6 +31,7 @@ from src.main.python.plotlyst.event.core import emit_event, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
@@ -159,10 +160,15 @@ class HomeView(AbstractView):
             self._iconSelector.reset()
 
     def _add_new_novel(self):
+        @busy
+        def flush():
+            flush_or_fail()
+
         novel = StoryCreationDialog(self.widget).display()
         if novel:
             self.repo.insert_novel(novel)
             self._novels.append(novel)
+            flush()
             for character in novel.characters:
                 self.repo.insert_character(novel, character)
             for scene in novel.scenes:
