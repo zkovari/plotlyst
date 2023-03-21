@@ -40,10 +40,10 @@ from src.main.python.plotlyst.events import SceneSelectedEvent, SceneDeletedEven
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, ChildNode
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
-class SceneWidget(ChildNode):
+class SceneWidget(ContainerNode):
 
     def __init__(self, scene: Scene, novel: Novel, parent=None):
         super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent)

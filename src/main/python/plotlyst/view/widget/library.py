@@ -28,10 +28,10 @@ from qthandy import vspacer, spacer, sp
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, ChildNode
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
-class NovelNode(ChildNode):
+class NovelNode(ContainerNode):
     def __init__(self, novel: NovelDescriptor, parent=None):
         super(NovelNode, self).__init__(novel.title, parent=parent)
         self._novel = novel

@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize
-from PyQt6.QtGui import QIcon, QMouseEvent, QEnterEvent
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton, QMenu
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
@@ -139,36 +139,6 @@ class BaseTreeWidget(QWidget):
                 ''')
         else:
             self._wdgTitle.setStyleSheet('')
-
-
-class ChildNode(BaseTreeWidget):
-
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
-        super(ChildNode, self).__init__(title, icon, parent)
-        hbox(self)
-        self.layout().addWidget(self._wdgTitle)
-
-    @overrides
-    def enterEvent(self, event: QEnterEvent) -> None:
-        if self._menuEnabled:
-            self._btnMenu.setVisible(True)
-        if self._plusEnabled:
-            self._btnAdd.setVisible(True)
-
-    @overrides
-    def leaveEvent(self, event: QEvent) -> None:
-        if self._btnMenu.menu().isVisible() or self._btnAdd.menu() and self._btnAdd.menu().isVisible():
-            return
-        if self._menuEnabled:
-            self._btnMenu.setHidden(True)
-        if self._plusEnabled:
-            self._btnAdd.setHidden(True)
-
-    @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        if not self._selected:
-            self.select()
-            self.selectionChanged.emit(self._selected)
 
 
 class ContainerNode(BaseTreeWidget):
