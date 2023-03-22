@@ -269,7 +269,7 @@ class CircularProgressBar(QWidget):
             self.setToolTip('0%')
         elif self.value() == self.maxValue():
             self.setToolTip('100%')
-        elif self._tooltipMode == ProgressTooltipMode.NUMBERS:
-            self.setToolTip(f'{self.value()} out of {self.maxValue()}')
-        else:
+        elif 0 < self.value() < 1 or self._tooltipMode == ProgressTooltipMode.PERCENTAGE:
             self.setToolTip(f'{int(self.value() / self.maxValue() * 100)}%')
+        else:
+            self.setToolTip(f'{self.value():g} out of {self.maxValue()}')
