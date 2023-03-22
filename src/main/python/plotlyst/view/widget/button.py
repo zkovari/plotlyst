@@ -267,7 +267,7 @@ class ToolbarButton(QToolButton):
         qtanim.colorize(self, color=QColor('#7B2CBF'))
 
 
-class CollapseButton(QToolButton):
+class CollapseButton(QPushButton):
     def __init__(self, idle: Qt.Edge, checked: Qt.Edge, parent=None):
         super(CollapseButton, self).__init__(parent)
         self._idleIcon = self._icon(idle)
