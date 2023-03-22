@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSignal, QSize, Qt
+from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QObject
 from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtWidgets import QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, transparent, incr_font, hbox, btn_popup_menu, italic, busy
+from qthandy import ask_confirmation, transparent, incr_font, hbox, btn_popup_menu, italic, busy, retain_when_hidden
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor
@@ -80,6 +80,8 @@ class HomeView(AbstractView):
         incr_font(self.ui.lineNovelTitle, 10)
         self.ui.lineNovelTitle.textEdited.connect(self._title_edited)
         self.ui.btnNovelSettings.setIcon(IconRegistry.dots_icon(vertical=True))
+        retain_when_hidden(self.ui.btnNovelSettings)
+        self.ui.btnNovelSettings.setHidden(True)
 
         transparent(self.ui.lineSubtitle)
         italic(self.ui.lineSubtitle)
@@ -105,6 +107,8 @@ class HomeView(AbstractView):
         self._shelvesTreeView.newNovelRequested.connect(self._add_new_novel)
         self._shelvesTreeView.novelDeletionRequested.connect(self._on_delete)
 
+        self.ui.pageNovelDisplay.installEventFilter(self)
+
         incr_font(self.ui.btnAddNewStoryMain, 8)
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
 
@@ -125,6 +129,14 @@ class HomeView(AbstractView):
 
     def shelves(self) -> ShelvesTreeView:
         return self._shelvesTreeView
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Enter:
+            self.ui.btnNovelSettings.setVisible(True)
+        elif event.type() == QEvent.Type.Leave:
+            self.ui.btnNovelSettings.setHidden(True)
+        return super().eventFilter(watched, event)
 
     @overrides
     def event_received(self, event: Event):
