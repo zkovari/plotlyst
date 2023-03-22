@@ -1813,7 +1813,21 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
             if not char.disabled_template_headers.get(str(header.header.id), header.header.enabled):
                 continue
             if value.value:
-                headers[header] = headers[header] + 1
+                if isinstance(value.value, dict):
+                    count = 0
+                    values = 0
+                    for _, attrs in value.value.items():
+                        count += 1
+                        if attrs.get('value'):
+                            values += 1
+                        for secondary in attrs.get('secondary', []):
+                            count += 1
+                            if secondary.get('value'):
+                                values += 1
+
+                    headers[header] = headers[header] + values / count
+                else:
+                    headers[header] = headers[header] + 1
 
         overall_progress = CircularProgressBar(maxValue=2, parent=self)
         overall_progress.setTooltipMode(ProgressTooltipMode.PERCENTAGE)
