@@ -45,7 +45,7 @@ from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui impo
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
 from src.main.python.plotlyst.view.widget.labels import TraitLabel, LabelsEditorWidget
@@ -329,12 +329,8 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
     def __init__(self, field: TemplateField, parent=None):
         super(HeaderTemplateDisplayWidget, self).__init__(field, parent)
         hbox(self, margin=0, spacing=0)
-        self.btnHeader = QPushButton()
-        pointy(self.btnHeader)
+        self.btnHeader = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
         self.btnHeader.setIconSize(QSize(16, 16))
-        self.btnHeader.setCheckable(True)
-        self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-down'))
-        transparent(self.btnHeader)
         bold(self.btnHeader)
         underline(self.btnHeader)
         self.btnHeader.setText(field.name)
@@ -384,10 +380,6 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
     def _toggleCollapse(self, checked: bool):
         for wdg in self.children:
             wdg.setHidden(checked)
-        if checked:
-            self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-right'))
-        else:
-            self.btnHeader.setIcon(IconRegistry.from_name('mdi.chevron-down'))
 
     def setHeaderEnabled(self, enabled: bool):
         self.collapse(not enabled)
