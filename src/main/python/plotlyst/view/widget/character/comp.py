@@ -77,6 +77,7 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
         self.setPlaceholderText('Character summary...')
         self.setMaximumSize(250, 100)
         self.setMinimumWidth(200)
+        self.setTabChangesFocus(True)
 
         self.repo = RepositoryPersistenceManager.instance()
         self.refresh()
@@ -106,6 +107,7 @@ class CharacterOverviewWidget(QWidget, EventListener):
         self._avatar = QLabel(self)
         set_avatar(self._avatar, self._character, size=118)
         self._roleIcon = RoleIcon(self)
+        self._roleIcon.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         if self._character.role:
             self._roleIcon.setRole(self._character.role, showText=True)
 
