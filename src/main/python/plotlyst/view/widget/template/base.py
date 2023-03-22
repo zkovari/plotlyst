@@ -32,7 +32,7 @@ from src.main.python.plotlyst.view.common import emoji_font
 
 
 class TemplateWidgetBase(QFrame):
-    valueFilled = pyqtSignal()
+    valueFilled = pyqtSignal(float)
     valueReset = pyqtSignal()
 
     def __init__(self, field: TemplateField, parent=None):

@@ -350,7 +350,7 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
             self.layout().addWidget(self._toggle)
 
         self.children: List[TemplateWidgetBase] = []
-        self.progressStatuses: Dict[TemplateWidgetBase] = {}
+        self.progressStatuses: Dict[TemplateWidgetBase, float] = {}
 
         self.btnHeader.toggled.connect(self._toggleCollapse)
 
@@ -393,13 +393,12 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         self.setHeaderEnabled(enabled)
         self.headerEnabledChanged.emit(enabled)
 
-    def _valueFilled(self, widget: TemplateWidgetBase):
-        if self.progressStatuses[widget]:
+    def _valueFilled(self, widget: TemplateWidgetBase, value: float):
+        if self.progressStatuses[widget] == value:
             return
 
-        self.progressStatuses[widget] = True
-        value = self.progress.value()
-        self.progress.setValue(value + 1)
+        self.progressStatuses[widget] = value
+        self.progress.setValue(sum(self.progressStatuses.values()))
 
         # toggle collapse before display when editor is opened
         if not self.isVisible():
@@ -409,9 +408,8 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         if not self.progressStatuses[widget]:
             return
 
-        self.progressStatuses[widget] = False
-        value = self.progress.value()
-        self.progress.setValue(value - 1)
+        self.progressStatuses[widget] = 0
+        self.progress.setValue(sum(self.progressStatuses.values()))
 
 
 class LineTemplateDisplayWidget(TemplateDisplayWidget):
@@ -446,7 +444,7 @@ class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
 
     def _textChanged(self, text: str):
         if text:
-            self.valueFilled.emit()
+            self.valueFilled.emit(1)
         else:
             self.valueReset.emit()
 
@@ -461,6 +459,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setPlaceholderText(field.placeholder)
         self.wdgEditor.setToolTip(field.description if field.description else field.placeholder)
         self.setMaximumWidth(600)
+
+        self._filledBefore: bool = False
 
         # self.btnNotes = QToolButton()
 
@@ -495,10 +495,12 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setText(value)
 
     def _textChanged(self):
-        if self.wdgEditor.toPlainText():
-            self.valueFilled.emit()
+        if self.wdgEditor.toPlainText() and not self._filledBefore:
+            self.valueFilled.emit(1)
+            self._filledBefore = True
         else:
             self.valueReset.emit()
+            self._filledBefore = False
 
 
 class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
@@ -530,7 +532,7 @@ class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
 
     def _valueChanged(self, value: int):
         if value:
-            self.valueFilled.emit()
+            self.valueFilled.emit(1)
         else:
             self.valueReset.emit()
 
@@ -596,7 +598,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.lblDesire.setText(new.meta['desire'])
         self.lblFear.setText(new.meta['fear'])
 
-        self.valueFilled.emit()
+        self.valueFilled.emit(1)
 
 
 class MbtiFieldWidget(TemplateFieldWidgetBase):
@@ -620,7 +622,7 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
     def setValue(self, value: Any):
         self.wdgEditor.setValue(value)
         if value:
-            self.valueFilled.emit()
+            self.valueFilled.emit(1)
 
     def _selectionChanged(self, old: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
                           animated: bool = True):
@@ -628,7 +630,7 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
             return
 
-        self.valueFilled.emit()
+        self.valueFilled.emit(1)
 
 
 class TraitsFieldWidget(TemplateFieldWidgetBase):
@@ -651,7 +653,7 @@ class TraitsFieldWidget(TemplateFieldWidgetBase):
 
     def _selectionChanged(self):
         if self.wdgEditor.selectedItems():
-            self.valueFilled.emit()
+            self.valueFilled.emit(1)
         else:
             self.valueReset.emit()
 
@@ -676,7 +678,7 @@ class LabelsTemplateFieldWidget(TemplateFieldWidgetBase):
 
     def _selectionChanged(self):
         if self.wdgEditor.selectedItems():
-            self.valueFilled.emit()
+            self.valueFilled.emit(1)
         else:
             self.valueReset.emit()
 
@@ -711,6 +713,7 @@ class FieldToggle(QWidget):
 
 class FieldSelector(QWidget):
     toggled = pyqtSignal(TemplateField, bool)
+    clicked = pyqtSignal(TemplateField, bool)
 
     def __init__(self, fields: List[TemplateField], parent=None):
         super().__init__(parent)
@@ -722,6 +725,7 @@ class FieldSelector(QWidget):
             self._fields[field] = wdg
             self.layout().addWidget(wdg)
             wdg.toggle.toggled.connect(partial(self.toggled.emit, field))
+            wdg.toggle.clicked.connect(partial(self.clicked.emit, field))
 
     def toggle(self, field: TemplateField):
         self._fields[field].toggle.toggle()
@@ -729,6 +733,7 @@ class FieldSelector(QWidget):
 
 class _PrimaryFieldWidget(QWidget):
     removed = pyqtSignal()
+    valueChanged = pyqtSignal()
 
     def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], value: str = '', parent=None):
         super().__init__(parent)
@@ -739,8 +744,11 @@ class _PrimaryFieldWidget(QWidget):
             self._secondaryFieldWidgets[sf] = None
         hbox(self, 0, 2)
         self._primaryWdg = SmallTextTemplateFieldWidget(field)
+        self._primaryWdg.valueFilled.connect(self.valueChanged.emit)
+        self._primaryWdg.valueReset.connect(self.valueChanged.emit)
 
         btnSecondary = QToolButton()
+        btnSecondary.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         transparent(btnSecondary)
         pointy(btnSecondary)
         btnSecondary.setIconSize(QSize(22, 22))
@@ -764,6 +772,7 @@ class _PrimaryFieldWidget(QWidget):
         menu.addAction(action)
         btn_popup_menu(btnSecondary, menu)
         self._selector.toggled.connect(self._toggleSecondaryField)
+        self._selector.clicked.connect(self._clickSecondaryField)
         btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary, leaveOpacity=0.7))
 
         self._secondaryWdgContainer = QWidget()
@@ -802,6 +811,8 @@ class _PrimaryFieldWidget(QWidget):
 
         if toggled:
             wdg = SmallTextTemplateFieldWidget(secondary)
+            wdg.valueFilled.connect(self.valueChanged.emit)
+            wdg.valueReset.connect(self.valueChanged.emit)
             self._secondaryFieldWidgets[secondary] = wdg
             item = self._secondaryWdgContainer.layout().itemAt(i)
             self._secondaryWdgContainer.layout().replaceWidget(item.widget(), wdg)
@@ -809,6 +820,9 @@ class _PrimaryFieldWidget(QWidget):
             self._secondaryWdgContainer.layout().replaceWidget(self._secondaryFieldWidgets[secondary], spacer())
             gc(self._secondaryFieldWidgets[secondary])
             self._secondaryFieldWidgets[secondary] = None
+
+    def _clickSecondaryField(self):
+        self.valueChanged.emit()
 
 
 class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
@@ -869,6 +883,8 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
                 if secondary_field:
                     wdg.setSecondaryField(secondary_field, secondary[self.VALUE_KEY])
 
+        self._valueChanged()
+
     @abstractmethod
     def _primaryFields(self) -> List[TemplateField]:
         pass
@@ -895,6 +911,7 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         wdg = _PrimaryFieldWidget(field, self._secondaryFields(field))
         self._primaryWidgets.append(wdg)
         wdg.removed.connect(partial(self._removePrimaryField, wdg))
+        wdg.valueChanged.connect(self._valueChanged)
         if self._layout.count() > 2:
             self._layout.insertWidget(self._layout.count() - 2, line())
         self._layout.insertWidget(self._layout.count() - 2, wdg)
@@ -905,6 +922,19 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._primaryWidgets.remove(wdg)
         self._layout.removeWidget(wdg)
         gc(wdg)
+
+    def _valueChanged(self):
+        count = 0
+        value = 0
+        for wdg in self._primaryWidgets:
+            count += 1
+            if wdg.value():
+                value += 1
+            for _, v in wdg.secondaryFields():
+                count += 1
+                if v:
+                    value += 1
+        self.valueFilled.emit(value / count if count else 0)
 
 
 class GmcFieldWidget(MultiLayerComplexTemplateWidgetBase):
