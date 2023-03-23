@@ -25,7 +25,6 @@ def test_empty_window(qtbot, window: MainWindow):
     assert not client.novels()
 
     assert window.home_mode.isChecked()
-    assert not window.manuscript_mode.isEnabled()
     assert not window.outline_mode.isEnabled()
     assert_views(window, visible=False)
 
@@ -60,4 +59,4 @@ def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
 
 
 def test_manuscript_mode(qtbot, filled_window: MainWindow):
-    filled_window.manuscript_mode.click()
+    filled_window.btnManuscript.click()

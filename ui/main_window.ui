@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>865</width>
-    <height>665</height>
+    <width>754</width>
+    <height>577</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -65,7 +65,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QWidget" name="widget" native="true">
+         <widget class="QWidget" name="wdgNavBar" native="true">
           <layout class="QVBoxLayout" name="verticalLayout">
            <property name="spacing">
             <number>1</number>
@@ -422,7 +422,7 @@
            <item>
             <widget class="QToolButton" name="btnManuscript">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="minimumSize">
               <size>
@@ -678,6 +678,25 @@
               </property>
              </layout>
             </widget>
+            <widget class="QWidget" name="pageManuscript">
+             <layout class="QVBoxLayout" name="verticalLayout_15">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+             </layout>
+            </widget>
             <widget class="QWidget" name="pageAnalysis">
              <layout class="QVBoxLayout" name="verticalLayout_13">
               <property name="spacing">
@@ -705,44 +724,6 @@
       </widget>
       <widget class="QWidget" name="pageHome">
        <layout class="QVBoxLayout" name="verticalLayout_11">
-        <property name="spacing">
-         <number>3</number>
-        </property>
-        <property name="leftMargin">
-         <number>2</number>
-        </property>
-        <property name="topMargin">
-         <number>2</number>
-        </property>
-        <property name="rightMargin">
-         <number>2</number>
-        </property>
-        <property name="bottomMargin">
-         <number>2</number>
-        </property>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="pageManuscript">
-       <layout class="QVBoxLayout" name="verticalLayout_12">
-        <property name="spacing">
-         <number>3</number>
-        </property>
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="pageReports">
-       <layout class="QVBoxLayout" name="verticalLayout_14">
         <property name="spacing">
          <number>3</number>
         </property>
@@ -834,7 +815,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>865</width>
+     <width>754</width>
      <height>19</height>
     </rect>
    </property>

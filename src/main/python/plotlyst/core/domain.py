@@ -1501,6 +1501,7 @@ class ScenesView(Enum):
     SCENES = 'scenes'
     WORLD_BUILDING = 'world_building'
     DOCS = 'docs'
+    MANUSCRIPT = 'manuscript'
     BOARD = 'board'
     REPORTS = 'reports'
 
