@@ -33,7 +33,7 @@ from nltk import WhitespaceTokenizer
 from overrides import overrides
 from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout, gc
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
-from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState
+from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState, remove_font
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
@@ -449,8 +449,9 @@ class ManuscriptTextEditor(RichTextEditor):
     def _initTextEdit(self) -> EnhancedTextEdit:
         _textedit = ManuscriptTextEdit()
         _textedit.zoomIn(_textedit.font().pointSize() * 0.34)
-        _textedit.textChanged.connect(self._textChanged)
+        _textedit.setBlockFormat(130, textIndent=20)
         _textedit.selectionChanged.connect(self.selectionChanged.emit)
+        _textedit.textChanged.connect(self._textChanged)
         return _textedit
 
     def setGrammarCheckEnabled(self, enabled: bool):
@@ -468,7 +469,6 @@ class ManuscriptTextEditor(RichTextEditor):
 
         self._addScene(scene)
 
-        self._format()
         self.textEdit.document().clearUndoRedoStacks()
         self._scenes.append(scene)
 
@@ -488,7 +488,6 @@ class ManuscriptTextEditor(RichTextEditor):
                 self.textEdit.textCursor().insertBlock()
         self._scenes.extend(scenes)
 
-        self._format()
         self.textEdit.document().clearUndoRedoStacks()
 
     def clear(self):
