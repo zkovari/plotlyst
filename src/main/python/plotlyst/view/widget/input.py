@@ -437,9 +437,7 @@ class DocumentTextEditor(RichTextEditor):
 
         self.highlighter = self._initHighlighter()
 
-        if app_env.is_linux():
-            family = 'Noto Sans Mono'
-        elif app_env.is_mac():
+        if app_env.is_mac():
             family = 'Helvetica Neue'
         else:
             family = 'Helvetica'

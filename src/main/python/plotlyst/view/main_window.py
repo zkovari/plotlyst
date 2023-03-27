@@ -28,6 +28,7 @@ from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc
 from qthandy.filter import InstantTooltipEventFilter
+from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART, PLOTLYST_MAIN_COLOR
@@ -85,11 +86,16 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#8E9AAF'))
         QApplication.setPalette(palette)
 
+        if app_env.is_mac():
+            DEFAULT_FONT_FAMILIES.insert(0, 'Palatino')
+        elif app_env.is_linux():
+            DEFAULT_FONT_FAMILIES.insert(0, 'Noto Sans Mono')
+
         for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze]:
             lbl.setStyleSheet(f'color: {PLOTLYST_MAIN_COLOR};')
             font: QFont = lbl.font()
             font.setPointSize(font.pointSize() - 2)
-            font.setFamily('Arial')
+            font.setFamily('Helvetica')
             font.setUnderline(True)
             font.setBold(True)
             lbl.setFont(font)
