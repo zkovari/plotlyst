@@ -32,7 +32,7 @@ from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyl
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qthandy import transparent, hbox, margins
-from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode
+from qttextedit import EnhancedTextEdit, RichTextEditor, DashInsertionMode, remove_font
 
 from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
@@ -479,7 +479,7 @@ class DocumentTextEditor(RichTextEditor):
         return GrammarHighlighter(self.textEdit.document(), checkEnabled=False)
 
     def setText(self, content: str, title: str = '', icon: Optional[QIcon] = None, title_read_only: bool = False):
-        self.textEdit.setHtml(content)
+        self.textEdit.setHtml(remove_font(content))
         self.textEdit.setFocus()
         self._textTitle.setText(title)
         self._textTitle.setReadOnly(title_read_only)
