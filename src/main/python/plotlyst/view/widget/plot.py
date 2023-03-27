@@ -26,7 +26,8 @@ from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QAbstractButton, QTextEdit
 from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup, vbox, transparent
+    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup, vbox, transparent, \
+    clear_layout, vspacer
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DisabledClickEventFilter, \
     InstantTooltipEventFilter
 
@@ -49,6 +50,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
+from src.main.python.plotlyst.view.widget.list import ListItemWidget
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
@@ -154,6 +157,60 @@ class PlotPrincipleEditor(QWidget):
                 self._btnSet.setEnabled(True)
             else:
                 self._btnSet.setDisabled(True)
+
+
+class PlotListItemWidget(ListItemWidget):
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotListItemWidget, self).__init__(parent)
+        self._plot = plot
+        self._lineEdit.setReadOnly(True)
+        self.refresh()
+
+    def refresh(self):
+        self._lineEdit.setText(self._plot.text)
+
+
+class PlotNode(ContainerNode):
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotNode, self).__init__(plot.text, parent)
+        self._plot = plot
+        self.setPlusButtonEnabled(False)
+
+        self.refresh()
+
+    def refresh(self):
+        if self._plot.icon:
+            self._icon.setIcon(IconRegistry.from_name(self._plot.icon, self._plot.icon_color))
+            self._icon.setVisible(True)
+        else:
+            self._icon.setHidden(True)
+
+        self._lblTitle.setText(self._plot.text)
+
+
+class PlotList(TreeView):
+    def __init__(self, novel: Novel, parent=None):
+        super(PlotList, self).__init__(parent)
+        self._novel = novel
+
+        self.refresh()
+
+    def refresh(self):
+        clear_layout(self._centralWidget, auto_delete=False)
+
+        for plot in self._novel.plots:
+            wdg = self.__initPlotWidget(plot)
+            self._centralWidget.layout().addWidget(wdg)
+
+        self._centralWidget.layout().addWidget(vspacer())
+
+    def addPlot(self, plot: Plot):
+        wdg = self.__initPlotWidget(plot)
+        self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, wdg)
+
+    def __initPlotWidget(self, plot: Plot) -> PlotNode:
+        node = PlotNode(plot)
+        return node
 
 
 class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
@@ -375,10 +432,12 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         super(PlotEditor, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
-        flow(self.scrollAreaWidgetContents, spacing=15)
-        margins(self.scrollAreaWidgetContents, left=15)
-        for plot in self.novel.plots:
-            self._addPlotWidget(plot)
+
+        self._wdgList = PlotList(self.novel)
+        self.wdgPlotListParent.layout().addWidget(self._wdgList)
+
+        # for plot in self.novel.plots:
+        #     self._addPlotWidget(plot)
 
         italic(self.btnAdd)
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
@@ -428,8 +487,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             number_of_plots = len([x for x in self.novel.plots if x.plot_type == plot_type])
             plot.icon_color = plot_colors[(number_of_plots - 1) % len(plot_colors)]
 
-        widget = self._addPlotWidget(plot)
-        widget.lineName.setFocus()
+        self._wdgList.addPlot(plot)
 
         self.repo.update_novel(self.novel)
 
