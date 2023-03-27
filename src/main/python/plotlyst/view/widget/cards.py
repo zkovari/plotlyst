@@ -401,6 +401,7 @@ class CardsView(QFrame):
         self._resizeCard(self._dragPlaceholder)
         translucent(self._dragPlaceholder)
         self._dragPlaceholder.setHidden(True)
+        self._dragPlaceholder.setParent(self)
         self._dragPlaceholder.setAcceptDrops(True)
         self._dragPlaceholder.installEventFilter(
             DropEventFilter(self._dragPlaceholder, mimeTypes=[card.mimeType()], droppedSlot=self._dropped))
