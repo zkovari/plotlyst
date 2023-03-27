@@ -24,6 +24,7 @@ from qthandy.filter import InstantTooltipEventFilter
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.common import scroll_to_bottom
 from src.main.python.plotlyst.view.generated.board_view_ui import Ui_BoardView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.task import BoardWidget
@@ -50,6 +51,7 @@ class BoardView(AbstractNovelView):
 
         self._board = BoardWidget(novel)
         self.ui.scrollAreaWidgetContents.layout().addWidget(self._board)
+        self._board.taskAdded.connect(lambda: scroll_to_bottom(self.ui.scrollArea))
 
         self.ui.btnNew.clicked.connect(self._board.addNewTask)
 

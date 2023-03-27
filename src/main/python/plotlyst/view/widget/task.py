@@ -353,6 +353,8 @@ class StatusColumnWidget(QFrame):
 
 
 class BoardWidget(QWidget):
+    taskAdded = pyqtSignal(Task)
+
     def __init__(self, novel: Novel, parent=None):
         super(BoardWidget, self).__init__(parent)
         self._novel = novel
@@ -386,6 +388,7 @@ class BoardWidget(QWidget):
             task = Task('', column.status().id)
             self._novel.board.tasks.append(task)
             column.addTask(task, edit=True)
+            self.taskAdded.emit(task)
 
     def _firstStatusColumn(self) -> StatusColumnWidget:
         return self._statusColumns[str(self._novel.board.statuses[0].id)]
