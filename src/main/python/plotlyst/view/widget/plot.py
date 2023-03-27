@@ -436,6 +436,8 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self._wdgList = PlotList(self.novel)
         self.wdgPlotListParent.layout().addWidget(self._wdgList)
 
+        self.splitter.setSizes([150, 550])
+
         # for plot in self.novel.plots:
         #     self._addPlotWidget(plot)
 
