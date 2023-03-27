@@ -499,10 +499,7 @@ class ManuscriptTextEditor(RichTextEditor):
         if not scene.manuscript.loaded:
             json_client.load_document(app_env.novel, scene.manuscript)
 
-        self.textEdit.textCursor().insertHtml(scene.manuscript.content)
-
-    def _format(self):
-        self.textEdit.setBlockFormat(130, textIndent=20)
+        self.textEdit.textCursor().insertHtml(remove_font(scene.manuscript.content))
 
     def document(self) -> QTextDocument:
         return self.textEdit.document()
