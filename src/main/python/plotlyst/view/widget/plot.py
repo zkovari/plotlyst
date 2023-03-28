@@ -25,14 +25,11 @@ import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QAbstractButton, QTextEdit
-from qtframes import Frame
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup, vbox, transparent, \
+    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, vbox, transparent, \
     clear_layout, vspacer
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DisabledClickEventFilter, \
-    InstantTooltipEventFilter
+from qthandy.filter import VisibilityToggleEventFilter, DisabledClickEventFilter
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType
 from src.main.python.plotlyst.core.template import antagonist_role
@@ -212,6 +209,9 @@ class PlotList(TreeView):
 
         self._centralWidget.layout().addWidget(vspacer())
 
+    def refreshPlot(self, plot: Plot):
+        self._plots[plot].refresh()
+
     def addPlot(self, plot: Plot):
         wdg = self.__initPlotWidget(plot)
         self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, wdg)
@@ -238,6 +238,8 @@ class PlotList(TreeView):
 
 
 class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
+    titleChanged = pyqtSignal()
+    iconChanged = pyqtSignal()
     removalRequested = pyqtSignal()
 
     def __init__(self, novel: Novel, plot: Plot, parent=None):
@@ -254,32 +256,31 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.textQuestion.setPlainText(self.plot.question)
         self.textQuestion.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.textQuestion.textChanged.connect(self._questionChanged)
-        retain_when_hidden(self.btnRemove)
 
-        self.btnGoal.setIcon(principle_icon(PlotPrincipleType.GOAL))
-        self.btnAntagonist.setIcon(principle_icon(PlotPrincipleType.ANTAGONIST))
-        self.btnConflict.setIcon(principle_icon(PlotPrincipleType.CONFLICT))
-        self.btnConsequences.setIcon(principle_icon(PlotPrincipleType.CONSEQUENCES))
-        self.btnProgress.setIcon(principle_icon(PlotPrincipleType.PROGRESS))
-        self.btnSetback.setIcon(principle_icon(PlotPrincipleType.SETBACK))
-        self.btnTurns.setIcon(principle_icon(PlotPrincipleType.TURNS))
-        self.btnCrisis.setIcon(principle_icon(PlotPrincipleType.CRISIS))
+        # self.btnGoal.setIcon(principle_icon(PlotPrincipleType.GOAL))
+        # self.btnAntagonist.setIcon(principle_icon(PlotPrincipleType.ANTAGONIST))
+        # self.btnConflict.setIcon(principle_icon(PlotPrincipleType.CONFLICT))
+        # self.btnConsequences.setIcon(principle_icon(PlotPrincipleType.CONSEQUENCES))
+        # self.btnProgress.setIcon(principle_icon(PlotPrincipleType.PROGRESS))
+        # self.btnSetback.setIcon(principle_icon(PlotPrincipleType.SETBACK))
+        # self.btnTurns.setIcon(principle_icon(PlotPrincipleType.TURNS))
+        # self.btnCrisis.setIcon(principle_icon(PlotPrincipleType.CRISIS))
 
-        for btn in self.buttonGroup.buttons():
-            btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
-            btn.installEventFilter(InstantTooltipEventFilter(btn))
+        # for btn in self.buttonGroup.buttons():
+        #     btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
+        #     btn.installEventFilter(InstantTooltipEventFilter(btn))
 
-        for principle_type in PlotPrincipleType:
-            principle = self._principle(principle_type)
-            btn = self._btnPrinciple(principle_type)
-            btn.setChecked(principle.is_set)
-            self._setPrincipleTooltip(btn, principle)
-
-            editor = PlotPrincipleEditor(principle, btn)
-            editor.principleSet.connect(self._principleSet)
-            editor.principleEdited.connect(self._principleEdited)
-            menu = btn_popup(btn, editor)
-            menu.aboutToShow.connect(editor.activate)
+        # for principle_type in PlotPrincipleType:
+        #     principle = self._principle(principle_type)
+        #     btn = self._btnPrinciple(principle_type)
+        #     btn.setChecked(principle.is_set)
+        #     self._setPrincipleTooltip(btn, principle)
+        #
+        #     editor = PlotPrincipleEditor(principle, btn)
+        #     editor.principleSet.connect(self._principleSet)
+        #     editor.principleEdited.connect(self._principleEdited)
+        #     menu = btn_popup(btn, editor)
+        #     menu.aboutToShow.connect(editor.activate)
 
         flow(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
@@ -301,7 +302,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.wdgValues.layout().addWidget(self._btnAddValue)
         self._btnAddValue.clicked.connect(self._newValue)
 
-        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemove, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
 
         self._updateIcon()
@@ -323,7 +324,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             action('Change icon', icon=IconRegistry.icons_icon(), slot=self._changeIcon, parent=iconMenu))
         btn_popup_menu(self.btnPlotIcon, iconMenu)
 
-        self.btnRemove.clicked.connect(self.removalRequested.emit)
+        # self.btnRemove.clicked.connect(self.removalRequested.emit)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -337,42 +338,42 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
                 self.repo.update_novel(self.novel)
                 self._characterSelector.clear()
 
-    def _principle(self, principleType: PlotPrincipleType) -> PlotPrinciple:
-        for principle in self.plot.principles:
-            if principle.type == principleType:
-                return principle
+    # def _principle(self, principleType: PlotPrincipleType) -> PlotPrinciple:
+    #     for principle in self.plot.principles:
+    #         if principle.type == principleType:
+    #             return principle
+    #
+    #     principle = PlotPrinciple(principleType, '')
+    #     self.plot.principles.append(principle)
+    #     return principle
 
-        principle = PlotPrinciple(principleType, '')
-        self.plot.principles.append(principle)
-        return principle
+    # def _btnPrinciple(self, principleType: PlotPrincipleType) -> QAbstractButton:
+    #     if principleType == PlotPrincipleType.GOAL:
+    #         return self.btnGoal
+    #     elif principleType == PlotPrincipleType.ANTAGONIST:
+    #         return self.btnAntagonist
+    #     elif principleType == PlotPrincipleType.CONFLICT:
+    #         return self.btnConflict
+    #     elif principleType == PlotPrincipleType.CONSEQUENCES:
+    #         return self.btnConsequences
+    #     elif principleType == PlotPrincipleType.PROGRESS:
+    #         return self.btnProgress
+    #     elif principleType == PlotPrincipleType.SETBACK:
+    #         return self.btnSetback
+    #     elif principleType == PlotPrincipleType.TURNS:
+    #         return self.btnTurns
+    #     elif principleType == PlotPrincipleType.CRISIS:
+    #         return self.btnCrisis
 
-    def _btnPrinciple(self, principleType: PlotPrincipleType) -> QAbstractButton:
-        if principleType == PlotPrincipleType.GOAL:
-            return self.btnGoal
-        elif principleType == PlotPrincipleType.ANTAGONIST:
-            return self.btnAntagonist
-        elif principleType == PlotPrincipleType.CONFLICT:
-            return self.btnConflict
-        elif principleType == PlotPrincipleType.CONSEQUENCES:
-            return self.btnConsequences
-        elif principleType == PlotPrincipleType.PROGRESS:
-            return self.btnProgress
-        elif principleType == PlotPrincipleType.SETBACK:
-            return self.btnSetback
-        elif principleType == PlotPrincipleType.TURNS:
-            return self.btnTurns
-        elif principleType == PlotPrincipleType.CRISIS:
-            return self.btnCrisis
-
-    def _principleSet(self, principle: PlotPrinciple, toggled: bool):
-        btn = self._btnPrinciple(principle.type)
-        btn.setChecked(toggled)
-        if toggled:
-            qtanim.glow(btn)
-        else:
-            translucent(btn, 0.4)
-        self.repo.update_novel(self.novel)
-        self._setPrincipleTooltip(btn, principle)
+    # def _principleSet(self, principle: PlotPrinciple, toggled: bool):
+    #     btn = self._btnPrinciple(principle.type)
+    #     btn.setChecked(toggled)
+    #     if toggled:
+    #         qtanim.glow(btn)
+    #     else:
+    #         translucent(btn, 0.4)
+    #     self.repo.update_novel(self.novel)
+    #     self._setPrincipleTooltip(btn, principle)
 
     def _setPrincipleTooltip(self, btn: QAbstractButton, principle: PlotPrinciple):
         tooltip = f'<html><body style="font-size:{btn.font().pointSize() + 2}pt;">'
@@ -382,10 +383,10 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             tooltip += f'<hr/>{principle.value}'
         btn.setToolTip(tooltip)
 
-    def _principleEdited(self, principle: PlotPrinciple):
-        self.repo.update_novel(self.novel)
-        if principle.is_set:
-            self._setPrincipleTooltip(self._btnPrinciple(principle.type), principle)
+    # def _principleEdited(self, principle: PlotPrinciple):
+    #     self.repo.update_novel(self.novel)
+    #     if principle.is_set:
+    #         self._setPrincipleTooltip(self._btnPrinciple(principle.type), principle)
 
     def _updateIcon(self):
         if self.plot.icon:
@@ -394,6 +395,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _nameEdited(self, name: str):
         self.plot.text = name
         self.repo.update_novel(self.novel)
+        self.titleChanged.emit()
 
     def _questionChanged(self):
         self.plot.question = self.textQuestion.toPlainText()
@@ -410,12 +412,14 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self.plot.icon_color = result[1].name()
             self._updateIcon()
             self.repo.update_novel(self.novel)
+            self.iconChanged.emit()
 
     def _colorChanged(self, color: QColor):
         self.plot.icon_color = color.name()
         self._updateIcon()
-        self.parent().setFrameColor(color)
+        # self.parent().setFrameColor(color)
         self.repo.update_novel(self.novel)
+        self.iconChanged.emit()
 
     def _newValue(self):
         value = PlotValueEditorDialog().display()
@@ -475,17 +479,19 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.repo = RepositoryPersistenceManager.instance()
 
     def _plotSelected(self, plot: Plot) -> PlotWidget:
-        frame = Frame()
-        frame.setFrameColor(QColor(plot.icon_color))
-        frame.setBackgroundColor(QColor(RELAXED_WHITE_COLOR))
+        # frame = Frame()
+        # frame.setFrameColor(QColor(plot.icon_color))
+        # frame.setBackgroundColor(QColor(RELAXED_WHITE_COLOR))
 
-        widget = PlotWidget(self.novel, plot, frame)
+        widget = PlotWidget(self.novel, plot, self.pageDisplay)
         margins(widget, left=5, right=5)
         widget.removalRequested.connect(partial(self._remove, widget))
+        widget.titleChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
+        widget.iconChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
 
-        frame.setWidget(widget)
+        # frame.setWidget(widget)
         clear_layout(self.pageDisplay)
-        self.pageDisplay.layout().addWidget(frame)
+        self.pageDisplay.layout().addWidget(widget)
 
         return widget
 

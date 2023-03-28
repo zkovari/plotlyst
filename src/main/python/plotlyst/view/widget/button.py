@@ -25,7 +25,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
 from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu
 from overrides import overrides
-from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, btn_popup_menu
+from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
@@ -298,12 +298,17 @@ class CollapseButton(QPushButton):
 
 
 class DotsMenuButton(QToolButton):
-    def __init__(self, menu: QMenu, vertical: bool = True, parent=None):
+    def __init__(self, parent=None):
         super(DotsMenuButton, self).__init__(parent)
         transparent(self)
         retain_when_hidden(self)
         pointy(self)
-        self.setIcon(IconRegistry.dots_icon('grey', vertical=vertical))
+        self.setIcon(IconRegistry.dots_icon('grey', vertical=True))
+        self._pressFilter: Optional[ButtonPressResizeEventFilter] = None
 
-        btn_popup_menu(self, menu)
-        self.installEventFilter(ButtonPressResizeEventFilter(self))
+    @overrides
+    def setMenu(self, menu: QMenu):
+        super(DotsMenuButton, self).setMenu(menu)
+        if self._pressFilter is None:
+            self._pressFilter = ButtonPressResizeEventFilter(self)
+            self.installEventFilter(self._pressFilter)
