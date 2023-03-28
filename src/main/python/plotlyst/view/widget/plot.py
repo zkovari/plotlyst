@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from functools import partial
+from typing import Set, Dict
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
@@ -178,6 +179,9 @@ class PlotNode(ContainerNode):
 
         self.refresh()
 
+    def plot(self) -> Plot:
+        return self._plot
+
     def refresh(self):
         if self._plot.icon:
             self._icon.setIcon(IconRegistry.from_name(self._plot.icon, self._plot.icon_color))
@@ -189,9 +193,13 @@ class PlotNode(ContainerNode):
 
 
 class PlotList(TreeView):
+    plotSelected = pyqtSignal(Plot)
+
     def __init__(self, novel: Novel, parent=None):
         super(PlotList, self).__init__(parent)
         self._novel = novel
+        self._plots: Dict[Plot, PlotNode] = {}
+        self._selectedPlots: Set[Plot] = set()
 
         self.refresh()
 
@@ -208,9 +216,25 @@ class PlotList(TreeView):
         wdg = self.__initPlotWidget(plot)
         self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, wdg)
 
+    def clearSelection(self):
+        for plot in self._selectedPlots:
+            self._plots[plot].deselect()
+        self._selectedPlots.clear()
+
+    def _plotSelectionChanged(self, wdg: PlotNode, selected: bool):
+        if selected:
+            self.clearSelection()
+            self._selectedPlots.add(wdg.plot())
+            self.plotSelected.emit(wdg.plot())
+        elif wdg.plot() in self._selectedPlots:
+            self._selectedPlots.remove(wdg.plot())
+
     def __initPlotWidget(self, plot: Plot) -> PlotNode:
-        node = PlotNode(plot)
-        return node
+        wdg = PlotNode(plot)
+        wdg.selectionChanged.connect(partial(self._plotSelectionChanged, wdg))
+
+        self._plots[plot] = wdg
+        return wdg
 
 
 class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
@@ -435,11 +459,10 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         self._wdgList = PlotList(self.novel)
         self.wdgPlotListParent.layout().addWidget(self._wdgList)
+        self._wdgList.plotSelected.connect(self._plotSelected)
+        self.stack.setCurrentWidget(self.pageDisplay)
 
         self.splitter.setSizes([150, 550])
-
-        # for plot in self.novel.plots:
-        #     self._addPlotWidget(plot)
 
         italic(self.btnAdd)
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
@@ -451,7 +474,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    def _addPlotWidget(self, plot: Plot) -> PlotWidget:
+    def _plotSelected(self, plot: Plot) -> PlotWidget:
         frame = Frame()
         frame.setFrameColor(QColor(plot.icon_color))
         frame.setBackgroundColor(QColor(RELAXED_WHITE_COLOR))
@@ -461,7 +484,8 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         widget.removalRequested.connect(partial(self._remove, widget))
 
         frame.setWidget(widget)
-        self.scrollAreaWidgetContents.layout().addWidget(frame)
+        clear_layout(self.pageDisplay)
+        self.pageDisplay.layout().addWidget(frame)
 
         return widget
 
