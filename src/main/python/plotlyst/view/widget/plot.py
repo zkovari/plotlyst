@@ -30,6 +30,7 @@ from qthandy import gc, bold, flow, incr_font, \
     clear_layout, vspacer
 from qthandy.filter import VisibilityToggleEventFilter, DisabledClickEventFilter
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType
 from src.main.python.plotlyst.core.template import antagonist_role
@@ -257,6 +258,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.textQuestion.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.textQuestion.textChanged.connect(self._questionChanged)
 
+        self._initFrameColor()
+
         # self.btnGoal.setIcon(principle_icon(PlotPrincipleType.GOAL))
         # self.btnAntagonist.setIcon(principle_icon(PlotPrincipleType.ANTAGONIST))
         # self.btnConflict.setIcon(principle_icon(PlotPrincipleType.CONFLICT))
@@ -292,7 +295,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._addValue(value)
 
         self._characterSelector = CharacterSelectorButton(novel, self)
-        self._characterSelector.setGeometry(5, 5, 40, 40)
+        self._characterSelector.setGeometry(10, 10, 40, 40)
         character = self.plot.character(novel)
         if character is not None:
             self._characterSelector.setCharacter(character)
@@ -417,9 +420,21 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _colorChanged(self, color: QColor):
         self.plot.icon_color = color.name()
         self._updateIcon()
+        self._initFrameColor()
         # self.parent().setFrameColor(color)
         self.repo.update_novel(self.novel)
         self.iconChanged.emit()
+
+    def _initFrameColor(self):
+        self.setStyleSheet(f'''
+            #PlotWidget {{
+                background-color: {RELAXED_WHITE_COLOR};
+                border: 2px solid {self.plot.icon_color};
+            }}
+            #frame {{
+                border: 1px solid {self.plot.icon_color};
+            }}
+        ''')
 
     def _newValue(self):
         value = PlotValueEditorDialog().display()
@@ -479,17 +494,11 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self.repo = RepositoryPersistenceManager.instance()
 
     def _plotSelected(self, plot: Plot) -> PlotWidget:
-        # frame = Frame()
-        # frame.setFrameColor(QColor(plot.icon_color))
-        # frame.setBackgroundColor(QColor(RELAXED_WHITE_COLOR))
-
         widget = PlotWidget(self.novel, plot, self.pageDisplay)
-        margins(widget, left=5, right=5)
         widget.removalRequested.connect(partial(self._remove, widget))
         widget.titleChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
         widget.iconChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
 
-        # frame.setWidget(widget)
         clear_layout(self.pageDisplay)
         self.pageDisplay.layout().addWidget(widget)
 
