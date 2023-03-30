@@ -27,10 +27,10 @@ from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QAbstractButton, QTextEdit
 from qthandy import gc, bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, vbox, transparent, \
-    clear_layout, vspacer
+    clear_layout, vspacer, underline, decr_font, decr_icon
 from qthandy.filter import VisibilityToggleEventFilter, DisabledClickEventFilter
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType
 from src.main.python.plotlyst.core.template import antagonist_role
@@ -249,16 +249,22 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.novel = novel
         self.plot = plot
 
-        incr_font(self.lineName)
+        incr_font(self.lineName, 2)
         bold(self.lineName)
         self.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
-        self.textQuestion.setPlainText(self.plot.question)
-        self.textQuestion.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.textQuestion.textChanged.connect(self._questionChanged)
+        self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon())
+        retain_when_hidden(self.btnPincipleEditor)
+        self.btnArcToggle.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
+        decr_icon(self.btnArcToggle)
+        # self.textQuestion.setPlainText(self.plot.question)
+        # self.textQuestion.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.textQuestion.textChanged.connect(self._questionChanged)
 
         self._initFrameColor()
+        for lbl in [self.lblValues, self.lblPrinciples, self.lblProgression]:
+            underline(lbl)
 
         # self.btnGoal.setIcon(principle_icon(PlotPrincipleType.GOAL))
         # self.btnAntagonist.setIcon(principle_icon(PlotPrincipleType.ANTAGONIST))
@@ -287,6 +293,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         flow(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
+        decr_font(self._btnAddValue)
         self._btnAddValue.setIconSize(QSize(14, 14))
         self._btnAddValue.setText('' if self.plot.values else 'Attach story value')
         retain_when_hidden(self._btnAddValue)
@@ -307,6 +314,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnPincipleEditor, parent=self))
 
         self._updateIcon()
 
