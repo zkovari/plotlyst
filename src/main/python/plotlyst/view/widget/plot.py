@@ -40,7 +40,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, restyle, pointy, icon_to_html_img
+from src.main.python.plotlyst.view.common import action, restyle, pointy, icon_to_html_img, fade_out_and_gc
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -192,6 +192,7 @@ class PlotNode(ContainerNode):
 
 class PlotList(TreeView):
     plotSelected = pyqtSignal(Plot)
+    plotRemoved = pyqtSignal(Plot)
 
     def __init__(self, novel: Novel, parent=None):
         super(PlotList, self).__init__(parent)
@@ -217,6 +218,11 @@ class PlotList(TreeView):
         wdg = self.__initPlotWidget(plot)
         self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, wdg)
 
+    def selectPlot(self, plot: Plot):
+        self._plots[plot].select()
+        wdg = self._plots[plot]
+        self._plotSelectionChanged(wdg, wdg.isSelected())
+
     def clearSelection(self):
         for plot in self._selectedPlots:
             self._plots[plot].deselect()
@@ -230,9 +236,22 @@ class PlotList(TreeView):
         elif wdg.plot() in self._selectedPlots:
             self._selectedPlots.remove(wdg.plot())
 
+    def _removePlot(self, wdg: PlotNode):
+        plot = wdg.plot()
+        if not ask_confirmation(f"Delete plot '{plot.text}'?", self._centralWidget):
+            return
+        if plot in self._selectedPlots:
+            self._selectedPlots.remove(plot)
+        self._plots.pop(plot)
+
+        fade_out_and_gc(wdg.parent(), wdg)
+
+        self.plotRemoved.emit(wdg.plot())
+
     def __initPlotWidget(self, plot: Plot) -> PlotNode:
         wdg = PlotNode(plot)
         wdg.selectionChanged.connect(partial(self._plotSelectionChanged, wdg))
+        wdg.deleted.connect(partial(self._removePlot, wdg))
 
         self._plots[plot] = wdg
         return wdg
@@ -487,6 +506,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         self._wdgList = PlotList(self.novel)
         self.wdgPlotListParent.layout().addWidget(self._wdgList)
         self._wdgList.plotSelected.connect(self._plotSelected)
+        self._wdgList.plotRemoved.connect(self._plotRemoved)
         self.stack.setCurrentWidget(self.pageDisplay)
 
         self.splitter.setSizes([150, 550])
@@ -500,17 +520,6 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         btn_popup_menu(self.btnAdd, menu)
 
         self.repo = RepositoryPersistenceManager.instance()
-
-    def _plotSelected(self, plot: Plot) -> PlotWidget:
-        widget = PlotWidget(self.novel, plot, self.pageDisplay)
-        widget.removalRequested.connect(partial(self._remove, widget))
-        widget.titleChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
-        widget.iconChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
-
-        clear_layout(self.pageDisplay)
-        self.pageDisplay.layout().addWidget(widget)
-
-        return widget
 
     def newPlot(self, plot_type: PlotType):
         if plot_type == PlotType.Internal:
@@ -537,17 +546,39 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             plot.icon_color = plot_colors[(number_of_plots - 1) % len(plot_colors)]
 
         self._wdgList.addPlot(plot)
-
         self.repo.update_novel(self.novel)
+        self._wdgList.selectPlot(plot)
 
-    def _remove(self, widget: PlotWidget):
-        if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
-            if app_env.test_env():
-                self.__destroy(widget)
-            else:
-                anim = qtanim.fade_out(widget, duration=150)
-                anim.finished.connect(partial(self.__destroy, widget))
+    def _plotSelected(self, plot: Plot) -> PlotWidget:
+        widget = PlotWidget(self.novel, plot, self.pageDisplay)
+        widget.removalRequested.connect(partial(self._remove, widget))
+        widget.titleChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
+        widget.iconChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
 
-    def __destroy(self, widget: PlotWidget):
-        delete_plot(self.novel, widget.plot)
-        self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
+        clear_layout(self.pageDisplay)
+        self.pageDisplay.layout().addWidget(widget)
+
+        return widget
+
+    def _remove(self, wdg: PlotWidget):
+        pass
+
+    def _plotRemoved(self, plot: Plot):
+        if self.pageDisplay.layout().count():
+            item = self.pageDisplay.layout().itemAt(0)
+            if item.widget() and isinstance(item.widget(), PlotWidget):
+                if item.widget().plot == plot:
+                    clear_layout(self.pageDisplay)
+        delete_plot(self.novel, plot)
+
+    # def _remove(self, widget: PlotWidget):
+    #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
+    #         if app_env.test_env():
+    #             self.__destroy(widget)
+    #         else:
+    #             anim = qtanim.fade_out(widget, duration=150)
+    #             anim.finished.connect(partial(self.__destroy, widget))
+    #
+    # def __destroy(self, widget: PlotWidget):
+    #     delete_plot(self.novel, widget.plot)
+    #     self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
