@@ -174,6 +174,8 @@ class PlotNode(ContainerNode):
         super(PlotNode, self).__init__(plot.text, parent)
         self._plot = plot
         self.setPlusButtonEnabled(False)
+        incr_font(self._lblTitle)
+        margins(self, top=5, bottom=5)
 
         self.refresh()
 
