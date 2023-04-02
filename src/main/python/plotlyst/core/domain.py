@@ -454,6 +454,9 @@ class PlotPrincipleType(Enum):
     SETBACK = 5
     TURNS = 6
     CRISIS = 7
+    QUESTION = 8
+    STAKES = 9
+    THEMATIC_REFERENCE = 10
 
 
 @dataclass
