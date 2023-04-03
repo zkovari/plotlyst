@@ -22,8 +22,9 @@ from functools import partial
 from typing import Set, Dict
 
 import qtanim
+from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QColor, QIcon
+from PyQt6.QtGui import QColor, QIcon, QPen
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QTextEdit
 from overrides import overrides
 from qthandy import gc, bold, flow, incr_font, \
@@ -35,6 +36,7 @@ from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECOND
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
     PlotPrincipleType, PlotEvent, PlotEventType
 from src.main.python.plotlyst.core.template import antagonist_role
+from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -49,6 +51,7 @@ from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
+from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
@@ -249,6 +252,45 @@ class PlotNode(ContainerNode):
             self._icon.setHidden(True)
 
         self._lblTitle.setText(self._plot.text)
+
+
+class PlotEventsArcChart(BaseChart):
+    MAX: int = 4
+    MIN: int = -4
+
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotEventsArcChart, self).__init__(parent)
+        self._plot = plot
+        self.setTitle(html('Arc preview').bold())
+
+    def refresh(self):
+        self.reset()
+
+        if not self._plot.events:
+            return
+
+        series = QSplineSeries()
+        pen = QPen()
+        pen.setWidth(2)
+        pen.setColor(QColor(self._plot.icon_color))
+        series.setPen(pen)
+        arc_value: int = 0
+        series.append(0, 0)
+        for event in self._plot.events:
+            if event.type in [PlotEventType.PROGRESS, PlotEventType.TOOL] and arc_value < self.MAX:
+                arc_value += 1
+            elif event.type in [PlotEventType.SETBACK, PlotEventType.COST] and arc_value > self.MIN:
+                arc_value -= 1
+            elif event.type == PlotEventType.CRISIS and arc_value > self.MIN + 1:
+                arc_value -= 2
+            series.append(len(series), arc_value)
+
+        axis = QValueAxis()
+        axis.setRange(self.MIN, self.MAX)
+        self.addSeries(series)
+        self.addAxis(axis, Qt.AlignmentFlag.AlignLeft)
+        series.attachAxis(axis)
+        axis.setVisible(False)
 
 
 class PlotEventItem(ListItemWidget):
@@ -467,8 +509,12 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self._lstEvents = PlotEventsList(self.plot)
         self._lstEvents.centralWidget().setStyleSheet(f'.QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
-        self._lstEvents.eventsChanged.connect(self._save)
+        self._lstEvents.eventsChanged.connect(self._eventsChanged)
         self.wdgEventsParent.layout().addWidget(self._lstEvents)
+
+        self._arcChart = PlotEventsArcChart(self.plot)
+        self.chartViewArcPreview.setChart(self._arcChart)
+        self._arcChart.refresh()
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
@@ -525,15 +571,13 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         result = IconSelectorDialog(self).display(QColor(self.plot.icon_color))
         if result:
             self.plot.icon = result[0]
-            self.plot.icon_color = result[1].name()
-            self._updateIcon()
-            self.repo.update_novel(self.novel)
-            self.iconChanged.emit()
+            self._colorChanged(result[1])
 
     def _colorChanged(self, color: QColor):
         self.plot.icon_color = color.name()
         self._updateIcon()
         self._initFrameColor()
+        self._arcChart.refresh()
         self._save()
         self.iconChanged.emit()
 
@@ -562,6 +606,10 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
     def _save(self):
         self.repo.update_novel(self.novel)
+
+    def _eventsChanged(self):
+        self._arcChart.refresh()
+        self._save()
 
     def _initFrameColor(self):
         self.setStyleSheet(f'''
