@@ -4,7 +4,6 @@ from src.main.python.plotlyst.test.common import create_plot, go_to_novel, patch
 from src.main.python.plotlyst.view.main_window import MainWindow
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.widget.novel import StoryStructureSelectorDialog
-from src.main.python.plotlyst.view.widget.plot import PlotWidget
 
 
 def test_create_plot(qtbot, filled_window: MainWindow):
@@ -27,10 +26,7 @@ def test_delete_plot(qtbot, filled_window: MainWindow, monkeypatch):
     assert plot == view.novel.scenes[0].plot_values[0].plot
 
     patch_confirmed(monkeypatch)
-    item = view.plot_editor.scrollAreaWidgetContents.layout().itemAt(0)
-    assert item and item.widget() and isinstance(item.widget().widget(), PlotWidget)
-    plot_widget: PlotWidget = item.widget().widget()
-    plot_widget.btnRemove.click()
+    view.plot_editor.widgetList().plotRemoved.emit(plot)
 
     assert len(view.novel.plots) == 2
     assert plot not in view.novel.plots

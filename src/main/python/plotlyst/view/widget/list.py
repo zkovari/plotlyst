@@ -110,7 +110,8 @@ class ListView(QScrollArea):
         vbox(self._centralWidget, spacing=0)
 
         self._btnAdd = SecondaryActionPushButton('Add new')
-        self._centralWidget.layout().addWidget(wrap(self._btnAdd, margin_left=10))
+        self._wdgAdd = wrap(self._btnAdd, margin_left=10)
+        self._centralWidget.layout().addWidget(self._wdgAdd)
         self._centralWidget.layout().addWidget(vspacer())
 
         self._btnAdd.clicked.connect(self._addNewItem)
@@ -132,7 +133,7 @@ class ListView(QScrollArea):
 
     def clear(self):
         clear_layout(self._centralWidget, auto_delete=False)
-        self._centralWidget.layout().addWidget(self._btnAdd)
+        self._centralWidget.layout().addWidget(self._wdgAdd)
         self._centralWidget.layout().addWidget(vspacer())
 
     def widgets(self) -> List[ListItemWidget]:

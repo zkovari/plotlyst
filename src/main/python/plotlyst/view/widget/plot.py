@@ -683,6 +683,9 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         self.repo = RepositoryPersistenceManager.instance()
 
+    def widgetList(self) -> PlotList:
+        return self._wdgList
+
     def newPlot(self, plot_type: PlotType):
         if plot_type == PlotType.Internal:
             name = 'Internal plot'
