@@ -167,6 +167,7 @@ class PlotPrincipleEditor(QWidget):
         self._label.setText(principle.type.name.lower().capitalize())
         self._label.setIcon(principle_icon(principle.type))
         self._label.setCheckable(True)
+        self._label.setChecked(True)
 
         self._textedit = QTextEdit(self)
         hint = principle_hints[principle.type]
@@ -429,7 +430,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             if principle:
                 self.plot.principles.remove(principle)
                 wdg = self._principles.pop(principle.type)
-                # self.wdgPrinciples.layout().removeWidget(wdg)
                 fade_out_and_gc(self.wdgPrinciples, wdg)
 
     def _initPrincipleEditor(self, principle: PlotPrinciple):

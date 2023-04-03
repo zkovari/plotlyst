@@ -187,6 +187,9 @@ QToolButton:checked {
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
               </property>
+              <property name="toolTip">
+               <string>Edit plot principles</string>
+              </property>
               <property name="text">
                <string/>
               </property>
@@ -256,6 +259,9 @@ QToolButton:checked {
                    <widget class="QToolButton" name="btnArcToggle">
                     <property name="cursor">
                      <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
+                    <property name="toolTip">
+                     <string>Toggle plot arc preview</string>
                     </property>
                     <property name="text">
                      <string/>
