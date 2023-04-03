@@ -466,9 +466,18 @@ class PlotPrinciple:
     is_set: bool = False
 
 
+class PlotEventType(Enum):
+    PROGRESS = 0
+    SETBACK = 2
+    CRISIS = 3
+    COST = 4
+    TOOL = 5
+
+
 @dataclass
 class PlotEvent:
     text: str
+    type: PlotEventType
 
 
 # must add to the subclass:

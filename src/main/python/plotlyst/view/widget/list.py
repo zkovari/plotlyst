@@ -29,7 +29,7 @@ from qtanim import fade_in
 from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent
 from qthandy.filter import DragEventFilter, DropEventFilter, ObjectReferenceMimeData
 
-from src.main.python.plotlyst.view.common import fade_out_and_gc
+from src.main.python.plotlyst.view.common import fade_out_and_gc, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -110,7 +110,7 @@ class ListView(QScrollArea):
         vbox(self._centralWidget, spacing=0)
 
         self._btnAdd = SecondaryActionPushButton('Add new')
-        self._centralWidget.layout().addWidget(self._btnAdd)
+        self._centralWidget.layout().addWidget(wrap(self._btnAdd, margin_left=10))
         self._centralWidget.layout().addWidget(vspacer())
 
         self._btnAdd.clicked.connect(self._addNewItem)
