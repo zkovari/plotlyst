@@ -422,7 +422,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         return editor
 
     def _principleEdited(self, principle: PlotPrinciple):
-        pass
+        self.repo.update_novel(self.novel)
 
     def _initFrameColor(self):
         self.setStyleSheet(f'''
