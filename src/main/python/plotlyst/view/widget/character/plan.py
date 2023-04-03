@@ -89,9 +89,10 @@ class CharacterSubtaskWidget(QWidget):
         decr_font(self.lineText)
         self.lineText.setText(self._goal.text)
 
-        menu = QMenu()
+        self.btnMenu = DotsMenuButton()
+        menu = QMenu(self.btnMenu)
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.delete.emit)
-        self.btnMenu = DotsMenuButton(menu)
+        btn_popup_menu(self.btnMenu, menu)
         self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu, leaveOpacity=0.7))
 
         hbox(self)
@@ -153,9 +154,10 @@ class CharacterGoalWidget(QWidget):
 
         self.btnAdd = _AddObjectiveButton()
         self.btnAddBefore = _AddObjectiveButton()
-        menu = QMenu()
+        self.btnMenu = DotsMenuButton()
+        menu = QMenu(self.btnMenu)
         menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.delete.emit)
-        self.btnMenu = DotsMenuButton(menu)
+        btn_popup_menu(self.btnMenu, menu)
         self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu, leaveOpacity=0.7))
 
         self._wdgCenter.layout().addWidget(self.btnAddBefore)

@@ -100,6 +100,9 @@ class BaseTreeWidget(QWidget):
     def deselect(self):
         self._toggleSelection(False)
 
+    def isSelected(self) -> bool:
+        return self._selected
+
     def setMenuEnabled(self, enabled: bool):
         self._menuEnabled = enabled
 

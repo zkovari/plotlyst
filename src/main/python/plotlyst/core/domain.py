@@ -454,6 +454,9 @@ class PlotPrincipleType(Enum):
     SETBACK = 5
     TURNS = 6
     CRISIS = 7
+    QUESTION = 8
+    STAKES = 9
+    THEME = 10
 
 
 @dataclass
@@ -461,6 +464,20 @@ class PlotPrinciple:
     type: PlotPrincipleType
     value: Any = None
     is_set: bool = False
+
+
+class PlotEventType(Enum):
+    PROGRESS = 0
+    SETBACK = 2
+    CRISIS = 3
+    COST = 4
+    TOOL = 5
+
+
+@dataclass
+class PlotEvent:
+    text: str
+    type: PlotEventType
 
 
 # must add to the subclass:
@@ -516,6 +533,7 @@ class Plot(SelectionItem, CharacterBased):
     character_id: Optional[uuid.UUID] = None
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
+    events: List[PlotEvent] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None

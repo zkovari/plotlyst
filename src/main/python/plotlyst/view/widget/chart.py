@@ -20,16 +20,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 from typing import List, Dict
 
-from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QSplineSeries, \
-    QPolarChart
+from PyQt6.QtCharts import QChart, QPieSeries, QBarSet, QBarCategoryAxis, QValueAxis, QBarSeries, QPolarChart
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QCursor, QIcon
 from PyQt6.QtWidgets import QToolTip
 from overrides import overrides
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
-from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel, \
-    SceneStructureItem
+from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
     secondary_role
@@ -280,26 +278,6 @@ class ManuscriptLengthChart(BaseChart):
         self.addSeries(series)
         series.attachAxis(axis_x)
         series.attachAxis(axis_y)
-
-
-class SceneStructureEmotionalArcChart(BaseChart):
-
-    def refresh(self, beats: List[SceneStructureItem]):
-        self.reset()
-
-        series = QSplineSeries()
-        arc_value: int = 0
-        series.append(0, 0)
-        for beat in beats:
-            if beat.emotion is not None:
-                arc_value = beat.emotion * 2
-            series.append(len(series), arc_value)
-
-        axis = QValueAxis()
-        axis.setRange(-8, 8)
-        self.addSeries(series)
-        self.setAxisY(axis, series)
-        axis.setVisible(False)
 
 
 class ActDistributionChart(BaseChart):

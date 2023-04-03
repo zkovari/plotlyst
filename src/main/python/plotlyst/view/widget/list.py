@@ -26,10 +26,10 @@ from PyQt6.QtWidgets import QScrollArea, QFrame, QLineEdit
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent
+from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent, decr_font
 from qthandy.filter import DragEventFilter, DropEventFilter, ObjectReferenceMimeData
 
-from src.main.python.plotlyst.view.common import fade_out_and_gc
+from src.main.python.plotlyst.view.common import fade_out_and_gc, wrap
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -110,14 +110,19 @@ class ListView(QScrollArea):
         vbox(self._centralWidget, spacing=0)
 
         self._btnAdd = SecondaryActionPushButton('Add new')
-        self._centralWidget.layout().addWidget(self._btnAdd)
+        self._wdgAdd = wrap(self._btnAdd, margin_left=10)
+        self._centralWidget.layout().addWidget(self._wdgAdd)
         self._centralWidget.layout().addWidget(vspacer())
 
         self._btnAdd.clicked.connect(self._addNewItem)
+        decr_font(self._btnAdd)
 
         self._dragPlaceholder: Optional[ListItemWidget] = None
         self._dragged: Optional[ListItemWidget] = None
         self._toBeRemoved = False
+
+    def centralWidget(self) -> QWidget:
+        return self._centralWidget
 
     def addItem(self, item: Any):
         wdg = self.__newItemWidget(item)
@@ -129,7 +134,7 @@ class ListView(QScrollArea):
 
     def clear(self):
         clear_layout(self._centralWidget, auto_delete=False)
-        self._centralWidget.layout().addWidget(self._btnAdd)
+        self._centralWidget.layout().addWidget(self._wdgAdd)
         self._centralWidget.layout().addWidget(vspacer())
 
     def widgets(self) -> List[ListItemWidget]:

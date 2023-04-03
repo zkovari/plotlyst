@@ -653,6 +653,7 @@ class CharacterSelectorButton(QToolButton):
         super().__init__(parent)
         self._novel = novel
         self._iconSize = iconSize
+        self._setIconSize = self._iconSize + 4
         pointy(self)
         self._opacityEffectEnabled = opacityEffectEnabled
         if self._opacityEffectEnabled:
@@ -670,18 +671,18 @@ class CharacterSelectorButton(QToolButton):
         if self._opacityEffectEnabled:
             self.removeEventFilter(self._opacityFilter)
             translucent(self, 1.0)
-        self.setIconSize(QSize(self._iconSize, self._iconSize))
+        self.setIconSize(QSize(self._setIconSize, self._setIconSize))
 
     def clear(self):
         self.setStyleSheet('''
-                                QToolButton {
-                                    border: 2px dotted grey;
-                                    border-radius: 6px;
-                                }
-                                QToolButton:hover {
-                                    border: 2px dotted darkBlue;
-                                }
-                            ''')
+                QToolButton {
+                    border: 2px dotted grey;
+                    border-radius: 6px;
+                }
+                QToolButton:hover {
+                    border: 2px dotted black;
+                }
+        ''')
         self.setIcon(IconRegistry.character_icon('grey'))
         self.setIconSize(QSize(self._iconSize, self._iconSize))
         if self._opacityEffectEnabled:

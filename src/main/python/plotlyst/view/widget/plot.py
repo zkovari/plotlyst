@@ -19,28 +19,31 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 from functools import partial
+from typing import Set, Dict
 
 import qtanim
+from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QColor, QIcon
-from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QAbstractButton, QTextEdit
-from qtframes import Frame
+from PyQt6.QtGui import QColor, QIcon, QPen
+from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QTextEdit
+from overrides import overrides
 from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, btn_popup, vbox, transparent
-from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DisabledClickEventFilter, \
-    InstantTooltipEventFilter
+    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, vbox, transparent, \
+    clear_layout, vspacer, underline, decr_font, decr_icon, hbox, spacer, sp
+from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
-    PlotPrincipleType
+    PlotPrincipleType, PlotEvent, PlotEventType
 from src.main.python.plotlyst.core.template import antagonist_role
+from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, restyle, pointy, icon_to_html_img
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -48,7 +51,12 @@ from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
+from src.main.python.plotlyst.view.widget.chart import BaseChart
+from src.main.python.plotlyst.view.widget.display import Icon
+from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel
+from src.main.python.plotlyst.view.widget.list import ListItemWidget, ListView
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 from src.main.python.plotlyst.view.widget.utility import ColorPicker
 
 
@@ -69,6 +77,12 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.from_name('mdi.boom-gate-up-outline', 'grey', '#8338ec')
     elif type == PlotPrincipleType.CRISIS:
         return IconRegistry.crisis_icon('grey')
+    elif type == PlotPrincipleType.STAKES:
+        return IconRegistry.from_name('mdi.sack', 'grey', '#e9c46a')
+    elif type == PlotPrincipleType.QUESTION:
+        return IconRegistry.from_name('ei.question-sign', 'grey', 'darkBlue')
+    elif type == PlotPrincipleType.THEME:
+        return IconRegistry.theme_icon('grey')
 
 
 principle_hints = {PlotPrincipleType.GOAL: "What's the main goal that drives this plot?",
@@ -79,25 +93,109 @@ principle_hints = {PlotPrincipleType.GOAL: "What's the main goal that drives thi
                    PlotPrincipleType.SETBACK: "How the character gets further away from accomplishing the goal.",
                    PlotPrincipleType.TURNS: "When progress suddenly turns to setback or vice versa.",
                    PlotPrincipleType.CRISIS: "The lowest moment." +
-                                             " Often an impossible choice between two equally good or bad outcomes."}
+                                             " Often an impossible choice between two equally good or bad outcomes.",
+                   PlotPrincipleType.STAKES: "What's at stake if the plot goal is not accomplished?",
+                   PlotPrincipleType.QUESTION: "What is the main dramatic question of this plot?",
+                   PlotPrincipleType.THEME: "How does this plot express the theme?",
+                   }
+
+principle_type_index: Dict[PlotPrincipleType, int] = {
+    PlotPrincipleType.QUESTION: 0,
+    PlotPrincipleType.GOAL: 1,
+    PlotPrincipleType.ANTAGONIST: 2,
+    PlotPrincipleType.CONFLICT: 3,
+    PlotPrincipleType.STAKES: 4,
+    PlotPrincipleType.THEME: 5,
+}
+
+
+def plot_event_icon(type: PlotEventType) -> QIcon:
+    if type == PlotEventType.PROGRESS:
+        return IconRegistry.charge_icon(1)
+    elif type == PlotEventType.SETBACK:
+        return IconRegistry.charge_icon(-1)
+    elif type == PlotEventType.CRISIS:
+        return IconRegistry.crisis_icon()
+    elif type == PlotEventType.COST:
+        return IconRegistry.from_name('ph.coin-bold', '#e9c46a')
+    elif type == PlotEventType.TOOL:
+        return IconRegistry.from_name('fa5s.hammer', '#d4a373')
+
+
+plot_event_type_hint = {
+    PlotEventType.PROGRESS: 'How does the plot progress and get closer to resolution?',
+    PlotEventType.SETBACK: 'How does the plot face conflict and get further from resolution?',
+    PlotEventType.CRISIS: "The lowest moment. Often an impossible choice between two equally good or bad outcomes.",
+    PlotEventType.COST: 'What does the character need to sacrifice to progress further with the plot?',
+    PlotEventType.TOOL: 'What kind of tool does the character acquire which helps them resolve the plot?',
+}
+
+
+class _PlotPrincipleToggle(QWidget):
+    def __init__(self, pincipleType: PlotPrincipleType, parent=None):
+        super(_PlotPrincipleToggle, self).__init__(parent)
+        hbox(self)
+        self._principleType = pincipleType
+
+        self._label = QPushButton()
+        transparent(self._label)
+        self._label.setCheckable(True)
+        bold(self._label)
+        self._label.setText(self._principleType.name.lower().capitalize())
+        self._label.setToolTip(principle_hints[self._principleType])
+        self._label.setIcon(principle_icon(self._principleType))
+        self._label.setCheckable(True)
+
+        self.toggle = Toggle(self)
+
+        self.layout().addWidget(self._label)
+        self.layout().addWidget(spacer())
+        self.layout().addWidget(self.toggle)
+
+        self.toggle.toggled.connect(self._label.setChecked)
+
+
+class PlotPrincipleSelectorMenu(QMenu):
+    principleToggled = pyqtSignal(PlotPrincipleType, bool)
+
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotPrincipleSelectorMenu, self).__init__(parent)
+        self._plot = plot
+
+        self._selector = QWidget()
+        vbox(self._selector)
+
+        active_types = set([x.type for x in self._plot.principles])
+
+        for principle in [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
+                          PlotPrincipleType.CONFLICT,
+                          PlotPrincipleType.STAKES, PlotPrincipleType.THEME]:
+            wdg = _PlotPrincipleToggle(principle)
+            if principle in active_types:
+                wdg.toggle.setChecked(True)
+            wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
+            self._selector.layout().addWidget(wdg)
+
+        action = QWidgetAction(self)
+        action.setDefaultWidget(self._selector)
+        self.addAction(action)
 
 
 class PlotPrincipleEditor(QWidget):
-    principleEdited = pyqtSignal(PlotPrinciple)
-    principleSet = pyqtSignal(PlotPrinciple, bool)
+    principleEdited = pyqtSignal()
 
     def __init__(self, principle: PlotPrinciple, parent=None):
         super().__init__(parent)
         self._principle = principle
 
         vbox(self)
-        margins(self, bottom=5, top=5)
         self._label = QPushButton()
         transparent(self._label)
         bold(self._label)
         self._label.setText(principle.type.name.lower().capitalize())
         self._label.setIcon(principle_icon(principle.type))
         self._label.setCheckable(True)
+        self._label.setChecked(True)
 
         self._textedit = QTextEdit(self)
         hint = principle_hints[principle.type]
@@ -108,55 +206,251 @@ class PlotPrincipleEditor(QWidget):
         self._textedit.setMaximumSize(200, 100)
         self._textedit.textChanged.connect(self._valueChanged)
 
-        self._btnSet = QPushButton('Set', self)
-        pointy(self._btnSet)
-        self._btnSet.setProperty('base', True)
-        self._btnSet.setProperty('highlighted', True)
-        self._btnSet.setMinimumWidth(80)
-        self._btnSet.setCheckable(True)
-        self._btnSet.clicked.connect(self._btnSetClicked)
-        self._btnSet.toggled.connect(self._btnSetToggled)
-        self._btnSet.setChecked(self._principle.is_set)
-        self._checkSetEnabled()
-        self._btnSet.installEventFilter(
-            DisabledClickEventFilter(self._btnSet, slot=lambda: qtanim.shake(self._textedit)))
-
         self.layout().addWidget(self._label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._textedit)
-        self.layout().addWidget(self._btnSet, alignment=Qt.AlignmentFlag.AlignRight)
 
     def activate(self):
         self._textedit.setFocus()
 
-    def _btnSetClicked(self, toggled: bool):
-        self._principle.is_set = toggled
-        self.principleSet.emit(self._principle, toggled)
-        if toggled and isinstance(self.parent(), QMenu):
-            self.parent().hide()
-
-    def _btnSetToggled(self, toggled: bool):
-        self._btnSet.setText('Unset' if toggled else 'Set')
-        self._btnSet.setProperty('highlighted', not toggled)
-        self._btnSet.setProperty('deconstructive', toggled)
-        restyle(self._btnSet)
-        self._label.setChecked(toggled)
-
-        self._checkSetEnabled()
+    def principle(self) -> PlotPrinciple:
+        return self._principle
 
     def _valueChanged(self):
         self._principle.value = self._textedit.toPlainText()
-        self._checkSetEnabled()
-        self.principleEdited.emit(self._principle)
+        self.principleEdited.emit()
 
-    def _checkSetEnabled(self):
-        if not self._btnSet.isChecked():
-            if self._principle.value:
-                self._btnSet.setEnabled(True)
-            else:
-                self._btnSet.setDisabled(True)
+
+class PlotListItemWidget(ListItemWidget):
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotListItemWidget, self).__init__(parent)
+        self._plot = plot
+        self._lineEdit.setReadOnly(True)
+        self.refresh()
+
+    def refresh(self):
+        self._lineEdit.setText(self._plot.text)
+
+
+class PlotNode(ContainerNode):
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotNode, self).__init__(plot.text, parent)
+        self._plot = plot
+        self.setPlusButtonEnabled(False)
+        incr_font(self._lblTitle)
+        margins(self._wdgTitle, top=5, bottom=5)
+
+        self.refresh()
+
+    def plot(self) -> Plot:
+        return self._plot
+
+    def refresh(self):
+        if self._plot.icon:
+            self._icon.setIcon(IconRegistry.from_name(self._plot.icon, self._plot.icon_color))
+            self._icon.setVisible(True)
+        else:
+            self._icon.setHidden(True)
+
+        self._lblTitle.setText(self._plot.text)
+
+
+class PlotEventsArcChart(BaseChart):
+    MAX: int = 4
+    MIN: int = -4
+
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotEventsArcChart, self).__init__(parent)
+        self._plot = plot
+        self.setTitle(html('Arc preview').bold())
+
+    def refresh(self):
+        self.reset()
+
+        if not self._plot.events:
+            return
+
+        series = QSplineSeries()
+        pen = QPen()
+        pen.setWidth(2)
+        pen.setColor(QColor(self._plot.icon_color))
+        series.setPen(pen)
+        arc_value: int = 0
+        series.append(0, 0)
+        for event in self._plot.events:
+            if event.type in [PlotEventType.PROGRESS, PlotEventType.TOOL] and arc_value < self.MAX:
+                arc_value += 1
+            elif event.type in [PlotEventType.SETBACK, PlotEventType.COST] and arc_value > self.MIN:
+                arc_value -= 1
+            elif event.type == PlotEventType.CRISIS and arc_value > self.MIN + 1:
+                arc_value -= 2
+            series.append(len(series), arc_value)
+
+        axis = QValueAxis()
+        axis.setRange(self.MIN, self.MAX)
+        self.addSeries(series)
+        self.addAxis(axis, Qt.AlignmentFlag.AlignLeft)
+        series.attachAxis(axis)
+        axis.setVisible(False)
+
+
+class PlotEventItem(ListItemWidget):
+    def __init__(self, event: PlotEvent, parent=None):
+        super(PlotEventItem, self).__init__(event, parent)
+        self._event = event
+        self._lineEdit.setMaximumWidth(800)
+        hint = plot_event_type_hint[event.type]
+        self._lineEdit.setPlaceholderText(hint)
+        self._lineEdit.setToolTip(hint)
+        _spacer = spacer()
+        sp(_spacer).h_preferred()
+        self.layout().addWidget(_spacer)
+        margins(self, right=15)
+
+        self._icon = Icon()
+        self._icon.setIcon(plot_event_icon(event.type))
+        self._icon.setToolTip(hint)
+        self.layout().insertWidget(1, self._icon)
+        self.refresh()
+
+    def refresh(self):
+        self._lineEdit.setText(self._event.text)
+
+    @overrides
+    def _textChanged(self, text: str):
+        super(PlotEventItem, self)._textChanged(text)
+        self._event.text = text
+
+
+class PlotEventSelectorMenu(QMenu):
+    eventSelected = pyqtSignal(PlotEventType)
+
+    def __init__(self, parent=None):
+        super(PlotEventSelectorMenu, self).__init__(parent)
+
+        for type in PlotEventType:
+            action_ = action(type.name.lower().capitalize(), plot_event_icon(type),
+                             partial(self.eventSelected.emit, type), parent=self)
+            action_.setToolTip(plot_event_type_hint[type])
+            self.addAction(action_)
+
+        self.setToolTipsVisible(True)
+
+
+class PlotEventsList(ListView):
+    eventsChanged = pyqtSignal()
+
+    def __init__(self, plot: Plot, parent=None):
+        super(PlotEventsList, self).__init__(parent)
+        self._plot = plot
+        self._btnAdd.setText('Add new event')
+        self._btnAdd.setToolTip('Add new event to reflect how the plot will progress or face setback')
+
+        menu = PlotEventSelectorMenu()
+        btn_popup_menu(self._btnAdd, menu)
+        menu.eventSelected.connect(self._addNewItem)
+
+        for event in self._plot.events:
+            self.addItem(event)
+
+    @overrides
+    def _addNewItem(self, eventType: PlotEventType):
+        event = PlotEvent('', type=eventType)
+        self._plot.events.append(event)
+        self.addItem(event)
+
+        self.eventsChanged.emit()
+
+    @overrides
+    def _listItemWidgetClass(self):
+        return PlotEventItem
+
+    @overrides
+    def _deleteItemWidget(self, widget: ListItemWidget):
+        super(PlotEventsList, self)._deleteItemWidget(widget)
+        self._plot.events.remove(widget.item())
+        self.eventsChanged.emit()
+
+    @overrides
+    def _dropped(self, mimeData: ObjectReferenceMimeData):
+        super(PlotEventsList, self)._dropped(mimeData)
+        self._plot.events[:] = [x.item() for x in self.widgets()]
+
+        self.eventsChanged.emit()
+
+
+class PlotList(TreeView):
+    plotSelected = pyqtSignal(Plot)
+    plotRemoved = pyqtSignal(Plot)
+
+    def __init__(self, novel: Novel, parent=None):
+        super(PlotList, self).__init__(parent)
+        self._novel = novel
+        self._plots: Dict[Plot, PlotNode] = {}
+        self._selectedPlots: Set[Plot] = set()
+
+        self.refresh()
+
+    def refresh(self):
+        clear_layout(self._centralWidget, auto_delete=False)
+
+        for plot in self._novel.plots:
+            wdg = self.__initPlotWidget(plot)
+            self._centralWidget.layout().addWidget(wdg)
+
+        self._centralWidget.layout().addWidget(vspacer())
+
+    def refreshPlot(self, plot: Plot):
+        self._plots[plot].refresh()
+
+    def addPlot(self, plot: Plot):
+        wdg = self.__initPlotWidget(plot)
+        self._centralWidget.layout().insertWidget(self._centralWidget.layout().count() - 1, wdg)
+
+    def selectPlot(self, plot: Plot):
+        self._plots[plot].select()
+        wdg = self._plots[plot]
+        self._plotSelectionChanged(wdg, wdg.isSelected())
+
+    def removePlot(self, plot: Plot):
+        self._removePlot(self._plots[plot])
+
+    def clearSelection(self):
+        for plot in self._selectedPlots:
+            self._plots[plot].deselect()
+        self._selectedPlots.clear()
+
+    def _plotSelectionChanged(self, wdg: PlotNode, selected: bool):
+        if selected:
+            self.clearSelection()
+            self._selectedPlots.add(wdg.plot())
+            self.plotSelected.emit(wdg.plot())
+        elif wdg.plot() in self._selectedPlots:
+            self._selectedPlots.remove(wdg.plot())
+
+    def _removePlot(self, wdg: PlotNode):
+        plot = wdg.plot()
+        if not ask_confirmation(f"Delete plot '{plot.text}'?", self._centralWidget):
+            return
+        if plot in self._selectedPlots:
+            self._selectedPlots.remove(plot)
+        self._plots.pop(plot)
+
+        fade_out_and_gc(wdg.parent(), wdg)
+
+        self.plotRemoved.emit(wdg.plot())
+
+    def __initPlotWidget(self, plot: Plot) -> PlotNode:
+        wdg = PlotNode(plot)
+        wdg.selectionChanged.connect(partial(self._plotSelectionChanged, wdg))
+        wdg.deleted.connect(partial(self._removePlot, wdg))
+
+        self._plots[plot] = wdg
+        return wdg
 
 
 class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
+    titleChanged = pyqtSignal()
+    iconChanged = pyqtSignal()
     removalRequested = pyqtSignal()
 
     def __init__(self, novel: Novel, plot: Plot, parent=None):
@@ -165,43 +459,39 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.novel = novel
         self.plot = plot
 
-        incr_font(self.lineName)
+        incr_font(self.lineName, 2)
         bold(self.lineName)
         self.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
-        self.textQuestion.setPlainText(self.plot.question)
-        self.textQuestion.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.textQuestion.textChanged.connect(self._questionChanged)
-        retain_when_hidden(self.btnRemove)
+        self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon())
+        retain_when_hidden(self.btnPincipleEditor)
+        decr_icon(self.btnPincipleEditor)
+        self.btnArcToggle.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
+        decr_icon(self.btnArcToggle)
 
-        self.btnGoal.setIcon(principle_icon(PlotPrincipleType.GOAL))
-        self.btnAntagonist.setIcon(principle_icon(PlotPrincipleType.ANTAGONIST))
-        self.btnConflict.setIcon(principle_icon(PlotPrincipleType.CONFLICT))
-        self.btnConsequences.setIcon(principle_icon(PlotPrincipleType.CONSEQUENCES))
-        self.btnProgress.setIcon(principle_icon(PlotPrincipleType.PROGRESS))
-        self.btnSetback.setIcon(principle_icon(PlotPrincipleType.SETBACK))
-        self.btnTurns.setIcon(principle_icon(PlotPrincipleType.TURNS))
-        self.btnCrisis.setIcon(principle_icon(PlotPrincipleType.CRISIS))
+        self.splitter.setSizes([300, 300])
 
-        for btn in self.buttonGroup.buttons():
-            btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
-            btn.installEventFilter(InstantTooltipEventFilter(btn))
+        self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
+        self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
+        btn_popup_menu(self.btnPincipleEditor, self._principleSelectorMenu)
+        self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
 
-        for principle_type in PlotPrincipleType:
-            principle = self._principle(principle_type)
-            btn = self._btnPrinciple(principle_type)
-            btn.setChecked(principle.is_set)
-            self._setPrincipleTooltip(btn, principle)
+        self._initFrameColor()
+        for lbl in [self.lblValues, self.lblPrinciples, self.lblProgression]:
+            underline(lbl)
 
-            editor = PlotPrincipleEditor(principle, btn)
-            editor.principleSet.connect(self._principleSet)
-            editor.principleEdited.connect(self._principleEdited)
-            menu = btn_popup(btn, editor)
-            menu.aboutToShow.connect(editor.activate)
+        flow(self.wdgPrinciples)
+        for principle in self.plot.principles:
+            # TODO remove later
+            if principle.type in [PlotPrincipleType.TURNS, PlotPrincipleType.CRISIS, PlotPrincipleType.PROGRESS,
+                                  PlotPrincipleType.SETBACK, PlotPrincipleType.CONSEQUENCES]:
+                continue
+            self._initPrincipleEditor(principle)
 
         flow(self.wdgValues)
         self._btnAddValue = SecondaryActionPushButton(self)
+        decr_font(self._btnAddValue)
         self._btnAddValue.setIconSize(QSize(14, 14))
         self._btnAddValue.setText('' if self.plot.values else 'Attach story value')
         retain_when_hidden(self._btnAddValue)
@@ -210,7 +500,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._addValue(value)
 
         self._characterSelector = CharacterSelectorButton(novel, self)
-        self._characterSelector.setGeometry(5, 5, 40, 40)
+        self._characterSelector.setToolTip('Link character to this plot')
+        self._characterSelector.setGeometry(10, 10, 40, 40)
         character = self.plot.character(novel)
         if character is not None:
             self._characterSelector.setCharacter(character)
@@ -220,8 +511,18 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.wdgValues.layout().addWidget(self._btnAddValue)
         self._btnAddValue.clicked.connect(self._newValue)
 
-        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnRemove, parent=self))
+        self._lstEvents = PlotEventsList(self.plot)
+        self._lstEvents.centralWidget().setStyleSheet(f'.QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
+        self._lstEvents.eventsChanged.connect(self._eventsChanged)
+        self.wdgEventsParent.layout().addWidget(self._lstEvents)
+
+        self._arcChart = PlotEventsArcChart(self.plot)
+        self.chartViewArcPreview.setChart(self._arcChart)
+        self._arcChart.refresh()
+
+        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
+        self.installEventFilter(VisibilityToggleEventFilter(target=self.btnPincipleEditor, parent=self))
 
         self._updateIcon()
 
@@ -242,69 +543,24 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             action('Change icon', icon=IconRegistry.icons_icon(), slot=self._changeIcon, parent=iconMenu))
         btn_popup_menu(self.btnPlotIcon, iconMenu)
 
-        self.btnRemove.clicked.connect(self.removalRequested.emit)
+        contextMenu = QMenu()
+        contextMenu.addMenu(colorMenu)
+        contextMenu.addSeparator()
+        contextMenu.addAction(IconRegistry.trash_can_icon(), 'Remove plot', self.removalRequested.emit)
+        btn_popup_menu(self.btnSettings, contextMenu)
 
         self.repo = RepositoryPersistenceManager.instance()
 
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
 
+    @overrides
     def event_received(self, event: Event):
         if isinstance(event, CharacterDeletedEvent):
             if self.plot.character_id == event.character.id:
                 self.plot.reset_character()
-                self.repo.update_novel(self.novel)
+                self._save()
                 self._characterSelector.clear()
-
-    def _principle(self, principleType: PlotPrincipleType) -> PlotPrinciple:
-        for principle in self.plot.principles:
-            if principle.type == principleType:
-                return principle
-
-        principle = PlotPrinciple(principleType, '')
-        self.plot.principles.append(principle)
-        return principle
-
-    def _btnPrinciple(self, principleType: PlotPrincipleType) -> QAbstractButton:
-        if principleType == PlotPrincipleType.GOAL:
-            return self.btnGoal
-        elif principleType == PlotPrincipleType.ANTAGONIST:
-            return self.btnAntagonist
-        elif principleType == PlotPrincipleType.CONFLICT:
-            return self.btnConflict
-        elif principleType == PlotPrincipleType.CONSEQUENCES:
-            return self.btnConsequences
-        elif principleType == PlotPrincipleType.PROGRESS:
-            return self.btnProgress
-        elif principleType == PlotPrincipleType.SETBACK:
-            return self.btnSetback
-        elif principleType == PlotPrincipleType.TURNS:
-            return self.btnTurns
-        elif principleType == PlotPrincipleType.CRISIS:
-            return self.btnCrisis
-
-    def _principleSet(self, principle: PlotPrinciple, toggled: bool):
-        btn = self._btnPrinciple(principle.type)
-        btn.setChecked(toggled)
-        if toggled:
-            qtanim.glow(btn)
-        else:
-            translucent(btn, 0.4)
-        self.repo.update_novel(self.novel)
-        self._setPrincipleTooltip(btn, principle)
-
-    def _setPrincipleTooltip(self, btn: QAbstractButton, principle: PlotPrinciple):
-        tooltip = f'<html><body style="font-size:{btn.font().pointSize() + 2}pt;">'
-        tooltip += f'{icon_to_html_img(btn.icon())} {principle.type.name.lower().capitalize()}'
-
-        if principle.is_set:
-            tooltip += f'<hr/>{principle.value}'
-        btn.setToolTip(tooltip)
-
-    def _principleEdited(self, principle: PlotPrinciple):
-        self.repo.update_novel(self.novel)
-        if principle.is_set:
-            self._setPrincipleTooltip(self._btnPrinciple(principle.type), principle)
 
     def _updateIcon(self):
         if self.plot.icon:
@@ -312,29 +568,70 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
     def _nameEdited(self, name: str):
         self.plot.text = name
-        self.repo.update_novel(self.novel)
-
-    def _questionChanged(self):
-        self.plot.question = self.textQuestion.toPlainText()
-        self.repo.update_novel(self.novel)
+        self._save()
+        self.titleChanged.emit()
 
     def _characterSelected(self, character: Character):
         self.plot.set_character(character)
-        self.repo.update_novel(self.novel)
+        self._save()
 
     def _changeIcon(self):
         result = IconSelectorDialog(self).display(QColor(self.plot.icon_color))
         if result:
             self.plot.icon = result[0]
-            self.plot.icon_color = result[1].name()
-            self._updateIcon()
-            self.repo.update_novel(self.novel)
+            self._colorChanged(result[1])
 
     def _colorChanged(self, color: QColor):
         self.plot.icon_color = color.name()
         self._updateIcon()
-        self.parent().setFrameColor(color)
+        self._initFrameColor()
+        self._arcChart.refresh()
+        self._save()
+        self.iconChanged.emit()
+
+    def _principleToggled(self, principleType: PlotPrincipleType, toggled: bool):
+        if toggled:
+            principle = PlotPrinciple(principleType)
+            self._initPrincipleEditor(principle)
+            self.plot.principles.append(principle)
+        else:
+            principle = next((_principle for _principle in self.plot.principles if _principle.type == principleType),
+                             None)
+            if principle:
+                self.plot.principles.remove(principle)
+                wdg = self._principles.pop(principle.type)
+                fade_out_and_gc(self.wdgPrinciples, wdg)
+
+        self._save()
+
+    def _initPrincipleEditor(self, principle: PlotPrinciple):
+        editor = PlotPrincipleEditor(principle)
+        editor.principleEdited.connect(self._save)
+        self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
+        self._principles[principle.type] = editor
+
+        return editor
+
+    def _save(self):
         self.repo.update_novel(self.novel)
+
+    def _eventsChanged(self):
+        self._arcChart.refresh()
+        self._save()
+
+    def _initFrameColor(self):
+        self.setStyleSheet(f'''
+            #PlotWidget {{
+                background-color: {RELAXED_WHITE_COLOR};
+                border: 2px solid {self.plot.icon_color};
+            }}
+            #scrollAreaWidgetContents {{
+                background-color: {RELAXED_WHITE_COLOR};
+            }}
+            #frame {{
+                border: 1px solid {self.plot.icon_color};
+            }}
+        ''')
 
     def _newValue(self):
         value = PlotValueEditorDialog().display()
@@ -344,7 +641,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._addValue(value)
             self.wdgValues.layout().addWidget(self._btnAddValue)
 
-            self.repo.update_novel(self.novel)
+            self._save()
 
     def _addValue(self, value: PlotValue):
         label = PlotValueLabel(value, parent=self.wdgValues, removalEnabled=True)
@@ -363,7 +660,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
     def __destroyValue(self, widget: PlotValueLabel):
         self.plot.values.remove(widget.value)
-        self.repo.update_novel(self.novel)
+        self._save()
         self.wdgValues.layout().removeWidget(widget)
         gc(widget)
         has_values = len(self.plot.values) > 0
@@ -375,10 +672,14 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         super(PlotEditor, self).__init__(parent)
         self.setupUi(self)
         self.novel = novel
-        flow(self.scrollAreaWidgetContents, spacing=15)
-        margins(self.scrollAreaWidgetContents, left=15)
-        for plot in self.novel.plots:
-            self._addPlotWidget(plot)
+
+        self._wdgList = PlotList(self.novel)
+        self.wdgPlotListParent.layout().addWidget(self._wdgList)
+        self._wdgList.plotSelected.connect(self._plotSelected)
+        self._wdgList.plotRemoved.connect(self._plotRemoved)
+        self.stack.setCurrentWidget(self.pageDisplay)
+
+        self.splitter.setSizes([150, 550])
 
         italic(self.btnAdd)
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
@@ -390,19 +691,8 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-    def _addPlotWidget(self, plot: Plot) -> PlotWidget:
-        frame = Frame()
-        frame.setFrameColor(QColor(plot.icon_color))
-        frame.setBackgroundColor(QColor(RELAXED_WHITE_COLOR))
-
-        widget = PlotWidget(self.novel, plot, frame)
-        margins(widget, left=5, right=5)
-        widget.removalRequested.connect(partial(self._remove, widget))
-
-        frame.setWidget(widget)
-        self.scrollAreaWidgetContents.layout().addWidget(frame)
-
-        return widget
+    def widgetList(self) -> PlotList:
+        return self._wdgList
 
     def newPlot(self, plot_type: PlotType):
         if plot_type == PlotType.Internal:
@@ -428,19 +718,40 @@ class PlotEditor(QWidget, Ui_PlotEditor):
             number_of_plots = len([x for x in self.novel.plots if x.plot_type == plot_type])
             plot.icon_color = plot_colors[(number_of_plots - 1) % len(plot_colors)]
 
-        widget = self._addPlotWidget(plot)
-        widget.lineName.setFocus()
-
+        self._wdgList.addPlot(plot)
         self.repo.update_novel(self.novel)
+        self._wdgList.selectPlot(plot)
 
-    def _remove(self, widget: PlotWidget):
-        if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
-            if app_env.test_env():
-                self.__destroy(widget)
-            else:
-                anim = qtanim.fade_out(widget, duration=150)
-                anim.finished.connect(partial(self.__destroy, widget))
+    def _plotSelected(self, plot: Plot) -> PlotWidget:
+        widget = PlotWidget(self.novel, plot, self.pageDisplay)
+        widget.removalRequested.connect(partial(self._remove, widget))
+        widget.titleChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
+        widget.iconChanged.connect(partial(self._wdgList.refreshPlot, widget.plot))
 
-    def __destroy(self, widget: PlotWidget):
-        delete_plot(self.novel, widget.plot)
-        self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())
+        clear_layout(self.pageDisplay)
+        self.pageDisplay.layout().addWidget(widget)
+
+        return widget
+
+    def _remove(self, wdg: PlotWidget):
+        self._wdgList.removePlot(wdg.plot)
+
+    def _plotRemoved(self, plot: Plot):
+        if self.pageDisplay.layout().count():
+            item = self.pageDisplay.layout().itemAt(0)
+            if item.widget() and isinstance(item.widget(), PlotWidget):
+                if item.widget().plot == plot:
+                    clear_layout(self.pageDisplay)
+        delete_plot(self.novel, plot)
+
+    # def _remove(self, widget: PlotWidget):
+    #     if ask_confirmation(f'Are you sure you want to delete the plot {widget.plot.text}?'):
+    #         if app_env.test_env():
+    #             self.__destroy(widget)
+    #         else:
+    #             anim = qtanim.fade_out(widget, duration=150)
+    #             anim.finished.connect(partial(self.__destroy, widget))
+    #
+    # def __destroy(self, widget: PlotWidget):
+    #     delete_plot(self.novel, widget.plot)
+    #     self.scrollAreaWidgetContents.layout().removeWidget(widget.parent())

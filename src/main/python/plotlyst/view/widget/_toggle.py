@@ -36,11 +36,11 @@ class _Toggle(QCheckBox):
     _transparent_pen = QPen(Qt.GlobalColor.transparent)
     _light_grey_pen = QPen(Qt.GlobalColor.lightGray)
 
-    def __init__(self, parent=None, bar_color=Qt.gray, checked_color='#A57ABF',
+    def __init__(self, parent=None, bar_color=Qt.GlobalColor.gray, checked_color='#219EBC',
                  handle_color=Qt.GlobalColor.white):
         super().__init__(parent)
         self._bar_brush = QBrush(bar_color)
-        self._bar_checked_brush = QBrush(QColor(checked_color).lighter())
+        self._bar_checked_brush = QBrush(QColor('#2BB7DA'))
 
         self._handle_brush = QBrush(handle_color)
         self._handle_checked_brush = QBrush(QColor(checked_color))
@@ -121,13 +121,13 @@ class _Toggle(QCheckBox):
 class AnimatedToggle(_Toggle):
 
     def __init__(self, *args, pulse_unchecked_color="#44999999",
-                 pulse_checked_color="#CDB4DB", **kwargs):
+                 pulse_checked_color="#60C9E3", **kwargs):
         self._pulse_radius = 0
 
         super().__init__(*args, **kwargs)
 
         self.animation = QPropertyAnimation(self, b"handle_position", self)
-        self.animation.setEasingCurve(QEasingCurve.InOutCubic)
+        self.animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
         self.animation.setDuration(200)
 
         self.pulse_anim = QPropertyAnimation(self, b"pulse_radius", self)
@@ -172,7 +172,7 @@ class AnimatedToggle(_Toggle):
 
         xPos = contRect.x() + handleRadius + trailLength * self._handle_position
 
-        if self.pulse_anim.state() == QPropertyAnimation.Running:
+        if self.pulse_anim.state() == QPropertyAnimation.State.Running:
             painter.setBrush(
                 self._pulse_checked_animation if
                 self.isChecked() else self._pulse_unchecked_animation)
