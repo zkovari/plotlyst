@@ -78,7 +78,7 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
     elif type == PlotPrincipleType.CRISIS:
         return IconRegistry.crisis_icon('grey')
     elif type == PlotPrincipleType.STAKES:
-        return IconRegistry.from_name('mdi.sack')
+        return IconRegistry.from_name('mdi.sack', 'grey', '#e9c46a')
     elif type == PlotPrincipleType.QUESTION:
         return IconRegistry.from_name('ei.question-sign', 'grey', 'darkBlue')
     elif type == PlotPrincipleType.THEME:
@@ -411,6 +411,9 @@ class PlotList(TreeView):
         wdg = self._plots[plot]
         self._plotSelectionChanged(wdg, wdg.isSelected())
 
+    def removePlot(self, plot: Plot):
+        self._removePlot(self._plots[plot])
+
     def clearSelection(self):
         for plot in self._selectedPlots:
             self._plots[plot].deselect()
@@ -463,6 +466,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.lineName.textChanged.connect(self._nameEdited)
         self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon())
         retain_when_hidden(self.btnPincipleEditor)
+        decr_icon(self.btnPincipleEditor)
         self.btnArcToggle.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
         decr_icon(self.btnArcToggle)
 
@@ -539,7 +543,11 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             action('Change icon', icon=IconRegistry.icons_icon(), slot=self._changeIcon, parent=iconMenu))
         btn_popup_menu(self.btnPlotIcon, iconMenu)
 
-        # self.btnRemove.clicked.connect(self.removalRequested.emit)
+        contextMenu = QMenu()
+        contextMenu.addMenu(colorMenu)
+        contextMenu.addSeparator()
+        contextMenu.addAction(IconRegistry.trash_can_icon(), 'Remove plot', self.removalRequested.emit)
+        btn_popup_menu(self.btnSettings, contextMenu)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -726,7 +734,7 @@ class PlotEditor(QWidget, Ui_PlotEditor):
         return widget
 
     def _remove(self, wdg: PlotWidget):
-        pass
+        self._wdgList.removePlot(wdg.plot)
 
     def _plotRemoved(self, plot: Plot):
         if self.pageDisplay.layout().count():

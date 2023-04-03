@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import QScrollArea, QFrame, QLineEdit
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qtanim import fade_in
-from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent
+from qthandy import vbox, vspacer, hbox, clear_layout, retain_when_hidden, margins, gc, translucent, decr_font
 from qthandy.filter import DragEventFilter, DropEventFilter, ObjectReferenceMimeData
 
 from src.main.python.plotlyst.view.common import fade_out_and_gc, wrap
@@ -115,6 +115,7 @@ class ListView(QScrollArea):
         self._centralWidget.layout().addWidget(vspacer())
 
         self._btnAdd.clicked.connect(self._addNewItem)
+        decr_font(self._btnAdd)
 
         self._dragPlaceholder: Optional[ListItemWidget] = None
         self._dragged: Optional[ListItemWidget] = None
