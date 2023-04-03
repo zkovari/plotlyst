@@ -466,6 +466,11 @@ class PlotPrinciple:
     is_set: bool = False
 
 
+@dataclass
+class PlotEvent:
+    text: str
+
+
 # must add to the subclass:
 #    character_id: Optional[uuid.UUID] = None
 #    def __post_init__(self):
@@ -519,6 +524,7 @@ class Plot(SelectionItem, CharacterBased):
     character_id: Optional[uuid.UUID] = None
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
+    events: List[PlotEvent] = field(default_factory=list)
 
     def __post_init__(self):
         self._character: Optional[Character] = None

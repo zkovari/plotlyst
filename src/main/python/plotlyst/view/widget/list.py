@@ -119,6 +119,9 @@ class ListView(QScrollArea):
         self._dragged: Optional[ListItemWidget] = None
         self._toBeRemoved = False
 
+    def centralWidget(self) -> QWidget:
+        return self._centralWidget
+
     def addItem(self, item: Any):
         wdg = self.__newItemWidget(item)
 
