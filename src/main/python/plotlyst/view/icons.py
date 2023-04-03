@@ -502,6 +502,10 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.timer-outline')
 
     @staticmethod
+    def theme_icon(color: str = '#9d4edd', color_on: str = '#9d4edd') -> QIcon:
+        return IconRegistry.from_name('mdi.butterfly-outline', color=color, color_on=color_on)
+
+    @staticmethod
     def pause_icon() -> QIcon:
         return IconRegistry.from_name('fa5s.pause', '#3f37c9')
 

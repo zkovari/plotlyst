@@ -74,6 +74,10 @@ def principle_icon(type: PlotPrincipleType) -> QIcon:
         return IconRegistry.crisis_icon('grey')
     elif type == PlotPrincipleType.STAKES:
         return IconRegistry.from_name('mdi.sack')
+    elif type == PlotPrincipleType.QUESTION:
+        return IconRegistry.from_name('ei.question-sign', 'grey', 'darkBlue')
+    elif type == PlotPrincipleType.THEME:
+        return IconRegistry.theme_icon('grey')
 
 
 principle_hints = {PlotPrincipleType.GOAL: "What's the main goal that drives this plot?",
@@ -85,21 +89,33 @@ principle_hints = {PlotPrincipleType.GOAL: "What's the main goal that drives thi
                    PlotPrincipleType.TURNS: "When progress suddenly turns to setback or vice versa.",
                    PlotPrincipleType.CRISIS: "The lowest moment." +
                                              " Often an impossible choice between two equally good or bad outcomes.",
-                   PlotPrincipleType.STAKES: "What's at stake if the plot goal is not accomplished?"
+                   PlotPrincipleType.STAKES: "What's at stake if the plot goal is not accomplished?",
+                   PlotPrincipleType.QUESTION: "What is the main dramatic question of this plot?",
+                   PlotPrincipleType.THEME: "How does this plot express the theme?",
                    }
+
+principle_type_index: Dict[PlotPrincipleType, int] = {
+    PlotPrincipleType.QUESTION: 0,
+    PlotPrincipleType.GOAL: 1,
+    PlotPrincipleType.ANTAGONIST: 2,
+    PlotPrincipleType.CONFLICT: 3,
+    PlotPrincipleType.STAKES: 4,
+    PlotPrincipleType.THEME: 5,
+}
 
 
 class _PlotPrincipleToggle(QWidget):
     def __init__(self, pincipleType: PlotPrincipleType, parent=None):
         super(_PlotPrincipleToggle, self).__init__(parent)
         hbox(self)
-        self._pincipleType = pincipleType
+        self._principleType = pincipleType
 
         self._label = QPushButton()
         transparent(self._label)
+        self._label.setCheckable(True)
         bold(self._label)
-        self._label.setText(self._pincipleType.name.lower().capitalize())
-        self._label.setIcon(principle_icon(self._pincipleType))
+        self._label.setText(self._principleType.name.lower().capitalize())
+        self._label.setIcon(principle_icon(self._principleType))
         self._label.setCheckable(True)
 
         self.toggle = Toggle(self)
@@ -107,6 +123,8 @@ class _PlotPrincipleToggle(QWidget):
         self.layout().addWidget(self._label)
         self.layout().addWidget(spacer())
         self.layout().addWidget(self.toggle)
+
+        self.toggle.toggled.connect(self._label.setChecked)
 
 
 class PlotPrincipleSelectorMenu(QMenu):
@@ -121,8 +139,9 @@ class PlotPrincipleSelectorMenu(QMenu):
 
         active_types = set([x.type for x in self._plot.principles])
 
-        for principle in [PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST, PlotPrincipleType.CONFLICT,
-                          PlotPrincipleType.STAKES]:
+        for principle in [PlotPrincipleType.QUESTION, PlotPrincipleType.GOAL, PlotPrincipleType.ANTAGONIST,
+                          PlotPrincipleType.CONFLICT,
+                          PlotPrincipleType.STAKES, PlotPrincipleType.THEME]:
             wdg = _PlotPrincipleToggle(principle)
             if principle in active_types:
                 wdg.toggle.setChecked(True)
@@ -416,12 +435,12 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
     def _initPrincipleEditor(self, principle: PlotPrinciple):
         editor = PlotPrincipleEditor(principle)
         editor.principleEdited.connect(partial(self._principleEdited, principle))
-        self.wdgPrinciples.layout().insertWidget(principle.type.value, editor)
+        self.wdgPrinciples.layout().insertWidget(principle_type_index[principle.type], editor)
         self._principles[principle.type] = editor
 
         return editor
 
-    def _principleEdited(self, principle: PlotPrinciple):
+    def _principleEdited(self, _: PlotPrinciple):
         self.repo.update_novel(self.novel)
 
     def _initFrameColor(self):

@@ -456,7 +456,7 @@ class PlotPrincipleType(Enum):
     CRISIS = 7
     QUESTION = 8
     STAKES = 9
-    THEMATIC_REFERENCE = 10
+    THEME = 10
 
 
 @dataclass
