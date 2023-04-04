@@ -30,8 +30,8 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton
     QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout, QWidgetAction
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
-    decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic
-from qthandy.filter import OpacityEventFilter
+    decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
 
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
@@ -453,10 +453,10 @@ class LineTextTemplateFieldWidget(TemplateFieldWidgetBase):
 
 
 class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
-    def __init__(self, field: TemplateField, parent=None):
+    def __init__(self, field: TemplateField, parent=None, minHeight: int = 60):
         super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
         _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
-        self.wdgEditor = AutoAdjustableTextEdit(height=60)
+        self.wdgEditor = AutoAdjustableTextEdit(height=minHeight)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setTabChangesFocus(True)
         self.wdgEditor.setPlaceholderText(field.placeholder)
@@ -734,30 +734,20 @@ class FieldSelector(QWidget):
         self._fields[field].toggle.toggle()
 
 
-class _PrimaryFieldWidget(QWidget):
-    removed = pyqtSignal()
-    valueChanged = pyqtSignal()
+class _SecondaryFieldSelectorButton(QToolButton):
+    removalRequested = pyqtSignal()
 
-    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], value: str = '', parent=None):
-        super().__init__(parent)
+    def __init__(self, field: TemplateField, selector: FieldSelector, parent=None):
+        super(_SecondaryFieldSelectorButton, self).__init__(parent)
         self._field = field
-        self._secondaryFields = secondaryFields
-        self._secondaryFieldWidgets: Dict[TemplateField, Optional[SmallTextTemplateFieldWidget]] = {}
-        for sf in secondaryFields:
-            self._secondaryFieldWidgets[sf] = None
-        hbox(self, 0, 2)
-        self._primaryWdg = SmallTextTemplateFieldWidget(field)
-        self._primaryWdg.valueFilled.connect(self.valueChanged.emit)
-        self._primaryWdg.valueReset.connect(self.valueChanged.emit)
-
-        btnSecondary = QToolButton()
-        btnSecondary.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        transparent(btnSecondary)
-        pointy(btnSecondary)
-        btnSecondary.setIconSize(QSize(22, 22))
-        btnSecondary.setIcon(IconRegistry.plus_edit_icon())
-        self._selector = FieldSelector(secondaryFields)
-        menu = QMenu(btnSecondary)
+        self._selector = selector
+        retain_when_hidden(self)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        transparent(self)
+        pointy(self)
+        self.setIconSize(QSize(22, 22))
+        self.setIcon(IconRegistry.plus_edit_icon())
+        menu = QMenu(self)
         action = QWidgetAction(menu)
         action.setDefaultWidget(self._selector)
         menu.addAction(action)
@@ -770,22 +760,52 @@ class _PrimaryFieldWidget(QWidget):
         btnRemove.setIcon(IconRegistry.trash_can_icon())
         hmax(btnRemove)
         italic(btnRemove)
-        btnRemove.clicked.connect(self.removed.emit)
+        btnRemove.clicked.connect(self.removalRequested.emit)
         action.setDefaultWidget(wrap(btnRemove, margin_top=15))
         menu.addAction(action)
-        btn_popup_menu(btnSecondary, menu)
+        btn_popup_menu(self, menu)
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
+
+
+class _PrimaryFieldWidget(QWidget):
+    removed = pyqtSignal()
+    valueChanged = pyqtSignal()
+
+    def __init__(self, field: TemplateField, secondaryFields: List[TemplateField], value: str = '', parent=None):
+        super().__init__(parent)
+        self._field = field
+        self._secondaryFields = secondaryFields
+        self._secondaryFieldWidgets: Dict[TemplateField, Optional[SmallTextTemplateFieldWidget]] = {}
+        for sf in secondaryFields:
+            self._secondaryFieldWidgets[sf] = None
+        vbox(self, 0, 2)
+        self._primaryWdg = SmallTextTemplateFieldWidget(field)
+        self._primaryWdg.valueFilled.connect(self.valueChanged.emit)
+        self._primaryWdg.valueReset.connect(self.valueChanged.emit)
+
+        self._selector = FieldSelector(secondaryFields)
+        btnSecondary = _SecondaryFieldSelectorButton(self._field, self._selector)
+        btnSecondary.removalRequested.connect(self.removed.emit)
         self._selector.toggled.connect(self._toggleSecondaryField)
         self._selector.clicked.connect(self._clickSecondaryField)
-        btnSecondary.installEventFilter(OpacityEventFilter(btnSecondary, leaveOpacity=0.7))
 
         self._secondaryWdgContainer = QWidget()
         vbox(self._secondaryWdgContainer, 0, 2)
+        margins(self._secondaryWdgContainer, left=40)
         for _ in self._secondaryFields:
             self._secondaryWdgContainer.layout().addWidget(spacer())
 
-        self.layout().addWidget(self._primaryWdg, alignment=Qt.AlignmentFlag.AlignVCenter)
-        self.layout().addWidget(wrap(btnSecondary, margin_top=20))
+        top = QWidget()
+        hbox(top)
+        top.layout().addWidget(self._primaryWdg)
+        top.layout().addWidget(btnSecondary, alignment=Qt.AlignmentFlag.AlignTop)
+        spacer_ = spacer()
+        sp(spacer_).h_preferred()
+        top.layout().addWidget(spacer_)
+        self.layout().addWidget(top)
         self.layout().addWidget(self._secondaryWdgContainer)
+
+        self.installEventFilter(VisibilityToggleEventFilter(btnSecondary, self._primaryWdg))
 
     def field(self) -> TemplateField:
         return self._field
@@ -813,7 +833,7 @@ class _PrimaryFieldWidget(QWidget):
         i = self._secondaryFields.index(secondary)
 
         if toggled:
-            wdg = SmallTextTemplateFieldWidget(secondary)
+            wdg = SmallTextTemplateFieldWidget(secondary, minHeight=40)
             wdg.valueFilled.connect(self.valueChanged.emit)
             wdg.valueReset.connect(self.valueChanged.emit)
             self._secondaryFieldWidgets[secondary] = wdg
