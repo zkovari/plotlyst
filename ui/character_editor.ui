@@ -591,9 +591,12 @@ border: 0px;
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tabTopics">
+       <property name="relaxed-white-bg" stdset="0">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>Topics</string>
        </attribute>
@@ -770,6 +773,9 @@ border: 0px;
        </layout>
       </widget>
       <widget class="QWidget" name="tabGoals">
+       <property name="relaxed-white-bg" stdset="0">
+        <bool>true</bool>
+       </property>
        <attribute name="title">
         <string>Plan</string>
        </attribute>
