@@ -1929,11 +1929,52 @@ default_topics: List[Topic] = [
 ]
 default_topics.sort(key=lambda x: x.text)
 
+topic_ids = {}
+for topic in default_topics:
+    topic_ids[str(topic.id)] = topic
+
+
+class CharacterTopicSelector(QMenu):
+    topicTriggered = pyqtSignal(Topic)
+
+    def __init__(self, character: Character, parent=None):
+        super(CharacterTopicSelector, self).__init__(parent)
+        self._character = character
+        self._actions: Dict[Topic, QAction] = {}
+        char_topic_ids = set([str(x.id) for x in character.topics])
+        self.setToolTipsVisible(True)
+
+        for topic in default_topics:
+            action_ = self._Action(topic, self)
+            self._actions[topic] = action_
+            action_.triggered.connect(partial(self.topicTriggered.emit, topic))
+            if str(topic.id) in char_topic_ids:
+                action_.setDisabled(True)
+            self.addAction(action_)
+
+        # self.addSeparator()
+        # new_topic_action = action('New topic', IconRegistry.topics_icon(),
+        #                           slot=self._newTopic, parent=menu)
+        # self.addAction(new_topic_action)
+
+    def updateTopic(self, topic: Topic, enabled: bool):
+        self._actions[topic].setEnabled(enabled)
+
+    class _Action(QAction):
+        def __init__(self, topic: Topic, parent=None):
+            super().__init__(parent)
+            self.topic = topic
+            if topic.icon:
+                self.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
+            self.setText(topic.text)
+            self.setToolTip(topic.description)
+
 
 class CharacterTopicsEditor(QWidget, Ui_CharacterTopicEditor):
     def __init__(self, parent=None):
         super(CharacterTopicsEditor, self).__init__(parent)
         self._character: Optional[Character] = None
+        self._menu: Optional[CharacterTopicSelector] = None
         self.setupUi(self)
 
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
@@ -1945,50 +1986,24 @@ class CharacterTopicsEditor(QWidget, Ui_CharacterTopicEditor):
 
     def setCharacter(self, character: Character):
         self._character = character
-        topic_ids = {}
-        char_topic_ids = set([str(x.id) for x in character.topics])
-
-        menu = QMenu(self.btnAdd)
-        for topic in default_topics:
-            topic_ids[str(topic.id)] = topic
-            action_ = self._Action(topic, menu)
-            action_.triggered.connect(partial(self._addTopic, action_, topic))
-            if str(topic.id) in char_topic_ids:
-                action_.setDisabled(True)
-            menu.addAction(action_)
-
-        # menu.addSeparator()
-        # menu.addSection('Section')
-        # new_topic_action = action('New topic', IconRegistry.topics_icon(),
-        #                           slot=self._newTopic, parent=menu)
-        # menu.addAction(new_topic_action)
-        btn_popup_menu(self.btnAdd, menu)
+        self._menu = CharacterTopicSelector(self._character, self.btnAdd)
+        self._menu.topicTriggered.connect(self._addTopic)
+        btn_popup_menu(self.btnAdd, self._menu)
 
         for tc in character.topics:
             topic = topic_ids.get(str(tc.id))
             if topic:
                 self._wdgTopics.addTopic(topic, tc)
 
-    def _addTopic(self, action_: QAction, topic: Topic):
+    def _addTopic(self, topic: Topic):
         if self._character is None:
             return
         value = TemplateValue(topic.id, '')
         self._character.topics.append(value)
         self._wdgTopics.addTopic(topic, value)
 
-        action_.setDisabled(True)
+        self._menu.updateTopic(topic, False)
 
     def _topicRemoved(self, topic: Topic, value: TemplateValue):
         self._character.topics.remove(value)
-
-    def _newTopic(self):
-        pass
-
-    class _Action(QAction):
-        def __init__(self, topic: Topic, parent=None):
-            super().__init__(parent)
-            self.topic = topic
-            if topic.icon:
-                self.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
-            self.setText(topic.text)
-            self.setToolTip(topic.description)
+        self._menu.updateTopic(topic, True)
