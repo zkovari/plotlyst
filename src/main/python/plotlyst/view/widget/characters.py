@@ -1936,19 +1936,12 @@ class CharacterTopicsEditor(QWidget, Ui_CharacterTopicEditor):
         self._character: Optional[Character] = None
         self.setupUi(self)
 
-        # self._btnAdd = QPushButton(self)
-        # self._btnAdd.setProperty('base', True)
-        # self._btnAdd.setProperty('positive', True)
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
         self.btnAdd.setText('Add topic')
 
         self._wdgTopics = TopicsEditor(self)
         self.scrollAreaWidgetTopics.layout().addWidget(self._wdgTopics)
-
-        # layout_ = vbox(self, margin=9)
-        # layout_.addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignLeft)
-        # layout_.addWidget(self._wdgTopics)
-        # layout_.addWidget(vspacer())
+        self._wdgTopics.topicRemoved.connect(self._topicRemoved)
 
     def setCharacter(self, character: Character):
         self._character = character
@@ -1984,6 +1977,9 @@ class CharacterTopicsEditor(QWidget, Ui_CharacterTopicEditor):
         self._wdgTopics.addTopic(topic, value)
 
         action_.setDisabled(True)
+
+    def _topicRemoved(self, topic: Topic, value: TemplateValue):
+        self._character.topics.remove(value)
 
     def _newTopic(self):
         pass
