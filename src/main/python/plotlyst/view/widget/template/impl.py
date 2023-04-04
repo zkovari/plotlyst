@@ -393,6 +393,8 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         self.setHeaderEnabled(enabled)
         self.headerEnabledChanged.emit(enabled)
 
+        self._toggle.setVisible(True)
+
     def _valueFilled(self, widget: TemplateWidgetBase, value: float):
         if self.progressStatuses[widget] == value:
             return
