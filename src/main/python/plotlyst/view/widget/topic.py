@@ -21,10 +21,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QTextEdit
-from qthandy import vbox, bold, line, transparent, margins
+from qthandy import vbox, bold, line, transparent, margins, vspacer
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Topic
-from src.main.python.plotlyst.view.common import pointy
+from src.main.python.plotlyst.view.common import pointy, insert_before_the_end
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
@@ -92,6 +92,8 @@ class TopicsEditor(QWidget):
         super(TopicsEditor, self).__init__(parent)
         vbox(self)
 
+        self.layout().addWidget(vspacer())
+
     def addTopic(self, topic: Topic, value: TemplateValue):
         wdg = TopicWidget(topic, value, self)
-        self.layout().addWidget(wdg)
+        insert_before_the_end(self, wdg)

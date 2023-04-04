@@ -66,6 +66,7 @@ from src.main.python.plotlyst.view.generated.character_backstory_card_ui import 
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
+from src.main.python.plotlyst.view.generated.character_topic_editor_ui import Ui_CharacterTopicEditor
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import Ui_ConflictReferenceEditor
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
@@ -1929,27 +1930,32 @@ default_topics: List[Topic] = [
 default_topics.sort(key=lambda x: x.text)
 
 
-class CharacterTopicsEditor(QWidget):
+class CharacterTopicsEditor(QWidget, Ui_CharacterTopicEditor):
     def __init__(self, parent=None):
         super(CharacterTopicsEditor, self).__init__(parent)
         self._character: Optional[Character] = None
+        self.setupUi(self)
 
-        self._btnAdd = QToolButton(self)
-        self._btnAdd.setIcon(IconRegistry.plus_icon())
+        # self._btnAdd = QPushButton(self)
+        # self._btnAdd.setProperty('base', True)
+        # self._btnAdd.setProperty('positive', True)
+        self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
+        self.btnAdd.setText('Add topic')
 
         self._wdgTopics = TopicsEditor(self)
+        self.scrollAreaWidgetTopics.layout().addWidget(self._wdgTopics)
 
-        layout_ = vbox(self)
-        layout_.addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignRight)
-        layout_.addWidget(self._wdgTopics)
-        layout_.addWidget(vspacer())
+        # layout_ = vbox(self, margin=9)
+        # layout_.addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignLeft)
+        # layout_.addWidget(self._wdgTopics)
+        # layout_.addWidget(vspacer())
 
     def setCharacter(self, character: Character):
         self._character = character
         topic_ids = {}
         char_topic_ids = set([str(x.id) for x in character.topics])
 
-        menu = QMenu(self._btnAdd)
+        menu = QMenu(self.btnAdd)
         for topic in default_topics:
             topic_ids[str(topic.id)] = topic
             action_ = self._Action(topic, menu)
@@ -1963,7 +1969,7 @@ class CharacterTopicsEditor(QWidget):
         # new_topic_action = action('New topic', IconRegistry.topics_icon(),
         #                           slot=self._newTopic, parent=menu)
         # menu.addAction(new_topic_action)
-        btn_popup_menu(self._btnAdd, menu)
+        btn_popup_menu(self.btnAdd, menu)
 
         for tc in character.topics:
             topic = topic_ids.get(str(tc.id))
