@@ -17,16 +17,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import qtanim
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QPalette, QColor
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QTextEdit
+from PyQt6.QtWidgets import QWidget, QPushButton, QTextEdit
 from qthandy import vbox, bold, line, transparent, margins, vspacer
 
 from src.main.python.plotlyst.core.domain import TemplateValue, Topic
 from src.main.python.plotlyst.view.common import pointy, insert_before_the_end
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.widget.button import CollapseButton
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
 
 
@@ -34,37 +34,33 @@ class TopicWidget(QWidget):
     def __init__(self, topic: Topic, value: TemplateValue, parent=None):
         super(TopicWidget, self).__init__(parent)
 
+        self._topic = topic
         self._value = value
 
         self.btnHeader = QPushButton()
-        self.btnHeader.setCheckable(True)
         self.btnHeader.setText(topic.text)
         self.btnHeader.setToolTip(topic.description)
         if topic.icon:
             self.btnHeader.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
 
-        self.btnCollapse = QToolButton()
+        self.btnCollapse = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
         self.btnCollapse.setIconSize(QSize(16, 16))
-        self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-down'))
 
         pointy(self.btnHeader)
-        pointy(self.btnCollapse)
         transparent(self.btnHeader)
-        transparent(self.btnCollapse)
         bold(self.btnHeader)
 
-        self.textEdit = AutoAdjustableTextEdit(height=100)
+        self.textEdit = AutoAdjustableTextEdit(height=80)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setMarkdown(value.value)
-        self.textEdit.setPlaceholderText(f'Write about {topic.text.lower()}')
+
         self.textEdit.textChanged.connect(self._textChanged)
 
         top = group(self.btnCollapse, self.btnHeader, margin=0, spacing=1)
         layout_ = vbox(self)
         layout_.addWidget(top, alignment=Qt.AlignmentFlag.AlignLeft)
 
-        line_ = line()
-        line_.setPalette(QPalette(QColor(topic.icon_color)))
+        line_ = line(color=topic.icon_color)
         middle = group(line_, margin=0, spacing=0)
         margins(middle, left=20)
         layout_.addWidget(middle)
@@ -73,18 +69,15 @@ class TopicWidget(QWidget):
         margins(bottom, left=20)
         layout_.addWidget(bottom, alignment=Qt.AlignmentFlag.AlignTop)
 
-        self.btnHeader.toggled.connect(self._toggleCollapse)
-        self.btnCollapse.clicked.connect(self.btnHeader.toggle)
+        self.btnHeader.clicked.connect(self.btnCollapse.toggle)
+        self.btnCollapse.toggled.connect(self.textEdit.setHidden)
+
+    def activate(self):
+        self.textEdit.setFocus()
+        self.textEdit.setPlaceholderText(f'Write about {self._topic.text.lower()}')
 
     def _textChanged(self):
         self._value.value = self.textEdit.toMarkdown()
-
-    def _toggleCollapse(self, checked: bool):
-        self.textEdit.setHidden(checked)
-        if checked:
-            self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-right'))
-        else:
-            self.btnCollapse.setIcon(IconRegistry.from_name('mdi.chevron-down'))
 
 
 class TopicsEditor(QWidget):
@@ -97,3 +90,8 @@ class TopicsEditor(QWidget):
     def addTopic(self, topic: Topic, value: TemplateValue):
         wdg = TopicWidget(topic, value, self)
         insert_before_the_end(self, wdg)
+        if self.isVisible():
+            anim = qtanim.fade_in(wdg, duration=200)
+            anim.finished.connect(wdg.activate)
+        else:
+            wdg.activate()
