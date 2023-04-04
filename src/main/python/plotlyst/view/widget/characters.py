@@ -66,6 +66,7 @@ from src.main.python.plotlyst.view.generated.character_backstory_card_ui import 
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
 from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
+from src.main.python.plotlyst.view.generated.character_topic_editor_ui import Ui_CharacterTopicEditor
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import Ui_ConflictReferenceEditor
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
@@ -1928,59 +1929,36 @@ default_topics: List[Topic] = [
 ]
 default_topics.sort(key=lambda x: x.text)
 
+topic_ids = {}
+for topic in default_topics:
+    topic_ids[str(topic.id)] = topic
 
-class CharacterTopicsEditor(QWidget):
-    def __init__(self, parent=None):
-        super(CharacterTopicsEditor, self).__init__(parent)
-        self._character: Optional[Character] = None
 
-        self._btnAdd = QToolButton(self)
-        self._btnAdd.setIcon(IconRegistry.plus_icon())
+class CharacterTopicSelector(QMenu):
+    topicTriggered = pyqtSignal(Topic)
 
-        self._wdgTopics = TopicsEditor(self)
-
-        layout_ = vbox(self)
-        layout_.addWidget(self._btnAdd, alignment=Qt.AlignmentFlag.AlignRight)
-        layout_.addWidget(self._wdgTopics)
-        layout_.addWidget(vspacer())
-
-    def setCharacter(self, character: Character):
+    def __init__(self, character: Character, parent=None):
+        super(CharacterTopicSelector, self).__init__(parent)
         self._character = character
-        topic_ids = {}
+        self._actions: Dict[Topic, QAction] = {}
         char_topic_ids = set([str(x.id) for x in character.topics])
+        self.setToolTipsVisible(True)
 
-        menu = QMenu(self._btnAdd)
         for topic in default_topics:
-            topic_ids[str(topic.id)] = topic
-            action_ = self._Action(topic, menu)
-            action_.triggered.connect(partial(self._addTopic, action_, topic))
+            action_ = self._Action(topic, self)
+            self._actions[topic] = action_
+            action_.triggered.connect(partial(self.topicTriggered.emit, topic))
             if str(topic.id) in char_topic_ids:
                 action_.setDisabled(True)
-            menu.addAction(action_)
+            self.addAction(action_)
 
-        # menu.addSeparator()
-        # menu.addSection('Section')
+        # self.addSeparator()
         # new_topic_action = action('New topic', IconRegistry.topics_icon(),
         #                           slot=self._newTopic, parent=menu)
-        # menu.addAction(new_topic_action)
-        btn_popup_menu(self._btnAdd, menu)
+        # self.addAction(new_topic_action)
 
-        for tc in character.topics:
-            topic = topic_ids.get(str(tc.id))
-            if topic:
-                self._wdgTopics.addTopic(topic, tc)
-
-    def _addTopic(self, action_: QAction, topic: Topic):
-        if self._character is None:
-            return
-        value = TemplateValue(topic.id, '')
-        self._character.topics.append(value)
-        self._wdgTopics.addTopic(topic, value)
-
-        action_.setDisabled(True)
-
-    def _newTopic(self):
-        pass
+    def updateTopic(self, topic: Topic, enabled: bool):
+        self._actions[topic].setEnabled(enabled)
 
     class _Action(QAction):
         def __init__(self, topic: Topic, parent=None):
@@ -1990,3 +1968,42 @@ class CharacterTopicsEditor(QWidget):
                 self.setIcon(IconRegistry.from_name(topic.icon, topic.icon_color))
             self.setText(topic.text)
             self.setToolTip(topic.description)
+
+
+class CharacterTopicsEditor(QWidget, Ui_CharacterTopicEditor):
+    def __init__(self, parent=None):
+        super(CharacterTopicsEditor, self).__init__(parent)
+        self._character: Optional[Character] = None
+        self._menu: Optional[CharacterTopicSelector] = None
+        self.setupUi(self)
+
+        self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
+        self.btnAdd.setText('Add topic')
+
+        self._wdgTopics = TopicsEditor(self)
+        self.scrollAreaWidgetTopics.layout().addWidget(self._wdgTopics)
+        self._wdgTopics.topicRemoved.connect(self._topicRemoved)
+
+    def setCharacter(self, character: Character):
+        self._character = character
+        self._menu = CharacterTopicSelector(self._character, self.btnAdd)
+        self._menu.topicTriggered.connect(self._addTopic)
+        btn_popup_menu(self.btnAdd, self._menu)
+
+        for tc in character.topics:
+            topic = topic_ids.get(str(tc.id))
+            if topic:
+                self._wdgTopics.addTopic(topic, tc)
+
+    def _addTopic(self, topic: Topic):
+        if self._character is None:
+            return
+        value = TemplateValue(topic.id, '')
+        self._character.topics.append(value)
+        self._wdgTopics.addTopic(topic, value)
+
+        self._menu.updateTopic(topic, False)
+
+    def _topicRemoved(self, topic: Topic, value: TemplateValue):
+        self._character.topics.remove(value)
+        self._menu.updateTopic(topic, True)

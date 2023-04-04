@@ -345,6 +345,7 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
         if not field.required:
             self._toggle = Toggle(self)
             self._toggle.setToolTip(f'Character has {field.name}')
+
             retain_when_hidden(self._toggle)
             self._toggle.toggled.connect(self._headerEnabledChanged)
             self.layout().addWidget(self._toggle)

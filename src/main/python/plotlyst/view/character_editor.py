@@ -36,7 +36,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from src.main.python.plotlyst.view.widget.character.control import CharacterAgeEditor
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
-from src.main.python.plotlyst.view.widget.characters import CharacterRoleSelector
+from src.main.python.plotlyst.view.widget.characters import CharacterRoleSelector, CharacterTopicsEditor
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 
 
@@ -150,14 +150,16 @@ class CharacterEditor:
         self.ui.tabGoals.layout().addWidget(self._character_goals)
         margins(self.ui.tabGoals.layout(), left=5)
 
-        self.ui.wdgTopicsEditor.setCharacter(self.character)
+        self.wdgTopicsEditor = CharacterTopicsEditor()
+        self.wdgTopicsEditor.setCharacter(self.character)
+        self.ui.tabTopics.layout().addWidget(self.wdgTopicsEditor)
 
         self.profile = CharacterProfileTemplateView(self.character, self.novel.character_profiles[0])
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
         self.ui.wdgBackstory.setCharacter(self.character)
         self.widget.setStyleSheet(
-            f'''#scrollAreaWidgetContents {{background-image: url({resource_registry.cover1});}}
+            f'''#scrollAreaBackstoryContents {{background-image: url({resource_registry.cover1});}}
                                ''')
 
         if self.character.document and self.character.document.loaded:

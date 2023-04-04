@@ -277,3 +277,7 @@ def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
 
     anim = fade_out(widget, duration)
     anim.finished.connect(destroy)
+
+
+def insert_before_the_end(parent: QWidget, widget: QWidget, leave: int = 1):
+    parent.layout().insertWidget(parent.layout().count() - leave, widget)
