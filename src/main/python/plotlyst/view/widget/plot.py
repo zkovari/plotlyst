@@ -24,13 +24,13 @@ from typing import Set, Dict
 import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
-from PyQt6.QtGui import QColor, QIcon, QPen
+from PyQt6.QtGui import QColor, QIcon, QPen, QCursor
 from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QTextEdit
 from overrides import overrides
-from qthandy import gc, bold, flow, incr_font, \
-    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, translucent, vbox, transparent, \
+from qthandy import bold, flow, incr_font, \
+    margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
     clear_layout, vspacer, underline, decr_font, decr_icon, hbox, spacer, sp
-from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData
+from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData, OpacityEventFilter
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -43,7 +43,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, pointy
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -644,25 +644,43 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
             self._save()
 
     def _addValue(self, value: PlotValue):
-        label = PlotValueLabel(value, parent=self.wdgValues, removalEnabled=True)
-        translucent(label)
+        label = PlotValueLabel(value, parent=self.wdgValues)
+        label.installEventFilter(OpacityEventFilter(label, leaveOpacity=0.7))
+        pointy(label)
         self.wdgValues.layout().addWidget(label)
         label.removalRequested.connect(partial(self._removeValue, label))
+        label.clicked.connect(partial(self._plotValueClicked, label))
 
         self._btnAddValue.setText('')
 
-    def _removeValue(self, widget: PlotValueLabel):
+    def _removeValue(self, label: PlotValueLabel):
         if app_env.test_env():
-            self.__destroyValue(widget)
+            self.__destroyValue(label)
         else:
-            anim = qtanim.fade_out(widget, duration=150, hide_if_finished=False)
-            anim.finished.connect(partial(self.__destroyValue, widget))
+            anim = qtanim.fade_out(label, duration=150, hide_if_finished=False)
+            anim.finished.connect(partial(self.__destroyValue, label))
 
-    def __destroyValue(self, widget: PlotValueLabel):
-        self.plot.values.remove(widget.value)
+    def _editValue(self, label: PlotValueLabel):
+        value = PlotValueEditorDialog().display(label.value)
+        if value:
+            label.value.text = value.text
+            label.value.negative = value.negative
+            label.value.icon = value.icon
+            label.value.icon_color = value.icon_color
+            label.refresh()
+            self._save()
+
+    def _plotValueClicked(self, label: PlotValueLabel):
+        menu = QMenu(label)
+        menu.addAction(IconRegistry.edit_icon(), 'Edit', partial(self._editValue, label))
+        menu.addSeparator()
+        menu.addAction(IconRegistry.trash_can_icon(), 'Remove', label.removalRequested.emit)
+        menu.popup(QCursor.pos())
+
+    def __destroyValue(self, label: PlotValueLabel):
+        self.plot.values.remove(label.value)
         self._save()
-        self.wdgValues.layout().removeWidget(widget)
-        gc(widget)
+        fade_out_and_gc(self.wdgValues, label)
         has_values = len(self.plot.values) > 0
         self._btnAddValue.setText('' if has_values else 'Attach story value')
 

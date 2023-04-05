@@ -80,38 +80,37 @@ class _TemplatePlotValueButton(QPushButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
 
+plot_value_templates = [
+    PlotValue(text='Love', negative='Hate', icon='ei.heart', icon_color='#d1495b'),
+    PlotValue(text='Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c'),
+    PlotValue(text='Wealth', negative='Poverty', icon='fa5s.hand-holding-usd', icon_color='#e9c46a'),
+    PlotValue(text='Justice', negative='Injustice', icon='fa5s.gavel', icon_color='#a68a64'),
+    PlotValue(text='Maturity', negative='Immaturity', icon='fa5s.seedling', icon_color='#95d5b2'),
+    PlotValue(text='Truth', negative='Lie', icon='mdi.scale-balance', icon_color='#5390d9'),
+    PlotValue(text='Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9'),
+    PlotValue(text='Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c'),
+    PlotValue(text='Morality', negative='Immorality', icon='ph.scales-bold', icon_color='#560bad'),
+    PlotValue(text='Esteem', negative='Disrespect', icon='mdi.account-star', icon_color='#f72585'),
+]
+
+
 class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
     def __init__(self, parent=None):
         super(PlotValueEditorDialog, self).__init__(parent)
         self.setupUi(self)
 
-        self._value = PlotValue('', icon='fa5s.chevron-circle-down', icon_color='grey')
+        self._value: Optional[PlotValue] = None
 
         self.btnChargeUp.setIcon(IconRegistry.charge_icon(3))
         self.btnChargeDown.setIcon(IconRegistry.charge_icon(-3))
         self.btnVersusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-v'))
-
         self.subtitle.setHint(plot_value_help)
 
-        self.btnIcon.setIcon(IconRegistry.from_name(self._value.icon, self._value.icon_color))
         decr_icon(self.btnIcon, 2)
         self.btnIcon.clicked.connect(self._changeIcon)
 
         flow(self.wdgTemplates, margin=5)
-        templates = [
-            PlotValue(text='Love', negative='Hate', icon='ei.heart', icon_color='#d1495b'),
-            PlotValue(text='Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c'),
-            PlotValue(text='Wealth', negative='Poverty', icon='fa5s.hand-holding-usd', icon_color='#e9c46a'),
-            PlotValue(text='Justice', negative='Injustice', icon='fa5s.gavel', icon_color='#a68a64'),
-            PlotValue(text='Maturity', negative='Immaturity', icon='fa5s.seedling', icon_color='#95d5b2'),
-            PlotValue(text='Truth', negative='Lie', icon='mdi.scale-balance', icon_color='#5390d9'),
-            PlotValue(text='Loyalty', negative='Betrayal', icon='fa5.handshake', icon_color='#5390d9'),
-            PlotValue(text='Honor', negative='Dishonor', icon='fa5s.award', icon_color='#40916c'),
-            PlotValue(text='Morality', negative='Immorality', icon='ph.scales-bold', icon_color='#560bad'),
-            PlotValue(text='Esteem', negative='Disrespect', icon='mdi.account-star', icon_color='#f72585'),
-        ]
-
-        for value in templates:
+        for value in plot_value_templates:
             btn = _TemplatePlotValueButton(value)
             self.wdgTemplates.layout().addWidget(btn)
             btn.clicked.connect(partial(self._fillTemplate, value))
@@ -121,7 +120,14 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         btnOk.installEventFilter(DisabledClickEventFilter(btnOk, lambda: qtanim.shake(self.linePositive)))
         link_editor_to_btn(self.linePositive, btnOk)
 
-    def display(self) -> Optional[PlotValue]:
+    def display(self, reference: Optional[PlotValue] = None) -> Optional[PlotValue]:
+        self._value = PlotValue('', icon='fa5s.chevron-circle-down', icon_color='grey')
+        if reference:
+            self._fillTemplate(reference)
+            self.linePositive.setFocus()
+        else:
+            self.btnIcon.setIcon(IconRegistry.from_name(self._value.icon, self._value.icon_color))
+
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
             self._value.text = self.linePositive.text()
@@ -137,10 +143,11 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
             self._value.icon_color = value.icon_color
             self.btnIcon.setBorderColor(self._value.icon_color)
 
-        glow_color = QColor(value.icon_color)
-        qtanim.glow(self.linePositive, color=glow_color)
-        qtanim.glow(self.lineNegative, color=glow_color)
-        qtanim.glow(self.btnIcon, color=glow_color)
+        if self.isVisible():
+            glow_color = QColor(value.icon_color)
+            qtanim.glow(self.linePositive, color=glow_color)
+            qtanim.glow(self.lineNegative, color=glow_color)
+            qtanim.glow(self.btnIcon, color=glow_color)
 
     def _changeIcon(self):
         result = IconSelectorDialog().display()
@@ -185,4 +192,4 @@ class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     dialog = PlotValueEditorDialog()
-    dialog.display()
+    dialog.display(plot_value_templates[5])

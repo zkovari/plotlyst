@@ -176,12 +176,8 @@ class SelectionItemLabel(Label):
         self.btnIcon.clicked.connect(self.clicked.emit)
         transparent(self.btnIcon)
         self.layout().addWidget(self.btnIcon)
-        if self.item.icon:
-            self.btnIcon.setIcon(IconRegistry.from_name(self.item.icon, self.item.icon_color))
-        else:
-            self.btnIcon.setHidden(True)
 
-        self.lblText = QLabel(self.item.text)
+        self.lblText = QLabel()
         self.layout().addWidget(self.lblText)
         self.btnRemoval = RemovalButton(self)
         self.layout().addWidget(self.btnRemoval)
@@ -190,23 +186,33 @@ class SelectionItemLabel(Label):
         if removalEnabled:
             self.installEventFilter(VisibilityToggleEventFilter(self.btnRemoval, self))
 
-        if item.color_hexa:
-            bg_color = item.color_hexa
+        self._initLabel()
+
+    def _initLabel(self):
+        if self.item.icon:
+            self.btnIcon.setIcon(IconRegistry.from_name(self.item.icon, self.item.icon_color))
+        else:
+            self.btnIcon.setHidden(True)
+        self.lblText.setText(self.item.text)
+        self._initStyle()
+
+    def _initStyle(self):
+        if self.item.color_hexa:
+            bg_color = self.item.color_hexa
             text_color = text_color_with_bg_color(bg_color)
         else:
             bg_color = 'white'
             text_color = 'black'
-
         self.setStyleSheet(f'''
-                        SelectionItemLabel {{
-                            border: 2px solid {self._borderColor()};
-                            border-radius: 8px; padding-left: 3px; padding-right: 3px;
-                            background-color: {bg_color};
-                            }}
-                        QLabel {{
-                            color: {text_color};
-                        }}
-                        ''')
+                                SelectionItemLabel {{
+                                    border: 2px solid {self._borderColor()};
+                                    border-radius: 8px; padding-left: 3px; padding-right: 3px;
+                                    background-color: {bg_color};
+                                    }}
+                                QLabel {{
+                                    color: {text_color};
+                                }}
+                                ''')
 
     def _borderColor(self) -> str:
         if not self.item.color_hexa and self.item.icon:
@@ -225,13 +231,21 @@ class PlotValueLabel(SelectionItemLabel):
     def __init__(self, item: PlotValue, parent=None, removalEnabled: bool = False):
         super(PlotValueLabel, self).__init__(item, parent, removalEnabled)
         self.value = item
-        if item.negative:
-            versusIcon = QToolButton(self)
-            transparent(versusIcon)
-            versusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-h'))
-            self.layout().insertWidget(2, versusIcon)
-            self.lblNegative = QLabel(item.negative)
-            self.layout().insertWidget(3, self.lblNegative)
+
+        self._versusIcon = QToolButton(self)
+        transparent(self._versusIcon)
+        self._versusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-h'))
+        self.layout().insertWidget(2, self._versusIcon)
+        self.lblNegative = QLabel()
+        self.layout().insertWidget(3, self.lblNegative)
+
+        self.refresh()
+
+    def refresh(self):
+        self._initLabel()
+        self.lblNegative.setText(self.value.negative)
+        self.lblNegative.setVisible(True if self.value.negative else False)
+        self._versusIcon.setVisible(True if self.value.negative else False)
 
     @overrides
     def _borderColor(self):
