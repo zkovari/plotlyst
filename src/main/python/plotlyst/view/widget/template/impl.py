@@ -40,7 +40,7 @@ from src.main.python.plotlyst.core.template import TemplateField, SelectionItem,
     healing_field, methods_field, misbelief_field, positive_arc, negative_arc, need_field, ghost_field, desire_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
-from src.main.python.plotlyst.view.common import pointy, wrap, emoji_font, hmax, action
+from src.main.python.plotlyst.view.common import pointy, wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui import Ui_FieldTextSelectionWidget
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -126,6 +126,7 @@ class TextSelectionWidget(SecondaryActionPushButton):
             self.tblItems.doubleClicked.connect(self._select)
 
             self.btnSelect.clicked.connect(self._select)
+            self.btnSelect.installEventFilter(ButtonPressResizeEventFilter(self.btnSelect))
 
         @overrides
         def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -147,10 +148,14 @@ class TextSelectionWidget(SecondaryActionPushButton):
                 self.textBrowser.setText(self.help.get(item.text, ''))
                 if 'positive' in item.meta.keys():
                     for trait in item.meta['positive']:
-                        self.wdgLabels.addLabel(TraitLabel(trait))  # '#008148'
+                        label = TraitLabel(trait)
+                        decr_font(label)
+                        self.wdgLabels.addLabel(label)
                 if 'negative' in item.meta.keys():
                     for trait in item.meta['negative']:
-                        self.wdgLabels.addLabel(TraitLabel(trait, positive=False))
+                        label = TraitLabel(trait, positive=False)
+                        decr_font(label)
+                        self.wdgLabels.addLabel(label)
             else:
                 self.btnSelect.setDisabled(True)
                 self.textBrowser.clear()
@@ -587,7 +592,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         if enneagram:
             self._selectionChanged(new=enneagram, animated=False)
 
-    def _selectionChanged(self, old: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
+    def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
                           animated: bool = True):
         if not new:
             self.wdgAttr.setHidden(True)
@@ -861,6 +866,7 @@ class MultiLayerComplexTemplateWidgetBase(ComplexTemplateWidgetBase):
         self._btnPrimary = SecondaryActionPushButton()
         self._btnPrimary.setText(self._primaryButtonText())
         self._btnPrimary.setIcon(IconRegistry.plus_icon('grey'))
+        decr_font(self._btnPrimary)
         if self._hasMenu():
             btn_popup_menu(self._btnPrimary, self._primaryMenu())
         else:
