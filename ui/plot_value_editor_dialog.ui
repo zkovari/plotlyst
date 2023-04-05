@@ -99,6 +99,9 @@
      </property>
      <item row="2" column="1" alignment="Qt::AlignHCenter">
       <widget class="QToolButton" name="btnVersusIcon">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="styleSheet">
         <string notr="true">border: 0px;</string>
        </property>
@@ -109,6 +112,9 @@
      </item>
      <item row="1" column="0">
       <widget class="SecondaryActionToolButton" name="btnIcon">
+       <property name="toolTip">
+        <string>Value icon</string>
+       </property>
        <property name="iconSize">
         <size>
          <width>24</width>
@@ -131,6 +137,9 @@
          <height>24</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Positive charge</string>
+       </property>
        <property name="placeholderText">
         <string>Positive</string>
        </property>
@@ -138,6 +147,9 @@
      </item>
      <item row="3" column="2">
       <widget class="QToolButton" name="btnChargeDown">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="styleSheet">
         <string notr="true">border: 0px;</string>
        </property>
@@ -148,6 +160,9 @@
      </item>
      <item row="1" column="2">
       <widget class="QToolButton" name="btnChargeUp">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
        <property name="styleSheet">
         <string notr="true">border: 0px;</string>
        </property>
@@ -169,6 +184,9 @@
          <width>150</width>
          <height>24</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Negative charge</string>
        </property>
        <property name="placeholderText">
         <string>Negative (Optional)</string>
