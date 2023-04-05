@@ -85,7 +85,7 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         super(PlotValueEditorDialog, self).__init__(parent)
         self.setupUi(self)
 
-        self._value = PlotValue('')
+        self._value = PlotValue('', icon='fa5s.chevron-circle-down', icon_color='grey')
 
         self.btnChargeUp.setIcon(IconRegistry.charge_icon(3))
         self.btnChargeDown.setIcon(IconRegistry.charge_icon(-3))
@@ -93,7 +93,7 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
 
         self.subtitle.setHint(plot_value_help)
 
-        self.btnIcon.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
+        self.btnIcon.setIcon(IconRegistry.from_name(self._value.icon, self._value.icon_color))
         decr_icon(self.btnIcon, 2)
         self.btnIcon.clicked.connect(self._changeIcon)
 
