@@ -48,7 +48,6 @@ from src.main.python.plotlyst.view.common import action, pointy, autoresize_col
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
-from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 
 
@@ -415,7 +414,8 @@ class DocumentTextEditor(RichTextEditor):
 
     def __init__(self, parent=None):
         super(DocumentTextEditor, self).__init__(parent)
-        self._btnIcon = Icon()
+        self._btnIcon = QToolButton()
+        transparent(self._btnIcon)
         self._btnIcon.setIconSize(QSize(40, 40))
         self._textTitle = QLineEdit()
         self._textTitle.setStyleSheet('border: 0px; icon-size: 40px;')

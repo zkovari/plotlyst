@@ -109,3 +109,7 @@ mbti_help = {'ISTJ': '''<html><h3>The Inspector</h3>
              ENTJs see the big picture and think strategically about the future. They are able to efficiently organise people and resources in order to accomplish long-term goals, and tend to be comfortable with taking strong leadership over others.
              '''
              }
+
+plot_value_help = """<html>When associated with scenes, such plot value can be charged <b style=color:#52b788;>positively</b> or 
+<b style=color:#9d0208;>negatively</b>, thus depicting a 
+character's shift between the value's positive and negative spectrum, e.g., Love vs. Hate.</html>"""

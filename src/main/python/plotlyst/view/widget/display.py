@@ -25,13 +25,14 @@ import qtanim
 from PyQt6.QtCharts import QChartView
 from PyQt6.QtCore import QPropertyAnimation, pyqtProperty, QSize
 from PyQt6.QtGui import QPainter, QShowEvent, QColor
-from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy
+from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QMenu, QWidgetAction, QTextBrowser
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, btn_popup_menu
+from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, pointy, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 
@@ -86,6 +87,7 @@ class Subtitle(QWidget):
         self.lblDescription = QLabel(self)
         bold(self.lblTitle)
         incr_font(self.lblTitle)
+        self._btnHint: Optional[HintButton] = None
 
         self._iconName: str = ''
         self._iconColor: str = 'black'
@@ -116,6 +118,13 @@ class Subtitle(QWidget):
     def setDescription(self, value):
         self.lblDescription.setText(value)
 
+    def setHint(self, hint: str):
+        if not self._btnHint:
+            self._btnHint = HintButton(self)
+            self._top.layout().addWidget(self._btnHint)
+
+        self._btnHint.setHint(hint)
+
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
         if not self.lblTitle.text():
@@ -137,7 +146,7 @@ class Subtitle(QWidget):
             self._descSpacer.setMaximumWidth(5)
 
     def addWidget(self, widget: QWidget):
-        self._top.layout().insertWidget(self._top.layout().count() - 1, widget)
+        insert_before_the_end(self._top, widget, leave=1 if self._btnHint is None else 2)
 
 
 class Emoji(QLabel):
@@ -289,3 +298,32 @@ class IconText(QPushButton, _AbstractIcon):
     def _setIcon(self):
         if self._iconName:
             self.setIcon(IconRegistry.from_name(self._iconName, self._iconColor))
+
+
+class HintButton(QToolButton):
+    def __init__(self, parent=None):
+        super(HintButton, self).__init__(parent)
+        self.setIcon(IconRegistry.general_info_icon())
+        pointy(self)
+        transparent(self)
+        incr_icon(self)
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.6, enterOpacity=0.9))
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+
+        self._hint: str = ''
+
+    def setHint(self, hint: str):
+        if not self.menu():
+            menu = QMenu(self)
+            btn_popup_menu(self, menu)
+            menu.aboutToShow.connect(self._beforeShow)
+
+        self._hint = hint
+
+    def _beforeShow(self):
+        if not self.menu().actions():
+            action = QWidgetAction(self.menu())
+            textedit = QTextBrowser()
+            action.setDefaultWidget(textedit)
+            textedit.setText(self._hint)
+            self.menu().addAction(action)
