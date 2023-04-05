@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import sys
 from functools import partial
 from typing import Optional
 
@@ -187,9 +186,3 @@ class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
         dialog.exec()
 
         return dialog.textSynopsis.textEdit.toHtml()
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    dialog = PlotValueEditorDialog()
-    dialog.display(plot_value_templates[5])
