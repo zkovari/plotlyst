@@ -74,6 +74,7 @@ class _ProfileTemplateBase(QWidget):
         self.scrollArea = QScrollArea(self)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
         self.scrollAreaWidgetContents = QWidget()
         self.gridLayout = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setSpacing(1)
