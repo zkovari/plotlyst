@@ -168,7 +168,7 @@ class IconRegistry:
 
     @staticmethod
     def general_info_icon() -> QIcon:
-        return qtawesome.icon('fa5s.info-circle', color='darkBlue')
+        return IconRegistry.from_name('fa5s.info-circle', color=PLOTLYST_SECONDARY_COLOR)
 
     @staticmethod
     def action_scene_icon(resolved: bool = False, trade_off: bool = False) -> QIcon:

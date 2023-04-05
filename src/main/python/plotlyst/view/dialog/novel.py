@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import sys
 from functools import partial
 from typing import Optional
 
@@ -24,10 +25,11 @@ import qtanim
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QDialog, QPushButton, QDialogButtonBox, QApplication
-from qthandy import flow
+from qthandy import flow, decr_font, decr_icon
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.core.domain import NovelDescriptor, PlotValue, Novel
+from src.main.python.plotlyst.core.help import plot_value_help
 from src.main.python.plotlyst.view.common import link_editor_to_btn
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.novel_creation_dialog_ui import Ui_NovelCreationDialog
@@ -53,12 +55,16 @@ class NovelEditionDialog(QDialog, Ui_NovelCreationDialog):
 class _TemplatePlotValueButton(QPushButton):
     def __init__(self, value: PlotValue, parent=None):
         super(_TemplatePlotValueButton, self).__init__(parent)
+        self.setText(value.text)
         if value.negative:
-            self.setText(f'{value.text}/{value.negative}')
+            self.setToolTip(f'{value.text} vs. {value.negative}')
         else:
-            self.setText(value.text)
+            self.setToolTip(value.text)
         if value.icon:
             self.setIcon(IconRegistry.from_name(value.icon, value.icon_color))
+
+        decr_font(self)
+        decr_icon(self)
 
         self.setStyleSheet(f'''
             QPushButton {{
@@ -85,10 +91,13 @@ class PlotValueEditorDialog(QDialog, Ui_PlotValueEditorDialog):
         self.btnChargeDown.setIcon(IconRegistry.charge_icon(-3))
         self.btnVersusIcon.setIcon(IconRegistry.from_name('fa5s.arrows-alt-v'))
 
-        self.btnIcon.setIcon(IconRegistry.icons_icon('grey'))
+        self.subtitle.setHint(plot_value_help)
+
+        self.btnIcon.setIcon(IconRegistry.from_name('fa5s.chevron-circle-down', 'grey'))
+        decr_icon(self.btnIcon, 2)
         self.btnIcon.clicked.connect(self._changeIcon)
 
-        flow(self.wdgTemplates)
+        flow(self.wdgTemplates, margin=5)
         templates = [
             PlotValue(text='Love', negative='Hate', icon='ei.heart', icon_color='#d1495b'),
             PlotValue(text='Life', negative='Death', icon='mdi.pulse', icon_color='#ef233c'),
@@ -171,3 +180,9 @@ class SynopsisEditorDialog(QDialog, Ui_SynopsisEditorDialog):
         dialog.exec()
 
         return dialog.textSynopsis.textEdit.toHtml()
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    dialog = PlotValueEditorDialog()
+    dialog.display()
