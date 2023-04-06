@@ -86,6 +86,7 @@ class SceneWidget(ContainerNode):
 class ChapterWidget(ContainerNode):
     deleted = pyqtSignal()
     addScene = pyqtSignal()
+    addChapter = pyqtSignal()
 
     def __init__(self, chapter: Chapter, novel: Novel, parent=None):
         super(ChapterWidget, self).__init__(chapter.title_index(novel), IconRegistry.chapter_icon(), parent)
@@ -94,6 +95,7 @@ class ChapterWidget(ContainerNode):
         margins(self._wdgTitle, top=2, bottom=2)
 
         menu = QMenu()
+        menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.addChapter.emit)
         menu.addAction(IconRegistry.scene_icon(), 'Add scene', self.addScene.emit)
         self.setPlusMenu(menu)
 
@@ -245,6 +247,16 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._reorderScenes()
 
+    def _insertChapter(self, chapterWdg: ChapterWidget):
+        i = self._centralWidget.layout().indexOf(chapterWdg) + 1
+        chapter = Chapter('')
+        self._novel.chapters.insert(i, chapter)
+        wdg = self.__initChapterWidget(chapter)
+        self._centralWidget.layout().insertWidget(i, wdg)
+
+        self._refreshChapterTitles()
+        self.repo.update_novel(self._novel)
+
     def _sceneSelectionChanged(self, sceneWdg: SceneWidget, selected: bool):
         if selected:
             self.clearSelection()
@@ -283,8 +295,7 @@ class ScenesTreeView(TreeView, EventListener):
         self._novel.chapters.remove(chapter)
         self.repo.update_novel(self._novel)
 
-        for wdg in self._chapters.values():
-            wdg.refresh()
+        self._refreshChapterTitles()
 
         emit_event(ChapterChangedEvent(self))
 
@@ -392,6 +403,14 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._dummyWdg.setHidden(True)
 
+    def _refreshChapterTitles(self):
+        for wdg in self._chapters.values():
+            wdg.refresh()
+
+    def _refreshSceneTitles(self):
+        for wdg in self._scenes.values():
+            wdg.refreshTitle()
+
     def _reorderScenes(self):
         chapters = []
         scenes = []
@@ -411,10 +430,8 @@ class ScenesTreeView(TreeView, EventListener):
         self._novel.chapters[:] = chapters
         self._novel.scenes[:] = scenes
 
-        for wdg in self._chapters.values():
-            wdg.refresh()
-        for wdg in self._scenes.values():
-            wdg.refreshTitle()
+        self._refreshChapterTitles()
+        self._refreshSceneTitles()
 
         emit_event(SceneOrderChangedEvent(self))
         self.repo.update_novel(self._novel)
@@ -433,6 +450,7 @@ class ScenesTreeView(TreeView, EventListener):
         chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
         chapterWdg.deleted.connect(partial(self._deleteChapter, chapterWdg))
         chapterWdg.addScene.connect(partial(self._addScene, chapterWdg))
+        chapterWdg.addChapter.connect(partial(self._insertChapter, chapterWdg))
         chapterWdg.installEventFilter(
             DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
                             grabbed=chapterWdg.titleWidget(),
