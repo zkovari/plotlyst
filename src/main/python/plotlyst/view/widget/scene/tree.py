@@ -52,6 +52,7 @@ class SceneWidget(ContainerNode):
 
         self._scenePovIcon = Icon(self)
         retain_when_hidden(self._scenePovIcon)
+        self.setPlusButtonEnabled(False)
 
         self._wdgTitle.layout().insertWidget(0, self._scenePovIcon)
 
