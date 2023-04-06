@@ -209,6 +209,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, NovelUpdatedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel.title = event.novel.title
+                self.outline_mode.setText(self.novel.title)
         elif isinstance(event, OpenDistractionFreeMode):
             self.btnComments.setChecked(False)
             self._toggle_fullscreen(on=True)
@@ -366,8 +367,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.home_mode.setIcon(IconRegistry.home_icon(color_on='#240046'))
 
         self.outline_mode = ToolbarButton(self.toolBar)
-        self.outline_mode.setText('Plan')
-        self.outline_mode.setIcon(IconRegistry.decision_icon(color='black', color_on='#240046'))
+        self.outline_mode.setMinimumWidth(80)
+        self.outline_mode.setText('My novel')
+        self.outline_mode.setIcon(IconRegistry.book_icon(color_on='#240046'))
 
         self._mode_btn_group = QButtonGroup()
         self._mode_btn_group.addButton(self.home_mode)
@@ -398,9 +400,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.novel:
             self.outline_mode.setChecked(True)
+            self.outline_mode.setText(self.novel.title)
         else:
             self.home_mode.setChecked(True)
             self.outline_mode.setDisabled(True)
+            self.outline_mode.setHidden(True)
 
     def _init_statusbar(self):
         self.statusbar.addPermanentWidget(self._tasks_widget)
@@ -451,8 +455,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.outline_mode.setChecked(True)
             return
 
-        self.outline_mode.setEnabled(True)
-
         self.repo.flush()
         event_dispatcher.clear()
         if self.novel:
@@ -470,6 +472,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         settings.set_last_novel_id(self.novel.id)
         self._register_events()
 
+        self.outline_mode.setEnabled(True)
+        self.outline_mode.setVisible(True)
+        self.outline_mode.setText(self.novel.title)
         self.outline_mode.setChecked(True)
 
     def _register_events(self):
