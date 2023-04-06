@@ -58,14 +58,14 @@ class BaseTreeWidget(QWidget):
         transparent(self._btnMenu)
         self._btnMenu.setIcon(IconRegistry.dots_icon('grey', vertical=True))
         self._btnMenu.setIconSize(QSize(18, 18))
-        self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
         self._btnMenu.setHidden(True)
         retain_when_hidden(self._btnMenu)
 
         self._btnAdd = QToolButton()
         transparent(self._btnAdd)
         self._btnAdd.setIcon(IconRegistry.plus_icon('grey'))
-        self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
+        self._btnAddPressFilter = ButtonPressResizeEventFilter(self._btnAdd)
+        self._btnAdd.installEventFilter(self._btnAddPressFilter)
         self._btnAdd.setHidden(True)
 
         self._actionChangeIcon = action('Change icon', IconRegistry.icons_icon(), self._changeIcon)
@@ -87,6 +87,7 @@ class BaseTreeWidget(QWidget):
         self._actionChangeIcon.setVisible(False)
 
         btn_popup_menu(self._btnMenu, menu)
+        self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
 
     def titleWidget(self) -> QWidget:
         return self._wdgTitle
@@ -112,6 +113,9 @@ class BaseTreeWidget(QWidget):
     def setPlusMenu(self, menu: QMenu):
         menu.aboutToHide.connect(self._hideAll)
         btn_popup_menu(self._btnAdd, menu)
+        self._btnAdd.removeEventFilter(self._btnAddPressFilter)
+        self._btnAddPressFilter = ButtonPressResizeEventFilter(self._btnAdd)
+        self._btnAdd.installEventFilter(self._btnAddPressFilter)
 
     def _toggleSelection(self, selected: bool):
         self._selected = selected
