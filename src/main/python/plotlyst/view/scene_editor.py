@@ -30,7 +30,7 @@ from qthandy import flow, clear_layout
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    SceneStoryBeat, SceneStructureAgenda, Character, ScenePlotReference, TagReference
+    SceneStoryBeat, Character, ScenePlotReference, TagReference
 from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
@@ -143,10 +143,9 @@ class SceneEditor(QObject):
             index = self.scenes_model.index(self.novel.scenes.index(scene), ScenesTableModel.ColTitle)
             self.ui.lstScenes.selectionModel().select(index, QItemSelectionModel.Select)
         else:
-            self.scene = Scene('')
+            self.scene = self.novel.new_scene()
             if len(self.novel.scenes) > 1:
                 self.scene.day = self.novel.scenes[-1].day
-            self.scene.agendas.append(SceneStructureAgenda())
             self._new_scene = True
 
         if self.scene.pov:
