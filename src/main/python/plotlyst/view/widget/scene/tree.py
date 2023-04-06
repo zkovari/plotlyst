@@ -230,6 +230,7 @@ class ScenesTreeView(TreeView, EventListener):
                 wdg = self._scenes.pop(event.scene)
                 wdg.parent().layout().removeWidget(wdg)
                 gc(wdg)
+            self._refreshSceneTitles()
         elif isinstance(event, SceneChangedEvent):
             wdg = self._scenes.get(event.scene)
             if wdg is not None:
@@ -309,6 +310,7 @@ class ScenesTreeView(TreeView, EventListener):
             sceneWdg.setHidden(True)
             gc(sceneWdg)
 
+            self._refreshSceneTitles()
             emit_event(SceneDeletedEvent(self, scene))
 
     def _dragStarted(self, wdg: QWidget):
