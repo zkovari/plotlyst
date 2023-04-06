@@ -494,6 +494,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         gc(self.board_view.widget)
         self.pageBoard.layout().removeWidget(self.reports_view.widget)
         gc(self.reports_view.widget)
+        self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
+        gc(self.manuscript_view.widget)
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         gc(self.comments_view.widget)
 
