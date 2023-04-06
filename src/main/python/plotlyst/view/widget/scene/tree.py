@@ -24,9 +24,9 @@ from typing import List
 
 from PyQt6.QtCore import QMimeData, QPointF
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QMenu
 from overrides import overrides
-from qthandy import gc, retain_when_hidden, translucent, clear_layout, vbox
+from qthandy import gc, retain_when_hidden, translucent, clear_layout, vbox, margins
 from qthandy import vspacer
 from qthandy.filter import DragEventFilter, DropEventFilter
 
@@ -34,9 +34,9 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     Chapter
 from src.main.python.plotlyst.event.core import emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
-from src.main.python.plotlyst.events import SceneSelectedEvent, SceneDeletedEvent, \
+from src.main.python.plotlyst.events import SceneDeletedEvent, \
     SceneChangedEvent
+from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -76,16 +76,25 @@ class SceneWidget(ContainerNode):
             avatar = None
         self._scenePovIcon.setVisible(avatar is not None)
 
+        self.refreshTitle()
+
+    def refreshTitle(self):
         self._lblTitle.setText(self._scene.title_or_index(self._novel))
 
 
 class ChapterWidget(ContainerNode):
     deleted = pyqtSignal()
+    addScene = pyqtSignal()
 
     def __init__(self, chapter: Chapter, novel: Novel, parent=None):
         super(ChapterWidget, self).__init__(chapter.title_index(novel), IconRegistry.chapter_icon(), parent)
         self._chapter = chapter
         self._novel = novel
+        margins(self._wdgTitle, top=2, bottom=2)
+
+        menu = QMenu()
+        menu.addAction(IconRegistry.scene_icon(), 'Add scene', self.addScene.emit)
+        self.setPlusMenu(menu)
 
         self._reStyle()
 
@@ -132,7 +141,7 @@ class ScenesTreeView(TreeView, EventListener):
         self._centralWidget.installEventFilter(DropEventFilter(self, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
                                                                leftSlot=lambda: self._dummyWdg.setHidden(True)))
 
-        event_dispatcher.register(self, SceneSelectedEvent)
+        event_dispatcher.register(self, SceneOrderChangedEvent)
         event_dispatcher.register(self, SceneDeletedEvent)
         event_dispatcher.register(self, SceneChangedEvent)
         self.repo = RepositoryPersistenceManager.instance()
@@ -176,7 +185,7 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._centralWidget.layout().addWidget(self._spacer)
 
-    def insertChapter(self):
+    def addChapter(self):
         if self._novel.chapters:
             last_chapter = self._novel.chapters[-1]
             i = self._centralWidget.layout().indexOf(self._chapters[last_chapter]) + 1
@@ -186,6 +195,8 @@ class ScenesTreeView(TreeView, EventListener):
         self._novel.chapters.append(chapter)
         wdg = self.__initChapterWidget(chapter)
         self._centralWidget.layout().insertWidget(i, wdg)
+
+        self.repo.update_novel(self._novel)
 
     def selectChapter(self, chapter: Chapter):
         self.clearSelection()
@@ -209,9 +220,7 @@ class ScenesTreeView(TreeView, EventListener):
 
     @overrides
     def event_received(self, event: Event):
-        if isinstance(event, SceneSelectedEvent):
-            self.selectScene(event.scene)
-        elif isinstance(event, SceneDeletedEvent):
+        if isinstance(event, SceneDeletedEvent):
             if event.scene in self._selectedScenes:
                 self._selectedScenes.remove(event.scene)
             if event.scene in self._scenes.keys():
@@ -222,6 +231,18 @@ class ScenesTreeView(TreeView, EventListener):
             wdg = self._scenes.get(event.scene)
             if wdg is not None:
                 wdg.refresh()
+        elif isinstance(event, SceneOrderChangedEvent):
+            self.refresh()
+
+    def _addScene(self, chapterWdg: ChapterWidget):
+        scene = self._novel.new_scene()
+        scene.chapter = chapterWdg.chapter()
+        self._novel.scenes.append(scene)
+        self.repo.insert_scene(self._novel, scene)
+        sceneWdg = self.__initSceneWidget(scene)
+        chapterWdg.addChild(sceneWdg)
+
+        self._reorderScenes()
 
     def _sceneSelectionChanged(self, sceneWdg: SceneWidget, selected: bool):
         if selected:
@@ -371,8 +392,8 @@ class ScenesTreeView(TreeView, EventListener):
         self._dummyWdg.setHidden(True)
 
     def _reorderScenes(self):
-        self._novel.chapters.clear()
-        self._novel.scenes.clear()
+        chapters = []
+        scenes = []
 
         for i in range(self._centralWidget.layout().count()):
             item = self._centralWidget.layout().itemAt(i)
@@ -380,14 +401,19 @@ class ScenesTreeView(TreeView, EventListener):
                 continue
             wdg = item.widget()
             if isinstance(wdg, ChapterWidget):
-                self._novel.chapters.append(wdg.chapter())
+                chapters.append(wdg.chapter())
                 for scene_wdg in wdg.sceneWidgets():
-                    self._novel.scenes.append(scene_wdg.scene())
+                    scenes.append(scene_wdg.scene())
             elif isinstance(wdg, SceneWidget):
-                self._novel.scenes.append(wdg.scene())
+                scenes.append(wdg.scene())
+
+        self._novel.chapters[:] = chapters
+        self._novel.scenes[:] = scenes
 
         for wdg in self._chapters.values():
             wdg.refresh()
+        for wdg in self._scenes.values():
+            wdg.refreshTitle()
 
         emit_event(SceneOrderChangedEvent(self))
         self.repo.update_novel(self._novel)
@@ -405,6 +431,7 @@ class ScenesTreeView(TreeView, EventListener):
         chapterWdg = ChapterWidget(chapter, self._novel)
         chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
         chapterWdg.deleted.connect(partial(self._deleteChapter, chapterWdg))
+        chapterWdg.addScene.connect(partial(self._addScene, chapterWdg))
         chapterWdg.installEventFilter(
             DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
                             grabbed=chapterWdg.titleWidget(),

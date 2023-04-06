@@ -144,7 +144,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         self._addSceneMenu = QMenu(self.ui.btnNew)
         self._addSceneMenu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
-        self._addSceneMenu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.insertChapter)
+        self._addSceneMenu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.addChapter)
 
         self.ui.treeChapters.setNovel(self.novel)
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
@@ -374,6 +374,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.selected_card.clearSelection()
         self.selected_card = card
         self._enable_action_buttons(True)
+        self.ui.treeChapters.selectScene(card.scene)
         emit_event(SceneSelectedEvent(self, card.scene))
 
     def _selection_cleared(self):
