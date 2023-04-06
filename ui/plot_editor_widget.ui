@@ -62,6 +62,9 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
+     <property name="childrenCollapsible">
+      <bool>false</bool>
+     </property>
      <widget class="QWidget" name="wdgPlotListParent" native="true">
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
@@ -88,7 +91,7 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <widget class="QWidget" name="pageEmpty" native="true">
+      <widget class="QWidget" name="pageEmpty">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
          <horstretch>0</horstretch>
