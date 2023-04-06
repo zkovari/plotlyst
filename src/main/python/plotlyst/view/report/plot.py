@@ -57,10 +57,10 @@ class PlotReport(AbstractReport, Ui_PlotReport):
         flow(self.wdgPlotContainer)
         self._btnGroupPlots: Optional[QButtonGroup] = None
 
-        self.display()
+        self.refresh()
 
     @overrides
-    def display(self):
+    def refresh(self):
         clear_layout(self.wdgPlotContainer)
         self._btnGroupPlots = QButtonGroup()
         self._btnGroupPlots.setExclusive(False)

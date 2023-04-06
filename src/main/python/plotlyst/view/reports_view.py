@@ -41,6 +41,7 @@ from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.report.character import CharacterReport
 from src.main.python.plotlyst.view.report.conflict import ConflictReport
 from src.main.python.plotlyst.view.report.manuscript import ManuscriptReport
+from src.main.python.plotlyst.view.report.plot import PlotReport
 from src.main.python.plotlyst.view.report.scene import SceneReport
 
 
@@ -135,7 +136,7 @@ class ArcReportPage(ReportPage):
 
     @overrides
     def _initReport(self):
-        return CharacterReport(self._novel)
+        return PlotReport(self._novel)
 
 
 class ManuscriptReportPage(ReportPage):
