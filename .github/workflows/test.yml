@@ -69,6 +69,7 @@ jobs:
           pip install fbs.tar.gz
           pip install -e .[test]
           pip install git+https://github.com/plotlyst/qt-uic.git
+          pip install git+https://github.com/plotlyst/qt-menu.git
           pip install git+https://github.com/plotlyst/qt-anim.git
           pip install git+https://github.com/plotlyst/qt-textedit.git
           pip install git+https://github.com/plotlyst/qt-emojipicker.git
