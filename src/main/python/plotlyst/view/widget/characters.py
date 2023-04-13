@@ -32,10 +32,11 @@ from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QCol
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
     QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
 from overrides import overrides
-from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, btn_popup_menu, incr_font, \
+from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
     OpacityEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color, \
     CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
@@ -661,8 +662,7 @@ class CharacterSelectorButton(QToolButton):
             self._opacityFilter = OpacityEventFilter(self)
         else:
             self._opacityFilter = None
-        self._menu = QMenu(self)
-        btn_popup_menu(self, self._menu)
+        self._menu = MenuWidget(self)
         self._menu.aboutToShow.connect(self._fillUpMenu)
         self.clear()
 
@@ -788,11 +788,10 @@ class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
             self._styleIconButton(border=True)
         self.btnGoalIcon.clicked.connect(self._selectIcon)
         self.btnContext.setIcon(IconRegistry.dots_icon('grey', vertical=True))
-        menu = QMenu(self)
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self._delete)
+        menu = MenuWidget(self.btnContext)
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self._delete))
         menu.aboutToShow.connect(self._aboutToShowContextMenu)
         menu.aboutToHide.connect(self._aboutToHideContextMenu)
-        btn_popup_menu(self.btnContext, menu)
 
         self.btnAddChildGoal.setIcon(IconRegistry.plus_icon('grey'))
         self.btnAddChildGoal.installEventFilter(OpacityEventFilter(parent=self.btnAddChildGoal, leaveOpacity=0.65))
@@ -1934,7 +1933,7 @@ for topic in default_topics:
     topic_ids[str(topic.id)] = topic
 
 
-class CharacterTopicSelector(QMenu):
+class CharacterTopicSelector(MenuWidget):
     topicTriggered = pyqtSignal(Topic)
 
     def __init__(self, character: Character, parent=None):
@@ -1942,7 +1941,6 @@ class CharacterTopicSelector(QMenu):
         self._character = character
         self._actions: Dict[Topic, QAction] = {}
         char_topic_ids = set([str(x.id) for x in character.topics])
-        self.setToolTipsVisible(True)
 
         for topic in default_topics:
             action_ = self._Action(topic, self)
@@ -1988,7 +1986,6 @@ class CharacterTopicsEditor(QWidget, Ui_CharacterTopicEditor):
         self._character = character
         self._menu = CharacterTopicSelector(self._character, self.btnAdd)
         self._menu.topicTriggered.connect(self._addTopic)
-        btn_popup_menu(self.btnAdd, self._menu)
 
         for tc in character.topics:
             topic = topic_ids.get(str(tc.id))

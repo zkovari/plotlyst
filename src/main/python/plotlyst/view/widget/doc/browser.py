@@ -83,7 +83,7 @@ class DocumentWidget(ContainerNode):
         self._actionChangeIcon.setVisible(True)
         menu = DocumentAdditionMenu(self._novel)
         menu.documentTriggered.connect(self.added.emit)
-        self.setPlusMenu(menu)
+        # self.setPlusMenu(menu)
         self.refresh()
 
     def doc(self) -> Document:

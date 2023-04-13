@@ -27,11 +27,12 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize, QItemSelectionModel
 from PyQt6.QtGui import QMouseEvent, QIcon
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout, QWidgetAction
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
     decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
@@ -752,12 +753,9 @@ class _SecondaryFieldSelectorButton(QToolButton):
         pointy(self)
         self.setIconSize(QSize(22, 22))
         self.setIcon(IconRegistry.plus_edit_icon())
-        menu = QMenu(self)
-        action = QWidgetAction(menu)
-        action.setDefaultWidget(self._selector)
-        menu.addAction(action)
+        menu = MenuWidget(self)
+        menu.addWidget(self._selector)
         menu.addSeparator()
-        action = QWidgetAction(menu)
         btnRemove = QPushButton(f'Remove {self._field.name}')
         transparent(btnRemove)
         pointy(btnRemove)
@@ -766,9 +764,7 @@ class _SecondaryFieldSelectorButton(QToolButton):
         hmax(btnRemove)
         italic(btnRemove)
         btnRemove.clicked.connect(self.removalRequested.emit)
-        action.setDefaultWidget(wrap(btnRemove, margin_top=15))
-        menu.addAction(action)
-        btn_popup_menu(self, menu)
+        menu.addWidget(btnRemove)
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
 
 
