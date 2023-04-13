@@ -95,7 +95,7 @@ class HomeView(AbstractView):
         self.ui.wdgSubtitleParent.layout().insertWidget(0, self._iconSelector)
 
         menu = MenuWidget(self.ui.btnNovelSettings)
-        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self._on_delete))
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self._on_delete()))
 
         self._shelvesTreeView = ShelvesTreeView()
         hbox(self.ui.wdgShelvesParent)
