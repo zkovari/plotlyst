@@ -17,13 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any
+from typing import Any, Optional, Tuple
 
 from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
-from PyQt6.QtGui import QColor, QBrush
-from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup
+from PyQt6.QtGui import QColor, QBrush, QResizeEvent
+from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup, QDialog
 from overrides import overrides
-from qthandy import flow, btn_popup, transparent, pointy
+from qthandy import flow, transparent, pointy, hbox
 
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
@@ -84,6 +84,7 @@ class ColorPicker(QWidget):
 
 class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
     iconSelected = pyqtSignal(str, QColor)
+    model = None
 
     def __init__(self, parent=None):
         super(IconSelectorWidget, self).__init__(parent)
@@ -113,13 +114,15 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
         self.colorPicker.colorPicked.connect(self._colorPicked)
         self.hLayoutTop.insertWidget(0, self.colorPicker)
 
-        filtered_icons = []
-        for type, icons_list in icons_registry.items():
-            for icon in icons_list:
-                if icon and icon != 'fa5s.' and icon != 'mdi.':
-                    filtered_icons.append(self._IconItem(type, icon))
-        self.model = self._Model(filtered_icons)
-        self._proxy = proxy(self.model)
+        if IconSelectorWidget.model is None:
+            filtered_icons = []
+            for type, icons_list in icons_registry.items():
+                for icon in icons_list:
+                    if icon and icon != 'fa5s.' and icon != 'mdi.':
+                        filtered_icons.append(self._IconItem(type, icon))
+            IconSelectorWidget.model = self._Model(filtered_icons)
+
+        self._proxy = proxy(IconSelectorWidget.model)
         self._proxy.setFilterRole(self._Model.IconTypeRole)
         self.lstIcons.setModel(self._proxy)
         self.lstIcons.setViewMode(QListView.ViewMode.IconMode)
@@ -207,6 +210,41 @@ class IconSelectorWidget(QWidget, Ui_IconsSelectorWidget):
             self.modelReset.emit()
 
 
+class _IconSelectorDialog(QDialog):
+
+    def __init__(self, parent=None):
+        super(_IconSelectorDialog, self).__init__(parent)
+        self.setWindowTitle('Select icon')
+
+        self.resize(500, 500)
+        hbox(self, 1, 0)
+
+        self._icon = ''
+        self._color: Optional[QColor] = None
+        self.selector = IconSelectorWidget(self)
+        self.selector.iconSelected.connect(self._icon_selected)
+
+        self.layout().addWidget(self.selector)
+
+    def display(self, color: Optional[QColor] = None) -> Optional[Tuple[str, QColor]]:
+        if color:
+            self.selector.setColor(color)
+        result = self.exec()
+        if result == QDialog.DialogCode.Accepted and self._icon:
+            return self._icon, self._color
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.selector.lstIcons.model().modelReset.emit()
+        self.selector.lstIcons.update()
+
+    def _icon_selected(self, icon_alias: str, color: QColor):
+        self._icon = icon_alias
+        self._color = color
+
+        self.accept()
+
+
 class IconSelectorButton(SecondaryActionToolButton):
     iconSelected = pyqtSignal(str, QColor)
 
@@ -214,13 +252,9 @@ class IconSelectorButton(SecondaryActionToolButton):
         super(IconSelectorButton, self).__init__(parent)
         self._selectedIconSize = QSize(32, 32)
         self._defaultIconSize = QSize(24, 24)
-        self._firstShow = True
 
-        self._selector = IconSelectorWidget()
-        self._menu = btn_popup(self, self._selector)
-        self._menu.aboutToShow.connect(self._aboutToShow)
         self.reset()
-        self._selector.iconSelected.connect(self._iconSelected)
+        self.clicked.connect(self._displayIcons)
 
     def setSelectedIconSize(self, size: QSize):
         self._selectedIconSize = size
@@ -238,13 +272,8 @@ class IconSelectorButton(SecondaryActionToolButton):
         self.setIcon(IconRegistry.icons_icon())
         self.initStyleSheet()
 
-    def _iconSelected(self, icon: str, color: QColor):
-        self.selectIcon(icon, color.name())
-        self.iconSelected.emit(icon, color)
-        self.menu().hide()
-
-    def _aboutToShow(self):
-        if self._firstShow:
-            self._selector.model.modelReset.emit()
-            self._firstShow = False
-        self._selector.lineFilter.setFocus()
+    def _displayIcons(self):
+        result = _IconSelectorDialog().display()
+        if result:
+            self.selectIcon(result[0], result[1].name())
+            self.iconSelected.emit(result[0], result[1])
