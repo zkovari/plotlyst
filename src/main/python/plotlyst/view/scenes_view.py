@@ -26,6 +26,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
@@ -40,7 +41,7 @@ from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.service.persistence import delete_scene
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
@@ -142,14 +143,16 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.ui.splitterLeft.setSizes([120, 500])
 
-        self._addSceneMenu = QMenu(self.ui.btnNew)
-        self._addSceneMenu.addAction(IconRegistry.scene_icon(), 'Add scene', self._new_scene)
-        self._addSceneMenu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.ui.treeChapters.addChapter)
+        self._addSceneMenu = MenuWidget(self.ui.btnNewWithMenu)
+        self._addSceneMenu.addAction(action('Add scene', IconRegistry.scene_icon(), self._new_scene))
+        self._addSceneMenu.addAction(
+            action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
 
         self.ui.treeChapters.setNovel(self.novel)
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
+        self.ui.btnNewWithMenu.setVisible(self.ui.btnChaptersToggle.isChecked())
         self.ui.btnChaptersToggle.setIcon(IconRegistry.chapter_icon())
         self.ui.btnChaptersToggle.setChecked(self.novel.prefs.panels.scene_chapters_sidebar_toggled)
         self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
@@ -224,7 +227,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnEdit.setIcon(IconRegistry.edit_icon())
         self.ui.btnEdit.clicked.connect(self._on_edit)
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
+        self.ui.btnNewWithMenu.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
+        self.ui.btnNewWithMenu.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNewWithMenu))
         self.ui.btnNew.clicked.connect(self._new_scene)
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
@@ -285,11 +290,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnEdit.setEnabled(False)
 
     def _hide_chapters_toggled(self, toggled: bool):
-        if toggled:
-            self.ui.btnNew.setMenu(self._addSceneMenu)
-        else:
-            self.ui.btnNew.setMenu(None)
-
         if self.novel.prefs.panels.scene_chapters_sidebar_toggled != toggled:
             self.novel.prefs.panels.scene_chapters_sidebar_toggled = toggled
             self.repo.update_novel(self.novel)
@@ -339,14 +339,14 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor = SceneEditor(self.novel)
         self._switch_to_editor()
 
-    def _show_card_menu(self, card: SceneCard, pos: QPoint):
-        builder = PopupMenuBuilder.from_widget_position(card, pos)
-        builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
-        builder.add_action('Insert new scene', IconRegistry.plus_icon('black'),
-                           partial(self._insert_scene_after, card.scene))
-        builder.add_separator()
-        builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
-        builder.popup()
+    def _show_card_menu(self, card: SceneCard, _: QPoint):
+        menu = MenuWidget()
+        menu.addAction(action('Edit', IconRegistry.edit_icon(), self._on_edit))
+        menu.addAction(action('Insert new scene', IconRegistry.plus_icon('black'),
+                              partial(self._insert_scene_after, card.scene)))
+        menu.addSeparator()
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click))
+        menu.exec()
 
     def _init_cards(self):
         self.selected_card = None

@@ -27,9 +27,10 @@ from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShow
 from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QMenu, \
     QPushButton
 from overrides import overrides
-from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, btn_popup_menu, \
-    decr_font, curved_flow, gc, sp, decr_icon
+from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, decr_font, curved_flow, \
+    gc, sp, decr_icon
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -55,13 +56,12 @@ class _AddObjectiveButton(QPushButton):
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
         pointy(self)
         retain_when_hidden(self)
-        menu = QMenu(self)
+        menu = MenuWidget(self)
         menu.addAction(action('Add new objective', IconRegistry.goal_icon(), self.addNew.emit, parent=menu))
         menu.addSeparator()
         menu.addAction(
             action('Select objective from a character', IconRegistry.character_icon(), self.selectExisting.emit,
                    parent=menu))
-        btn_popup_menu(self, menu)
 
         self.installEventFilter(ButtonPressResizeEventFilter(self))
 
@@ -90,9 +90,8 @@ class CharacterSubtaskWidget(QWidget):
         self.lineText.setText(self._goal.text)
 
         self.btnMenu = DotsMenuButton()
-        menu = QMenu(self.btnMenu)
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.delete.emit)
-        btn_popup_menu(self.btnMenu, menu)
+        menu = MenuWidget(self.btnMenu)
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.delete.emit))
         self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu, leaveOpacity=0.7))
 
         hbox(self)
@@ -155,9 +154,8 @@ class CharacterGoalWidget(QWidget):
         self.btnAdd = _AddObjectiveButton()
         self.btnAddBefore = _AddObjectiveButton()
         self.btnMenu = DotsMenuButton()
-        menu = QMenu(self.btnMenu)
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self.delete.emit)
-        btn_popup_menu(self.btnMenu, menu)
+        menu = MenuWidget(self.btnMenu)
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.delete.emit))
         self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu, leaveOpacity=0.7))
 
         self._wdgCenter.layout().addWidget(self.btnAddBefore)

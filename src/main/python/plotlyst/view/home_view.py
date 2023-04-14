@@ -19,11 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QObject
+from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap, QColor
-from PyQt6.QtWidgets import QMenu
 from overrides import overrides
-from qthandy import ask_confirmation, transparent, incr_font, hbox, btn_popup_menu, italic, busy, retain_when_hidden
+from qthandy import ask_confirmation, transparent, incr_font, hbox, italic, busy, retain_when_hidden
+from qthandy.filter import VisibilityToggleEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor
@@ -33,7 +34,7 @@ from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -93,9 +94,8 @@ class HomeView(AbstractView):
         self._iconSelector.iconSelected.connect(self._icon_changed)
         self.ui.wdgSubtitleParent.layout().insertWidget(0, self._iconSelector)
 
-        menu = QMenu(self.ui.btnNovelSettings)
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', self._on_delete)
-        btn_popup_menu(self.ui.btnNovelSettings, menu)
+        menu = MenuWidget(self.ui.btnNovelSettings)
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self._on_delete()))
 
         self._shelvesTreeView = ShelvesTreeView()
         hbox(self.ui.wdgShelvesParent)
@@ -107,7 +107,8 @@ class HomeView(AbstractView):
         self._shelvesTreeView.newNovelRequested.connect(self._add_new_novel)
         self._shelvesTreeView.novelDeletionRequested.connect(self._on_delete)
 
-        self.ui.pageNovelDisplay.installEventFilter(self)
+        self.ui.pageNovelDisplay.installEventFilter(
+            VisibilityToggleEventFilter(self.ui.btnNovelSettings, self.ui.pageNovelDisplay))
 
         incr_font(self.ui.btnAddNewStoryMain, 8)
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
@@ -129,14 +130,6 @@ class HomeView(AbstractView):
 
     def shelves(self) -> ShelvesTreeView:
         return self._shelvesTreeView
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Enter:
-            self.ui.btnNovelSettings.setVisible(True)
-        elif event.type() == QEvent.Type.Leave:
-            self.ui.btnNovelSettings.setHidden(True)
-        return super().eventFilter(watched, event)
 
     @overrides
     def event_received(self, event: Event):

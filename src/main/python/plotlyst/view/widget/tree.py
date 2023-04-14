@@ -21,10 +21,11 @@ from typing import Optional, List
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton, QMenu
+from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, btn_popup_menu, retain_when_hidden
+from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
@@ -44,6 +45,7 @@ class BaseTreeWidget(QWidget):
 
         self._selected: bool = False
         self._wdgTitle = QWidget(self)
+        self._wdgTitle.setObjectName('wdgTitle')
         hbox(self._wdgTitle, 0, 2)
 
         self._lblTitle = QLabel(title)
@@ -78,7 +80,7 @@ class BaseTreeWidget(QWidget):
         self._wdgTitle.layout().addWidget(self._btnAdd)
 
     def _initMenu(self):
-        menu = QMenu(self._btnMenu)
+        menu = MenuWidget(self._btnMenu)
         menu.addAction(self._actionChangeIcon)
         menu.addSeparator()
         menu.addAction(self._actionDelete)
@@ -86,7 +88,6 @@ class BaseTreeWidget(QWidget):
 
         self._actionChangeIcon.setVisible(False)
 
-        btn_popup_menu(self._btnMenu, menu)
         self._btnMenu.installEventFilter(ButtonPressResizeEventFilter(self._btnMenu))
 
     def titleWidget(self) -> QWidget:
@@ -110,9 +111,8 @@ class BaseTreeWidget(QWidget):
     def setPlusButtonEnabled(self, enabled: bool):
         self._plusEnabled = enabled
 
-    def setPlusMenu(self, menu: QMenu):
+    def setPlusMenu(self, menu: MenuWidget):
         menu.aboutToHide.connect(self._hideAll)
-        btn_popup_menu(self._btnAdd, menu)
         self._btnAdd.removeEventFilter(self._btnAddPressFilter)
         self._btnAddPressFilter = ButtonPressResizeEventFilter(self._btnAdd)
         self._btnAdd.installEventFilter(self._btnAddPressFilter)
@@ -140,7 +140,7 @@ class BaseTreeWidget(QWidget):
     def _reStyle(self):
         if self._selected:
             self._wdgTitle.setStyleSheet('''
-                    .QWidget {
+                    #wdgTitle {
                         background-color: #D8D5D5;
                     }
                 ''')
@@ -171,7 +171,7 @@ class ContainerNode(BaseTreeWidget):
             if self._plusEnabled and self.isEnabled():
                 self._btnAdd.setVisible(True)
             if not self._selected and self.isEnabled():
-                self._wdgTitle.setStyleSheet('.QWidget {background-color: #E9E7E7;}')
+                self._wdgTitle.setStyleSheet('#wdgTitle {background-color: #E9E7E7;}')
         elif event.type() == QEvent.Type.Leave:
             if (self._menuEnabled and self._btnMenu.menu().isVisible()) or \
                     (self._plusEnabled and self._btnAdd.menu() and self._btnAdd.menu().isVisible()):

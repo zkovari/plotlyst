@@ -25,10 +25,11 @@ import qtanim
 from PyQt6.QtCharts import QChartView
 from PyQt6.QtCore import QPropertyAnimation, pyqtProperty, QSize
 from PyQt6.QtGui import QPainter, QShowEvent, QColor
-from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QMenu, QWidgetAction, QTextBrowser
+from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser
 from overrides import overrides
-from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon, btn_popup_menu
+from qthandy import spacer, incr_font, bold, transparent, vbox, incr_icon
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
@@ -309,21 +310,19 @@ class HintButton(QToolButton):
         incr_icon(self)
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.6, enterOpacity=0.9))
         self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self._menu: Optional[MenuWidget] = None
 
         self._hint: str = ''
 
     def setHint(self, hint: str):
         if not self.menu():
-            menu = QMenu(self)
-            btn_popup_menu(self, menu)
-            menu.aboutToShow.connect(self._beforeShow)
+            self._menu = MenuWidget(self)
+            self._menu.aboutToShow.connect(self._beforeShow)
 
         self._hint = hint
 
     def _beforeShow(self):
-        if not self.menu().actions():
-            action = QWidgetAction(self.menu())
+        if self._menu.isEmpty():
             textedit = QTextBrowser()
-            action.setDefaultWidget(textedit)
             textedit.setText(self._hint)
-            self.menu().addAction(action)
+            self._menu.addWidget(textedit)

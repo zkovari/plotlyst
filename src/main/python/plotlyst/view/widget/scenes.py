@@ -32,10 +32,11 @@ from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
     QAbstractItemView
 from overrides import overrides
-from qthandy import busy, margins, vspacer, btn_popup_menu, bold, incr_font
+from qthandy import busy, margins, vspacer, bold, incr_font
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter, DragEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_THREE_COLOR, ACT_TWO_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.common import truncate_string
@@ -1409,13 +1410,11 @@ class SceneStageButton(QToolButton, EventListener):
         if not self._stageOk:
             self.setIcon(IconRegistry.progress_check_icon('grey'))
 
-        menu = QMenu(self)
+        menu = MenuWidget(self)
         for stage in self._novel.stages:
             act = action(stage.text, slot=partial(self._changeStage, stage), checkable=True, parent=menu)
             act.setChecked(self._scene.stage == stage)
             menu.addAction(act)
-
-        btn_popup_menu(self, menu)
 
     def _changeStage(self, stage: SceneStage):
         self._scene.stage = stage

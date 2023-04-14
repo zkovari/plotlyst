@@ -69,12 +69,6 @@ def emotion_color(emotion_value: int) -> str:
         return NEUTRAL_EMOTION_COLOR
 
 
-EM_DASH = u'\u2014'
-EN_DASH = u'\u2013'
-LEFT_QUOTATION_ENGLISH = u'\u201C'
-RIGHT_QUOTATION_ENGLISH = u'\u201D'
-
-
 def truncate_string(text: str, length: int = 25):
     return (text[:length] + '...') if len(text) > length else text
 

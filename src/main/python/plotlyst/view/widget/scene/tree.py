@@ -24,11 +24,12 @@ from typing import List
 
 from PyQt6.QtCore import QMimeData, QPointF
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QMenu
+from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import gc, retain_when_hidden, translucent, clear_layout, vbox, margins
 from qthandy import vspacer
 from qthandy.filter import DragEventFilter, DropEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Scene, Novel, SceneType, \
     Chapter
@@ -38,6 +39,7 @@ from src.main.python.plotlyst.events import SceneDeletedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
+from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
@@ -94,9 +96,9 @@ class ChapterWidget(ContainerNode):
         self._novel = novel
         margins(self._wdgTitle, top=2, bottom=2)
 
-        menu = QMenu()
-        menu.addAction(IconRegistry.chapter_icon(), 'Add chapter', self.addChapter.emit)
-        menu.addAction(IconRegistry.scene_icon(), 'Add scene', self.addScene.emit)
+        menu = MenuWidget(self._btnAdd)
+        menu.addAction(action('Add chapter', IconRegistry.chapter_icon(), self.addChapter.emit))
+        menu.addAction(action('Add scene', IconRegistry.scene_icon(), self.addScene.emit))
         self.setPlusMenu(menu)
 
         self._reStyle()

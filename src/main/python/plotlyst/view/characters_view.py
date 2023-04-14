@@ -23,6 +23,7 @@ from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
@@ -35,7 +36,8 @@ from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import delete_character
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.character_editor import CharacterEditor
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, PopupMenuBuilder, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, \
+    action
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -201,11 +203,11 @@ class CharactersView(AbstractNovelView):
         self._progress.refresh()
 
     def _show_card_menu(self, card: CharacterCard, pos: QPoint):
-        builder = PopupMenuBuilder.from_widget_position(card, pos)
-        builder.add_action('Edit', IconRegistry.edit_icon(), self._on_edit)
-        builder.add_separator()
-        builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
-        builder.popup()
+        menu = MenuWidget()
+        menu.addAction(action('Edit', IconRegistry.edit_icon(), self._on_edit))
+        menu.addSeparator()
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click))
+        menu.exec()
 
     def _init_cards(self):
         self.selected_card = None

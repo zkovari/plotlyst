@@ -31,6 +31,7 @@ from qthandy import bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
     clear_layout, vspacer, underline, decr_font, decr_icon, hbox, spacer, sp
 from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData, OpacityEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -321,7 +322,7 @@ class PlotEventItem(ListItemWidget):
         self._event.text = text
 
 
-class PlotEventSelectorMenu(QMenu):
+class PlotEventSelectorMenu(MenuWidget):
     eventSelected = pyqtSignal(PlotEventType)
 
     def __init__(self, parent=None):
@@ -333,8 +334,6 @@ class PlotEventSelectorMenu(QMenu):
             action_.setToolTip(plot_event_type_hint[type])
             self.addAction(action_)
 
-        self.setToolTipsVisible(True)
-
 
 class PlotEventsList(ListView):
     eventsChanged = pyqtSignal()
@@ -345,8 +344,7 @@ class PlotEventsList(ListView):
         self._btnAdd.setText('Add new event')
         self._btnAdd.setToolTip('Add new event to reflect how the plot will progress or face setback')
 
-        menu = PlotEventSelectorMenu()
-        btn_popup_menu(self._btnAdd, menu)
+        menu = PlotEventSelectorMenu(self._btnAdd)
         menu.eventSelected.connect(self._addNewItem)
 
         for event in self._plot.events:
@@ -701,11 +699,11 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         italic(self.btnAdd)
         self.btnAdd.setIcon(IconRegistry.plus_icon('white'))
-        menu = QMenu(self.btnAdd)
-        menu.addAction(IconRegistry.cause_and_effect_icon(), 'Main plot', lambda: self.newPlot(PlotType.Main))
-        menu.addAction(IconRegistry.conflict_self_icon(), 'Internal plot', lambda: self.newPlot(PlotType.Internal))
-        menu.addAction(IconRegistry.subplot_icon(), 'Subplot', lambda: self.newPlot(PlotType.Subplot))
-        btn_popup_menu(self.btnAdd, menu)
+        menu = MenuWidget(self.btnAdd)
+        menu.addAction(action('Main plot', IconRegistry.cause_and_effect_icon(), lambda: self.newPlot(PlotType.Main)))
+        menu.addAction(
+            action('Internal plot', IconRegistry.conflict_self_icon(), lambda: self.newPlot(PlotType.Internal)))
+        menu.addAction(action('Subplot', IconRegistry.subplot_icon(), lambda: self.newPlot(PlotType.Subplot)))
 
         self.repo = RepositoryPersistenceManager.instance()
 

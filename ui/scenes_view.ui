@@ -337,6 +337,34 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="btnNewWithMenu">
+            <property name="maximumSize">
+             <size>
+              <width>130</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="toolTip">
+             <string>Add new scene</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="shortcut">
+             <string>Ctrl+N</string>
+            </property>
+            <property name="positive" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="btnEdit">
             <property name="enabled">
              <bool>false</bool>
@@ -1135,7 +1163,7 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>84</width>
+                    <width>98</width>
                     <height>16</height>
                    </rect>
                   </property>
@@ -1231,7 +1259,7 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>423</x>
+     <x>517</x>
      <y>58</y>
     </hint>
     <hint type="destinationlabel">
@@ -1251,8 +1279,8 @@
      <y>52</y>
     </hint>
     <hint type="destinationlabel">
-     <x>3</x>
-     <y>79</y>
+     <x>12</x>
+     <y>119</y>
     </hint>
    </hints>
   </connection>
@@ -1263,12 +1291,44 @@
    <slot>setVisible(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>623</x>
-     <y>87</y>
+     <x>376</x>
+     <y>89</y>
     </hint>
     <hint type="destinationlabel">
-     <x>649</x>
-     <y>97</y>
+     <x>395</x>
+     <y>89</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnChaptersToggle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>btnNew</receiver>
+   <slot>setHidden(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>67</x>
+     <y>45</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>119</x>
+     <y>48</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnChaptersToggle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>btnNewWithMenu</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>81</x>
+     <y>51</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>174</x>
+     <y>54</y>
     </hint>
    </hints>
   </connection>

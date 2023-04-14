@@ -9,9 +9,11 @@ with (HERE / 'README.md').open('rt') as fh:
 REQUIREMENTS: dict = {
     'core': [
         'PyQt6==6.4.0',
+        'PyQt6-Qt6==6.4.0',
         'overrides==3.1.0',
         'qtawesome==1.1.1',
         'PyQt6-Charts==6.4.0',
+        'PyQt6-Charts-Qt6==6.4.0',
         'anytree==2.8.0',
         'emoji==2.2.0',
         'fbs[sentry]',

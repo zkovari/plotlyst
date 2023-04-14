@@ -29,6 +29,7 @@ from overrides import overrides
 from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, retain_when_hidden, incr_font, \
     btn_popup_menu, gc, vline
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character
 from src.main.python.plotlyst.env import app_env
@@ -37,7 +38,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterDeletedEvent, TaskChanged, TaskDeleted, TaskChangedToWip, \
     TaskChangedFromWip
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, pointy, shadow, action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import CollapseButton
@@ -101,11 +102,10 @@ class TaskWidget(QFrame):
         self._btnMenu.setIcon(IconRegistry.dots_icon('grey'))
         self._btnMenu.setProperty('transparent-circle-bg-on-hover', True)
         pointy(self._btnMenu)
-        menu = QMenu(self._btnMenu)
-        menu.addAction(IconRegistry.edit_icon(), 'Rename', self._lineTitle.setFocus)
+        menu = MenuWidget(self._btnMenu)
+        menu.addAction(action('Rename', IconRegistry.edit_icon(), self._lineTitle.setFocus))
         menu.addSeparator()
-        menu.addAction(IconRegistry.trash_can_icon(), 'Delete', lambda: self.removalRequested.emit(self))
-        btn_popup_menu(self._btnMenu, menu)
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self.removalRequested.emit(self)))
         menu.aboutToHide.connect(self._onLeave)
         self._wdgBottom.layout().addWidget(spacer())
         self._wdgBottom.layout().addWidget(self._btnResolve, alignment=Qt.AlignmentFlag.AlignRight)
