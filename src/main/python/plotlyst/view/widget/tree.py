@@ -140,7 +140,7 @@ class BaseTreeWidget(QWidget):
     def _reStyle(self):
         if self._selected:
             self._wdgTitle.setStyleSheet('''
-                    .QWidget {
+                    #wdgTitle {
                         background-color: #D8D5D5;
                     }
                 ''')
