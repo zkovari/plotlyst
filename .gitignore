@@ -1,6 +1,7 @@
 .idea
 venv
 .DS_Store
+profile.stats
 
 generated
 coverage
