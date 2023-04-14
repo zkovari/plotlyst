@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from timeit import default_timer as timer
+
 from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY
 
 EXIT_CODE_RESTART = 10
@@ -93,3 +95,23 @@ def recursive(parent, children_func, action, action_first: bool = True):
 
         if not action_first:
             action(parent, child)
+
+
+class Timer:
+    def __init__(self, prefix: str = 'Elapsed', auto_start: bool = True):
+        self._prefix = prefix
+        self._elapsed = 0
+        self._start = 0
+
+        if auto_start:
+            self.start()
+
+    def start(self):
+        self._start = timer()
+
+    def end(self) -> float:
+        end = timer()
+        self._elapsed = end - self._start
+        print(f'{self._prefix}: {self._elapsed}')
+
+        return self._elapsed
