@@ -21,44 +21,46 @@ from functools import partial
 from typing import Set, Optional, Dict
 
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
-from PyQt6.QtWidgets import QMenu, QListView, QWidgetAction
+from PyQt6.QtWidgets import QListView
 from overrides import overrides
 from qthandy import clear_layout, vspacer, retain_when_hidden, translucent, gc, ask_confirmation
 from qthandy.filter import DragEventFilter, DropEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Document, Novel, DocumentType, Character
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import fade_out_and_gc, pointy
+from src.main.python.plotlyst.view.common import fade_out_and_gc, pointy, action
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
-class DocumentAdditionMenu(QMenu):
+class DocumentAdditionMenu(MenuWidget):
     documentTriggered = pyqtSignal(Document)
 
     def __init__(self, novel: Novel, parent=None):
         super(DocumentAdditionMenu, self).__init__(parent)
         self._novel = novel
 
-        self.addAction(IconRegistry.document_edition_icon(), 'Document', self._documentSelected)
+        self.addAction(action('Document', IconRegistry.document_edition_icon(), self._documentSelected))
 
-        character_menu = self.addMenu(IconRegistry.character_icon(), 'Characters')
+        self._character_menu = MenuWidget()
+        self._character_menu.setTitle('Characters')
+        self._character_menu.setIcon(IconRegistry.character_icon())
         _view = QListView()
         pointy(_view)
         _view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         _view.clicked.connect(self._characterSelected)
         _view.setModel(CharactersTableModel(self._novel))
-        action = QWidgetAction(character_menu)
-        action.setDefaultWidget(_view)
-        character_menu.addAction(action)
+        self._character_menu.addWidget(_view)
+        self.addMenu(self._character_menu)
 
     def _characterSelected(self, char_index: QModelIndex):
         char = char_index.data(CharactersTableModel.CharacterRole)
         self._documentSelected(character=char)
-        self.hide()
+        self._character_menu.close()
 
     def _documentSelected(self, docType=DocumentType.DOCUMENT, character: Optional[Character] = None):
         doc = Document('New Document', type=docType)
@@ -81,9 +83,8 @@ class DocumentWidget(ContainerNode):
         retain_when_hidden(self._icon)
 
         self._actionChangeIcon.setVisible(True)
-        menu = DocumentAdditionMenu(self._novel)
+        menu = DocumentAdditionMenu(self._novel, self._btnAdd)
         menu.documentTriggered.connect(self.added.emit)
-        # self.setPlusMenu(menu)
         self.refresh()
 
     def doc(self) -> Document:

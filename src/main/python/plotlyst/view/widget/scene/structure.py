@@ -225,15 +225,14 @@ class _SceneBeatPlaceholderButton(QToolButton):
 
         self._menu = GridMenuWidget(self)
         self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self._menu.setSearchEnabled(True)
         self._menu.setStyleSheet(f'''
                 MenuWidget {{
                     background-color: {RELAXED_WHITE_COLOR};
                 }}
                 QFrame {{
                     background-color: {RELAXED_WHITE_COLOR};
-                    padding-left: 5px;
-                    padding-right: 5px;
+                    padding-left: 2px;
+                    padding-right: 2px;
                     border-radius: 5px;
                 }}
                 MenuItemWidget:hover {{

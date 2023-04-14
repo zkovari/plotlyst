@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from overrides import overrides
-from qthandy import clear_layout, bold, btn_popup_menu
+from qthandy import clear_layout, bold
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType
@@ -56,9 +56,8 @@ class DocumentsView(AbstractNovelView):
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
         self.ui.btnAdd.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAdd))
-        menu = DocumentAdditionMenu(self.novel)
+        menu = DocumentAdditionMenu(self.novel, self.ui.btnAdd)
         menu.documentTriggered.connect(self._add_doc)
-        btn_popup_menu(self.ui.btnAdd, menu)
 
     @overrides
     def refresh(self):
