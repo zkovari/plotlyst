@@ -44,7 +44,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, pointy
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, pointy, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
@@ -465,16 +465,19 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.lineName.setText(self.plot.text)
         self.lineName.textChanged.connect(self._nameEdited)
         self.btnPincipleEditor.setIcon(IconRegistry.plus_edit_icon())
+        transparent(self.btnPincipleEditor)
         retain_when_hidden(self.btnPincipleEditor)
         decr_icon(self.btnPincipleEditor)
         self.btnArcToggle.setIcon(IconRegistry.rising_action_icon('black', color_on=PLOTLYST_SECONDARY_COLOR))
-        decr_icon(self.btnArcToggle)
+        decr_icon(self.btnArcToggle, 2)
 
         self.splitter.setSizes([300, 300])
 
         self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
         btn_popup_menu(self.btnPincipleEditor, self._principleSelectorMenu)
+        self.btnPincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPincipleEditor))
+        self.btnPincipleEditor.installEventFilter(OpacityEventFilter(self.btnPincipleEditor, leaveOpacity=0.7))
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
 
         self._initFrameColor()
@@ -602,6 +605,10 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
                 self.plot.principles.remove(principle)
                 wdg = self._principles.pop(principle.type)
                 fade_out_and_gc(self.wdgPrinciples, wdg)
+
+        self._btnAddValue.setVisible(True)
+        self.btnSettings.setVisible(True)
+        self.btnPincipleEditor.setVisible(True)
 
         self._save()
 
