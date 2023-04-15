@@ -26,6 +26,7 @@ from qthandy import ask_confirmation, transparent, incr_font, hbox, italic, busy
 from qthandy.filter import VisibilityToggleEventFilter
 from qtmenu import MenuWidget
 
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor
 from src.main.python.plotlyst.event.core import emit_event, Event
@@ -60,9 +61,9 @@ class HomeView(AbstractView):
         transparent(self.ui.btnInstagram)
         transparent(self.ui.btnFacebook)
 
-        self.ui.btnLibrary.setIcon(IconRegistry.from_name('mdi.bookshelf', color_on='darkBlue'))
-        self.ui.btnProgress.setIcon(IconRegistry.from_name('fa5s.chart-line'))
-        self.ui.btnRoadmap.setIcon(IconRegistry.from_name('fa5s.road'))
+        self.ui.btnLibrary.setIcon(IconRegistry.from_name('mdi.bookshelf', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnProgress.setIcon(IconRegistry.from_name('fa5s.chart-line', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnRoadmap.setIcon(IconRegistry.from_name('fa5s.road', color_on=PLOTLYST_SECONDARY_COLOR))
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
