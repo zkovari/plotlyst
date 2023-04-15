@@ -345,6 +345,7 @@ class PlotEventsList(ListView):
         self._btnAdd.setText('Add new event')
         self._btnAdd.setToolTip('Add new event to reflect how the plot will progress or face setback')
 
+        self._centralWidget.setProperty('relaxed-white-bg', True)
         menu = PlotEventSelectorMenu(self._btnAdd)
         menu.eventSelected.connect(self._addNewItem)
 
@@ -511,12 +512,13 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._btnAddValue.clicked.connect(self._newValue)
 
         self._lstEvents = PlotEventsList(self.plot)
-        self._lstEvents.centralWidget().setStyleSheet(f'.QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
+        self._lstEvents.setMinimumHeight(300)
         self._lstEvents.eventsChanged.connect(self._eventsChanged)
         self.wdgEventsParent.layout().addWidget(self._lstEvents)
 
         self._arcChart = PlotEventsArcChart(self.plot)
         self.chartViewArcPreview.setChart(self._arcChart)
+        self.chartViewArcPreview.setMinimumHeight(300)
         self._arcChart.refresh()
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
