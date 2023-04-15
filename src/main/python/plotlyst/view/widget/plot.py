@@ -31,7 +31,7 @@ from qthandy import bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
     clear_layout, vspacer, underline, decr_font, decr_icon, hbox, spacer, sp
 from qthandy.filter import VisibilityToggleEventFilter, ObjectReferenceMimeData, OpacityEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Plot, PlotValue, PlotType, Character, PlotPrinciple, \
@@ -327,11 +327,12 @@ class PlotEventSelectorMenu(MenuWidget):
 
     def __init__(self, parent=None):
         super(PlotEventSelectorMenu, self).__init__(parent)
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
 
-        for type in PlotEventType:
-            action_ = action(type.name.lower().capitalize(), plot_event_icon(type),
-                             partial(self.eventSelected.emit, type), parent=self)
-            action_.setToolTip(plot_event_type_hint[type])
+        for type_ in PlotEventType:
+            action_ = action(type_.name.lower().capitalize(), plot_event_icon(type_),
+                             partial(self.eventSelected.emit, type_))
+            action_.setToolTip(plot_event_type_hint[type_])
             self.addAction(action_)
 
 
