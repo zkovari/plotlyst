@@ -28,20 +28,21 @@ from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEve
     QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication
 from overrides import overrides
+from qtanim import fade_in
 from qthandy import pointy, gc, translucent, bold, retain_when_hidden, flow, clear_layout, decr_font, \
-    margins, spacer, sp, curved_flow
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DragEventFilter, DisabledClickEventFilter, \
-    ObjectReferenceMimeData
+    margins, spacer, sp, curved_flow, incr_icon
+from qthandy.filter import OpacityEventFilter, DragEventFilter, DisabledClickEventFilter, \
+    ObjectReferenceMimeData, VisibilityToggleEventFilter
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidget
 
 from src.main.python.plotlyst.common import emotion_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
     SceneStructureItem, SceneOutcome, SceneStructureAgenda, CharacterGoal, GoalReference, Conflict, ConflictReference
-from src.main.python.plotlyst.view.common import action, wrap, fade_out_and_gc
+from src.main.python.plotlyst.view.common import action, wrap, fade_out_and_gc, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton, FadeOutButtonGroup
+from src.main.python.plotlyst.view.widget.button import FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton, CharacterGoalSelector, \
     CharacterConflictSelector
 from src.main.python.plotlyst.view.widget.labels import EmotionLabel
@@ -119,13 +120,15 @@ emotions: Dict[str, str] = {'Admiration': '#008744', 'Adoration': '#7048e8', 'Am
                             'Satisfaction': '#228b22', 'Surprise': '#ff69b4'}
 
 
-class EmotionSelectorButton(SecondaryActionToolButton):
+class EmotionSelectorButton(QToolButton):
     emotionSelected = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super(EmotionSelectorButton, self).__init__(parent)
         self.setIcon(IconRegistry.from_name('ri.emotion-sad-line'))
-        self.setPadding(1)
+        self.setProperty('transparent', True)
+        pointy(self)
+        incr_icon(self, 2)
         menuEmotions = ScrollableMenuWidget(self)
         menuEmotions.setMaximumHeight(300)
         for emotion in ['Admiration', 'Adoration', 'Amusement', 'Anger', 'Anxiety', 'Awe', 'Awkwardness', 'Boredom',
@@ -133,6 +136,8 @@ class EmotionSelectorButton(SecondaryActionToolButton):
                         'Craving', 'Disgust', 'Empathic', 'Pain', 'Entrancement', 'Excitement', 'Fear', 'Horror',
                         'Interest', 'Joy', 'Nostalgia', 'Relief', 'Sadness', 'Satisfaction', 'Surprise']:
             menuEmotions.addAction(action(emotion, slot=partial(self.emotionSelected.emit, emotion)))
+
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
 
 
 class _SceneTypeButton(QPushButton):
@@ -578,14 +583,12 @@ class SceneStructureTimeline(QWidget):
         self.layout().insertWidget(i, widget)
         self.layout().insertWidget(i + 1, self._newPlaceholderWidget())
         self.layout().insertWidget(i, self._newPlaceholderWidget())
-        widget.setVisible(True)
-        widget.activate()
+        fade_in(widget, teardown=widget.activate)
         self.update()
         self.timelineChanged.emit()
 
     def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
         widget = SceneStructureItemWidget(self._novel, item, parent=self)
-        # widget.entered.connect(lambda: self._placeholder.setHidden(True))
         widget.removed.connect(self._beatRemoved)
         widget.emotionChanged.connect(self.emotionChanged.emit)
         # widget.dragStarted.connect(partial(self._initDragPlaceholder, widget))

@@ -80,7 +80,7 @@ class _SecondaryActionButton(QAbstractButton):
         self._checkedColor: str = 'black'
         self._padding: int = 2
         self.initStyleSheet()
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        pointy(self)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
 
