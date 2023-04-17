@@ -297,8 +297,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_edit(self):
         scene: Optional[Scene] = self._selected_scene()
         if scene:
-            self.editor = SceneEditor(self.novel, scene)
-            self._switch_to_editor()
+            self._switch_to_editor(scene)
 
     def _selected_scene(self) -> Optional[Scene]:
         if self.ui.btnCardsView.isChecked() and self.selected_card:
@@ -317,14 +316,16 @@ class ScenesOutlineView(AbstractNovelView):
                 return None
 
     @busy
-    def _switch_to_editor(self):
+    def _switch_to_editor(self, scene: Optional[Scene]):
+        self.editor = SceneEditor(self.novel, scene)
         self.title.setHidden(True)
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
         self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
 
-    def _on_close_editor(self):
+    @busy
+    def _on_close_editor(self, _: bool):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
@@ -335,8 +336,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.editor = None
         self.refresh()
 
+    @busy
     def _new_scene(self):
-        self.editor = SceneEditor(self.novel)
         self._switch_to_editor()
 
     def _show_card_menu(self, card: SceneCard, _: QPoint):
