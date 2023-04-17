@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import pickle
+import sys
 from functools import partial
 from typing import Optional, List, Dict
 
@@ -25,7 +26,7 @@ import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint
 from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QResizeEvent, \
     QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication
 from overrides import overrides
 from qthandy import pointy, gc, translucent, bold, transparent, retain_when_hidden, flow, clear_layout, decr_font, \
     margins, spacer
@@ -1029,3 +1030,25 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             conflict_selector.setConflict(conflict, conflict_ref)
         self.wdgGoalConflictContainer.layout().addWidget(conflict_selector)
         conflict_selector.conflictSelected.connect(self._initSelectors)
+
+
+if __name__ == '__main__':
+    class MainWindow(QMainWindow):
+        def __init__(self, parent=None):
+            super(MainWindow, self).__init__(parent)
+
+            self.resize(500, 500)
+
+            self.widget = SceneStructureWidget(self)
+            self.setCentralWidget(self.widget)
+
+            novel = Novel('Novel')
+            scene = Scene('Scene', agendas=[SceneStructureAgenda()])
+            self.widget.setScene(novel, scene)
+
+
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+
+    app.exec()
