@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGr
     QScrollArea, QApplication, QDialogButtonBox
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_layout, flow, vbox, incr_font, \
-    retain_when_hidden, grid, decr_icon
+    retain_when_hidden, grid, decr_icon, ask_confirmation
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color
@@ -446,18 +446,22 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def _removeStructure(self):
         if len(self.novel.story_structures) < 2:
             return
-        to_be_removed = None
+
         structure = self.novel.active_story_structure
-        for btn in self.btnGroupStructure.buttons():
-            if btn.structure() is structure:
-                to_be_removed = btn
-                break
-        if not to_be_removed:
+        if not ask_confirmation(f'Remove structure "{structure.title}"?'):
             return
 
-        self.btnGroupStructure.removeButton(to_be_removed)
-        self.wdgTemplates.layout().removeWidget(to_be_removed)
-        gc(to_be_removed)
+        to_be_removed_button: Optional[QPushButton] = None
+        for btn in self.btnGroupStructure.buttons():
+            if btn.structure() is structure:
+                to_be_removed_button = btn
+                break
+        if not to_be_removed_button:
+            return
+
+        self.btnGroupStructure.removeButton(to_be_removed_button)
+        self.wdgTemplates.layout().removeWidget(to_be_removed_button)
+        gc(to_be_removed_button)
         self.novel.story_structures.remove(structure)
         if self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[-1].setChecked(True)
