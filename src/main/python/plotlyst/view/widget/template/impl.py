@@ -72,7 +72,7 @@ class TextSelectionWidget(SecondaryActionPushButton):
 
         self.setText(f'{self.field.name}...')
         self._popup = self.Popup(self.field, help)
-        btn_popup(self, self._popup)
+        self._popupParent = btn_popup(self, self._popup)
 
         self._selected: Optional[SelectionItem] = None
         self._items: Dict[str, SelectionItem] = {}
@@ -100,7 +100,7 @@ class TextSelectionWidget(SecondaryActionPushButton):
             self.setIcon(IconRegistry.empty_icon())
 
     def _selection_changed(self, item: SelectionItem):
-        self.menu().hide()
+        self._popupParent.close()
         previous = self._selected
         self.setValue(item.text)
         self.selectionChanged.emit(previous, self._selected)
