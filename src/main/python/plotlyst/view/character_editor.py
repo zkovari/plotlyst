@@ -29,7 +29,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Document, MAL
 from src.main.python.plotlyst.core.template import protagonist_role
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap
+from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -53,7 +53,8 @@ class CharacterEditor:
         self._emoji_font = emoji_font()
         self.ui.btnCustomize.setIcon(IconRegistry.customization_icon())
         self.ui.btnCustomize.clicked.connect(self._customize_profile)
-        self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon())
+        self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon('white'))
+        self.ui.btnNewBackstory.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNewBackstory))
         self.ui.btnNewBackstory.clicked.connect(lambda: self.ui.wdgBackstory.add())
         self.ui.tabAttributes.currentChanged.connect(self._tab_changed)
         self.ui.textEdit.setTitleVisible(False)

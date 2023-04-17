@@ -591,7 +591,7 @@ border: 0px;
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabTopics">
        <property name="relaxed-white-bg" stdset="0">
@@ -627,13 +627,13 @@ border: 0px;
          <number>3</number>
         </property>
         <property name="leftMargin">
-         <number>3</number>
+         <number>2</number>
         </property>
         <property name="topMargin">
-         <number>9</number>
+         <number>2</number>
         </property>
         <property name="rightMargin">
-         <number>3</number>
+         <number>2</number>
         </property>
         <property name="bottomMargin">
          <number>2</number>
@@ -643,27 +643,37 @@ border: 0px;
           <property name="spacing">
            <number>3</number>
           </property>
+          <property name="leftMargin">
+           <number>4</number>
+          </property>
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>10</number>
+          </property>
           <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string/>
+           <widget class="QPushButton" name="btnNewBackstory">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QToolButton" name="btnNewBackstory">
             <property name="focusPolicy">
              <enum>Qt::ClickFocus</enum>
             </property>
-            <property name="text">
-             <string/>
+            <property name="toolTip">
+             <string>Add new backstory event</string>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>Events from the character's past.</string>
+             <string>Add event</string>
+            </property>
+            <property name="base" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="positive" stdset="0">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -683,13 +693,6 @@ border: 0px;
          </layout>
         </item>
         <item>
-         <widget class="Line" name="line">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QScrollArea" name="scrollArea">
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
@@ -702,8 +705,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>376</width>
-             <height>508</height>
+             <width>378</width>
+             <height>512</height>
             </rect>
            </property>
            <property name="styleSheet">
