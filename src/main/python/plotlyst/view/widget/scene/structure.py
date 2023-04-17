@@ -23,7 +23,7 @@ from functools import partial
 from typing import Optional, List, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF
 from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QResizeEvent, \
     QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication
@@ -37,7 +37,7 @@ from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidge
 from src.main.python.plotlyst.common import emotion_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
     SceneStructureItem, SceneOutcome, SceneStructureAgenda, CharacterGoal, GoalReference, Conflict, ConflictReference
-from src.main.python.plotlyst.view.common import action, wrap
+from src.main.python.plotlyst.view.common import action, wrap, fade_out_and_gc
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -109,21 +109,6 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
 
 HAPPENING_BEATS = (SceneStructureItemType.BEAT, SceneStructureItemType.EXPOSITION, SceneStructureItemType.SETUP,
                    SceneStructureItemType.HOOK, SceneStructureItemType.MYSTERY, SceneStructureItemType.EXPOSITION)
-
-
-def normalize_beat_percentages(agenda, forced: bool = False):
-    if len(agenda.items) > 0 and forced:
-        agenda.items[0].percentage = 0.0
-    if len(agenda.items) > 1:
-        last_beat = agenda.items[-1]
-        if last_beat.percentage == 0.0 or forced:
-            last_beat.percentage = 0.9
-
-    for i in range(1, len(agenda.items) - 1):
-        beat = agenda.items[i]
-        if beat.percentage == 0.0 or forced:
-            beat.percentage = i * (0.9 / (len(agenda.items) - 1))
-
 
 emotions: Dict[str, str] = {'Admiration': '#008744', 'Adoration': '#7048e8', 'Amusement': '#ff6961', 'Anger': '#ff3333',
                             'Anxiety': '#ffbf00', 'Awe': '#87ceeb', 'Awkwardness': '#ff69b4', 'Boredom': '#778899',
@@ -522,8 +507,6 @@ class SceneStructureTimeline(QWidget):
         if not agenda.items:
             self._initBeatsFromType(sceneTyoe)
 
-        # normalize_beat_percentages(agenda)
-
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
@@ -637,9 +620,12 @@ class SceneStructureTimeline(QWidget):
         self.update()
 
     def _beatRemoved(self, wdg: SceneStructureItemWidget):
+        i = self.layout().indexOf(wdg)
         self._agenda.items.remove(wdg.beat)
         self._beatWidgets.remove(wdg)
-        gc(wdg)
+        placeholder_prev = self.layout().takeAt(i - 1).widget()
+        gc(placeholder_prev)
+        fade_out_and_gc(self, wdg)
         self.update()
 
         self.timelineChanged.emit()
@@ -659,11 +645,6 @@ class _SceneStructureTimeline(QWidget):
         self._emotionSize: int = 32
         self._penSize: int = 10
         self._path: Optional[QPainterPath] = None
-
-        self._placeholder = _SceneBeatPlaceholderButton(self)
-        self._placeholder.setVisible(False)
-        self._placeholder.menu().aboutToHide.connect(lambda: self._placeholder.setVisible(False))
-        self._placeholder.selected.connect(self._insertBeatWidget)
 
         self._dragPlaceholder: Optional[SceneStructureItemWidget] = None
 
@@ -701,10 +682,6 @@ class _SceneStructureTimeline(QWidget):
         painter.end()
 
     @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self._rearrangeBeats()
-
-    @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType):
             event.accept()
@@ -732,15 +709,10 @@ class _SceneStructureTimeline(QWidget):
 
         for wdg in self._beatWidgets:
             if id(wdg) == id_:
-                wdg.beat.percentage = self._percentage(event.position())
                 break
-
-        sorted(self._agenda.items, key=lambda x: x.percentage)
-        sorted(self._beatWidgets, key=lambda x: x.beat.percentage)
 
         event.accept()
 
-        self._rearrangeBeats()
         self.update()
 
     @overrides
@@ -759,41 +731,6 @@ class _SceneStructureTimeline(QWidget):
                                       self._placeholder.height())
         self.update()
 
-    def _verticalTimelineIndex(self, pos: QPoint) -> int:
-        return (pos.y() - self._topMargin) // self._lineDistance
-
-    def _intersects(self, pos: QPoint) -> bool:
-        return pos.y() <= (self._curves() * 2 + 1) * self._lineDistance or pos.y() > self._topMargin
-
-    def _percentage(self, pos: QPoint) -> float:
-        length = 0
-        vertical_index = self._verticalTimelineIndex(pos)
-        y_pos = vertical_index * self._lineDistance + self._topMargin
-        for i in range(self._path.elementCount()):
-            el = self._path.elementAt(i)
-            if i > 0:
-                prev_el = self._path.elementAt(i - 1)
-                if prev_el.y == el.y:
-                    length += abs(el.x - prev_el.x)
-                elif prev_el.isCurveTo():
-                    length += self._lineDistance / 2
-            if el.y - 10 < y_pos < el.y + 10:
-                if pos.x() <= el.x:
-                    length += abs(el.x - pos.x())
-                if pos.x() >= el.x:
-                    length += abs(pos.x() - el.x)
-
-                return self._path.percentAtLength(length)
-
-        return -1
-
-    def _curves(self) -> int:
-        if not self.width():
-            return 0
-        w = self.width() - self._margin * 2
-        placeholder_size = 24
-        return max(sum([x.maximumWidth() + placeholder_size for x in self._beatWidgets]) // w, 0)
-
     def _drawLine(self, path: QPainterPath, width: int, y: int, forward: bool):
         if forward:
             path.lineTo(width - self._margin - self._arcWidth, y)
@@ -805,38 +742,6 @@ class _SceneStructureTimeline(QWidget):
             path.arcTo(QRectF(width - self._margin - self._arcWidth, y, self._arcWidth, self._lineDistance), 90, -180)
         else:
             path.arcTo(QRectF(self._margin, y, self._arcWidth, self._lineDistance), -270, 180)
-
-    def _rearrangeBeats(self):
-        width = self.width()
-        if not width:
-            return
-        trackedPath = QPainterPath()
-
-        y = self._topMargin
-        trackedPath.moveTo(self._margin + self._beatWidth // 2, y)
-        trackedPath.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
-        curves = self._curves()
-        for i in range(curves):
-            if i > 0:
-                self._drawLine(trackedPath, width, y, True)
-            self._drawArc(trackedPath, width, y, True)
-            y += self._lineDistance
-            self._drawLine(trackedPath, width, y, False)
-            self._drawArc(trackedPath, width, y, False)
-            y += self._lineDistance
-        trackedPath.lineTo(width - 10 - self._margin, y)
-
-        self._path = trackedPath
-
-        for i in range(len(self._beatWidgets)):
-            wdg = self._beatWidgets[i]
-            point = self._path.pointAtPercent(wdg.beat.percentage)
-            wdg.setGeometry(point.x() - wdg.minimumWidth() // 2, point.y() - 15, wdg.minimumWidth(),
-                            wdg.minimumHeight())
-
-        self._emotionStart.setGeometry(10, 25, self._emotionSize, self._emotionSize)
-        self._emotionEnd.setGeometry(width - 30, y + 5, self._emotionSize, self._emotionSize)
-        self.setMinimumHeight(y + self._lineDistance)
 
     def _initDragPlaceholder(self, widget: SceneStructureItemWidget):
         self._dragPlaceholder = SceneStructureItemWidget(self.novel, widget.sceneStructureItem(), parent=self)
@@ -887,7 +792,6 @@ class SceneStructureList(ListView):
     def _addNewItem(self):
         beat = SceneStructureItem(SceneStructureItemType.EXPOSITION)
         self._agenda.items.append(beat)
-        normalize_beat_percentages(self._agenda, forced=True)
         self.addItem(beat)
 
     @overrides
@@ -898,7 +802,6 @@ class SceneStructureList(ListView):
     def _deleteItemWidget(self, widget: ListItemWidget):
         super(SceneStructureList, self)._deleteItemWidget(widget)
         self._agenda.items.remove(widget.item())
-        normalize_beat_percentages(self._agenda, forced=True)
 
     @overrides
     def _dropped(self, mimeData: ObjectReferenceMimeData):
@@ -907,8 +810,6 @@ class SceneStructureList(ListView):
 
         for wdg in self.widgets():
             self._agenda.items.append(wdg.item())
-
-        normalize_beat_percentages(self._agenda, forced=True)
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
