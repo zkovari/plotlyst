@@ -221,6 +221,9 @@
              </property>
              <item>
               <widget class="QScrollArea" name="scrollArea">
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
                <property name="horizontalScrollBarPolicy">
                 <enum>Qt::ScrollBarAlwaysOff</enum>
                </property>
@@ -232,8 +235,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>764</width>
-                  <height>431</height>
+                  <width>766</width>
+                  <height>433</height>
                  </rect>
                 </property>
                 <property name="sizePolicy">
@@ -241,6 +244,9 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="relaxed-white-bg" stdset="0">
+                 <bool>true</bool>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_2">
                  <property name="spacing">

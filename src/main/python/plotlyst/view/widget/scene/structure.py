@@ -28,8 +28,8 @@ from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEve
     QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication
 from overrides import overrides
-from qthandy import pointy, gc, translucent, bold, transparent, retain_when_hidden, flow, clear_layout, decr_font, \
-    margins, spacer
+from qthandy import pointy, gc, translucent, bold, retain_when_hidden, flow, clear_layout, decr_font, \
+    margins, spacer, sp, curved_flow
 from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DragEventFilter, DisabledClickEventFilter, \
     ObjectReferenceMimeData
 from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidget
@@ -37,8 +37,7 @@ from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidge
 from src.main.python.plotlyst.common import emotion_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
     SceneStructureItem, SceneOutcome, SceneStructureAgenda, CharacterGoal, GoalReference, Conflict, ConflictReference
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import action
+from src.main.python.plotlyst.view.common import action, wrap
 from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -217,10 +216,11 @@ class _SceneBeatPlaceholderButton(QToolButton):
 
     def __init__(self, parent=None):
         super(_SceneBeatPlaceholderButton, self).__init__(parent)
+        self.setProperty('transparent', True)
         self.setIcon(IconRegistry.plus_circle_icon('grey'))
         self.installEventFilter(OpacityEventFilter(self))
         self.setIconSize(QSize(24, 24))
-        transparent(self)
+        # transparent(self)
         pointy(self)
         self.setToolTip('Insert new beat')
 
@@ -274,6 +274,9 @@ class _SceneBeatPlaceholderButton(QToolButton):
         self._menu.addAction(
             action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description), row,
             column)
+
+
+BEAT_MIN_HEIGHT = 190
 
 
 class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
@@ -459,24 +462,12 @@ class SceneStructureTimeline(QWidget):
 
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
-        self.novel = app_env.novel
-        self._topMargin = 20
-        self._margin = 80
-        self._lineDistance = 170
-        self._arcWidth = 80
-        self._beatWidth: int = 180
-        self._emotionSize: int = 32
-        self._penSize: int = 10
-        self._path: Optional[QPainterPath] = None
+        self._novel: Optional[Novel] = None
+        sp(self).h_exp().v_exp()
+        curved_flow(self, margin=10, spacing=10)
+
         self._agenda: Optional[SceneStructureAgenda] = None
         self._beatWidgets: List[SceneStructureItemWidget] = []
-
-        self._placeholder = _SceneBeatPlaceholderButton(self)
-        self._placeholder.setVisible(False)
-        self._placeholder.menu().aboutToHide.connect(lambda: self._placeholder.setVisible(False))
-        self._placeholder.selected.connect(self._insertBeatWidget)
-
-        self._dragPlaceholder: Optional[SceneStructureItemWidget] = None
 
         self._emotionStart = CharacterEmotionButton(self)
         self._emotionStart.setToolTip('Beginning emotion')
@@ -487,26 +478,18 @@ class SceneStructureTimeline(QWidget):
         self._emotionStart.emotionChanged.connect(self._emotionChanged)
         self._emotionEnd.emotionChanged.connect(self._emotionChanged)
 
-        self.setMouseTracking(True)
         self.setAcceptDrops(True)
 
-    def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
-        self.reset()
+    def setNovel(self, novel: Novel):
+        self._novel = novel
 
-        self._agenda = agenda
-        for item in agenda.items:
-            self._addBeatWidget(item)
-        self._emotionStart.setValue(agenda.beginning_emotion)
-        self._emotionStart.setVisible(True)
-        self._emotionEnd.setValue(agenda.ending_emotion)
-        self._emotionEnd.setVisible(True)
-
-        if not agenda.items:
-            self._initBeatsFromType(sceneTyoe)
-
-        normalize_beat_percentages(agenda)
-
-        self._rearrangeBeats()
+    def clear(self):
+        clear_layout(self)
+        for wdg in self._beatWidgets:
+            gc(wdg)
+        self._beatWidgets.clear()
+        # self._rearrangeBeats()
+        self.update()
 
     def setSceneType(self, sceneTyoe: SceneType):
         if not self._beatWidgets:
@@ -526,13 +509,168 @@ class SceneStructureTimeline(QWidget):
             self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
             self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
 
-    def reset(self):
-        clear_layout(self)
-        for wdg in self._beatWidgets:
-            gc(wdg)
-        self._beatWidgets.clear()
-        self._rearrangeBeats()
+    def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
+        self.clear()
+
+        self._agenda = agenda
+        for item in agenda.items:
+            self._addBeatWidget(item)
+        self._emotionStart.setValue(agenda.beginning_emotion)
+        self._emotionStart.setVisible(True)
+        self._emotionEnd.setValue(agenda.ending_emotion)
+        self._emotionEnd.setVisible(True)
+
+        if not agenda.items:
+            self._initBeatsFromType(sceneTyoe)
+
+        normalize_beat_percentages(agenda)
+
+        # self._rearrangeBeats()
+
+    @overrides
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setOpacity(0.7)
+
+        pen = QPen()
+        pen.setColor(QColor('darkBlue'))
+        pen.setWidth(3)
+        painter.setPen(pen)
+
+        path = QPainterPath()
+
+        forward = True
+        y = 0
+        for i, wdg in enumerate(self._beatWidgets):
+            pos = wdg.pos().toPointF()
+            pos.setY(pos.y() + wdg.layout().contentsMargins().top())
+            if isinstance(wdg, SceneStructureItemWidget):
+                pos.setY(pos.y() + wdg.btnIcon.height() // 2)
+            pos.setX(pos.x() + wdg.layout().contentsMargins().left())
+            if i == 0:
+                y = pos.y()
+                path.moveTo(pos)
+            else:
+                if pos.y() > y:
+                    if forward:
+                        path.arcTo(QRectF(pos.x() + wdg.width(), y, 60, pos.y() - y),
+                                   90, -180)
+                    else:
+                        path.arcTo(QRectF(pos.x(), y, 60, pos.y() - y), -270, 180)
+                    forward = not forward
+                    y = pos.y()
+
+            if forward:
+                pos.setX(pos.x() + wdg.width())
+            path.lineTo(pos)
+
+        painter.drawPath(path)
+
+    def _addBeat(self, beatType: SceneStructureItemType):
+        item = SceneStructureItem(beatType)
+        if beatType == SceneStructureItemType.OUTCOME:
+            item.outcome = SceneOutcome.DISASTER
+        self._agenda.items.append(item)
+        self._addBeatWidget(item)
+
+    def _addBeatWidget(self, item: SceneStructureItem):
+        widget = self._newBeatWidget(item)
+        self._beatWidgets.append(widget)
+        if self.layout().count() == 0:
+            self.layout().addWidget(self._newPlaceholderWidget())
+        self.layout().addWidget(widget)
+        self.layout().addWidget(self._newPlaceholderWidget())
+        widget.setVisible(True)
+        self.timelineChanged.emit()
+
+    def _insertBeatWidget(self, placeholder: QWidget, beatType: SceneStructureItemType):
+        item = SceneStructureItem(beatType)
+        widget = self._newBeatWidget(item)
+
+        i = self.layout().indexOf(placeholder)
+        self.layout().removeWidget(placeholder)
+        gc(placeholder)
+
+        self._beatWidgets.insert(i // 2, widget)
+        self.layout().insertWidget(i, widget)
+        self.layout().insertWidget(i + 1, self._newPlaceholderWidget())
+        self.layout().insertWidget(i, self._newPlaceholderWidget())
+        widget.setVisible(True)
+        widget.activate()
+        # self._rearrangeBeats()
         self.update()
+        self.timelineChanged.emit()
+
+    def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
+        widget = SceneStructureItemWidget(self._novel, item, parent=self)
+        # widget.entered.connect(lambda: self._placeholder.setHidden(True))
+        widget.removed.connect(self._beatRemoved)
+        widget.emotionChanged.connect(self.emotionChanged.emit)
+        # widget.dragStarted.connect(partial(self._initDragPlaceholder, widget))
+        # widget.dragStopped.connect(self._resetDragPlaceholder)
+
+        return widget
+
+    def _newPlaceholderWidget(self) -> QWidget:
+        btn = _SceneBeatPlaceholderButton()
+        parent = wrap(btn, margin_top=BEAT_MIN_HEIGHT // 2 - 10)
+        btn.selected.connect(partial(self._insertBeatWidget, parent))
+        return parent
+
+    def _initBeatsFromType(self, sceneTyoe: SceneType):
+        if sceneTyoe == SceneType.ACTION:
+            self._addBeat(SceneStructureItemType.ACTION)
+            self._addBeat(SceneStructureItemType.CONFLICT)
+            self._addBeat(SceneStructureItemType.OUTCOME)
+        elif sceneTyoe == SceneType.REACTION:
+            self._addBeat(SceneStructureItemType.REACTION)
+            self._addBeat(SceneStructureItemType.DILEMMA)
+            self._addBeat(SceneStructureItemType.DECISION)
+        else:
+            self._addBeat(SceneStructureItemType.BEAT)
+            self._addBeat(SceneStructureItemType.BEAT)
+            self._addBeat(SceneStructureItemType.BEAT)
+
+    def _emotionChanged(self):
+        self._agenda.beginning_emotion = self._emotionStart.value()
+        self._agenda.ending_emotion = self._emotionEnd.value()
+
+        self.update()
+
+    def _beatRemoved(self, wdg: SceneStructureItemWidget):
+        self._agenda.items.remove(wdg.beat)
+        self._beatWidgets.remove(wdg)
+        gc(wdg)
+        # self._rearrangeBeats()
+        self.update()
+
+        self.timelineChanged.emit()
+
+
+class _SceneStructureTimeline(QWidget):
+    emotionChanged = pyqtSignal()
+    timelineChanged = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(_SceneStructureTimeline, self).__init__(parent)
+        self._topMargin = 20
+        self._margin = 80
+        self._lineDistance = 170
+        self._arcWidth = 80
+        self._beatWidth: int = 180
+        self._emotionSize: int = 32
+        self._penSize: int = 10
+        self._path: Optional[QPainterPath] = None
+
+        self._placeholder = _SceneBeatPlaceholderButton(self)
+        self._placeholder.setVisible(False)
+        self._placeholder.menu().aboutToHide.connect(lambda: self._placeholder.setVisible(False))
+        self._placeholder.selected.connect(self._insertBeatWidget)
+
+        self._dragPlaceholder: Optional[SceneStructureItemWidget] = None
+
+        self.setMouseTracking(True)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -703,79 +841,6 @@ class SceneStructureTimeline(QWidget):
         self._emotionEnd.setGeometry(width - 30, y + 5, self._emotionSize, self._emotionSize)
         self.setMinimumHeight(y + self._lineDistance)
 
-    def _addBeat(self, beatType: SceneStructureItemType):
-        item = SceneStructureItem(beatType)
-        if beatType == SceneStructureItemType.OUTCOME:
-            item.outcome = SceneOutcome.DISASTER
-        self._agenda.items.append(item)
-        self._addBeatWidget(item)
-
-    def _addBeatWidget(self, item: SceneStructureItem):
-        widget = self._newBeatWidget(item)
-        self._beatWidgets.append(widget)
-        widget.setVisible(True)
-        self.timelineChanged.emit()
-
-    def _insertBeatWidget(self, beatType: SceneStructureItemType):
-        self._placeholder.setVisible(False)
-
-        item = SceneStructureItem(beatType)
-        perc = self._percentage(self._placeholder.geometry().center())
-        item.percentage = perc
-        widget = self._newBeatWidget(item)
-
-        pos = 0
-        for i, item_ in enumerate(self._agenda.items):
-            if item_.percentage > perc:
-                pos = i
-                break
-        self._agenda.items.insert(pos, item)
-        self._beatWidgets.insert(pos, widget)
-        widget.setVisible(True)
-        widget.activate()
-        self._rearrangeBeats()
-        self.update()
-        self.timelineChanged.emit()
-
-    def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
-        widget = SceneStructureItemWidget(self.novel, item, parent=self)
-        widget.entered.connect(lambda: self._placeholder.setHidden(True))
-        widget.removed.connect(self._beatRemoved)
-        widget.emotionChanged.connect(self.emotionChanged.emit)
-        widget.dragStarted.connect(partial(self._initDragPlaceholder, widget))
-        widget.dragStopped.connect(self._resetDragPlaceholder)
-
-        return widget
-
-    def _initBeatsFromType(self, sceneTyoe: SceneType):
-        if sceneTyoe == SceneType.ACTION:
-            self._addBeat(SceneStructureItemType.ACTION)
-            self._addBeat(SceneStructureItemType.CONFLICT)
-            self._addBeat(SceneStructureItemType.OUTCOME)
-        elif sceneTyoe == SceneType.REACTION:
-            self._addBeat(SceneStructureItemType.REACTION)
-            self._addBeat(SceneStructureItemType.DILEMMA)
-            self._addBeat(SceneStructureItemType.DECISION)
-        else:
-            self._addBeat(SceneStructureItemType.BEAT)
-            self._addBeat(SceneStructureItemType.BEAT)
-            self._addBeat(SceneStructureItemType.BEAT)
-
-    def _emotionChanged(self):
-        self._agenda.beginning_emotion = self._emotionStart.value()
-        self._agenda.ending_emotion = self._emotionEnd.value()
-
-        self.update()
-
-    def _beatRemoved(self, wdg: SceneStructureItemWidget):
-        self._agenda.items.remove(wdg.beat)
-        self._beatWidgets.remove(wdg)
-        gc(wdg)
-        self._rearrangeBeats()
-        self.update()
-
-        self.timelineChanged.emit()
-
     def _initDragPlaceholder(self, widget: SceneStructureItemWidget):
         self._dragPlaceholder = SceneStructureItemWidget(self.novel, widget.sceneStructureItem(), parent=self)
         self._dragPlaceholder.setDisabled(True)
@@ -874,7 +939,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         margins(self.wdgGoalConflictContainer, left=40)
 
         self.timeline = SceneStructureTimeline(self)
-        self.timeline.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.scrollAreaTimeline.layout().addWidget(self.timeline)
 
         self.listEvents = SceneStructureList()
@@ -909,7 +973,8 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.updateAvailableAgendaCharacters()
         self._toggleCharacterStatus()
 
-        self.timeline.reset()
+        self.timeline.setNovel(novel)
+        self.timeline.clear()
         self._initSelectors()
 
         self._checkSceneType()
@@ -964,7 +1029,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def _typeClicked(self, type: SceneType, checked: bool):
         if not checked:
             if type in [SceneType.EXPOSITION, SceneType.SUMMARY]:
-                self.timeline.reset()
                 self.timeline.setAgenda(self.scene.agendas[0], self.scene.type)
             self.scene.type = SceneType.DEFAULT
             self._initEditor(SceneType.DEFAULT)
@@ -1043,7 +1107,8 @@ if __name__ == '__main__':
             self.setCentralWidget(self.widget)
 
             novel = Novel('Novel')
-            scene = Scene('Scene', agendas=[SceneStructureAgenda()])
+            agenda = SceneStructureAgenda()
+            scene = Scene('Scene', agendas=[agenda])
             self.widget.setScene(novel, scene)
 
 
