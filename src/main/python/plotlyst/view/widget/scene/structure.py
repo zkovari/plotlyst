@@ -488,7 +488,6 @@ class SceneStructureTimeline(QWidget):
         for wdg in self._beatWidgets:
             gc(wdg)
         self._beatWidgets.clear()
-        # self._rearrangeBeats()
         self.update()
 
     def setSceneType(self, sceneTyoe: SceneType):
@@ -523,9 +522,7 @@ class SceneStructureTimeline(QWidget):
         if not agenda.items:
             self._initBeatsFromType(sceneTyoe)
 
-        normalize_beat_percentages(agenda)
-
-        # self._rearrangeBeats()
+        # normalize_beat_percentages(agenda)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -592,13 +589,14 @@ class SceneStructureTimeline(QWidget):
         self.layout().removeWidget(placeholder)
         gc(placeholder)
 
-        self._beatWidgets.insert(i // 2, widget)
+        beat_index = i // 2
+        self._beatWidgets.insert(beat_index, widget)
+        self._agenda.items.insert(beat_index, item)
         self.layout().insertWidget(i, widget)
         self.layout().insertWidget(i + 1, self._newPlaceholderWidget())
         self.layout().insertWidget(i, self._newPlaceholderWidget())
         widget.setVisible(True)
         widget.activate()
-        # self._rearrangeBeats()
         self.update()
         self.timelineChanged.emit()
 
@@ -642,7 +640,6 @@ class SceneStructureTimeline(QWidget):
         self._agenda.items.remove(wdg.beat)
         self._beatWidgets.remove(wdg)
         gc(wdg)
-        # self._rearrangeBeats()
         self.update()
 
         self.timelineChanged.emit()
