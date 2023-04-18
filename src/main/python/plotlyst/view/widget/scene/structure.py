@@ -236,7 +236,7 @@ class _SceneBeatPlaceholderButton(QToolButton):
                     color: grey;
                 }}
                 ''')
-        self._menu.addSection('Scene', 0, 0, icon=IconRegistry.action_scene_icon())
+        self._menu.addSection('Scene beats', 0, 0, icon=IconRegistry.action_scene_icon())
         self._menu.addSeparator(1, 0, colSpan=2)
         self._addAction('Action', SceneStructureItemType.ACTION, 2, 0)
         self._addAction('Hook', SceneStructureItemType.HOOK, 2, 1)
@@ -248,12 +248,12 @@ class _SceneBeatPlaceholderButton(QToolButton):
         self._addAction('Choice', SceneStructureItemType.CHOICE, 5, 1)
         self._addAction('Revelation', SceneStructureItemType.REVELATION, 6, 0)
         self._addAction('Outcome', SceneStructureItemType.OUTCOME, 6, 1)
-        self._menu.addSection('Sequel', 7, 0, icon=IconRegistry.reaction_scene_icon())
+        self._menu.addSection('Sequel beats', 7, 0, icon=IconRegistry.reaction_scene_icon())
         self._menu.addSeparator(8, 0)
         self._addAction('Reaction', SceneStructureItemType.REACTION, 9, 0)
         self._addAction('Dilemma', SceneStructureItemType.DILEMMA, 10, 0)
         self._addAction('Decision', SceneStructureItemType.DECISION, 11, 0)
-        self._menu.addSection('General', 7, 1)
+        self._menu.addSection('General beats', 7, 1)
         self._menu.addSeparator(8, 1)
         self._addAction('Beat', SceneStructureItemType.BEAT, 9, 1)
         self._addAction('Exposition', SceneStructureItemType.EXPOSITION, 10, 1)
