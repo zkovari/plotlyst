@@ -269,7 +269,7 @@ class _SceneBeatPlaceholderButton(QToolButton):
 BEAT_MIN_HEIGHT = 190
 
 
-class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
+class SceneStructureBeatWidget(QWidget, Ui_SceneBeatItemWidget):
     entered = pyqtSignal()
     removed = pyqtSignal(object)
     dragStarted = pyqtSignal()
@@ -279,7 +279,7 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
     SceneBeatMimeType: str = 'application/scene-beat'
 
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
-        super(SceneStructureItemWidget, self).__init__(parent)
+        super(SceneStructureBeatWidget, self).__init__(parent)
         self.novel = novel
         self.beat = scene_structure_item
         self.setupUi(self)
@@ -379,6 +379,9 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
                                     border: 2px solid {color};
                                     border-radius: 18px; padding: 4px;
                                 }}
+                    QToolButton:menu-indicator {{
+                        width: 0;
+                    }}
                     ''')
         self.btnName.setStyleSheet(f'QPushButton {{border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};}}')
         self.text.setStyleSheet(f'''
@@ -457,7 +460,7 @@ class SceneStructureTimeline(QWidget):
         curved_flow(self, margin=10, spacing=10)
 
         self._agenda: Optional[SceneStructureAgenda] = None
-        self._beatWidgets: List[SceneStructureItemWidget] = []
+        self._beatWidgets: List[SceneStructureBeatWidget] = []
 
         self._emotionStart = CharacterEmotionButton(self)
         self._emotionStart.setToolTip('Beginning emotion')
@@ -530,7 +533,7 @@ class SceneStructureTimeline(QWidget):
         for i, wdg in enumerate(self._beatWidgets):
             pos = wdg.pos().toPointF()
             pos.setY(pos.y() + wdg.layout().contentsMargins().top())
-            if isinstance(wdg, SceneStructureItemWidget):
+            if isinstance(wdg, SceneStructureBeatWidget):
                 pos.setY(pos.y() + wdg.btnIcon.height() // 2)
             pos.setX(pos.x() + wdg.layout().contentsMargins().left())
             if i == 0:
@@ -587,8 +590,8 @@ class SceneStructureTimeline(QWidget):
         self.update()
         self.timelineChanged.emit()
 
-    def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
-        widget = SceneStructureItemWidget(self._novel, item, parent=self)
+    def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureBeatWidget:
+        widget = SceneStructureBeatWidget(self._novel, item, parent=self)
         widget.removed.connect(self._beatRemoved)
         widget.emotionChanged.connect(self.emotionChanged.emit)
         # widget.dragStarted.connect(partial(self._initDragPlaceholder, widget))
@@ -622,7 +625,7 @@ class SceneStructureTimeline(QWidget):
 
         self.update()
 
-    def _beatRemoved(self, wdg: SceneStructureItemWidget):
+    def _beatRemoved(self, wdg: SceneStructureBeatWidget):
         i = self.layout().indexOf(wdg)
         self._agenda.items.remove(wdg.beat)
         self._beatWidgets.remove(wdg)
@@ -649,7 +652,7 @@ class _SceneStructureTimeline(QWidget):
         self._penSize: int = 10
         self._path: Optional[QPainterPath] = None
 
-        self._dragPlaceholder: Optional[SceneStructureItemWidget] = None
+        self._dragPlaceholder: Optional[SceneStructureBeatWidget] = None
 
         self.setMouseTracking(True)
 
@@ -686,14 +689,14 @@ class _SceneStructureTimeline(QWidget):
 
     @overrides
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType):
+        if event.mimeData().hasFormat(SceneStructureBeatWidget.SceneBeatMimeType):
             event.accept()
         else:
             event.ignore()
 
     @overrides
     def dragMoveEvent(self, event: QDragMoveEvent) -> None:
-        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType) and self._intersects(
+        if event.mimeData().hasFormat(SceneStructureBeatWidget.SceneBeatMimeType) and self._intersects(
                 event.position()):
             event.accept()
             if self._dragPlaceholder:
@@ -708,7 +711,7 @@ class _SceneStructureTimeline(QWidget):
 
     @overrides
     def dropEvent(self, event: QDropEvent) -> None:
-        id_ = pickle.loads(event.mimeData().data(SceneStructureItemWidget.SceneBeatMimeType))
+        id_ = pickle.loads(event.mimeData().data(SceneStructureBeatWidget.SceneBeatMimeType))
 
         for wdg in self._beatWidgets:
             if id(wdg) == id_:
@@ -746,8 +749,8 @@ class _SceneStructureTimeline(QWidget):
         else:
             path.arcTo(QRectF(self._margin, y, self._arcWidth, self._lineDistance), -270, 180)
 
-    def _initDragPlaceholder(self, widget: SceneStructureItemWidget):
-        self._dragPlaceholder = SceneStructureItemWidget(self.novel, widget.sceneStructureItem(), parent=self)
+    def _initDragPlaceholder(self, widget: SceneStructureBeatWidget):
+        self._dragPlaceholder = SceneStructureBeatWidget(self.novel, widget.sceneStructureItem(), parent=self)
         self._dragPlaceholder.setDisabled(True)
         translucent(self._dragPlaceholder)
         self._dragPlaceholder.setHidden(True)
