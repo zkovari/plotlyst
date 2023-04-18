@@ -432,6 +432,8 @@ class SceneStructureBeatWidget(QWidget):
             return '#b8c0ff'
         elif self.beat.type == SceneStructureItemType.REVELATION:
             return '#588157'
+        elif self.beat.type == SceneStructureItemType.DILEMMA:
+            return '#ba6f4d'
         elif self.beat.type == SceneStructureItemType.SETUP:
             return '#ddbea9'
         else:
