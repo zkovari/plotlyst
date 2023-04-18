@@ -283,3 +283,13 @@ def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
 
 def insert_before_the_end(parent: QWidget, widget: QWidget, leave: int = 1):
     parent.layout().insertWidget(parent.layout().count() - leave, widget)
+
+
+def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False) -> QToolButton:
+    btn = QToolButton()
+    btn.setIcon(icon)
+    btn.setToolTip(tooltip)
+    btn.setCheckable(checkable)
+    pointy(btn)
+
+    return btn
