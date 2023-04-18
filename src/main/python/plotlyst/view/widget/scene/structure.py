@@ -503,14 +503,14 @@ class SceneStructureTimeline(QWidget):
             for _ in range(3 - len(self._beatWidgets)):
                 self._addBeat(SceneStructureItemType.BEAT)
 
-        if sceneTyoe == SceneType.ACTION:
-            self._beatWidgets[0].swap(SceneStructureItemType.ACTION)
-            self._beatWidgets[1].swap(SceneStructureItemType.CONFLICT)
-            self._beatWidgets[-1].swap(SceneStructureItemType.OUTCOME)
-        elif sceneTyoe == SceneType.REACTION:
-            self._beatWidgets[0].swap(SceneStructureItemType.REACTION)
-            self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
-            self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
+        # if sceneTyoe == SceneType.ACTION:
+        #     self._beatWidgets[0].swap(SceneStructureItemType.ACTION)
+        #     self._beatWidgets[1].swap(SceneStructureItemType.CONFLICT)
+        #     self._beatWidgets[-1].swap(SceneStructureItemType.OUTCOME)
+        # elif sceneTyoe == SceneType.REACTION:
+        #     self._beatWidgets[0].swap(SceneStructureItemType.REACTION)
+        #     self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
+        #     self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
         self.clear()
