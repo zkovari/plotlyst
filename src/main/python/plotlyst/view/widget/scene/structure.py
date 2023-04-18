@@ -24,24 +24,24 @@ from typing import Optional, List, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF
-from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QResizeEvent, \
-    QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication
+from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QPen, \
+    QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication, QTextEdit
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import pointy, gc, translucent, bold, retain_when_hidden, flow, clear_layout, decr_font, \
-    margins, spacer, sp, curved_flow, incr_icon
+    margins, spacer, sp, curved_flow, incr_icon, vbox
 from qthandy.filter import OpacityEventFilter, DragEventFilter, DisabledClickEventFilter, \
     ObjectReferenceMimeData, VisibilityToggleEventFilter
-from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidget
+from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidget, MenuWidget
 
 from src.main.python.plotlyst.common import emotion_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
     SceneStructureItem, SceneOutcome, SceneStructureAgenda, CharacterGoal, GoalReference, Conflict, ConflictReference
 from src.main.python.plotlyst.view.common import action, wrap, fade_out_and_gc, ButtonPressResizeEventFilter
-from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton, CharacterGoalSelector, \
     CharacterConflictSelector
@@ -269,7 +269,7 @@ class _SceneBeatPlaceholderButton(QToolButton):
 BEAT_MIN_HEIGHT = 190
 
 
-class SceneStructureBeatWidget(QWidget, Ui_SceneBeatItemWidget):
+class SceneStructureBeatWidget(QWidget):
     entered = pyqtSignal()
     removed = pyqtSignal(object)
     dragStarted = pyqtSignal()
@@ -282,46 +282,58 @@ class SceneStructureBeatWidget(QWidget, Ui_SceneBeatItemWidget):
         super(SceneStructureBeatWidget, self).__init__(parent)
         self.novel = novel
         self.beat = scene_structure_item
-        self.setupUi(self)
+        vbox(self, 0, 0)
+        self.setFixedWidth(190)
+
+        self._btnName = QPushButton()
+        bold(self._btnName)
+
         self._outcome = SceneOutcomeSelector(self.beat)
         self._outcome.selected.connect(self._outcomeChanged)
-        self.wdgBottom.layout().addWidget(self._outcome, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.btnIcon = QToolButton(self)
-        self.btnIcon.setIconSize(QSize(24, 24))
-        self.btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
+        self._btnIcon = QToolButton(self)
+        pointy(self._btnIcon)
+        self._btnIcon.setIconSize(QSize(24, 24))
+        self._btnIcon.setFixedSize(36, 36)
+        self._menu = MenuWidget(self._btnIcon)
+        self._menu.addAction(action('Swap'))
+        self._menu.addAction(action('Remove', IconRegistry.trash_can_icon(), self._remove))
 
-        bold(self.btnName)
+        self._text = QTextEdit()
+        decr_font(self._text)
+        self._text.setFixedHeight(80)
+        self._text.setTabChangesFocus(True)
+        self._text.setText(self.beat.text)
+        self._text.textChanged.connect(self._textChanged)
 
-        decr_font(self.text)
-        self.text.setText(self.beat.text)
-        self.text.textChanged.connect(self._textChanged)
-
-        self.lblEmotion = EmotionLabel()
-        decr_font(self.lblEmotion)
+        self._lblEmotion = EmotionLabel()
+        decr_font(self._lblEmotion)
         if self.beat.emotion:
-            self.lblEmotion.setEmotion(self.beat.emotion, color=emotions.get(self.beat.emotion, 'red'))
+            self._lblEmotion.setEmotion(self.beat.emotion, color=emotions.get(self.beat.emotion, 'red'))
         else:
-            self.lblEmotion.setHidden(True)
-        self.wdgEmotion.layout().addWidget(self.lblEmotion, alignment=Qt.AlignmentFlag.AlignLeft)
+            self._lblEmotion.setHidden(True)
+        # self.wdgEmotion.layout().addWidget(self.lblEmotion, alignment=Qt.AlignmentFlag.AlignLeft)
         self._btnEmotionSelector = EmotionSelectorButton(self)
-        self._btnEmotionSelector.setIconSize(QSize(15, 15))
+        self._btnEmotionSelector.setIconSize(QSize(16, 16))
         self._btnEmotionSelector.emotionSelected.connect(self._emotionSelected)
-        self.wdgEmotion.layout().addWidget(self._btnEmotionSelector, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        self.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._btnName, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._text)
+        self.layout().addWidget(self._outcome, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(group(self._btnEmotionSelector, self._lblEmotion), alignment=Qt.AlignmentFlag.AlignLeft)
 
         self._initStyle()
 
-        self.btnDelete.clicked.connect(self._remove)
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
+        # self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(self._btnEmotionSelector, parent=self))
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnTag, parent=self))
-        self.btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
-                                                        grabbed=self.btnIcon, startedSlot=self.dragStarted.emit,
-                                                        finishedSlot=self.dragStopped.emit,
-                                                        hideTarget=True))
-        retain_when_hidden(self.btnDelete)
-        self.btnTag.setHidden(True)
-        retain_when_hidden(self.btnTag)
+        # self.installEventFilter(VisibilityToggleEventFilter(self.btnTag, parent=self))
+        self._btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
+                                                         grabbed=self._btnIcon, startedSlot=self.dragStarted.emit,
+                                                         finishedSlot=self.dragStopped.emit,
+                                                         hideTarget=True))
+        # self.btnTag.setHidden(True)
+        # retain_when_hidden(self.btnTag)
         retain_when_hidden(self._btnEmotionSelector)
 
     def outcomeVisible(self) -> bool:
@@ -331,7 +343,11 @@ class SceneStructureBeatWidget(QWidget, Ui_SceneBeatItemWidget):
         return self.beat
 
     def activate(self):
-        self.text.setFocus()
+        if self.isVisible():
+            self._text.setFocus()
+        if self.graphicsEffect():
+            self.setGraphicsEffect(None)
+        self._btnEmotionSelector.installEventFilter(OpacityEventFilter(self._btnEmotionSelector))
 
     def swap(self, beatType: SceneStructureItemType):
         if self.beat.type != beatType:
@@ -344,10 +360,6 @@ class SceneStructureBeatWidget(QWidget, Ui_SceneBeatItemWidget):
         self._glow()
 
     @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self.btnIcon.setGeometry(self.width() // 2 - 18, 0, 36, 36)
-
-    @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
         self.entered.emit()
 
@@ -357,23 +369,22 @@ class SceneStructureBeatWidget(QWidget, Ui_SceneBeatItemWidget):
     def _initStyle(self):
         self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
         desc = BeatDescriptions[self.beat.type]
-        self.text.setPlaceholderText(desc)
-        self.btnName.setToolTip(desc)
-        self.text.setToolTip(desc)
-        self.btnIcon.setToolTip(desc)
+        self._text.setPlaceholderText(desc)
+        self._btnName.setToolTip(desc)
+        self._text.setToolTip(desc)
+        self._btnIcon.setToolTip(desc)
         if self.beat.type == SceneStructureItemType.OUTCOME:
             if self.beat.outcome is None:
                 self.beat.outcome = SceneOutcome.DISASTER
             name = SceneOutcome.to_str(self.beat.outcome)
         else:
             name = self.beat.type.name
-        self.wdgEmotion.setHidden(self.beat.type == SceneStructureItemType.OUTCOME)
-        self.btnName.setText(name.lower().capitalize().replace('_', ' '))
-        self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
-                                       trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
+        self._btnName.setText(name.lower().capitalize().replace('_', ' '))
+        self._btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
+                                        trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
 
         color = self._color()
-        self.btnIcon.setStyleSheet(f'''
+        self._btnIcon.setStyleSheet(f'''
                     QToolButton {{
                                     background-color: white;
                                     border: 2px solid {color};
@@ -383,8 +394,8 @@ class SceneStructureBeatWidget(QWidget, Ui_SceneBeatItemWidget):
                         width: 0;
                     }}
                     ''')
-        self.btnName.setStyleSheet(f'QPushButton {{border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};}}')
-        self.text.setStyleSheet(f'''
+        self._btnName.setStyleSheet(f'QPushButton {{border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};}}')
+        self._text.setStyleSheet(f'''
                     border: 2px solid {color};
                     border-radius: 3px;
                     ''')
@@ -432,21 +443,21 @@ class SceneStructureBeatWidget(QWidget, Ui_SceneBeatItemWidget):
             anim.finished.connect(lambda: self.removed.emit(self))
 
     def _textChanged(self):
-        self.beat.text = self.text.toPlainText()
+        self.beat.text = self._text.toPlainText()
 
     def _outcomeChanged(self):
         self._initStyle()
         self._glow()
 
     def _emotionSelected(self, emotion: str):
-        self.lblEmotion.setEmotion(emotion, color=emotions.get(emotion, 'red'))
-        self.lblEmotion.setVisible(True)
+        self._lblEmotion.setEmotion(emotion, color=emotions.get(emotion, 'red'))
+        self._lblEmotion.setVisible(True)
         self.beat.emotion = emotion
 
     def _glow(self):
         color = QColor(self._color())
-        qtanim.glow(self.btnName, color=color)
-        qtanim.glow(self.text, color=color)
+        qtanim.glow(self._btnName, color=color)
+        qtanim.glow(self._text, color=color)
 
 
 class SceneStructureTimeline(QWidget):
@@ -534,7 +545,7 @@ class SceneStructureTimeline(QWidget):
             pos = wdg.pos().toPointF()
             pos.setY(pos.y() + wdg.layout().contentsMargins().top())
             if isinstance(wdg, SceneStructureBeatWidget):
-                pos.setY(pos.y() + wdg.btnIcon.height() // 2)
+                pos.setY(pos.y() + wdg._btnIcon.height() // 2)
             pos.setX(pos.x() + wdg.layout().contentsMargins().left())
             if i == 0:
                 y = pos.y()
@@ -569,7 +580,7 @@ class SceneStructureTimeline(QWidget):
             self.layout().addWidget(self._newPlaceholderWidget())
         self.layout().addWidget(widget)
         self.layout().addWidget(self._newPlaceholderWidget())
-        widget.setVisible(True)
+        widget.activate()
         self.timelineChanged.emit()
 
     def _insertBeatWidget(self, placeholder: QWidget, beatType: SceneStructureItemType):
