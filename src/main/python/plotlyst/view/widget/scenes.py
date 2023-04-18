@@ -85,6 +85,9 @@ class SceneOutcomeSelector(QWidget):
                                       checkable=True)
         self.btnTradeOff = tool_btn(IconRegistry.tradeoff_icon(color='grey'), scene_trade_off_outcome_help,
                                     checkable=True)
+        self._initStyle(self.btnDisaster, '#FDD7D2')
+        self._initStyle(self.btnTradeOff, '#F0C4E1')
+        self._initStyle(self.btnResolution, '#CDFAEC')
 
         self.refresh()
         self.btnGroupOutcome = QButtonGroup()
@@ -117,6 +120,19 @@ class SceneOutcomeSelector(QWidget):
             self.scene_structure_item.outcome = SceneOutcome.TRADE_OFF
 
         self.selected.emit(self.scene_structure_item.outcome)
+
+    def _initStyle(self, btn: QToolButton, color: str):
+        btn.setIconSize(QSize(20, 20))
+        btn.setStyleSheet(f'''
+        QToolButton {{
+            border-radius: 12px;
+            border: 1px hidden lightgrey;
+            padding: 2px;
+        }}
+        QToolButton:hover {{
+        	background: {color};
+        }}
+        ''')
 
 
 class ScenePlotValueChargeWidget(QWidget):
