@@ -130,7 +130,7 @@ class SceneOutcomeSelector(QWidget):
             padding: 2px;
         }}
         QToolButton:hover {{
-        	background: {color};
+            background: {color};
         }}
         ''')
 
