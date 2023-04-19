@@ -559,8 +559,7 @@ class ScenesOutlineView(AbstractNovelView):
         emit_event(SceneChangedEvent(self, new_scene))
 
         self.refresh()
-        self.editor = SceneEditor(self.novel, new_scene)
-        self._switch_to_editor()
+        self._switch_to_editor(new_scene)
 
     def _on_delete(self):
         scene: Optional[Scene] = self._selected_scene()
