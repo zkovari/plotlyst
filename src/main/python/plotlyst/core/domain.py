@@ -639,6 +639,8 @@ class SceneStructureItemType(Enum):
     MYSTERY = 14
     REVELATION = 15
     SETUP = 16
+    EMOTION = 17
+    SUMMARY = 18
 
 
 class SceneOutcome(Enum):
