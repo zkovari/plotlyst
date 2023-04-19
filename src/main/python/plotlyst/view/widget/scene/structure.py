@@ -25,7 +25,7 @@ from typing import Optional, List, Dict
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
-    QPainterPath, QPaintEvent
+    QPainterPath, QPaintEvent, QAction
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication, QTextEdit
 from overrides import overrides
 from qtanim import fade_in
@@ -250,6 +250,8 @@ class BeatSelectorMenu(GridMenuWidget):
     def __init__(self, parent=None):
         super(BeatSelectorMenu, self).__init__(parent)
 
+        self._outcomeAction: Optional[QAction] = None
+
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         self.setStyleSheet(f'''
                         MenuWidget {{
@@ -298,9 +300,13 @@ class BeatSelectorMenu(GridMenuWidget):
 
     def _addAction(self, text: str, beat_type: SceneStructureItemType, row: int, column: int):
         description = BeatDescriptions[beat_type]
-        self.addAction(
-            action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description), row,
-            column)
+        action_ = action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description)
+        if beat_type == SceneStructureItemType.OUTCOME:
+            self._outcomeAction = action_
+        self.addAction(action_, row, column)
+
+    def setOutcomeEnabled(self, enabled: bool):
+        self._outcomeAction.setEnabled(enabled)
 
 
 class _SceneBeatPlaceholderButton(QToolButton):
@@ -311,60 +317,10 @@ class _SceneBeatPlaceholderButton(QToolButton):
         self.setIcon(IconRegistry.plus_circle_icon('grey'))
         self.installEventFilter(OpacityEventFilter(self))
         self.setIconSize(QSize(24, 24))
-        # transparent(self)
         pointy(self)
         self.setToolTip('Insert new beat')
 
-        self.selectorMenu = BeatSelectorMenu(self)
-    #     self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-    #     self._menu.setStyleSheet(f'''
-    #             MenuWidget {{
-    #                 background-color: {RELAXED_WHITE_COLOR};
-    #             }}
-    #             QFrame {{
-    #                 background-color: {RELAXED_WHITE_COLOR};
-    #                 padding-left: 2px;
-    #                 padding-right: 2px;
-    #                 border-radius: 5px;
-    #             }}
-    #             MenuItemWidget:hover {{
-    #                 background-color: #EDEDED;
-    #             }}
-    #             MenuItemWidget[pressed=true] {{
-    #                 background-color: #DCDCDC;
-    #             }}
-    #             QLabel[description=true] {{
-    #                 color: grey;
-    #             }}
-    #             ''')
-    #     self._menu.addSection('Scene beats', 0, 0, icon=IconRegistry.action_scene_icon())
-    #     self._menu.addSeparator(1, 0, colSpan=2)
-    #     self._addAction('Action', SceneStructureItemType.ACTION, 2, 0)
-    #     self._addAction('Hook', SceneStructureItemType.HOOK, 2, 1)
-    #     self._addAction('Inciting incident', SceneStructureItemType.INCITING_INCIDENT, 3, 0)
-    #     self._addAction('Mystery', SceneStructureItemType.MYSTERY, 3, 1)
-    #     self._addAction('Conflict', SceneStructureItemType.CONFLICT, 4, 0)
-    #     self._addAction('Rising action', SceneStructureItemType.RISING_ACTION, 4, 1)
-    #     self._addAction('Turn', SceneStructureItemType.TURN, 5, 0)
-    #     self._addAction('Choice', SceneStructureItemType.CHOICE, 5, 1)
-    #     self._addAction('Revelation', SceneStructureItemType.REVELATION, 6, 0)
-    #     self._addAction('Outcome', SceneStructureItemType.OUTCOME, 6, 1)
-    #     self._menu.addSection('Sequel beats', 7, 0, icon=IconRegistry.reaction_scene_icon())
-    #     self._menu.addSeparator(8, 0)
-    #     self._addAction('Reaction', SceneStructureItemType.REACTION, 9, 0)
-    #     self._addAction('Dilemma', SceneStructureItemType.DILEMMA, 10, 0)
-    #     self._addAction('Decision', SceneStructureItemType.DECISION, 11, 0)
-    #     self._menu.addSection('General beats', 7, 1)
-    #     self._menu.addSeparator(8, 1)
-    #     self._addAction('Beat', SceneStructureItemType.BEAT, 9, 1)
-    #     self._addAction('Exposition', SceneStructureItemType.EXPOSITION, 10, 1)
-    #     self._addAction('Setup', SceneStructureItemType.SETUP, 11, 1)
-    #
-    # def _addAction(self, text: str, beat_type: SceneStructureItemType, row: int, column: int):
-    #     description = BeatDescriptions[beat_type]
-    #     self._menu.addAction(
-    #         action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description), row,
-    #         column)
+        # self.selectorMenu = BeatSelectorMenu(self)
 
 
 BEAT_MIN_HEIGHT = 190
@@ -642,6 +598,9 @@ class SceneStructureTimeline(QWidget):
         self._menuEmotions = EmotionSelectorMenu()
         self._menuEmotions.emotionSelected.connect(self._insertEmotion)
 
+        self._selectorMenu = BeatSelectorMenu(self)
+        self._selectorMenu.selected.connect(self._insertBeat)
+
         self._emotionStart = CharacterEmotionButton(self)
         self._emotionStart.setToolTip('Beginning emotion')
         self._emotionStart.setVisible(False)
@@ -752,25 +711,25 @@ class SceneStructureTimeline(QWidget):
         widget.activate()
         self.timelineChanged.emit()
 
-    def _insertBeat(self, placeholder: QWidget, beatType: SceneStructureItemType):
+    def _insertBeat(self, beatType: SceneStructureItemType):
         if beatType == SceneStructureItemType.EMOTION:
-            self._currentPlaceholder = placeholder
-            self._menuEmotions.exec(self.mapToGlobal(placeholder.pos()))
+            self._menuEmotions.exec(self.mapToGlobal(self._currentPlaceholder.pos()))
             return
 
         item = SceneStructureItem(beatType)
         widget = self._newBeatWidget(item)
-        self._insertWidget(placeholder, item, widget)
+        self._insertWidget(item, widget)
 
     def _insertEmotion(self, emotion: str):
         item = SceneStructureItem(SceneStructureItemType.EMOTION, emotion=emotion)
         widget = self._newBeatWidget(item)
-        self._insertWidget(self._currentPlaceholder, item, widget)
+        self._insertWidget(item, widget)
 
-    def _insertWidget(self, placeholder: QWidget, item: SceneStructureItem, widget):
-        i = self.layout().indexOf(placeholder)
-        self.layout().removeWidget(placeholder)
-        gc(placeholder)
+    def _insertWidget(self, item: SceneStructureItem, widget):
+        i = self.layout().indexOf(self._currentPlaceholder)
+        self.layout().removeWidget(self._currentPlaceholder)
+        gc(self._currentPlaceholder)
+        self._currentPlaceholder = None
 
         beat_index = i // 2
         self._beatWidgets.insert(beat_index, widget)
@@ -789,6 +748,8 @@ class SceneStructureTimeline(QWidget):
             clazz = SceneStructureBeatWidget
         widget = clazz(self._novel, item, parent=self)
         widget.removed.connect(self._beatRemoved)
+        if item.type == SceneStructureItemType.OUTCOME:
+            self._selectorMenu.setOutcomeEnabled(False)
         # widget.dragStarted.connect(partial(self._initDragPlaceholder, widget))
         # widget.dragStopped.connect(self._resetDragPlaceholder)
 
@@ -797,8 +758,13 @@ class SceneStructureTimeline(QWidget):
     def _newPlaceholderWidget(self) -> QWidget:
         btn = _SceneBeatPlaceholderButton()
         parent = wrap(btn, margin_top=BEAT_MIN_HEIGHT // 2 - 10)
-        btn.selectorMenu.selected.connect(partial(self._insertBeat, parent))
+        btn.clicked.connect(partial(self._showBeatMenu, parent))
+        # btn.selectorMenu.selected.connect(partial(self._insertBeat, parent))
         return parent
+
+    def _showBeatMenu(self, placeholder: QWidget):
+        self._currentPlaceholder = placeholder
+        self._selectorMenu.exec(self.mapToGlobal(self._currentPlaceholder.pos()))
 
     def _initBeatsFromType(self, sceneTyoe: SceneType):
         if sceneTyoe == SceneType.ACTION:
@@ -824,6 +790,8 @@ class SceneStructureTimeline(QWidget):
         i = self.layout().indexOf(wdg)
         self._agenda.items.remove(wdg.beat)
         self._beatWidgets.remove(wdg)
+        if wdg.beat.type == SceneStructureItemType.OUTCOME:
+            self._selectorMenu.setOutcomeEnabled(True)
         placeholder_prev = self.layout().takeAt(i - 1).widget()
         gc(placeholder_prev)
         fade_out_and_gc(self, wdg)
