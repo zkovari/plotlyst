@@ -316,7 +316,7 @@ class ScenesOutlineView(AbstractNovelView):
                 return None
 
     @busy
-    def _switch_to_editor(self, scene: Optional[Scene]):
+    def _switch_to_editor(self, scene: Optional[Scene] = None):
         self.editor = SceneEditor(self.novel, scene)
         self.title.setHidden(True)
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
@@ -337,7 +337,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.refresh()
 
     @busy
-    def _new_scene(self):
+    def _new_scene(self, _):
         self._switch_to_editor()
 
     def _show_card_menu(self, card: SceneCard, _: QPoint):
