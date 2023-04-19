@@ -323,9 +323,6 @@ class _SceneBeatPlaceholderButton(QToolButton):
         # self.selectorMenu = BeatSelectorMenu(self)
 
 
-BEAT_MIN_HEIGHT = 190
-
-
 class SceneStructureItemWidget(QWidget):
     removed = pyqtSignal(object)
     iconFixedSize: int = 36
@@ -765,7 +762,7 @@ class SceneStructureTimeline(QWidget):
 
     def _newPlaceholderWidget(self) -> QWidget:
         btn = _SceneBeatPlaceholderButton()
-        parent = wrap(btn, margin_top=BEAT_MIN_HEIGHT // 2 - 10)
+        parent = wrap(btn, margin_top=80)
         btn.clicked.connect(partial(self._showBeatMenu, parent))
         # btn.selectorMenu.selected.connect(partial(self._insertBeat, parent))
         return parent
