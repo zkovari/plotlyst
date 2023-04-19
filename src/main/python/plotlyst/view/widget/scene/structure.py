@@ -592,6 +592,7 @@ class SceneStructureTimeline(QWidget):
         curved_flow(self, margin=10, spacing=10)
 
         self._agenda: Optional[SceneStructureAgenda] = None
+        self._sceneType: Optional[SceneType] = None
         self._beatWidgets: List[SceneStructureItemWidget] = []
 
         self._currentPlaceholder: Optional[QWidget] = None
@@ -622,14 +623,16 @@ class SceneStructureTimeline(QWidget):
         self._beatWidgets.clear()
         self.update()
 
-    def setSceneType(self, sceneTyoe: SceneType):
-        if not self._beatWidgets:
-            self._initBeatsFromType(sceneTyoe)
-            return
+    def setSceneType(self, sceneType: SceneType):
+        # if not self._beatWidgets:
+        # self._initBeatsFromType(sceneType)
+        # return
 
-        if len(self._beatWidgets) < 3:
-            for _ in range(3 - len(self._beatWidgets)):
-                self._addBeat(SceneStructureItemType.BEAT)
+        self._sceneType = sceneType
+        self.update()
+        # if len(self._beatWidgets) < 3:
+        #     for _ in range(3 - len(self._beatWidgets)):
+        #         self._addBeat(SceneStructureItemType.BEAT)
 
         # if sceneTyoe == SceneType.ACTION:
         #     self._beatWidgets[0].swap(SceneStructureItemType.ACTION)
@@ -640,7 +643,7 @@ class SceneStructureTimeline(QWidget):
         #     self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
         #     self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
 
-    def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
+    def setAgenda(self, agenda: SceneStructureAgenda, sceneType: SceneType):
         self.clear()
 
         self._agenda = agenda
@@ -651,8 +654,7 @@ class SceneStructureTimeline(QWidget):
         self._emotionEnd.setValue(agenda.ending_emotion)
         self._emotionEnd.setVisible(True)
 
-        if not agenda.items:
-            self._initBeatsFromType(sceneTyoe)
+        self.setSceneType(sceneType)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -661,7 +663,13 @@ class SceneStructureTimeline(QWidget):
         painter.setOpacity(0.5)
 
         pen = QPen()
-        pen.setColor(QColor('darkBlue'))
+        if self._sceneType == SceneType.ACTION:
+            pen.setColor(QColor('red'))
+        elif self._sceneType == SceneType.REACTION:
+            pen.setColor(QColor('#4b86b4'))
+        else:
+            pen.setColor(QColor('grey'))
+
         pen.setWidth(3)
         painter.setPen(pen)
 
@@ -766,19 +774,19 @@ class SceneStructureTimeline(QWidget):
         self._currentPlaceholder = placeholder
         self._selectorMenu.exec(self.mapToGlobal(self._currentPlaceholder.pos()))
 
-    def _initBeatsFromType(self, sceneTyoe: SceneType):
-        if sceneTyoe == SceneType.ACTION:
-            self._addBeat(SceneStructureItemType.ACTION)
-            self._addBeat(SceneStructureItemType.CONFLICT)
-            self._addBeat(SceneStructureItemType.OUTCOME)
-        elif sceneTyoe == SceneType.REACTION:
-            self._addBeat(SceneStructureItemType.REACTION)
-            self._addBeat(SceneStructureItemType.DILEMMA)
-            self._addBeat(SceneStructureItemType.DECISION)
-        else:
-            self._addBeat(SceneStructureItemType.BEAT)
-            self._addBeat(SceneStructureItemType.BEAT)
-            self._addBeat(SceneStructureItemType.BEAT)
+    # def _initBeatsFromType(self, sceneTyoe: SceneType):
+    #     if sceneTyoe == SceneType.ACTION:
+    #         self._addBeat(SceneStructureItemType.ACTION)
+    #         self._addBeat(SceneStructureItemType.CONFLICT)
+    #         self._addBeat(SceneStructureItemType.OUTCOME)
+    #     elif sceneTyoe == SceneType.REACTION:
+    #         self._addBeat(SceneStructureItemType.REACTION)
+    #         self._addBeat(SceneStructureItemType.DILEMMA)
+    #         self._addBeat(SceneStructureItemType.DECISION)
+    #     else:
+    #         self._addBeat(SceneStructureItemType.BEAT)
+    #         self._addBeat(SceneStructureItemType.BEAT)
+    #         self._addBeat(SceneStructureItemType.BEAT)
 
     def _emotionChanged(self):
         self._agenda.beginning_emotion = self._emotionStart.value()

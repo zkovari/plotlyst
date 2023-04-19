@@ -93,13 +93,13 @@ class SceneOutcomeSelector(QWidget):
         self.btnGroupOutcome = QButtonGroup()
         self.btnGroupOutcome.setExclusive(True)
         self.btnGroupOutcome.addButton(self.btnDisaster)
-        self.btnGroupOutcome.addButton(self.btnResolution)
         self.btnGroupOutcome.addButton(self.btnTradeOff)
+        self.btnGroupOutcome.addButton(self.btnResolution)
         self.btnDisaster.setChecked(True)
 
         self.layout().addWidget(self.btnDisaster)
-        self.layout().addWidget(self.btnResolution)
         self.layout().addWidget(self.btnTradeOff)
+        self.layout().addWidget(self.btnResolution)
 
         self.btnGroupOutcome.buttonClicked.connect(self._clicked)
 
