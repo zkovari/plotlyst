@@ -250,9 +250,11 @@ class BeatSelectorMenu(GridMenuWidget):
     def __init__(self, parent=None):
         super(BeatSelectorMenu, self).__init__(parent)
 
-        self._outcomeAction: Optional[QAction] = None
+        self._actions: Dict[SceneStructureItemType, QAction] = {}
+        self._outcomeEnabled: bool = True
 
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        self.setSearchEnabled(True)
         self.setStyleSheet(f'''
                         MenuWidget {{
                             background-color: {RELAXED_WHITE_COLOR};
@@ -301,12 +303,29 @@ class BeatSelectorMenu(GridMenuWidget):
     def _addAction(self, text: str, beat_type: SceneStructureItemType, row: int, column: int):
         description = BeatDescriptions[beat_type]
         action_ = action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description)
-        if beat_type == SceneStructureItemType.OUTCOME:
-            self._outcomeAction = action_
+        self._actions[beat_type] = action_
         self.addAction(action_, row, column)
 
     def setOutcomeEnabled(self, enabled: bool):
-        self._outcomeAction.setEnabled(enabled)
+        self._outcomeEnabled = enabled
+        self._actions[SceneStructureItemType.OUTCOME].setEnabled(enabled)
+
+    def toggleSceneType(self, sceneType: SceneType):
+        for action_ in self._actions.values():
+            action_.setEnabled(True)
+        self._actions[SceneStructureItemType.OUTCOME].setEnabled(self._outcomeEnabled)
+        if sceneType == SceneType.REACTION:
+            for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
+                          SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
+                          SceneStructureItemType.CONFLICT, SceneStructureItemType.OUTCOME, SceneStructureItemType.TURN]:
+                self._actions[type_].setEnabled(False)
+        elif sceneType == SceneType.HAPPENING:
+            for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
+                          SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
+                          SceneStructureItemType.CONFLICT, SceneStructureItemType.OUTCOME, SceneStructureItemType.TURN,
+                          SceneStructureItemType.CHOICE, SceneStructureItemType.REACTION,
+                          SceneStructureItemType.DILEMMA, SceneStructureItemType.DECISION]:
+                self._actions[type_].setEnabled(False)
 
 
 class _SceneBeatPlaceholderButton(QToolButton):
@@ -319,8 +338,6 @@ class _SceneBeatPlaceholderButton(QToolButton):
         self.setIconSize(QSize(24, 24))
         pointy(self)
         self.setToolTip('Insert new beat')
-
-        # self.selectorMenu = BeatSelectorMenu(self)
 
 
 class SceneStructureItemWidget(QWidget):
@@ -626,6 +643,7 @@ class SceneStructureTimeline(QWidget):
         # return
 
         self._sceneType = sceneType
+        self._selectorMenu.toggleSceneType(sceneType)
         self.update()
         # if len(self._beatWidgets) < 3:
         #     for _ in range(3 - len(self._beatWidgets)):
