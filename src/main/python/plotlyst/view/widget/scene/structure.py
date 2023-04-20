@@ -592,6 +592,7 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
             if self.beat.outcome is None:
                 self.beat.outcome = SceneOutcome.DISASTER
             name = SceneOutcome.to_str(self.beat.outcome)
+            self._outcome.refresh()
         elif self.isEmotion():
             name = self.beat.emotion
         else:
@@ -694,28 +695,13 @@ class SceneStructureTimeline(QWidget):
         for wdg in self._beatWidgets:
             gc(wdg)
         self._beatWidgets.clear()
+        self._selectorMenu.setOutcomeEnabled(True)
         self.update()
 
     def setSceneType(self, sceneType: SceneType):
-        # if not self._beatWidgets:
-        # self._initBeatsFromType(sceneType)
-        # return
-
         self._sceneType = sceneType
         self._selectorMenu.toggleSceneType(sceneType)
         self.update()
-        # if len(self._beatWidgets) < 3:
-        #     for _ in range(3 - len(self._beatWidgets)):
-        #         self._addBeat(SceneStructureItemType.BEAT)
-
-        # if sceneTyoe == SceneType.ACTION:
-        #     self._beatWidgets[0].swap(SceneStructureItemType.ACTION)
-        #     self._beatWidgets[1].swap(SceneStructureItemType.CONFLICT)
-        #     self._beatWidgets[-1].swap(SceneStructureItemType.OUTCOME)
-        # elif sceneTyoe == SceneType.REACTION:
-        #     self._beatWidgets[0].swap(SceneStructureItemType.REACTION)
-        #     self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
-        #     self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
 
     def setAgenda(self, agenda: SceneStructureAgenda, sceneType: SceneType):
         self.clear()
