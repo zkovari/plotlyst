@@ -359,7 +359,6 @@ class SceneStructureItemWidget(QWidget):
         self._btnIcon.setIconSize(QSize(24, 24))
         self._btnIcon.setFixedSize(self.iconFixedSize, self.iconFixedSize)
         self._menu = MenuWidget(self._btnIcon)
-        self._menu.addAction(action('Swap'))
         self._menu.addAction(action('Remove', IconRegistry.trash_can_icon(), self._remove))
 
         self.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
