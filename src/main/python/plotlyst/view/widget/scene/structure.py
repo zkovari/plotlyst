@@ -689,6 +689,7 @@ class SceneStructureTimeline(QWidget):
             if i == 0:
                 y = pos.y()
                 path.moveTo(pos)
+                painter.drawLine(pos.x(), y - 10, pos.x(), y + 10)
             else:
                 if pos.y() > y:
                     if forward:
@@ -704,6 +705,13 @@ class SceneStructureTimeline(QWidget):
             path.lineTo(pos)
 
         painter.drawPath(path)
+        if self._beatWidgets:
+            if forward:
+                x_arrow_diff = -10
+            else:
+                x_arrow_diff = 10
+            painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y + 10)
+            painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y - 10)
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
