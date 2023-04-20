@@ -38,12 +38,13 @@ from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidge
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
     SceneStructureItem, SceneOutcome, SceneStructureAgenda, CharacterGoal, GoalReference, Conflict, ConflictReference
-from src.main.python.plotlyst.view.common import action, wrap, fade_out_and_gc, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import action, wrap, fade_out_and_gc, ButtonPressResizeEventFilter, \
+    insert_after
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import FadeOutButtonGroup
-from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton, CharacterGoalSelector, \
-    CharacterConflictSelector
+from src.main.python.plotlyst.view.widget.characters import CharacterGoalSelector, \
+    CharacterConflictSelector, CharacterEmotionButton
 from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
@@ -616,15 +617,6 @@ class SceneStructureTimeline(QWidget):
         self._selectorMenu = BeatSelectorMenu(self)
         self._selectorMenu.selected.connect(self._insertBeat)
 
-        self._emotionStart = CharacterEmotionButton(self)
-        self._emotionStart.setToolTip('Beginning emotion')
-        self._emotionStart.setVisible(False)
-        self._emotionEnd = CharacterEmotionButton(self)
-        self._emotionEnd.setToolTip('Ending emotion')
-        self._emotionEnd.setVisible(False)
-        self._emotionStart.emotionChanged.connect(self._emotionChanged)
-        self._emotionEnd.emotionChanged.connect(self._emotionChanged)
-
         self.setAcceptDrops(True)
 
     def setNovel(self, novel: Novel):
@@ -664,10 +656,6 @@ class SceneStructureTimeline(QWidget):
         self._agenda = agenda
         for item in agenda.items:
             self._addBeatWidget(item)
-        self._emotionStart.setValue(agenda.beginning_emotion)
-        self._emotionStart.setVisible(True)
-        self._emotionEnd.setValue(agenda.ending_emotion)
-        self._emotionEnd.setVisible(True)
 
         self.setSceneType(sceneType)
 
@@ -802,12 +790,6 @@ class SceneStructureTimeline(QWidget):
     #         self._addBeat(SceneStructureItemType.BEAT)
     #         self._addBeat(SceneStructureItemType.BEAT)
     #         self._addBeat(SceneStructureItemType.BEAT)
-
-    def _emotionChanged(self):
-        self._agenda.beginning_emotion = self._emotionStart.value()
-        self._agenda.ending_emotion = self._emotionEnd.value()
-
-        self.update()
 
     def _beatRemoved(self, wdg: SceneStructureBeatWidget):
         i = self.layout().indexOf(wdg)
@@ -1006,6 +988,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._btnGroupType.addButton(self.btnExposition)
         self._btnGroupType.addButton(self.btnSummary)
 
+        self._emotionEnd = CharacterEmotionButton(self)
+        self._emotionEnd.setToolTip('How does the character feel in the end of the scene?')
+        self._emotionEnd.setVisible(False)
+        insert_after(self.wdgAgenda, self._emotionEnd, self.wdgAgendaCharacter)
+        self._emotionEnd.emotionChanged.connect(self._emotionChanged)
+
         self.wdgAgendaCharacter.setDefaultText('Select character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
         self.unsetCharacterSlot = None
@@ -1028,6 +1016,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.timeline.setAgenda(scene.agendas[0], self.scene.type)
         self.listEvents.setAgenda(scene.agendas[0], self.scene.type)
+        self._emotionEnd.setValue(scene.agendas[0].ending_emotion)
         self._initEditor(self.scene.type)
 
     def updateAvailableAgendaCharacters(self):
@@ -1047,12 +1036,14 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             char = self.scene.agendas[0].character(self.novel)
             if char:
                 self.wdgAgendaCharacter.setCharacter(char)
+            self._emotionEnd.setVisible(True)
         else:
             self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(
                 DisabledClickEventFilter(self, self.unsetCharacterSlot))
 
             self.wdgAgendaCharacter.setDisabled(True)
             self.wdgAgendaCharacter.setToolTip('Select POV character first')
+            self._emotionEnd.setHidden(True)
 
     def _agendaCharacterSelected(self, character: Character):
         self.scene.agendas[0].set_character(character)
@@ -1141,6 +1132,9 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             conflict_selector.setConflict(conflict, conflict_ref)
         self.wdgGoalConflictContainer.layout().addWidget(conflict_selector)
         conflict_selector.conflictSelected.connect(self._initSelectors)
+
+    def _emotionChanged(self):
+        self.scene.agendas[0].ending_emotion = self._emotionEnd.value()
 
 
 if __name__ == '__main__':
