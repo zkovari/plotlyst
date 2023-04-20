@@ -641,6 +641,8 @@ class SceneStructureItemType(Enum):
     SETUP = 16
     EMOTION = 17
     SUMMARY = 18
+    PROGRESS = 19
+    SETBACK = 20
 
 
 class SceneOutcome(Enum):

@@ -52,7 +52,8 @@ people = [
     "mdi.face-outline", "mdi.face-profile", "mdi.face-profile-woman", "mdi.face-recognition", "mdi.face-shimmer",
     "mdi.face-shimmer-outline", "mdi.face-woman", "mdi.face-woman-outline", "mdi.face-woman-shimmer",
     "mdi.face-woman-shimmer-outline", "mdi.offer", "mdi.hand", "mdi.hand-heart", "mdi.hand-heart-outline",
-    "mdi.hand-okay", "mdi.hand-peace", "mdi.hand-peace-variant", "mdi.hand-pointing-down", "", "mdi.hand-wash",
+    "mdi.hand-okay", "mdi.hand-peace", "mdi.hand-peace-variant", "mdi.hand-pointing-down", "fa5s.diagnoses",
+    "mdi.hand-wash",
     "mdi.hand-wash-outline", "mdi.hand-water", "mdi.handshake-outline", "mdi.head", "mdi.head-alert-outline",
     "mdi.head-heart-outline", "mdi.head-flash-outline", "mdi.head-lightbulb-outline", "", "mdi.mustache", "", "", "",
     "", "", "", "", "", "", "", "", "", "",
@@ -83,13 +84,15 @@ food = [
 ]
 
 nature = [
+    'msc.globe', 'fa5s.globe', 'mdi.globe-model',
     'mdi.nature', 'mdi.nature-people', "fa5.lemon", "fa5.moon", "fa5.snowflake", "fa5.sun", 'mdi.flower',
     'mdi.flower-outline', 'mdi.image-filter-vintage', 'mdi.image-filter-hdr', 'mdi.island', 'mdi.mushroom',
     'mdi.mushroom-outline', 'mdi.flower-poppy', 'mdi.flower-tulip', 'mdi.flower-tulip-outline', "fa5s.apple-alt",
     "mdi.bacteria", "mdi.bacteria-outline", "fa5s.bolt", "fa5s.bug", "fa5s.cat", 'mdi.cat', "fa5s.crow", "fa5s.dog",
     'mdi.dog', 'mdi.dog-side', 'mdi.dog-service', "fa5s.dove", "fa5s.dragon", 'mdi.bird', 'mdi.duck', 'mdi.rabbit',
     'mdi.sheep', 'mdi.shark-fin', 'mdi.shark-fin-outline', "fa5s.feather", 'mdi.feather', "fa5s.feather-alt", 'mdi.owl',
-    'mdi.penguin', "fa5s.fish", 'mdi.fish', 'mdi.snail', 'mdi.snake', 'mdi.tortoise', 'mdi.turtle', "fa5s.frog",
+    'mdi.penguin', "fa5s.fish", 'mdi6.fishbowl', 'mdi.snail', 'mdi.snake', 'mdi.tortoise', 'mdi.turtle',
+    "fa5s.frog",
     "mdi.butterfly", "mdi.butterfly-outline", 'mdi.cow', 'mdi.pig', 'mdi.rodent', 'mdi.turkey', "fa5s.hippo",
     'mdi.elephant', 'mdi.kangaroo', 'mdi.koala', 'mdi.panda', "fa5s.horse", "fa5s.horse-head", 'mdi.horse',
     'mdi.horse-human', 'mdi.horse-variant', "fa5s.kiwi-bird", "fa5s.otter", 'mdi.donkey', 'mdi.jellyfish',

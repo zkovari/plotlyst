@@ -486,6 +486,10 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.chart-line', color=color, color_on=color_on)
 
     @staticmethod
+    def setback_icon() -> QIcon:
+        return IconRegistry.from_name('fa5s.chart-line', color='#FD4D21', vflip=True)
+
+    @staticmethod
     def crisis_icon(color: str = '#ce2d4f', color_on: str = '#ce2d4f') -> QIcon:
         return IconRegistry.from_name('mdi.arrow-decision-outline', color=color, color_on=color_on)
 
@@ -609,11 +613,13 @@ class IconRegistry:
         return IconRegistry.from_name(item.icon, item.icon_color)
 
     @staticmethod
-    def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2) -> QIcon:
+    def from_name(name: str, color: str = 'black', color_on: str = '', mdi_scale: float = 1.2, hflip: bool = False,
+                  vflip: bool = False) -> QIcon:
         _color_on = color_on if color_on else color
         if name.startswith('md') or name.startswith('ri') or name.startswith('ph'):
-            return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, options=[{'scale_factor': mdi_scale}]))
-        return QIcon(qtawesome.icon(name, color=color, color_on=_color_on))
+            return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, hflip=hflip, vflip=vflip,
+                                        options=[{'scale_factor': mdi_scale}]))
+        return QIcon(qtawesome.icon(name, color=color, color_on=_color_on, hflip=hflip, vflip=vflip))
 
 
 class AvatarsRegistry:

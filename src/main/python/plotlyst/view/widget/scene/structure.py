@@ -23,9 +23,9 @@ from functools import partial
 from typing import Optional, List, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
-    QPainterPath, QPaintEvent, QAction
+    QPainterPath, QPaintEvent, QAction, QResizeEvent, QEnterEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication, QTextEdit
 from overrides import overrides
 from qtanim import fade_in
@@ -60,6 +60,8 @@ BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought,
                     SceneStructureItemType.INCITING_INCIDENT: 'Triggers events in this scene',
                     SceneStructureItemType.TICKING_CLOCK: 'Ticking clock is activated to add urgency',
                     SceneStructureItemType.RISING_ACTION: 'Increasing progress or setback throughout the scene',
+                    SceneStructureItemType.PROGRESS: 'Increasing progress throughout the scene',
+                    SceneStructureItemType.SETBACK: 'Increasing setback throughout the scene',
                     SceneStructureItemType.CHOICE: 'Impossible choice between two equally good or bad outcomes',
                     SceneStructureItemType.EXPOSITION: 'Description, explanation, or introduction of normal world',
                     SceneStructureItemType.SUMMARY: 'A summary of events to quicken the pace',
@@ -93,6 +95,10 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.ticking_clock_icon()
     elif beat_type == SceneStructureItemType.RISING_ACTION:
         return IconRegistry.rising_action_icon()
+    elif beat_type == SceneStructureItemType.PROGRESS:
+        return IconRegistry.rising_action_icon()
+    elif beat_type == SceneStructureItemType.SETBACK:
+        return IconRegistry.setback_icon()
     elif beat_type == SceneStructureItemType.CHOICE:
         return IconRegistry.crisis_icon()
     elif beat_type == SceneStructureItemType.EXPOSITION:
@@ -379,29 +385,6 @@ class SceneStructureItemWidget(QWidget):
         anim.finished.connect(lambda: self.removed.emit(self))
 
     def _initStyle(self):
-        # self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
-        # if self.isEmotion():
-        #     desc = "How is the character's emotion shown?"
-        # else:
-        #     desc = BeatDescriptions[self.beat.type]
-        # self._text.setPlaceholderText(desc)
-        # self._btnName.setToolTip(desc)
-        # self._text.setToolTip(desc)
-        # self._btnIcon.setToolTip(desc)
-        #
-        # self._text.setHidden(self.isEmotion())
-        # if self.beat.type == SceneStructureItemType.OUTCOME:
-        #     if self.beat.outcome is None:
-        #         self.beat.outcome = SceneOutcome.DISASTER
-        #     name = SceneOutcome.to_str(self.beat.outcome)
-        # elif self.isEmotion():
-        #     name = self.beat.emotion
-        # else:
-        #     name = self.beat.type.name
-        # self._btnName.setText(name.lower().capitalize().replace('_', ' '))
-        # self._btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
-        #                                 trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
-
         color = self._color()
         self._btnIcon.setStyleSheet(f'''
                     QToolButton {{
@@ -414,10 +397,6 @@ class SceneStructureItemWidget(QWidget):
                     }}
                     ''')
         self._btnName.setStyleSheet(f'QPushButton {{border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};}}')
-        # self._text.setStyleSheet(f'''
-        #             border: 2px solid {color};
-        #             border-radius: 3px;
-        #             ''')
 
     def _beatDataFunc(self, btn):
         return id(self)
@@ -444,6 +423,10 @@ class SceneStructureItemWidget(QWidget):
             return '#f7cb15'
         elif self.beat.type == SceneStructureItemType.RISING_ACTION:
             return '#08605f'
+        elif self.beat.type == SceneStructureItemType.PROGRESS:
+            return '#08605f'
+        elif self.beat.type == SceneStructureItemType.SETBACK:
+            return '#FD4D21'
         elif self.beat.type == SceneStructureItemType.CHOICE:
             return '#ce2d4f'
         elif self.beat.type == SceneStructureItemType.EXPOSITION:
@@ -492,6 +475,17 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         self._text.setText(self.beat.text)
         self._text.textChanged.connect(self._textChanged)
 
+        self._btnProgressSwitch = QToolButton(self)
+        self._btnProgressSwitch.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey'))
+        self._btnProgressSwitch.setProperty('transparent', True)
+        self._progressMenu = MenuWidget(self._btnProgressSwitch)
+        self._progressMenu.addAction(
+            action('Progress', IconRegistry.charge_icon(2), lambda: self._changeProgress(True)))
+        self._progressMenu.addAction(
+            action('Setback', IconRegistry.charge_icon(-2), lambda: self._changeProgress(False)))
+        pointy(self._btnProgressSwitch)
+        self._btnProgressSwitch.setHidden(True)
+
         self.layout().addWidget(self._text)
         self.layout().addWidget(self._outcome, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -509,6 +503,21 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
         super(SceneStructureBeatWidget, self).activate()
         if self.isVisible():
             self._text.setFocus()
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self.beat.type in [SceneStructureItemType.RISING_ACTION, SceneStructureItemType.PROGRESS,
+                              SceneStructureItemType.SETBACK]:
+            self._btnProgressSwitch.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if not self._btnProgressSwitch.menu().isVisible():
+            self._btnProgressSwitch.setHidden(True)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self._btnProgressSwitch.setGeometry(5, self.iconFixedSize, 18, 18)
 
     def swap(self, beatType: SceneStructureItemType):
         if self.beat.type != beatType:
@@ -558,6 +567,12 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
     def _outcomeChanged(self):
         self._initStyle()
         self._glow()
+
+    def _changeProgress(self, progress: bool):
+        if progress:
+            self.swap(SceneStructureItemType.PROGRESS)
+        else:
+            self.swap(SceneStructureItemType.SETBACK)
 
     @overrides
     def _glow(self) -> QColor:
