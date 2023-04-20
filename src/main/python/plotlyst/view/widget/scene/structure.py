@@ -17,34 +17,36 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import pickle
+import sys
+from abc import abstractmethod
+from dataclasses import dataclass
 from functools import partial
 from typing import Optional, List, Dict
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QPoint
-from PyQt6.QtGui import QIcon, QColor, QDropEvent, QDragEnterEvent, QDragMoveEvent, QMouseEvent, QPainter, QResizeEvent, \
-    QPen, QPainterPath, QPaintEvent, QLinearGradient, QEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent, QPoint, QMimeData
+from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
+    QPainterPath, QPaintEvent, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication, QTextEdit
 from overrides import overrides
-from qthandy import pointy, gc, translucent, bold, transparent, retain_when_hidden, flow, clear_layout, decr_font, \
-    margins, spacer
-from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter, DragEventFilter, DisabledClickEventFilter, \
-    ObjectReferenceMimeData
-from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidget
+from qtanim import fade_in
+from qthandy import pointy, gc, translucent, bold, flow, clear_layout, decr_font, \
+    margins, spacer, sp, curved_flow, incr_icon, vbox
+from qthandy.filter import OpacityEventFilter, DisabledClickEventFilter, \
+    ObjectReferenceMimeData, DragEventFilter, DropEventFilter
+from qtmenu import ScrollableMenuWidget, ActionTooltipDisplayMode, GridMenuWidget, MenuWidget
 
-from src.main.python.plotlyst.common import emotion_color, RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, Scene, SceneStructureItemType, SceneType, \
     SceneStructureItem, SceneOutcome, SceneStructureAgenda, CharacterGoal, GoalReference, Conflict, ConflictReference
-from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.view.common import action
-from src.main.python.plotlyst.view.generated.scene_beat_item_widget_ui import Ui_SceneBeatItemWidget
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, ButtonPressResizeEventFilter, \
+    insert_after
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton, FadeOutButtonGroup
-from src.main.python.plotlyst.view.widget.characters import CharacterEmotionButton, CharacterGoalSelector, \
-    CharacterConflictSelector
-from src.main.python.plotlyst.view.widget.labels import EmotionLabel
+from src.main.python.plotlyst.view.widget.button import FadeOutButtonGroup
+from src.main.python.plotlyst.view.widget.characters import CharacterGoalSelector, \
+    CharacterConflictSelector, CharacterEmotionButton
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
@@ -53,14 +55,18 @@ BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought,
                     SceneStructureItemType.CONFLICT: "Conflict hinders the character's goals",
                     SceneStructureItemType.OUTCOME: 'Outcome of the scene, typically ending with disaster',
                     SceneStructureItemType.REACTION: "Initial reaction to a prior scene's outcome",
+                    SceneStructureItemType.EMOTION: "The character's emotional state",
                     SceneStructureItemType.DILEMMA: 'Dilemma throughout the scene. What to do next?',
                     SceneStructureItemType.DECISION: 'Character makes a decision and may act right away',
                     SceneStructureItemType.HOOK: "Initial hook to raise readers' curiosity",
                     SceneStructureItemType.INCITING_INCIDENT: 'Triggers events in this scene',
                     SceneStructureItemType.TICKING_CLOCK: 'Ticking clock is activated to add urgency',
                     SceneStructureItemType.RISING_ACTION: 'Increasing progress or setback throughout the scene',
+                    SceneStructureItemType.PROGRESS: 'Increasing progress throughout the scene',
+                    SceneStructureItemType.SETBACK: 'Increasing setback throughout the scene',
                     SceneStructureItemType.CHOICE: 'Impossible choice between two equally good or bad outcomes',
                     SceneStructureItemType.EXPOSITION: 'Description, explanation, or introduction of normal world',
+                    SceneStructureItemType.SUMMARY: 'A summary of events to quicken the pace',
                     SceneStructureItemType.TURN: 'Shift in plot arc: small victory or setback',
                     SceneStructureItemType.MYSTERY: "An unanswered question raises reader's curiosity",
                     SceneStructureItemType.REVELATION: 'Key information is revealed or discovered',
@@ -77,6 +83,8 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.action_scene_icon(resolved, trade_off)
     elif beat_type == SceneStructureItemType.REACTION:
         return IconRegistry.reaction_icon()
+    elif beat_type == SceneStructureItemType.EMOTION:
+        return IconRegistry.emotion_icon()
     elif beat_type == SceneStructureItemType.DILEMMA:
         return IconRegistry.dilemma_icon()
     elif beat_type == SceneStructureItemType.DECISION:
@@ -89,10 +97,16 @@ def beat_icon(beat_type: SceneStructureItemType, resolved: bool = False, trade_o
         return IconRegistry.ticking_clock_icon()
     elif beat_type == SceneStructureItemType.RISING_ACTION:
         return IconRegistry.rising_action_icon()
+    elif beat_type == SceneStructureItemType.PROGRESS:
+        return IconRegistry.rising_action_icon()
+    elif beat_type == SceneStructureItemType.SETBACK:
+        return IconRegistry.setback_icon()
     elif beat_type == SceneStructureItemType.CHOICE:
         return IconRegistry.crisis_icon()
     elif beat_type == SceneStructureItemType.EXPOSITION:
         return IconRegistry.exposition_icon()
+    elif beat_type == SceneStructureItemType.SUMMARY:
+        return IconRegistry.summary_scene_icon()
     elif beat_type == SceneStructureItemType.BEAT:
         return IconRegistry.beat_icon()
     elif beat_type == SceneStructureItemType.TURN:
@@ -111,43 +125,71 @@ HAPPENING_BEATS = (SceneStructureItemType.BEAT, SceneStructureItemType.EXPOSITIO
                    SceneStructureItemType.HOOK, SceneStructureItemType.MYSTERY, SceneStructureItemType.EXPOSITION)
 
 
-def normalize_beat_percentages(agenda, forced: bool = False):
-    if len(agenda.items) > 0 and forced:
-        agenda.items[0].percentage = 0.0
-    if len(agenda.items) > 1:
-        last_beat = agenda.items[-1]
-        if last_beat.percentage == 0.0 or forced:
-            last_beat.percentage = 0.9
+@dataclass
+class Emotion:
+    name: str
+    color: str
+    weight: int
 
-    for i in range(1, len(agenda.items) - 1):
-        beat = agenda.items[i]
-        if beat.percentage == 0.0 or forced:
-            beat.percentage = i * (0.9 / (len(agenda.items) - 1))
+    @overrides
+    def __hash__(self):
+        return hash(self.name)
 
 
-emotions: Dict[str, str] = {'Admiration': '#008744', 'Adoration': '#7048e8', 'Amusement': '#ff6961', 'Anger': '#ff3333',
-                            'Anxiety': '#ffbf00', 'Awe': '#87ceeb', 'Awkwardness': '#ff69b4', 'Boredom': '#778899',
-                            'Calmness': '#1e90ff', 'Confusion': '#ffc107', 'Craving': '#ffdb58', 'Disgust': '#ffa500',
-                            'Empathic': '#4da6ff', 'Pain': '#ff5050', 'Entrancement': '#00bfff',
-                            'Excitement': '#ff5c5c', 'Fear': '#1f1f1f', 'Horror': '#ff4d4d', 'Interest': '#3cb371',
-                            'Joy': '#00ff7f', 'Nostalgia': '#ffb347', 'Relief': '#00ff00', 'Sadness': '#999999',
-                            'Satisfaction': '#228b22', 'Surprise': '#ff69b4'}
+emotions: Dict[str, Emotion] = {'Admiration': Emotion('Admiration', '#008744', 4),
+                                'Adoration': Emotion('Adoration', '#7048e8', 4),
+                                'Amusement': Emotion('Amusement', '#ff6961', 4),
+                                'Anger': Emotion('Anger', '#ff3333', 1),
+                                'Anxiety': Emotion('Anxiety', '#ffbf00', 2), 'Awe': Emotion('Awe', '#87ceeb', 4),
+                                'Awkwardness': Emotion('Awkwardness', '#ff69b4', 2),
+                                'Boredom': Emotion('Boredom', '#778899', 3),
+                                'Calmness': Emotion('Calmness', '#1e90ff', 4),
+                                'Confusion': Emotion('Confusion', '#ffc107', 3),
+                                'Craving': Emotion('Craving', '#ffdb58', 3),
+                                'Disgust': Emotion('Disgust', '#ffa500', 2),
+                                'Empathic': Emotion('Empathic', '#4da6ff', 3), 'Pain': Emotion('Pain', '#ff5050', 2),
+                                'Entrancement': Emotion('Entrancement', '#00bfff', 4),
+                                'Excitement': Emotion('Excitement', '#ff5c5c', 4),
+                                'Fear': Emotion('Fear', '#1f1f1f', 2),
+                                'Horror': Emotion('Horror', '#ff4d4d', 1),
+                                'Interest': Emotion('Interest', '#3cb371', 4),
+                                'Joy': Emotion('Joy', '#00ff7f', 5), 'Nostalgia': Emotion('Nostalgia', '#ffb347', 3),
+                                'Relief': Emotion('Relief', '#00ff00', 4),
+                                'Sadness': Emotion('Sadness', '#999999', 2),
+                                'Satisfaction': Emotion('Satisfaction', '#228b22', 5),
+                                'Surprise': Emotion('Surprise', '#ff69b4', 5)}
 
 
-class EmotionSelectorButton(SecondaryActionToolButton):
+class EmotionSelectorMenu(ScrollableMenuWidget):
     emotionSelected = pyqtSignal(str)
 
     def __init__(self, parent=None):
-        super(EmotionSelectorButton, self).__init__(parent)
-        self.setIcon(IconRegistry.from_name('ri.emotion-sad-line'))
-        self.setPadding(1)
-        menuEmotions = ScrollableMenuWidget(self)
-        menuEmotions.setMaximumHeight(300)
+        super(EmotionSelectorMenu, self).__init__(parent)
+        self.setMaximumHeight(300)
         for emotion in ['Admiration', 'Adoration', 'Amusement', 'Anger', 'Anxiety', 'Awe', 'Awkwardness', 'Boredom',
                         'Calmness', 'Confusion',
                         'Craving', 'Disgust', 'Empathic', 'Pain', 'Entrancement', 'Excitement', 'Fear', 'Horror',
                         'Interest', 'Joy', 'Nostalgia', 'Relief', 'Sadness', 'Satisfaction', 'Surprise']:
-            menuEmotions.addAction(action(emotion, slot=partial(self.emotionSelected.emit, emotion)))
+            self.addAction(action(emotion, slot=partial(self.emotionSelected.emit, emotion)))
+
+
+class EmotionSelectorButton(QToolButton):
+
+    def __init__(self, parent=None):
+        super(EmotionSelectorButton, self).__init__(parent)
+        self.setIcon(IconRegistry.from_name('ri.emotion-sad-line'))
+        self.setProperty('transparent', True)
+        pointy(self)
+        incr_icon(self, 2)
+        self.menuEmotions = EmotionSelectorMenu(self)
+        # menuEmotions.setMaximumHeight(300)
+        # for emotion in ['Admiration', 'Adoration', 'Amusement', 'Anger', 'Anxiety', 'Awe', 'Awkwardness', 'Boredom',
+        #                 'Calmness', 'Confusion',
+        #                 'Craving', 'Disgust', 'Empathic', 'Pain', 'Entrancement', 'Excitement', 'Fear', 'Horror',
+        #                 'Interest', 'Joy', 'Nostalgia', 'Relief', 'Sadness', 'Satisfaction', 'Surprise']:
+        #     menuEmotions.addAction(action(emotion, slot=partial(self.emotionSelected.emit, emotion)))
+
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
 
 
 class _SceneTypeButton(QPushButton):
@@ -211,42 +253,39 @@ class _SceneTypeButton(QPushButton):
         self.setFont(font)
 
 
-class _SceneBeatPlaceholderButton(QToolButton):
+class BeatSelectorMenu(GridMenuWidget):
     selected = pyqtSignal(SceneStructureItemType)
 
     def __init__(self, parent=None):
-        super(_SceneBeatPlaceholderButton, self).__init__(parent)
-        self.setIcon(IconRegistry.plus_circle_icon('grey'))
-        self.installEventFilter(OpacityEventFilter(self))
-        self.setIconSize(QSize(24, 24))
-        transparent(self)
-        pointy(self)
-        self.setToolTip('Insert new beat')
+        super(BeatSelectorMenu, self).__init__(parent)
 
-        self._menu = GridMenuWidget(self)
-        self._menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
-        self._menu.setStyleSheet(f'''
-                MenuWidget {{
-                    background-color: {RELAXED_WHITE_COLOR};
-                }}
-                QFrame {{
-                    background-color: {RELAXED_WHITE_COLOR};
-                    padding-left: 2px;
-                    padding-right: 2px;
-                    border-radius: 5px;
-                }}
-                MenuItemWidget:hover {{
-                    background-color: #EDEDED;
-                }}
-                MenuItemWidget[pressed=true] {{
-                    background-color: #DCDCDC;
-                }}
-                QLabel[description=true] {{
-                    color: grey;
-                }}
-                ''')
-        self._menu.addSection('Scene', 0, 0, icon=IconRegistry.action_scene_icon())
-        self._menu.addSeparator(1, 0, colSpan=2)
+        self._actions: Dict[SceneStructureItemType, QAction] = {}
+        self._outcomeEnabled: bool = True
+
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        self.setSearchEnabled(True)
+        self.setStyleSheet(f'''
+                        MenuWidget {{
+                            background-color: {RELAXED_WHITE_COLOR};
+                        }}
+                        QFrame {{
+                            background-color: {RELAXED_WHITE_COLOR};
+                            padding-left: 2px;
+                            padding-right: 2px;
+                            border-radius: 5px;
+                        }}
+                        MenuItemWidget:hover {{
+                            background-color: #EDEDED;
+                        }}
+                        MenuItemWidget[pressed=true] {{
+                            background-color: #DCDCDC;
+                        }}
+                        QLabel[description=true] {{
+                            color: grey;
+                        }}
+                        ''')
+        self.addSection('Scene beats', 0, 0, icon=IconRegistry.action_scene_icon())
+        self.addSeparator(1, 0, colSpan=2)
         self._addAction('Action', SceneStructureItemType.ACTION, 2, 0)
         self._addAction('Hook', SceneStructureItemType.HOOK, 2, 1)
         self._addAction('Inciting incident', SceneStructureItemType.INCITING_INCIDENT, 3, 0)
@@ -257,140 +296,155 @@ class _SceneBeatPlaceholderButton(QToolButton):
         self._addAction('Choice', SceneStructureItemType.CHOICE, 5, 1)
         self._addAction('Revelation', SceneStructureItemType.REVELATION, 6, 0)
         self._addAction('Outcome', SceneStructureItemType.OUTCOME, 6, 1)
-        self._menu.addSection('Sequel', 7, 0, icon=IconRegistry.reaction_scene_icon())
-        self._menu.addSeparator(8, 0)
+        self.addSection('Sequel beats', 7, 0, icon=IconRegistry.reaction_scene_icon())
+        self.addSeparator(8, 0)
         self._addAction('Reaction', SceneStructureItemType.REACTION, 9, 0)
-        self._addAction('Dilemma', SceneStructureItemType.DILEMMA, 10, 0)
-        self._addAction('Decision', SceneStructureItemType.DECISION, 11, 0)
-        self._menu.addSection('General', 7, 1)
-        self._menu.addSeparator(8, 1)
+        self._addAction('Emotion', SceneStructureItemType.EMOTION, 10, 0)
+        self._addAction('Dilemma', SceneStructureItemType.DILEMMA, 11, 0)
+        self._addAction('Decision', SceneStructureItemType.DECISION, 12, 0)
+        self.addSection('General beats', 7, 1)
+        self.addSeparator(8, 1)
         self._addAction('Beat', SceneStructureItemType.BEAT, 9, 1)
         self._addAction('Exposition', SceneStructureItemType.EXPOSITION, 10, 1)
-        self._addAction('Setup', SceneStructureItemType.SETUP, 11, 1)
+        self._addAction('Summary', SceneStructureItemType.SUMMARY, 11, 1)
+        self._addAction('Setup', SceneStructureItemType.SETUP, 12, 1)
 
     def _addAction(self, text: str, beat_type: SceneStructureItemType, row: int, column: int):
         description = BeatDescriptions[beat_type]
-        self._menu.addAction(
-            action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description), row,
-            column)
+        action_ = action(text, beat_icon(beat_type), slot=lambda: self.selected.emit(beat_type), tooltip=description)
+        self._actions[beat_type] = action_
+        self.addAction(action_, row, column)
+
+    def setOutcomeEnabled(self, enabled: bool):
+        self._outcomeEnabled = enabled
+        self._actions[SceneStructureItemType.OUTCOME].setEnabled(enabled)
+
+    def toggleSceneType(self, sceneType: SceneType):
+        for action_ in self._actions.values():
+            action_.setEnabled(True)
+        self._actions[SceneStructureItemType.OUTCOME].setEnabled(self._outcomeEnabled)
+        if sceneType == SceneType.REACTION:
+            for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
+                          SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
+                          SceneStructureItemType.CONFLICT, SceneStructureItemType.OUTCOME, SceneStructureItemType.TURN]:
+                self._actions[type_].setEnabled(False)
+        elif sceneType == SceneType.HAPPENING:
+            for type_ in [SceneStructureItemType.ACTION, SceneStructureItemType.HOOK,
+                          SceneStructureItemType.RISING_ACTION, SceneStructureItemType.INCITING_INCIDENT,
+                          SceneStructureItemType.CONFLICT, SceneStructureItemType.OUTCOME, SceneStructureItemType.TURN,
+                          SceneStructureItemType.CHOICE, SceneStructureItemType.REACTION,
+                          SceneStructureItemType.DILEMMA, SceneStructureItemType.DECISION]:
+                self._actions[type_].setEnabled(False)
 
 
-class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
-    entered = pyqtSignal()
-    removed = pyqtSignal(object)
+class _SceneBeatPlaceholderButton(QToolButton):
+
+    def __init__(self, parent=None):
+        super(_SceneBeatPlaceholderButton, self).__init__(parent)
+        self.setProperty('transparent', True)
+        self.setIcon(IconRegistry.plus_circle_icon('grey'))
+        self.installEventFilter(OpacityEventFilter(self))
+        self.setIconSize(QSize(24, 24))
+        pointy(self)
+        self.setToolTip('Insert new beat')
+
+
+class _PlaceholderWidget(QWidget):
+    def __init__(self, parent=None):
+        super(_PlaceholderWidget, self).__init__(parent)
+        self.btn = _SceneBeatPlaceholderButton(self)
+        vbox(self, 0, 0)
+        margins(self, top=80)
+        self.layout().addWidget(self.btn)
+
+
+class SceneStructureItemWidget(QWidget):
+    SceneBeatMimeType: str = 'application/scene-beat'
     dragStarted = pyqtSignal()
     dragStopped = pyqtSignal()
-    emotionChanged = pyqtSignal()
-
-    SceneBeatMimeType: str = 'application/scene-beat'
+    removed = pyqtSignal(object)
+    iconFixedSize: int = 36
 
     def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
         super(SceneStructureItemWidget, self).__init__(parent)
         self.novel = novel
         self.beat = scene_structure_item
-        self.setupUi(self)
-        self._outcome = SceneOutcomeSelector(self.beat)
-        self._outcome.selected.connect(self._outcomeChanged)
-        self.wdgBottom.layout().addWidget(self._outcome, alignment=Qt.AlignmentFlag.AlignCenter)
+        vbox(self, 0, 0)
 
-        self.btnIcon = QToolButton(self)
-        self.btnIcon.setIconSize(QSize(24, 24))
-        self.btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
+        self._btnName = QPushButton()
+        bold(self._btnName)
 
-        bold(self.btnName)
+        self._btnIcon = QToolButton(self)
+        pointy(self._btnIcon)
+        self._btnIcon.setIconSize(QSize(24, 24))
+        self._btnIcon.setCursor(Qt.CursorShape.OpenHandCursor)
+        self._btnIcon.setFixedSize(self.iconFixedSize, self.iconFixedSize)
 
-        decr_font(self.text)
-        self.text.setText(self.beat.text)
-        self.text.textChanged.connect(self._textChanged)
+        self._btnRemove = RemovalButton(self)
+        self._btnRemove.setHidden(True)
+        self._btnRemove.clicked.connect(self._remove)
 
-        self.lblEmotion = EmotionLabel()
-        decr_font(self.lblEmotion)
-        if self.beat.emotion:
-            self.lblEmotion.setEmotion(self.beat.emotion, color=emotions.get(self.beat.emotion, 'red'))
-        else:
-            self.lblEmotion.setHidden(True)
-        self.wdgEmotion.layout().addWidget(self.lblEmotion, alignment=Qt.AlignmentFlag.AlignLeft)
-        self._btnEmotionSelector = EmotionSelectorButton(self)
-        self._btnEmotionSelector.setIconSize(QSize(15, 15))
-        self._btnEmotionSelector.emotionSelected.connect(self._emotionSelected)
-        self.wdgEmotion.layout().addWidget(self._btnEmotionSelector, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout().addWidget(self._btnName, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self._initStyle()
+        self._btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
+                                                         grabbed=self._btnIcon, startedSlot=self.dragStarted.emit,
+                                                         finishedSlot=self.dragStopped.emit,
+                                                         hideTarget=True))
 
-        self.btnDelete.clicked.connect(self._remove)
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnDelete, parent=self))
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnEmotionSelector, parent=self))
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnTag, parent=self))
-        self.btnIcon.installEventFilter(DragEventFilter(self, self.SceneBeatMimeType, self._beatDataFunc,
-                                                        grabbed=self.btnIcon, startedSlot=self.dragStarted.emit,
-                                                        finishedSlot=self.dragStopped.emit,
-                                                        hideTarget=True))
-        retain_when_hidden(self.btnDelete)
-        self.btnTag.setHidden(True)
-        retain_when_hidden(self.btnTag)
-        retain_when_hidden(self._btnEmotionSelector)
+        self.setAcceptDrops(True)
 
-    def outcomeVisible(self) -> bool:
-        return self._outcome.isVisible()
+    def isEmotion(self) -> bool:
+        return self.beat.type == SceneStructureItemType.EMOTION
 
     def sceneStructureItem(self) -> SceneStructureItem:
         return self.beat
 
     def activate(self):
-        self.text.setFocus()
+        if self.graphicsEffect():
+            self.setGraphicsEffect(None)
 
-    def swap(self, beatType: SceneStructureItemType):
-        if self.beat.type != beatType:
-            self.beat.type = beatType
-            if self.beat.type == SceneStructureItemType.OUTCOME:
-                if self.beat.outcome is None:
-                    self.beat.outcome = SceneOutcome.DISASTER
-                self._outcome.refresh()
-            self._initStyle()
-        self._glow()
+    @abstractmethod
+    def copy(self) -> 'SceneStructureItemWidget':
+        pass
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.btnIcon.setGeometry(self.width() // 2 - 18, 0, 36, 36)
+        self._btnRemove.setGeometry(self.width() - 15, self.iconFixedSize, 15, 15)
+        self._btnRemove.raise_()
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
-        self.entered.emit()
+        self._btnRemove.setVisible(True)
 
-    def _beatDataFunc(self, btn):
-        return id(self)
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._btnRemove.setHidden(True)
+
+    def _remove(self):
+        anim = qtanim.fade_out(self, duration=150)
+        anim.finished.connect(lambda: self.removed.emit(self))
 
     def _initStyle(self):
-        self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
-        desc = BeatDescriptions[self.beat.type]
-        self.text.setPlaceholderText(desc)
-        self.btnName.setToolTip(desc)
-        self.text.setToolTip(desc)
-        self.btnIcon.setToolTip(desc)
-        if self.beat.type == SceneStructureItemType.OUTCOME:
-            if self.beat.outcome is None:
-                self.beat.outcome = SceneOutcome.DISASTER
-            name = SceneOutcome.to_str(self.beat.outcome)
-        else:
-            name = self.beat.type.name
-        self.wdgEmotion.setHidden(self.beat.type == SceneStructureItemType.OUTCOME)
-        self.btnName.setText(name.lower().capitalize().replace('_', ' '))
-        self.btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
-                                       trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
-
         color = self._color()
-        self.btnIcon.setStyleSheet(f'''
+        self._btnIcon.setStyleSheet(f'''
                     QToolButton {{
                                     background-color: white;
                                     border: 2px solid {color};
                                     border-radius: 18px; padding: 4px;
                                 }}
+                    QToolButton:menu-indicator {{
+                        width: 0;
+                    }}
                     ''')
-        self.btnName.setStyleSheet(f'QPushButton {{border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};}}')
-        self.text.setStyleSheet(f'''
-                    border: 2px solid {color};
-                    border-radius: 3px;
-                    ''')
+        self._btnName.setStyleSheet(f'''QPushButton {{
+            border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};
+            padding-left: 15px;
+            padding-right: 15px;
+        }}''')
+
+    def _beatDataFunc(self, btn):
+        return id(self)
 
     def _color(self) -> str:
         if self.beat.type == SceneStructureItemType.ACTION:
@@ -414,42 +468,195 @@ class SceneStructureItemWidget(QWidget, Ui_SceneBeatItemWidget):
             return '#f7cb15'
         elif self.beat.type == SceneStructureItemType.RISING_ACTION:
             return '#08605f'
+        elif self.beat.type == SceneStructureItemType.PROGRESS:
+            return '#08605f'
+        elif self.beat.type == SceneStructureItemType.SETBACK:
+            return '#FD4D21'
         elif self.beat.type == SceneStructureItemType.CHOICE:
             return '#ce2d4f'
         elif self.beat.type == SceneStructureItemType.EXPOSITION:
             return '#1ea896'
+        elif self.beat.type == SceneStructureItemType.SUMMARY:
+            return 'grey'
         elif self.beat.type == SceneStructureItemType.TURN:
             return '#8338ec'
         elif self.beat.type == SceneStructureItemType.MYSTERY:
             return '#b8c0ff'
         elif self.beat.type == SceneStructureItemType.REVELATION:
             return '#588157'
+        elif self.beat.type == SceneStructureItemType.EMOTION:
+            return emotions[self.beat.emotion].color
+        elif self.beat.type == SceneStructureItemType.DILEMMA:
+            return '#ba6f4d'
         elif self.beat.type == SceneStructureItemType.SETUP:
             return '#ddbea9'
         else:
-            return 'black'
+            return '#343a40'
 
-    def _remove(self):
-        if self.parent():
-            anim = qtanim.fade_out(self, duration=150)
-            anim.finished.connect(lambda: self.removed.emit(self))
+    def _glow(self) -> QColor:
+        color = QColor(self._color())
+        qtanim.glow(self._btnName, color=color)
+
+        return color
+
+
+class SceneStructureBeatWidget(SceneStructureItemWidget):
+    emotionChanged = pyqtSignal()
+
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(SceneStructureBeatWidget, self).__init__(novel, scene_structure_item, parent)
+        self.setFixedWidth(190)
+
+        self._outcome = SceneOutcomeSelector(self.beat)
+        self._outcome.selected.connect(self._outcomeChanged)
+
+        self._text = QTextEdit()
+        decr_font(self._text)
+        self._text.setFixedHeight(80)
+        self._text.setTabChangesFocus(True)
+        self._text.setText(self.beat.text)
+        self._text.textChanged.connect(self._textChanged)
+
+        self._btnProgressSwitch = QToolButton(self)
+        self._btnProgressSwitch.setIcon(IconRegistry.from_name('mdi.chevron-double-up', 'grey'))
+        self._btnProgressSwitch.setProperty('transparent', True)
+        self._progressMenu = MenuWidget(self._btnProgressSwitch)
+        self._progressMenu.addAction(
+            action('Progress', IconRegistry.charge_icon(2), lambda: self._changeProgress(True)))
+        self._progressMenu.addAction(
+            action('Setback', IconRegistry.charge_icon(-2), lambda: self._changeProgress(False)))
+        pointy(self._btnProgressSwitch)
+        self._btnProgressSwitch.setHidden(True)
+
+        self.layout().addWidget(self._text)
+        self.layout().addWidget(self._outcome, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self._initStyle()
+
+    def outcomeVisible(self) -> bool:
+        return self._outcome.isVisible()
+
+    def activate(self):
+        super(SceneStructureBeatWidget, self).activate()
+        if self.isVisible():
+            self._text.setFocus()
+
+    @overrides
+    def copy(self) -> 'SceneStructureItemWidget':
+        return SceneStructureBeatWidget(self.novel, self.beat)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        super(SceneStructureBeatWidget, self).enterEvent(event)
+        if self.beat.type in [SceneStructureItemType.RISING_ACTION, SceneStructureItemType.PROGRESS,
+                              SceneStructureItemType.SETBACK]:
+            self._btnProgressSwitch.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        super(SceneStructureBeatWidget, self).leaveEvent(event)
+        if not self._btnProgressSwitch.menu().isVisible():
+            self._btnProgressSwitch.setHidden(True)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super(SceneStructureBeatWidget, self).resizeEvent(event)
+        self._btnProgressSwitch.setGeometry(5, self.iconFixedSize, 18, 18)
+
+    def swap(self, beatType: SceneStructureItemType):
+        if self.beat.type != beatType:
+            self.beat.type = beatType
+            if self.beat.type == SceneStructureItemType.OUTCOME:
+                if self.beat.outcome is None:
+                    self.beat.outcome = SceneOutcome.DISASTER
+                self._outcome.refresh()
+            self._initStyle()
+        self._glow()
+
+    @overrides
+    def _initStyle(self):
+        super(SceneStructureBeatWidget, self)._initStyle()
+
+        self._outcome.setVisible(self.beat.type == SceneStructureItemType.OUTCOME)
+        if self.isEmotion():
+            desc = "How is the character's emotion shown?"
+        else:
+            desc = BeatDescriptions[self.beat.type]
+        self._text.setPlaceholderText(desc)
+        self._btnName.setToolTip(desc)
+        self._text.setToolTip(desc)
+        self._btnIcon.setToolTip(desc)
+
+        self._text.setHidden(self.isEmotion())
+        if self.beat.type == SceneStructureItemType.OUTCOME:
+            if self.beat.outcome is None:
+                self.beat.outcome = SceneOutcome.DISASTER
+            name = SceneOutcome.to_str(self.beat.outcome)
+            self._outcome.refresh()
+        elif self.isEmotion():
+            name = self.beat.emotion
+        else:
+            name = self.beat.type.name
+        self._btnName.setText(name.lower().capitalize().replace('_', ' '))
+        self._btnIcon.setIcon(beat_icon(self.beat.type, resolved=self.beat.outcome == SceneOutcome.RESOLUTION,
+                                        trade_off=self.beat.outcome == SceneOutcome.TRADE_OFF))
+
+        self._text.setStyleSheet(f'''
+                    border: 2px solid {self._color()};
+                    border-radius: 3px;
+                    ''')
 
     def _textChanged(self):
-        self.beat.text = self.text.toPlainText()
+        self.beat.text = self._text.toPlainText()
 
     def _outcomeChanged(self):
         self._initStyle()
         self._glow()
 
-    def _emotionSelected(self, emotion: str):
-        self.lblEmotion.setEmotion(emotion, color=emotions.get(emotion, 'red'))
-        self.lblEmotion.setVisible(True)
-        self.beat.emotion = emotion
+    def _changeProgress(self, progress: bool):
+        if progress:
+            self.swap(SceneStructureItemType.PROGRESS)
+        else:
+            self.swap(SceneStructureItemType.SETBACK)
 
-    def _glow(self):
-        color = QColor(self._color())
-        qtanim.glow(self.btnName, color=color)
-        qtanim.glow(self.text, color=color)
+    @overrides
+    def _glow(self) -> QColor:
+        color = super(SceneStructureBeatWidget, self)._glow()
+        qtanim.glow(self._text, color=color)
+
+        return color
+
+
+class SceneStructureEmotionWidget(SceneStructureItemWidget):
+
+    def __init__(self, novel: Novel, scene_structure_item: SceneStructureItem, parent=None):
+        super(SceneStructureEmotionWidget, self).__init__(novel, scene_structure_item, parent)
+
+        self._initStyle()
+
+    @overrides
+    def copy(self) -> 'SceneStructureItemWidget':
+        return SceneStructureEmotionWidget(self.novel, self.beat)
+
+    @overrides
+    def _initStyle(self):
+        super(SceneStructureEmotionWidget, self)._initStyle()
+
+        self._btnName.setText(self.beat.emotion.lower().capitalize().replace('_', ' '))
+        emotion = emotions[self.beat.emotion]
+        color = self._color()
+        if emotion.weight == 1:
+            icon = IconRegistry.from_name('fa5s.sad-cry', color)
+        elif emotion.weight == 2:
+            icon = IconRegistry.from_name('mdi.emoticon-sad', color)
+        elif emotion.weight == 4:
+            icon = IconRegistry.from_name('fa5s.smile', color)
+        elif emotion.weight == 5:
+            icon = IconRegistry.from_name('fa5s.smile-beam', color)
+        else:
+            icon = IconRegistry.from_name('mdi.emoticon-neutral', color)
+
+        self._btnIcon.setIcon(icon)
 
 
 class SceneStructureTimeline(QWidget):
@@ -458,249 +665,106 @@ class SceneStructureTimeline(QWidget):
 
     def __init__(self, parent=None):
         super(SceneStructureTimeline, self).__init__(parent)
-        self.novel = app_env.novel
-        self._topMargin = 20
-        self._margin = 80
-        self._lineDistance = 170
-        self._arcWidth = 80
-        self._beatWidth: int = 180
-        self._emotionSize: int = 32
-        self._penSize: int = 10
-        self._path: Optional[QPainterPath] = None
+        self._novel: Optional[Novel] = None
+        sp(self).h_exp().v_exp()
+        curved_flow(self, margin=10, spacing=10)
+
         self._agenda: Optional[SceneStructureAgenda] = None
+        self._sceneType: Optional[SceneType] = None
         self._beatWidgets: List[SceneStructureItemWidget] = []
 
-        self._placeholder = _SceneBeatPlaceholderButton(self)
-        self._placeholder.setVisible(False)
-        self._placeholder.menu().aboutToHide.connect(lambda: self._placeholder.setVisible(False))
-        self._placeholder.selected.connect(self._insertBeatWidget)
+        self._currentPlaceholder: Optional[QWidget] = None
+        self._menuEmotions = EmotionSelectorMenu()
+        self._menuEmotions.emotionSelected.connect(self._insertEmotion)
+
+        self._selectorMenu = BeatSelectorMenu(self)
+        self._selectorMenu.selected.connect(self._insertBeat)
 
         self._dragPlaceholder: Optional[SceneStructureItemWidget] = None
+        self._dragPlaceholderIndex: int = -1
+        self._dragged: Optional[SceneStructureItemWidget] = None
+        self._wasDropped: bool = False
 
-        self._emotionStart = CharacterEmotionButton(self)
-        self._emotionStart.setToolTip('Beginning emotion')
-        self._emotionStart.setVisible(False)
-        self._emotionEnd = CharacterEmotionButton(self)
-        self._emotionEnd.setToolTip('Ending emotion')
-        self._emotionEnd.setVisible(False)
-        self._emotionStart.emotionChanged.connect(self._emotionChanged)
-        self._emotionEnd.emotionChanged.connect(self._emotionChanged)
-
-        self.setMouseTracking(True)
         self.setAcceptDrops(True)
 
-    def setAgenda(self, agenda: SceneStructureAgenda, sceneTyoe: SceneType):
-        self.reset()
+    def setNovel(self, novel: Novel):
+        self._novel = novel
 
-        self._agenda = agenda
-        for item in agenda.items:
-            self._addBeatWidget(item)
-        self._emotionStart.setValue(agenda.beginning_emotion)
-        self._emotionStart.setVisible(True)
-        self._emotionEnd.setValue(agenda.ending_emotion)
-        self._emotionEnd.setVisible(True)
-
-        if not agenda.items:
-            self._initBeatsFromType(sceneTyoe)
-
-        normalize_beat_percentages(agenda)
-
-        self._rearrangeBeats()
-
-    def setSceneType(self, sceneTyoe: SceneType):
-        if not self._beatWidgets:
-            self._initBeatsFromType(sceneTyoe)
-            return
-
-        if len(self._beatWidgets) < 3:
-            for _ in range(3 - len(self._beatWidgets)):
-                self._addBeat(SceneStructureItemType.BEAT)
-
-        if sceneTyoe == SceneType.ACTION:
-            self._beatWidgets[0].swap(SceneStructureItemType.ACTION)
-            self._beatWidgets[1].swap(SceneStructureItemType.CONFLICT)
-            self._beatWidgets[-1].swap(SceneStructureItemType.OUTCOME)
-        elif sceneTyoe == SceneType.REACTION:
-            self._beatWidgets[0].swap(SceneStructureItemType.REACTION)
-            self._beatWidgets[1].swap(SceneStructureItemType.DILEMMA)
-            self._beatWidgets[-1].swap(SceneStructureItemType.DECISION)
-
-    def reset(self):
+    def clear(self):
         clear_layout(self)
         for wdg in self._beatWidgets:
             gc(wdg)
         self._beatWidgets.clear()
-        self._rearrangeBeats()
+        self._selectorMenu.setOutcomeEnabled(True)
         self.update()
+
+    def setSceneType(self, sceneType: SceneType):
+        self._sceneType = sceneType
+        self._selectorMenu.toggleSceneType(sceneType)
+        self.update()
+
+    def setAgenda(self, agenda: SceneStructureAgenda, sceneType: SceneType):
+        self.clear()
+
+        self._agenda = agenda
+        for item in agenda.items:
+            self._addBeatWidget(item)
+
+        self.setSceneType(sceneType)
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
-        width = event.rect().width()
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setOpacity(0.5)
 
-        first_el = self._path.elementAt(0)
-        last_el = self._path.elementAt(self._path.elementCount() - 1)
-
-        if self._curves():
-            gradient = QLinearGradient(width // 2, 0, width // 2, last_el.y)
+        pen = QPen()
+        if self._sceneType == SceneType.ACTION:
+            pen.setColor(QColor('red'))
+        elif self._sceneType == SceneType.REACTION:
+            pen.setColor(QColor('#4b86b4'))
         else:
-            gradient = QLinearGradient(0, first_el.y, last_el.x, last_el.y)
-        gradient.setColorAt(0, QColor(emotion_color(self._agenda.beginning_emotion)))
-        gradient.setColorAt(1, QColor(emotion_color(self._agenda.ending_emotion)))
-        pen = QPen(gradient, self._penSize, Qt.PenStyle.SolidLine)
+            pen.setColor(QColor('grey'))
+
+        pen.setWidth(3)
         painter.setPen(pen)
+
         path = QPainterPath()
 
-        path.moveTo(0, first_el.y)
-        path.lineTo(first_el.x, first_el.y)
-        if self._path:
-            path.connectPath(self._path)
-            pos = path.currentPosition()
-            path.lineTo(width - 10, pos.y())
-        painter.fillRect(self.rect(), QColor(RELAXED_WHITE_COLOR))
+        forward = True
+        y = 0
+        for i, wdg in enumerate(self._beatWidgets):
+            pos = wdg.pos().toPointF()
+            pos.setY(pos.y() + wdg.layout().contentsMargins().top())
+            if isinstance(wdg, SceneStructureItemWidget):
+                pos.setY(pos.y() + wdg.iconFixedSize // 2)
+            pos.setX(pos.x() + wdg.layout().contentsMargins().left())
+            if i == 0:
+                y = pos.y()
+                path.moveTo(pos)
+                painter.drawLine(pos.x(), y - 10, pos.x(), y + 10)
+            else:
+                if pos.y() > y:
+                    if forward:
+                        path.arcTo(QRectF(pos.x() + wdg.width(), y, 60, pos.y() - y),
+                                   90, -180)
+                    else:
+                        path.arcTo(QRectF(pos.x(), y, 60, pos.y() - y), -270, 180)
+                    forward = not forward
+                    y = pos.y()
+
+            if forward:
+                pos.setX(pos.x() + wdg.width())
+            path.lineTo(pos)
+
         painter.drawPath(path)
-
-        painter.end()
-
-    @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self._rearrangeBeats()
-
-    @overrides
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType):
-            event.accept()
-        else:
-            event.ignore()
-
-    @overrides
-    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
-        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType) and self._intersects(
-                event.position()):
-            event.accept()
-            if self._dragPlaceholder:
-                vertical_index = self._verticalTimelineIndex(event.position())
-                self._dragPlaceholder.setGeometry(event.position().x() - self._dragPlaceholder.width() / 2,
-                                                  vertical_index * self._lineDistance,
-                                                  self._dragPlaceholder.width(),
-                                                  self._dragPlaceholder.height())
-                self._dragPlaceholder.setVisible(True)
-        else:
-            event.ignore()
-
-    @overrides
-    def dropEvent(self, event: QDropEvent) -> None:
-        id_ = pickle.loads(event.mimeData().data(SceneStructureItemWidget.SceneBeatMimeType))
-
-        for wdg in self._beatWidgets:
-            if id(wdg) == id_:
-                wdg.beat.percentage = self._percentage(event.position())
-                break
-
-        sorted(self._agenda.items, key=lambda x: x.percentage)
-        sorted(self._beatWidgets, key=lambda x: x.beat.percentage)
-
-        event.accept()
-
-        self._rearrangeBeats()
-        self.update()
-
-    @overrides
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if not self._intersects(event.pos()):
-            if self._placeholder.isVisible():
-                self._placeholder.setVisible(False)
-                self.update()
-            return
-
-        self._placeholder.setVisible(True)
-        vertical_index = self._verticalTimelineIndex(event.pos())
-        self._placeholder.setGeometry(event.pos().x() - self._placeholder.width() / 2,
-                                      vertical_index * self._lineDistance + self._lineDistance / 2 + self._penSize,
-                                      self._placeholder.width(),
-                                      self._placeholder.height())
-        self.update()
-
-    def _verticalTimelineIndex(self, pos: QPoint) -> int:
-        return (pos.y() - self._topMargin) // self._lineDistance
-
-    def _intersects(self, pos: QPoint) -> bool:
-        return pos.y() <= (self._curves() * 2 + 1) * self._lineDistance or pos.y() > self._topMargin
-
-    def _percentage(self, pos: QPoint) -> float:
-        length = 0
-        vertical_index = self._verticalTimelineIndex(pos)
-        y_pos = vertical_index * self._lineDistance + self._topMargin
-        for i in range(self._path.elementCount()):
-            el = self._path.elementAt(i)
-            if i > 0:
-                prev_el = self._path.elementAt(i - 1)
-                if prev_el.y == el.y:
-                    length += abs(el.x - prev_el.x)
-                elif prev_el.isCurveTo():
-                    length += self._lineDistance / 2
-            if el.y - 10 < y_pos < el.y + 10:
-                if pos.x() <= el.x:
-                    length += abs(el.x - pos.x())
-                if pos.x() >= el.x:
-                    length += abs(pos.x() - el.x)
-
-                return self._path.percentAtLength(length)
-
-        return -1
-
-    def _curves(self) -> int:
-        if not self.width():
-            return 0
-        w = self.width() - self._margin * 2
-        placeholder_size = 24
-        return max(sum([x.maximumWidth() + placeholder_size for x in self._beatWidgets]) // w, 0)
-
-    def _drawLine(self, path: QPainterPath, width: int, y: int, forward: bool):
-        if forward:
-            path.lineTo(width - self._margin - self._arcWidth, y)
-        else:
-            path.lineTo(self._margin + self._arcWidth + 5, y)
-
-    def _drawArc(self, path: QPainterPath, width: int, y: int, forward: bool):
-        if forward:
-            path.arcTo(QRectF(width - self._margin - self._arcWidth, y, self._arcWidth, self._lineDistance), 90, -180)
-        else:
-            path.arcTo(QRectF(self._margin, y, self._arcWidth, self._lineDistance), -270, 180)
-
-    def _rearrangeBeats(self):
-        width = self.width()
-        if not width:
-            return
-        trackedPath = QPainterPath()
-
-        y = self._topMargin
-        trackedPath.moveTo(self._margin + self._beatWidth // 2, y)
-        trackedPath.lineTo(width - self._margin - self._arcWidth // 2 - 5, y)
-        curves = self._curves()
-        for i in range(curves):
-            if i > 0:
-                self._drawLine(trackedPath, width, y, True)
-            self._drawArc(trackedPath, width, y, True)
-            y += self._lineDistance
-            self._drawLine(trackedPath, width, y, False)
-            self._drawArc(trackedPath, width, y, False)
-            y += self._lineDistance
-        trackedPath.lineTo(width - 10 - self._margin, y)
-
-        self._path = trackedPath
-
-        for i in range(len(self._beatWidgets)):
-            wdg = self._beatWidgets[i]
-            point = self._path.pointAtPercent(wdg.beat.percentage)
-            wdg.setGeometry(point.x() - wdg.minimumWidth() // 2, point.y() - 15, wdg.minimumWidth(),
-                            wdg.minimumHeight())
-
-        self._emotionStart.setGeometry(10, 25, self._emotionSize, self._emotionSize)
-        self._emotionEnd.setGeometry(width - 30, y + 5, self._emotionSize, self._emotionSize)
-        self.setMinimumHeight(y + self._lineDistance)
+        if self._beatWidgets:
+            if forward:
+                x_arrow_diff = -10
+            else:
+                x_arrow_diff = 10
+            painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y + 10)
+            painter.drawLine(pos.x(), y, pos.x() + x_arrow_diff, y - 10)
 
     def _addBeat(self, beatType: SceneStructureItemType):
         item = SceneStructureItem(beatType)
@@ -712,80 +776,217 @@ class SceneStructureTimeline(QWidget):
     def _addBeatWidget(self, item: SceneStructureItem):
         widget = self._newBeatWidget(item)
         self._beatWidgets.append(widget)
-        widget.setVisible(True)
+        if self.layout().count() == 0:
+            self.layout().addWidget(self._newPlaceholderWidget())
+        self.layout().addWidget(widget)
+        self.layout().addWidget(self._newPlaceholderWidget())
+        widget.activate()
         self.timelineChanged.emit()
 
-    def _insertBeatWidget(self, beatType: SceneStructureItemType):
-        self._placeholder.setVisible(False)
+    def _insertBeat(self, beatType: SceneStructureItemType):
+        if beatType == SceneStructureItemType.EMOTION:
+            self._menuEmotions.exec(self.mapToGlobal(self._currentPlaceholder.pos()))
+            return
 
         item = SceneStructureItem(beatType)
-        perc = self._percentage(self._placeholder.geometry().center())
-        item.percentage = perc
         widget = self._newBeatWidget(item)
+        self._insertWidget(item, widget)
 
-        pos = 0
-        for i, item_ in enumerate(self._agenda.items):
-            if item_.percentage > perc:
-                pos = i
-                break
-        self._agenda.items.insert(pos, item)
-        self._beatWidgets.insert(pos, widget)
-        widget.setVisible(True)
-        widget.activate()
-        self._rearrangeBeats()
+    def _insertEmotion(self, emotion: str):
+        item = SceneStructureItem(SceneStructureItemType.EMOTION, emotion=emotion)
+        widget = self._newBeatWidget(item)
+        self._insertWidget(item, widget)
+
+    def _insertWidget(self, item: SceneStructureItem, widget: SceneStructureItemWidget):
+        i = self.layout().indexOf(self._currentPlaceholder)
+        self.layout().removeWidget(self._currentPlaceholder)
+        gc(self._currentPlaceholder)
+        self._currentPlaceholder = None
+
+        beat_index = i // 2
+        self._beatWidgets.insert(beat_index, widget)
+        self._agenda.items.insert(beat_index, item)
+        self.layout().insertWidget(i, widget)
+        self.layout().insertWidget(i + 1, self._newPlaceholderWidget())
+        self.layout().insertWidget(i, self._newPlaceholderWidget())
+        fade_in(widget, teardown=widget.activate)
         self.update()
         self.timelineChanged.emit()
 
-    def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureItemWidget:
-        widget = SceneStructureItemWidget(self.novel, item, parent=self)
-        widget.entered.connect(lambda: self._placeholder.setHidden(True))
+    def _newBeatWidget(self, item: SceneStructureItem) -> SceneStructureBeatWidget:
+        if item.type == SceneStructureItemType.EMOTION:
+            clazz = SceneStructureEmotionWidget
+        else:
+            clazz = SceneStructureBeatWidget
+        widget = clazz(self._novel, item, parent=self)
         widget.removed.connect(self._beatRemoved)
-        widget.emotionChanged.connect(self.emotionChanged.emit)
-        widget.dragStarted.connect(partial(self._initDragPlaceholder, widget))
-        widget.dragStopped.connect(self._resetDragPlaceholder)
+        if item.type == SceneStructureItemType.OUTCOME:
+            self._selectorMenu.setOutcomeEnabled(False)
+        widget.dragStarted.connect(partial(self._dragStarted, widget))
+        widget.dragStopped.connect(self._dragFinished)
+
+        widget.installEventFilter(DropEventFilter(widget, [SceneStructureItemWidget.SceneBeatMimeType],
+                                                  motionDetection=Qt.Orientation.Horizontal,
+                                                  motionSlot=partial(self._dragMoved, widget),
+                                                  droppedSlot=self._dropped))
 
         return widget
 
-    def _initBeatsFromType(self, sceneTyoe: SceneType):
-        if sceneTyoe == SceneType.ACTION:
-            self._addBeat(SceneStructureItemType.ACTION)
-            self._addBeat(SceneStructureItemType.CONFLICT)
-            self._addBeat(SceneStructureItemType.OUTCOME)
-        elif sceneTyoe == SceneType.REACTION:
-            self._addBeat(SceneStructureItemType.REACTION)
-            self._addBeat(SceneStructureItemType.DILEMMA)
-            self._addBeat(SceneStructureItemType.DECISION)
-        else:
-            self._addBeat(SceneStructureItemType.BEAT)
-            self._addBeat(SceneStructureItemType.BEAT)
-            self._addBeat(SceneStructureItemType.BEAT)
+    def _newPlaceholderWidget(self) -> QWidget:
+        parent = _PlaceholderWidget()
+        parent.btn.clicked.connect(partial(self._showBeatMenu, parent))
 
-    def _emotionChanged(self):
-        self._agenda.beginning_emotion = self._emotionStart.value()
-        self._agenda.ending_emotion = self._emotionEnd.value()
+        return parent
 
-        self.update()
+    def _showBeatMenu(self, placeholder: QWidget):
+        self._currentPlaceholder = placeholder
+        self._selectorMenu.exec(self.mapToGlobal(self._currentPlaceholder.pos()))
 
-    def _beatRemoved(self, wdg: SceneStructureItemWidget):
+    def _beatRemoved(self, wdg: SceneStructureBeatWidget):
+        i = self.layout().indexOf(wdg)
         self._agenda.items.remove(wdg.beat)
         self._beatWidgets.remove(wdg)
-        gc(wdg)
-        self._rearrangeBeats()
+        if wdg.beat.type == SceneStructureItemType.OUTCOME:
+            self._selectorMenu.setOutcomeEnabled(True)
+        placeholder_prev = self.layout().takeAt(i - 1).widget()
+        gc(placeholder_prev)
+        fade_out_and_gc(self, wdg)
         self.update()
 
         self.timelineChanged.emit()
 
-    def _initDragPlaceholder(self, widget: SceneStructureItemWidget):
-        self._dragPlaceholder = SceneStructureItemWidget(self.novel, widget.sceneStructureItem(), parent=self)
-        self._dragPlaceholder.setDisabled(True)
+    @overrides
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasFormat(SceneStructureItemWidget.SceneBeatMimeType):
+            event.accept()
+        else:
+            event.ignore()
+
+    def _dragStarted(self, widget: SceneStructureBeatWidget):
+        self._dragPlaceholder = widget.copy()
+        self._dragged = widget
         translucent(self._dragPlaceholder)
         self._dragPlaceholder.setHidden(True)
+        self._dragPlaceholder.setAcceptDrops(True)
+        self._dragPlaceholder.installEventFilter(
+            DropEventFilter(self._dragPlaceholder, mimeTypes=[SceneStructureItemWidget.SceneBeatMimeType],
+                            droppedSlot=self._dropped))
 
-    def _resetDragPlaceholder(self):
+    def _dragMoved(self, widget: QWidget, edge: Qt.Edge, _: QPoint):
+        self._dragPlaceholder.setVisible(True)
+        i = self.layout().indexOf(widget)
+        if edge == Qt.Edge.LeftEdge:
+            new_index = i - 1
+        else:
+            new_index = i + 2
+
+        if self._dragPlaceholderIndex != new_index:
+            self._dragPlaceholderIndex = new_index
+            self.layout().insertWidget(self._dragPlaceholderIndex, self._dragPlaceholder)
+            self.update()
+
+    def _dropped(self, _: QMimeData):
+        wdg = self._newBeatWidget(self._dragged.beat)
+        i = self.layout().indexOf(self._dragPlaceholder)
+        self.layout().insertWidget(i, wdg)
+
+        self.layout().removeWidget(self._dragPlaceholder)
+        gc(self._dragPlaceholder)
+        self._dragPlaceholder = None
+        self._dragPlaceholderIndex = -1
+
+        beats: List[SceneStructureItemWidget] = []
+        is_placeholder = False
+        is_beat = True
+        i = 0
+        while i < self.layout().count():
+            item = self.layout().itemAt(i)
+            if item.widget() and isinstance(item.widget(), _PlaceholderWidget):
+                if is_placeholder:
+                    gc(item.widget())
+                    continue
+                is_placeholder = True
+                is_beat = False
+            elif item.widget() is not self._dragged:
+                beats.append(item.widget())
+                is_placeholder = False
+                if is_beat:
+                    self.layout().insertWidget(i, self._newPlaceholderWidget())
+                    is_beat = False
+                    i += 1
+                else:
+                    is_beat = True
+
+            i += 1
+
+        self._beatWidgets[:] = beats
+        self._agenda.items[:] = [x.beat for x in self._beatWidgets]
+        self._wasDropped = True
+
+    def _dragFinished(self):
         if self._dragPlaceholder is not None:
             self._dragPlaceholder.setHidden(True)
             gc(self._dragPlaceholder)
-            self._dragPlaceholder = None
+
+        if self._wasDropped:
+            self._dragged.setHidden(True)
+            self.layout().removeWidget(self._dragged)
+            gc(self._dragged)
+
+        self._dragPlaceholder = None
+        self._dragPlaceholderIndex = -1
+        self._dragged = None
+        self._wasDropped = False
+        self.update()
+
+
+# class _SceneStructureTimeline(QWidget):
+#     emotionChanged = pyqtSignal()
+#     timelineChanged = pyqtSignal()
+#
+#     def __init__(self, parent=None):
+#         super(_SceneStructureTimeline, self).__init__(parent)
+#         self._topMargin = 20
+#         self._margin = 80
+#         self._lineDistance = 170
+#         self._arcWidth = 80
+#         self._beatWidth: int = 180
+#         self._emotionSize: int = 32
+#         self._penSize: int = 10
+#         self._path: Optional[QPainterPath] = None
+#
+#         self._dragPlaceholder: Optional[SceneStructureBeatWidget] = None
+#
+#         self.setMouseTracking(True)
+#
+#
+#     @overrides
+#     def mouseMoveEvent(self, event: QMouseEvent) -> None:
+#         if not self._intersects(event.pos()):
+#             if self._placeholder.isVisible():
+#                 self._placeholder.setVisible(False)
+#                 self.update()
+#             return
+#
+#         self._placeholder.setVisible(True)
+#         vertical_index = self._verticalTimelineIndex(event.pos())
+#         self._placeholder.setGeometry(event.pos().x() - self._placeholder.width() / 2,
+#                                       vertical_index * self._lineDistance + self._lineDistance / 2 + self._penSize,
+#                                       self._placeholder.width(),
+#                                       self._placeholder.height())
+#         self.update()
+#
+#     def _initDragPlaceholder(self, widget: SceneStructureBeatWidget):
+#         self._dragPlaceholder = SceneStructureBeatWidget(self.novel, widget.sceneStructureItem(), parent=self)
+#         self._dragPlaceholder.setDisabled(True)
+#         translucent(self._dragPlaceholder)
+#         self._dragPlaceholder.setHidden(True)
+#
+#     def _resetDragPlaceholder(self):
+#         if self._dragPlaceholder is not None:
+#             self._dragPlaceholder.setHidden(True)
+#             gc(self._dragPlaceholder)
+#             self._dragPlaceholder = None
 
 
 class BeatListItemWidget(ListItemWidget):
@@ -824,7 +1025,6 @@ class SceneStructureList(ListView):
     def _addNewItem(self):
         beat = SceneStructureItem(SceneStructureItemType.EXPOSITION)
         self._agenda.items.append(beat)
-        normalize_beat_percentages(self._agenda, forced=True)
         self.addItem(beat)
 
     @overrides
@@ -835,7 +1035,6 @@ class SceneStructureList(ListView):
     def _deleteItemWidget(self, widget: ListItemWidget):
         super(SceneStructureList, self)._deleteItemWidget(widget)
         self._agenda.items.remove(widget.item())
-        normalize_beat_percentages(self._agenda, forced=True)
 
     @overrides
     def _dropped(self, mimeData: ObjectReferenceMimeData):
@@ -844,8 +1043,6 @@ class SceneStructureList(ListView):
 
         for wdg in self.widgets():
             self._agenda.items.append(wdg.item())
-
-        normalize_beat_percentages(self._agenda, forced=True)
 
 
 class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
@@ -873,7 +1070,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         margins(self.wdgGoalConflictContainer, left=40)
 
         self.timeline = SceneStructureTimeline(self)
-        self.timeline.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.scrollAreaTimeline.layout().addWidget(self.timeline)
 
         self.listEvents = SceneStructureList()
@@ -894,6 +1090,12 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self._btnGroupType.addButton(self.btnExposition)
         self._btnGroupType.addButton(self.btnSummary)
 
+        self._emotionEnd = CharacterEmotionButton(self)
+        self._emotionEnd.setToolTip('How does the character feel in the end of the scene?')
+        self._emotionEnd.setVisible(False)
+        insert_after(self.wdgAgenda, self._emotionEnd, self.wdgAgendaCharacter)
+        self._emotionEnd.emotionChanged.connect(self._emotionChanged)
+
         self.wdgAgendaCharacter.setDefaultText('Select character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
         self.unsetCharacterSlot = None
@@ -908,13 +1110,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
         self.updateAvailableAgendaCharacters()
         self._toggleCharacterStatus()
 
-        self.timeline.reset()
+        self.timeline.setNovel(novel)
+        self.timeline.clear()
         self._initSelectors()
 
         self._checkSceneType()
 
         self.timeline.setAgenda(scene.agendas[0], self.scene.type)
         self.listEvents.setAgenda(scene.agendas[0], self.scene.type)
+        self._emotionEnd.setValue(scene.agendas[0].ending_emotion)
         self._initEditor(self.scene.type)
 
     def updateAvailableAgendaCharacters(self):
@@ -934,12 +1138,14 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             char = self.scene.agendas[0].character(self.novel)
             if char:
                 self.wdgAgendaCharacter.setCharacter(char)
+            self._emotionEnd.setVisible(True)
         else:
             self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(
                 DisabledClickEventFilter(self, self.unsetCharacterSlot))
 
             self.wdgAgendaCharacter.setDisabled(True)
             self.wdgAgendaCharacter.setToolTip('Select POV character first')
+            self._emotionEnd.setHidden(True)
 
     def _agendaCharacterSelected(self, character: Character):
         self.scene.agendas[0].set_character(character)
@@ -963,7 +1169,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
     def _typeClicked(self, type: SceneType, checked: bool):
         if not checked:
             if type in [SceneType.EXPOSITION, SceneType.SUMMARY]:
-                self.timeline.reset()
                 self.timeline.setAgenda(self.scene.agendas[0], self.scene.type)
             self.scene.type = SceneType.DEFAULT
             self._initEditor(SceneType.DEFAULT)
@@ -1029,3 +1234,32 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             conflict_selector.setConflict(conflict, conflict_ref)
         self.wdgGoalConflictContainer.layout().addWidget(conflict_selector)
         conflict_selector.conflictSelected.connect(self._initSelectors)
+
+    def _emotionChanged(self):
+        self.scene.agendas[0].ending_emotion = self._emotionEnd.value()
+
+
+if __name__ == '__main__':
+    class MainWindow(QMainWindow):
+        def __init__(self, parent=None):
+            super(MainWindow, self).__init__(parent)
+
+            self.resize(500, 500)
+
+            self.widget = SceneStructureWidget(self)
+            self.setCentralWidget(self.widget)
+
+            novel = Novel('Novel')
+            agenda = SceneStructureAgenda()
+            agenda.items.append(SceneStructureItem(SceneStructureItemType.HOOK))
+            agenda.items.append(SceneStructureItem(SceneStructureItemType.ACTION))
+            agenda.items.append(SceneStructureItem(SceneStructureItemType.OUTCOME))
+            scene = Scene('Scene', agendas=[agenda])
+            self.widget.setScene(novel, scene)
+
+
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+
+    app.exec()

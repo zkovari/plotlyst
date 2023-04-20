@@ -30,7 +30,7 @@ from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEve
     QPen, QPainterPath, QShowEvent
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QTreeView, QMenu, QWidgetAction, QTextEdit, QLabel, QTableView, \
-    QAbstractItemView
+    QAbstractItemView, QButtonGroup
 from overrides import overrides
 from qthandy import busy, margins, vspacer, bold, incr_font
 from qthandy import decr_font, gc, transparent, retain_when_hidden, translucent, underline, flow, \
@@ -46,6 +46,8 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, SceneStructureIte
     ScenePlotValueCharge, \
     SceneStage, ReaderPosition, InformationAcquisition, Document, \
     StoryStructure
+from src.main.python.plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
+    scene_resolution_outcome_help
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -56,10 +58,9 @@ from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import PopupMenuBuilder, hmax, pointy, action, stretch_col, \
-    ButtonPressResizeEventFilter
+    ButtonPressResizeEventFilter, tool_btn
 from src.main.python.plotlyst.view.generated.scene_drive_editor_ui import Ui_SceneDriveTrackingEditor
 from src.main.python.plotlyst.view.generated.scene_filter_widget_ui import Ui_SceneFilterWidget
-from src.main.python.plotlyst.view.generated.scene_ouctome_selector_ui import Ui_SceneOutcomeSelectorWidget
 from src.main.python.plotlyst.view.generated.scenes_view_preferences_widget_ui import Ui_ScenesViewPreferences
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -71,19 +72,34 @@ from src.main.python.plotlyst.view.widget.labels import SelectionItemLabel, Scen
     PlotLabel, PlotValueLabel, SceneLabel
 
 
-class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
+class SceneOutcomeSelector(QWidget):
     selected = pyqtSignal(SceneOutcome)
 
     def __init__(self, scene_structure_item: SceneStructureItem, parent=None):
         super(SceneOutcomeSelector, self).__init__(parent)
         self.scene_structure_item = scene_structure_item
-        self.setupUi(self)
-        self.btnDisaster.setChecked(True)
-        self.btnDisaster.setIcon(IconRegistry.disaster_icon(color='grey'))
-        self.btnResolution.setIcon(IconRegistry.success_icon(color='grey'))
-        self.btnTradeOff.setIcon(IconRegistry.tradeoff_icon(color='grey'))
+        hbox(self)
+        self.btnDisaster = tool_btn(IconRegistry.disaster_icon(color='grey'), scene_disaster_outcome_help,
+                                    checkable=True)
+        self.btnResolution = tool_btn(IconRegistry.success_icon(color='grey'), scene_resolution_outcome_help,
+                                      checkable=True)
+        self.btnTradeOff = tool_btn(IconRegistry.tradeoff_icon(color='grey'), scene_trade_off_outcome_help,
+                                    checkable=True)
+        self._initStyle(self.btnDisaster, '#FDD7D2')
+        self._initStyle(self.btnTradeOff, '#F0C4E1')
+        self._initStyle(self.btnResolution, '#CDFAEC')
 
         self.refresh()
+        self.btnGroupOutcome = QButtonGroup()
+        self.btnGroupOutcome.setExclusive(True)
+        self.btnGroupOutcome.addButton(self.btnDisaster)
+        self.btnGroupOutcome.addButton(self.btnTradeOff)
+        self.btnGroupOutcome.addButton(self.btnResolution)
+        self.btnDisaster.setChecked(True)
+
+        self.layout().addWidget(self.btnDisaster)
+        self.layout().addWidget(self.btnTradeOff)
+        self.layout().addWidget(self.btnResolution)
 
         self.btnGroupOutcome.buttonClicked.connect(self._clicked)
 
@@ -104,6 +120,19 @@ class SceneOutcomeSelector(QWidget, Ui_SceneOutcomeSelectorWidget):
             self.scene_structure_item.outcome = SceneOutcome.TRADE_OFF
 
         self.selected.emit(self.scene_structure_item.outcome)
+
+    def _initStyle(self, btn: QToolButton, color: str):
+        btn.setIconSize(QSize(20, 20))
+        btn.setStyleSheet(f'''
+        QToolButton {{
+            border-radius: 12px;
+            border: 1px hidden lightgrey;
+            padding: 2px;
+        }}
+        QToolButton:hover {{
+            background: {color};
+        }}
+        ''')
 
 
 class ScenePlotValueChargeWidget(QWidget):
