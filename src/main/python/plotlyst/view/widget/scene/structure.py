@@ -45,6 +45,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterGoalSelector, \
     CharacterConflictSelector, CharacterEmotionButton
+from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
@@ -364,8 +365,10 @@ class SceneStructureItemWidget(QWidget):
         pointy(self._btnIcon)
         self._btnIcon.setIconSize(QSize(24, 24))
         self._btnIcon.setFixedSize(self.iconFixedSize, self.iconFixedSize)
-        self._menu = MenuWidget(self._btnIcon)
-        self._menu.addAction(action('Remove', IconRegistry.trash_can_icon(), self._remove))
+
+        self._btnRemove = RemovalButton(self)
+        self._btnRemove.setHidden(True)
+        self._btnRemove.clicked.connect(self._remove)
 
         self.layout().addWidget(self._btnIcon, alignment=Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(self._btnName, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -379,6 +382,19 @@ class SceneStructureItemWidget(QWidget):
     def activate(self):
         if self.graphicsEffect():
             self.setGraphicsEffect(None)
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self._btnRemove.setGeometry(self.width() - 15, self.iconFixedSize, 15, 15)
+        self._btnRemove.raise_()
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self._btnRemove.setVisible(True)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self._btnRemove.setHidden(True)
 
     def _remove(self):
         anim = qtanim.fade_out(self, duration=150)
@@ -396,7 +412,11 @@ class SceneStructureItemWidget(QWidget):
                         width: 0;
                     }}
                     ''')
-        self._btnName.setStyleSheet(f'QPushButton {{border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};}}')
+        self._btnName.setStyleSheet(f'''QPushButton {{
+            border: 0px; background-color: rgba(0, 0, 0, 0); color: {color};
+            padding-left: 15px;
+            padding-right: 15px;
+        }}''')
 
     def _beatDataFunc(self, btn):
         return id(self)
@@ -506,17 +526,20 @@ class SceneStructureBeatWidget(SceneStructureItemWidget):
 
     @overrides
     def enterEvent(self, event: QEnterEvent) -> None:
+        super(SceneStructureBeatWidget, self).enterEvent(event)
         if self.beat.type in [SceneStructureItemType.RISING_ACTION, SceneStructureItemType.PROGRESS,
                               SceneStructureItemType.SETBACK]:
             self._btnProgressSwitch.setVisible(True)
 
     @overrides
     def leaveEvent(self, event: QEvent) -> None:
+        super(SceneStructureBeatWidget, self).leaveEvent(event)
         if not self._btnProgressSwitch.menu().isVisible():
             self._btnProgressSwitch.setHidden(True)
 
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
+        super(SceneStructureBeatWidget, self).resizeEvent(event)
         self._btnProgressSwitch.setGeometry(5, self.iconFixedSize, 18, 18)
 
     def swap(self, beatType: SceneStructureItemType):
