@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QMouseEvent, QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QTextEdit, QApplication, \
     QMainWindow
@@ -57,7 +57,6 @@ class ScenePlotValueChargeWidget(QWidget):
 
         self.chargeIcon = QToolButton()
         transparent(self.chargeIcon)
-        self.chargeIcon.setIconSize(QSize(22, 22))
         self.chargeIcon.setIcon(IconRegistry.charge_icon(self.charge))
 
         self.posCharge = SecondaryActionToolButton()
@@ -178,7 +177,6 @@ class ScenePlotSelector(QWidget):
         self.btnLinkPlot.setHidden(True)
 
     def _plotSelected(self, plot: Plot):
-        self.btnLinkPlot.menu().hide()
         plotValue = ScenePlotReference(plot)
         self.scene.plot_values.append(plotValue)
         self.setPlot(plotValue)
