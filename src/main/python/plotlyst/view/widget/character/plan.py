@@ -34,7 +34,8 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action, wrap
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action, wrap, \
+    fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
@@ -236,6 +237,8 @@ class CharacterGoalWidget(QWidget):
 
 
 class CharacterPlanBarWidget(QWidget):
+    removed = pyqtSignal()
+
     def __init__(self, novel: Novel, character: Character, plan: CharacterPlan, parent=None):
         super(CharacterPlanBarWidget, self).__init__(parent)
         self._novel = novel
@@ -259,9 +262,15 @@ class CharacterPlanBarWidget(QWidget):
         self._textSummary.setAcceptRichText(False)
         self._textSummary.setText(self._plan.summary)
         self._textSummary.textChanged.connect(self._summaryChanged)
+
+        self._btnContext = DotsMenuButton()
+        menu = MenuWidget(self._btnContext)
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.removed.emit))
+
         self._wdgHeader.layout().addWidget(self._lblEmoji, alignment=Qt.AlignmentFlag.AlignTop)
         self._wdgHeader.layout().addWidget(self._textSummary, alignment=Qt.AlignmentFlag.AlignTop)
         self._wdgHeader.layout().addWidget(spacer())
+        self._wdgHeader.layout().addWidget(self._btnContext, alignment=Qt.AlignmentFlag.AlignTop)
 
         self._wdgBar = QWidget()
         self._wdgBar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
@@ -283,7 +292,12 @@ class CharacterPlanBarWidget(QWidget):
         self.layout().addWidget(line())
         self.layout().addWidget(self._wdgBar)
 
+        self._wdgHeader.installEventFilter(VisibilityToggleEventFilter(self._btnContext, self._wdgHeader))
+
         self.repo = RepositoryPersistenceManager.instance()
+
+    def plan(self) -> CharacterPlan:
+        return self._plan
 
     @overrides
     def paintEvent(self, event: QPaintEvent) -> None:
@@ -411,7 +425,7 @@ class CharacterPlansWidget(QWidget):
         self.layout().addWidget(group(self._btnAdd, spacer()))
 
         for plan in self._character.plans:
-            bar = CharacterPlanBarWidget(self._novel, self._character, plan)
+            bar = self.__initPlanWidget(plan)
             self.layout().addWidget(bar)
         self.layout().addWidget(vspacer())
 
@@ -419,8 +433,18 @@ class CharacterPlansWidget(QWidget):
         plan = CharacterPlan(external=external)
         self._character.plans.append(plan)
 
-        bar = CharacterPlanBarWidget(self._novel, self._character, plan)
+        bar = self.__initPlanWidget(plan)
         self.layout().insertWidget(self.layout().count() - 1, bar)
+
+    def _removePlan(self, wdg: CharacterPlanBarWidget):
+        print('remove')
+        self._character.plans.remove(wdg.plan())
+        fade_out_and_gc(self, wdg)
+
+    def __initPlanWidget(self, plan: CharacterPlan) -> CharacterPlanBarWidget:
+        bar = CharacterPlanBarWidget(self._novel, self._character, plan)
+        bar.removed.connect(partial(self._removePlan, bar))
+        return bar
 
 
 if __name__ == '__main__':
