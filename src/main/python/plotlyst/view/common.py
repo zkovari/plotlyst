@@ -172,6 +172,26 @@ class ButtonPressResizeEventFilter(QObject):
         watched.setIconSize(self._originalSize)
 
 
+class MouseEventDelegate(QObject):
+    def __init__(self, target, delegate):
+        super().__init__(target)
+        self._delegate = delegate
+
+    @overrides
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.MouseButtonPress:
+            self._delegate.mousePressEvent(event)
+            return False
+        elif event.type() == QEvent.Type.MouseButtonRelease:
+            self._delegate.mouseReleaseEvent(event)
+            return False
+        elif event.type() == QEvent.Type.Enter:
+            self._delegate.enterEvent(event)
+        elif event.type() == QEvent.Type.Leave:
+            self._delegate.leaveEvent(event)
+        return super(MouseEventDelegate, self).eventFilter(watched, event)
+
+
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):
     def _open(widget: QWidget, toggled: bool):
         if toggled:

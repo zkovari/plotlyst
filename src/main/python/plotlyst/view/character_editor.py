@@ -24,6 +24,7 @@ from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
 from qthandy import translucent, btn_popup, incr_font, bold, italic, margins
 from qthandy.filter import OpacityEventFilter
 
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
 from src.main.python.plotlyst.core.template import protagonist_role
@@ -127,11 +128,13 @@ class CharacterEditor:
                 if not btn.isChecked():
                     btn.setHidden(True)
 
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory, IconRegistry.backstory_icon('black'))
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabTopics, IconRegistry.topics_icon())
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabBigFive, IconRegistry.big_five_icon())
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabBackstory,
+                     IconRegistry.backstory_icon('black', PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabTopics,
+                     IconRegistry.topics_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabBigFive, IconRegistry.big_five_icon(PLOTLYST_SECONDARY_COLOR))
         set_tab_icon(self.ui.tabAttributes, self.ui.tabNotes, IconRegistry.document_edition_icon())
-        set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black'))
+        set_tab_icon(self.ui.tabAttributes, self.ui.tabGoals, IconRegistry.goal_icon('black', PLOTLYST_SECONDARY_COLOR))
 
         self._bigFive = BigFivePersonalityWidget()
         self._bigFive.setCharacter(self.character)
@@ -148,7 +151,7 @@ class CharacterEditor:
         self.ui.lineName.setText(self.character.name)
 
         self._character_goals = CharacterPlansWidget(self.novel, self.character)
-        self.ui.tabGoals.layout().addWidget(self._character_goals)
+        self.ui.scrollAreaPlans.layout().addWidget(self._character_goals)
         margins(self.ui.tabGoals.layout(), left=5)
 
         self.wdgTopicsEditor = CharacterTopicsEditor()
