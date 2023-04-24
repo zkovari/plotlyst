@@ -336,7 +336,7 @@ class BeatSelectorMenu(GridMenuWidget):
                 self._actions[type_].setEnabled(False)
 
 
-class _SceneBeatPlaceholderButton(QToolButton):
+class _SceneBeatPlaceholderButton(QPushButton):
 
     def __init__(self, parent=None):
         super(_SceneBeatPlaceholderButton, self).__init__(parent)
@@ -708,6 +708,8 @@ class SceneStructureTimeline(QWidget):
         self._agenda = agenda
         for item in agenda.items:
             self._addBeatWidget(item)
+        if not agenda.items:
+            self.layout().addWidget(self._newPlaceholderWidget(displayText=True))
 
         self.setSceneType(sceneType)
 
@@ -831,8 +833,10 @@ class SceneStructureTimeline(QWidget):
 
         return widget
 
-    def _newPlaceholderWidget(self) -> QWidget:
+    def _newPlaceholderWidget(self, displayText: bool = False) -> QWidget:
         parent = _PlaceholderWidget()
+        if displayText:
+            parent.btn.setText('Insert beat')
         parent.btn.clicked.connect(partial(self._showBeatMenu, parent))
 
         return parent

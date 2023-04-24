@@ -85,6 +85,11 @@ QPushButton[deconstructive=true]:hover {
     background-color: #c0392b;
 }
 
+QPushButton[transparent=true] {
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
 QToolButton::menu-indicator {
     width:0px;
 }
