@@ -601,8 +601,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.card-account-details-star-outline', color, color_on)
 
     @staticmethod
-    def big_five_icon() -> QIcon:
-        return IconRegistry.from_name('ph.number-square-five-bold', color_on='#7209b7')
+    def big_five_icon(color_on: str = '#7209b7') -> QIcon:
+        return IconRegistry.from_name('ph.number-square-five-bold', color_on=color_on)
 
     @staticmethod
     def expand_icon() -> QIcon:
