@@ -22,20 +22,21 @@ from functools import partial
 from typing import Dict
 
 import emoji
-from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize, QRectF
-from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent
+import qtanim
+from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize, QRectF, QEvent
+from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent, QEnterEvent, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QMenu, \
-    QPushButton
+    QPushButton, QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, decr_font, curved_flow, \
-    gc, sp, decr_icon
+    gc, sp, decr_icon, translucent
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, pointy, action, wrap, \
-    fade_out_and_gc
+    fade_out_and_gc, MouseEventDelegate
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
@@ -72,24 +73,73 @@ class _AddObjectiveButton(QPushButton):
         self.installEventFilter(ButtonPressResizeEventFilter(self))
 
 
+class _SelectableObjectiveIcon(QToolButton):
+    selected = pyqtSignal(bool)
+
+    def __init__(self, parent=None):
+        super(_SelectableObjectiveIcon, self).__init__(parent)
+        transparent(self)
+        pointy(self)
+        self.setCheckable(True)
+        translucent(self, 0.4)
+        self._iconColor: str = ''
+
+        self.clicked.connect(self._select)
+
+    def selectIcon(self, icon: str, icon_color: str):
+        self._iconColor = icon_color
+        self.setIcon(IconRegistry.from_name(icon, 'grey', color_on=icon_color))
+        transparent(self)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self.toggle()
+        self._select()
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if self.isChecked() or not self.isEnabled():
+            return
+        translucent(self, 1.0)
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        if self.isChecked() or not self.isEnabled():
+            return
+        translucent(self, 0.4)
+
+    def _select(self):
+        qtanim.glow(self, duration=75, color=QColor(self._iconColor),
+                    teardown=lambda: self.selected.emit(self.isChecked()))
+
+
 class _AbstractCharacterObjectiveWidget(QWidget):
-    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, readOnly: bool = True):
+    selected = pyqtSignal(bool)
+
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = True):
         super(_AbstractCharacterObjectiveWidget, self).__init__(parent)
         self._novel = novel
         self._goalRef = goalRef
         self._goal = goalRef.goal(self._novel)
-        self._readOnly = readOnly
+        self._selectable = selectable
 
-        self.iconSelector = IconSelectorButton()
-        self.iconSelector.setDisabled(self._readOnly)
+        if selectable:
+            self.iconSelector = _SelectableObjectiveIcon()
+            self.iconSelector.selected.connect(self.selected.emit)
+        else:
+            self.iconSelector = IconSelectorButton()
+            self.iconSelector.iconSelected.connect(self._iconSelected)
         if self._goal.icon:
             self.iconSelector.selectIcon(self._goal.icon, self._goal.icon_color)
         else:
             self.iconSelector.selectIcon('mdi.target', 'darkBlue')
-        self.iconSelector.iconSelected.connect(self._iconSelected)
+
         self.lineText = QLineEdit()
         self.lineText.setPlaceholderText('Subtask')
-        self.lineText.setReadOnly(self._readOnly)
+        self.lineText.setReadOnly(self._selectable)
+        if self._selectable:
+            pointy(self.lineText)
+            self.lineText.installEventFilter(MouseEventDelegate(self.lineText, self.iconSelector))
         self.lineText.textEdited.connect(self._textEdited)
         transparent(self.lineText)
         decr_font(self.lineText)
@@ -112,10 +162,10 @@ class _AbstractCharacterObjectiveWidget(QWidget):
 class CharacterSubtaskWidget(_AbstractCharacterObjectiveWidget):
     delete = pyqtSignal()
 
-    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, readOnly: bool = True):
-        super(CharacterSubtaskWidget, self).__init__(novel, goalRef, parent, readOnly)
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = True):
+        super(CharacterSubtaskWidget, self).__init__(novel, goalRef, parent, selectable)
 
-        self.iconSelector.setSelectedIconSize(QSize(16, 16))
+        self.iconSelector.setIconSize(QSize(16, 16))
 
         self.btnMenu = DotsMenuButton()
         menu = MenuWidget(self.btnMenu)
@@ -127,7 +177,7 @@ class CharacterSubtaskWidget(_AbstractCharacterObjectiveWidget):
         self.layout().addWidget(self.lineText)
         self.layout().addWidget(self.btnMenu)
 
-        if self._readOnly:
+        if self._selectable:
             self.btnMenu.setHidden(True)
         else:
             self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
@@ -137,19 +187,20 @@ class CharacterSubtaskWidget(_AbstractCharacterObjectiveWidget):
 
 
 class CharacterGoalWidget(_AbstractCharacterObjectiveWidget):
+    subtaskSelected = pyqtSignal(CharacterSubtaskWidget, bool)
     addBefore = pyqtSignal()
     addAfter = pyqtSignal()
     delete = pyqtSignal()
     subtasksChanged = pyqtSignal()
     selectExisting = pyqtSignal()
 
-    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, readOnly: bool = True):
-        super(CharacterGoalWidget, self).__init__(novel, goalRef, parent, readOnly)
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = True):
+        super(CharacterGoalWidget, self).__init__(novel, goalRef, parent, selectable)
 
         vbox(self, 0)
         self._wdgCenter = QWidget()
         hbox(self._wdgCenter, 0, 0)
-        self.iconSelector.setSelectedIconSize(QSize(28, 28))
+        self.iconSelector.setIconSize(QSize(28, 28))
         self.hLine = line()
         retain_when_hidden(self.hLine)
         self.hLine.setHidden(True)
@@ -184,10 +235,16 @@ class CharacterGoalWidget(_AbstractCharacterObjectiveWidget):
         for child in self._goalRef.children:
             self._addSubtaskWidget(child)
 
-        self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
-        self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAddBefore, self))
-        self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
-        self.installEventFilter(VisibilityToggleEventFilter(self._btnAddSubtask, self))
+        if self._selectable:
+            self.btnAdd.setHidden(True)
+            self.btnAddBefore.setHidden(True)
+            self.btnMenu.setHidden(True)
+            self._btnAddSubtask.setHidden(True)
+        else:
+            self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAdd, self))
+            self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnAddBefore, self))
+            self._wdgCenter.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+            self.installEventFilter(VisibilityToggleEventFilter(self._btnAddSubtask, self))
 
         self.layout().addWidget(self._wdgCenter)
         self.layout().addWidget(self._wdgBottom)
@@ -231,6 +288,7 @@ class CharacterGoalWidget(_AbstractCharacterObjectiveWidget):
     def _addSubtaskWidget(self, charGoal: CharacterGoal):
         subtaskWdg = CharacterSubtaskWidget(self._novel, charGoal)
         subtaskWdg.delete.connect(partial(self._deleteSubtask, subtaskWdg))
+        subtaskWdg.selected.connect(partial(self.subtaskSelected.emit, subtaskWdg))
         margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)
         self._wdgBottom.layout().insertWidget(self._wdgBottom.layout().count() - 1, subtaskWdg)
         self._btnAddSubtask.setText('')
@@ -249,13 +307,15 @@ class CharacterGoalWidget(_AbstractCharacterObjectiveWidget):
 
 class CharacterPlanBarWidget(QWidget):
     removed = pyqtSignal()
+    goalSelected = pyqtSignal(CharacterGoalWidget, bool)
+    subtaskSelected = pyqtSignal(CharacterGoalWidget, bool)
 
-    def __init__(self, novel: Novel, character: Character, plan: CharacterPlan, parent=None, readOnly: bool = False):
+    def __init__(self, novel: Novel, character: Character, plan: CharacterPlan, parent=None, selectable: bool = False):
         super(CharacterPlanBarWidget, self).__init__(parent)
         self._novel = novel
         self._character = character
         self._plan = plan
-        self._readOnly = readOnly
+        self._selectable = selectable
         vbox(self)
         margins(self, left=5, right=5)
         self._firstShow = True
@@ -274,6 +334,7 @@ class CharacterPlanBarWidget(QWidget):
         self._textSummary.setPlaceholderText('Summarize this goal')
         self._textSummary.setAcceptRichText(False)
         self._textSummary.setText(self._plan.summary)
+        self._textSummary.setReadOnly(self._selectable)
         self._textSummary.textChanged.connect(self._summaryChanged)
 
         self._btnContext = DotsMenuButton()
@@ -305,7 +366,10 @@ class CharacterPlanBarWidget(QWidget):
         self.layout().addWidget(line())
         self.layout().addWidget(self._wdgBar)
 
-        self._wdgHeader.installEventFilter(VisibilityToggleEventFilter(self._btnContext, self._wdgHeader))
+        if self._selectable:
+            self._btnContext.setHidden(True)
+        else:
+            self._wdgHeader.installEventFilter(VisibilityToggleEventFilter(self._btnContext, self._wdgHeader))
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -370,11 +434,13 @@ class CharacterPlanBarWidget(QWidget):
                 margins(wdg, left=10, top=40)
 
     def _initGoalWidget(self, goal: CharacterGoal):
-        goalWdg = CharacterGoalWidget(self._novel, goal)
+        goalWdg = CharacterGoalWidget(self._novel, goal, selectable=self._selectable)
         goalWdg.addAfter.connect(partial(self._addNewGoal, goalWdg))
         goalWdg.addBefore.connect(partial(self._addNewGoalBefore, goalWdg))
         goalWdg.subtasksChanged.connect(self.update)
         goalWdg.delete.connect(partial(self._deleteGoal, goalWdg))
+        goalWdg.selected.connect(partial(self.goalSelected.emit, goalWdg))
+        goalWdg.subtaskSelected.connect(self.subtaskSelected.emit)
         self._goalWidgets[goal] = goalWdg
         return goalWdg
 
@@ -461,6 +527,31 @@ class CharacterPlansWidget(QWidget):
         return bar
 
 
+class CharacterPlansSelectorWidget(QWidget):
+    goalSelected = pyqtSignal(CharacterGoal)
+
+    def __init__(self, novel: Novel, character: Character, parent=None):
+        super(CharacterPlansSelectorWidget, self).__init__(parent)
+        self._novel = novel
+        self._character = character
+        vbox(self)
+
+        for plan in self._character.plans:
+            bar = CharacterPlanBarWidget(self._novel, self._character, plan, selectable=True)
+            bar.goalSelected.connect(self._goalSelected)
+            bar.subtaskSelected.connect(self._subtaskSelected)
+            self.layout().addWidget(bar)
+        self.layout().addWidget(vspacer())
+
+    def _goalSelected(self, wdg: CharacterGoalWidget, selected: bool):
+        if selected:
+            self.goalSelected.emit(wdg.goal())
+
+    def _subtaskSelected(self, wdg: CharacterSubtaskWidget, selected: bool):
+        if selected:
+            self.goalSelected.emit(wdg.subtask())
+
+
 if __name__ == '__main__':
     class MainWindow(QMainWindow):
         def __init__(self, parent=None):
@@ -483,7 +574,7 @@ if __name__ == '__main__':
 
             character.plans.append(plan)
             character.plans.append(CharacterPlan(external=False))
-            self.widget = CharacterPlansWidget(novel, character)
+            self.widget = CharacterPlansSelectorWidget(novel, character)
             self.setCentralWidget(self.widget)
 
 
