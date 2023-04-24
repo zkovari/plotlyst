@@ -308,6 +308,7 @@ class CharacterPlanBarWidget(QWidget):
             if i == 0:
                 y = pos.y()
                 path.moveTo(pos)
+                painter.drawLine(pos.x(), y - 10, pos.x(), y + 10)
             else:
                 if pos.y() > y:
                     if forward:
