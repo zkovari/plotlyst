@@ -136,4 +136,5 @@ class ShelvesTreeView(TreeView):
 
     def selectNovel(self, novel: NovelDescriptor):
         self._novels[novel].select()
+        self._selectedNovels.add(novel)
         self.novelSelected.emit(novel)
