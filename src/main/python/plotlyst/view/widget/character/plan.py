@@ -72,17 +72,16 @@ class _AddObjectiveButton(QPushButton):
         self.installEventFilter(ButtonPressResizeEventFilter(self))
 
 
-class CharacterSubtaskWidget(QWidget):
-    delete = pyqtSignal()
-
-    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None):
-        super(CharacterSubtaskWidget, self).__init__(parent)
+class _AbstractCharacterObjectiveWidget(QWidget):
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, readOnly: bool = True):
+        super(_AbstractCharacterObjectiveWidget, self).__init__(parent)
         self._novel = novel
         self._goalRef = goalRef
         self._goal = goalRef.goal(self._novel)
+        self._readOnly = readOnly
 
         self.iconSelector = IconSelectorButton()
-        self.iconSelector.setSelectedIconSize(QSize(16, 16))
+        self.iconSelector.setDisabled(self._readOnly)
         if self._goal.icon:
             self.iconSelector.selectIcon(self._goal.icon, self._goal.icon_color)
         else:
@@ -90,27 +89,13 @@ class CharacterSubtaskWidget(QWidget):
         self.iconSelector.iconSelected.connect(self._iconSelected)
         self.lineText = QLineEdit()
         self.lineText.setPlaceholderText('Subtask')
+        self.lineText.setReadOnly(self._readOnly)
         self.lineText.textEdited.connect(self._textEdited)
         transparent(self.lineText)
         decr_font(self.lineText)
         self.lineText.setText(self._goal.text)
 
-        self.btnMenu = DotsMenuButton()
-        menu = MenuWidget(self.btnMenu)
-        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.delete.emit))
-        self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu, leaveOpacity=0.7))
-
-        hbox(self)
-        self.layout().addWidget(self.iconSelector)
-        self.layout().addWidget(self.lineText)
-        self.layout().addWidget(self.btnMenu)
-
-        self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
-
         self.repo = RepositoryPersistenceManager.instance()
-
-    def subtask(self) -> CharacterGoal:
-        return self._goalRef
 
     def _textEdited(self, text: str):
         self._goal.text = text
@@ -124,36 +109,47 @@ class CharacterSubtaskWidget(QWidget):
         self.repo.update_novel(self._novel)
 
 
-class CharacterGoalWidget(QWidget):
+class CharacterSubtaskWidget(_AbstractCharacterObjectiveWidget):
+    delete = pyqtSignal()
+
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, readOnly: bool = True):
+        super(CharacterSubtaskWidget, self).__init__(novel, goalRef, parent, readOnly)
+
+        self.iconSelector.setSelectedIconSize(QSize(16, 16))
+
+        self.btnMenu = DotsMenuButton()
+        menu = MenuWidget(self.btnMenu)
+        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.delete.emit))
+        self.btnMenu.installEventFilter(OpacityEventFilter(self.btnMenu, leaveOpacity=0.7))
+
+        hbox(self)
+        self.layout().addWidget(self.iconSelector)
+        self.layout().addWidget(self.lineText)
+        self.layout().addWidget(self.btnMenu)
+
+        if self._readOnly:
+            self.btnMenu.setHidden(True)
+        else:
+            self.installEventFilter(VisibilityToggleEventFilter(self.btnMenu, self))
+
+    def subtask(self) -> CharacterGoal:
+        return self._goalRef
+
+
+class CharacterGoalWidget(_AbstractCharacterObjectiveWidget):
     addBefore = pyqtSignal()
     addAfter = pyqtSignal()
     delete = pyqtSignal()
     subtasksChanged = pyqtSignal()
     selectExisting = pyqtSignal()
 
-    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None):
-        super(CharacterGoalWidget, self).__init__(parent)
-        self._novel = novel
-        self._goalRef = goalRef
-        self._goal = goalRef.goal(self._novel)
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, readOnly: bool = True):
+        super(CharacterGoalWidget, self).__init__(novel, goalRef, parent, readOnly)
 
         vbox(self, 0)
         self._wdgCenter = QWidget()
         hbox(self._wdgCenter, 0, 0)
-        self.iconSelector = IconSelectorButton()
         self.iconSelector.setSelectedIconSize(QSize(28, 28))
-        if self._goal.icon:
-            self.iconSelector.selectIcon(self._goal.icon, self._goal.icon_color)
-        else:
-            self.iconSelector.selectIcon('mdi.target', 'darkBlue')
-        self.iconSelector.iconSelected.connect(self._iconSelected)
-        self.lineText = QLineEdit()
-        self.lineText.setMinimumWidth(150)
-        self.lineText.setPlaceholderText('Objective')
-        self.lineText.setText(self._goal.text)
-        self.lineText.setToolTip(self._goal.text)
-        self.lineText.textEdited.connect(self._textEdited)
-        transparent(self.lineText)
         self.hLine = line()
         retain_when_hidden(self.hLine)
         self.hLine.setHidden(True)
@@ -196,26 +192,17 @@ class CharacterGoalWidget(QWidget):
         self.layout().addWidget(self._wdgCenter)
         self.layout().addWidget(self._wdgBottom)
 
-        self.repo = RepositoryPersistenceManager.instance()
-
     def goal(self) -> CharacterGoal:
         return self._goalRef
 
     def setForward(self, forward: bool):
         self._forward = forward
 
+    @overrides
     def _textEdited(self, text: str):
+        super(CharacterGoalWidget, self)._textEdited(text)
         self.btnAdd.setHidden(True)
         self.btnAddBefore.setHidden(True)
-        self._goal.text = text
-        self.lineText.setToolTip(text)
-
-        self.repo.update_novel(self._novel)
-
-    def _iconSelected(self, icon: str, color: QColor):
-        self._goal.icon = icon
-        self._goal.icon_color = color.name()
-        self.repo.update_novel(self._novel)
 
     def _addBefore(self):
         if self._forward:
@@ -263,11 +250,12 @@ class CharacterGoalWidget(QWidget):
 class CharacterPlanBarWidget(QWidget):
     removed = pyqtSignal()
 
-    def __init__(self, novel: Novel, character: Character, plan: CharacterPlan, parent=None):
+    def __init__(self, novel: Novel, character: Character, plan: CharacterPlan, parent=None, readOnly: bool = False):
         super(CharacterPlanBarWidget, self).__init__(parent)
         self._novel = novel
         self._character = character
         self._plan = plan
+        self._readOnly = readOnly
         vbox(self)
         margins(self, left=5, right=5)
         self._firstShow = True
