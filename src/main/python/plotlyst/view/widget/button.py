@@ -213,6 +213,12 @@ class FadeOutButtonGroup(QButtonGroup):
         btn.setChecked(not btn.isChecked())
         self._toggled(btn, animated=False)
 
+    def setButtonChecked(self, btn: QAbstractButton, checked: bool):
+        btn.setVisible(True)
+        btn.setEnabled(True)
+        btn.setChecked(checked)
+        self._toggled(btn, animated=False)
+
     def reset(self):
         for btn in self.buttons():
             btn.setEnabled(True)

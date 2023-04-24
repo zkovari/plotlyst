@@ -1157,15 +1157,15 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _checkSceneType(self):
         if self.scene.type == SceneType.ACTION:
-            self._btnGroupType.toggle(self.btnScene)
+            self._btnGroupType.setButtonChecked(self.btnScene, True)
         elif self.scene.type == SceneType.REACTION:
-            self._btnGroupType.toggle(self.btnSequel)
+            self._btnGroupType.setButtonChecked(self.btnSequel, True)
         elif self.scene.type == SceneType.HAPPENING:
-            self._btnGroupType.toggle(self.btnHappening)
+            self._btnGroupType.setButtonChecked(self.btnHappening, True)
         elif self.scene.type == SceneType.EXPOSITION:
-            self._btnGroupType.toggle(self.btnExposition)
+            self._btnGroupType.setButtonChecked(self.btnExposition, True)
         elif self.scene.type == SceneType.SUMMARY:
-            self._btnGroupType.toggle(self.btnSummary)
+            self._btnGroupType.setButtonChecked(self.btnSummary, True)
         else:
             self._btnGroupType.reset()
 
