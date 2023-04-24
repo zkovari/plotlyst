@@ -130,7 +130,7 @@ class CharacterInfo:
     plans: List[CharacterPlan] = field(default_factory=list)
     document: Optional[Document] = None
     journals: List[Document] = field(default_factory=list)
-    prefs: CharacterPreferences = CharacterPreferences()
+    prefs: CharacterPreferences = field(default_factory=CharacterPreferences)
     topics: List[TemplateValue] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
 
@@ -195,7 +195,7 @@ class NovelInfo:
     premise: str = ''
     synopsis: Optional['Document'] = None
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
-    prefs: NovelPreferences = NovelPreferences()
+    prefs: NovelPreferences = field(default_factory=NovelPreferences)
     world: WorldBuilding = WorldBuilding()
     board: Board = Board()
 

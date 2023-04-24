@@ -277,7 +277,7 @@ class Character:
     plans: List[CharacterPlan] = field(default_factory=list)
     document: Optional['Document'] = None
     journals: List['Document'] = field(default_factory=list)
-    prefs: CharacterPreferences = CharacterPreferences()
+    prefs: CharacterPreferences = field(default_factory=CharacterPreferences)
     topics: List[TemplateValue] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
 
@@ -1538,8 +1538,8 @@ class PanelPreferences:
 @dataclass
 class NovelPreferences:
     active_stage_id: Optional[uuid.UUID] = None
-    docs: DocsPreferences = DocsPreferences()
-    panels: PanelPreferences = PanelPreferences()
+    docs: DocsPreferences = field(default_factory=DocsPreferences)
+    panels: PanelPreferences = field(default_factory=PanelPreferences)
 
 
 @dataclass
@@ -1558,7 +1558,7 @@ class Novel(NovelDescriptor):
     tags: Dict[TagType, List[Tag]] = field(default_factory=default_tags)
     premise: str = ''
     synopsis: Optional['Document'] = None
-    prefs: NovelPreferences = NovelPreferences()
+    prefs: NovelPreferences = field(default_factory=NovelPreferences)
     world: WorldBuilding = WorldBuilding()
     board: Board = Board()
 
