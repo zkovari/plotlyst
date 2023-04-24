@@ -220,12 +220,6 @@ class SelectionItemLabel(Label):
         return '#2e5266'
 
 
-class PlotLabel(SelectionItemLabel):
-    @overrides
-    def _borderColor(self):
-        return self.item.icon_color
-
-
 class PlotValueLabel(SelectionItemLabel):
 
     def __init__(self, item: PlotValue, parent=None, removalEnabled: bool = False):
@@ -252,7 +246,7 @@ class PlotValueLabel(SelectionItemLabel):
         return self.item.icon_color
 
 
-class ScenePlotValueLabel(PlotLabel):
+class ScenePlotValueLabel(SelectionItemLabel):
     def __init__(self, plot_value: ScenePlotReference, parent=None, removalEnabled: bool = True):
         super(ScenePlotValueLabel, self).__init__(plot_value.plot, parent, removalEnabled)
         self.lblText.clear()
