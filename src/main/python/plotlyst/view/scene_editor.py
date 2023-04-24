@@ -41,7 +41,8 @@ from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEdit
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
 from src.main.python.plotlyst.view.widget.labels import CharacterLabel
-from src.main.python.plotlyst.view.widget.scenes import ScenePlotSelector, SceneTagSelector
+from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelector
+from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
 
 class SceneEditor(QObject):
