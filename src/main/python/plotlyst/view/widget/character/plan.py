@@ -53,7 +53,12 @@ class _AddObjectiveButton(QPushButton):
         self.setIcon(IconRegistry.plus_icon('grey'))
         self.setToolTip('Add new objective')
         transparent(self)
-        self.setStyleSheet(f'{self.styleSheet()}\nQPushButton{{ color: grey;}}')
+        self.setStyleSheet(f'''{self.styleSheet()}
+            QPushButton{{ color: grey;}}
+            QPushButton:menu-indicator {{
+                width: 0;
+            }}
+        ''')
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
         pointy(self)
         retain_when_hidden(self)
@@ -120,7 +125,8 @@ class CharacterSubtaskWidget(QWidget):
 
 
 class CharacterGoalWidget(QWidget):
-    addNew = pyqtSignal()
+    addBefore = pyqtSignal()
+    addAfter = pyqtSignal()
     delete = pyqtSignal()
     subtasksChanged = pyqtSignal()
     selectExisting = pyqtSignal()
@@ -151,9 +157,12 @@ class CharacterGoalWidget(QWidget):
         self.hLine = line()
         retain_when_hidden(self.hLine)
         self.hLine.setHidden(True)
+        self._forward = True
 
         self.btnAdd = _AddObjectiveButton()
         self.btnAddBefore = _AddObjectiveButton()
+        self.btnAdd.addNew.connect(self._addAfter)
+        self.btnAddBefore.addNew.connect(self._addBefore)
         self.btnMenu = DotsMenuButton()
         menu = MenuWidget(self.btnMenu)
         menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.delete.emit))
@@ -192,6 +201,9 @@ class CharacterGoalWidget(QWidget):
     def goal(self) -> CharacterGoal:
         return self._goalRef
 
+    def setForward(self, forward: bool):
+        self._forward = forward
+
     def _textEdited(self, text: str):
         self.btnAdd.setHidden(True)
         self.btnAddBefore.setHidden(True)
@@ -204,6 +216,18 @@ class CharacterGoalWidget(QWidget):
         self._goal.icon = icon
         self._goal.icon_color = color.name()
         self.repo.update_novel(self._novel)
+
+    def _addBefore(self):
+        if self._forward:
+            self.addBefore.emit()
+        else:
+            self.addAfter.emit()
+
+    def _addAfter(self):
+        if self._forward:
+            self.addAfter.emit()
+        else:
+            self.addBefore.emit()
 
     def _addNewSubtask(self):
         goal = Goal('')
@@ -336,6 +360,9 @@ class CharacterPlanBarWidget(QWidget):
 
             if forward:
                 pos.setX(pos.x() + wdg.hLine.width() + wdg.iconSelector.width())
+                wdg.setForward(True)
+            else:
+                wdg.setForward(False)
             path.lineTo(pos)
 
         painter.drawPath(path)
@@ -356,8 +383,8 @@ class CharacterPlanBarWidget(QWidget):
 
     def _initGoalWidget(self, goal: CharacterGoal):
         goalWdg = CharacterGoalWidget(self._novel, goal)
-        goalWdg.btnAdd.addNew.connect(partial(self._addNewGoal, goalWdg))
-        goalWdg.btnAddBefore.addNew.connect(partial(self._addNewGoalBefore, goalWdg))
+        goalWdg.addAfter.connect(partial(self._addNewGoal, goalWdg))
+        goalWdg.addBefore.connect(partial(self._addNewGoalBefore, goalWdg))
         goalWdg.subtasksChanged.connect(self.update)
         goalWdg.delete.connect(partial(self._deleteGoal, goalWdg))
         self._goalWidgets[goal] = goalWdg
