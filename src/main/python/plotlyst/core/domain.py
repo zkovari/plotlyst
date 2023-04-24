@@ -258,7 +258,7 @@ def default_big_five_values() -> Dict[str, List[int]]:
 
 @dataclass
 class CharacterPreferences:
-    avatar: AvatarPreferences = AvatarPreferences()
+    avatar: AvatarPreferences = field(default_factory=AvatarPreferences)
 
 
 @dataclass
@@ -609,7 +609,7 @@ class ScenePlotReferenceData:
 @dataclass
 class ScenePlotReference:
     plot: Plot
-    data: ScenePlotReferenceData = ScenePlotReferenceData()
+    data: ScenePlotReferenceData = field(default_factory=ScenePlotReferenceData)
 
 
 class SceneType(Enum):
