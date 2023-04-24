@@ -31,6 +31,9 @@
    </property>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="topMargin">
+      <number>20</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_8">
        <item alignment="Qt::AlignLeft">
@@ -80,94 +83,10 @@
          </property>
         </spacer>
        </item>
-       <item>
-        <widget class="QToolButton" name="btnPrevious">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>50</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="cursor">
-          <cursorShape>PointingHandCursor</cursorShape>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::ClickFocus</enum>
-         </property>
-         <property name="toolTip">
-          <string>Previous scene</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="shortcut">
-          <string>Left</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="btnNext">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>50</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="cursor">
-          <cursorShape>PointingHandCursor</cursorShape>
-         </property>
-         <property name="focusPolicy">
-          <enum>Qt::ClickFocus</enum>
-         </property>
-         <property name="toolTip">
-          <string>Next scene</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="shortcut">
-          <string>Right</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Preferred</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>10</width>
-           <height>10</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
      </item>
      <item>
-      <widget class="QListView" name="lstScenes">
+      <widget class="ScenesTreeView" name="treeScenes">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -188,9 +107,19 @@
     </layout>
    </item>
    <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <property name="spacing">
       <number>4</number>
+     </property>
+     <property name="topMargin">
+      <number>20</number>
      </property>
      <item>
       <widget class="SceneStoryStructureWidget" name="wdgStructure" native="true"/>
@@ -818,9 +747,10 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CharacterAvatar</class>
+   <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.characters</header>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>RotatedButton</class>
@@ -828,15 +758,19 @@
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>src.main.python.plotlyst.view.widget.scene</header>
+  </customwidget>
+  <customwidget>
+   <class>CharacterAvatar</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.characters</header>
+  </customwidget>
+  <customwidget>
    <class>DocumentTextEditor</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
-   <class>SceneStoryStructureWidget</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>LabelsWidget</class>

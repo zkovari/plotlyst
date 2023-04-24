@@ -22,8 +22,7 @@ from typing import Optional
 
 import emoji
 import qtanim
-from PyQt6.QtCore import QObject, pyqtSignal, QModelIndex, QItemSelectionModel, \
-    Qt
+from PyQt6.QtCore import QObject, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QWidgetAction, QTableView, QMenu
 from qthandy import flow, clear_layout
 
@@ -33,7 +32,6 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBe
     SceneStoryBeat, Character, ScenePlotReference, TagReference
 from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
-from src.main.python.plotlyst.model.scenes_model import ScenesTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font
@@ -68,6 +66,8 @@ class SceneEditor(QObject):
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
+
+        self.ui.lineTitle.textEdited.connect(self._title_edited)
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
         self.ui.lblDayEmoji.setText(emoji.emojize(':spiral_calendar:'))
@@ -113,17 +113,11 @@ class SceneEditor(QObject):
         self.tag_selector = SceneTagSelector(self.novel, self.scene)
         self.ui.wdgTags.layout().addWidget(self.tag_selector)
 
-        self.scenes_model = ScenesTableModel(self.novel)
-        self.ui.lstScenes.setModel(self.scenes_model)
-        self.ui.lstScenes.setModelColumn(ScenesTableModel.ColTitle)
-        self.ui.lstScenes.clicked.connect(self._new_scene_selected)
+        self.ui.treeScenes.setNovel(self.novel, readOnly=True)
+        self.ui.treeScenes.sceneSelected.connect(self._scene_selected)
 
         self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._on_close)
-        self.ui.btnPrevious.setIcon(IconRegistry.arrow_left_thick_icon())
-        self.ui.btnPrevious.clicked.connect(self._on_previous_scene)
-        self.ui.btnNext.setIcon(IconRegistry.arrow_right_thick_icon())
-        self.ui.btnNext.clicked.connect(self._on_next_scene)
 
         flow(self.ui.wdgPlotContainer)
 
@@ -141,8 +135,7 @@ class SceneEditor(QObject):
         if scene:
             self.scene = scene
             self._new_scene = False
-            index = self.scenes_model.index(self.novel.scenes.index(scene), ScenesTableModel.ColTitle)
-            self.ui.lstScenes.selectionModel().select(index, QItemSelectionModel.Select)
+            self.ui.treeScenes.selectScene(self.scene)
         else:
             self.scene = self.novel.new_scene()
             if len(self.novel.scenes) > 1:
@@ -183,22 +176,6 @@ class SceneEditor(QObject):
         self._character_changed()
 
         self.ui.wdgDriveEditor.setScene(self.scene)
-
-        if self._new_scene:
-            self.ui.btnPrevious.setDisabled(True)
-            self.ui.btnPrevious.setHidden(True)
-            self.ui.btnNext.setDisabled(True)
-            self.ui.btnNext.setHidden(True)
-        else:
-            index = self.novel.scenes.index(scene)
-            if index == 0:
-                self.ui.btnPrevious.setDisabled(True)
-            else:
-                self.ui.btnPrevious.setEnabled(True)
-            if index == len(self.novel.scenes) - 1:
-                self.ui.btnNext.setDisabled(True)
-            else:
-                self.ui.btnNext.setEnabled(True)
 
     def _page_toggled(self):
         if self.ui.btnAttributes.isChecked():
@@ -255,6 +232,7 @@ class SceneEditor(QObject):
         self._characters_model.update()
         self._character_changed()
         self.ui.wdgSceneStructure.updateAgendaCharacter()
+        self.ui.treeScenes.refreshScene(self.scene)
 
     def _update_pov_avatar(self):
         if self.scene.pov:
@@ -263,6 +241,10 @@ class SceneEditor(QObject):
         else:
             self.ui.wdgPov.reset()
             self.ui.wdgPov.btnPov.setToolTip('Select point of view character')
+
+    def _title_edited(self, text: str):
+        self.scene.title = text
+        self.ui.treeScenes.refreshScene(self.scene)
 
     def _character_changed(self):
         self.ui.wdgCharacters.clear()
@@ -299,20 +281,6 @@ class SceneEditor(QObject):
     def _on_close(self):
         self._save_scene()
 
-    def _on_previous_scene(self):
-        row = self.novel.scenes.index(self.scene) - 1
-        self.ui.lstScenes.selectionModel().select(self.scenes_model.index(row, ScenesTableModel.ColTitle),
-                                                  QItemSelectionModel.ClearAndSelect)
-        self._new_scene_selected(self.scenes_model.index(row, 0))
-
-    def _on_next_scene(self):
-        row = self.novel.scenes.index(self.scene) + 1
-        self.ui.lstScenes.selectionModel().select(self.scenes_model.index(row, ScenesTableModel.ColTitle),
-                                                  QItemSelectionModel.ClearAndSelect)
-        self._new_scene_selected(self.scenes_model.index(row, 0))
-
-    def _new_scene_selected(self, index: QModelIndex):
+    def _scene_selected(self, scene: Scene):
         self._save_scene()
-
-        scene = self.scenes_model.data(index, role=ScenesTableModel.SceneRole)
         self._update_view(scene)
