@@ -23,18 +23,20 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
-from PyQt6.QtGui import QColor, QMouseEvent, QCursor
-from PyQt6.QtWidgets import QWidget, QToolButton, QMenu, QTextEdit, QWidgetAction, QApplication, \
+from PyQt6.QtGui import QColor, QMouseEvent, QShowEvent
+from PyQt6.QtWidgets import QWidget, QToolButton, QTextEdit, QApplication, \
     QMainWindow
 from overrides import overrides
-from qthandy import vbox, hbox, pointy, gc, transparent, retain_when_hidden, btn_popup, spacer, sp
+from qthandy import vbox, hbox, pointy, transparent, retain_when_hidden, spacer, sp, decr_icon, ask_confirmation
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, Plot
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton, SecondaryActionPushButton
-from src.main.python.plotlyst.view.widget.labels import PlotValueLabel, SelectionItemLabel, PlotLabel, \
-    ScenePlotValueLabel
+from src.main.python.plotlyst.view.widget.labels import PlotValueLabel, SelectionItemLabel, ScenePlotValueLabel
 
 
 class ScenePlotValueChargeWidget(QWidget):
@@ -60,12 +62,12 @@ class ScenePlotValueChargeWidget(QWidget):
 
         self.posCharge = SecondaryActionToolButton()
         self.posCharge.setIcon(IconRegistry.plus_circle_icon('grey'))
-        self.posCharge.setIconSize(QSize(18, 18))
+        decr_icon(self.posCharge, 4)
         self.posCharge.clicked.connect(lambda: self._changeCharge(1))
         retain_when_hidden(self.posCharge)
         self.negCharge = SecondaryActionToolButton()
         self.negCharge.setIcon(IconRegistry.minus_icon('grey'))
-        self.negCharge.setIconSize(QSize(18, 18))
+        decr_icon(self.negCharge, 4)
         self.negCharge.clicked.connect(lambda: self._changeCharge(-1))
         retain_when_hidden(self.negCharge)
 
@@ -112,8 +114,11 @@ class ScenePlotValueEditor(QWidget):
         super(ScenePlotValueEditor, self).__init__(parent)
         self.plotReference = plotReference
 
+        self.setProperty('relaxed-white-bg', True)
+
         vbox(self)
         self.textComment = QTextEdit(self)
+        self.textComment.setProperty('relaxed-white-bg', True)
         self.textComment.setAcceptRichText(False)
         self.textComment.setFixedHeight(100)
         self.textComment.setPlaceholderText('Describe how this scene is related to the selected plot')
@@ -124,6 +129,10 @@ class ScenePlotValueEditor(QWidget):
         for value in self.plotReference.plot.values:
             wdg = ScenePlotValueChargeWidget(self.plotReference, value)
             self.layout().addWidget(wdg)
+
+    @overrides
+    def showEvent(self, _: QShowEvent) -> None:
+        self.textComment.setFocus()
 
     @overrides
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -155,22 +164,12 @@ class ScenePlotSelector(QWidget):
         self.btnLinkPlot.installEventFilter(
             OpacityEventFilter(parent=self.btnLinkPlot, leaveOpacity=0.4 if simplified else 0.7))
 
-        self.selectorWidget = QWidget()
-        vbox(self.selectorWidget)
-        occupied_plot_ids = [x.plot.id for x in self.scene.plot_values]
-        for plot in self.novel.plots:
-            if plot.id in occupied_plot_ids:
-                continue
-            label = PlotLabel(plot)
-            label.installEventFilter(OpacityEventFilter(parent=label, leaveOpacity=0.7))
-            label.clicked.connect(partial(self._plotSelected, plot))
-            self.selectorWidget.layout().addWidget(label)
-
-        btn_popup(self.btnLinkPlot, self.selectorWidget)
+        self._menu = MenuWidget(self.btnLinkPlot)
+        self._menu.aboutToShow.connect(self._beforeShow)
 
     def setPlot(self, plotValue: ScenePlotReference):
         self.plotValue = plotValue
-        self.label = ScenePlotValueLabel(plotValue)
+        self.label = ScenePlotValueLabel(plotValue, self)
         pointy(self.label)
         self.label.clicked.connect(self._plotValueClicked)
 
@@ -185,23 +184,40 @@ class ScenePlotSelector(QWidget):
         self.setPlot(plotValue)
 
         self.plotSelected.emit()
+        self._plotValueClicked()
 
     def _plotValueClicked(self):
-        menu = QMenu(self.label)
-        action = QWidgetAction(menu)
-        action.setDefaultWidget(ScenePlotValueEditor(self.plotValue))
-        menu.addAction(action)
-        menu.popup(QCursor.pos())
+        menu = MenuWidget(self.label)
+        menu.setStyleSheet(f'''
+        MenuWidget {{
+                background-color: {RELAXED_WHITE_COLOR};
+            }}
+            QFrame {{
+                background-color: {RELAXED_WHITE_COLOR};
+                padding-left: 2px;
+                padding-right: 2px;
+                border-radius: 5px;
+            }}
+        ''')
+        menu.addWidget(ScenePlotValueEditor(self.plotValue))
+        menu.exec()
+
+    def _beforeShow(self):
+        self._menu.clear()
+        occupied_plot_ids = [x.plot.id for x in self.scene.plot_values]
+        self._menu.addSection('Link plotlines to this scene')
+        self._menu.addSeparator()
+        for plot in self.novel.plots:
+            action_ = action(plot.text, IconRegistry.from_name(plot.icon, plot.icon_color),
+                             partial(self._plotSelected, plot))
+            if plot.id in occupied_plot_ids:
+                action_.setDisabled(True)
+            self._menu.addAction(action_)
 
     def _remove(self):
-        if self.parent():
-            anim = qtanim.fade_out(self, duration=150)
-            anim.finished.connect(self.__destroy)
-
-    def __destroy(self):
-        self.scene.plot_values.remove(self.plotValue)
-        self.parent().layout().removeWidget(self)
-        gc(self)
+        if ask_confirmation(f"Remove scene association for plot '{self.plotValue.plot.text}'?"):
+            self.scene.plot_values.remove(self.plotValue)
+            fade_out_and_gc(self.parent(), self)
 
 
 if __name__ == '__main__':
@@ -212,7 +228,7 @@ if __name__ == '__main__':
             self.resize(500, 500)
 
             novel = Novel('test')
-            novel.plots.append(Plot('Plot 1'))
+            novel.plots.append(Plot('Plot 1', icon='mdi.ray-start-arrow', icon_color='darkBlue'))
             scene = Scene('Scene 1')
             novel.scenes.append(scene)
             self.widget = ScenePlotSelector(novel, scene, parent=self)
