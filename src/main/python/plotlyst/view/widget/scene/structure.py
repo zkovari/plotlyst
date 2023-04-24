@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import sys
 from abc import abstractmethod
 from dataclasses import dataclass
 from functools import partial
@@ -27,7 +26,7 @@ import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QRectF, QEvent, QPoint, QMimeData
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, \
     QPainterPath, QPaintEvent, QAction, QResizeEvent, QEnterEvent, QDragEnterEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QMainWindow, QApplication, QTextEdit
+from PyQt6.QtWidgets import QWidget, QToolButton, QPushButton, QSizePolicy, QTextEdit
 from overrides import overrides
 from qtanim import fade_in
 from qthandy import pointy, gc, translucent, bold, flow, clear_layout, decr_font, \
@@ -1237,29 +1236,3 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _emotionChanged(self):
         self.scene.agendas[0].ending_emotion = self._emotionEnd.value()
-
-
-if __name__ == '__main__':
-    class MainWindow(QMainWindow):
-        def __init__(self, parent=None):
-            super(MainWindow, self).__init__(parent)
-
-            self.resize(500, 500)
-
-            self.widget = SceneStructureWidget(self)
-            self.setCentralWidget(self.widget)
-
-            novel = Novel('Novel')
-            agenda = SceneStructureAgenda()
-            agenda.items.append(SceneStructureItem(SceneStructureItemType.HOOK))
-            agenda.items.append(SceneStructureItem(SceneStructureItemType.ACTION))
-            agenda.items.append(SceneStructureItem(SceneStructureItemType.OUTCOME))
-            scene = Scene('Scene', agendas=[agenda])
-            self.widget.setScene(novel, scene)
-
-
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-
-    app.exec()
