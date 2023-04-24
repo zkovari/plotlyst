@@ -245,6 +245,7 @@ class CharacterPlanBarWidget(QWidget):
         self._character = character
         self._plan = plan
         vbox(self)
+        margins(self, left=5, right=5)
         self._firstShow = True
 
         self._wdgHeader = QWidget()
@@ -322,7 +323,6 @@ class CharacterPlanBarWidget(QWidget):
             if i == 0:
                 y = pos.y()
                 path.moveTo(pos)
-                painter.drawLine(pos.x(), y - 10, pos.x(), y + 10)
             else:
                 if pos.y() > y:
                     if forward:
@@ -437,7 +437,6 @@ class CharacterPlansWidget(QWidget):
         self.layout().insertWidget(self.layout().count() - 1, bar)
 
     def _removePlan(self, wdg: CharacterPlanBarWidget):
-        print('remove')
         self._character.plans.remove(wdg.plan())
         fade_out_and_gc(self, wdg)
 

@@ -148,7 +148,7 @@ class CharacterEditor:
         self.ui.lineName.setText(self.character.name)
 
         self._character_goals = CharacterPlansWidget(self.novel, self.character)
-        self.ui.tabGoals.layout().addWidget(self._character_goals)
+        self.ui.scrollAreaPlans.layout().addWidget(self._character_goals)
         margins(self.ui.tabGoals.layout(), left=5)
 
         self.wdgTopicsEditor = CharacterTopicsEditor()
