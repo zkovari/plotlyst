@@ -25,6 +25,8 @@ APP_STYLESHEET = '''
 
 QToolTip {
     border: 0px;
+    font-size: 14pt;
+    padding: 5px;
 }
 
 QPushButton[base=true] {
