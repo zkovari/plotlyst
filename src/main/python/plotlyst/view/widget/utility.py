@@ -17,17 +17,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any, Optional, Tuple
+from functools import partial
+from typing import Any, Optional, Tuple, Dict
 
 from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QBrush, QResizeEvent
-from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup, QDialog
+from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup, QDialog, QLabel, QPushButton
 from overrides import overrides
-from qthandy import flow, transparent, pointy, hbox
-
+from qthandy import flow, transparent, pointy, hbox, grid, vspacer, italic, underline, decr_font, incr_font, bold, \
+    spacer, line, decr_icon, ask_confirmation
+from qthandy.filter import OpacityEventFilter
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
 from src.main.python.plotlyst.model.common import proxy
+from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDescriptor
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
+from src.main.python.plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget._icons import icons_registry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 
@@ -283,3 +290,82 @@ class IconSelectorButton(SecondaryActionToolButton):
         if result:
             self.selectIcon(result[0], result[1].name())
             self.iconSelected.emit(result[0], result[1])
+
+
+class _ResourceControllers:
+    def __init__(self, resourceType: ResourceType):
+        super(_ResourceControllers, self).__init__()
+        self._resourceType = resourceType
+        self._resource: ResourceDescriptor = resource_manager.resource(self._resourceType)
+
+        self.label = QLabel(self._resource.human_name)
+        incr_font(self.label)
+        bold(self.label)
+        self.description = QLabel(self._resource.description)
+        decr_font(self.description)
+        self.description.setStyleSheet('color: grey;')
+        self.btnStatus = QToolButton()
+        italic(self.btnStatus)
+        transparent(self.btnStatus)
+
+        self.btnRemove = QPushButton()
+        self.btnRemove.setProperty('base', True)
+        self.btnRemove.setProperty('deconstructive', True)
+        decr_icon(self.btnRemove, 2)
+        pointy(self.btnRemove)
+        self.btnRemove.setIcon(IconRegistry.trash_can_icon('white'))
+        self.btnRemove.installEventFilter(OpacityEventFilter(self.btnRemove, leaveOpacity=0.7))
+        self.btnRemove.installEventFilter(ButtonPressResizeEventFilter(self.btnRemove))
+
+        if resource_manager.has_resource(self._resourceType):
+            self.btnStatus.setIcon(IconRegistry.ok_icon(PLOTLYST_MAIN_COMPLEMENTARY_COLOR))
+        else:
+            self.btnStatus.setIcon(IconRegistry.from_name('fa5s.minus'))
+
+    def resource(self) -> ResourceDescriptor:
+        return self._resource
+
+
+class ResourceManagerWidget(QWidget):
+    def __init__(self, parent=None):
+        super(ResourceManagerWidget, self).__init__(parent)
+        self._gridLayout = grid(self)
+
+        self._resources: Dict[ResourceType, _ResourceControllers] = {}
+
+        header = QLabel('Resource')
+        underline(header)
+        self._gridLayout.addWidget(header, 0, 0)
+        header = QLabel('Status')
+        underline(header)
+        self._gridLayout.addWidget(header, 0, 1)
+        self._gridLayout.addWidget(line(), 1, 0, 1, 3)
+
+        for i, resourceType in enumerate([ResourceType.JRE_8, ResourceType.NLTK_AVERAGED_PERCEPTRON_TAGGER,
+                                          ResourceType.NLTK_PUNKT_TOKENIZER]):
+            contr = _ResourceControllers(resourceType)
+            self._resources[resourceType] = contr
+            self._gridLayout.addWidget(group(contr.label, contr.description, vertical=False, spacing=2), i + 2, 0)
+            self._gridLayout.addWidget(contr.btnStatus, i + 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
+            self._gridLayout.addWidget(contr.btnRemove, i + 2, 2, alignment=Qt.AlignmentFlag.AlignCenter)
+            self._gridLayout.addWidget(spacer(), i + 2, 3)
+
+            contr.btnRemove.clicked.connect(partial(self._remove, contr))
+
+    def _remove(self, contr: _ResourceControllers):
+        if ask_confirmation(
+                f"Remove downloaded resource '{contr.resource().human_name}'? Some functionality might stop working."):
+            print('remove')
+
+
+class ResourceManagerDialog(QDialog, Ui_ResourceManagerDialog):
+    def __init__(self, parent=None):
+        super(ResourceManagerDialog, self).__init__(parent)
+        self.setupUi(self)
+
+        wdg = ResourceManagerWidget()
+        self.wdgCentral.layout().addWidget(wdg)
+        self.wdgCentral.layout().addWidget(vspacer())
+
+    def display(self):
+        self.exec()

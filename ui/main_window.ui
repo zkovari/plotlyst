@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>754</width>
-    <height>577</height>
+    <height>597</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -870,6 +870,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionCharacterTemplateEditor"/>
+    <addaction name="actionResourceManager"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -989,6 +990,11 @@
   <action name="actionChangeDir">
    <property name="text">
     <string>Change project directory...</string>
+   </property>
+  </action>
+  <action name="actionResourceManager">
+   <property name="text">
+    <string>Resource manager</string>
    </property>
   </action>
  </widget>

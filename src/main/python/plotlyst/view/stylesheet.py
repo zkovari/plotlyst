@@ -315,6 +315,10 @@ QSlider::handle:horizontal {
     background-color: #f8f9fa;
 }
 
+QDialog[relaxed-white-bg] {
+    background-color: #f8f9fa;
+}
+
 QTextBrowser {
     background-color: #f8f9fa;
 }

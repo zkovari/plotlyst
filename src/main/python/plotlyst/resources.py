@@ -28,7 +28,6 @@ from atomicwrites import atomic_write
 from dataclasses_json import Undefined, dataclass_json
 from fbs_runtime.application_context.PyQt6 import ApplicationContext
 from overrides import overrides
-
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -87,6 +86,7 @@ class ResourceDescriptor:
     web_url: str
     extension: str = 'zip'
     version: str = ''
+    human_name: str = ''
     description: str = ''
 
     def filename(self) -> str:
@@ -94,9 +94,12 @@ class ResourceDescriptor:
 
 
 _punkt_nltk_resource = ResourceDescriptor('punkt', 'tokenizers',
-                                          'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip')
+                                          'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip',
+                                          human_name='Punctuation tokenizer',
+                                          description='Necessary for a precise sentence number calculation')
 __avg_tagger_url = 'https://github.com/nltk/nltk_data/raw/gh-pages/packages/taggers/averaged_perceptron_tagger.zip'
-_avg_tagger_nltk_resource = ResourceDescriptor('averaged_perceptron_tagger', 'taggers', __avg_tagger_url)
+_avg_tagger_nltk_resource = ResourceDescriptor('averaged_perceptron_tagger', 'taggers', __avg_tagger_url,
+                                               human_name='Tagger', description='Necessary for adverb highlight')
 
 _nltk_resources: Dict[ResourceType, ResourceDescriptor] = {
     ResourceType.NLTK_PUNKT_TOKENIZER: _punkt_nltk_resource,
@@ -179,7 +182,8 @@ class ResourceManager(EventListener):
             else:
                 raise IOError('Not supported platform for JRE')
             url = f'https://github.com/adoptium/temurin8-binaries/releases/download/{version}/{distr}'
-            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz', version=version)
+            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz', version=version, human_name='Java',
+                                      description='Necessary for local grammar checking')
 
     def nltk_resource_types(self) -> List[ResourceType]:
         return [x for x in ResourceType if x.name.startswith('NLTK')]
