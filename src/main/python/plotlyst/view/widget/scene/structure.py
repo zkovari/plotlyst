@@ -1101,10 +1101,14 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
         self.wdgAgendaCharacter.setDefaultText('Select character')
         self.wdgAgendaCharacter.characterSelected.connect(self._agendaCharacterSelected)
-        self.unsetCharacterSlot = None
+        self._disabledAgendaEventFilter = None
 
     def setUnsetCharacterSlot(self, unsetCharacterSlot):
-        self.unsetCharacterSlot = unsetCharacterSlot
+        if self._disabledAgendaEventFilter:
+            self.wdgAgendaCharacter.btnLinkCharacter.removeEventFilter(self._disabledAgendaEventFilter)
+
+        self._disabledAgendaEventFilter = DisabledClickEventFilter(self, unsetCharacterSlot)
+        self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(self._disabledAgendaEventFilter)
 
     def setScene(self, novel: Novel, scene: Scene):
         self.novel = novel
@@ -1144,8 +1148,6 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
             self._emotionEnd.setVisible(True)
         else:
             self.wdgAgendaCharacter.reset()
-            self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(
-                DisabledClickEventFilter(self, self.unsetCharacterSlot))
 
             self.wdgAgendaCharacter.setDisabled(True)
             self.wdgAgendaCharacter.setToolTip('Select POV character first')
