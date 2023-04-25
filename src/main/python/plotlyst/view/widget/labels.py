@@ -82,6 +82,7 @@ class CharacterLabel(Label):
         self.btnAvatar.setStyleSheet('border: 0px;')
         self.btnAvatar.setIcon(QIcon(avatars.avatar(self.character)))
         self.btnAvatar.setIconSize(QSize(24, 24))
+        self.btnAvatar.clicked.connect(self.clicked.emit)
         self.layout().addWidget(self.btnAvatar)
         self.layout().addWidget(QLabel(truncate_string(character.name)))
 
