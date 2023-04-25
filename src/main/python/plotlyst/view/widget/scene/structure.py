@@ -1143,6 +1143,7 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
                 self.wdgAgendaCharacter.setCharacter(char)
             self._emotionEnd.setVisible(True)
         else:
+            self.wdgAgendaCharacter.reset()
             self.wdgAgendaCharacter.btnLinkCharacter.installEventFilter(
                 DisabledClickEventFilter(self, self.unsetCharacterSlot))
 

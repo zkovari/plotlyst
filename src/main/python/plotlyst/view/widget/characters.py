@@ -613,20 +613,28 @@ class CharacterLinkWidget(QWidget):
         if self.character and character.id == self.character.id:
             return
         self.character = character
-        if self.label is not None:
-            self.layout().removeWidget(self.label)
-            gc(self.label)
-            self.label = None
+
+        self._clearLabel()
         self.label = CharacterLabel(self.character)
         self.label.setToolTip(f'<html>Agenda character: <b>{character.name}</b>')
         self.label.installEventFilter(OpacityEventFilter(self.label, enterOpacity=0.7, leaveOpacity=1.0))
-        self.label.setCursor(Qt.CursorShape.PointingHandCursor)
+        pointy(self.label)
         self.label.clicked.connect(self.btnLinkCharacter.showMenu)
         self.layout().addWidget(self.label)
         self.btnLinkCharacter.setHidden(True)
 
+    def reset(self):
+        self._clearLabel()
+        self.btnLinkCharacter.setVisible(True)
+
     def setAvailableCharacters(self, characters: List[Character]):
         self.selectorWidget.setCharacters(characters)
+
+    def _clearLabel(self):
+        if self.label is not None:
+            self.layout().removeWidget(self.label)
+            gc(self.label)
+            self.label = None
 
     def _characterClicked(self, character: Character):
         self.btnLinkCharacter.menu().hide()
