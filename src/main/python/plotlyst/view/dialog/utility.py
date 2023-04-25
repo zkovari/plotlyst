@@ -33,7 +33,6 @@ from PyQt6.QtWidgets import QDialog, QToolButton, QPushButton, QApplication
 from overrides import overrides
 from qthandy import hbox, FlowLayout, bold, underline
 from qthandy.filter import InstantTooltipEventFilter
-
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.view.common import rounded_pixmap
 from src.main.python.plotlyst.view.generated.artbreeder_picker_dialog_ui import Ui_ArtbreederPickerDialog
@@ -84,7 +83,8 @@ class _AvatarButton(QToolButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._size = 128
         self.setIconSize(QSize(self._size, self._size))
-        self.setIcon(QIcon(pixmap.scaled(self._size, self._size, Qt.KeepAspectRatio, Qt.SmoothTransformation)))
+        self.setIcon(QIcon(pixmap.scaled(self._size, self._size, Qt.AspectRatioMode.KeepAspectRatio,
+                                         Qt.TransformationMode.SmoothTransformation)))
 
 
 class ArtbreederDialog(QDialog, Ui_ArtbreederPickerDialog):
@@ -201,7 +201,8 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
             h = pixmap.height()
 
         self.frame.setFixedSize(min(w, h), min(w, h))
-        self.scaled = pixmap.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.scaled = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatio,
+                                    Qt.TransformationMode.SmoothTransformation)
         self.lblImage.setPixmap(self.scaled)
         self._updatePreview()
         result = self.exec()
@@ -223,7 +224,8 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         painter.end()
 
         self.lblPreview.setPixmap(
-            rounded_pixmap(self.cropped.scaled(128, 128, Qt.KeepAspectRatio, Qt.SmoothTransformation)))
+            rounded_pixmap(self.cropped.scaled(128, 128, Qt.AspectRatioMode.KeepAspectRatio,
+                                               Qt.TransformationMode.SmoothTransformation)))
 
     class CropFrame(QPushButton):
         cropped = pyqtSignal()
@@ -240,7 +242,7 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
         @overrides
         def enterEvent(self, event: QEvent) -> None:
             if not QApplication.overrideCursor():
-                QApplication.setOverrideCursor(Qt.SizeAllCursor)
+                QApplication.setOverrideCursor(Qt.CursorShape.SizeAllCursor)
 
         @overrides
         def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -269,19 +271,19 @@ class ImageCropDialog(QDialog, Ui_ImageCropDialog):
                 self._resizeCorner = None
                 if event.pos().x() < self.cornerRange and event.pos().y() < self.cornerRange:
                     self._resizeCorner = Corner.TopLeft
-                    QApplication.changeOverrideCursor(Qt.SizeFDiagCursor)
+                    QApplication.changeOverrideCursor(Qt.CursorShape.SizeFDiagCursor)
                 elif event.pos().x() > self.width() - self.cornerRange \
                         and event.pos().y() > self.height() - self.cornerRange:
                     self._resizeCorner = Corner.BottomRight
-                    QApplication.changeOverrideCursor(Qt.SizeFDiagCursor)
+                    QApplication.changeOverrideCursor(Qt.CursorShape.SizeFDiagCursor)
                 elif event.pos().x() > self.width() - self.cornerRange and event.pos().y() < self.cornerRange:
                     self._resizeCorner = Corner.TopRight
-                    QApplication.changeOverrideCursor(Qt.SizeBDiagCursor)
+                    QApplication.changeOverrideCursor(Qt.CursorShape.SizeBDiagCursor)
                 elif event.pos().x() < self.cornerRange and event.pos().y() > self.height() - self.cornerRange:
                     self._resizeCorner = Corner.BottomLeft
-                    QApplication.changeOverrideCursor(Qt.SizeBDiagCursor)
+                    QApplication.changeOverrideCursor(Qt.CursorShape.SizeBDiagCursor)
                 else:
-                    QApplication.changeOverrideCursor(Qt.SizeAllCursor)
+                    QApplication.changeOverrideCursor(Qt.CursorShape.SizeAllCursor)
 
         def _xMovementAllowed(self, diff: int) -> bool:
             return 0 < self.geometry().x() + diff \
