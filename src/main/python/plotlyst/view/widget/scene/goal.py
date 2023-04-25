@@ -25,7 +25,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QMouseEvent, QCursor
 from PyQt6.QtWidgets import QWidget, QPushButton, QMenu, QWidgetAction
 from overrides import overrides
-from qthandy import hbox, pointy, gc
+from qthandy import hbox, pointy, gc, bold
 from qthandy.filter import OpacityEventFilter
 from qtmenu import ScrollableMenuWidget
 
@@ -42,6 +42,7 @@ class GoalStakesEditor(QWidget, Ui_GoalReferenceStakesEditor):
         self.setupUi(self)
         self.goalRef = goalRef
         self.refresh()
+        bold(self.lblTitle)
 
         self.sliderPhysiological.valueChanged.connect(partial(self._stakeChanged, Stake.PHYSIOLOGICAL))
         self.sliderSecurity.valueChanged.connect(partial(self._stakeChanged, Stake.SAFETY))

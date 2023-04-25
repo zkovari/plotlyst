@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>306</width>
-    <height>165</height>
+    <height>174</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,16 +30,14 @@
     <number>2</number>
    </property>
    <item alignment="Qt::AlignHCenter">
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="lblTitle">
      <property name="font">
       <font>
-       <weight>75</weight>
-       <bold>true</bold>
        <underline>false</underline>
       </font>
      </property>
      <property name="text">
-      <string>Stakes</string>
+      <string>Motivation</string>
      </property>
     </widget>
    </item>
@@ -478,7 +476,6 @@ QSlider::sub-page:horizontal {
        </property>
        <property name="font">
         <font>
-         <weight>50</weight>
          <bold>false</bold>
         </font>
        </property>
