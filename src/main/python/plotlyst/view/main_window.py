@@ -91,7 +91,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif app_env.is_linux():
             DEFAULT_FONT_FAMILIES.insert(0, 'Noto Sans Mono')
 
-        for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze]:
+        for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze, self.lblManage]:
             lbl.setStyleSheet(f'color: {PLOTLYST_MAIN_COLOR};')
             font: QFont = lbl.font()
             font.setPointSize(font.pointSize() - 2)
