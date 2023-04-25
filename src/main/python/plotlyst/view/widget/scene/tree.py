@@ -198,7 +198,8 @@ class ScenesTreeView(TreeView, EventListener):
         self._centralWidget.layout().addWidget(self._spacer)
 
     def refreshScene(self, scene: Scene):
-        self._scenes[scene].refresh()
+        if scene in self._scenes.keys():
+            self._scenes[scene].refresh()
 
     def addChapter(self):
         if self._novel.chapters:
