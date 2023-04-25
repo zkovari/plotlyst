@@ -23,8 +23,9 @@ from typing import Optional
 import emoji
 import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, Qt
-from PyQt6.QtWidgets import QWidget, QWidgetAction, QTableView, QMenu
-from qthandy import flow, clear_layout
+from PyQt6.QtWidgets import QWidget, QTableView, QMenu
+from qthandy import flow, clear_layout, underline
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
@@ -34,7 +35,7 @@ from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
@@ -65,7 +66,7 @@ class SceneEditor(QObject):
         self.ui.btnDrive.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
 
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
-        self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
+        underline(self.ui.btnStageCharacterLabel)
 
         self.ui.lineTitle.textEdited.connect(self._title_edited)
 
@@ -106,9 +107,11 @@ class SceneEditor(QObject):
         self.tblCharacters.setModel(self._characters_model)
         self.tblCharacters.clicked.connect(self._characters_model.toggleSelection)
 
-        action = QWidgetAction(self.ui.btnEditCharacters)
-        action.setDefaultWidget(self.tblCharacters)
-        self.ui.btnEditCharacters.addAction(action)
+        self.ui.btnEditCharacters.setIcon(IconRegistry.plus_edit_icon())
+        menu = MenuWidget(self.ui.btnEditCharacters)
+        menu.addWidget(self.tblCharacters)
+        self.ui.btnEditCharacters.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditCharacters))
+        self.ui.btnStageCharacterLabel.clicked.connect(lambda: menu.exec())
 
         self.tag_selector = SceneTagSelector(self.novel, self.scene)
         self.ui.wdgTags.layout().addWidget(self.tag_selector)
