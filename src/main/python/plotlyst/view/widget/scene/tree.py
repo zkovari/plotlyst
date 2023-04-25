@@ -56,6 +56,7 @@ class SceneWidget(ContainerNode):
         self._scenePovIcon = Icon(self)
         self.setPlusButtonEnabled(False)
         self.setMenuEnabled(not self._readOnly)
+        self._scenePovIcon.installEventFilter(self)
 
         self._wdgTitle.layout().insertWidget(0, self._scenePovIcon)
 

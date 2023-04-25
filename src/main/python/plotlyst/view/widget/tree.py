@@ -161,26 +161,28 @@ class ContainerNode(BaseTreeWidget):
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._container)
 
+        self._icon.installEventFilter(self)
         self._wdgTitle.installEventFilter(self)
 
     @overrides
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.Enter:
-            if self._menuEnabled and self.isEnabled():
-                self._btnMenu.setVisible(True)
-            if self._plusEnabled and self.isEnabled():
-                self._btnAdd.setVisible(True)
-            if not self._selected and self.isEnabled():
-                self._wdgTitle.setStyleSheet('#wdgTitle {background-color: #E9E7E7;}')
-        elif event.type() == QEvent.Type.Leave:
-            if (self._menuEnabled and self._btnMenu.menu().isVisible()) or \
-                    (self._plusEnabled and self._btnAdd.menu() and self._btnAdd.menu().isVisible()):
-                return super(ContainerNode, self).eventFilter(watched, event)
-            self._btnMenu.setHidden(True)
-            self._btnAdd.setHidden(True)
-            if not self._selected:
-                self._wdgTitle.setStyleSheet('')
-        elif event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
+        if watched is self._wdgTitle:
+            if event.type() == QEvent.Type.Enter:
+                if self._menuEnabled and self.isEnabled():
+                    self._btnMenu.setVisible(True)
+                if self._plusEnabled and self.isEnabled():
+                    self._btnAdd.setVisible(True)
+                if not self._selected and self.isEnabled():
+                    self._wdgTitle.setStyleSheet('#wdgTitle {background-color: #E9E7E7;}')
+            elif event.type() == QEvent.Type.Leave:
+                if (self._menuEnabled and self._btnMenu.menu().isVisible()) or \
+                        (self._plusEnabled and self._btnAdd.menu() and self._btnAdd.menu().isVisible()):
+                    return super(ContainerNode, self).eventFilter(watched, event)
+                self._btnMenu.setHidden(True)
+                self._btnAdd.setHidden(True)
+                if not self._selected:
+                    self._wdgTitle.setStyleSheet('')
+        if event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
             if not self._selected:
                 self.select()
                 self.selectionChanged.emit(self._selected)
