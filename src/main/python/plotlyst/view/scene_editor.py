@@ -227,7 +227,7 @@ class SceneEditor(QObject):
     def _on_pov_changed(self, pov: Character):
         self.scene.pov = pov
 
-        self.scene.agendas[0].character_id = self.scene.pov.id
+        self.scene.agendas[0].set_character(self.scene.pov)
         self.scene.agendas[0].conflict_references.clear()
 
         self._update_pov_avatar()

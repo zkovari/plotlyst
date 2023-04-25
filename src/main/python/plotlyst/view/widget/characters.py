@@ -35,7 +35,7 @@ from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold
 from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color, \
     CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
@@ -601,10 +601,7 @@ class CharacterLinkWidget(QWidget):
                 }
             ''')
 
-        self.selectorWidget = CharacterSelectorButtons(self.btnLinkCharacter)
-        self.selectorWidget.setMinimumWidth(100)
-        self.selectorWidget.characterClicked.connect(self._characterClicked)
-        btn_popup(self.btnLinkCharacter, self.selectorWidget)
+        self._menu = ScrollableMenuWidget(self.btnLinkCharacter)
 
     def setDefaultText(self, value: str):
         self.btnLinkCharacter.setText(value)
@@ -619,7 +616,7 @@ class CharacterLinkWidget(QWidget):
         self.label.setToolTip(f'<html>Agenda character: <b>{character.name}</b>')
         self.label.installEventFilter(OpacityEventFilter(self.label, enterOpacity=0.7, leaveOpacity=1.0))
         pointy(self.label)
-        self.label.clicked.connect(self.btnLinkCharacter.showMenu)
+        self.label.clicked.connect(lambda: self._menu.exec())
         self.layout().addWidget(self.label)
         self.btnLinkCharacter.setHidden(True)
 
@@ -628,7 +625,10 @@ class CharacterLinkWidget(QWidget):
         self.btnLinkCharacter.setVisible(True)
 
     def setAvailableCharacters(self, characters: List[Character]):
-        self.selectorWidget.setCharacters(characters)
+        self._menu.clear()
+        for character in characters:
+            self._menu.addAction(
+                action(character.name, avatars.avatar(character), partial(self._characterClicked, character)))
 
     def _clearLabel(self):
         if self.label is not None:
