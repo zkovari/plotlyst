@@ -110,15 +110,10 @@ class SceneGoalSelector(QWidget):
             ''')
 
         self.btnLinkGoal.installEventFilter(OpacityEventFilter(parent=self.btnLinkGoal))
-        # scrollArea = QScrollArea(self)
-        # scrollArea.setWidgetResizable(True)
-        # scrollArea.setMinimumSize(500, 300)
         menu = ScrollableMenuWidget(self.btnLinkGoal)
         self._goalSelector = CharacterPlansSelectorWidget(self.novel, self.scene.agendas[0].character(self.novel))
         menu.addWidget(self._goalSelector)
-        # scrollArea.setBackgroundRole(QPalette.ColorRole.Light)
-        # scrollArea.setWidget(self._goalSelector)
-        # btn_popup(self.btnLinkGoal, scrollArea)
+        self._goalSelector.setMinimumWidth(600)
 
         self._goalSelector.goalSelected.connect(self._goalSelected)
 
