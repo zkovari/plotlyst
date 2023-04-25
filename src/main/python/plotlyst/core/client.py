@@ -39,8 +39,8 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     Conflict, BackstoryEvent, Comment, Document, default_documents, DocumentType, Causality, \
     Plot, ScenePlotReference, SceneType, SceneStructureAgenda, \
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
-    default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterGoal, \
-    CharacterPreferences, TagReference, ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
+    default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
+    ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
     default_big_five_values, CharacterPlan
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
 from src.main.python.plotlyst.env import app_env
@@ -126,7 +126,6 @@ class CharacterInfo:
     template_values: List[TemplateValue] = field(default_factory=list)
     disabled_template_headers: Dict[str, bool] = field(default_factory=dict)
     backstory: List[BackstoryEvent] = field(default_factory=list)
-    goals: List[CharacterGoal] = field(default_factory=list)
     plans: List[CharacterPlan] = field(default_factory=list)
     document: Optional[Document] = None
     journals: List[Document] = field(default_factory=list)
@@ -445,7 +444,7 @@ class JsonClient:
                                       occupation=info.occupation,
                                       template_values=info.template_values,
                                       disabled_template_headers=info.disabled_template_headers,
-                                      backstory=info.backstory, goals=info.goals, plans=info.plans,
+                                      backstory=info.backstory, plans=info.plans,
                                       document=info.document,
                                       journals=info.journals, prefs=info.prefs, topics=info.topics,
                                       big_five=info.big_five)
@@ -617,7 +616,7 @@ class JsonClient:
                                   template_values=char.template_values,
                                   disabled_template_headers=char.disabled_template_headers,
                                   avatar_id=avatar_id,
-                                  backstory=char.backstory, goals=char.goals, plans=char.plans, document=char.document,
+                                  backstory=char.backstory, plans=char.plans, document=char.document,
                                   journals=char.journals, prefs=char.prefs, topics=char.topics, big_five=char.big_five)
         self.__persist_info(self.characters_dir(), char_info)
 

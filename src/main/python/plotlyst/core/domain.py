@@ -273,7 +273,6 @@ class Character:
     template_values: List[TemplateValue] = field(default_factory=list)
     disabled_template_headers: Dict[str, bool] = field(default_factory=dict)
     backstory: List[BackstoryEvent] = field(default_factory=list)
-    goals: List[CharacterGoal] = field(default_factory=list)
     plans: List[CharacterPlan] = field(default_factory=list)
     document: Optional['Document'] = None
     journals: List['Document'] = field(default_factory=list)
@@ -315,13 +314,13 @@ class Character:
 
     def flatten_goals(self) -> List[CharacterGoal]:
         all_goals = []
-        self.__traverse_goals(all_goals, self.goals)
-        return all_goals
+        for plan in self.plans:
+            for goal in plan.goals:
+                all_goals.append(goal)
+                for subgoal in goal.children:
+                    all_goals.append(subgoal)
 
-    def __traverse_goals(self, all_goals: List[CharacterGoal], current_goals: List[CharacterGoal]):
-        for goal in current_goals:
-            all_goals.append(goal)
-            self.__traverse_goals(all_goals, goal.children)
+        return all_goals
 
     @overrides
     def __hash__(self):

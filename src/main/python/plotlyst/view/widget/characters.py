@@ -28,21 +28,20 @@ import qtanim
 from PyQt6 import QtCore
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal, QSize, QObject, QEvent, QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QIcon, QPaintEvent, QPainter, QResizeEvent, QBrush, QColor, QImageReader, QImage, QPixmap, \
-    QPalette, QMouseEvent, QCursor, QAction, QShowEvent
+    QMouseEvent, QCursor, QAction, QShowEvent
 from PyQt6.QtWidgets import QWidget, QToolButton, QButtonGroup, QFrame, QMenu, QSizePolicy, QLabel, QPushButton, \
-    QHeaderView, QFileDialog, QMessageBox, QScrollArea, QGridLayout, QWidgetAction
+    QHeaderView, QFileDialog, QMessageBox, QGridLayout, QWidgetAction
 from overrides import overrides
 from qthandy import vspacer, ask_confirmation, transparent, gc, line, btn_popup, incr_font, \
     spacer, clear_layout, vbox, hbox, flow, translucent, margins, bold
-from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, VisibilityToggleEventFilter, \
-    OpacityEventFilter
+from qthandy.filter import InstantTooltipEventFilter, DisabledClickEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, NEUTRAL_EMOTION_COLOR, emotion_color, \
     CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, Conflict, ConflictType, BackstoryEvent, \
     VERY_HAPPY, HAPPY, UNHAPPY, VERY_UNHAPPY, Scene, NEUTRAL, SceneStructureAgenda, ConflictReference, \
-    CharacterGoal, Goal, GoalReference, Stake, Topic, TemplateValue
+    Topic, TemplateValue
 from src.main.python.plotlyst.core.template import secondary_role, guide_role, love_interest_role, sidekick_role, \
     contagonist_role, confidant_role, foil_role, supporter_role, adversary_role, antagonist_role, henchmen_role, \
     tertiary_role, SelectionItem, Role, TemplateFieldType, TemplateField, protagonist_role, RoleImportance, \
@@ -58,25 +57,22 @@ from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, \
-    hmax, link_buttons_to_pages, pointy, action
+    link_buttons_to_pages, pointy, action
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
 from src.main.python.plotlyst.view.generated.character_avatar_ui import Ui_CharacterAvatar
 from src.main.python.plotlyst.view.generated.character_backstory_card_ui import Ui_CharacterBackstoryCard
 from src.main.python.plotlyst.view.generated.character_conflict_widget_ui import Ui_CharacterConflictWidget
-from src.main.python.plotlyst.view.generated.character_goal_widget_ui import Ui_CharacterGoalWidget
 from src.main.python.plotlyst.view.generated.character_role_selector_ui import Ui_CharacterRoleSelector
 from src.main.python.plotlyst.view.generated.character_topic_editor_ui import Ui_CharacterTopicEditor
 from src.main.python.plotlyst.view.generated.characters_progress_widget_ui import Ui_CharactersProgressWidget
 from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import Ui_ConflictReferenceEditor
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
-from src.main.python.plotlyst.view.generated.scene_goal_stakes_ui import Ui_GoalReferenceStakesEditor
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
 from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
 from src.main.python.plotlyst.view.widget.display import IconText, Icon
-from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
-from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel, CharacterGoalLabel
+from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel
 from src.main.python.plotlyst.view.widget.progress import CircularProgressBar, ProgressTooltipMode, \
     CharacterRoleProgressChart
 from src.main.python.plotlyst.view.widget.topic import TopicsEditor
@@ -504,7 +500,7 @@ class CharacterConflictSelector(QWidget):
     def _conflictSelected(self):
         new_conflict = self.scene.agendas[0].conflicts(self.novel)[-1]
         new_conflict_ref = self.scene.agendas[0].conflict_references[-1]
-        self.btnLinkConflict.menu().hide()
+        # self.btnLinkConflict.menu().hide()
         self.setConflict(new_conflict, new_conflict_ref)
 
         self.conflictSelected.emit()
@@ -523,127 +519,6 @@ class CharacterConflictSelector(QWidget):
 
     def __destroy(self):
         self.scene.agendas[0].remove_conflict(self.conflict)
-        self.parent().layout().removeWidget(self)
-        gc(self)
-
-
-class GoalStakesEditor(QWidget, Ui_GoalReferenceStakesEditor):
-    def __init__(self, goalRef: GoalReference, parent=None):
-        super(GoalStakesEditor, self).__init__(parent)
-        self.setupUi(self)
-        self.goalRef = goalRef
-        self.refresh()
-
-        self.sliderPhysiological.valueChanged.connect(partial(self._stakeChanged, Stake.PHYSIOLOGICAL))
-        self.sliderSecurity.valueChanged.connect(partial(self._stakeChanged, Stake.SAFETY))
-        self.sliderBelonging.valueChanged.connect(partial(self._stakeChanged, Stake.BELONGING))
-        self.sliderEsteem.valueChanged.connect(partial(self._stakeChanged, Stake.ESTEEM))
-        self.sliderActualization.valueChanged.connect(partial(self._stakeChanged, Stake.SELF_ACTUALIZATION))
-        self.sliderTranscendence.valueChanged.connect(partial(self._stakeChanged, Stake.SELF_TRANSCENDENCE))
-
-    @overrides
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        pass
-
-    def refresh(self):
-        for k, v in self.goalRef.stakes.items():
-            if k == Stake.PHYSIOLOGICAL:
-                self.sliderPhysiological.setValue(v)
-            elif k == Stake.SAFETY:
-                self.sliderSecurity.setValue(v)
-            elif k == Stake.BELONGING:
-                self.sliderBelonging.setValue(v)
-            elif k == Stake.ESTEEM:
-                self.sliderEsteem.setValue(v)
-            elif k == Stake.SELF_ACTUALIZATION:
-                self.sliderActualization.setValue(v)
-            elif k == Stake.SELF_TRANSCENDENCE:
-                self.sliderTranscendence.setValue(v)
-
-    def _stakeChanged(self, stake: int, value: int):
-        self.goalRef.stakes[stake] = value
-
-
-class CharacterGoalSelector(QWidget):
-    goalSelected = pyqtSignal()
-
-    def __init__(self, novel: Novel, scene: Scene, simplified: bool = False, parent=None):
-        super(CharacterGoalSelector, self).__init__(parent)
-        self.novel = novel
-        self.scene = scene
-        self.characterGoal: Optional[CharacterGoal] = None
-        self.goalRef: Optional[GoalReference] = None
-        hbox(self)
-
-        self.label: Optional[CharacterGoalLabel] = None
-
-        self.btnLinkGoal = QPushButton(self)
-        if not simplified:
-            self.btnLinkGoal.setText('Track goal')
-        self.layout().addWidget(self.btnLinkGoal)
-        self.btnLinkGoal.setIcon(IconRegistry.goal_icon())
-        self.btnLinkGoal.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btnLinkGoal.setStyleSheet('''
-                QPushButton {
-                    border: 2px dotted grey;
-                    border-radius: 6px;
-                    font: italic;
-                }
-                QPushButton:hover {
-                    border: 2px dotted darkBlue;
-                    color: darkBlue;
-                    font: normal;
-                }
-                QPushButton:pressed {
-                    border: 2px solid white;
-                }
-            ''')
-
-        self.btnLinkGoal.installEventFilter(OpacityEventFilter(parent=self.btnLinkGoal))
-        scrollArea = QScrollArea(self)
-        scrollArea.setWidgetResizable(True)
-        scrollArea.setMinimumSize(400, 300)
-        self._goalSelector = _GoalSelectionObject()
-        # self.selectorWidget = CharacterGoalsEditor(self.novel, self.scene.agendas[0].character(self.novel),
-        #                                            selector=self._goalSelector)
-        scrollArea.setBackgroundRole(QPalette.ColorRole.Light)
-        # scrollArea.setWidget(self.selectorWidget)
-        btn_popup(self.btnLinkGoal, scrollArea)
-
-        self._goalSelector.goalSelected.connect(self._goalSelected)
-
-    def setGoal(self, characterGoal: CharacterGoal, goalRef: GoalReference):
-        self.characterGoal = characterGoal
-        self.goalRef = goalRef
-        self.label = CharacterGoalLabel(self.novel, self.characterGoal, self.goalRef, removalEnabled=True)
-        pointy(self.label)
-        self.label.clicked.connect(self._goalRefClicked)
-        self.label.removalRequested.connect(self._remove)
-        self.layout().addWidget(self.label)
-        self.btnLinkGoal.setHidden(True)
-
-    def _goalSelected(self, characterGoal: CharacterGoal):
-        goal_ref = GoalReference(characterGoal.id)
-        self.scene.agendas[0].goal_references.append(goal_ref)
-
-        self.btnLinkGoal.menu().hide()
-        self.setGoal(characterGoal, goal_ref)
-        self.goalSelected.emit()
-
-    def _goalRefClicked(self):
-        menu = QMenu(self.label)
-        action = QWidgetAction(menu)
-        action.setDefaultWidget(GoalStakesEditor(self.goalRef))
-        menu.addAction(action)
-        menu.popup(QCursor.pos())
-
-    def _remove(self):
-        if self.parent():
-            anim = qtanim.fade_out(self, duration=150)
-            anim.finished.connect(self.__destroy)
-
-    def __destroy(self):
-        self.scene.agendas[0].remove_goal(self.characterGoal)
         self.parent().layout().removeWidget(self)
         gc(self)
 
@@ -757,195 +632,6 @@ class CharacterLinkWidget(QWidget):
         self.btnLinkCharacter.menu().hide()
         self.setCharacter(character)
         self.characterSelected.emit(character)
-
-
-class CharacterGoalWidget(QWidget, Ui_CharacterGoalWidget):
-    def __init__(self, novel: Novel, character: Character, goal: CharacterGoal,
-                 parent_goal: Optional[CharacterGoal] = None, parent=None, selector: '_GoalSelectionObject' = None):
-        super(CharacterGoalWidget, self).__init__(parent)
-        self.setupUi(self)
-        self.novel = novel
-        self.character = character
-        self.selector = selector
-        self.char_goal = goal
-        self.parent_goal = parent_goal
-        self.goal = self.char_goal.goal(self.novel)
-        if selector:
-            self.btnToggle.setVisible(True)
-            self.btnToggle.clicked.connect(lambda: self.selector.goalSelected.emit(self.char_goal))
-        else:
-            self.btnToggle.setVisible(False)
-
-        self._filtersFrozen: bool = False
-
-        self.lineName.setText(self.goal.text)
-        self.lineName.textEdited.connect(self._textEdited)
-        if self.goal.icon:
-            self.btnGoalIcon.setIcon(IconRegistry.from_name(self.goal.icon, self.goal.icon_color))
-            self._styleIconButton()
-        else:
-            self.btnGoalIcon.setIcon(IconRegistry.icons_icon('grey'))
-            self._styleIconButton(border=True)
-        self.btnGoalIcon.clicked.connect(self._selectIcon)
-        self.btnContext.setIcon(IconRegistry.dots_icon('grey', vertical=True))
-        menu = MenuWidget(self.btnContext)
-        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self._delete))
-        menu.aboutToShow.connect(self._aboutToShowContextMenu)
-        menu.aboutToHide.connect(self._aboutToHideContextMenu)
-
-        self.btnAddChildGoal.setIcon(IconRegistry.plus_icon('grey'))
-        self.btnAddChildGoal.installEventFilter(OpacityEventFilter(parent=self.btnAddChildGoal, leaveOpacity=0.65))
-        self.btnContext.installEventFilter(OpacityEventFilter(parent=self.btnContext, leaveOpacity=0.65))
-        filter = VisibilityToggleEventFilter(self.btnAddChildGoal, self)
-        self.wdgTop.installEventFilter(filter)
-        filter = VisibilityToggleEventFilter(self.btnContext, self)
-        self.wdgTop.installEventFilter(filter)
-        self.wdgTop.installEventFilter(self)
-        self.btnAddChildGoal.clicked.connect(self._addChild)
-
-        for child in self.char_goal.children:
-            wdg = CharacterGoalWidget(self.novel, self.character, child, self.char_goal, parent=self,
-                                      selector=selector)
-            self.wdgChildren.layout().addWidget(wdg)
-
-        self.repo = RepositoryPersistenceManager.instance()
-
-        self.lineName.setFocus()
-
-    @overrides
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        if self._filtersFrozen:
-            return super().eventFilter(watched, event)
-        if event.type() == QEvent.Type.Enter:
-            self.wdgTop.setStyleSheet('background-color: #D8D5D5;')
-        elif event.type() == QEvent.Type.Leave:
-            self.wdgTop.setStyleSheet('background-color: rgba(0,0,0,0);')
-
-        return super().eventFilter(watched, event)
-
-    def _textEdited(self, text: str):
-        self.goal.text = text
-
-    def _selectIcon(self):
-        result = IconSelectorDialog(self).display()
-        if result:
-            self.goal.icon = result[0]
-            self.goal.icon_color = result[1].name()
-            self.btnGoalIcon.setIcon(IconRegistry.from_name(self.goal.icon, self.goal.icon_color))
-            self._styleIconButton()
-
-    def _addChild(self):
-        goal = Goal('')
-        self.novel.goals.append(goal)
-
-        child_char_goal = CharacterGoal(goal.id)
-        self.char_goal.children.append(child_char_goal)
-
-        wdg = CharacterGoalWidget(self.novel, self.character, child_char_goal, parent_goal=self.char_goal, parent=self,
-                                  selector=self.selector)
-        self.wdgChildren.layout().addWidget(wdg)
-        wdg.lineName.setFocus()
-
-        self.repo.update_novel(self.novel)
-
-    def _aboutToShowContextMenu(self):
-        self._filtersFrozen = True
-
-    def _aboutToHideContextMenu(self):
-        self._filtersFrozen = False
-        self.wdgTop.setStyleSheet('background-color: rgba(0,0,0,0);')
-
-    def _delete(self):
-        if self.parent_goal:
-            self.parent_goal.children.remove(self.char_goal)
-        else:
-            self.character.goals.remove(self.char_goal)
-
-        anim = qtanim.fade_out(self)
-        anim.finished.connect(self.__destroy)
-
-    def __destroy(self):
-        self.parent().layout().removeWidget(self)
-        gc(self)
-
-    def _styleIconButton(self, border: bool = False):
-        border_str = '1px dashed gray' if border else '0px'
-        self.btnGoalIcon.setStyleSheet(f'''
-            QToolButton {{
-                border: {border_str};
-                border-radius: 4px;
-                color: grey;
-            }}
-
-            QToolButton:pressed {{
-                border: 1px solid grey;
-            }}
-        ''')
-
-
-class _GoalSelectionObject(QObject):
-    goalSelected = pyqtSignal(CharacterGoal)
-
-
-class CharacterGoalsEditor(QWidget):
-
-    def __init__(self, novel: Novel, character: Character, parent=None, selector: '_GoalSelectionObject' = None):
-        super(CharacterGoalsEditor, self).__init__(parent)
-        self.novel = novel
-        self.character = character
-        self._goalSelector = selector
-        self.repo = RepositoryPersistenceManager.instance()
-
-        vbox(self)
-        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-
-        for goal in self.character.goals:
-            wdg = CharacterGoalWidget(self.novel, self.character, goal, parent=self, selector=self._goalSelector)
-            self.layout().addWidget(wdg)
-        self.layout().addWidget(line())
-
-        self.btnAdd = QPushButton('Add new main story goal', self)
-        self.btnAdd.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._styleAddButton()
-        self.btnAdd.clicked.connect(self._newGoal)
-        hmax(self.btnAdd)
-        self.layout().addWidget(self.btnAdd)
-        self.layout().addWidget(vspacer())
-
-    @overrides
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        pass
-
-    def _newGoal(self):
-        goal = Goal('')
-        self.novel.goals.append(goal)
-        self.repo.update_novel(self.novel)
-
-        char_goal = CharacterGoal(goal.id)
-        self.character.goals.append(char_goal)
-
-        wdg = CharacterGoalWidget(self.novel, self.character, char_goal, parent=self, selector=self._goalSelector)
-        self.layout().insertWidget(len(self.character.goals) - 1, wdg)
-        self._styleAddButton()
-
-    def _styleAddButton(self):
-        if self.character.goals:
-            self.btnAdd.setProperty('base', False)
-            self.btnAdd.setProperty('positive', False)
-            icon_color = 'grey'
-            self.btnAdd.setStyleSheet('''
-                QPushButton {
-                    border: 1px dashed grey;
-                    border-radius: 6px;
-                    color: grey;
-                    opacity: 0.7;
-                }
-            ''')
-        else:
-            self.btnAdd.setProperty('base', True)
-            self.btnAdd.setProperty('positive', True)
-            icon_color = 'white'
-        self.btnAdd.setIcon(IconRegistry.plus_icon(icon_color))
 
 
 class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
@@ -1293,90 +979,6 @@ class CharacterEmotionButton(QToolButton):
     def _emotionClicked(self, value: int):
         self.setValue(value)
         self.emotionChanged.emit()
-
-
-class JournalTextEdit(DocumentTextEditor):
-    def __init__(self, parent=None):
-        super(JournalTextEdit, self).__init__(parent)
-
-        self.setToolbarVisible(False)
-
-
-# class JournalWidget(QWidget, Ui_JournalWidget):
-#
-#     def __init__(self, parent=None):
-#         super(JournalWidget, self).__init__(parent)
-#         self.setupUi(self)
-#         self.novel: Optional[Novel] = None
-#         self.character: Optional[Character] = None
-#         self.textEditor: Optional[JournalTextEdit] = None
-#
-#         self.selected_card: Optional[JournalCard] = None
-#
-#         self.btnNew.setIcon(IconRegistry.document_edition_icon())
-#         self.btnNew.clicked.connect(self._new)
-#
-#         self.btnBack.setIcon(IconRegistry.return_icon())
-#         self.btnBack.clicked.connect(self._closeEditor)
-#
-#         self.stackedWidget.setCurrentWidget(self.pageCards)
-#
-#         self.repo = RepositoryPersistenceManager.instance()
-#
-#     def setCharacter(self, novel: Novel, character: Character):
-#         self.novel = novel
-#         self.character = character
-#         self._update_cards()
-#
-#     def _new(self):
-#         journal = Document(title='New Journal entry')
-#         journal.loaded = True
-#         self.character.journals.insert(0, journal)
-#         self._update_cards()
-#         card = self.cardsJournal.cardAt(0)
-#         if card:
-#             card.select()
-#             self._edit(card)
-#
-#     def _update_cards(self):
-#         self.selected_card = None
-#         self.cardsJournal.clear()
-#
-#         for journal in self.character.journals:
-#             card = JournalCard(journal)
-#             self.cardsJournal.addCard(card)
-#             card.selected.connect(self._card_selected)
-#             card.doubleClicked.connect(self._edit)
-#
-#     def _card_selected(self, card: JournalCard):
-#         if self.selected_card and self.selected_card is not card:
-#             self.selected_card.clearSelection()
-#         self.selected_card = card
-#
-#     @busy
-#     def _edit(self, card: JournalCard):
-#         if not card.journal.loaded:
-#             json_client.load_document(self.novel, card.journal)
-#
-#         self.stackedWidget.setCurrentWidget(self.pageEditor)
-#         clear_layout(self.wdgEditor.layout())
-#
-#         self.textEditor = JournalTextEdit(self.wdgEditor)
-#         self.textEditor.setText(card.journal.content, card.journal.title)
-#         self.wdgEditor.layout().addWidget(self.textEditor)
-#         self.textEditor.textEdit.textChanged.connect(partial(self._textChanged, card.journal))
-#         self.textEditor.textTitle.textChanged.connect(partial(self._titleChanged, card.journal))
-#
-#     def _closeEditor(self):
-#         self.stackedWidget.setCurrentWidget(self.pageCards)
-#         self.selected_card.refresh()
-#
-#     def _textChanged(self, journal: Document):
-#         journal.content = self.textEditor.textEdit.toHtml()
-#         self.repo.update_doc(self.novel, journal)
-#
-#     def _titleChanged(self, journal: Document):
-#         journal.title = self.textEditor.textTitle.toPlainText()
 
 
 class AvatarSelectors(QWidget, Ui_AvatarSelectors):

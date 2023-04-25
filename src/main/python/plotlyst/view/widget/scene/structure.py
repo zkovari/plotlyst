@@ -43,10 +43,10 @@ from src.main.python.plotlyst.view.common import action, fade_out_and_gc, Button
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.button import FadeOutButtonGroup
-from src.main.python.plotlyst.view.widget.characters import CharacterGoalSelector, \
-    CharacterConflictSelector, CharacterEmotionButton
+from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterEmotionButton
 from src.main.python.plotlyst.view.widget.input import RemovalButton
 from src.main.python.plotlyst.view.widget.list import ListView, ListItemWidget
+from src.main.python.plotlyst.view.widget.scene.goal import SceneGoalSelector
 from src.main.python.plotlyst.view.widget.scenes import SceneOutcomeSelector
 
 BeatDescriptions = {SceneStructureItemType.BEAT: 'New action, reaction, thought, or emotion',
@@ -1222,11 +1222,11 @@ class SceneStructureWidget(QWidget, Ui_SceneStructureWidget):
 
     def _addGoalSelector(self, goal: Optional[CharacterGoal] = None, goalRef: Optional[GoalReference] = None):
         simplified = len(self.scene.agendas[0].goal_references) > 0
-        selector = CharacterGoalSelector(self.novel, self.scene, simplified=simplified)
+        selector = SceneGoalSelector(self.novel, self.scene, simplified=simplified)
         self.wdgGoalConflictContainer.layout().addWidget(selector)
         selector.goalSelected.connect(self._initSelectors)
-        # if goal and goalRef:
-        #     selector.setGoal(goal, goalRef)
+        if goal and goalRef:
+            selector.setGoal(goal, goalRef)
 
     def _addConfictSelector(self, conflict: Optional[Conflict] = None,
                             conflict_ref: Optional[ConflictReference] = None):
