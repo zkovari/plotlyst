@@ -23,9 +23,9 @@ from typing import Optional
 import emoji
 import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, Qt
-from PyQt6.QtWidgets import QWidget, QTableView, QMenu
+from PyQt6.QtWidgets import QWidget, QTableView
 from qthandy import flow, clear_layout, underline
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
@@ -35,7 +35,7 @@ from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.generated.scene_editor_ui import Ui_SceneEditor
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.input import RotatedButtonOrientation
@@ -86,10 +86,9 @@ class SceneEditor(QObject):
         self.ui.wdgStructure.setRemovalContextMenuEnabled(True)
         self.ui.wdgStructure.beatRemovalRequested.connect(self._beat_removed)
 
-        self._povMenu = QMenu(self.ui.wdgPov.btnPov)
+        self._povMenu = ScrollableMenuWidget(self.ui.wdgPov.btnPov)
         for char in self.novel.characters:
-            self._povMenu.addAction(avatars.avatar(char), char.name, partial(self._on_pov_changed, char))
-        self.ui.wdgPov.btnPov.setMenu(self._povMenu)
+            self._povMenu.addAction(action(char.name, avatars.avatar(char), partial(self._on_pov_changed, char)))
         self.ui.wdgPov.btnPov.setText('Select POV')
 
         self.ui.textNotes.setTitleVisible(False)
