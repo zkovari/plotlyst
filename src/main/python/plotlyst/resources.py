@@ -175,6 +175,9 @@ class ResourceManager(EventListener):
         elif app_env.is_linux():
             os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir, f'jre/{jre.version}-jre/bin/java')
 
+        os.environ.setdefault('PYPANDOC_PANDOC',
+                              os.path.join(app_env.cache_dir, _pandoc_resource.folder, _pandoc_resource.name, 'pandoc'))
+
         event_dispatcher.register(self, ResourceDownloadedEvent)
         event_dispatcher.register(self, ResourceRemovedEvent)
 
