@@ -96,5 +96,7 @@ def open_location(location: str):
 
     if app_env.is_windows():
         os.system("start " + location)
-    else:
+    elif app_env.is_linux():
         subprocess.run(["xdg-open", location])
+    elif app_env.is_mac():
+        os.system("open " + location)
