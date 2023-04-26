@@ -30,7 +30,7 @@ from fbs_runtime.application_context.PyQt6 import ApplicationContext
 from overrides import overrides
 
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 
 
@@ -80,6 +80,10 @@ class ResourceType(str, Enum):
     JRE_8 = 'jre_8'
 
 
+def is_nltk(resourceType: ResourceType) -> bool:
+    return resourceType.name.startswith('NLTK')
+
+
 @dataclass
 class ResourceDescriptor:
     name: str
@@ -87,6 +91,7 @@ class ResourceDescriptor:
     web_url: str
     extension: str = 'zip'
     version: str = ''
+    human_name: str = ''
     description: str = ''
 
     def filename(self) -> str:
@@ -94,9 +99,12 @@ class ResourceDescriptor:
 
 
 _punkt_nltk_resource = ResourceDescriptor('punkt', 'tokenizers',
-                                          'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip')
+                                          'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip',
+                                          human_name='Punctuation tokenizer',
+                                          description='Necessary for a precise sentence number calculation')
 __avg_tagger_url = 'https://github.com/nltk/nltk_data/raw/gh-pages/packages/taggers/averaged_perceptron_tagger.zip'
-_avg_tagger_nltk_resource = ResourceDescriptor('averaged_perceptron_tagger', 'taggers', __avg_tagger_url)
+_avg_tagger_nltk_resource = ResourceDescriptor('averaged_perceptron_tagger', 'taggers', __avg_tagger_url,
+                                               human_name='Tagger', description='Necessary for adverb highlighting')
 
 _nltk_resources: Dict[ResourceType, ResourceDescriptor] = {
     ResourceType.NLTK_PUNKT_TOKENIZER: _punkt_nltk_resource,
@@ -109,10 +117,21 @@ class ResourceDownloadedEvent(Event):
     type: ResourceType
 
 
+@dataclass
+class ResourceRemovedEvent(Event):
+    type: ResourceType
+
+
 class ResourceStatus(Enum):
     MISSING = 'missing'
     PENDING = 'pending'
     DOWNLOADED = 'downloaded'
+
+
+@dataclass
+class ResourceStatusChangedEvent(Event):
+    type: ResourceType
+    status: ResourceStatus
 
 
 @dataclass
@@ -151,11 +170,14 @@ class ResourceManager(EventListener):
             os.environ['LTP_JAVA_PATH'] = os.path.join(app_env.cache_dir, f'jre/{jre.version}-jre/bin/java')
 
         event_dispatcher.register(self, ResourceDownloadedEvent)
+        event_dispatcher.register(self, ResourceRemovedEvent)
 
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, ResourceDownloadedEvent):
             self._update_resource_status(event.type, ResourceStatus.DOWNLOADED)
+        elif isinstance(event, ResourceRemovedEvent):
+            self._update_resource_status(event.type, ResourceStatus.MISSING)
 
     def has_resource(self, resource_type: ResourceType) -> bool:
         if self._resources_config is None:
@@ -179,10 +201,12 @@ class ResourceManager(EventListener):
             else:
                 raise IOError('Not supported platform for JRE')
             url = f'https://github.com/adoptium/temurin8-binaries/releases/download/{version}/{distr}'
-            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz', version=version)
+            return ResourceDescriptor('jre', 'jre', url, extension='tar.gz',
+                                      version=version, human_name='Java',
+                                      description='Necessary for local grammar checking')
 
     def nltk_resource_types(self) -> List[ResourceType]:
-        return [x for x in ResourceType if x.name.startswith('NLTK')]
+        return [x for x in ResourceType if is_nltk(x)]
 
     def save(self):
         with atomic_write(self._path, overwrite=True) as f:
@@ -192,6 +216,8 @@ class ResourceManager(EventListener):
         info = self.__get_resource_info(type_)
         info.status = status
         self.save()
+
+        emit_event(ResourceStatusChangedEvent(self, type_, status))
 
     def __get_resource_info(self, resource_type: ResourceType) -> ResourceInfo:
         if resource_type not in self._resources_config.resources.keys():

@@ -763,22 +763,5 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>btnAnalysis</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>wdgSideAnalysis</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>485</x>
-     <y>65</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>450</x>
-     <y>201</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

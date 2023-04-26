@@ -44,9 +44,9 @@ from src.main.python.plotlyst.events import NovelDeletedEvent, \
 from src.main.python.plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
-from src.main.python.plotlyst.service.download import NltkResourceDownloadWorker, JreResourceDownloadWorker
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.service.resource import download_resource, download_nltk_resources
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.board_view import BoardView
@@ -67,6 +67,7 @@ from src.main.python.plotlyst.view.widget.button import ToolbarButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
+from src.main.python.plotlyst.view.widget.utility import ResourceManagerDialog
 from src.main.python.plotlyst.view.world_building_view import WorldBuildingView
 
 textstat.sentence_count = sentence_count
@@ -139,11 +140,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._threadpool = QThreadPool()
         self._language_tool_setup_worker = LanguageToolServerSetupWorker()
-        nltk_download_worker = NltkResourceDownloadWorker()
-        jre_download_worker = JreResourceDownloadWorker()
         if not app_env.test_env():
-            self._threadpool.start(nltk_download_worker)
-            self._threadpool.start(jre_download_worker)
+            download_nltk_resources()
+            download_resource(ResourceType.JRE_8)
 
         if self.novel:
             self._language_tool_setup_worker.lang = self.novel.lang_settings.lang
@@ -352,6 +351,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionCopy.triggered.connect(self._copy_text)
         self.actionPaste.setIcon(IconRegistry.paste_icon())
         self.actionPaste.triggered.connect(self._paste_text)
+
+        self.actionResourceManager.triggered.connect(lambda: ResourceManagerDialog().display())
 
         self.actionDirPlaceholder.setText(settings.workspace())
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
