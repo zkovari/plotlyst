@@ -18,17 +18,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
+import shutil
 import tarfile
 import zipfile
-from typing import List
+from typing import List, Optional
 
 import requests
-from PyQt6.QtCore import QRunnable
+from PyQt6.QtCore import QRunnable, QThreadPool
 from overrides import overrides
 
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent
+from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent, \
+    ResourceRemovedEvent, is_nltk
 
 
 def download_file(url, target):
@@ -39,17 +41,48 @@ def download_file(url, target):
                 f.write(chunk)
 
 
+def remove_resource(resource_type: ResourceType):
+    resource = resource_manager.resource(resource_type)
+    if is_nltk(resource_type):
+        resource_path = os.path.join(app_env.nltk_data, resource.folder)
+    else:
+        resource_path = os.path.join(app_env.cache_dir, resource.folder)
+
+    if os.path.exists(resource_path):
+        shutil.rmtree(resource_path)
+    emit_event(ResourceRemovedEvent(resource, resource_type))
+
+
+def download_resource(resource_type: ResourceType):
+    if is_nltk(resource_type):
+        runner = NltkResourceDownloadWorker(resource_type)
+    elif resource_type == ResourceType.JRE_8:
+        runner = JreResourceDownloadWorker()
+    else:
+        return
+    QThreadPool.globalInstance().start(runner)
+
+
+def download_nltk_resources():
+    runner = NltkResourceDownloadWorker()
+    QThreadPool.globalInstance().start(runner)
+
+
 class NltkResourceDownloadWorker(QRunnable):
 
-    def __init__(self):
+    def __init__(self, resourceType: Optional[ResourceType] = None):
         super(NltkResourceDownloadWorker, self).__init__()
-        self.resource_types: List[ResourceType] = resource_manager.nltk_resource_types()
+        if resourceType:
+            self.resource_types: List[ResourceType] = [resourceType]
+        else:
+            self.resource_types = resource_manager.nltk_resource_types()
 
     @overrides
     def run(self) -> None:
         for resource_type in self.resource_types:
             if resource_manager.has_resource(resource_type):
                 continue
+
             resource = resource_manager.resource(resource_type)
             resource_path = os.path.join(app_env.nltk_data, resource.folder)
 

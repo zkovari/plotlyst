@@ -17,20 +17,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from functools import partial
 from typing import Any, Optional, Tuple, Dict
 
 from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QBrush, QResizeEvent
-from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup, QDialog, QLabel, QPushButton
+from PyQt6.QtWidgets import QWidget, QListView, QSizePolicy, QToolButton, QButtonGroup, QDialog, QLabel, QPushButton, \
+    QGridLayout
 from overrides import overrides
 from qthandy import flow, transparent, pointy, hbox, grid, vspacer, italic, underline, decr_font, incr_font, bold, \
     spacer, line, decr_icon, ask_confirmation
 from qthandy.filter import OpacityEventFilter
+
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.model.common import proxy
-from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDescriptor
-from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter
+from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDescriptor, \
+    ResourceStatusChangedEvent
+from src.main.python.plotlyst.service.resource import remove_resource, download_resource
+from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, spin
 from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_IconsSelectorWidget
 from src.main.python.plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -309,6 +314,7 @@ class _ResourceControllers:
         transparent(self.btnStatus)
 
         self.btnRemove = QPushButton()
+        self.btnRemove.setToolTip('Remove downloaded resource. Some functionality might stop working')
         self.btnRemove.setProperty('base', True)
         self.btnRemove.setProperty('deconstructive', True)
         decr_icon(self.btnRemove, 2)
@@ -317,19 +323,59 @@ class _ResourceControllers:
         self.btnRemove.installEventFilter(OpacityEventFilter(self.btnRemove, leaveOpacity=0.7))
         self.btnRemove.installEventFilter(ButtonPressResizeEventFilter(self.btnRemove))
 
-        if resource_manager.has_resource(self._resourceType):
-            self.btnStatus.setIcon(IconRegistry.ok_icon(PLOTLYST_MAIN_COMPLEMENTARY_COLOR))
-        else:
-            self.btnStatus.setIcon(IconRegistry.from_name('fa5s.minus'))
+        self.btnDownload = QPushButton()
+        self.btnDownload.setToolTip('Download external resource. Internet access is necessary')
+        self.btnDownload.setProperty('base', True)
+        self.btnDownload.setProperty('highlighted', True)
+        decr_icon(self.btnDownload, 2)
+        pointy(self.btnDownload)
+        self.btnDownload.setIcon(IconRegistry.from_name('mdi.download', 'white'))
+        self.btnDownload.installEventFilter(OpacityEventFilter(self.btnDownload, leaveOpacity=0.7))
+        self.btnDownload.installEventFilter(ButtonPressResizeEventFilter(self.btnDownload))
+
+        self.btnRemove.clicked.connect(self._askRemove)
+        self.btnDownload.clicked.connect(self.download)
+
+        self.refresh()
 
     def resource(self) -> ResourceDescriptor:
         return self._resource
 
+    def remove(self):
+        spin(self.btnStatus)
+        self.btnRemove.setDisabled(True)
+        remove_resource(self._resourceType)
 
-class ResourceManagerWidget(QWidget):
+    def download(self):
+        spin(self.btnStatus)
+        self.btnDownload.setDisabled(True)
+        download_resource(self._resourceType)
+
+    def refresh(self):
+        if resource_manager.has_resource(self._resourceType):
+            self.btnStatus.setIcon(IconRegistry.ok_icon(PLOTLYST_MAIN_COMPLEMENTARY_COLOR))
+            self.btnStatus.setToolTip('Downloaded')
+            self.btnRemove.setVisible(True)
+            self.btnRemove.setEnabled(True)
+            self.btnDownload.setHidden(True)
+        else:
+            self.btnStatus.setIcon(IconRegistry.from_name('fa5s.minus'))
+            self.btnStatus.setToolTip('Missing')
+            self.btnRemove.setHidden(True)
+            self.btnDownload.setVisible(True)
+            self.btnDownload.setEnabled(True)
+
+    def _askRemove(self):
+        if ask_confirmation(
+                f"Remove downloaded resource '{self._resource.human_name}'? Some functionality might stop working."):
+            self.remove()
+
+
+class ResourceManagerWidget(QWidget, EventListener):
+
     def __init__(self, parent=None):
         super(ResourceManagerWidget, self).__init__(parent)
-        self._gridLayout = grid(self)
+        self._gridLayout: QGridLayout = grid(self)
 
         self._resources: Dict[ResourceType, _ResourceControllers] = {}
 
@@ -348,14 +394,15 @@ class ResourceManagerWidget(QWidget):
             self._gridLayout.addWidget(group(contr.label, contr.description, vertical=False, spacing=2), i + 2, 0)
             self._gridLayout.addWidget(contr.btnStatus, i + 2, 1, alignment=Qt.AlignmentFlag.AlignCenter)
             self._gridLayout.addWidget(contr.btnRemove, i + 2, 2, alignment=Qt.AlignmentFlag.AlignCenter)
-            self._gridLayout.addWidget(spacer(), i + 2, 3)
+            self._gridLayout.addWidget(contr.btnDownload, i + 2, 3, alignment=Qt.AlignmentFlag.AlignCenter)
+            self._gridLayout.addWidget(spacer(), i + 2, 4)
 
-            contr.btnRemove.clicked.connect(partial(self._remove, contr))
+        event_dispatcher.register(self, ResourceStatusChangedEvent)
 
-    def _remove(self, contr: _ResourceControllers):
-        if ask_confirmation(
-                f"Remove downloaded resource '{contr.resource().human_name}'? Some functionality might stop working."):
-            print('remove')
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, ResourceStatusChangedEvent):
+            self._resources[event.type].refresh()
 
 
 class ResourceManagerDialog(QDialog, Ui_ResourceManagerDialog):
