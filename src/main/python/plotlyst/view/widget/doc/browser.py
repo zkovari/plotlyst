@@ -44,7 +44,7 @@ class DocumentAdditionMenu(MenuWidget):
         super(DocumentAdditionMenu, self).__init__(parent)
         self._novel = novel
 
-        self.addAction(action('Document', IconRegistry.document_edition_icon(), self._documentSelected))
+        self.addAction(action('Document', IconRegistry.document_edition_icon(), lambda: self._documentSelected()))
 
         self._character_menu = MenuWidget()
         self._character_menu.setTitle('Characters')
