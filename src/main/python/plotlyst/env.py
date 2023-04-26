@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
+import subprocess
 from enum import Enum
 from typing import Optional
 
@@ -87,3 +88,13 @@ class AppEnvironment:
 
 
 app_env = AppEnvironment()
+
+
+def open_location(location: str):
+    if not location:
+        return
+
+    if app_env.is_windows():
+        os.system("start " + location)
+    else:
+        subprocess.run(["xdg-open", location])

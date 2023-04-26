@@ -35,7 +35,7 @@ from src.main.python.plotlyst.common import EXIT_CODE_RESTART, PLOTLYST_MAIN_COL
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
-from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.env import app_env, open_location
 from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, event_sender, \
     emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
@@ -355,6 +355,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionResourceManager.triggered.connect(lambda: ResourceManagerDialog().display())
 
         self.actionDirPlaceholder.setText(settings.workspace())
+        self.actionOpenProjectDir.setIcon(IconRegistry.from_name('fa5s.external-link-alt'))
+        self.actionOpenProjectDir.triggered.connect(lambda: open_location(settings.workspace()))
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
 
