@@ -26,11 +26,12 @@ from typing import List, Optional
 import requests
 from PyQt6.QtCore import QRunnable, QThreadPool
 from overrides import overrides
+from pypandoc import download_pandoc
 
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent, \
-    ResourceRemovedEvent, is_nltk
+    ResourceRemovedEvent, is_nltk, PANDOC_VERSION
 
 
 def download_file(url, target):
@@ -58,6 +59,8 @@ def download_resource(resource_type: ResourceType):
         runner = NltkResourceDownloadWorker(resource_type)
     elif resource_type == ResourceType.JRE_8:
         runner = JreResourceDownloadWorker()
+    elif resource_type == ResourceType.PANDOC:
+        runner = PandocResourceDownloadWorker()
     else:
         return
     QThreadPool.globalInstance().start(runner)
@@ -117,4 +120,25 @@ class JreResourceDownloadWorker(QRunnable):
         with tarfile.open(resource_tar_path) as tar_ref:
             tar_ref.extractall(resource_path)
 
+        emit_event(ResourceDownloadedEvent(self, self._type))
+
+
+class PandocResourceDownloadWorker(QRunnable):
+
+    def __init__(self):
+        super(PandocResourceDownloadWorker, self).__init__()
+        self._type = ResourceType.PANDOC
+
+    @overrides
+    def run(self) -> None:
+        if resource_manager.has_resource(self._type):
+            return
+        resource = resource_manager.resource(self._type)
+        resource_path = os.path.join(app_env.cache_dir, resource.folder)
+        os.makedirs(resource_path, exist_ok=True)
+
+        target_path = os.path.join(resource_path, resource.name)
+        os.makedirs(target_path, exist_ok=True)
+
+        download_pandoc(version=PANDOC_VERSION, targetfolder=target_path, download_folder=resource_path)
         emit_event(ResourceDownloadedEvent(self, self._type))

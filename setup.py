@@ -26,6 +26,7 @@ REQUIREMENTS: dict = {
         'nltk==3.7',
         'requests==2.27.1',
         'qt-handy',
+        'pypandoc==1.11',
     ],
     'test': [
         'pytest==6.2.4',

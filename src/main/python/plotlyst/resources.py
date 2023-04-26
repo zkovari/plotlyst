@@ -78,6 +78,7 @@ class ResourceType(str, Enum):
     NLTK_PUNKT_TOKENIZER = 'nltk_punkt_tokenizer'
     NLTK_AVERAGED_PERCEPTRON_TAGGER = 'nltk_averaged_perceptron_tagger'
     JRE_8 = 'jre_8'
+    PANDOC = 'pandoc'
 
 
 def is_nltk(resourceType: ResourceType) -> bool:
@@ -97,6 +98,11 @@ class ResourceDescriptor:
     def filename(self) -> str:
         return f'{self.name}.{self.extension}'
 
+
+PANDOC_VERSION: str = '3.1.2'
+
+_pandoc_resource = ResourceDescriptor('pandoc', 'formatting', '', human_name='Exporter', version=PANDOC_VERSION,
+                                      description='Necessary for exporting to docx format')
 
 _punkt_nltk_resource = ResourceDescriptor('punkt', 'tokenizers',
                                           'https://github.com/nltk/nltk_data/raw/gh-pages/packages/tokenizers/punkt.zip',
@@ -192,7 +198,9 @@ class ResourceManager(EventListener):
     def resource(self, resource_type: ResourceType) -> ResourceDescriptor:
         if resource_type.name.startswith('NLTK'):
             return _nltk_resources[resource_type]
-        if resource_type == ResourceType.JRE_8:
+        elif resource_type == ResourceType.PANDOC:
+            return _pandoc_resource
+        elif resource_type == ResourceType.JRE_8:
             version = 'jdk8u362-b09'
             if app_env.is_linux():
                 distr = 'OpenJDK8U-jre_x64_linux_hotspot_8u362b09.tar.gz'
