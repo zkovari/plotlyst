@@ -64,6 +64,7 @@ from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton
+from src.main.python.plotlyst.view.widget.export import ExportManuscriptDialog
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
@@ -360,6 +361,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
 
+        self.actionExport.triggered.connect(lambda: ExportManuscriptDialog(self.novel).display())
+
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
     def _init_toolbar(self):
@@ -480,6 +483,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setText(self.novel.title)
         self.outline_mode.setChecked(True)
 
+        self.actionExport.setEnabled(True)
+
     def _register_events(self):
         event_dispatcher.register(self, NovelDeletedEvent)
         event_dispatcher.register(self, NovelUpdatedEvent)
@@ -507,17 +512,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         gc(self.comments_view.widget)
 
-        # if self.pageManuscript.layout().count():
-        #     self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
-        #     gc(self.manuscript_view.widget)
-        #     self.manuscript_view = None
-        # if self.pageReports.layout().count():
-        #     self.pageReports.layout().removeWidget(self.reports_view.widget)
-        #     gc(self.reports_view.widget)
-        #     self.reports_view = None
-
         self.outline_mode.setDisabled(True)
-        # self.manuscript_mode.setDisabled(True)
+
+        self.actionExport.setDisabled(True)
 
         self._tasks_widget.reset()
 

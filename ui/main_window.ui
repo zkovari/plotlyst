@@ -840,6 +840,7 @@
      <addaction name="actionChangeDir"/>
     </widget>
     <addaction name="menuProject"/>
+    <addaction name="actionExport"/>
     <addaction name="actionRestart"/>
    </widget>
    <widget class="QMenu" name="menuView">

@@ -17,11 +17,33 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import sys
+
+import pypandoc
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat
+from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat, QTextBlock
+from qdarktheme.qtpy.QtWidgets import QApplication
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
+
+
+def prepare_content_for_convert(html: str) -> str:
+    text_doc = QTextDocument()
+    text_doc.setHtml(html)
+
+    block: QTextBlock = text_doc.begin()
+    md_content: str = ''
+    while block.isValid():
+        cursor = QTextCursor(block)
+        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+        md_content += cursor.selection().toMarkdown()
+
+        block = block.next()
+    content = pypandoc.convert_text(md_content, to='html', format='md')
+    # print(content)
+
+    return content
 
 
 def format_manuscript(novel: Novel) -> QTextDocument:
@@ -71,6 +93,7 @@ def format_manuscript(novel: Novel) -> QTextDocument:
             if j == len(scenes) - 1 and i != len(novel.chapters) - 1:
                 cursor.insertBlock(page_break_format)
 
+    print(document.toHtml())
     return document
 
 
@@ -84,3 +107,24 @@ def format_document(doc: Document, char_format: QTextCharFormat) -> QTextDocumen
     cursor.clearSelection()
 
     return text_doc
+
+
+if __name__ == '__main__':
+    html = '''
+               <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+               <html><head></head>
+               <body>
+               <div custom-style="Title">Title</div>
+               <div custom-style="First Paragraph">Block text.</div>
+               <div custom-style="Block Text">Block text.</div>
+               Default text.
+               <p><b>Bold text</b>
+               <p style="color:red;">I am red</p>
+               <p><i>Italic text</i>
+               <p><b><i>Bold-italic text</i></b>
+               </body>
+               '''
+    app = QApplication(sys.argv)
+    content = prepare_content_for_convert(html)
+    print(pypandoc.get_pandoc_formats())
+    # print(content)
