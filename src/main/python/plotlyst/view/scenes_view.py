@@ -25,7 +25,7 @@ from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc
+from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
@@ -75,10 +75,12 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
 
         self._chartDistribution = ActDistributionChart()
         self._chartDistributionView = ChartView()
-        self._chartDistributionView.setMaximumSize(356, 356)
+        self._chartDistributionView.setFixedSize(356, 356)
         self._chartDistributionView.setChart(self._chartDistribution)
 
-        btn_popup(self.btnCount, self._chartDistributionView)
+        menu = MenuWidget(self.btnCount)
+        menu.addWidget(self._chartDistributionView)
+        sp(self._chartDistributionView).h_exp().v_exp()
         self.refresh()
 
         event_dispatcher.register(self, SceneChangedEvent)
