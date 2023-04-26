@@ -116,7 +116,7 @@ class _SelectableObjectiveIcon(QToolButton):
 class _AbstractCharacterObjectiveWidget(QWidget):
     selected = pyqtSignal(bool)
 
-    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = True):
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = False):
         super(_AbstractCharacterObjectiveWidget, self).__init__(parent)
         self._novel = novel
         self._goalRef = goalRef
@@ -162,7 +162,7 @@ class _AbstractCharacterObjectiveWidget(QWidget):
 class CharacterSubtaskWidget(_AbstractCharacterObjectiveWidget):
     delete = pyqtSignal()
 
-    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = True):
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = False):
         super(CharacterSubtaskWidget, self).__init__(novel, goalRef, parent, selectable)
 
         self.iconSelector.setIconSize(QSize(16, 16))
@@ -194,7 +194,7 @@ class CharacterGoalWidget(_AbstractCharacterObjectiveWidget):
     subtasksChanged = pyqtSignal()
     selectExisting = pyqtSignal()
 
-    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = True):
+    def __init__(self, novel: Novel, goalRef: CharacterGoal, parent=None, selectable: bool = False):
         super(CharacterGoalWidget, self).__init__(novel, goalRef, parent, selectable)
 
         vbox(self, 0)
@@ -286,7 +286,7 @@ class CharacterGoalWidget(_AbstractCharacterObjectiveWidget):
         self.repo.update_novel(self._novel)
 
     def _addSubtaskWidget(self, charGoal: CharacterGoal):
-        subtaskWdg = CharacterSubtaskWidget(self._novel, charGoal)
+        subtaskWdg = CharacterSubtaskWidget(self._novel, charGoal, selectable=self._selectable)
         subtaskWdg.delete.connect(partial(self._deleteSubtask, subtaskWdg))
         subtaskWdg.selected.connect(partial(self.subtaskSelected.emit, subtaskWdg))
         margins(subtaskWdg, left=self.btnAddBefore.sizeHint().width() + self.iconSelector.sizeHint().width() / 2)

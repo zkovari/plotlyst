@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>754</width>
-    <height>597</height>
+    <height>605</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -501,7 +501,7 @@
              </property>
             </spacer>
            </item>
-           <item>
+           <item alignment="Qt::AlignHCenter">
             <widget class="QLabel" name="lblManage">
              <property name="text">
               <string>Manage</string>
@@ -823,7 +823,7 @@
      <x>0</x>
      <y>0</y>
      <width>754</width>
-     <height>19</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
