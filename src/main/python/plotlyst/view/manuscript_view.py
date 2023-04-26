@@ -30,6 +30,7 @@ from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
     ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode
+from src.main.python.plotlyst.resources import resource_manager, ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -38,6 +39,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
+from src.main.python.plotlyst.view.widget.utility import MissingResourceManagerDialog
 
 
 class ManuscriptView(AbstractNovelView):
@@ -261,6 +263,13 @@ class ManuscriptView(AbstractNovelView):
         translucent(self.ui.btnAnalysisIcon, 1 if toggled else 0.4)
 
     def _analysis_clicked(self, checked: bool):
+        if checked and not resource_manager.has_resource(ResourceType.NLTK_PUNKT_TOKENIZER):
+            MissingResourceManagerDialog([ResourceType.NLTK_PUNKT_TOKENIZER]).display()
+            if not resource_manager.has_resource(ResourceType.NLTK_PUNKT_TOKENIZER):
+                self.ui.btnAnalysis.setChecked(False)
+                return
+
+        self.ui.wdgSideAnalysis.setVisible(checked)
         if not checked:
             return
 

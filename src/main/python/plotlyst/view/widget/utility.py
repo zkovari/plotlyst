@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any, Optional, Tuple, Dict
+from typing import Any, Optional, Tuple, Dict, List
 
 from PyQt6.QtCore import QModelIndex, Qt, QAbstractListModel, pyqtSignal, QSize
 from PyQt6.QtGui import QColor, QBrush, QResizeEvent
@@ -373,11 +373,14 @@ class _ResourceControllers:
 
 class ResourceManagerWidget(QWidget, EventListener):
 
-    def __init__(self, parent=None):
+    def __init__(self, resourceTypes: Optional[List[ResourceType]] = None, parent=None):
         super(ResourceManagerWidget, self).__init__(parent)
-        self._gridLayout: QGridLayout = grid(self)
-
+        if not resourceTypes:
+            resourceTypes = [ResourceType.JRE_8, ResourceType.NLTK_AVERAGED_PERCEPTRON_TAGGER,
+                             ResourceType.NLTK_PUNKT_TOKENIZER]
         self._resources: Dict[ResourceType, _ResourceControllers] = {}
+
+        self._gridLayout: QGridLayout = grid(self)
 
         header = QLabel('Resource')
         underline(header)
@@ -387,8 +390,7 @@ class ResourceManagerWidget(QWidget, EventListener):
         self._gridLayout.addWidget(header, 0, 1)
         self._gridLayout.addWidget(line(), 1, 0, 1, 3)
 
-        for i, resourceType in enumerate([ResourceType.JRE_8, ResourceType.NLTK_AVERAGED_PERCEPTRON_TAGGER,
-                                          ResourceType.NLTK_PUNKT_TOKENIZER]):
+        for i, resourceType in enumerate(resourceTypes):
             contr = _ResourceControllers(resourceType)
             self._resources[resourceType] = contr
             self._gridLayout.addWidget(group(contr.label, contr.description, vertical=False, spacing=2), i + 2, 0)
@@ -406,11 +408,34 @@ class ResourceManagerWidget(QWidget, EventListener):
 
 
 class ResourceManagerDialog(QDialog, Ui_ResourceManagerDialog):
-    def __init__(self, parent=None):
+    def __init__(self, resourceTypes: Optional[List[ResourceType]] = None, parent=None):
         super(ResourceManagerDialog, self).__init__(parent)
         self.setupUi(self)
 
-        wdg = ResourceManagerWidget()
+        wdg = ResourceManagerWidget(resourceTypes)
+        self.wdgCentral.layout().addWidget(wdg)
+        self.wdgCentral.layout().addWidget(vspacer())
+
+    def display(self):
+        self.exec()
+
+
+class MissingResourceManagerDialog(QDialog, Ui_ResourceManagerDialog):
+    def __init__(self, resourceTypes: List[ResourceType], parent=None):
+        super(MissingResourceManagerDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.setWindowTitle('Resource is missing')
+
+        self._label = QLabel()
+        self._label.setWordWrap(True)
+        self._label.setText(
+            "Additional resources are necessary to perform this action." +
+            " Please click download to proceed (internet access is necessary)")
+        italic(self._label)
+
+        self.wdgCentral.layout().addWidget(self._label)
+        self.wdgCentral.layout().addWidget(vspacer(40))
+        wdg = ResourceManagerWidget(resourceTypes)
         self.wdgCentral.layout().addWidget(wdg)
         self.wdgCentral.layout().addWidget(vspacer())
 
