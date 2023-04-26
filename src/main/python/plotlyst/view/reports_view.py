@@ -168,7 +168,10 @@ class ManuscriptReportPage(ReportPage):
     def _cacheWordCounts(self):
         self._wc_cache.clear()
         for scene in self._novel.scenes:
-            self._wc_cache.append(scene.manuscript.statistics.wc if scene.manuscript else 0)
+            if scene.manuscript and scene.manuscript.statistics:
+                self._wc_cache.append(scene.manuscript.statistics.wc)
+            else:
+                self._wc_cache.append(0)
 
 
 class ReportsView(AbstractNovelView):
