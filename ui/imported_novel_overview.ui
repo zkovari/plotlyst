@@ -36,16 +36,24 @@
     <number>2</number>
    </property>
    <item alignment="Qt::AlignHCenter">
-    <widget class="QLabel" name="lblTitle">
-     <property name="font">
-      <font>
-       <bold>true</bold>
-      </font>
-     </property>
+    <widget class="QPushButton" name="btnTitle">
      <property name="text">
-      <string/>
+      <string>Title</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer_5">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item>
     <layout class="QHBoxLayout" name="layoutButtons">

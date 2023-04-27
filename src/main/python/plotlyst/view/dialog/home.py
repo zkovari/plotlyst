@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import uuid
 from typing import Optional
 
 import qtanim
@@ -25,11 +26,9 @@ from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from qthandy import incr_font
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
-from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import Novel, ImportOrigin, ImportOriginType
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
@@ -88,15 +87,17 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
             ''')
             btn.installEventFilter(OpacityEventFilter(parent=btn, ignoreCheckedButton=True))
         self.stackedWidget.currentChanged.connect(self._pageChanged)
+        self.stackedWidget.setCurrentWidget(self.pageNewStory)
 
     def display(self) -> Optional[Novel]:
+        self._scrivenerNovel = None
         result = self.exec()
         if result == QDialog.DialogCode.Rejected:
             return None
 
         if self.stackedWidget.currentWidget() == self.pageNewStory:
             return Novel(title=self.lineTitle.text())
-        elif self.stackedWidget.currentWidget() == self.pageScrivener:
+        elif self._scrivenerNovel is not None:
             return self._scrivenerNovel
 
         return None
@@ -121,12 +122,17 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
 
         importer = ScrivenerImporter()
         novel: Novel = importer.import_project(project)
-        if client.has_novel(novel.id):
-            return emit_critical('Cannot import Scrivener project again because it is already present in Plotlyst.')
+
+        self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
 
         self.wdgScrivenerImportDetails.setVisible(True)
         self.wdgScrivenerImportDetails.setNovel(novel)
         self.btnSaveScrivener.setEnabled(True)
 
-        novel.import_origin = ImportOrigin(ImportOriginType.SCRIVENER, source=project)
+        novel.import_origin = ImportOrigin(ImportOriginType.SCRIVENER, source=project, source_id=novel.id)
+        print(novel.id)
         self._scrivenerNovel = novel
+        self._scrivenerNovel.id = uuid.uuid4()
+        print(f'new id {self._scrivenerNovel.id}')
+
+        self.wdgTypesContainer.setHidden(True)
