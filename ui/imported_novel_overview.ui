@@ -39,7 +39,6 @@
     <widget class="QLabel" name="lblTitle">
      <property name="font">
       <font>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
@@ -232,7 +231,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QTreeView" name="treeChapters">
+        <widget class="ScenesTreeView" name="treeChapters">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -242,9 +241,6 @@
          <property name="horizontalScrollBarPolicy">
           <enum>Qt::ScrollBarAlwaysOff</enum>
          </property>
-         <attribute name="headerVisible">
-          <bool>false</bool>
-         </attribute>
         </widget>
        </item>
       </layout>
@@ -253,6 +249,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>src.main.python.plotlyst.view.widget.scene</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>

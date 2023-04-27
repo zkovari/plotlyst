@@ -608,6 +608,7 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
         self.setupUi(self)
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnLocations.setIcon(IconRegistry.location_icon())
+        self.btnLocations.setHidden(True)
         self.btnScenes.setIcon(IconRegistry.scene_icon())
 
         link_buttons_to_pages(self.stackedWidget,
@@ -615,7 +616,6 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
                                (self.btnScenes, self.pageScenes)])
 
         self._charactersModel: Optional[CharactersTableModel] = None
-        # self._chaptersModel: Optional[ChaptersTreeModel] = None
 
     def setNovel(self, novel: Novel):
         self.lblTitle.setText(novel.title)
@@ -627,11 +627,4 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
         else:
             self.btnCharacters.setDisabled(True)
 
-        if novel.scenes:
-            # self._chaptersModel = ChaptersTreeModel(novel)
-            # self.treeChapters.setModel(self._chaptersModel)
-            # self.treeChapters.expandAll()
-            # self.treeChapters.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-            # self.treeChapters.hideColumn(ChaptersTreeModel.ColPlus)
-            if not self.btnLocations.isChecked():
-                self.btnScenes.setChecked(True)
+        self.treeChapters.setNovel(novel, readOnly=True)

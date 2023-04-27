@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical
 from src.main.python.plotlyst.resources import resource_registry
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -49,9 +49,10 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         self.wdgScrivenerImportDetails.setHidden(True)
         self.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.btnNewStory.setIcon(IconRegistry.book_icon(color_on='white'))
-        self.btnScrivener.setIcon(IconRegistry.from_name('mdi.alpha-s', color_on='white'))
+        self.btnScrivener.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color_on='white'))
         self.btnLoadScrivener.setIcon(IconRegistry.from_name('mdi6.application-import', color='white'))
         self.btnLoadScrivener.clicked.connect(self._loadFromScrivener)
+        self.btnLoadScrivener.installEventFilter(ButtonPressResizeEventFilter(self.btnLoadScrivener))
         incr_font(self.btnNewStory)
         incr_font(self.btnScrivener)
 
@@ -117,6 +118,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
             project = QFileDialog.getExistingDirectory(self, 'Choose a Scrivener project directory', default_path)
         if not project:
             return
+
         importer = ScrivenerImporter()
         novel: Novel = importer.import_project(project)
         if client.has_novel(novel.id):
