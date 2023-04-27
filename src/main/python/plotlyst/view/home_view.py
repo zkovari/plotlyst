@@ -72,6 +72,7 @@ class HomeView(AbstractView):
         self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self._selected_novel))
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
+        self.ui.btnAddNewStoryMain.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAddNewStoryMain))
 
         self.ui.wdgTitle.setFixedHeight(150)
         self.ui.wdgTitle.setStyleSheet(
@@ -181,6 +182,8 @@ class HomeView(AbstractView):
                 self.repo.insert_scene(novel, scene)
                 if scene.manuscript:
                     self.repo.update_doc(novel, scene.manuscript)
+
+            flush()
 
             self.refresh()
             self._shelvesTreeView.selectNovel(novel)
