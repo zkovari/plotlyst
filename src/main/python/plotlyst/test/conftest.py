@@ -51,8 +51,10 @@ def window_with_disk_db(qtbot, test_client):
 
 @pytest.fixture
 def filled_window(qtbot, test_client):
-    init_project()
-    return get_main_window(qtbot)
+    novel = init_project()
+    window = get_main_window(qtbot)
+    window.home_view.loadNovel.emit(novel)
+    return window
 
 
 def get_main_window(qtbot):
@@ -102,3 +104,5 @@ def init_project():
         json_client.insert_character(novel, char)
     for scene in novel.scenes:
         json_client.insert_scene(novel, scene)
+
+    return novel
