@@ -1301,7 +1301,6 @@ class NovelDescriptor:
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     lang_settings: LanguageSettings = LanguageSettings()
     import_origin: Optional[ImportOrigin] = None
-    migrated_to_new_location: bool = True
     subtitle: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
