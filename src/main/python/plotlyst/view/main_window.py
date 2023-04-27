@@ -362,7 +362,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
 
-        self.actionExport.triggered.connect(lambda: export_manuscript_to_docx(self.novel))
+        self.actionExportToDocx.setIcon(IconRegistry.docx_icon())
+        self.actionExportToDocx.triggered.connect(lambda: export_manuscript_to_docx(self.novel))
 
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
@@ -484,7 +485,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setText(self.novel.title)
         self.outline_mode.setChecked(True)
 
-        self.actionExport.setEnabled(True)
+        self.menuExport.setEnabled(True)
         self.actionPreview.setEnabled(True)
 
     def _register_events(self):
@@ -516,7 +517,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.outline_mode.setDisabled(True)
 
-        self.actionExport.setDisabled(True)
+        self.menuExport.setDisabled(True)
         self.actionPreview.setDisabled(True)
 
         self._tasks_widget.reset()

@@ -2,6 +2,7 @@
 venv
 .DS_Store
 profile.stats
+test.docx
 
 generated
 coverage

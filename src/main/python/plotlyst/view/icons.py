@@ -609,6 +609,10 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.expand-alt')
 
     @staticmethod
+    def docx_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.file-word-outline')
+
+    @staticmethod
     def from_selection_item(item: SelectionItem) -> QIcon:
         return IconRegistry.from_name(item.icon, item.icon_color)
 

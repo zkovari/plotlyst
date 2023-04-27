@@ -839,8 +839,14 @@
      <addaction name="separator"/>
      <addaction name="actionChangeDir"/>
     </widget>
+    <widget class="QMenu" name="menuExport">
+     <property name="title">
+      <string>Export</string>
+     </property>
+     <addaction name="actionExportToDocx"/>
+    </widget>
     <addaction name="menuProject"/>
-    <addaction name="actionExport"/>
+    <addaction name="menuExport"/>
     <addaction name="actionRestart"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -999,14 +1005,14 @@
     <string>Resource manager</string>
    </property>
   </action>
-  <action name="actionExport">
-   <property name="text">
-    <string>Export</string>
-   </property>
-  </action>
   <action name="actionOpenProjectDir">
    <property name="text">
     <string>Open in explorer...</string>
+   </property>
+  </action>
+  <action name="actionExportToDocx">
+   <property name="text">
+    <string>Export to Docx</string>
    </property>
   </action>
  </widget>
