@@ -55,6 +55,9 @@ def remove_resource(resource_type: ResourceType):
 
 
 def download_resource(resource_type: ResourceType):
+    if resource_manager.has_resource(resource_type):
+        return
+
     if is_nltk(resource_type):
         runner = NltkResourceDownloadWorker(resource_type)
     elif resource_type == ResourceType.JRE_8:

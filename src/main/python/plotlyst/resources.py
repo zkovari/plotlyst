@@ -49,26 +49,31 @@ class ResourceRegistry:
         self._cover1 = app_context.get_resource('cover_1.jpg')
         self._banner = app_context.get_resource('plotlyst_banner.jpg')
         self._circular_frame1 = app_context.get_resource('circular_frame1.png')
+        self._manuscript_docx_template = app_context.get_resource('manuscript-template.docx')
 
     @property
-    def cork(self):
+    def cork(self) -> str:
         return self._cork
 
     @property
-    def frame1(self):
+    def frame1(self) -> str:
         return self._frame1
 
     @property
-    def cover1(self):
+    def cover1(self) -> str:
         return self._cover1
 
     @property
-    def banner(self):
+    def banner(self) -> str:
         return self._banner
 
     @property
-    def circular_frame1(self):
+    def circular_frame1(self) -> str:
         return self._circular_frame1
+
+    @property
+    def manuscript_docx_template(self) -> str:
+        return self._manuscript_docx_template
 
 
 resource_registry = ResourceRegistry()

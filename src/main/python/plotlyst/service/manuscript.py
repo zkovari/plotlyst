@@ -17,11 +17,69 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+
+import pypandoc
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat
+from PyQt6.QtGui import QTextDocument, QTextCursor, QTextCharFormat, QFont, QTextBlockFormat, QTextFormat, QTextBlock
+from PyQt6.QtWidgets import QFileDialog
+from qthandy import ask_confirmation
+from slugify import slugify
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
+from src.main.python.plotlyst.env import open_location, app_env
+from src.main.python.plotlyst.resources import resource_registry, resource_manager, ResourceType
+from src.main.python.plotlyst.view.widget.utility import MissingResourceManagerDialog
+
+
+def prepare_content_for_convert(html: str) -> str:
+    text_doc = QTextDocument()
+    text_doc.setHtml(html)
+
+    block: QTextBlock = text_doc.begin()
+    md_content: str = ''
+    while block.isValid():
+        cursor = QTextCursor(block)
+        cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+        md_content += cursor.selection().toMarkdown()
+
+        block = block.next()
+    content = pypandoc.convert_text(md_content, to='html', format='md')
+
+    return content
+
+
+def export_manuscript_to_docx(novel: Novel):
+    if not resource_manager.has_resource(ResourceType.PANDOC):
+        MissingResourceManagerDialog([ResourceType.PANDOC]).display()
+        if not resource_manager.has_resource(ResourceType.PANDOC):
+            return
+
+    json_client.load_manuscript(novel)
+    if app_env.is_dev():
+        target_path = 'test.docx'
+    else:
+        title = slugify(novel.title if novel.title else 'my-novel')
+        target_path, _ = QFileDialog.getSaveFileName(None, 'Export Docx', f'{title}.docx',
+                                                     'Docx files (*.docx);;All Files()')
+        if not target_path:
+            return
+
+    html: str = ''
+    for i, chapter in enumerate(novel.chapters):
+        html += f'<div custom-style="Title">Chapter {i + 1}</div>'
+        for j, scene in enumerate(novel.scenes_in_chapter(chapter)):
+            if not scene.manuscript:
+                continue
+
+            scene_html = prepare_content_for_convert(scene.manuscript.content)
+            html += scene_html
+
+    spec_args = ['--reference-doc', resource_registry.manuscript_docx_template]
+    pypandoc.convert_text(html, to='docx', format='html', extra_args=spec_args, outputfile=target_path)
+
+    if ask_confirmation('Export was finished. Open file in editor?'):
+        open_location(target_path)
 
 
 def format_manuscript(novel: Novel) -> QTextDocument:
