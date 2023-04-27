@@ -112,7 +112,7 @@
             </sizepolicy>
            </property>
            <property name="styleSheet">
-            <string notr="true">font: 22pt &quot;Sans Serif&quot;;</string>
+            <string notr="true"/>
            </property>
            <property name="text">
             <string>Title</string>

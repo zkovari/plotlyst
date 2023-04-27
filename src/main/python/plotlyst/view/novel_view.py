@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt6.QtCore import QObject, QEvent, Qt
 from PyQt6.QtGui import QFont
 from overrides import overrides
-from qthandy import retain_when_hidden, transparent, decr_icon
+from qthandy import retain_when_hidden, transparent, decr_icon, incr_font
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 
 from src.main.python.plotlyst.core.client import json_client
@@ -91,6 +91,7 @@ class NovelView(AbstractNovelView):
         self.ui.subtitleSynopsis.addWidget(self._btnSynopsisExtendEdit)
         self._btnSynopsisExtendEdit.clicked.connect(self._expandSynopsisEditor)
 
+        incr_font(self.ui.lblTitle, 10)
         self.ui.lblTitle.setText(self.novel.title)
         self.ui.textPremise.textEdit.insertPlainText(self.novel.premise)
         self.ui.textPremise.textEdit.textChanged.connect(self._premise_changed)
