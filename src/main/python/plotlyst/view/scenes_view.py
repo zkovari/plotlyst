@@ -343,7 +343,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._switch_to_editor()
 
     def _show_card_menu(self, card: SceneCard, _: QPoint):
-        menu = MenuWidget()
+        menu = MenuWidget(card)
         menu.addAction(action('Edit', IconRegistry.edit_icon(), self._on_edit))
         menu.addAction(action('Insert new scene', IconRegistry.plus_icon('black'),
                               partial(self._insert_scene_after, card.scene)))
