@@ -45,6 +45,7 @@ from src.main.python.plotlyst.resources import resource_manager, ResourceType, R
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
+from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.service.resource import download_resource, download_nltk_resources
 from src.main.python.plotlyst.settings import settings
@@ -64,7 +65,6 @@ from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton
-from src.main.python.plotlyst.view.widget.export import ExportManuscriptDialog
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
@@ -144,6 +144,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if not app_env.test_env():
             download_nltk_resources()
             download_resource(ResourceType.JRE_8)
+            download_resource(ResourceType.PANDOC)
 
         if self.novel:
             self._language_tool_setup_worker.lang = self.novel.lang_settings.lang
@@ -361,7 +362,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.actionChangeDir.setIcon(IconRegistry.from_name('fa5s.folder-open'))
         self.actionChangeDir.triggered.connect(self._change_project_dir)
 
-        self.actionExport.triggered.connect(lambda: ExportManuscriptDialog(self.novel).display())
+        self.actionExport.triggered.connect(lambda: export_manuscript_to_docx(self.novel))
 
         self.actionCharacterTemplateEditor.triggered.connect(lambda: customize_character_profile(self.novel, 0, self))
 
@@ -484,6 +485,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setChecked(True)
 
         self.actionExport.setEnabled(True)
+        self.actionPreview.setEnabled(True)
 
     def _register_events(self):
         event_dispatcher.register(self, NovelDeletedEvent)
@@ -515,6 +517,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setDisabled(True)
 
         self.actionExport.setDisabled(True)
+        self.actionPreview.setDisabled(True)
 
         self._tasks_widget.reset()
 
