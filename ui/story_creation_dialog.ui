@@ -52,7 +52,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="spacing">
-         <number>0</number>
+         <number>4</number>
         </property>
         <property name="leftMargin">
          <number>0</number>
@@ -268,7 +268,7 @@
            <property name="base" stdset="0">
             <bool>true</bool>
            </property>
-           <property name="highlighted" stdset="0">
+           <property name="positive" stdset="0">
             <bool>true</bool>
            </property>
           </widget>

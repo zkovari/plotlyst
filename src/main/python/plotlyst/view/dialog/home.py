@@ -49,6 +49,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         self.wdgScrivenerImportDetails.setHidden(True)
         self.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.btnNewStory.setIcon(IconRegistry.book_icon(color_on='white'))
+        self.btnScrivener.setIcon(IconRegistry.from_name('mdi.alpha-s', color_on='white'))
+        self.btnLoadScrivener.setIcon(IconRegistry.from_name('mdi6.application-import', color='white'))
         self.btnLoadScrivener.clicked.connect(self._loadFromScrivener)
         incr_font(self.btnNewStory)
         incr_font(self.btnScrivener)

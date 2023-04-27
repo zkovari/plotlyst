@@ -165,7 +165,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self._threadpool.activeThreadCount():
             max_ = self._threadpool.activeThreadCount()
-            progress = QProgressDialog('Wait until background tasks are done...', 'Shut down anyway', 0,
+            progress = QProgressDialog('Wait until background tasks are finished...', 'Shut down anyway', 0,
                                        self._threadpool.activeThreadCount(), parent=self.centralwidget)
             progress.forceShow()
             progress.setWindowModality(Qt.WindowModality.WindowModal)
