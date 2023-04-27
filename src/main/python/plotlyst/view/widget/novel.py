@@ -610,6 +610,9 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
         self.btnLocations.setIcon(IconRegistry.location_icon())
         self.btnLocations.setHidden(True)
         self.btnScenes.setIcon(IconRegistry.scene_icon())
+        transparent(self.btnTitle)
+        self.btnTitle.setIcon(IconRegistry.book_icon())
+        bold(self.btnTitle)
 
         link_buttons_to_pages(self.stackedWidget,
                               [(self.btnCharacters, self.pageCharacters), (self.btnLocations, self.pageLocations),
@@ -618,7 +621,7 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
         self._charactersModel: Optional[CharactersTableModel] = None
 
     def setNovel(self, novel: Novel):
-        self.lblTitle.setText(novel.title)
+        self.btnTitle.setText(novel.title)
 
         if novel.characters:
             self._charactersModel = CharactersTableModel(novel)
