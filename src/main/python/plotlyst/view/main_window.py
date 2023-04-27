@@ -109,10 +109,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             has_novel = client.has_novel(last_novel_id)
             if has_novel:
                 self.novel = client.fetch_novel(last_novel_id)
-        if self.novel is None:
-            _novels = client.novels()
-            if _novels:
-                self.novel = client.fetch_novel(_novels[0].id)
 
         if self.novel:
             acts_registry.set_novel(self.novel)
