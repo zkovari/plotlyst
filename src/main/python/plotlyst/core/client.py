@@ -354,7 +354,7 @@ class JsonClient:
                 image = QImage.fromData(character.avatar)
                 image.save(str(self.images_dir.joinpath(self.__image_file(avatar_id))))
 
-        self._persist_character(character, avatar_id)
+        self._persist_character(character, avatar_id, novel)
 
     def delete_character(self, novel: Novel, character: Character):
         self._persist_novel(novel)
@@ -579,7 +579,7 @@ class JsonClient:
 
         self.__persist_info_by_name(novel_dir, board, 'board')
 
-    def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None):
+    def _persist_character(self, char: Character, avatar_id: Optional[uuid.UUID] = None, novel: Optional[Novel] = None):
         char_info = CharacterInfo(id=char.id, name=char.name, gender=char.gender, role=char.role, age=char.age,
                                   occupation=char.occupation,
                                   template_values=char.template_values,
@@ -587,7 +587,7 @@ class JsonClient:
                                   avatar_id=avatar_id,
                                   backstory=char.backstory, plans=char.plans, document=char.document,
                                   journals=char.journals, prefs=char.prefs, topics=char.topics, big_five=char.big_five)
-        self.__persist_info(self.characters_dir(), char_info)
+        self.__persist_info(self.characters_dir(novel), char_info)
 
     def _persist_scene(self, scene: Scene, novel: Optional[Novel] = None):
         plots = [ScenePlotReferenceInfo(x.plot.id, x.data) for x in scene.plot_values]
