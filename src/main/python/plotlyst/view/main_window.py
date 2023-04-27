@@ -463,7 +463,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.outline_mode.setChecked(True)
             return
 
-        self.repo.flush()
+        self.repo.flush(sync=True)
         event_dispatcher.clear()
         if self.novel:
             self._clear_novel_views()
