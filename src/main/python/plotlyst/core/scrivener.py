@@ -183,6 +183,7 @@ class ScrivenerImporter:
             content_path = id_folder.joinpath('content.rtf')
             if content_path.exists():
                 with open(content_path, encoding='utf8') as content_file:
+                    rtf_str = content_file.read()
                     text = pypandoc.convert_text(rtf_str, to='html', format='rtf')
 
                     doc = Document('')
