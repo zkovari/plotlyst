@@ -24,7 +24,7 @@ from uuid import UUID
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
-from striprtf.striprtf import rtf_to_text
+import pypandoc
 
 from src.main.python.plotlyst.common import camel_to_whitespace
 from src.main.python.plotlyst.core.client import load_image
@@ -183,8 +183,7 @@ class ScrivenerImporter:
             content_path = id_folder.joinpath('content.rtf')
             if content_path.exists():
                 with open(content_path, encoding='utf8') as content_file:
-                    rtf_str = content_file.read()
-                    text = rtf_to_text(rtf_str)
+                    text = pypandoc.convert_text(rtf_str, to='html', format='rtf')
 
                     doc = Document('')
                     doc.content = text
