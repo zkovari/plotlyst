@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
+import re
 from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
@@ -184,9 +185,16 @@ class ScrivenerImporter:
             if content_path.exists():
                 with open(content_path, encoding='utf8') as content_file:
                     rtf_str = content_file.read()
+                    rtf_str = replace_backslash_with_par(rtf_str)
                     text = pypandoc.convert_text(rtf_str, to='html', format='rtf')
 
                     doc = Document('')
                     doc.content = text
                     doc.loaded = True
                     return doc
+
+
+def replace_backslash_with_par(rtf_text):
+    pattern = r"\\$"
+    replace_with = r"\\par"
+    return re.sub(pattern, replace_with, rtf_text, flags=re.MULTILINE)
