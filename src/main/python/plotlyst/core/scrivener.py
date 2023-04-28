@@ -26,6 +26,7 @@ from xml.etree.ElementTree import Element
 
 from striprtf.striprtf import rtf_to_text
 
+from src.main.python.plotlyst.common import camel_to_whitespace
 from src.main.python.plotlyst.core.client import load_image
 from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document
 
@@ -111,7 +112,8 @@ class ScrivenerImporter:
                     #     if location:
                     #         locations.append(location)
 
-        return Novel(title='Importer project', id=UUID(novel_id), characters=characters, scenes=scenes,
+        return Novel(title=camel_to_whitespace(scrivener_path.stem), id=UUID(novel_id), characters=characters,
+                     scenes=scenes,
                      chapters=chapters)
 
     def _parse_chapter(self, element: Element) -> Chapter:

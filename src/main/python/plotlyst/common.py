@@ -115,3 +115,17 @@ class Timer:
         print(f'{self._prefix}: {self._elapsed}')
 
         return self._elapsed
+
+
+def camel_to_whitespace(text: str) -> str:
+    """
+    Converts a camel case string to a whitespace separated string.
+    """
+    words = []
+    start = 0
+    for i in range(len(text)):
+        if text[i].isupper():
+            words.append(text[start:i])
+            start = i
+    words.append(text[start:])
+    return ' '.join(words)
