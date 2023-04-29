@@ -26,10 +26,12 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
 import pypandoc
+from PyQt6.QtGui import QTextDocument
 
 from src.main.python.plotlyst.common import camel_to_whitespace
 from src.main.python.plotlyst.core.client import load_image
-from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document
+from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document, DocumentStatistics
+from src.main.python.plotlyst.view.widget.input import BlockStatistics, TextBlockData
 
 
 class ScrivenerParsingError(Exception):
@@ -52,7 +54,10 @@ class ScrivenerImporter:
         if not scrivener_file:
             raise ValueError(f'Could not find main Scrivener file with .scrivx extension under given folder: {folder}')
 
-        return self._parse_scrivx(Path(folder).joinpath(scrivener_file), Path(folder).joinpath('Files/Data'))
+        novel = self._parse_scrivx(Path(folder).joinpath(scrivener_file), Path(folder).joinpath('Files/Data'))
+
+        self._applyManuscriptFormat(novel)
+        return novel
 
     def _parse_scrivx(self, scrivener_path: Path, data_folder: Path) -> Novel:
         tree = ElementTree.parse(scrivener_path)
@@ -192,6 +197,20 @@ class ScrivenerImporter:
                     doc.content = text
                     doc.loaded = True
                     return doc
+
+    def _applyManuscriptFormat(self, novel: Novel):
+        for scene in novel.scenes:
+            if scene.manuscript:
+                document = QTextDocument()
+                BlockStatistics(document)
+                document.setHtml(scene.manuscript.content)
+                wc = 0
+                for i in range(document.blockCount()):
+                    block = document.findBlockByNumber(i)
+                    data = block.userData()
+                    if isinstance(data, TextBlockData):
+                        wc += data.wordCount
+                scene.manuscript.statistics = DocumentStatistics(wc)
 
 
 def replace_backslash_with_par(rtf_text):
