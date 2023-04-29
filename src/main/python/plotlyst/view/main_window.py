@@ -242,6 +242,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             btn.setVisible(True)
 
         self.outline_mode.setEnabled(True)
+        self.outline_mode.setVisible(True)
 
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
@@ -408,7 +409,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         else:
             self.home_mode.setChecked(True)
             self.outline_mode.setDisabled(True)
-            self.outline_mode.setHidden(True)
+            self.outline_mode.setText('')
 
     def _init_statusbar(self):
         self.statusbar.addPermanentWidget(self._tasks_widget)
@@ -512,6 +513,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         gc(self.comments_view.widget)
 
         self.outline_mode.setDisabled(True)
+        self.outline_mode.setText('')
 
         self.menuExport.setDisabled(True)
         self.actionPreview.setDisabled(True)
