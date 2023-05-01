@@ -540,8 +540,6 @@ class ManuscriptTextEditor(RichTextEditor):
         if not self._scenes:
             return
 
-        print(self.textEdit.toHtml())
-
         for scene in self._scenes:
             if scene.manuscript.statistics is None:
                 scene.manuscript.statistics = DocumentStatistics()
