@@ -131,4 +131,6 @@ def camel_to_whitespace(text: str) -> str:
             words.append(text[start:i])
             start = i
     words.append(text[start:])
-    return ' '.join(words)
+    new_text = ' '.join(words)
+    new_text = new_text.strip()
+    return new_text

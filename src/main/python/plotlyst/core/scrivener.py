@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
 import re
+import uuid
 from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
@@ -31,7 +32,8 @@ from PyQt6.QtGui import QTextDocument, QTextBlockFormat, QTextCursor
 from src.main.python.plotlyst.common import camel_to_whitespace, DEFAULT_MANUSCRIPT_INDENT, \
     DEFAULT_MANUSCRIPT_LINE_SPACE
 from src.main.python.plotlyst.core.client import load_image
-from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document, DocumentStatistics
+from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document, DocumentStatistics, \
+    ImportOrigin, ImportOriginType
 from src.main.python.plotlyst.core.text import wc
 
 
@@ -58,6 +60,10 @@ class ScrivenerImporter:
         novel = self._parse_scrivx(Path(folder).joinpath(scrivener_file), Path(folder).joinpath('Files/Data'))
 
         self._applyManuscriptFormat(novel)
+
+        novel.import_origin = ImportOrigin(ImportOriginType.SCRIVENER, source=folder, source_id=novel.id)
+        novel.id = uuid.uuid4()
+
         return novel
 
     def _parse_scrivx(self, scrivener_path: Path, data_folder: Path) -> Novel:
