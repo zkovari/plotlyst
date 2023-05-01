@@ -33,6 +33,7 @@ REQUIREMENTS: dict = {
         'pytest-qt==4.0.2',
         'pytest-cov==2.12.1',
         'pytest-randomly==3.11.0',
+        'pypandoc-binary==1.11',
     ],
     'dev': [
     ],

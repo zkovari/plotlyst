@@ -57,6 +57,9 @@ PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
 
+DEFAULT_MANUSCRIPT_LINE_SPACE: int = 130
+DEFAULT_MANUSCRIPT_INDENT: int = 20
+
 
 def emotion_color(emotion_value: int) -> str:
     if emotion_value == VERY_UNHAPPY:
@@ -128,4 +131,6 @@ def camel_to_whitespace(text: str) -> str:
             words.append(text[start:i])
             start = i
     words.append(text[start:])
-    return ' '.join(words)
+    new_text = ' '.join(words)
+    new_text = new_text.strip()
+    return new_text

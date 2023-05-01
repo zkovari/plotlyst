@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import uuid
 from typing import Optional
 
 import qtanim
@@ -26,7 +25,7 @@ from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from qthandy import incr_font
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
-from src.main.python.plotlyst.core.domain import Novel, ImportOrigin, ImportOriginType
+from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
@@ -121,18 +120,10 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
             return
 
         importer = ScrivenerImporter()
-        novel: Novel = importer.import_project(project)
+        self._scrivenerNovel = importer.import_project(project)
 
         self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
-
         self.wdgScrivenerImportDetails.setVisible(True)
-        self.wdgScrivenerImportDetails.setNovel(novel)
+        self.wdgScrivenerImportDetails.setNovel(self._scrivenerNovel)
         self.btnSaveScrivener.setEnabled(True)
-
-        novel.import_origin = ImportOrigin(ImportOriginType.SCRIVENER, source=project, source_id=novel.id)
-        print(novel.id)
-        self._scrivenerNovel = novel
-        self._scrivenerNovel.id = uuid.uuid4()
-        print(f'new id {self._scrivenerNovel.id}')
-
         self.wdgTypesContainer.setHidden(True)

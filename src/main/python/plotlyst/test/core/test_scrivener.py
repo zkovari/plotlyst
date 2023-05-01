@@ -4,7 +4,8 @@ from uuid import UUID
 
 import pytest
 
-from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Character
+from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Character, ImportOrigin, \
+    ImportOriginType
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 
 
@@ -50,17 +51,27 @@ def test_import_with_acts(test_client):
     characters = [Character('John', id=UUID('C33E84AA-CC86-4112-A2B4-713917EDB7EF')),
                   Character('Luna', id=UUID('CA105A6C-E2E7-4A27-9EF3-CB9D6D6B9CD9'))]
     # locations = [Location('Place one', id=UUID('BEF3ADD7-99D3-46B6-829F-D4B7CF08D4D0'))]
-    expected_novel = Novel(title='Importer project', id=UUID('C4B3D990-B9C2-4FE6-861E-B06B498283A4'), chapters=chapters,
+    expected_novel = Novel(title='Novel With Parts', id=novel.id, chapters=chapters,
                            scenes=scenes, characters=characters, stages=novel.stages,
-                           story_structures=novel.story_structures)
+                           story_structures=novel.story_structures,
+                           import_origin=ImportOrigin(ImportOriginType.SCRIVENER, source=str(folder),
+                                                      source_id=UUID('C4B3D990-B9C2-4FE6-861E-B06B498283A4')))
     assert novel.title == expected_novel.title
     assert novel.id == expected_novel.id
     assert novel.scenes[0].manuscript
+    assert novel.scenes[0].manuscript.content
+    assert novel.scenes[0].manuscript.statistics
+    assert novel.scenes[0].manuscript.statistics.wc
     assert novel.scenes[1].manuscript
+    assert novel.scenes[1].manuscript.content
+    assert novel.scenes[1].manuscript.statistics
+    assert novel.scenes[1].manuscript.statistics.wc
+    assert novel.id != novel.import_origin.source_id
+    assert novel.import_origin == expected_novel.import_origin
+    
     novel.scenes[0].manuscript = None
     novel.scenes[1].manuscript = None
     assert novel.scenes == expected_novel.scenes
-    # assert novel.locations == expected_novel.locations
 
     for c in novel.characters:
         assert c.avatar, 'Character avatar should have been loaded'

@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import os
 import re
+import uuid
 from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
@@ -26,10 +27,14 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
 import pypandoc
+from PyQt6.QtGui import QTextDocument, QTextBlockFormat, QTextCursor
 
-from src.main.python.plotlyst.common import camel_to_whitespace
+from src.main.python.plotlyst.common import camel_to_whitespace, DEFAULT_MANUSCRIPT_INDENT, \
+    DEFAULT_MANUSCRIPT_LINE_SPACE
 from src.main.python.plotlyst.core.client import load_image
-from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document
+from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document, DocumentStatistics, \
+    ImportOrigin, ImportOriginType
+from src.main.python.plotlyst.core.text import wc
 
 
 class ScrivenerParsingError(Exception):
@@ -52,7 +57,14 @@ class ScrivenerImporter:
         if not scrivener_file:
             raise ValueError(f'Could not find main Scrivener file with .scrivx extension under given folder: {folder}')
 
-        return self._parse_scrivx(Path(folder).joinpath(scrivener_file), Path(folder).joinpath('Files/Data'))
+        novel = self._parse_scrivx(Path(folder).joinpath(scrivener_file), Path(folder).joinpath('Files/Data'))
+
+        self._applyManuscriptFormat(novel)
+
+        novel.import_origin = ImportOrigin(ImportOriginType.SCRIVENER, source=folder, source_id=novel.id)
+        novel.id = uuid.uuid4()
+
+        return novel
 
     def _parse_scrivx(self, scrivener_path: Path, data_folder: Path) -> Novel:
         tree = ElementTree.parse(scrivener_path)
@@ -193,8 +205,29 @@ class ScrivenerImporter:
                     doc.loaded = True
                     return doc
 
+    def _applyManuscriptFormat(self, novel: Novel):
+        blockFmt = QTextBlockFormat()
+        blockFmt.setTextIndent(DEFAULT_MANUSCRIPT_INDENT)
+        blockFmt.setLineHeight(DEFAULT_MANUSCRIPT_LINE_SPACE, 1)
+        blockFmt.setLeftMargin(0)
+        blockFmt.setTopMargin(0)
+        blockFmt.setRightMargin(0)
+        blockFmt.setBottomMargin(0)
 
-def replace_backslash_with_par(rtf_text):
+        for scene in novel.scenes:
+            if scene.manuscript:
+                document = QTextDocument()
+                document.setHtml(scene.manuscript.content)
+                cursor = QTextCursor(document)
+                cursor.clearSelection()
+                cursor.select(QTextCursor.SelectionType.Document)
+                cursor.setBlockFormat(blockFmt)
+
+                scene.manuscript.content = document.toHtml()
+                scene.manuscript.statistics = DocumentStatistics(wc(document.toPlainText()))
+
+
+def replace_backslash_with_par(rtf_text: str):
     pattern = r"\\$"
     replace_with = r"\\par"
     return re.sub(pattern, replace_with, rtf_text, flags=re.MULTILINE)

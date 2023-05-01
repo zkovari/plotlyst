@@ -36,7 +36,8 @@ from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState, remove_font
 from textstat import textstat
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
+    DEFAULT_MANUSCRIPT_INDENT
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
 from src.main.python.plotlyst.core.sprint import TimerModel
@@ -449,7 +450,7 @@ class ManuscriptTextEditor(RichTextEditor):
     def _initTextEdit(self) -> EnhancedTextEdit:
         _textedit = ManuscriptTextEdit()
         _textedit.zoomIn(_textedit.font().pointSize() * 0.34)
-        _textedit.setBlockFormat(130, textIndent=20)
+        _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.selectionChanged.connect(self.selectionChanged.emit)
         _textedit.textChanged.connect(self._textChanged)
         return _textedit
