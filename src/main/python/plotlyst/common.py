@@ -57,6 +57,9 @@ PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
 
+DEFAULT_MANUSCRIPT_LINE_SPACE: int = 130
+DEFAULT_MANUSCRIPT_INDENT: int = 20
+
 
 def emotion_color(emotion_value: int) -> str:
     if emotion_value == VERY_UNHAPPY:

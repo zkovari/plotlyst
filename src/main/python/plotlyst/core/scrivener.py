@@ -26,9 +26,10 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
 import pypandoc
-from PyQt6.QtGui import QTextDocument
+from PyQt6.QtGui import QTextDocument, QTextBlockFormat, QTextCursor
 
-from src.main.python.plotlyst.common import camel_to_whitespace
+from src.main.python.plotlyst.common import camel_to_whitespace, DEFAULT_MANUSCRIPT_INDENT, \
+    DEFAULT_MANUSCRIPT_LINE_SPACE
 from src.main.python.plotlyst.core.client import load_image
 from src.main.python.plotlyst.core.domain import Novel, Scene, Chapter, Character, Document, DocumentStatistics
 from src.main.python.plotlyst.core.text import wc
@@ -199,16 +200,28 @@ class ScrivenerImporter:
                     return doc
 
     def _applyManuscriptFormat(self, novel: Novel):
+        blockFmt = QTextBlockFormat()
+        blockFmt.setTextIndent(DEFAULT_MANUSCRIPT_INDENT)
+        blockFmt.setLineHeight(DEFAULT_MANUSCRIPT_LINE_SPACE, 1)
+        blockFmt.setLeftMargin(0)
+        blockFmt.setTopMargin(0)
+        blockFmt.setRightMargin(0)
+        blockFmt.setBottomMargin(0)
+
         for scene in novel.scenes:
             if scene.manuscript:
                 document = QTextDocument()
                 document.setHtml(scene.manuscript.content)
-                for i in range(document.blockCount()):
-                    block = document.findBlockByNumber(i)
+                cursor = QTextCursor(document)
+                cursor.clearSelection()
+                cursor.select(QTextCursor.SelectionType.Document)
+                cursor.setBlockFormat(blockFmt)
+
+                scene.manuscript.content = document.toHtml()
                 scene.manuscript.statistics = DocumentStatistics(wc(document.toPlainText()))
 
 
-def replace_backslash_with_par(rtf_text):
+def replace_backslash_with_par(rtf_text: str):
     pattern = r"\\$"
     replace_with = r"\\par"
     return re.sub(pattern, replace_with, rtf_text, flags=re.MULTILINE)
