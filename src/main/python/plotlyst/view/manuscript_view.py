@@ -21,8 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
-from qthandy import translucent, incr_font, bold, btn_popup, margins, transparent
-from qthandy.filter import OpacityEventFilter
+from qthandy import translucent, bold, margins
 from qttextedit.ops import TextEditorSettingsWidget
 
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
@@ -35,7 +34,7 @@ from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
-from src.main.python.plotlyst.view.icons import IconRegistry, avatars
+from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
@@ -52,38 +51,44 @@ class ManuscriptView(AbstractNovelView):
         self.ui.splitterEditor.setSizes([400, 150])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
 
-        self.ui.btnTitle.setText(self.novel.title)
+        # self.ui.btnTitle.setText(self.novel.title)
 
-        self.ui.btnStoryGoal.setText('80,000')
-        self.ui.btnTitle.clicked.connect(self._homepage)
-        self.ui.btnStoryGoal.clicked.connect(self._homepage)
+        # self.ui.btnStoryGoal.setText('80,000')
+        # self.ui.btnTitle.clicked.connect(self._homepage)
+        # self.ui.btnStoryGoal.clicked.connect(self._homepage)
 
-        bold(self.ui.lineSceneTitle)
-        incr_font(self.ui.lineSceneTitle)
-        transparent(self.ui.lineSceneTitle)
-        self.ui.lineSceneTitle.textEdited.connect(self._scene_title_edited)
+        self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
+
+        bold(self.ui.lblTitle)
+        self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
+
+        # bold(self.ui.lineSceneTitle)
+        # incr_font(self.ui.lineSceneTitle)
+        # transparent(self.ui.lineSceneTitle)
+        # self.ui.lineSceneTitle.textEdited.connect(self._scene_title_edited)
+        # self.ui.lineSceneTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         bold(self.ui.lblWordCount)
 
-        self.ui.btnDistractionFree.setIcon(IconRegistry.expand_icon())
-        self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
-        self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
-        self.ui.btnContext.setIcon(IconRegistry.context_icon())
-        self.ui.btnContext.installEventFilter(OpacityEventFilter(self.ui.btnContext, leaveOpacity=0.7))
+        # self.ui.btnDistractionFree.setIcon(IconRegistry.expand_icon())
+        # self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        # self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
+        # self.ui.btnContext.setIcon(IconRegistry.context_icon())
+        # self.ui.btnContext.installEventFilter(OpacityEventFilter(self.ui.btnContext, leaveOpacity=0.7))
         self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
         self._contextMenuWidget = TextEditorSettingsWidget()
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
-        btn_popup(self.ui.btnContext, self._contextMenuWidget)
+        # btn_popup(self.ui.btnContext, self._contextMenuWidget)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
-        self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
-        self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
-        self.ui.btnAnalysis.toggled.connect(self._analysis_toggled)
-        self.ui.btnAnalysis.clicked.connect(self._analysis_clicked)
+        # self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
+        # self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
+        # self.ui.btnAnalysis.toggled.connect(self._analysis_toggled)
+        # self.ui.btnAnalysis.clicked.connect(self._analysis_clicked)
         self.ui.wdgReadability.cbAdverbs.toggled.connect(self._adverb_highlight_toggled)
-        self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
-        self._analysis_toggled(self.ui.btnAnalysis.isChecked())
+        # self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
+        # self._analysis_toggled(self.ui.btnAnalysis.isChecked())
 
         self._dist_free_editor = DistractionFreeManuscriptEditor(self.ui.pageDistractionFree)
         self._dist_free_editor.exitRequested.connect(self._exit_distraction_free)
@@ -107,7 +112,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.textEdit.setSidebarEnabled(False)
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
-        self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
+        # self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
             self.ui.treeChapters.selectChapter(self.novel.chapters[0])
@@ -147,8 +152,8 @@ class ManuscriptView(AbstractNovelView):
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
-        self.ui.btnStoryGoal.setText(f'{wc} word{"s" if wc > 1 else ""}')
-        self.ui.progressStory.setValue(int(wc / 80000 * 100))
+        # self.ui.btnStoryGoal.setText(f'{wc} word{"s" if wc > 1 else ""}')
+        # self.ui.progressStory.setValue(int(wc / 80000 * 100))
 
     def _editScene(self, scene: Scene):
         self.ui.textEdit.setGrammarCheckEnabled(False)
@@ -160,24 +165,24 @@ class ManuscriptView(AbstractNovelView):
 
         self.ui.textEdit.setScene(scene)
 
-        if scene.title:
-            self.ui.lineSceneTitle.setText(scene.title)
-            self.ui.lineSceneTitle.setPlaceholderText('Scene title')
-        else:
-            self.ui.lineSceneTitle.clear()
-            self.ui.lineSceneTitle.setPlaceholderText(scene.title_or_index(self.novel))
+        # if scene.title:
+        #     self.ui.lineSceneTitle.setText(scene.title)
+        #     self.ui.lineSceneTitle.setPlaceholderText('Scene title')
+        # else:
+        #     self.ui.lineSceneTitle.clear()
+        #     self.ui.lineSceneTitle.setPlaceholderText(scene.title_or_index(self.novel))
 
-        if scene.pov:
-            self.ui.btnPov.setIcon(avatars.avatar(scene.pov))
-            self.ui.btnPov.setVisible(True)
-        else:
-            self.ui.btnPov.setHidden(True)
-        scene_type_icon = IconRegistry.scene_type_icon(scene)
-        if scene_type_icon:
-            self.ui.btnSceneType.setIcon(scene_type_icon)
-            self.ui.btnSceneType.setVisible(True)
-        else:
-            self.ui.btnSceneType.setHidden(True)
+        # if scene.pov:
+        #     self.ui.btnPov.setIcon(avatars.avatar(scene.pov))
+        #     self.ui.btnPov.setVisible(True)
+        # else:
+        #     self.ui.btnPov.setHidden(True)
+        # scene_type_icon = IconRegistry.scene_type_icon(scene)
+        # if scene_type_icon:
+        #     self.ui.btnSceneType.setIcon(scene_type_icon)
+        #     self.ui.btnSceneType.setVisible(True)
+        # else:
+        #     self.ui.btnSceneType.setHidden(True)
 
         self.notesEditor.setScene(scene)
         self.ui.btnNotes.setEnabled(True)
@@ -202,9 +207,9 @@ class ManuscriptView(AbstractNovelView):
         else:
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
-        self.ui.lineSceneTitle.setText(chapter.title_index(self.novel))
-        self.ui.btnPov.setHidden(True)
-        self.ui.btnSceneType.setHidden(True)
+        # self.ui.lineSceneTitle.setText(chapter.title_index(self.novel))
+        # self.ui.btnPov.setHidden(True)
+        # self.ui.btnSceneType.setHidden(True)
         self.ui.btnNotes.setChecked(False)
         self.ui.btnNotes.setDisabled(True)
         self.ui.btnStage.setDisabled(True)
@@ -216,12 +221,12 @@ class ManuscriptView(AbstractNovelView):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
             self._text_changed()
 
-            if self.ui.cbSpellCheck.isChecked():
-                self.ui.textEdit.setGrammarCheckEnabled(True)
-                self.ui.textEdit.asyncCheckGrammer()
-
-            if self.ui.btnAnalysis.isChecked():
-                self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
+            # if self.ui.cbSpellCheck.isChecked():
+            #     self.ui.textEdit.setGrammarCheckEnabled(True)
+            #     self.ui.textEdit.asyncCheckGrammer()
+            #
+            # if self.ui.btnAnalysis.isChecked():
+            #     self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _text_changed(self):
         wc = self.ui.textEdit.statistics().word_count
