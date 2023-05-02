@@ -22,9 +22,11 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent
+from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget
 
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
 from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
@@ -34,7 +36,7 @@ from src.main.python.plotlyst.resources import resource_manager, ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import tool_btn
+from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -65,6 +67,15 @@ class ManuscriptView(AbstractNovelView):
 
         bold(self.ui.lblTitle)
         self.ui.btnManuscript.setIcon(IconRegistry.manuscript_icon())
+
+        self.ui.btnSceneInfo.setIcon(IconRegistry.scene_icon())
+        self.ui.btnGoals.setIcon(IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
+        self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
+        self.ui.btnLengthCharts.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
+        self.ui.btnExport.setIcon(IconRegistry.from_name('ei.download-alt', 'black', PLOTLYST_MAIN_COLOR))
+        for btn in self.ui.btnGroupSideBar.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5))
+            btn.installEventFilter(ButtonPressResizeEventFilter(btn))
 
         # bold(self.ui.lineSceneTitle)
         # incr_font(self.ui.lineSceneTitle)

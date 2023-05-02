@@ -231,7 +231,7 @@
             <number>0</number>
            </property>
            <property name="rightMargin">
-            <number>10</number>
+            <number>15</number>
            </property>
            <property name="bottomMargin">
             <number>2</number>
@@ -374,7 +374,7 @@
               <number>2</number>
              </property>
              <property name="topMargin">
-              <number>0</number>
+              <number>10</number>
              </property>
              <property name="rightMargin">
               <number>10</number>
@@ -383,7 +383,13 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QToolButton" name="toolButton_2">
+              <widget class="QToolButton" name="btnSceneInfo">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Scene info</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -393,10 +399,28 @@
                  <height>28</height>
                 </size>
                </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="transparent-circle-bg-on-hover" stdset="0">
+                <bool>true</bool>
+               </property>
+               <property name="large" stdset="0">
+                <bool>true</bool>
+               </property>
+               <attribute name="buttonGroup">
+                <string notr="true">btnGroupSideBar</string>
+               </attribute>
               </widget>
              </item>
              <item>
-              <widget class="QToolButton" name="toolButton">
+              <widget class="QToolButton" name="btnGoals">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Goals</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -406,10 +430,28 @@
                  <height>28</height>
                 </size>
                </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="transparent-circle-bg-on-hover" stdset="0">
+                <bool>true</bool>
+               </property>
+               <property name="large" stdset="0">
+                <bool>true</bool>
+               </property>
+               <attribute name="buttonGroup">
+                <string notr="true">btnGroupSideBar</string>
+               </attribute>
               </widget>
              </item>
              <item>
-              <widget class="QToolButton" name="toolButton_3">
+              <widget class="QToolButton" name="btnReadability">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Readability</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -419,10 +461,28 @@
                  <height>28</height>
                 </size>
                </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="transparent-circle-bg-on-hover" stdset="0">
+                <bool>true</bool>
+               </property>
+               <property name="large" stdset="0">
+                <bool>true</bool>
+               </property>
+               <attribute name="buttonGroup">
+                <string notr="true">btnGroupSideBar</string>
+               </attribute>
               </widget>
              </item>
              <item>
-              <widget class="QToolButton" name="toolButton_4">
+              <widget class="QToolButton" name="btnLengthCharts">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Length distribution</string>
+               </property>
                <property name="text">
                 <string/>
                </property>
@@ -432,6 +492,49 @@
                  <height>28</height>
                 </size>
                </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="transparent-circle-bg-on-hover" stdset="0">
+                <bool>true</bool>
+               </property>
+               <property name="large" stdset="0">
+                <bool>true</bool>
+               </property>
+               <attribute name="buttonGroup">
+                <string notr="true">btnGroupSideBar</string>
+               </attribute>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="btnExport">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="toolTip">
+                <string>Export</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>28</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="transparent-circle-bg-on-hover" stdset="0">
+                <bool>true</bool>
+               </property>
+               <property name="large" stdset="0">
+                <bool>true</bool>
+               </property>
+               <attribute name="buttonGroup">
+                <string notr="true">btnGroupSideBar</string>
+               </attribute>
               </widget>
              </item>
              <item>
@@ -647,4 +750,11 @@
  </customwidgets>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="btnGroupSideBar">
+   <property name="exclusive">
+    <bool>false</bool>
+   </property>
+  </buttongroup>
+ </buttongroups>
 </ui>
