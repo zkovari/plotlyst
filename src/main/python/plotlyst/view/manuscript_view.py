@@ -240,9 +240,9 @@ class ManuscriptView(AbstractNovelView):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
             self._text_changed()
 
-            # if self.ui.cbSpellCheck.isChecked():
-            #     self.ui.textEdit.setGrammarCheckEnabled(True)
-            #     self.ui.textEdit.asyncCheckGrammer()
+            if self._cbSpellCheck.isChecked():
+                self.ui.textEdit.setGrammarCheckEnabled(True)
+                self.ui.textEdit.asyncCheckGrammer()
             #
             # if self.ui.btnAnalysis.isChecked():
             #     self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
