@@ -315,11 +315,16 @@ def insert_after(parent: QWidget, widget: QWidget, reference: QWidget):
     parent.layout().insertWidget(i + 1, widget)
 
 
-def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False) -> QToolButton:
+def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
+             icon_resize: bool = True) -> QToolButton:
     btn = QToolButton()
     btn.setIcon(icon)
     btn.setToolTip(tooltip)
     btn.setCheckable(checkable)
     pointy(btn)
+    if base:
+        btn.setProperty('base', True)
+    if icon_resize:
+        btn.installEventFilter(ButtonPressResizeEventFilter(btn))
 
     return btn

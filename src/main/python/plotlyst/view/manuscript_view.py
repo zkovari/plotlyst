@@ -21,7 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
-from qthandy import translucent, bold, margins
+from qthandy import translucent, bold, margins, spacer, vline, transparent
+from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget
 
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
@@ -33,10 +34,13 @@ from src.main.python.plotlyst.resources import resource_manager, ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.common import tool_btn
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.display import Icon
+from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor
+    DistractionFreeManuscriptEditor, SprintWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 from src.main.python.plotlyst.view.widget.utility import MissingResourceManagerDialog
 
@@ -70,24 +74,40 @@ class ManuscriptView(AbstractNovelView):
 
         bold(self.ui.lblWordCount)
 
-        # self.ui.btnDistractionFree.setIcon(IconRegistry.expand_icon())
-        # self.ui.btnSpellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
+        self._wdgSprint = SprintWidget()
+        self._spellCheckIcon = Icon()
+        self._spellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        self._cbSpellCheck = Toggle()
+        self._btnContext = tool_btn(IconRegistry.context_icon(), 'Manuscript settings')
+        transparent(self._btnContext)
+
+        self.ui.wdgTop.layout().addWidget(self._btnDistractionFree)
+        self.ui.wdgTop.layout().addWidget(self._wdgSprint)
+        self.ui.wdgTop.layout().addWidget(spacer())
+        self.ui.wdgTop.layout().addWidget(self._spellCheckIcon)
+        self.ui.wdgTop.layout().addWidget(self._cbSpellCheck)
+        self.ui.wdgTop.layout().addWidget(vline())
+        self.ui.wdgTop.layout().addWidget(self._btnContext)
+
         # self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
         # self.ui.btnContext.setIcon(IconRegistry.context_icon())
         # self.ui.btnContext.installEventFilter(OpacityEventFilter(self.ui.btnContext, leaveOpacity=0.7))
         self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
         self._contextMenuWidget = TextEditorSettingsWidget()
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
+        menu = MenuWidget(self._btnContext)
+        menu.addWidget(self._contextMenuWidget)
         # btn_popup(self.ui.btnContext, self._contextMenuWidget)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
-        # self.ui.cbSpellCheck.toggled.connect(self._spellcheck_toggled)
-        # self.ui.cbSpellCheck.clicked.connect(self._spellcheck_clicked)
+        self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
+        self._cbSpellCheck.clicked.connect(self._spellcheck_clicked)
         # self.ui.btnAnalysis.toggled.connect(self._analysis_toggled)
         # self.ui.btnAnalysis.clicked.connect(self._analysis_clicked)
-        self.ui.wdgReadability.cbAdverbs.toggled.connect(self._adverb_highlight_toggled)
-        # self._spellcheck_toggled(self.ui.btnSpellCheckIcon.isChecked())
+        # self.ui.wdgReadability.cbAdverbs.toggled.connect(self._adverb_highlight_toggled)
+        self._spellcheck_toggled(self._cbSpellCheck.isChecked())
         # self._analysis_toggled(self.ui.btnAnalysis.isChecked())
 
         self._dist_free_editor = DistractionFreeManuscriptEditor(self.ui.pageDistractionFree)
@@ -98,8 +118,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.sceneSelected.connect(self._editScene)
         self.ui.treeChapters.chapterSelected.connect(self._editChapter)
 
-        self.ui.wdgTopAnalysis.setHidden(True)
-        self.ui.wdgSideAnalysis.setHidden(True)
+        self.ui.wdgSide.setHidden(True)
         self.ui.wdgAddon.setHidden(True)
 
         self.notesEditor = SceneNotesEditor()
@@ -112,7 +131,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.textEdit.setSidebarEnabled(False)
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
-        # self.ui.btnDistractionFree.clicked.connect(self._enter_distraction_free)
+        # self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
             self.ui.treeChapters.selectChapter(self.novel.chapters[0])
@@ -232,7 +251,7 @@ class ManuscriptView(AbstractNovelView):
         wc = self.ui.textEdit.statistics().word_count
         self.ui.lblWordCount.setWordCount(wc)
         self._update_story_goal()
-        self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
+        # self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
 
     def _text_selection_changed(self):
         fragment = self.ui.textEdit.textEdit.textCursor().selection()
@@ -249,15 +268,15 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.clearSelection()
 
     def _spellcheck_toggled(self, toggled: bool):
-        translucent(self.ui.btnSpellCheckIcon, 1 if toggled else 0.4)
+        translucent(self._spellCheckIcon, 1 if toggled else 0.4)
 
     def _spellcheck_clicked(self, checked: bool):
         if checked:
             if language_tool_proxy.is_failed():
-                self.ui.cbSpellCheck.setChecked(False)
+                self._cbSpellCheck.setChecked(False)
                 emit_critical(language_tool_proxy.error)
             else:
-                self.ui.wdgReadability.cbAdverbs.setChecked(False)
+                # self.ui.wdgReadability.cbAdverbs.setChecked(False)
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 QTimer.singleShot(50, self.ui.textEdit.asyncCheckGrammer)
         else:
@@ -282,8 +301,8 @@ class ManuscriptView(AbstractNovelView):
 
     def _adverb_highlight_toggled(self, toggled: bool):
         if toggled:
-            if self.ui.cbSpellCheck.isChecked():
-                self.ui.cbSpellCheck.setChecked(False)
+            if self._cbSpellCheck.isChecked():
+                self._cbSpellCheck.setChecked(False)
                 self.ui.textEdit.setGrammarCheckEnabled(False)
                 self.ui.textEdit.checkGrammar()
         self.ui.textEdit.setWordTagHighlighterEnabled(toggled)

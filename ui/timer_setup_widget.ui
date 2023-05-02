@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>178</width>
-    <height>107</height>
+    <width>222</width>
+    <height>149</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,19 +21,19 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>3</number>
+    <number>5</number>
    </property>
    <property name="leftMargin">
-    <number>4</number>
+    <number>5</number>
    </property>
    <property name="topMargin">
-    <number>4</number>
+    <number>5</number>
    </property>
    <property name="rightMargin">
-    <number>4</number>
+    <number>5</number>
    </property>
    <property name="bottomMargin">
-    <number>4</number>
+    <number>5</number>
    </property>
    <item>
     <widget class="QLabel" name="label">
@@ -42,7 +42,7 @@
      </property>
     </widget>
    </item>
-   <item alignment="Qt::AlignRight">
+   <item alignment="Qt::AlignHCenter">
     <widget class="QSpinBox" name="sbTimer">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -97,7 +97,7 @@
      <property name="base" stdset="0">
       <bool>true</bool>
      </property>
-     <property name="highlighted" stdset="0">
+     <property name="positive" stdset="0">
       <bool>true</bool>
      </property>
     </widget>

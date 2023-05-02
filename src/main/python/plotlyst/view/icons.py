@@ -606,7 +606,7 @@ class IconRegistry:
 
     @staticmethod
     def expand_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.expand-alt')
+        return IconRegistry.from_name('fa5s.expand-alt', vflip=True)
 
     @staticmethod
     def docx_icon() -> QIcon:

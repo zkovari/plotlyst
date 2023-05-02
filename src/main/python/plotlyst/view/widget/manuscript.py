@@ -31,8 +31,9 @@ from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, btn_popup, clear_layout, gc
+from qthandy import retain_when_hidden, translucent, clear_layout, gc
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
+from qtmenu import MenuWidget
 from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState, remove_font
 from textstat import textstat
 
@@ -79,7 +80,8 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self.btnTimer.setIcon(IconRegistry.timer_icon())
         self.btnReset.setIcon(IconRegistry.restore_alert_icon('#9b2226'))
         self._timer_setup = TimerSetupWidget()
-        btn_popup(self.btnTimer, self._timer_setup)
+        self._menu = MenuWidget(self.btnTimer)
+        self._menu.addWidget(self._timer_setup)
 
         self._timer_setup.btnStart.clicked.connect(self.start)
         self.btnPause.clicked.connect(self._pauseStartTimer)
@@ -105,7 +107,7 @@ class SprintWidget(QWidget, Ui_SprintWidget):
         self._toggleState(True)
         self._model.start(self._timer_setup.value())
         self._updateTimer()
-        self.btnTimer.menu().hide()
+        self._menu.close()
 
     def _toggleState(self, running: bool):
         self.time.setVisible(running)
@@ -442,7 +444,7 @@ class ManuscriptTextEditor(RichTextEditor):
 
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
-        self.toolbar().setVisible(False)
+        self.toolbar().setHidden(True)
         self.setCharacterWidth()
         self._scenes: List[Scene] = []
         self.repo = RepositoryPersistenceManager.instance()
