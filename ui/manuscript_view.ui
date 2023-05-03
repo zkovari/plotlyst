@@ -223,6 +223,9 @@
         </property>
         <item>
          <widget class="QWidget" name="wdgTop" native="true">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
           <layout class="QHBoxLayout" name="horizontalLayout">
            <property name="leftMargin">
             <number>5</number>
@@ -231,7 +234,7 @@
             <number>0</number>
            </property>
            <property name="rightMargin">
-            <number>15</number>
+            <number>21</number>
            </property>
            <property name="bottomMargin">
             <number>2</number>
@@ -359,12 +362,18 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="wdgSideBar" native="true">
+           <widget class="QFrame" name="wdgSideBar">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Sunken</enum>
             </property>
             <property name="relaxed-white-bg" stdset="0">
              <bool>true</bool>
@@ -571,8 +580,6 @@
                                                                     #E7E7E7);
                                                                     border-bottom-left-radius: 6px;
                                                                     border-bottom-right-radius: 6px;
-                                                                    border: 1px hidden black;
-                                                                    border-top: 0px;
                                                                     }
                                                                 </string>
           </property>
