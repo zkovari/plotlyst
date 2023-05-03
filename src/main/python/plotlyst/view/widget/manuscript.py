@@ -433,9 +433,8 @@ class ManuscriptTextEdit(TextEditBase):
         self.setStyleSheet(f'border-top: {border}px dashed {RELAXED_WHITE_COLOR}; background-color: rgba(0, 0, 0, 0);')
 
     def _setDefaultStyleSheet(self):
-        border = 0
         self.setStyleSheet(
-            f'ManuscriptTextEdit {{border-top: {border}px dashed grey; background-color: {RELAXED_WHITE_COLOR};}}')
+            f'ManuscriptTextEdit {{background-color: {RELAXED_WHITE_COLOR};}}')
 
 
 class ManuscriptTextEditor(RichTextEditor):

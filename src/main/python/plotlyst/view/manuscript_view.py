@@ -74,7 +74,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnLengthCharts.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnExport.setIcon(IconRegistry.from_name('ei.download-alt', 'black', PLOTLYST_MAIN_COLOR))
         for btn in self.ui.btnGroupSideBar.buttons():
-            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5))
+            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
             btn.installEventFilter(ButtonPressResizeEventFilter(btn))
 
         # bold(self.ui.lineSceneTitle)
