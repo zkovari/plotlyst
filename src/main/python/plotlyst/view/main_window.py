@@ -92,6 +92,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             DEFAULT_FONT_FAMILIES.insert(0, 'Palatino')
         elif app_env.is_linux():
             DEFAULT_FONT_FAMILIES.insert(0, 'Noto Sans Mono')
+            DEFAULT_FONT_FAMILIES.insert(3 if len(DEFAULT_FONT_FAMILIES) > 5 else -1, 'Calibri')
 
         for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze, self.lblManage]:
             lbl.setStyleSheet(f'color: {PLOTLYST_MAIN_COLOR};')
