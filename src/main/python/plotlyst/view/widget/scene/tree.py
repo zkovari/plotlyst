@@ -171,7 +171,7 @@ class ScenesTreeView(TreeView, EventListener):
 
     def refresh(self):
         self.clearSelection()
-        clear_layout(self, auto_delete=False)
+        clear_layout(self._centralWidget, auto_delete=False)
 
         for scene in self._novel.scenes:
             if scene not in self._scenes.keys():
@@ -181,8 +181,10 @@ class ScenesTreeView(TreeView, EventListener):
             if scene.chapter:
                 if scene.chapter not in self._chapters.keys():
                     chapter_wdg = self.__initChapterWidget(scene.chapter)
-                    self._centralWidget.layout().addWidget(chapter_wdg)
-                self._chapters[scene.chapter].addChild(sceneWdg)
+                else:
+                    chapter_wdg = self._chapters[scene.chapter]
+                self._centralWidget.layout().addWidget(chapter_wdg)
+                chapter_wdg.addChild(sceneWdg)
             else:
                 self._centralWidget.layout().addWidget(sceneWdg)
 
@@ -190,11 +192,13 @@ class ScenesTreeView(TreeView, EventListener):
         for i, chapter in enumerate(self._novel.chapters):
             if chapter not in self._chapters.keys():
                 chapter_wdg = self.__initChapterWidget(chapter)
-                if i > 0:
-                    prev_chapter_wdg = self._chapters[self._novel.chapters[i - 1]]
-                    chapter_index = self._centralWidget.layout().indexOf(prev_chapter_wdg)
-                    chapter_index += 1
-                self._centralWidget.layout().insertWidget(chapter_index, chapter_wdg)
+            else:
+                chapter_wdg = self._chapters[chapter]
+            if i > 0:
+                prev_chapter_wdg = self._chapters[self._novel.chapters[i - 1]]
+                chapter_index = self._centralWidget.layout().indexOf(prev_chapter_wdg)
+                chapter_index += 1
+            self._centralWidget.layout().insertWidget(chapter_index, chapter_wdg)
 
         self._centralWidget.layout().addWidget(self._spacer)
 
@@ -214,6 +218,10 @@ class ScenesTreeView(TreeView, EventListener):
         self._centralWidget.layout().insertWidget(i, wdg)
 
         self.repo.update_novel(self._novel)
+        emit_event(ChapterChangedEvent(self))
+
+    def addScene(self):
+        pass
 
     def selectChapter(self, chapter: Chapter):
         self.clearSelection()
