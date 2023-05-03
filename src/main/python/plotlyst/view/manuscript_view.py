@@ -36,7 +36,7 @@ from src.main.python.plotlyst.resources import resource_manager, ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
@@ -101,15 +101,16 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgTop.layout().addWidget(vline())
         self.ui.wdgTop.layout().addWidget(self._btnContext)
 
-        # self.ui.btnAnalysisIcon.setIcon(IconRegistry.from_name('fa5s.glasses'))
-        # self.ui.btnContext.setIcon(IconRegistry.context_icon())
-        # self.ui.btnContext.installEventFilter(OpacityEventFilter(self.ui.btnContext, leaveOpacity=0.7))
+        self._addSceneMenu = MenuWidget(self.ui.btnAdd)
+        self._addSceneMenu.addAction(action('Add scene', IconRegistry.scene_icon(), self.ui.treeChapters.addScene))
+        self._addSceneMenu.addAction(
+            action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
+
         self._langSelectionWidget = ManuscriptContextMenuWidget(novel, self.widget)
         self._contextMenuWidget = TextEditorSettingsWidget()
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
         menu = MenuWidget(self._btnContext)
         menu.addWidget(self._contextMenuWidget)
-        # btn_popup(self.ui.btnContext, self._contextMenuWidget)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)

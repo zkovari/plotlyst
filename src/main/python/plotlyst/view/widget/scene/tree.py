@@ -39,7 +39,7 @@ from src.main.python.plotlyst.events import SceneDeletedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
-from src.main.python.plotlyst.view.common import action
+from src.main.python.plotlyst.view.common import action, insert_before_the_end
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
@@ -221,7 +221,13 @@ class ScenesTreeView(TreeView, EventListener):
         emit_event(ChapterChangedEvent(self))
 
     def addScene(self):
-        pass
+        scene = self._novel.new_scene()
+        self._novel.scenes.append(scene)
+        wdg = self.__initSceneWidget(scene)
+        insert_before_the_end(self._centralWidget, wdg)
+
+        self.repo.update_novel(self._novel)
+        emit_event(SceneChangedEvent(self, scene))
 
     def selectChapter(self, chapter: Chapter):
         self.clearSelection()
