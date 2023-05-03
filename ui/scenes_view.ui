@@ -1164,7 +1164,7 @@
                     <x>0</x>
                     <y>0</y>
                     <width>98</width>
-                    <height>16</height>
+                    <height>28</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -1228,6 +1228,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>src.main.python.plotlyst.view.widget.scene</header>
+  </customwidget>
+  <customwidget>
    <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
@@ -1243,11 +1248,6 @@
    <class>RotatedButton</class>
    <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
-   <class>ScenesTreeView</class>
-   <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.scene</header>
   </customwidget>
  </customwidgets>
  <resources/>
@@ -1265,22 +1265,6 @@
     <hint type="destinationlabel">
      <x>595</x>
      <y>67</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btnChaptersToggle</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>wgtChapters</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>21</x>
-     <y>52</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>12</x>
-     <y>119</y>
     </hint>
    </hints>
   </connection>
@@ -1334,7 +1318,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupStoryMapView"/>
+  <buttongroup name="btnGroupViews"/>
  </buttongroups>
 </ui>

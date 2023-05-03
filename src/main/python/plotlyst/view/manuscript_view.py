@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
+import qtanim
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
@@ -76,6 +76,8 @@ class ManuscriptView(AbstractNovelView):
         for btn in self.ui.btnGroupSideBar.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
             btn.installEventFilter(ButtonPressResizeEventFilter(btn))
+
+        self.ui.btnGroupSideBar.buttonToggled.connect(self._side_bar_toggled)
 
         # bold(self.ui.lineSceneTitle)
         # incr_font(self.ui.lineSceneTitle)
@@ -272,6 +274,17 @@ class ManuscriptView(AbstractNovelView):
             self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
         else:
             self.ui.lblWordCount.clearSecondaryWordCount()
+
+    def _side_bar_toggled(self):
+        btn = self.ui.btnGroupSideBar.checkedButton()
+        if btn is None:
+            # self.ui.wdgSide.setVisible(False)
+            qtanim.collapse(self.ui.wdgSide)
+            return
+
+        qtanim.expand(self.ui.wdgSide)
+
+        # self.ui.wdgSide.setVisible(True)
 
     def _scene_title_edited(self, text: str):
         pass
