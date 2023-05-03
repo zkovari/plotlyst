@@ -157,7 +157,7 @@ class ContainerNode(BaseTreeWidget):
         self._container = QWidget(self)
         self._container.setHidden(True)
         vbox(self._container, 1)
-        margins(self._container, left=10)
+        margins(self._container, left=20)
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._container)
 
