@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import qtanim
 from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer
@@ -26,7 +27,7 @@ from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
 from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
@@ -40,10 +41,11 @@ from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEven
     ExclusiveOptionalButtonGroup, link_buttons_to_pages
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.display import Icon
+from src.main.python.plotlyst.view.widget.display import Icon, ChartView
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget
+from src.main.python.plotlyst.view.widget.progress import ProgressChart
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 from src.main.python.plotlyst.view.widget.utility import MissingResourceManagerDialog
 
@@ -107,6 +109,14 @@ class ManuscriptView(AbstractNovelView):
         self._cbSpellCheck = Toggle()
         self._btnContext = tool_btn(IconRegistry.context_icon(), 'Manuscript settings')
         transparent(self._btnContext)
+
+        self._chartProgress = ProgressChart(maxValue=80000, emptySliceColor=RELAXED_WHITE_COLOR)
+        self._chartProgress.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
+        self._chartProgressView = ChartView()
+        self._chartProgressView.setMaximumSize(200, 200)
+        self._chartProgressView.setChart(self._chartProgress)
+        self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.ui.pageGoal.layout().addWidget(vspacer())
 
         self._wdgReadability = ReadabilityWidget()
         self.ui.pageReadability.layout().addWidget(self._wdgReadability, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -202,6 +212,8 @@ class ManuscriptView(AbstractNovelView):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
         # self.ui.btnStoryGoal.setText(f'{wc} word{"s" if wc > 1 else ""}')
         # self.ui.progressStory.setValue(int(wc / 80000 * 100))
+        self._chartProgress.setValue(wc)
+        self._chartProgress.refresh()
 
     def _editScene(self, scene: Scene):
         self.ui.textEdit.setGrammarCheckEnabled(False)
