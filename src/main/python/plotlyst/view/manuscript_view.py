@@ -21,7 +21,7 @@ import qtanim
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, vline, transparent
+from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget
@@ -36,13 +36,14 @@ from src.main.python.plotlyst.resources import resource_manager, ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action
+from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
-    DistractionFreeManuscriptEditor, SprintWidget
+    DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 from src.main.python.plotlyst.view.widget.utility import MissingResourceManagerDialog
 
@@ -73,11 +74,23 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnLengthCharts.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnExport.setIcon(IconRegistry.from_name('ei.download-alt', 'black', PLOTLYST_MAIN_COLOR))
-        for btn in self.ui.btnGroupSideBar.buttons():
+
+        self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
+        self._btnGroupSideBar.addButton(self.ui.btnSceneInfo)
+        self._btnGroupSideBar.addButton(self.ui.btnGoals)
+        self._btnGroupSideBar.addButton(self.ui.btnReadability)
+        self._btnGroupSideBar.addButton(self.ui.btnLengthCharts)
+        self._btnGroupSideBar.addButton(self.ui.btnExport)
+        for btn in self._btnGroupSideBar.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.5, ignoreCheckedButton=True))
             btn.installEventFilter(ButtonPressResizeEventFilter(btn))
 
-        self.ui.btnGroupSideBar.buttonToggled.connect(self._side_bar_toggled)
+        self._btnGroupSideBar.buttonToggled.connect(self._side_bar_toggled)
+        link_buttons_to_pages(self.ui.stackSide,
+                              [(self.ui.btnSceneInfo, self.ui.pageInfo), (self.ui.btnGoals, self.ui.pageGoal),
+                               (self.ui.btnExport, self.ui.pageExport),
+                               (self.ui.btnLengthCharts, self.ui.pageCharts),
+                               (self.ui.btnReadability, self.ui.pageReadability)])
 
         # bold(self.ui.lineSceneTitle)
         # incr_font(self.ui.lineSceneTitle)
@@ -94,6 +107,10 @@ class ManuscriptView(AbstractNovelView):
         self._cbSpellCheck = Toggle()
         self._btnContext = tool_btn(IconRegistry.context_icon(), 'Manuscript settings')
         transparent(self._btnContext)
+
+        self._wdgReadability = ReadabilityWidget()
+        self.ui.pageReadability.layout().addWidget(self._wdgReadability, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.ui.pageReadability.layout().addWidget(vspacer())
 
         self.ui.wdgTop.layout().addWidget(self._btnDistractionFree)
         self.ui.wdgTop.layout().addWidget(self._wdgSprint)
@@ -118,11 +135,8 @@ class ManuscriptView(AbstractNovelView):
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
         self._cbSpellCheck.toggled.connect(self._spellcheck_toggled)
         self._cbSpellCheck.clicked.connect(self._spellcheck_clicked)
-        # self.ui.btnAnalysis.toggled.connect(self._analysis_toggled)
-        # self.ui.btnAnalysis.clicked.connect(self._analysis_clicked)
-        # self.ui.wdgReadability.cbAdverbs.toggled.connect(self._adverb_highlight_toggled)
+        self._wdgReadability.cbAdverbs.toggled.connect(self._adverb_highlight_toggled)
         self._spellcheck_toggled(self._cbSpellCheck.isChecked())
-        # self._analysis_toggled(self.ui.btnAnalysis.isChecked())
 
         self._dist_free_editor = DistractionFreeManuscriptEditor(self.ui.pageDistractionFree)
         self._dist_free_editor.exitRequested.connect(self._exit_distraction_free)
@@ -167,7 +181,7 @@ class ManuscriptView(AbstractNovelView):
         margins(self.widget, 0, 0, 0, 0)
         self.ui.wdgTitle.setHidden(True)
         self.ui.treeChapters.setHidden(True)
-        self._dist_free_editor.activate(self.ui.textEdit, self.ui.wdgSprint.model())
+        self._dist_free_editor.activate(self.ui.textEdit, self._wdgSprint.model())
         self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
     def _exit_distraction_free(self):
@@ -182,7 +196,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.lblWordCount.setStyleSheet('color: black')
         self.ui.lblWordCount.setVisible(True)
         self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)
-        self.ui.wdgReadability.cbAdverbs.setChecked(False)
+        self._wdgReadability.cbAdverbs.setChecked(False)
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
@@ -258,15 +272,14 @@ class ManuscriptView(AbstractNovelView):
             if self._cbSpellCheck.isChecked():
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 self.ui.textEdit.asyncCheckGrammer()
-            #
-            # if self.ui.btnAnalysis.isChecked():
-            #     self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
+            if self.ui.btnReadability.isChecked():
+                self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _text_changed(self):
         wc = self.ui.textEdit.statistics().word_count
         self.ui.lblWordCount.setWordCount(wc)
         self._update_story_goal()
-        # self.ui.wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
+        self._wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
 
     def _text_selection_changed(self):
         fragment = self.ui.textEdit.textEdit.textCursor().selection()
@@ -275,16 +288,20 @@ class ManuscriptView(AbstractNovelView):
         else:
             self.ui.lblWordCount.clearSecondaryWordCount()
 
-    def _side_bar_toggled(self):
-        btn = self.ui.btnGroupSideBar.checkedButton()
+    def _side_bar_toggled(self, btn, toggled: bool):
+        btn = self._btnGroupSideBar.checkedButton()
         if btn is None:
-            # self.ui.wdgSide.setVisible(False)
             qtanim.collapse(self.ui.wdgSide)
             return
 
-        qtanim.expand(self.ui.wdgSide)
+        if toggled:
+            qtanim.expand(self.ui.wdgSide)
 
-        # self.ui.wdgSide.setVisible(True)
+        if btn is self.ui.btnReadability:
+            # self.ui.stackSide.setCurrentWidget(self.ui.pageReadability)
+            self._analysis_clicked(self.ui.btnReadability.isChecked())
+        # elif btn is self.ui.btnSceneInfo:
+        #     self.ui.stackSide.setCurrentWidget(self.ui.pageInfo)
 
     def _scene_title_edited(self, text: str):
         pass
@@ -302,28 +319,24 @@ class ManuscriptView(AbstractNovelView):
                 self._cbSpellCheck.setChecked(False)
                 emit_critical(language_tool_proxy.error)
             else:
-                # self.ui.wdgReadability.cbAdverbs.setChecked(False)
+                # self._wdgReadability.cbAdverbs.setChecked(False)
                 self.ui.textEdit.setGrammarCheckEnabled(True)
                 QTimer.singleShot(50, self.ui.textEdit.asyncCheckGrammer)
         else:
             self.ui.textEdit.setGrammarCheckEnabled(False)
             self.ui.textEdit.checkGrammar()
 
-    def _analysis_toggled(self, toggled: bool):
-        translucent(self.ui.btnAnalysisIcon, 1 if toggled else 0.4)
-
     def _analysis_clicked(self, checked: bool):
         if checked and not resource_manager.has_resource(ResourceType.NLTK_PUNKT_TOKENIZER):
             MissingResourceManagerDialog([ResourceType.NLTK_PUNKT_TOKENIZER]).display()
             if not resource_manager.has_resource(ResourceType.NLTK_PUNKT_TOKENIZER):
-                self.ui.btnAnalysis.setChecked(False)
+                self.ui.btnReadability.setChecked(False)
                 return
 
-        self.ui.wdgSideAnalysis.setVisible(checked)
         if not checked:
             return
 
-        self.ui.wdgReadability.checkTextDocument(self.ui.textEdit.document())
+        self._wdgReadability.checkTextDocument(self.ui.textEdit.document())
 
     def _adverb_highlight_toggled(self, toggled: bool):
         if toggled:
