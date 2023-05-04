@@ -353,7 +353,7 @@
               <number>3</number>
              </property>
              <property name="leftMargin">
-              <number>0</number>
+              <number>2</number>
              </property>
              <property name="topMargin">
               <number>2</number>
@@ -390,10 +390,10 @@
                   <number>3</number>
                  </property>
                  <property name="leftMargin">
-                  <number>2</number>
+                  <number>5</number>
                  </property>
                  <property name="topMargin">
-                  <number>2</number>
+                  <number>5</number>
                  </property>
                  <property name="rightMargin">
                   <number>2</number>
