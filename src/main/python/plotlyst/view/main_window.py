@@ -21,7 +21,7 @@ from typing import Optional
 
 import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QFont
+from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QFont, QResizeEvent
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
     QProgressDialog
 from fbs_runtime import platform
@@ -92,6 +92,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             DEFAULT_FONT_FAMILIES.insert(0, 'Palatino')
         elif app_env.is_linux():
             DEFAULT_FONT_FAMILIES.insert(0, 'Noto Sans Mono')
+            DEFAULT_FONT_FAMILIES.insert(3 if len(DEFAULT_FONT_FAMILIES) > 5 else -1, 'Calibri')
 
         for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze, self.lblManage]:
             lbl.setStyleSheet(f'color: {PLOTLYST_MAIN_COLOR};')
@@ -196,6 +197,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             return
 
         event.ignore()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        if app_env.is_dev():
+            emit_info(f'Size: {event.size().width()}:{event.size().height()}')
 
     @overrides
     def event_received(self, event: Event):

@@ -43,11 +43,17 @@
      <property name="focusPolicy">
       <enum>Qt::ClickFocus</enum>
      </property>
+     <property name="toolTip">
+      <string>Writing sprint</string>
+     </property>
      <property name="text">
       <string/>
      </property>
      <property name="popupMode">
       <enum>QToolButton::InstantPopup</enum>
+     </property>
+     <property name="base" stdset="0">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -94,6 +100,9 @@
      <property name="focusPolicy">
       <enum>Qt::ClickFocus</enum>
      </property>
+     <property name="toolTip">
+      <string>Pause timer</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -109,6 +118,9 @@
      </property>
      <property name="focusPolicy">
       <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="toolTip">
+      <string>Reset timer</string>
      </property>
      <property name="text">
       <string/>

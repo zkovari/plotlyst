@@ -27,7 +27,7 @@ from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, Q
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
-    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton
+    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
@@ -315,11 +315,36 @@ def insert_after(parent: QWidget, widget: QWidget, reference: QWidget):
     parent.layout().insertWidget(i + 1, widget)
 
 
-def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False) -> QToolButton:
+def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
+             icon_resize: bool = True) -> QToolButton:
     btn = QToolButton()
     btn.setIcon(icon)
     btn.setToolTip(tooltip)
     btn.setCheckable(checkable)
     pointy(btn)
+    if base:
+        btn.setProperty('base', True)
+    if icon_resize:
+        btn.installEventFilter(ButtonPressResizeEventFilter(btn))
 
     return btn
+
+
+class ExclusiveOptionalButtonGroup(QButtonGroup):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setExclusive(False)
+        self._checkedButton: Optional[QAbstractButton] = None
+
+        self.buttonToggled.connect(self._buttonToggled)
+
+    @overrides
+    def setExclusive(self, _: bool) -> None:
+        super(ExclusiveOptionalButtonGroup, self).setExclusive(False)
+
+    def _buttonToggled(self, button: QAbstractButton, toggled: bool):
+        if toggled and self._checkedButton and self._checkedButton is not button:
+            self._checkedButton.setChecked(False)
+
+        if toggled:
+            self._checkedButton = button

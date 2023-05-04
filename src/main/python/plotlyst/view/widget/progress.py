@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
 
 from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
-    RELAXED_WHITE_COLOR
+    RELAXED_WHITE_COLOR, ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
 from src.main.python.plotlyst.core.template import RoleImportance
 from src.main.python.plotlyst.event.core import EventListener, Event
@@ -71,7 +71,8 @@ class SceneStageProgressCharts(EventListener):
             self._stage = self.novel.stages[0]
         else:
             self._stage = None
-        self._act_colors = {1: '#02bcd4', 2: '#1bbc9c', 3: '#ff7800'}
+
+        self._act_colors = {1: ACT_ONE_COLOR, 2: ACT_TWO_COLOR, 3: ACT_THREE_COLOR}
 
         event_dispatcher.register(self, SceneStatusChangedEvent)
 
@@ -124,11 +125,13 @@ class SceneStageProgressCharts(EventListener):
 class ProgressChart(BaseChart):
 
     def __init__(self, value: int = 0, maxValue: int = 1, title_prefix: str = 'Progress', color=Qt.GlobalColor.darkBlue,
-                 titleColor=Qt.GlobalColor.black, emptySliceColor=Qt.GlobalColor.white, parent=None):
+                 titleColor=Qt.GlobalColor.black, emptySliceColor=Qt.GlobalColor.white,
+                 emptySliceBorder=Qt.GlobalColor.lightGray, parent=None):
         super(ProgressChart, self).__init__(parent)
         self._title_prefix = title_prefix
-        self._color = color
-        self._empty_slice_color = emptySliceColor
+        self._color: QColor = QColor(color)
+        self._empty_slice_color: QColor = QColor(emptySliceColor)
+        self._empty_slice_border: QColor = QColor(emptySliceBorder)
         self._value = value
         self._maxValue = maxValue
 
@@ -158,9 +161,11 @@ class ProgressChart(BaseChart):
         series = QPieSeries()
         series.setHoleSize(0.45)
         percentage_slice = QPieSlice('Progress', self._value)
-        percentage_slice.setColor(QColor(self._color))
+        percentage_slice.setColor(self._color)
+        percentage_slice.setBorderColor(self._color)
         empty_slice = QPieSlice('', self._maxValue - self._value)
-        empty_slice.setColor(QColor(self._empty_slice_color))
+        empty_slice.setColor(self._empty_slice_color)
+        empty_slice.setBorderColor(self._empty_slice_border)
         series.append(percentage_slice)
         series.append(empty_slice)
         self.setTitle(self._title_prefix + " {:.1f}%".format(100 * percentage_slice.percentage()))

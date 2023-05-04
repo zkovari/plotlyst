@@ -147,8 +147,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi6.clipboard-check-outline', color_on='#2B0548')
 
     @staticmethod
-    def scene_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.movie-open', color_on=PLOTLYST_SECONDARY_COLOR, mdi_scale=1.1)
+    def scene_icon(color: str = 'black') -> QIcon:
+        return IconRegistry.from_name('mdi.movie-open', color, color_on=PLOTLYST_SECONDARY_COLOR, mdi_scale=1.1)
 
     @staticmethod
     def manuscript_icon() -> QIcon:
@@ -606,7 +606,7 @@ class IconRegistry:
 
     @staticmethod
     def expand_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.expand-alt')
+        return IconRegistry.from_name('fa5s.expand-alt', vflip=True)
 
     @staticmethod
     def docx_icon() -> QIcon:

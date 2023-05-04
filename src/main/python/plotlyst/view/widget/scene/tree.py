@@ -39,7 +39,7 @@ from src.main.python.plotlyst.events import SceneDeletedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent, ChapterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_scene
-from src.main.python.plotlyst.view.common import action
+from src.main.python.plotlyst.view.common import action, insert_before_the_end
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
@@ -171,7 +171,7 @@ class ScenesTreeView(TreeView, EventListener):
 
     def refresh(self):
         self.clearSelection()
-        clear_layout(self, auto_delete=False)
+        clear_layout(self._centralWidget, auto_delete=False)
 
         for scene in self._novel.scenes:
             if scene not in self._scenes.keys():
@@ -181,8 +181,10 @@ class ScenesTreeView(TreeView, EventListener):
             if scene.chapter:
                 if scene.chapter not in self._chapters.keys():
                     chapter_wdg = self.__initChapterWidget(scene.chapter)
-                    self._centralWidget.layout().addWidget(chapter_wdg)
-                self._chapters[scene.chapter].addChild(sceneWdg)
+                else:
+                    chapter_wdg = self._chapters[scene.chapter]
+                self._centralWidget.layout().addWidget(chapter_wdg)
+                chapter_wdg.addChild(sceneWdg)
             else:
                 self._centralWidget.layout().addWidget(sceneWdg)
 
@@ -190,11 +192,13 @@ class ScenesTreeView(TreeView, EventListener):
         for i, chapter in enumerate(self._novel.chapters):
             if chapter not in self._chapters.keys():
                 chapter_wdg = self.__initChapterWidget(chapter)
-                if i > 0:
-                    prev_chapter_wdg = self._chapters[self._novel.chapters[i - 1]]
-                    chapter_index = self._centralWidget.layout().indexOf(prev_chapter_wdg)
-                    chapter_index += 1
-                self._centralWidget.layout().insertWidget(chapter_index, chapter_wdg)
+            else:
+                chapter_wdg = self._chapters[chapter]
+            if i > 0:
+                prev_chapter_wdg = self._chapters[self._novel.chapters[i - 1]]
+                chapter_index = self._centralWidget.layout().indexOf(prev_chapter_wdg)
+                chapter_index += 1
+            self._centralWidget.layout().insertWidget(chapter_index, chapter_wdg)
 
         self._centralWidget.layout().addWidget(self._spacer)
 
@@ -214,6 +218,16 @@ class ScenesTreeView(TreeView, EventListener):
         self._centralWidget.layout().insertWidget(i, wdg)
 
         self.repo.update_novel(self._novel)
+        emit_event(ChapterChangedEvent(self))
+
+    def addScene(self):
+        scene = self._novel.new_scene()
+        self._novel.scenes.append(scene)
+        wdg = self.__initSceneWidget(scene)
+        insert_before_the_end(self._centralWidget, wdg)
+
+        self.repo.update_novel(self._novel)
+        emit_event(SceneChangedEvent(self, scene))
 
     def selectChapter(self, chapter: Chapter):
         self.clearSelection()

@@ -21,6 +21,7 @@ import copy
 from functools import partial
 from typing import Optional, List
 
+import qtanim
 from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
@@ -157,8 +158,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnNewWithMenu.setVisible(self.ui.btnChaptersToggle.isChecked())
         self.ui.btnChaptersToggle.setIcon(IconRegistry.chapter_icon())
         self.ui.btnChaptersToggle.setChecked(self.novel.prefs.panels.scene_chapters_sidebar_toggled)
-        self.ui.btnChaptersToggle.toggled.connect(self._hide_chapters_toggled)
-        self._hide_chapters_toggled(self.ui.btnChaptersToggle.isChecked())
+        self.ui.btnChaptersToggle.clicked.connect(self._hide_chapters_clicked)
+        self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
 
         self.ui.btnAct1.setIcon(IconRegistry.act_one_icon(color='grey'))
         self.ui.btnAct2.setIcon(IconRegistry.act_two_icon(color='grey'))
@@ -291,7 +292,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.setEnabled(False)
         self.ui.btnEdit.setEnabled(False)
 
-    def _hide_chapters_toggled(self, toggled: bool):
+    def _hide_chapters_clicked(self, toggled: bool):
+        qtanim.toggle_expansion(self.ui.wgtChapters, toggled)
         if self.novel.prefs.panels.scene_chapters_sidebar_toggled != toggled:
             self.novel.prefs.panels.scene_chapters_sidebar_toggled = toggled
             self.repo.update_novel(self.novel)

@@ -145,12 +145,15 @@ QToolButton::menu-indicator[transparent-circle-bg-on-hover] {
     width:0px;
 }
 QToolButton:hover[transparent-circle-bg-on-hover] {
-    background: lightgrey;
+    background: #EDEDED;
 }
 QToolButton:hover[transparent-circle-bg-on-hover][positive] {
     background: #d8f3dc;
 }
-
+QToolButton[transparent-circle-bg-on-hover][large] {
+    border-radius: 18px;
+    padding: 4px;
+}
 
 QHeaderView::section {
     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -301,19 +304,23 @@ QSlider::groove:horizontal {
 }
 
 QSlider::handle:horizontal {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
-    border: 1px solid #5c5c5c;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4B0763, stop:1 #4B0763);
+    border: 1px solid #4B0763;
     width: 15px;
     margin: -3px -1px;
     border-radius: 3px;
 }
 
 
-.QWidget[white-bg] {
+.QWidget[white-bg=true] {
     background-color: white;
 }
 
-.QWidget[relaxed-white-bg] {
+.QWidget[relaxed-white-bg=true] {
+    background-color: #f8f9fa;
+}
+
+.QFrame[relaxed-white-bg=true] {
     background-color: #f8f9fa;
 }
 
