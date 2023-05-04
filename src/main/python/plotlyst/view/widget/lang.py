@@ -21,7 +21,7 @@ from typing import List
 
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QMenu, QWidgetAction, QPushButton
-from qthandy import decr_font, FlowLayout
+from qthandy import decr_font, FlowLayout, bold
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.view.generated.grammar_popup_ui import Ui_GrammarPopup
@@ -75,6 +75,7 @@ class GrammarPopupMenu(QMenu):
     def __init__(self, parent=None):
         super(GrammarPopupMenu, self).__init__(parent)
         self._popupWidget = GrammarPopup(self)
+        bold(self._popupWidget.lblType)
         self._popupWidget.btnClose.clicked.connect(self.hide)
         self._popupWidget.replacementRequested.connect(self.hide)
 
