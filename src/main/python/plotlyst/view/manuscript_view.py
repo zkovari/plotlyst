@@ -170,7 +170,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.textEdit.setSidebarEnabled(False)
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
-        # self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
+        self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
             self.ui.treeChapters.selectChapter(self.novel.chapters[0])
@@ -190,7 +190,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageDistractionFree)
         margins(self.widget, 0, 0, 0, 0)
         self.ui.wdgTitle.setHidden(True)
-        self.ui.treeChapters.setHidden(True)
+        self.ui.wdgLeftSide.setHidden(True)
         self._dist_free_editor.activate(self.ui.textEdit, self._wdgSprint.model())
         self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
@@ -200,7 +200,7 @@ class ManuscriptView(AbstractNovelView):
         margins(self.widget, 4, 2, 2, 2)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
         self.ui.wdgTitle.setVisible(True)
-        self.ui.treeChapters.setVisible(True)
+        self.ui.wdgLeftSide.setVisible(True)
 
         self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.lblWordCount.setStyleSheet('color: black')
