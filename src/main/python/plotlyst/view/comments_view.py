@@ -160,18 +160,13 @@ class CommentWidget(QFrame, Ui_CommentWidget):
         self._updateStyleSheet()
 
     def _updateStyleSheet(self):
+        pass
         if self.btnMajor.isChecked():
             border = 2
             border_color = '#fb8b24'
         else:
             border = 1
             border_color = '#3066be'
-        self.setStyleSheet(f'''
-        QFrame[mainFrame=true] {{
-               border: {border}px solid {border_color};
-               border-radius: 15px;
-               background-color: white;
-           }}''')
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:
