@@ -13,7 +13,6 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-
   <property name="mainFrame" stdset="0">
    <bool>true</bool>
   </property>
@@ -489,11 +488,6 @@ QToolButton:checked {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="font">
-                 <font>
-                  <italic>true</italic>
-                 </font>
-                </property>
                 <property name="text">
                  <string>Age</string>
                 </property>
@@ -502,6 +496,12 @@ QToolButton:checked {
                 </property>
                 <property name="iconColor" stdset="0">
                  <string>gray</string>
+                </property>
+                <property name="secondary-field-attribute" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <property name="no-menu" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -513,11 +513,6 @@ QToolButton:checked {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="font">
-                 <font>
-                  <italic>true</italic>
-                 </font>
-                </property>
                 <property name="text">
                  <string>Occupation</string>
                 </property>
@@ -526,6 +521,12 @@ QToolButton:checked {
                 </property>
                 <property name="iconColor" stdset="0">
                  <string>gray</string>
+                </property>
+                <property name="secondary-field-attribute" stdset="0">
+                 <bool>true</bool>
+                </property>
+                <property name="no-menu" stdset="0">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -707,7 +708,6 @@ border: 0px;
              <height>512</height>
             </rect>
            </property>
-
            <layout class="QVBoxLayout" name="verticalLayout_8">
             <property name="spacing">
              <number>3</number>

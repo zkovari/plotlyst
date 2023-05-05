@@ -19,6 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 style = '''
+QPushButton::menu-indicator[no-menu] {
+    width:0px;
+}
+
 QPushButton[base=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #f6f7fa, stop: 1 #dadbde);
@@ -80,6 +84,13 @@ QPushButton[deconstructive=true]:hover {
 QPushButton[transparent=true] {
     border: 0px;
     background-color: rgba(0, 0, 0, 0);
+}
+
+QPushButton[secondary-field-attribute=true] {
+    border: 1px hidden black;
+    border-radius: 6px;
+    color: #343a40;
+    padding: 2px;
 }
 
 QToolButton::menu-indicator {
