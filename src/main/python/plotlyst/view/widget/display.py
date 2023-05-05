@@ -33,7 +33,8 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.template import Role, protagonist_role
 from src.main.python.plotlyst.core.text import wc
-from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, pointy, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_end, pointy, \
+    ButtonPressResizeEventFilter, restyle
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 
@@ -94,7 +95,7 @@ class Subtitle(QWidget):
         self._iconColor: str = 'black'
         self._descSpacer = spacer(20)
 
-        self.lblDescription.setStyleSheet('color: #8d99ae;')
+        self.lblDescription.setProperty('description', True)
         self.lblDescription.setWordWrap(True)
         self.lblDescription.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self._top = group(self.icon, self.lblTitle, spacer(), parent=self)
@@ -180,6 +181,10 @@ class WordsDisplay(QLabel):
     def calculateWordCount(self, text: str):
         count = wc(text)
         self.setWordCount(count)
+
+    def setNightModeEnabled(self, enabled: bool):
+        self.setProperty('night-mode', enabled)
+        restyle(self)
 
     def setWordCount(self, count: int):
         if count:

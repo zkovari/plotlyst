@@ -64,6 +64,7 @@ from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
+from src.main.python.plotlyst.view.style.base import apply_color
 from src.main.python.plotlyst.view.widget.button import ToolbarButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
@@ -95,7 +96,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             DEFAULT_FONT_FAMILIES.insert(3 if len(DEFAULT_FONT_FAMILIES) > 5 else -1, 'Calibri')
 
         for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze, self.lblManage]:
-            lbl.setStyleSheet(f'color: {PLOTLYST_MAIN_COLOR};')
+            apply_color(lbl, PLOTLYST_MAIN_COLOR)
             font: QFont = lbl.font()
             font.setPointSize(font.pointSize() - 2)
             font.setFamily('Helvetica')
