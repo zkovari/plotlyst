@@ -35,6 +35,7 @@ from src.main.python.plotlyst.view.common import link_buttons_to_pages
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 from src.main.python.plotlyst.view.widget.plot import PlotEditor
 
@@ -115,8 +116,7 @@ class NovelView(AbstractNovelView):
 
         self.ui.wdgStructure.setNovel(self.novel)
         self.ui.wdgTitle.setFixedHeight(150)
-        self.ui.wdgTitle.setStyleSheet(
-            f'#wdgTitle {{border-image: url({resource_registry.frame1}) 0 0 0 0 stretch stretch;}}')
+        apply_border_image(self.ui.wdgTitle, resource_registry.frame1)
 
         self.plot_editor = PlotEditor(self.novel)
         self.ui.wdgPlotContainer.layout().addWidget(self.plot_editor)
