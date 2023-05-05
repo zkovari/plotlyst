@@ -27,7 +27,6 @@ from PyQt6.QtWidgets import QWidget, QTableView
 from qthandy import flow, clear_layout, underline
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     SceneStoryBeat, Character, ScenePlotReference, TagReference
@@ -124,7 +123,6 @@ class SceneEditor(QObject):
         flow(self.ui.wdgPlotContainer)
 
         self.ui.wdgSceneStructure.setUnsetCharacterSlot(self._pov_not_selected_notification)
-        self.ui.pageDrive.setStyleSheet(f'#pageDrive {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         self._update_view(scene)
 

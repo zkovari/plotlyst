@@ -954,6 +954,8 @@ class _ScenePlotAssociationsWidget(QWidget):
         self.plot = plot
         self._vertical = vertical
 
+        self.setProperty('relaxed-white-bg', True)
+
         self.wdgReferences = QWidget()
         line = QPushButton()
         line.setStyleSheet(f'''
@@ -1020,8 +1022,6 @@ class _ScenePlotAssociationsWidget(QWidget):
         else:
             self.wdgReferences.layout().addWidget(spacer())
 
-        self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
-
         self.repo = RepositoryPersistenceManager.instance()
 
     def _commentChanged(self, editor: QTextEdit, scene: Scene, scenePlotRef: ScenePlotReference):
@@ -1077,8 +1077,8 @@ class StoryMap(QWidget, EventListener):
         self._acts_filter: Dict[int, bool] = {}
         vbox(self, spacing=0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-
         self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
+
         self._refreshOnShow = False
         event_dispatcher.register(self, SceneOrderChangedEvent)
 
@@ -1132,7 +1132,7 @@ class StoryMap(QWidget, EventListener):
             if self._display_mode == StoryMapDisplayMode.TITLE:
                 titles = QWidget(self)
                 titles.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
-                titles.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
+                titles.setProperty('relaxed-white-bg', True)
                 hbox(titles, 0, 0)
                 margins(titles, left=70)
                 self.layout().insertWidget(0, titles)

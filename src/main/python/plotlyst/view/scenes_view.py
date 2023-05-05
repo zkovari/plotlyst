@@ -29,7 +29,7 @@ from overrides import overrides
 from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -141,8 +141,6 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.setColumnWidth(ScenesTableModel.ColSynopsis, 400)
         self.ui.tblScenes.setItemDelegate(ScenesViewDelegate())
         self.ui.tblScenes.hideColumn(ScenesTableModel.ColTime)
-
-        self.widget.setStyleSheet(f'#cards {{background: {RELAXED_WHITE_COLOR};}}')
 
         self.ui.splitterLeft.setSizes([120, 500])
 

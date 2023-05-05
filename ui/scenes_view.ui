@@ -111,7 +111,6 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
-
             <property name="text">
              <string/>
             </property>
@@ -137,7 +136,6 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
-
             <property name="text">
              <string/>
             </property>
@@ -163,7 +161,6 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
-
             <property name="text">
              <string/>
             </property>
@@ -711,9 +708,12 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>2</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="pageCards">
+              <property name="relaxed-white-bg" stdset="0">
+               <bool>true</bool>
+              </property>
               <layout class="QHBoxLayout" name="horizontalLayout_7">
                <property name="spacing">
                 <number>0</number>
@@ -740,8 +740,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>98</width>
-                    <height>28</height>
+                    <width>479</width>
+                    <height>582</height>
                    </rect>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -1222,9 +1222,10 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ScenesTreeView</class>
-   <extends>QTreeView</extends>
-   <header>src.main.python.plotlyst.view.widget.scene</header>
+   <class>CardsView</class>
+   <extends>QFrame</extends>
+   <header>src.main.python.plotlyst.view.widget.cards</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>SceneStoryStructureWidget</class>
@@ -1233,15 +1234,14 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>CardsView</class>
-   <extends>QFrame</extends>
-   <header>src.main.python.plotlyst.view.widget.cards</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>RotatedButton</class>
    <extends>QPushButton</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
+   <class>ScenesTreeView</class>
+   <extends>QTreeView</extends>
+   <header>src.main.python.plotlyst.view.widget.scene</header>
   </customwidget>
  </customwidgets>
  <resources/>

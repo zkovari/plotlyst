@@ -645,7 +645,7 @@
           <enum>Qt::NoFocus</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="pageStructure">
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -726,6 +726,9 @@
           </layout>
          </widget>
          <widget class="QWidget" name="pageDrive">
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
+          </property>
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <property name="spacing">
             <number>3</number>
@@ -757,6 +760,16 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DocumentTextEditor</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
+   <class>CharacterAvatar</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.characters</header>
+  </customwidget>
+  <customwidget>
    <class>SceneStoryStructureWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.scenes</header>
@@ -771,16 +784,6 @@
    <class>ScenesTreeView</class>
    <extends>QTreeView</extends>
    <header>src.main.python.plotlyst.view.widget.scene</header>
-  </customwidget>
-  <customwidget>
-   <class>CharacterAvatar</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.characters</header>
-  </customwidget>
-  <customwidget>
-   <class>DocumentTextEditor</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>LabelsWidget</class>

@@ -111,7 +111,6 @@
             <property name="toolTip">
              <string>Cards view</string>
             </property>
-
             <property name="text">
              <string/>
             </property>
@@ -449,7 +448,7 @@
        <item>
         <widget class="QStackedWidget" name="stackCharacters">
          <property name="currentIndex">
-          <number>4</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="pageTableView">
           <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -635,6 +634,9 @@
           </layout>
          </widget>
          <widget class="QWidget" name="pageProgressView">
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
+          </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <property name="spacing">
             <number>4</number>
@@ -1053,7 +1055,7 @@
  <connections/>
  <buttongroups>
   <buttongroup name="btnGroupComparisonView"/>
-  <buttongroup name="btnGroupComparison"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupComparison"/>
  </buttongroups>
 </ui>
