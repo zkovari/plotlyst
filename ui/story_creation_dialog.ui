@@ -25,6 +25,9 @@
   <property name="windowTitle">
    <string>Create a new story</string>
   </property>
+  <property name="main-side-nav" stdset="0">
+   <bool>true</bool>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <property name="spacing">
     <number>3</number>
@@ -52,7 +55,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="spacing">
-         <number>4</number>
+         <number>0</number>
         </property>
         <property name="leftMargin">
          <number>0</number>
@@ -77,26 +80,13 @@
           <property name="checked">
            <bool>true</bool>
           </property>
+          <property name="main-side-nav" stdset="0">
+           <bool>true</bool>
+          </property>
           <attribute name="buttonGroup">
            <string notr="true">buttonGroup</string>
           </attribute>
          </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>6</height>
-           </size>
-          </property>
-         </spacer>
         </item>
         <item>
          <widget class="QPushButton" name="btnScrivener">
@@ -110,6 +100,9 @@
            <string>Import from Scrivener</string>
           </property>
           <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="main-side-nav" stdset="0">
            <bool>true</bool>
           </property>
           <attribute name="buttonGroup">
@@ -136,7 +129,7 @@
      <item>
       <widget class="QStackedWidget" name="stackedWidget">
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="pageNewStory">
         <layout class="QVBoxLayout" name="verticalLayout_3">

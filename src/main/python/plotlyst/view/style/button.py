@@ -93,7 +93,6 @@ QPushButton[secondary-field-attribute=true] {
     padding: 2px;
 }
 
-
 QPushButton[top-level-nav=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #89c2d9);
     border: 2px solid #2c7da0;
@@ -115,7 +114,23 @@ QPushButton:checked[top-level-nav=true] {
     border: 2px solid #013a63;
 }
 
-
+QPushButton[main-side-nav=true] {
+    border: 0px;
+    padding: 5px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+QPushButton:hover[main-side-nav=true] {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
+                              stop: 0 #d7e3fc);
+    border: 1px hidden black;
+}
+QPushButton:checked[main-side-nav=true] {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
+                          stop: 0 #4e4187);
+    border: 1px solid #9BB8F7;
+    color: white;
+}
 
 QToolButton::menu-indicator {
     width:0px;

@@ -65,25 +65,6 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         self.btnSaveScrivener.installEventFilter(
             DisabledClickEventFilter(self.btnSaveScrivener, lambda: qtanim.shake(self.btnLoadScrivener)))
         for btn in [self.btnNewStory, self.btnScrivener]:
-            btn.setStyleSheet('''
-            QPushButton {
-                border: 0px;
-                padding: 3px;
-                padding-top: 6px;
-                padding-bottom: 6px;
-            }
-            QPushButton:hover {
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
-                                          stop: 0 #d7e3fc);
-                border: 1px hidden black;
-            }
-            QPushButton:checked {
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 0,
-                                      stop: 0 #4e4187);
-                border: 2px solid black;
-                color: white;
-            }
-            ''')
             btn.installEventFilter(OpacityEventFilter(parent=btn, ignoreCheckedButton=True))
         self.stackedWidget.currentChanged.connect(self._pageChanged)
         self.stackedWidget.setCurrentWidget(self.pageNewStory)
