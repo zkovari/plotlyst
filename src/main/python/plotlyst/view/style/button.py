@@ -136,11 +136,6 @@ QToolButton::menu-indicator {
     width:0px;
 }
 
-QToolButton[transparent=true] {
-    border: 0px;
-    background-color: rgba(0, 0, 0, 0);
-}
-
 QToolButton[base=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #f6f7fa, stop: 1 #dadbde);
@@ -169,11 +164,18 @@ QToolButton:disabled[base=true] {
 
 QToolButton[transparent=true] {
     border: 0px;
+    background-color: rgba(0, 0, 0, 0);
     border-radius: 4px;
 }
 
-QToolButton:pressed[transparent=true] {
-    border: 1px solid grey
+QToolButton[transparent-clickable=true] {
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 4px;
+}
+
+QToolButton:pressed[transparent-clickable=true] {
+    border: 1px solid grey;
 }
 
 QToolButton[transparent-circle-bg-on-hover] {

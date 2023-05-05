@@ -101,9 +101,6 @@
           <property name="cursor">
            <cursorShape>PointingHandCursor</cursorShape>
           </property>
-          <property name="styleSheet">
-           <string notr="true">border: 0px;</string>
-          </property>
           <property name="text">
            <string/>
           </property>
@@ -112,6 +109,9 @@
             <width>14</width>
             <height>14</height>
            </size>
+          </property>
+          <property name="transparent-clickable" stdset="0">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -120,9 +120,6 @@
           <property name="cursor">
            <cursorShape>PointingHandCursor</cursorShape>
           </property>
-          <property name="styleSheet">
-           <string notr="true">border: 0px;</string>
-          </property>
           <property name="text">
            <string/>
           </property>
@@ -131,6 +128,9 @@
             <width>14</width>
             <height>14</height>
            </size>
+          </property>
+          <property name="transparent" stdset="0">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

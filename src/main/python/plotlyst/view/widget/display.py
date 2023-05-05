@@ -23,7 +23,7 @@ from typing import Optional
 import emoji
 import qtanim
 from PyQt6.QtCharts import QChartView
-from PyQt6.QtCore import QPropertyAnimation, pyqtProperty, QSize
+from PyQt6.QtCore import pyqtProperty, QSize
 from PyQt6.QtGui import QPainter, QShowEvent, QColor
 from PyQt6.QtWidgets import QPushButton, QWidget, QLabel, QToolButton, QSizePolicy, QTextBrowser
 from overrides import overrides
@@ -37,40 +37,6 @@ from src.main.python.plotlyst.view.common import emoji_font, insert_before_the_e
     ButtonPressResizeEventFilter, restyle
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
-
-
-class ToggleHelp(QPushButton):
-    def __init__(self, parent=None):
-        super(ToggleHelp, self).__init__(parent)
-        self.setStyleSheet('border: 0px;')
-        self.setIcon(IconRegistry.general_info_icon())
-        self.setText(u'\u00BB')
-
-        self._attachedWidget: Optional[QWidget] = None
-        self.clicked.connect(self._clicked)
-
-    def attachWidget(self, widget: QWidget):
-        self.setCheckable(True)
-        self._attachedWidget = widget
-        self._attachedWidget.setVisible(False)
-
-    def _clicked(self, checked: bool):
-        if self._attachedWidget is None:
-            return
-
-        if checked:
-            self._attachedWidget.setVisible(checked)
-            animation = QPropertyAnimation(self._attachedWidget, b'maximumHeight', self)
-            animation.setStartValue(10)
-            animation.setEndValue(200)
-            animation.start()
-        else:
-            animation = QPropertyAnimation(self._attachedWidget, b'maximumHeight', self)
-            animation.setStartValue(200)
-            animation.setEndValue(0)
-            animation.start()
-
-        self.setText(u'\u02C7' if checked else u'\u00BB')
 
 
 class ChartView(QChartView):

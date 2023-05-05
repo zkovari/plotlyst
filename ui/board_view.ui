@@ -49,11 +49,11 @@
       </property>
       <item>
        <widget class="QToolButton" name="iconBoard">
-        <property name="styleSheet">
-         <string notr="true">border: 0px;</string>
-        </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -290,7 +290,7 @@
         <x>0</x>
         <y>0</y>
         <width>396</width>
-        <height>209</height>
+        <height>205</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">

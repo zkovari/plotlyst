@@ -626,7 +626,7 @@ class PowerBar(QFrame):
         self.layout().addWidget(self.btnPlus)
 
     def _styleButton(self, button: QToolButton):
-        button.setStyleSheet('border: 0px;')
+        transparent(button)
         button.installEventFilter(self)
         button.setIconSize(QSize(14, 14))
         button.setCursor(Qt.CursorShape.PointingHandCursor)

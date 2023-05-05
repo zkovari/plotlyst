@@ -79,7 +79,7 @@ class CharacterLabel(Label):
         super(CharacterLabel, self).__init__(parent)
         self.character = character
         self.btnAvatar = QToolButton()
-        self.btnAvatar.setStyleSheet('border: 0px;')
+        transparent(self.btnAvatar)
         self.btnAvatar.setIcon(QIcon(avatars.avatar(self.character)))
         self.btnAvatar.setIconSize(QSize(24, 24))
         self.btnAvatar.clicked.connect(self.clicked.emit)
@@ -107,7 +107,7 @@ class CharacterLabel(Label):
 class CharacterAvatarLabel(QToolButton):
     def __init__(self, character: Character, size: int = 24, parent=None):
         super(CharacterAvatarLabel, self).__init__(parent)
-        self.setStyleSheet('border: 0px;')
+        transparent(self)
         self.setIcon(avatars.avatar(character))
         self.setIconSize(QSize(size, size))
 

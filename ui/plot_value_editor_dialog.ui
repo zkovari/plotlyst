@@ -102,11 +102,11 @@
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
-       <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
-       </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="transparent" stdset="0">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -150,11 +150,11 @@
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
-       <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
-       </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="transparent" stdset="0">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -163,11 +163,11 @@
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
-       <property name="styleSheet">
-        <string notr="true">border: 0px;</string>
-       </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="transparent" stdset="0">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -222,14 +222,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>SecondaryActionToolButton</class>
-   <extends>QToolButton</extends>
-   <header>src.main.python.plotlyst.view.widget.button</header>
-  </customwidget>
-  <customwidget>
    <class>Subtitle</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SecondaryActionToolButton</class>
+   <extends>QToolButton</extends>
+   <header>src.main.python.plotlyst.view.widget.button</header>
   </customwidget>
  </customwidgets>
  <resources/>
