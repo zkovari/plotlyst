@@ -91,6 +91,9 @@ class CharacterEditor:
             self._roleSelector.setActiveRole(self.character.role)
         btn_popup(self.ui.btnRole, self._roleSelector)
 
+        italic(self.ui.btnAge)
+        italic(self.ui.btnOccupation)
+
         self._ageEditor = CharacterAgeEditor()
         self._ageEditor.valueChanged.connect(self._age_changed)
         menu = btn_popup(self.ui.btnAge, wrap(self._ageEditor, margin_bottom=4))
@@ -218,15 +221,6 @@ class CharacterEditor:
             italic(self.ui.btnAge, False)
             bold(self.ui.btnAge)
             self.ui.btnAge.iconColor = '#343a40'
-            self.ui.btnAge.setStyleSheet('''
-                        QPushButton::menu-indicator {width:0px;}
-                        QPushButton {
-                            border: 1px hidden black;
-                            border-radius: 6px;
-                            color: #343a40;
-                            padding: 2px;
-                        }
-                    ''')
         self.ui.btnAge.setText(str(age))
         self.character.age = age
 
@@ -236,15 +230,6 @@ class CharacterEditor:
             bold(self.ui.btnOccupation)
             incr_font(self.ui.btnOccupation, 2)
             self.ui.btnOccupation.iconColor = '#343a40'
-            self.ui.btnOccupation.setStyleSheet('''
-                                    QPushButton::menu-indicator {width:0px;}
-                                    QPushButton {
-                                        border: 1px hidden black;
-                                        border-radius: 6px;
-                                        color: #343a40;
-                                        padding: 2px;
-                                    }
-                                ''')
         self.ui.btnOccupation.setText(occupation)
         self.character.occupation = occupation
 
