@@ -44,7 +44,7 @@ class EventLogHandler:
             return
         if not event.highlighted:
             self.statusbar.showMessage(event.message, time)
-            self.statusbar.setStyleSheet('color: #235789;')
+            self.statusbar.setStyleSheet('color: black;')
         self._handle_highlighted_event(event, Severity.INFO)
 
     def on_error_event(self, event: EventLog, time: int) -> None:
