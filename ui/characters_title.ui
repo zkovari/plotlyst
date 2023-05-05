@@ -50,11 +50,11 @@
    </item>
    <item>
     <widget class="QToolButton" name="btnCharacter">
-     <property name="styleSheet">
-      <string notr="true">border: 0px;</string>
-     </property>
      <property name="text">
       <string/>
+     </property>
+     <property name="transparent" stdset="0">
+      <bool>true</bool>
      </property>
     </widget>
    </item>

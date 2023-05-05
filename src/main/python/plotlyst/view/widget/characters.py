@@ -57,7 +57,7 @@ from src.main.python.plotlyst.model.scenes_model import SceneConflictsModel
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, \
-    link_buttons_to_pages, pointy, action
+    link_buttons_to_pages, pointy, action, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.character import BackstoryEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog, ArtbreederDialog, ImageCropDialog
 from src.main.python.plotlyst.view.generated.avatar_selectors_ui import Ui_AvatarSelectors
@@ -936,13 +936,7 @@ class CharacterEmotionButton(QToolButton):
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setFixedSize(32, 32)
         pointy(self)
-
-        self.setStyleSheet('''
-                QToolButton {
-                    border: 0px;
-                }
-                QToolButton::menu-indicator {width:0px;}
-                ''')
+        transparent(self)
 
         menu = QMenu(self)
         self.setMenu(menu)
@@ -1345,14 +1339,12 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         for i, char in enumerate(self.novel.characters):
             btn = QToolButton(self)
             btn.setIconSize(QSize(45, 45))
-            btn.setStyleSheet('''
-                QToolButton {border: 0px;}
-                QToolButton:pressed {border: 1px solid grey; border-radius: 20px;}
-            ''')
+            transparent(btn)
             btn.setIcon(avatars.avatar(char))
             btn.setToolTip(char.name)
             self._layout.addWidget(btn, 0, i + 1)
             pointy(btn)
+            btn.installEventFilter(ButtonPressResizeEventFilter(btn))
             btn.installEventFilter(OpacityEventFilter(btn, 0.8, 1.0))
             btn.clicked.connect(partial(self.characterClicked.emit, char))
         self._layout.addWidget(spacer(), 0, self._layout.columnCount())

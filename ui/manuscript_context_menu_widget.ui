@@ -67,7 +67,7 @@
         <x>0</x>
         <y>0</y>
         <width>325</width>
-        <height>838</height>
+        <height>811</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -702,11 +702,11 @@
          </property>
          <item>
           <widget class="QToolButton" name="btnArabicIcon">
-           <property name="styleSheet">
-            <string notr="true">border: 0px;</string>
-           </property>
            <property name="text">
             <string/>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
            </property>
           </widget>
          </item>

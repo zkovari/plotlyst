@@ -153,21 +153,21 @@
             </property>
             <item>
              <widget class="QToolButton" name="btnPov">
-              <property name="styleSheet">
-               <string notr="true">border: 0px;</string>
-              </property>
               <property name="text">
                <string/>
+              </property>
+              <property name="transparent" stdset="0">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QToolButton" name="btnSceneType">
-              <property name="styleSheet">
-               <string notr="true">border: 0px;</string>
-              </property>
               <property name="text">
                <string/>
+              </property>
+              <property name="transparent" stdset="0">
+               <bool>true</bool>
               </property>
              </widget>
             </item>

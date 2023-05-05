@@ -88,9 +88,6 @@
          </property>
          <item alignment="Qt::AlignLeft">
           <widget class="QToolButton" name="btnPov">
-           <property name="styleSheet">
-            <string notr="true">border: 0px;</string>
-           </property>
            <property name="text">
             <string/>
            </property>
@@ -99,6 +96,9 @@
              <width>32</width>
              <height>32</height>
             </size>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -337,15 +337,15 @@ background-color:rgba(0,0,0,0);</string>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>SceneStageButton</class>
-   <extends>QToolButton</extends>
-   <header>src.main.python.plotlyst.view.widget.scenes</header>
-  </customwidget>
-  <customwidget>
    <class>LabelsWidget</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.labels</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SceneStageButton</class>
+   <extends>QToolButton</extends>
+   <header>src.main.python.plotlyst.view.widget.scenes</header>
   </customwidget>
  </customwidgets>
  <resources/>

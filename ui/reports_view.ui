@@ -49,11 +49,11 @@
       </property>
       <item>
        <widget class="QToolButton" name="iconReports">
-        <property name="styleSheet">
-         <string notr="true">border: 0px;</string>
-        </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -118,7 +118,6 @@ QToolButton:checked {
         <property name="toolTip">
          <string>Characters</string>
         </property>
-
         <property name="text">
          <string/>
         </property>
@@ -153,7 +152,6 @@ QToolButton:checked {
         <property name="toolTip">
          <string>Scenes</string>
         </property>
-
         <property name="text">
          <string/>
         </property>
@@ -188,7 +186,6 @@ QToolButton:checked {
         <property name="toolTip">
          <string>Scenes</string>
         </property>
-
         <property name="text">
          <string/>
         </property>

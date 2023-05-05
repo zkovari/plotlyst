@@ -414,11 +414,11 @@
               <property name="toolTip">
                <string>Select which characters are active in this scene</string>
               </property>
-              <property name="styleSheet">
-               <string notr="true">border: 0px;</string>
-              </property>
               <property name="text">
                <string>Present characters</string>
+              </property>
+              <property name="transparent" stdset="0">
+               <bool>true</bool>
               </property>
              </widget>
             </item>

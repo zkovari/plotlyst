@@ -261,9 +261,6 @@
         <property name="toolTip">
          <string>Exit distraction free mode</string>
         </property>
-        <property name="styleSheet">
-         <string notr="true">border: 0px;</string>
-        </property>
         <property name="text">
          <string/>
         </property>
@@ -272,6 +269,9 @@
           <width>22</width>
           <height>22</height>
          </size>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

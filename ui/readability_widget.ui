@@ -76,9 +76,6 @@ QToolButton:pressed {
    </item>
    <item alignment="Qt::AlignHCenter">
     <widget class="QToolButton" name="btnResult">
-     <property name="styleSheet">
-      <string notr="true">border: 0px;</string>
-     </property>
      <property name="text">
       <string/>
      </property>
@@ -87,6 +84,9 @@ QToolButton:pressed {
        <width>128</width>
        <height>128</height>
       </size>
+     </property>
+     <property name="transparent" stdset="0">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
