@@ -203,7 +203,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgLeftSide.setVisible(True)
 
         self.ui.wdgBottom.layout().insertWidget(1, self.ui.lblWordCount, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.ui.lblWordCount.setStyleSheet('color: black')
         self.ui.lblWordCount.setVisible(True)
         self.ui.splitterEditor.insertWidget(0, self.ui.textEdit)
         self._wdgReadability.cbAdverbs.setChecked(False)
