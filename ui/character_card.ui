@@ -149,11 +149,11 @@ p, li { white-space: pre-wrap; }
       </item>
       <item>
        <widget class="QPushButton" name="btnMbti">
-        <property name="styleSheet">
-         <string notr="true">border:0px;</string>
-        </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
