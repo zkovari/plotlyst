@@ -103,9 +103,6 @@
         <property name="toolTip">
          <string>Board view</string>
         </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
         <property name="text">
          <string/>
         </property>
@@ -133,9 +130,6 @@
         </property>
         <property name="toolTip">
          <string>Not available yet</string>
-        </property>
-        <property name="styleSheet">
-         <string notr="true"/>
         </property>
         <property name="text">
          <string/>

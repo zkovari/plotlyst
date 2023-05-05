@@ -111,9 +111,7 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
+
             <property name="text">
              <string/>
             </property>
@@ -139,9 +137,7 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
+
             <property name="text">
              <string/>
             </property>
@@ -167,9 +163,7 @@
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
+
             <property name="text">
              <string/>
             </property>

@@ -59,9 +59,7 @@
         <property name="toolTip">
          <string>Click to select a custom icon for this goal</string>
         </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
+
         <property name="text">
          <string/>
         </property>
@@ -113,9 +111,7 @@ QPushButton:pressed {
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
+
         <property name="text">
          <string/>
         </property>

@@ -118,9 +118,7 @@ QToolButton:checked {
         <property name="toolTip">
          <string>Characters</string>
         </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
+
         <property name="text">
          <string/>
         </property>
@@ -155,9 +153,7 @@ QToolButton:checked {
         <property name="toolTip">
          <string>Scenes</string>
         </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
+
         <property name="text">
          <string/>
         </property>
@@ -192,9 +188,7 @@ QToolButton:checked {
         <property name="toolTip">
          <string>Scenes</string>
         </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
+
         <property name="text">
          <string/>
         </property>
