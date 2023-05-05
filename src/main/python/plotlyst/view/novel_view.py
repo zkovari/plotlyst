@@ -131,29 +131,6 @@ class NovelView(AbstractNovelView):
         self.ui.btnStructure.setChecked(True)
 
         for btn in self.ui.buttonGroup.buttons():
-            btn.setStyleSheet('''
-            QPushButton {
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #89c2d9);
-                border: 2px solid #2c7da0;
-                border-radius: 6px;
-                color: white;
-                padding: 2px;
-                font: bold;
-            }
-            QPushButton:disabled {
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 lightGray);
-                border: 2px solid grey;
-                color: grey;
-                opacity: 0.45;
-            }
-            QPushButton:checked {
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #014f86);
-                border: 2px solid #013a63;
-            }
-            ''')
             btn.installEventFilter(OpacityEventFilter(parent=btn, leaveOpacity=0.7, ignoreCheckedButton=True))
 
     @overrides
