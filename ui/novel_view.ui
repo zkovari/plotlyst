@@ -202,6 +202,9 @@
        <property name="base" stdset="0">
         <bool>false</bool>
        </property>
+       <property name="top-level-nav" stdset="0">
+        <bool>true</bool>
+       </property>
        <attribute name="buttonGroup">
         <string notr="true">buttonGroup</string>
        </attribute>
@@ -226,6 +229,9 @@
        </property>
        <property name="base" stdset="0">
         <bool>false</bool>
+       </property>
+       <property name="top-level-nav" stdset="0">
+        <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">buttonGroup</string>
@@ -252,6 +258,9 @@
        <property name="base" stdset="0">
         <bool>false</bool>
        </property>
+       <property name="top-level-nav" stdset="0">
+        <bool>true</bool>
+       </property>
        <attribute name="buttonGroup">
         <string notr="true">buttonGroup</string>
        </attribute>
@@ -276,6 +285,9 @@
        </property>
        <property name="base" stdset="0">
         <bool>false</bool>
+       </property>
+       <property name="top-level-nav" stdset="0">
+        <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">buttonGroup</string>
@@ -304,6 +316,9 @@
        </property>
        <property name="base" stdset="0">
         <bool>false</bool>
+       </property>
+       <property name="top-level-nav" stdset="0">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -453,6 +468,9 @@
             </property>
             <property name="icon" stdset="0">
              <string>ph.megaphone-bold</string>
+            </property>
+            <property name="top-level-nav" stdset="0">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
