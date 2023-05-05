@@ -34,6 +34,7 @@ from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap,
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
 from src.main.python.plotlyst.view.generated.character_editor_ui import Ui_CharacterEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.big_five import BigFivePersonalityWidget
 from src.main.python.plotlyst.view.widget.character.control import CharacterAgeEditor
 from src.main.python.plotlyst.view.widget.character.plan import CharacterPlansWidget
@@ -165,9 +166,7 @@ class CharacterEditor:
         self.ui.wdgProfile.layout().addWidget(self.profile)
 
         self.ui.wdgBackstory.setCharacter(self.character)
-        self.widget.setStyleSheet(
-            f'''#scrollAreaBackstoryContents {{background-image: url({resource_registry.cover1});}}
-                               ''')
+        apply_bg_image(self.ui.scrollAreaBackstoryContents, resource_registry.cover1)
 
         if self.character.document and self.character.document.loaded:
             self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)

@@ -448,7 +448,7 @@
        <item>
         <widget class="QStackedWidget" name="stackCharacters">
          <property name="currentIndex">
-          <number>3</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="pageTableView">
           <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -552,9 +552,12 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>98</width>
-                <height>28</height>
+                <width>718</width>
+                <height>545</height>
                </rect>
+              </property>
+              <property name="bg-image" stdset="0">
+               <bool>true</bool>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
                <property name="spacing">
@@ -923,8 +926,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>720</width>
-                <height>504</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_8">

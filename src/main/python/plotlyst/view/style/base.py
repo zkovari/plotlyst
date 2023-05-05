@@ -61,3 +61,7 @@ def apply_color(wdg: QWidget, color: Union[str, QColor, Qt.GlobalColor]):
     if isinstance(color, QColor):
         color = color.name()
     wdg.setStyleSheet(f'color: {color}')
+
+
+def apply_bg_image(wdg: QWidget, resource_url: str):
+    wdg.setStyleSheet(f'QWidget[bg-image=true] {{background-image: url({resource_url});}}')

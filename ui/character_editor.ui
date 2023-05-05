@@ -590,7 +590,7 @@ border: 0px;
        <enum>Qt::ClickFocus</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabTopics">
        <property name="relaxed-white-bg" stdset="0">
@@ -707,6 +707,9 @@ border: 0px;
              <width>295</width>
              <height>512</height>
             </rect>
+           </property>
+           <property name="bg-image" stdset="0">
+            <bool>true</bool>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_8">
             <property name="spacing">
