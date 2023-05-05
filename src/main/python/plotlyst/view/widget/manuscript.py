@@ -725,11 +725,13 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.editor = None
         self.setMouseTracking(False)
         self.wdgDistractionFreeEditor.setMouseTracking(False)
+        if self.lblWords:
+            self.lblWords.setNightModeEnabled(False)
 
     def setWordDisplay(self, words: WordsDisplay):
+        words.setNightModeEnabled(True)
         self.lblWords = words
         self.wdgHeader.layout().addWidget(self.lblWords, alignment=Qt.AlignmentFlag.AlignRight)
-        self.lblWords.setStyleSheet(f'color: {RELAXED_WHITE_COLOR}')
         self._wordCountClicked(self.btnWordCount.isChecked())
 
     @overrides

@@ -17,6 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Union
+
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QWidget
 
 style = '''
 * {
@@ -50,3 +55,9 @@ QDialog[relaxed-white-bg] {
 }
 
 '''
+
+
+def apply_color(wdg: QWidget, color: Union[str, QColor, Qt.GlobalColor]):
+    if isinstance(color, QColor):
+        color = color.name()
+    wdg.setStyleSheet(f'color: {color}')

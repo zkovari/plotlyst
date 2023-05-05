@@ -308,7 +308,7 @@ class _ResourceControllers:
         bold(self.label)
         self.description = QLabel(self._resource.description)
         decr_font(self.description)
-        self.description.setStyleSheet('color: grey;')
+        self.description.setProperty('description', True)
         self.btnStatus = QToolButton()
         italic(self.btnStatus)
         transparent(self.btnStatus)

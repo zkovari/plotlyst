@@ -26,6 +26,7 @@ from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.view.generated.grammar_popup_ui import Ui_GrammarPopup
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_color
 
 
 class GrammarPopup(QWidget, Ui_GrammarPopup):
@@ -40,11 +41,11 @@ class GrammarPopup(QWidget, Ui_GrammarPopup):
 
     def init(self, replacements: List[str], msg: str, style: str):
         if style in ['misspelling']:
-            self.lblType.setStyleSheet('color: #d90429;')
+            apply_color(self.lblType, '#d90429')
         elif style == 'style':
-            self.lblType.setStyleSheet('color: #5a189a;')
+            apply_color(self.lblType, '#5a189a')
         else:
-            self.lblType.setStyleSheet('color: #ffc300;')
+            apply_color(self.lblType, '#ffc300')
         self.lblType.setText(style.capitalize())
         self.lblMessage.setText(msg)
         decr_font(self.lblMessage)

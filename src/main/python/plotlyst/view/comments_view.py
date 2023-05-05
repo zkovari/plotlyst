@@ -161,12 +161,12 @@ class CommentWidget(QFrame, Ui_CommentWidget):
 
     def _updateStyleSheet(self):
         pass
-        if self.btnMajor.isChecked():
-            border = 2
-            border_color = '#fb8b24'
-        else:
-            border = 1
-            border_color = '#3066be'
+        # if self.btnMajor.isChecked():
+        #     border = 2
+        #     border_color = '#fb8b24'
+        # else:
+        #     border = 1
+        #     border_color = '#3066be'
 
     @overrides
     def enterEvent(self, event: QEvent) -> None:

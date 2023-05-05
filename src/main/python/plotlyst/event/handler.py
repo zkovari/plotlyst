@@ -30,6 +30,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventLog, Severity, \
     emit_critical, EventListener, Event
 from src.main.python.plotlyst.view.dialog.error import ErrorMessageBox
+from src.main.python.plotlyst.view.style.base import apply_color
 
 
 class EventLogHandler:
@@ -44,14 +45,14 @@ class EventLogHandler:
             return
         if not event.highlighted:
             self.statusbar.showMessage(event.message, time)
-            self.statusbar.setStyleSheet('color: black;')
+            apply_color(self.statusbar, 'black')
         self._handle_highlighted_event(event, Severity.INFO)
 
     def on_error_event(self, event: EventLog, time: int) -> None:
         if not self._error_event.is_set():
             if not event.highlighted:
                 self.statusbar.showMessage(event.message, time)
-                self.statusbar.setStyleSheet('color: red')
+                apply_color(self.statusbar, 'red')
             self._handle_highlighted_event(event, Severity.ERROR)
             if event.details:
                 logging.error(event.details)
@@ -76,7 +77,7 @@ class EventLogHandler:
         QApplication.restoreOverrideCursor()
 
     def _reset_statusbar_color(self) -> None:
-        self.statusbar.setStyleSheet('color: black')
+        apply_color(self.statusbar, 'black')
 
 
 class DialogExceptionHandler:

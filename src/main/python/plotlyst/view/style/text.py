@@ -19,7 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 style = '''
+QLabel[description=true] {
+    color: #8d99ae;
+}
+
 QTextBrowser {
     background-color: #f8f9fa;
+}
+
+QLabel[night-mode=true] {
+    color: #f8f9fa;
 }
 '''
