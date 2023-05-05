@@ -50,9 +50,6 @@
    </property>
    <item>
     <widget class="QToolBox" name="toolBox">
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -141,9 +138,7 @@ QToolButton:checked {
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
+
             <property name="text">
              <string/>
             </property>

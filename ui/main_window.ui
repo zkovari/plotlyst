@@ -16,9 +16,7 @@
   <property name="windowTitle">
    <string>Plotlyst</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true"/>
-  </property>
+
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <property name="spacing">
@@ -38,9 +36,6 @@
     </property>
     <item>
      <widget class="QStackedWidget" name="stackMainPanels">
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
       <property name="lineWidth">
        <number>0</number>
       </property>

@@ -13,9 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true"/>
-  </property>
+
   <layout class="QVBoxLayout" name="verticalLayout_9">
    <property name="spacing">
     <number>3</number>
@@ -186,9 +184,7 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="pageText">
-       <property name="styleSheet">
-        <string notr="true"/>
-       </property>
+
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="spacing">
          <number>0</number>
@@ -207,9 +203,6 @@
         </property>
         <item>
          <widget class="QWidget" name="wdgTop" native="true">
-          <property name="styleSheet">
-           <string notr="true"/>
-          </property>
           <layout class="QHBoxLayout" name="horizontalLayout">
            <property name="leftMargin">
             <number>5</number>

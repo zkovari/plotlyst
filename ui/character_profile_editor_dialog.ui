@@ -13,9 +13,7 @@
   <property name="windowTitle">
    <string>Character Profile Editor</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true"/>
-  </property>
+
   <layout class="QVBoxLayout" name="verticalLayout_8">
    <property name="spacing">
     <number>3</number>
