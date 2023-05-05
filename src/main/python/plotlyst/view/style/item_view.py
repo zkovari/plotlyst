@@ -19,7 +19,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 style = '''
+
 QHeaderView::section {
+    background-color: #f8f9fa; border: 0px; color: black;
+}
+
+QHeaderView {
+    background-color: #f8f9fa;
+}
+
+QTableView {
+    background-color: #f8f9fa;
+}
+
+QTableView QTableCornerButton::section {
+    background-color: #f8f9fa;
+}
+
+QHeaderView::section[main-header] {
     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                                       stop:0 #D4B8E0, stop: 0.5 #4B0763,
                                       stop: 0.6 #4B0763, stop:1 #3C0764);

@@ -42,7 +42,7 @@ from src.main.python.plotlyst.model.novel import NovelStagesModel
 from src.main.python.plotlyst.model.scenes_model import ScenesTableModel, ScenesFilterProxyModel, ScenesStageTableModel
 from src.main.python.plotlyst.service.persistence import delete_scene
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import PopupMenuBuilder, ButtonPressResizeEventFilter, action
+from src.main.python.plotlyst.view.common import PopupMenuBuilder, ButtonPressResizeEventFilter, action, restyle
 from src.main.python.plotlyst.view.delegates import ScenesViewDelegate
 from src.main.python.plotlyst.view.dialog.items import ItemsEditorDialog
 from src.main.python.plotlyst.view.generated.scenes_title_ui import Ui_ScenesTitle
@@ -128,9 +128,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.tblScenes.horizontalHeader().setSectionResizeMode(ScenesTableModel.ColTitle,
                                                                   QHeaderView.ResizeMode.Fixed)
         self.ui.tblScenes.horizontalHeader().setFixedHeight(30)
-        self.ui.tblScenes.verticalHeader().setStyleSheet(
-            '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
-               QHeaderView {background-color: white;}''')
+        self.ui.tblScenes.horizontalHeader().setProperty('main-header', True)
         self.ui.tblScenes.verticalHeader().setFixedWidth(40)
         self.ui.tblScenes.verticalHeader().setVisible(True)
         self.tblModel.orderChanged.connect(self._on_scene_moved)
@@ -497,11 +495,10 @@ class ScenesOutlineView(AbstractNovelView):
             self._stages_proxy.setActsFilter(1, self.ui.btnAct1.isChecked())
             self._stages_proxy.setActsFilter(2, self.ui.btnAct2.isChecked())
             self._stages_proxy.setActsFilter(3, self.ui.btnAct3.isChecked())
-            self.ui.tblSceneStages.verticalHeader().setStyleSheet(
-                '''QHeaderView::section {background-color: white; border: 0px; color: black; font-size: 14px;}
-                   QHeaderView {background-color: white;}''')
-            self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
+            self.ui.tblSceneStages.horizontalHeader().setProperty('main-header', True)
+            restyle(self.ui.tblSceneStages.horizontalHeader())
             self.ui.tblSceneStages.horizontalHeader().sectionClicked.connect(header_clicked)
+            self.ui.tblSceneStages.verticalHeader().setFixedWidth(40)
             self.ui.tblSceneStages.setColumnWidth(ScenesStageTableModel.ColTitle, 250)
 
         for col in range(1, self.stagesModel.columnCount()):
