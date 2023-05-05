@@ -93,6 +93,7 @@ class CharactersView(AbstractNovelView):
         self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColRole, 40)
         self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColEnneagram, 40)
         self.ui.tblCharacters.setColumnWidth(CharactersTableModel.ColMbti, 90)
+        self.ui.tblCharacters.horizontalHeader().setProperty('main-header', True)
 
         self.ui.tblCharacters.selectionModel().selectionChanged.connect(self._on_character_selected)
         self.ui.tblCharacters.doubleClicked.connect(self.ui.btnEdit.click)
