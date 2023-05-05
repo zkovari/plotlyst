@@ -17,13 +17,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from src.main.python.plotlyst.view import style
 
-APP_STYLESHEET = f'''
-{style.base_style}
-{style.button_style}
-{style.item_view_style}
-{style.text_style}
-{style.tab_style}
-{style.slider_style}
+style = '''
+QSlider::groove:horizontal {
+    border: 1px solid #999999;
+    height: 6px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4);
+    margin: 0px 0;
+}
+
+QSlider::handle:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #4B0763, stop:1 #4B0763);
+    border: 1px solid #4B0763;
+    width: 15px;
+    margin: -3px -1px;
+    border-radius: 3px;
+}
 '''

@@ -17,13 +17,36 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from src.main.python.plotlyst.view import style
 
-APP_STYLESHEET = f'''
-{style.base_style}
-{style.button_style}
-{style.item_view_style}
-{style.text_style}
-{style.tab_style}
-{style.slider_style}
+style = '''
+* {
+    icon-size: 20px;
+}
+
+QToolTip {
+    border: 0px;
+    font-size: 14pt;
+    padding: 5px;
+}
+
+QToolBar {
+    spacing: 1px;
+}
+
+.QWidget[white-bg=true] {
+    background-color: white;
+}
+
+.QWidget[relaxed-white-bg=true] {
+    background-color: #f8f9fa;
+}
+
+.QFrame[relaxed-white-bg=true] {
+    background-color: #f8f9fa;
+}
+
+QDialog[relaxed-white-bg] {
+    background-color: #f8f9fa;
+}
+
 '''
