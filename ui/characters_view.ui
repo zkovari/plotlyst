@@ -448,7 +448,7 @@
        <item>
         <widget class="QStackedWidget" name="stackCharacters">
          <property name="currentIndex">
-          <number>1</number>
+          <number>5</number>
          </property>
          <widget class="QWidget" name="pageTableView">
           <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -953,6 +953,9 @@
           </layout>
          </widget>
          <widget class="QWidget" name="pageCardsView">
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
+          </property>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <property name="spacing">
             <number>0</number>
@@ -982,8 +985,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>100</width>
-                <height>30</height>
+                <width>720</width>
+                <height>564</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -1010,16 +1013,14 @@
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
-                 <property name="styleSheet">
-                  <string notr="true">.CardsView {
-	background-color: rgb(255, 255, 255);
-}</string>
-                 </property>
                  <property name="frameShape">
                   <enum>QFrame::Box</enum>
                  </property>
                  <property name="frameShadow">
                   <enum>QFrame::Raised</enum>
+                 </property>
+                 <property name="relaxed-white-bg" stdset="0">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>

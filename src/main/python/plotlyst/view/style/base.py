@@ -38,15 +38,19 @@ QToolBar {
     spacing: 1px;
 }
 
-.QWidget[white-bg=true] {
+QWidget[white-bg=true] {
     background-color: white;
 }
 
-.QWidget[relaxed-white-bg=true] {
+QWidget[relaxed-white-bg=true] {
     background-color: #f8f9fa;
 }
 
-.QFrame[relaxed-white-bg=true] {
+QWidget[banner-bg] {
+    background-color: #2B0548;
+}
+
+QFrame[relaxed-white-bg=true] {
     background-color: #f8f9fa;
 }
 
