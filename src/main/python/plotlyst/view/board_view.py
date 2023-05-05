@@ -36,8 +36,6 @@ class BoardView(AbstractNovelView):
         super().__init__(novel)
         self.ui = Ui_BoardView()
         self.ui.setupUi(self.widget)
-        self.widget.setObjectName('boardParentWidget')
-        self.widget.setStyleSheet('#boardParentWidget {background: #f3f3f6;}')
 
         self.ui.btnNew.setIcon(IconRegistry.plus_icon('white'))
         self.ui.btnBoard.setIcon(IconRegistry.from_name('fa5s.columns', color_on=PLOTLYST_SECONDARY_COLOR))
