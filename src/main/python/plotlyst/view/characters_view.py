@@ -41,6 +41,7 @@ from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPr
 from src.main.python.plotlyst.view.generated.characters_title_ui import Ui_CharactersTitle
 from src.main.python.plotlyst.view.generated.characters_view_ui import Ui_CharactersView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
 from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
     CharacterComparisonAttribute
@@ -116,9 +117,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
-        self.widget.setStyleSheet(
-            f'''#scrollAreaBackstoryContent {{background-image: url({resource_registry.cover1});}}
-                                       ''')
+        apply_bg_image(self.ui.scrollAreaBackstoryContent, resource_registry.cover1)
 
         self.selected_card: Optional[CharacterCard] = None
         self.ui.cards.selectionCleared.connect(lambda: self._enable_action_buttons(False))

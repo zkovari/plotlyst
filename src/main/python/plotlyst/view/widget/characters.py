@@ -70,6 +70,7 @@ from src.main.python.plotlyst.view.generated.characters_progress_widget_ui impor
 from src.main.python.plotlyst.view.generated.scene_conflict_intensity_ui import Ui_ConflictReferenceEditor
 from src.main.python.plotlyst.view.generated.scene_dstribution_widget_ui import Ui_CharactersScenesDistributionWidget
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry, set_avatar
+from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.button import SelectionItemPushButton
 from src.main.python.plotlyst.view.widget.display import IconText, Icon
 from src.main.python.plotlyst.view.widget.labels import ConflictLabel, CharacterLabel
@@ -1096,9 +1097,7 @@ class CharacterAvatar(QWidget, Ui_CharacterAvatar):
     def __init__(self, parent=None):
         super(CharacterAvatar, self).__init__(parent)
         self.setupUi(self)
-        self.setStyleSheet(
-            f'''#wdgPovFrame {{background-image: url({resource_registry.circular_frame1});}}
-                                                           ''')
+        apply_bg_image(self.wdgPovFrame, resource_registry.circular_frame1)
         self.wdgPovFrame.setFixedSize(190, 190)
         self.btnPov.installEventFilter(OpacityEventFilter(parent=self.btnPov, enterOpacity=0.7, leaveOpacity=1.0))
 

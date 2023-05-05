@@ -31,6 +31,9 @@
    </property>
    <item>
     <widget class="QWidget" name="wdgPovFrame" native="true">
+     <property name="bg-image" stdset="0">
+      <bool>true</bool>
+     </property>
      <layout class="QVBoxLayout" name="verticalLayout_15">
       <property name="spacing">
        <number>0</number>
