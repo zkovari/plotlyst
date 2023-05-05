@@ -471,6 +471,9 @@
                         <height>16777215</height>
                        </size>
                       </property>
+                      <property name="border-image" stdset="0">
+                       <bool>true</bool>
+                      </property>
                       <layout class="QHBoxLayout" name="horizontalLayout_2">
                        <property name="spacing">
                         <number>3</number>

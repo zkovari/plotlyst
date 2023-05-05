@@ -87,6 +87,9 @@
           <height>16777215</height>
          </size>
         </property>
+        <property name="border-image" stdset="0">
+         <bool>true</bool>
+        </property>
         <layout class="QHBoxLayout" name="horizontalLayout_10">
          <property name="spacing">
           <number>0</number>
@@ -111,7 +114,6 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-
            <property name="text">
             <string>Title</string>
            </property>
@@ -628,6 +630,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DocumentTextEditor</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
+  </customwidget>
+  <customwidget>
    <class>Subtitle</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
@@ -637,11 +644,6 @@
    <class>WordsDisplay</class>
    <extends>QLabel</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
-  </customwidget>
-  <customwidget>
-   <class>DocumentTextEditor</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>StoryStructureEditor</class>

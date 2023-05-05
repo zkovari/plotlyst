@@ -39,6 +39,7 @@ from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPr
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -75,8 +76,7 @@ class HomeView(AbstractView):
         self.ui.btnAddNewStoryMain.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAddNewStoryMain))
 
         self.ui.wdgTitle.setFixedHeight(150)
-        self.ui.wdgTitle.setStyleSheet(
-            f'#wdgTitle {{border-image: url({resource_registry.frame1}) 0 0 0 0 stretch stretch;}}')
+        apply_border_image(self.ui.wdgTitle, resource_registry.frame1)
 
         transparent(self.ui.lineNovelTitle)
         self.ui.lineNovelTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
