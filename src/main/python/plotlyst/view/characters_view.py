@@ -25,7 +25,7 @@ from overrides import overrides
 from qthandy import busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -174,10 +174,6 @@ class CharactersView(AbstractNovelView):
 
         self._progress = CharactersProgressWidget()
         self.ui.pageProgressView.layout().addWidget(self._progress)
-        self.ui.pageProgressView.setStyleSheet(f'''
-            #scrollAreaProgress {{background-color: {RELAXED_WHITE_COLOR};}}
-            #pageProgressView {{background-color: {RELAXED_WHITE_COLOR};}}
-            ''')
         self._progress.setNovel(self.novel)
         self._progress.characterClicked.connect(self._edit_character)
         self._progress.refresh()
