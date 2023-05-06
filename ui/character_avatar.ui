@@ -61,12 +61,6 @@
         <property name="toolTip">
          <string/>
         </property>
-        <property name="styleSheet">
-         <string notr="true">QToolButton {
-	border: 0px;
-}
-QToolButton::menu-indicator {width:0px;}</string>
-        </property>
         <property name="text">
          <string>Avatar</string>
         </property>
@@ -81,6 +75,9 @@ QToolButton::menu-indicator {width:0px;}</string>
         </property>
         <property name="toolButtonStyle">
          <enum>Qt::ToolButtonTextUnderIcon</enum>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

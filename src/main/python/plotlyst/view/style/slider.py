@@ -17,6 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Union
+
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QWidget
 
 style = '''
 QSlider::groove:horizontal {
@@ -34,3 +39,16 @@ QSlider::handle:horizontal {
     border-radius: 3px;
 }
 '''
+
+
+def apply_slider_color(wdg: QWidget, color: Union[str, QColor, Qt.GlobalColor]):
+    if isinstance(color, QColor):
+        color = color.name()
+    wdg.setStyleSheet(f'''
+                QSlider::add-page:horizontal {{
+                    background: lightgray;
+                }}
+                QSlider::sub-page:horizontal {{
+                    background: {color};
+                }}
+            ''')

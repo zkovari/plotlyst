@@ -68,15 +68,7 @@ class HintWidget(QFrame):
             return
 
         self.setLineWidth(1)
-        self.setFrameShape(QFrame.StyledPanel)
-        self.setStyleSheet('''
-            HintWidget {
-                border: 2px solid #7209b7;
-                border-radius: 4px;
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
-                                      stop: 0 #dec9e9);
-            }
-        ''')
+        self.setFrameShape(QFrame.Shape.StyledPanel)
 
         self.wdgHint = QWidget(self)
         self.setupUi(self.wdgHint)

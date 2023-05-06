@@ -57,16 +57,7 @@ class GrammarPopup(QWidget, Ui_GrammarPopup):
     def _button(self, replacement: str) -> QPushButton:
         btn = QPushButton(replacement, self)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn.setStyleSheet('''
-            QPushButton {
-                background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #4361ee, stop: 1 #4361ee);
-                border: 1px solid #4361ee;
-                border-radius: 5px;
-                padding: 3px;
-                color: white;
-            }
-        ''')
+        btn.setProperty('lang-spellcheck-suggestion', True)
         btn.clicked.connect(lambda: self.replacementRequested.emit(replacement))
 
         return btn
