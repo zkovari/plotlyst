@@ -326,6 +326,9 @@
               <widget class="QStackedWidget" name="stackWdgNovels">
                <widget class="QWidget" name="pageEmpty">
                 <property name="white-bg" stdset="0">
+                 <bool>false</bool>
+                </property>
+                <property name="relaxed-white-bg" stdset="0">
                  <bool>true</bool>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_12">
@@ -333,7 +336,7 @@
                   <number>0</number>
                  </property>
                  <property name="topMargin">
-                  <number>0</number>
+                  <number>50</number>
                  </property>
                  <property name="rightMargin">
                   <number>0</number>
@@ -341,22 +344,6 @@
                  <property name="bottomMargin">
                   <number>0</number>
                  </property>
-                 <item>
-                  <spacer name="verticalSpacer_3">
-                   <property name="orientation">
-                    <enum>Qt::Vertical</enum>
-                   </property>
-                   <property name="sizeType">
-                    <enum>QSizePolicy::Preferred</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
                  <item alignment="Qt::AlignHCenter">
                   <widget class="QPushButton" name="btnAddNewStoryMain">
                    <property name="sizePolicy">
@@ -378,6 +365,9 @@
                     <bool>true</bool>
                    </property>
                    <property name="base" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <property name="large" stdset="0">
                     <bool>true</bool>
                    </property>
                   </widget>
@@ -672,6 +662,9 @@
                     <bool>true</bool>
                    </property>
                    <property name="positive" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <property name="large" stdset="0">
                     <bool>true</bool>
                    </property>
                   </widget>
