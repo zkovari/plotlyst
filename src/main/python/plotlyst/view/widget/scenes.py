@@ -155,7 +155,6 @@ class SceneTagSelector(QWidget):
 
         self.wdgTags = QFrame(self)
         flow(self.wdgTags)
-        self.setStyleSheet('#wdgTags {background-color: white;}')
 
         self.layout().addWidget(group(self.btnSelect, QLabel('Tags:'), margin=0), alignment=Qt.AlignmentFlag.AlignTop)
         self.layout().addWidget(self.wdgTags)
@@ -537,7 +536,7 @@ class SceneStoryStructureWidget(QWidget):
 
     def unhighlightBeats(self):
         for btn in self._beats.values():
-            btn.setStyleSheet('border: 0px;')
+            transparent(btn)
             btn.setFixedSize(self._beatHeight, self._beatHeight)
 
     def clearHighlights(self):
@@ -1077,6 +1076,7 @@ class StoryMap(QWidget, EventListener):
         self._acts_filter: Dict[int, bool] = {}
         vbox(self, spacing=0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        # apply to every QWidget inside
         self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         self._refreshOnShow = False
@@ -1204,15 +1204,7 @@ class SceneStageButton(QToolButton, EventListener):
         self._novel: Optional[Novel] = None
         self._stageOk: bool = False
 
-        self.setStyleSheet('''
-        QToolButton {
-            border: 0px;
-        }
-
-        QToolButton::menu-indicator {
-            width: 0px;
-        }
-        ''')
+        transparent(self)
         self.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         pointy(self)
 

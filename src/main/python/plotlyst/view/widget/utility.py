@@ -40,6 +40,7 @@ from src.main.python.plotlyst.view.generated.icon_selector_widget_ui import Ui_I
 from src.main.python.plotlyst.view.generated.resource_manager_dialog_ui import Ui_ResourceManagerDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.button import apply_button_color
 from src.main.python.plotlyst.view.widget._icons import icons_registry
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
 
@@ -50,17 +51,8 @@ class ColorButton(QToolButton):
         self.color = color
         self.setCheckable(True)
         pointy(self)
-        self.setStyleSheet(f'''
-                    QToolButton {{
-                        background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
-                                              stop: 0 {self.color});
-                        border: 1px solid darkGrey;
-                        border-radius: 12px;
-                    }}
-                    QToolButton:pressed {{
-                        border: 1px solid white;
-                    }}
-                    ''')
+        apply_button_color(self, self.color)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
 
 
 class ColorPicker(QWidget):

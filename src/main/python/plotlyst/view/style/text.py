@@ -30,4 +30,17 @@ QTextBrowser {
 QLabel[night-mode=true] {
     color: #f8f9fa;
 }
+
+HintWidget {
+    border: 2px solid #7209b7;
+    border-radius: 4px;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
+                          stop: 0 #dec9e9);
+}
+
+QTextEdit[transparent=true] {
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
 '''

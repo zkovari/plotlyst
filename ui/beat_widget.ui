@@ -97,13 +97,13 @@
          </property>
          <item alignment="Qt::AlignTop">
           <widget class="QLabel" name="lblDescription">
-           <property name="styleSheet">
-            <string notr="true">color: #8d99ae;</string>
-           </property>
            <property name="text">
             <string>TextLabel</string>
            </property>
            <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="description" stdset="0">
             <bool>true</bool>
            </property>
           </widget>
@@ -202,11 +202,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="styleSheet">
-            <string notr="true">background-color: rgba(0, 0, 0, 0);</string>
-           </property>
            <property name="placeholderText">
             <string>Scene summary</string>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -267,13 +267,13 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>AutoAdjustableTextEdit</class>
-   <extends>QTextEdit</extends>
+   <class>Toggle</class>
+   <extends>QCheckBox</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
-   <class>Toggle</class>
-   <extends>QCheckBox</extends>
+   <class>AutoAdjustableTextEdit</class>
+   <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
  </customwidgets>

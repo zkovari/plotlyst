@@ -33,6 +33,7 @@ from src.main.python.plotlyst.core.domain import Character, BigFiveDimension, Bi
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.chart import PolarBaseChart
 from src.main.python.plotlyst.view.widget.display import ChartView, IconText
 
@@ -140,14 +141,7 @@ class FacetSlider(QSlider):
         self.setMaximum(100)
         self.setValue(50)
         self.setTracking(False)
-        self.setStyleSheet(f'''
-            QSlider::add-page:horizontal {{
-                background: lightgray;
-            }}
-            QSlider::sub-page:horizontal {{
-                background: {self._dimension.color};
-            }}
-        ''')
+        apply_slider_color(self, self._dimension.color)
 
     @overrides
     def wheelEvent(self, event: QWheelEvent) -> None:

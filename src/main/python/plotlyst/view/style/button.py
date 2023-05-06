@@ -17,6 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Union
+
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QAbstractButton
 
 style = '''
 QPushButton::menu-indicator[no-menu] {
@@ -136,6 +141,15 @@ QPushButton:checked[main-side-nav=true] {
     color: white;
 }
 
+QPushButton[lang-spellcheck-suggestion] {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                          stop: 0 #4361ee, stop: 1 #4361ee);
+    border: 1px solid #4361ee;
+    border-radius: 5px;
+    padding: 3px;
+    color: white;
+}
+
 QToolButton::menu-indicator {
     width:0px;
 }
@@ -242,3 +256,16 @@ QToolButton:hover[emotion-very-happy] {
 }
 
 '''
+
+
+def apply_button_color(button: QAbstractButton, color: Union[str, QColor, Qt.GlobalColor]):
+    if isinstance(color, QColor):
+        color = color.name()
+    button.setStyleSheet(f'''
+                    QToolButton {{
+                        background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
+                                              stop: 0 {color});
+                        border: 1px solid darkGrey;
+                        border-radius: 12px;
+                    }}
+                    ''')
