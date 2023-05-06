@@ -255,6 +255,20 @@ QToolButton:hover[emotion-very-happy] {
     border: 1px solid rgb(0, 202, 148);
 }
 
+QToolButton[conflict-selector] {
+    border-radius: 15px;
+    border: 1px hidden lightgrey;
+    padding: 2px;
+}
+
+QToolButton:hover[conflict-selector] {
+    background: lightgrey;
+}
+
+QToolButton:checked[conflict-selector] {
+    background: #fce4c9;
+}
+
 '''
 
 

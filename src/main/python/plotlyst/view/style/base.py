@@ -58,6 +58,23 @@ QDialog[relaxed-white-bg] {
     background-color: #f8f9fa;
 }
 
+QToolBox::tab[conflict-selector] {
+    background: #f3a712;
+    border-radius: 5px;
+    color: black;
+    font: italic;
+}
+
+QToolBox::tab:selected[conflict-selector] {
+    font: bold;
+    color: black;
+}
+
+QToolBox[conflict-selector] {
+    background-color: white;
+}
+            
+
 '''
 
 
