@@ -73,7 +73,16 @@ QToolBox::tab:selected[conflict-selector] {
 QToolBox[conflict-selector] {
     background-color: white;
 }
-            
+
+QWidget[transparent] {
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+}
+        
+QScrollArea[transparent] {
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+}
 
 '''
 

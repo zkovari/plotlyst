@@ -31,7 +31,7 @@ from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog, SynopsisEditorDialog
 from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -58,6 +58,7 @@ class NovelView(AbstractNovelView):
 
         self.ui.btnEditNovel.setIcon(IconRegistry.edit_icon(color_on='darkBlue'))
         self.ui.btnEditNovel.installEventFilter(OpacityEventFilter(parent=self.ui.btnEditNovel))
+        self.ui.btnEditNovel.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditNovel))
         self.ui.btnEditNovel.clicked.connect(self._edit_novel)
         retain_when_hidden(self.ui.btnEditNovel)
         self.ui.wdgTitle.installEventFilter(self)

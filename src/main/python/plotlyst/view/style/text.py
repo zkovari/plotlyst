@@ -43,4 +43,9 @@ QTextEdit[transparent=true] {
     background-color: rgba(0, 0, 0, 0);
 }
 
+QLineEdit[transparent=true] {
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
 '''

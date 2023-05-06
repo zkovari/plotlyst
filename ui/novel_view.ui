@@ -124,18 +124,11 @@
            <property name="cursor">
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
-           <property name="styleSheet">
-            <string notr="true">QToolButton {
-                                                    border: 0px;
-                                                    }
-
-                                                    QToolButton:pressed {
-                                                    border: 1px solid black;
-                                                    }
-                                                </string>
-           </property>
            <property name="text">
             <string/>
+           </property>
+           <property name="transparent" stdset="0">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -648,15 +641,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>DocumentTextEditor</class>
-   <extends>QWidget</extends>
-   <header>src.main.python.plotlyst.view.widget.input</header>
-  </customwidget>
-  <customwidget>
    <class>Subtitle</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.display</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DocumentTextEditor</class>
+   <extends>QWidget</extends>
+   <header>src.main.python.plotlyst.view.widget.input</header>
   </customwidget>
   <customwidget>
    <class>WordsDisplay</class>
