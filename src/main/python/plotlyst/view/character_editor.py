@@ -79,6 +79,7 @@ class CharacterEditor:
             OpacityEventFilter(parent=self.ui.btnGenderless, ignoreCheckedButton=True))
         self.ui.btnGenderless.setHidden(True)
         self.ui.btnGroupGender.buttonClicked.connect(self._gender_clicked)
+        self.ui.btnMoreGender.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnMoreGender))
         self.ui.btnMoreGender.clicked.connect(self._display_more_gender_clicked)
 
         self.ui.btnRole.setIcon(IconRegistry.from_name('fa5s.chess-bishop'))

@@ -202,20 +202,6 @@
                 <property name="toolTip">
                  <string>Male</string>
                 </property>
-                <property name="styleSheet">
-                 <string notr="true">QToolButton {
-	border: 1px dashed grey;
-	border-radius: 6px;
-}
-
-QToolButton:pressed {
-	border: 1px solid grey;
-}
-
-QToolButton:checked {
-		border: 2px solid #067bc2;	
-}</string>
-                </property>
                 <property name="text">
                  <string>male</string>
                 </property>
@@ -226,6 +212,9 @@ QToolButton:checked {
                  </size>
                 </property>
                 <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="gender-male" stdset="0">
                  <bool>true</bool>
                 </property>
                 <attribute name="buttonGroup">
@@ -244,20 +233,6 @@ QToolButton:checked {
                 <property name="toolTip">
                  <string>Female</string>
                 </property>
-                <property name="styleSheet">
-                 <string notr="true">QToolButton {
-	border: 1px dashed grey;
-	border-radius: 6px;
-}
-
-QToolButton:pressed {
-	border: 1px solid grey;
-}
-
-QToolButton:checked {
-		border: 2px solid #832161;	
-}</string>
-                </property>
                 <property name="text">
                  <string>female</string>
                 </property>
@@ -268,6 +243,9 @@ QToolButton:checked {
                  </size>
                 </property>
                 <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="gender-female" stdset="0">
                  <bool>true</bool>
                 </property>
                 <attribute name="buttonGroup">
@@ -283,19 +261,13 @@ QToolButton:checked {
                 <property name="toolTip">
                  <string>Display more genders</string>
                 </property>
-                <property name="styleSheet">
-                 <string notr="true">QToolButton {
-	border: 0px;
-}
-
-QToolButton:pressed {
-	color: white;
-}</string>
-                </property>
                 <property name="text">
                  <string>»</string>
                 </property>
                 <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="transparent" stdset="0">
                  <bool>true</bool>
                 </property>
                </widget>
@@ -311,20 +283,6 @@ QToolButton:pressed {
                 <property name="toolTip">
                  <string>Transgender</string>
                 </property>
-                <property name="styleSheet">
-                 <string notr="true">QToolButton {
-	border: 1px dashed grey;
-	border-radius: 6px;
-}
-
-QToolButton:pressed {
-	border: 1px solid grey;
-}
-
-QToolButton:checked {
-	border: 2px solid #f4a261;	
-}</string>
-                </property>
                 <property name="text">
                  <string>transgender</string>
                 </property>
@@ -335,6 +293,9 @@ QToolButton:checked {
                  </size>
                 </property>
                 <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="gender-transgender" stdset="0">
                  <bool>true</bool>
                 </property>
                </widget>
@@ -350,20 +311,6 @@ QToolButton:checked {
                 <property name="toolTip">
                  <string>Non-binary</string>
                 </property>
-                <property name="styleSheet">
-                 <string notr="true">QToolButton {
-	border: 1px dashed grey;
-	border-radius: 6px;
-}
-
-QToolButton:pressed {
-	border: 1px solid grey;
-}
-
-QToolButton:checked {
-		border: 2px solid #7209b7;	
-}</string>
-                </property>
                 <property name="text">
                  <string>non-binary</string>
                 </property>
@@ -374,6 +321,9 @@ QToolButton:checked {
                  </size>
                 </property>
                 <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="gender-non-binary" stdset="0">
                  <bool>true</bool>
                 </property>
                </widget>
@@ -389,20 +339,6 @@ QToolButton:checked {
                 <property name="toolTip">
                  <string>Genderless</string>
                 </property>
-                <property name="styleSheet">
-                 <string notr="true">QToolButton {
-	border: 1px dashed grey;
-	border-radius: 6px;
-}
-
-QToolButton:pressed {
-	border: 1px solid grey;
-}
-
-QToolButton:checked {
-		border: 2px solid #6c757d;	
-}</string>
-                </property>
                 <property name="text">
                  <string>genderless</string>
                 </property>
@@ -413,6 +349,9 @@ QToolButton:checked {
                  </size>
                 </property>
                 <property name="checkable">
+                 <bool>true</bool>
+                </property>
+                <property name="gender-genderless" stdset="0">
                  <bool>true</bool>
                 </property>
                </widget>
