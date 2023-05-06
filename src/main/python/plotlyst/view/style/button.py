@@ -269,6 +269,71 @@ QToolButton:checked[conflict-selector] {
     background: #fce4c9;
 }
 
+QToolButton[gender-male] {
+    border: 1px dashed grey;
+    border-radius: 6px;
+}
+
+QToolButton:pressed[gender-male] {
+    border: 1px solid grey;
+}
+
+QToolButton:checked[gender-male] {
+    border: 2px solid #067bc2;	
+}
+
+QToolButton[gender-female] {
+    border: 1px dashed grey;
+    border-radius: 6px;
+}
+
+QToolButton:pressed[gender-female] {
+    border: 1px solid grey;
+}
+
+QToolButton:checked[gender-female] {
+    border: 2px solid #832161;	
+}
+
+QToolButton[gender-transgender] {
+    border: 1px dashed grey;
+    border-radius: 6px;
+}
+
+QToolButton:pressed[gender-transgender] {
+    border: 1px solid grey;
+}
+
+QToolButton:checked[gender-transgender] {
+    border: 2px solid #f4a261;	
+}
+
+QToolButton[gender-non-binary] {
+    border: 1px dashed grey;
+    border-radius: 6px;
+}
+
+QToolButton:pressed[gender-non-binary] {
+    border: 1px solid grey;
+}
+
+QToolButton:checked[gender-non-binary] {
+    border: 2px solid #7209b7;	
+}
+
+QToolButton[gender-genderless] {
+    border: 1px dashed grey;
+    border-radius: 6px;
+}
+
+QToolButton:pressed[gender-genderless] {
+    border: 1px solid grey;
+}
+
+QToolButton:checked[gender-genderless] {
+    border: 2px solid #6c757d;	
+}
+
 '''
 
 
