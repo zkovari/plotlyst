@@ -69,7 +69,6 @@ class HomeView(AbstractView):
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
         self.ui.btnActivate.setIconSize(QSize(28, 28))
-        incr_font(self.ui.btnActivate, 6)
         self.ui.btnActivate.clicked.connect(lambda: self.loadNovel.emit(self._selected_novel))
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
@@ -112,7 +111,6 @@ class HomeView(AbstractView):
         self.ui.pageNovelDisplay.installEventFilter(
             VisibilityToggleEventFilter(self.ui.btnNovelSettings, self.ui.pageNovelDisplay))
 
-        incr_font(self.ui.btnAddNewStoryMain, 8)
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
 
         link_buttons_to_pages(self.ui.stackedWidget,

@@ -31,6 +31,10 @@ QPushButton[base=true] {
     padding: 2px;
 }
 
+QPushButton[large=true] {
+    font-size: 24px;
+}
+
 QPushButton:hover[base=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #c3c4c7, stop: 1 #f6f7fa);
