@@ -104,17 +104,14 @@ QToolButton:checked {
       </item>
       <item>
        <widget class="QLineEdit" name="lineName">
-        <property name="styleSheet">
-         <string notr="true">QLineEdit {
-	
-	background-color: rgba(0, 0, 0, 0);
-}</string>
-        </property>
         <property name="frame">
          <bool>false</bool>
         </property>
         <property name="placeholderText">
          <string>Plot name</string>
+        </property>
+        <property name="transparent" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -139,7 +136,7 @@ QToolButton:checked {
            <x>0</x>
            <y>0</y>
            <width>555</width>
-           <height>342</height>
+           <height>338</height>
           </rect>
          </property>
          <property name="sizePolicy">
