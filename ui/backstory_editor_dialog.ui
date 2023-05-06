@@ -81,19 +81,6 @@
        <property name="cursor">
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
-       <property name="styleSheet">
-        <string notr="true">QToolButton:checked {
-	background-color: rgb(239, 0, 0);
-}
-
-QToolButton:hover {
-	border: 1px solid rgb(239, 0, 0);
-}
-
-QToolButton:disabled {   
-	font: grey;
-}</string>
-       </property>
        <property name="text">
         <string/>
        </property>
@@ -108,6 +95,9 @@ QToolButton:disabled {
        </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextOnly</enum>
+       </property>
+       <property name="emotion-very-unhappy" stdset="0">
+        <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">btnGroupEmotion</string>
@@ -131,15 +121,6 @@ QToolButton:disabled {
        <property name="cursor">
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
-       <property name="styleSheet">
-        <string notr="true">QToolButton:checked {
-	background-color: rgb(255, 142, 43);
-}
-
-QToolButton:hover {
-	border: 1px solid rgb(255, 142, 43);
-}</string>
-       </property>
        <property name="text">
         <string/>
        </property>
@@ -154,6 +135,9 @@ QToolButton:hover {
        </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextOnly</enum>
+       </property>
+       <property name="emotion-unhappy" stdset="0">
+        <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">btnGroupEmotion</string>
@@ -177,15 +161,6 @@ QToolButton:hover {
        <property name="cursor">
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
-       <property name="styleSheet">
-        <string notr="true">QToolButton::checked {
-	background-color: rgb(171, 171, 171);
-}
-
-QToolButton:hover {
-	border: 1px solid rgb(171, 171, 171);
-}</string>
-       </property>
        <property name="text">
         <string/>
        </property>
@@ -203,6 +178,9 @@ QToolButton:hover {
        </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextOnly</enum>
+       </property>
+       <property name="emotion-neutral" stdset="0">
+        <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">btnGroupEmotion</string>
@@ -226,15 +204,6 @@ QToolButton:hover {
        <property name="cursor">
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
-       <property name="styleSheet">
-        <string notr="true">QToolButton:checked {
-	background-color: #93e5ab;
-}
-
-QToolButton:hover {
-	border: 1px solid #93e5ab;
-}</string>
-       </property>
        <property name="text">
         <string/>
        </property>
@@ -249,6 +218,9 @@ QToolButton:hover {
        </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextOnly</enum>
+       </property>
+       <property name="emotion-happy" stdset="0">
+        <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">btnGroupEmotion</string>
@@ -272,17 +244,6 @@ QToolButton:hover {
        <property name="cursor">
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
-       <property name="styleSheet">
-        <string notr="true">QToolButton:checked {
-	background-color: rgb(0, 202, 148);
-}
-
-QToolButton:hover {
-	border: 1px solid rgb(0, 202, 148);
-}
-
-</string>
-       </property>
        <property name="text">
         <string/>
        </property>
@@ -297,6 +258,9 @@ QToolButton:hover {
        </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextOnly</enum>
+       </property>
+       <property name="emotion-very-happy" stdset="0">
+        <bool>true</bool>
        </property>
        <attribute name="buttonGroup">
         <string notr="true">btnGroupEmotion</string>
@@ -330,10 +294,10 @@ QToolButton:hover {
    </item>
    <item>
     <widget class="QScrollArea" name="scrollArea">
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(255, 255, 255);</string>
-     </property>
      <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <property name="relaxed-white-bg" stdset="0">
       <bool>true</bool>
      </property>
      <widget class="QWidget" name="wdgTypes">
@@ -344,6 +308,9 @@ QToolButton:hover {
         <width>461</width>
         <height>68</height>
        </rect>
+      </property>
+      <property name="relaxed-white-bg" stdset="0">
+       <bool>true</bool>
       </property>
      </widget>
     </widget>

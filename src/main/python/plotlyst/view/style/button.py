@@ -201,5 +201,44 @@ QToolButton[transparent-circle-bg-on-hover][large] {
     padding: 4px;
 }
 
+QToolButton:checked[emotion-very-unhappy] {
+    background-color: rgb(239, 0, 0);
+}
+
+QToolButton:hover[emotion-very-unhappy] {
+    border: 1px solid rgb(239, 0, 0);
+}
+
+QToolButton:checked[emotion-unhappy] {
+    background-color: rgb(255, 142, 43);
+}
+
+QToolButton:hover[emotion-unhappy] {
+    border: 1px solid rgb(255, 142, 43);
+}
+
+QToolButton::checked[emotion-neutral] {
+    background-color: rgb(171, 171, 171);
+}
+
+QToolButton:hover[emotion-neutral] {
+    border: 1px solid rgb(171, 171, 171);
+}
+
+QToolButton:checked[emotion-happy] {
+    background-color: #93e5ab;
+}
+
+QToolButton:hover[emotion-happy] {
+    border: 1px solid #93e5ab;
+}
+
+QToolButton:checked[emotion-very-happy] {
+    background-color: rgb(0, 202, 148);
+}
+
+QToolButton:hover[emotion-very-happy] {
+    border: 1px solid rgb(0, 202, 148);
+}
 
 '''
