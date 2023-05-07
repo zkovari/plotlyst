@@ -46,8 +46,17 @@ QWidget[relaxed-white-bg=true] {
     background-color: #f8f9fa;
 }
 
-QWidget[banner-bg] {
+QWidget[banner-bg=true] {
     background-color: #2B0548;
+}
+
+QWidget[transparent=true] {
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+QWidget[navbar=true] {
+    background-color: #622675;
 }
 
 QFrame[relaxed-white-bg=true] {
@@ -58,31 +67,27 @@ QDialog[relaxed-white-bg] {
     background-color: #f8f9fa;
 }
 
-QToolBox::tab[conflict-selector] {
+QToolBox::tab[conflict-selector=true] {
     background: #f3a712;
     border-radius: 5px;
     color: black;
     font: italic;
 }
 
-QToolBox::tab:selected[conflict-selector] {
+QToolBox::tab:selected[conflict-selector=true] {
     font: bold;
     color: black;
 }
 
-QToolBox[conflict-selector] {
+QToolBox[conflict-selector=true] {
     background-color: white;
 }
-
-QWidget[transparent] {
-    border: 0px;
-    background-color: rgba(0, 0, 0, 0);
-}
         
-QScrollArea[transparent] {
+QScrollArea[transparent=true] {
     border: 0px;
     background-color: rgba(0, 0, 0, 0);
 }
+
 
 '''
 

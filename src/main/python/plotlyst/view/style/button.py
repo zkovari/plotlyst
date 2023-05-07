@@ -196,142 +196,156 @@ QToolButton:pressed[transparent-clickable=true] {
     border: 1px solid grey;
 }
 
-QToolButton[transparent-circle-bg-on-hover] {
+QToolButton[transparent-circle-bg-on-hover=true] {
     border-radius: 12px;
     border: 1px hidden lightgrey;
     padding: 2px;
 }
-QToolButton::menu-indicator[transparent-circle-bg-on-hover] {
+QToolButton::menu-indicator[transparent-circle-bg-on-hover=true] {
     width:0px;
 }
-QToolButton:hover[transparent-circle-bg-on-hover] {
+QToolButton:hover[transparent-circle-bg-on-hover=true] {
     background: #EDEDED;
 }
-QToolButton:hover[transparent-circle-bg-on-hover][positive] {
+QToolButton:hover[transparent-circle-bg-on-hover=true][positive=true] {
     background: #d8f3dc;
 }
-QToolButton[transparent-circle-bg-on-hover][large] {
+QToolButton[transparent-circle-bg-on-hover=true][large=true] {
     border-radius: 18px;
     padding: 4px;
 }
 
-QToolButton:checked[emotion-very-unhappy] {
+QToolButton:checked[emotion-very-unhappy=true] {
     background-color: rgb(239, 0, 0);
 }
 
-QToolButton:hover[emotion-very-unhappy] {
+QToolButton:hover[emotion-very-unhappy=true] {
     border: 1px solid rgb(239, 0, 0);
 }
 
-QToolButton:checked[emotion-unhappy] {
+QToolButton:checked[emotion-unhappy=true] {
     background-color: rgb(255, 142, 43);
 }
 
-QToolButton:hover[emotion-unhappy] {
+QToolButton:hover[emotion-unhappy=true] {
     border: 1px solid rgb(255, 142, 43);
 }
 
-QToolButton::checked[emotion-neutral] {
+QToolButton::checked[emotion-neutral=true] {
     background-color: rgb(171, 171, 171);
 }
 
-QToolButton:hover[emotion-neutral] {
+QToolButton:hover[emotion-neutral=true] {
     border: 1px solid rgb(171, 171, 171);
 }
 
-QToolButton:checked[emotion-happy] {
+QToolButton:checked[emotion-happy=true] {
     background-color: #93e5ab;
 }
 
-QToolButton:hover[emotion-happy] {
+QToolButton:hover[emotion-happy=true] {
     border: 1px solid #93e5ab;
 }
 
-QToolButton:checked[emotion-very-happy] {
+QToolButton:checked[emotion-very-happy=true] {
     background-color: rgb(0, 202, 148);
 }
 
-QToolButton:hover[emotion-very-happy] {
+QToolButton:hover[emotion-very-happy=true] {
     border: 1px solid rgb(0, 202, 148);
 }
 
-QToolButton[conflict-selector] {
+QToolButton[conflict-selector=true] {
     border-radius: 15px;
     border: 1px hidden lightgrey;
     padding: 2px;
 }
 
-QToolButton:hover[conflict-selector] {
+QToolButton:hover[conflict-selector=true] {
     background: lightgrey;
 }
 
-QToolButton:checked[conflict-selector] {
+QToolButton:checked[conflict-selector=true] {
     background: #fce4c9;
 }
 
-QToolButton[gender-male] {
+QToolButton[gender-male=true] {
     border: 1px dashed grey;
     border-radius: 6px;
 }
 
-QToolButton:pressed[gender-male] {
+QToolButton:pressed[gender-male=true] {
     border: 1px solid grey;
 }
 
-QToolButton:checked[gender-male] {
+QToolButton:checked[gender-male=true] {
     border: 2px solid #067bc2;	
 }
 
-QToolButton[gender-female] {
+QToolButton[gender-female=true] {
     border: 1px dashed grey;
     border-radius: 6px;
 }
 
-QToolButton:pressed[gender-female] {
+QToolButton:pressed[gender-female=true] {
     border: 1px solid grey;
 }
 
-QToolButton:checked[gender-female] {
+QToolButton:checked[gender-female=true] {
     border: 2px solid #832161;	
 }
 
-QToolButton[gender-transgender] {
+QToolButton[gender-transgender=true] {
     border: 1px dashed grey;
     border-radius: 6px;
 }
 
-QToolButton:pressed[gender-transgender] {
+QToolButton:pressed[gender-transgender=true] {
     border: 1px solid grey;
 }
 
-QToolButton:checked[gender-transgender] {
+QToolButton:checked[gender-transgender=true] {
     border: 2px solid #f4a261;	
 }
 
-QToolButton[gender-non-binary] {
+QToolButton[gender-non-binary=true] {
     border: 1px dashed grey;
     border-radius: 6px;
 }
 
-QToolButton:pressed[gender-non-binary] {
+QToolButton:pressed[gender-non-binary=true] {
     border: 1px solid grey;
 }
 
-QToolButton:checked[gender-non-binary] {
+QToolButton:checked[gender-non-binary=true] {
     border: 2px solid #7209b7;	
 }
 
-QToolButton[gender-genderless] {
+QToolButton[gender-genderless=true] {
     border: 1px dashed grey;
     border-radius: 6px;
 }
 
-QToolButton:pressed[gender-genderless] {
+QToolButton:pressed[gender-genderless=true] {
     border: 1px solid grey;
 }
 
-QToolButton:checked[gender-genderless] {
+QToolButton:checked[gender-genderless=true] {
     border: 2px solid #6c757d;	
+}
+
+QToolButton[main-navbar=true] {
+    border: 1px hidden white;
+    border-radius: 6px;
+    padding: 2px;
+}
+
+QToolButton:hover[main-navbar=true] {
+    background-color: #642A8B;
+}
+
+QToolButton:checked[main-navbar=true] {
+    background-color: #642A8B;
 }
 
 '''

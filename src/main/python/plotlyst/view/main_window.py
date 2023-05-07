@@ -27,11 +27,11 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QText
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
-from src.main.python.plotlyst.common import EXIT_CODE_RESTART, PLOTLYST_MAIN_COLOR
+from src.main.python.plotlyst.common import EXIT_CODE_RESTART, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
@@ -96,13 +96,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             DEFAULT_FONT_FAMILIES.insert(3 if len(DEFAULT_FONT_FAMILIES) > 5 else -1, 'Calibri')
 
         for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze, self.lblManage]:
-            apply_color(lbl, PLOTLYST_MAIN_COLOR)
+            apply_color(lbl, RELAXED_WHITE_COLOR)
             font: QFont = lbl.font()
             font.setPointSize(font.pointSize() - 2)
             font.setFamily('Helvetica')
             font.setUnderline(True)
             font.setBold(True)
             lbl.setFont(font)
+            lbl.setHidden(True)
 
         self.novel = None
         self._current_text_widget = None
@@ -125,6 +126,18 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._init_toolbar()
         self._tasks_widget = TasksQuickAccessWidget()
         self._init_statusbar()
+
+        self.btnBoard.setIcon(IconRegistry.board_icon('#A89BC7', '#F9F9F9'))
+        self.btnNovel.setIcon(IconRegistry.book_icon('#A89BC7', '#F9F9F9'))
+        self.btnCharacters.setIcon(IconRegistry.character_icon('#A89BC7', '#F9F9F9'))
+        self.btnScenes.setIcon(IconRegistry.scene_icon('#A89BC7', '#F9F9F9'))
+        self.btnWorld.setIcon(IconRegistry.world_building_icon('#A89BC7', '#F9F9F9'))
+        self.btnNotes.setIcon(IconRegistry.document_edition_icon('#A89BC7', '#F9F9F9'))
+        self.btnManuscript.setIcon(IconRegistry.manuscript_icon('#A89BC7', '#F9F9F9'))
+        self.btnReports.setIcon(IconRegistry.reports_icon('#A89BC7', '#F9F9F9'))
+
+        for btn in self.buttonGroup.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
 
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.info.connect(self.event_log_handler.on_info_event)
@@ -263,15 +276,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.comments_view = CommentsView(self.novel)
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
-
-        self.btnBoard.setIcon(IconRegistry.board_icon())
-        self.btnNovel.setIcon(IconRegistry.book_icon())
-        self.btnCharacters.setIcon(IconRegistry.character_icon())
-        self.btnScenes.setIcon(IconRegistry.scene_icon())
-        self.btnWorld.setIcon(IconRegistry.world_building_icon())
-        self.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.btnManuscript.setIcon(IconRegistry.manuscript_icon())
-        self.btnReports.setIcon(IconRegistry.reports_icon())
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)

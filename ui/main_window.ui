@@ -16,7 +16,6 @@
   <property name="windowTitle">
    <string>Plotlyst</string>
   </property>
-
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <property name="spacing">
@@ -61,6 +60,9 @@
         </property>
         <item>
          <widget class="QWidget" name="wdgNavBar" native="true">
+          <property name="navbar" stdset="0">
+           <bool>true</bool>
+          </property>
           <layout class="QVBoxLayout" name="verticalLayout">
            <property name="spacing">
             <number>1</number>
@@ -149,6 +151,12 @@
               <bool>true</bool>
              </property>
              <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
+              <bool>true</bool>
+             </property>
+             <property name="transparent" stdset="0">
               <bool>true</bool>
              </property>
              <attribute name="buttonGroup">
@@ -189,6 +197,9 @@
               <bool>true</bool>
              </property>
              <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
               <bool>true</bool>
              </property>
              <attribute name="buttonGroup">
@@ -229,6 +240,9 @@
               <bool>true</bool>
              </property>
              <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
               <bool>true</bool>
              </property>
              <attribute name="buttonGroup">
@@ -272,6 +286,9 @@
               <bool>true</bool>
              </property>
              <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
               <bool>true</bool>
              </property>
              <attribute name="buttonGroup">
@@ -312,6 +329,9 @@
               <bool>true</bool>
              </property>
              <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
               <bool>true</bool>
              </property>
              <attribute name="buttonGroup">
@@ -394,6 +414,9 @@
               <bool>true</bool>
              </property>
              <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
               <bool>true</bool>
              </property>
              <attribute name="buttonGroup">
@@ -473,6 +496,9 @@
               <bool>true</bool>
              </property>
              <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
               <bool>true</bool>
              </property>
              <attribute name="buttonGroup">
@@ -536,6 +562,9 @@
               <bool>true</bool>
              </property>
              <property name="base" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="main-navbar" stdset="0">
               <bool>true</bool>
              </property>
              <attribute name="buttonGroup">
