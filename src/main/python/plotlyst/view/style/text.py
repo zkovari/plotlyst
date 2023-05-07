@@ -17,6 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from PyQt6.QtWidgets import QWidget
+
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 
 style = '''
 QLabel[description=true] {
@@ -49,3 +52,21 @@ QLineEdit[transparent=true] {
 }
 
 '''
+
+
+def apply_texteditor_toolbar_style(widget: QWidget):
+    widget.setStyleSheet(f'''
+                            QFrame {{
+                                background-color: {RELAXED_WHITE_COLOR};
+                            }}
+
+                            QToolButton {{
+                                border: 1px hidden black;
+                            }}
+                            QToolButton:checked {{
+                                background-color: #ced4da;
+                            }}
+                            QToolButton:hover:!checked {{
+                                background-color: #e5e5e5;
+                            }}
+                        ''')

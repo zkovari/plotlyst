@@ -235,15 +235,15 @@ class IconRegistry:
 
     @staticmethod
     def tasks_icon() -> QIcon:
-        return qtawesome.icon('fa5s.tasks')
+        return IconRegistry.from_name('fa5s.tasks')
 
     @staticmethod
     def reports_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return qtawesome.icon('fa5.chart-bar', color=color, color_on=color_on)
+        return IconRegistry.from_name('fa5.chart-bar', color=color, color_on=color_on)
 
     @staticmethod
     def document_edition_icon(color: str = 'black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return qtawesome.icon('ei.file-edit', color=color, color_on=color_on)
+        return IconRegistry.from_name('mdi.file-document-outline', color=color, color_on=color_on)
 
     @staticmethod
     def act_one_icon(color=ACT_ONE_COLOR, color_on=ACT_ONE_COLOR) -> QIcon:
