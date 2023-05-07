@@ -414,6 +414,8 @@ class DocumentTextEditor(RichTextEditor):
 
     def __init__(self, parent=None):
         super(DocumentTextEditor, self).__init__(parent)
+        self._titleVisible: bool = True
+
         self._btnIcon = QToolButton()
         transparent(self._btnIcon)
         self._btnIcon.setIconSize(QSize(40, 40))
@@ -455,6 +457,8 @@ class DocumentTextEditor(RichTextEditor):
 
         self.layout().insertWidget(1, self._wdgTitle)
 
+        self._textedit.verticalScrollBar().valueChanged.connect(self._scrolled)
+
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
         def grammarCheckToggled(toggled: bool):
@@ -485,6 +489,7 @@ class DocumentTextEditor(RichTextEditor):
         self._textTitle.setText(title)
         self._textTitle.setReadOnly(title_read_only)
         self.setTitleIcon(icon)
+        self._textTitle.setVisible(self._titleVisible)
 
     def setTitleIcon(self, icon: Optional[QIcon] = None):
         self._btnIcon.setVisible(icon is not None)
@@ -495,6 +500,7 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setPlaceholderText(text)
 
     def setTitleVisible(self, visible: bool):
+        self._titleVisible = visible
         self._wdgTitle.setVisible(visible)
 
     def setToolbarVisible(self, visible: bool):
@@ -518,6 +524,12 @@ class DocumentTextEditor(RichTextEditor):
 
     def statistics(self) -> TextStatistics:
         return self.textEdit.statistics()
+
+    def _scrolled(self, value: int):
+        if value > self._wdgTitle.height():
+            self._wdgTitle.setHidden(True)
+        elif self._titleVisible:
+            self._wdgTitle.setVisible(True)
 
 
 class RotatedButtonOrientation(Enum):
