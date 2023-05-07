@@ -38,6 +38,10 @@ QToolBar {
     spacing: 1px;
 }
 
+QWidget[bg=true] {
+    background-color: #EFEFF4;
+}
+
 QWidget[white-bg=true] {
     background-color: white;
 }
@@ -57,6 +61,10 @@ QWidget[transparent=true] {
 
 QWidget[navbar=true] {
     background-color: #622675;
+}
+
+QFrame[bottom-bar=true] {
+    background-color: #EFEFF4;
 }
 
 QFrame[relaxed-white-bg=true] {

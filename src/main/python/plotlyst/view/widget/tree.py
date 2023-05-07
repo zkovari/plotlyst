@@ -46,7 +46,7 @@ class BaseTreeWidget(QWidget):
         self._selected: bool = False
         self._wdgTitle = QWidget(self)
         self._wdgTitle.setObjectName('wdgTitle')
-        hbox(self._wdgTitle, 0, 2)
+        hbox(self._wdgTitle, 0, 3)
 
         self._lblTitle = QLabel(title)
         self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -158,6 +158,7 @@ class ContainerNode(BaseTreeWidget):
         self._container.setHidden(True)
         vbox(self._container, 1)
         margins(self._container, left=20)
+        margins(self._wdgTitle, left=15)
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._container)
 

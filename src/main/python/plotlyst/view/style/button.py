@@ -345,7 +345,7 @@ QToolButton:hover[main-navbar=true] {
 }
 
 QToolButton:checked[main-navbar=true] {
-    background-color: #642A8B;
+    background-color: #82329A;
 }
 
 '''

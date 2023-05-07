@@ -44,7 +44,7 @@
       <widget class="QWidget" name="pageOutline">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <property name="spacing">
-         <number>3</number>
+         <number>0</number>
         </property>
         <property name="leftMargin">
          <number>0</number>
@@ -71,7 +71,7 @@
             <number>4</number>
            </property>
            <property name="topMargin">
-            <number>0</number>
+            <number>40</number>
            </property>
            <property name="rightMargin">
             <number>2</number>
@@ -79,29 +79,6 @@
            <property name="bottomMargin">
             <number>0</number>
            </property>
-           <item>
-            <spacer name="verticalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Fixed</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>10</width>
-               <height>10</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item alignment="Qt::AlignHCenter">
-            <widget class="QLabel" name="lblPlan">
-             <property name="text">
-              <string>Plan</string>
-             </property>
-            </widget>
-           </item>
            <item>
             <spacer name="verticalSpacer_6">
              <property name="orientation">
@@ -291,9 +268,6 @@
              <property name="main-navbar" stdset="0">
               <bool>true</bool>
              </property>
-             <attribute name="buttonGroup">
-              <string notr="true">buttonGroup</string>
-             </attribute>
             </widget>
            </item>
            <item>
@@ -354,13 +328,6 @@
               </size>
              </property>
             </spacer>
-           </item>
-           <item alignment="Qt::AlignHCenter">
-            <widget class="QLabel" name="lblWrite">
-             <property name="text">
-              <string>Write</string>
-             </property>
-            </widget>
            </item>
            <item>
             <spacer name="verticalSpacer_8">
@@ -440,13 +407,6 @@
              </property>
             </spacer>
            </item>
-           <item alignment="Qt::AlignHCenter">
-            <widget class="QLabel" name="lblAnalyze">
-             <property name="text">
-              <string>Analyze</string>
-             </property>
-            </widget>
-           </item>
            <item>
             <spacer name="verticalSpacer_7">
              <property name="orientation">
@@ -521,13 +481,6 @@
               </size>
              </property>
             </spacer>
-           </item>
-           <item alignment="Qt::AlignHCenter">
-            <widget class="QLabel" name="lblManage">
-             <property name="text">
-              <string>Manage</string>
-             </property>
-            </widget>
            </item>
            <item>
             <widget class="QToolButton" name="btnBoard">
