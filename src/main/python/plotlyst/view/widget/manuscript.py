@@ -28,12 +28,12 @@ from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObj
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
     QMouseEvent, QTextCursor, QFont, QScreen
 from PyQt6.QtMultimedia import QSoundEffect
-from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication
+from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit
 from nltk import WhitespaceTokenizer
 from overrides import overrides
-from qthandy import retain_when_hidden, translucent, clear_layout, gc
+from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, group
 from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState, remove_font
 from textstat import textstat
 
@@ -440,13 +440,32 @@ class ManuscriptTextEdit(TextEditBase):
 class ManuscriptTextEditor(RichTextEditor):
     textChanged = pyqtSignal()
     selectionChanged = pyqtSignal()
+    sceneTitleChanged = pyqtSignal(Scene)
 
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
         self.toolbar().setHidden(True)
         self.setCharacterWidth()
         self._scenes: List[Scene] = []
+
+        self._textTitle = QLineEdit()
+        self._textTitle.setProperty('transparent', True)
+        self._textTitle.setFrame(False)
+        self._textTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_font = self._textedit.font()
+        title_font.setBold(True)
+        title_font.setPointSize(32)
+        self._textTitle.setFont(title_font)
+        self._textTitle.returnPressed.connect(self.textEdit.setFocus)
+        self._textTitle.textChanged.connect(self._titleChanged)
+        self._wdgTitle = group(self._textTitle, margin=0, spacing=0)
+        self._wdgTitle.setProperty('relaxed-white-bg', True)
+        margins(self._wdgTitle, left=20)
+
+        self.layout().insertWidget(1, self._wdgTitle)
+
         self.repo = RepositoryPersistenceManager.instance()
+        self._textedit.verticalScrollBar().valueChanged.connect(self._scrolled)
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
@@ -455,6 +474,7 @@ class ManuscriptTextEditor(RichTextEditor):
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.selectionChanged.connect(self.selectionChanged.emit)
         _textedit.textChanged.connect(self._textChanged)
+        _textedit.setProperty('borderless', True)
         return _textedit
 
     def setGrammarCheckEnabled(self, enabled: bool):
@@ -474,8 +494,11 @@ class ManuscriptTextEditor(RichTextEditor):
 
         self.textEdit.document().clearUndoRedoStacks()
         self._scenes.append(scene)
+        self._textTitle.setPlaceholderText('Scene title')
+        self._textTitle.setText(scene.title)
+        self._textTitle.setReadOnly(False)
 
-    def setChapterScenes(self, scenes: List[Scene]):
+    def setChapterScenes(self, scenes: List[Scene], title: str = ''):
         self.clear()
         self.textEdit.setUneditableBlocksEnabled(True)
         block = self.textEdit.document().begin()
@@ -492,6 +515,9 @@ class ManuscriptTextEditor(RichTextEditor):
         self._scenes.extend(scenes)
 
         self.textEdit.document().clearUndoRedoStacks()
+        self._textTitle.setPlaceholderText('Chapter')
+        self._textTitle.setText(title)
+        self._textTitle.setReadOnly(True)
 
     def clear(self):
         self._scenes.clear()
@@ -584,6 +610,17 @@ class ManuscriptTextEditor(RichTextEditor):
             self.repo.update_scene(scene)
 
         self.repo.update_doc(app_env.novel, scene.manuscript)
+
+    def _titleChanged(self, text: str):
+        if len(self._scenes) == 1:
+            self._scenes[0].title = text
+            self.sceneTitleChanged.emit(self._scenes[0])
+
+    def _scrolled(self, value: int):
+        if value > self._wdgTitle.height():
+            self._wdgTitle.setHidden(True)
+        else:
+            self._wdgTitle.setVisible(True)
 
 
 class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):

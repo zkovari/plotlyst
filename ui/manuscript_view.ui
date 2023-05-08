@@ -193,7 +193,7 @@
         <item>
          <widget class="QFrame" name="wdgTop">
           <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
+           <enum>QFrame::NoFrame</enum>
           </property>
           <property name="frameShadow">
            <enum>QFrame::Sunken</enum>
@@ -209,10 +209,10 @@
             <number>0</number>
            </property>
            <property name="rightMargin">
-            <number>21</number>
+            <number>5</number>
            </property>
            <property name="bottomMargin">
-            <number>2</number>
+            <number>0</number>
            </property>
            <item>
             <widget class="QWidget" name="wdgTitle" native="true">
@@ -233,7 +233,7 @@
                <number>4</number>
               </property>
               <property name="rightMargin">
-               <number>2</number>
+               <number>23</number>
               </property>
               <property name="bottomMargin">
                <number>0</number>
@@ -386,7 +386,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>150</width>
+              <width>200</width>
               <height>16777215</height>
              </size>
             </property>
@@ -531,6 +531,13 @@
            </widget>
           </item>
           <item>
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QFrame" name="wdgSideBar">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -539,7 +546,7 @@
              </sizepolicy>
             </property>
             <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="frameShadow">
              <enum>QFrame::Sunken</enum>
@@ -817,8 +824,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>80</width>
-             <height>70</height>
+             <width>455</width>
+             <height>477</height>
             </rect>
            </property>
            <property name="sizePolicy">

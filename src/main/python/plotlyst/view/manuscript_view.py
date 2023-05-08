@@ -22,7 +22,7 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
+from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon, line
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
@@ -125,9 +125,12 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageReadability.layout().addWidget(self._wdgReadability, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.pageReadability.layout().addWidget(vspacer())
 
-        self.ui.wdgTop.layout().addWidget(
-            group(self._btnDistractionFree, self._wdgSprint, spacer(), self._spellCheckIcon, self._cbSpellCheck,
-                  vline(), self._btnContext))
+        self._wdgToolbar = group(self._btnDistractionFree, self._wdgSprint, spacer(), self._spellCheckIcon,
+                                 self._cbSpellCheck,
+                                 vline(), self._btnContext)
+        self.ui.wdgTop.layout().addWidget(self._wdgToolbar)
+        self.ui.wdgTop.layout().addWidget(line())
+        margins(self._wdgToolbar, right=21)
 
         self._addSceneMenu = MenuWidget(self.ui.btnAdd)
         self._addSceneMenu.addAction(action('Add scene', IconRegistry.scene_icon(), self.ui.treeChapters.addScene))
@@ -166,11 +169,12 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
         self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
 
-        self.ui.textEdit.setMargins(30, 80, 30, 30)
+        self.ui.textEdit.setMargins(30, 30, 30, 30)
         self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
         self.ui.textEdit.textEdit.setSidebarEnabled(False)
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
+        self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
         self._btnDistractionFree.clicked.connect(self._enter_distraction_free)
 
         if self.novel.chapters:
@@ -263,7 +267,7 @@ class ManuscriptView(AbstractNovelView):
                 scene.manuscript = Document('', scene_id=scene.id)
                 self.repo.update_scene(scene)
         if scenes:
-            self.ui.textEdit.setChapterScenes(scenes)
+            self.ui.textEdit.setChapterScenes(scenes, chapter.title_index(self.novel))
         else:
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
@@ -299,6 +303,10 @@ class ManuscriptView(AbstractNovelView):
             self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
         else:
             self.ui.lblWordCount.clearSecondaryWordCount()
+
+    def _scene_title_changed(self, scene: Scene):
+        self.repo.update_scene(scene)
+        emit_event(SceneChangedEvent(self, scene))
 
     def _side_bar_toggled(self, btn, toggled: bool):
         btn = self._btnGroupSideBar.checkedButton()
