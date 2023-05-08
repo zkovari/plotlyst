@@ -25,7 +25,7 @@ from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
-from qttextedit.ops import TextEditorSettingsWidget
+from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
@@ -139,6 +139,7 @@ class ManuscriptView(AbstractNovelView):
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
         menu = MenuWidget(self._btnContext)
         menu.addWidget(self._contextMenuWidget)
+        self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
 
         self._langSelectionWidget.languageChanged.connect(self._language_changed)
