@@ -239,7 +239,7 @@ class IconRegistry:
 
     @staticmethod
     def reports_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return IconRegistry.from_name('fa5.chart-bar', color=color, color_on=color_on)
+        return IconRegistry.from_name('mdi.chart-arc', color=color, color_on=color_on, mdi_scale=1.4)
 
     @staticmethod
     def document_edition_icon(color: str = 'black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
