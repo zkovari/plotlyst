@@ -21,17 +21,17 @@ from typing import Optional
 
 import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QFont, QResizeEvent
+from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QResizeEvent
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
     QProgressDialog
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
-from src.main.python.plotlyst.common import EXIT_CODE_RESTART, PLOTLYST_MAIN_COLOR
+from src.main.python.plotlyst.common import EXIT_CODE_RESTART
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
@@ -53,6 +53,7 @@ from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.board_view import BoardView
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
+from src.main.python.plotlyst.view.common import TooltipPositionEventFilter
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
@@ -64,7 +65,6 @@ from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.style.base import apply_color
 from src.main.python.plotlyst.view.widget.button import ToolbarButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
@@ -95,15 +95,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             DEFAULT_FONT_FAMILIES.insert(0, 'Noto Sans Mono')
             DEFAULT_FONT_FAMILIES.insert(3 if len(DEFAULT_FONT_FAMILIES) > 5 else -1, 'Calibri')
 
-        for lbl in [self.lblPlan, self.lblWrite, self.lblAnalyze, self.lblManage]:
-            apply_color(lbl, PLOTLYST_MAIN_COLOR)
-            font: QFont = lbl.font()
-            font.setPointSize(font.pointSize() - 2)
-            font.setFamily('Helvetica')
-            font.setUnderline(True)
-            font.setBold(True)
-            lbl.setFont(font)
-
         self.novel = None
         self._current_text_widget = None
         last_novel_id = settings.last_novel_id()
@@ -125,6 +116,20 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._init_toolbar()
         self._tasks_widget = TasksQuickAccessWidget()
         self._init_statusbar()
+
+        self.btnBoard.setIcon(IconRegistry.board_icon('#A89BC7', '#F9F9F9'))
+        self.btnNovel.setIcon(IconRegistry.book_icon('#A89BC7', '#F9F9F9'))
+        self.btnCharacters.setIcon(IconRegistry.character_icon('#A89BC7', '#F9F9F9'))
+        self.btnScenes.setIcon(IconRegistry.scene_icon('#A89BC7', '#F9F9F9'))
+        self.btnWorld.setIcon(IconRegistry.world_building_icon('#A89BC7', '#F9F9F9'))
+        self.btnWorld.setHidden(True)
+        self.btnNotes.setIcon(IconRegistry.document_edition_icon('#A89BC7', '#F9F9F9'))
+        self.btnManuscript.setIcon(IconRegistry.manuscript_icon('#A89BC7', '#F9F9F9'))
+        self.btnReports.setIcon(IconRegistry.reports_icon('#A89BC7', '#F9F9F9'))
+
+        for btn in self.buttonGroup.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
+            btn.installEventFilter(TooltipPositionEventFilter(btn))
 
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.info.connect(self.event_log_handler.on_info_event)
@@ -263,15 +268,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.comments_view = CommentsView(self.novel)
         self.pageComments.layout().addWidget(self.comments_view.widget)
         self.wdgSidebar.setCurrentWidget(self.pageComments)
-
-        self.btnBoard.setIcon(IconRegistry.board_icon())
-        self.btnNovel.setIcon(IconRegistry.book_icon())
-        self.btnCharacters.setIcon(IconRegistry.character_icon())
-        self.btnScenes.setIcon(IconRegistry.scene_icon())
-        self.btnWorld.setIcon(IconRegistry.world_building_icon())
-        self.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.btnManuscript.setIcon(IconRegistry.manuscript_icon())
-        self.btnReports.setIcon(IconRegistry.reports_icon())
 
         self.pageNovel.layout().addWidget(self.novel_view.widget)
         self.pageCharacters.layout().addWidget(self.characters_view.widget)

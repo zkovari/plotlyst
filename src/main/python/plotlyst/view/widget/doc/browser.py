@@ -122,7 +122,7 @@ class DocumentsTreeView(TreeView):
         self._dummyWdg: Optional[DocumentWidget] = None
         self._toBeRemoved: Optional[DocumentWidget] = None
 
-        self.setStyleSheet('DocumentsTreeView {background-color: rgb(244, 244, 244);}')
+        self._centralWidget.setProperty('bg', True)
 
         self.repo = RepositoryPersistenceManager.instance()
 

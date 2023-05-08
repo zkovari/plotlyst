@@ -46,6 +46,7 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import action, pointy
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.text import apply_texteditor_toolbar_style
 from src.main.python.plotlyst.view.widget._toggle import AnimatedToggle
 from src.main.python.plotlyst.view.widget.lang import GrammarPopupMenu
 
@@ -413,11 +414,13 @@ class DocumentTextEditor(RichTextEditor):
 
     def __init__(self, parent=None):
         super(DocumentTextEditor, self).__init__(parent)
+        self._titleVisible: bool = True
+
         self._btnIcon = QToolButton()
         transparent(self._btnIcon)
         self._btnIcon.setIconSize(QSize(40, 40))
         self._textTitle = QLineEdit()
-        self._textTitle.setStyleSheet('border: 0px; icon-size: 40px;')
+        self._textTitle.setProperty('transparent', True)
         self._textTitle.setFrame(False)
         title_font = self._textTitle.font()
         title_font.setBold(True)
@@ -427,12 +430,15 @@ class DocumentTextEditor(RichTextEditor):
         self._textTitle.returnPressed.connect(self.textEdit.setFocus)
         self._textTitle.textChanged.connect(self.titleChanged.emit)
 
+        apply_texteditor_toolbar_style(self.toolbar())
+
         self._wdgTitle = group(self._btnIcon, self._textTitle, margin=0, spacing=0)
-        self._wdgTitle.setStyleSheet('background: white;')
+        self._wdgTitle.setProperty('relaxed-white-bg', True)
         margins(self._wdgTitle, top=20, bottom=5)
-        self.setStyleSheet('DocumentTextEditor {background: white;}')
+        self.setProperty('relaxed-white-bg', True)
 
         self.textEdit.setViewportMargins(5, 5, 5, 5)
+        margins(self, top=50, right=10)
 
         self.highlighter = self._initHighlighter()
 
@@ -440,8 +446,8 @@ class DocumentTextEditor(RichTextEditor):
             family = 'Helvetica Neue'
         else:
             family = 'Helvetica'
-        self.textEdit.setStyleSheet('QTextEdit {background: white; border: 0px;}')
         self.textEdit.setFont(QFont(family))
+        self.textEdit.setProperty('transparent', True)
         self.textEdit.zoomIn(self.textEdit.font().pointSize() * 0.34)
         self.textEdit.setBlockFormat(lineSpacing=120)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
@@ -450,6 +456,8 @@ class DocumentTextEditor(RichTextEditor):
         self.setWidthPercentage(90)
 
         self.layout().insertWidget(1, self._wdgTitle)
+
+        self._textedit.verticalScrollBar().valueChanged.connect(self._scrolled)
 
     @overrides
     def _initTextEdit(self) -> EnhancedTextEdit:
@@ -481,6 +489,7 @@ class DocumentTextEditor(RichTextEditor):
         self._textTitle.setText(title)
         self._textTitle.setReadOnly(title_read_only)
         self.setTitleIcon(icon)
+        self._textTitle.setVisible(self._titleVisible)
 
     def setTitleIcon(self, icon: Optional[QIcon] = None):
         self._btnIcon.setVisible(icon is not None)
@@ -491,6 +500,7 @@ class DocumentTextEditor(RichTextEditor):
         self.textEdit.setPlaceholderText(text)
 
     def setTitleVisible(self, visible: bool):
+        self._titleVisible = visible
         self._wdgTitle.setVisible(visible)
 
     def setToolbarVisible(self, visible: bool):
@@ -514,6 +524,12 @@ class DocumentTextEditor(RichTextEditor):
 
     def statistics(self) -> TextStatistics:
         return self.textEdit.statistics()
+
+    def _scrolled(self, value: int):
+        if value > self._wdgTitle.height():
+            self._wdgTitle.setHidden(True)
+        elif self._titleVisible:
+            self._wdgTitle.setVisible(True)
 
 
 class RotatedButtonOrientation(Enum):

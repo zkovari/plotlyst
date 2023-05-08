@@ -22,12 +22,12 @@ from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-from PyQt6.QtCore import Qt, QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent
+from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
-    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup
+    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
@@ -190,6 +190,37 @@ class MouseEventDelegate(QObject):
         elif event.type() == QEvent.Type.Leave:
             self._delegate.leaveEvent(event)
         return super(MouseEventDelegate, self).eventFilter(watched, event)
+
+
+class TooltipPositionEventFilter(QObject):
+    def __init__(self, parent, tooltip_position=Qt.AlignmentFlag.AlignRight):
+        super().__init__(parent)
+        self._tooltip_position = tooltip_position
+
+    @overrides
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Type.ToolTip:
+            # get the position of the widget's corner in global coordinates
+            # if self.tooltip_position & Qt.AlignmentFlag.AlignLeft:
+            #     pos: QPoint = watched.mapToGlobal(watched.rect().topLeft())
+            #     metrics = QFontMetrics(QToolTip.font())
+            # tooltip_pos = pos - (metrics.boundingRect(watched.tooltip()).height(), 0)
+            # elif self.tooltip_position & Qt.AlignmentFlag.AlignRight:
+            # pos = global_pos(watched)
+            pos = watched.mapToGlobal(watched.rect().topRight())
+            pos.setX(pos.x() + 10)
+            # elif self.tooltip_position & Qt.AlignmentFlag.AlignTop:
+            #     pos = watched.mapToGlobal(watched.rect().topLeft())
+            #     pos = pos - (0, QToolTip.fontMetrics().height())
+            # elif self.tooltip_position & Qt.AlignmentFlag.AlignBottom:
+            #     pos = watched.mapToGlobal(watched.rect().bottomLeft())
+            #     pos = pos + (0, 10)
+
+            QToolTip.showText(pos, watched.toolTip(), watched)
+
+            return True
+
+        return super().eventFilter(watched, event)
 
 
 def link_buttons_to_pages(stack: QStackedWidget, buttons: List[Tuple[QAbstractButton, QWidget]]):

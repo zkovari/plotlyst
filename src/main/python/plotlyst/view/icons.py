@@ -139,20 +139,20 @@ class IconRegistry:
         return qtawesome.icon('fa5s.map-pin', color=color, color_on='darkBlue', options=[{'scale_factor': 1.1}])
 
     @staticmethod
-    def world_building_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.globe-model', color_on=PLOTLYST_SECONDARY_COLOR)
+    def world_building_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.globe-model', color=color, color_on=color_on)
 
     @staticmethod
-    def board_icon() -> QIcon:
-        return IconRegistry.from_name('mdi6.clipboard-check-outline', color_on='#2B0548')
+    def board_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi6.clipboard-check-outline', color=color, color_on=color_on)
 
     @staticmethod
-    def scene_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('mdi.movie-open', color, color_on=PLOTLYST_SECONDARY_COLOR, mdi_scale=1.1)
+    def scene_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
+        return IconRegistry.from_name('mdi.movie-open', color, color_on=color_on, mdi_scale=1.1)
 
     @staticmethod
-    def manuscript_icon() -> QIcon:
-        return IconRegistry.from_name('fa5s.scroll', color_on=PLOTLYST_SECONDARY_COLOR)
+    def manuscript_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
+        return IconRegistry.from_name('fa5s.scroll', color=color, color_on=color_on)
 
     @staticmethod
     def chapter_icon() -> QIcon:
@@ -235,15 +235,15 @@ class IconRegistry:
 
     @staticmethod
     def tasks_icon() -> QIcon:
-        return qtawesome.icon('fa5s.tasks')
+        return IconRegistry.from_name('fa5s.tasks')
 
     @staticmethod
-    def reports_icon(color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return qtawesome.icon('fa5.chart-bar', color_on=color_on)
+    def reports_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
+        return IconRegistry.from_name('fa5.chart-bar', color=color, color_on=color_on)
 
     @staticmethod
     def document_edition_icon(color: str = 'black', color_on=PLOTLYST_SECONDARY_COLOR) -> QIcon:
-        return qtawesome.icon('ei.file-edit', color=color, color_on=color_on)
+        return IconRegistry.from_name('mdi.file-document-outline', color=color, color_on=color_on)
 
     @staticmethod
     def act_one_icon(color=ACT_ONE_COLOR, color_on=ACT_ONE_COLOR) -> QIcon:
