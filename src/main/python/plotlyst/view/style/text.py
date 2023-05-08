@@ -30,6 +30,14 @@ QTextBrowser {
     background-color: #f8f9fa;
 }
 
+QLineEdit {
+    background-color: #f8f9fa;
+}
+
+QTextEdit {
+    background-color: #f8f9fa;
+}
+
 QLabel[night-mode=true] {
     color: #f8f9fa;
 }

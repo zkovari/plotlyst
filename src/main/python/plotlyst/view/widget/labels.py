@@ -320,7 +320,7 @@ class LabelsEditorWidget(QFrame):
         self.checkable = checkable
         self.setLineWidth(1)
         self.setFrameShape(QFrame.Shape.Box)
-        self.setStyleSheet('LabelsEditorWidget {background: white;}')
+        self.setProperty('relaxed-white-bg', True)
         if alignment == Qt.Orientation.Horizontal:
             hbox(self, 2, 1)
         else:

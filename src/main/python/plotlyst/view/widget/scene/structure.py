@@ -428,7 +428,7 @@ class SceneStructureItemWidget(QWidget):
         color = self._color()
         self._btnIcon.setStyleSheet(f'''
                     QToolButton {{
-                                    background-color: white;
+                                    background-color: {RELAXED_WHITE_COLOR};
                                     border: 2px solid {color};
                                     border-radius: 18px; padding: 4px;
                                 }}

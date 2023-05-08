@@ -705,7 +705,7 @@ class CharacterBackstoryCard(QFrame, Ui_CharacterBackstoryCard):
                     ''')
         self.btnType.setStyleSheet(
             f'''QToolButton {{
-                        background-color: white; border: 3px solid {bg_color};
+                        background-color: {RELAXED_WHITE_COLOR}; border: 3px solid {bg_color};
                         border-radius: 18px; padding: 4px;
                     }}''')
 

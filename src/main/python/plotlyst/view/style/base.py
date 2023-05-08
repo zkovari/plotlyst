@@ -96,6 +96,11 @@ QScrollArea[transparent=true] {
     background-color: rgba(0, 0, 0, 0);
 }
 
+TaskWidget {
+    background-color: #f8f9fa;
+    border: 1px solid lightGrey;
+    border-radius: 6px;
+}
 
 '''
 

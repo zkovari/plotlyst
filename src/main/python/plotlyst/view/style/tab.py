@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 style = '''
 QTabWidget::pane {
     border: 1px solid black;
-    background: white;
+    background: #f8f9fa;
 }
 
 QTabWidget::tab-bar:top {
@@ -45,7 +45,7 @@ QTabBar::tab {
 }
 
 QTabBar::tab:selected {
-    background: white;
+    background: #f8f9fa;
 }
 
 QTabBar::tab:!selected {

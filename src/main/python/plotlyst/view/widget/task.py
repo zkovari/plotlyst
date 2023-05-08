@@ -31,6 +31,7 @@ from qthandy import vbox, hbox, transparent, vspacer, margins, spacer, bold, ret
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter, DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import TaskStatus, Task, Novel, Character
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import Event, emit_event, EventListener
@@ -58,7 +59,6 @@ class TaskWidget(QFrame):
     def __init__(self, task: Task, parent=None):
         super(TaskWidget, self).__init__(parent)
         self._task: Task = task
-        self.setStyleSheet('TaskWidget {background: white; border: 1px solid lightGrey; border-radius: 6px;}')
 
         vbox(self, margin=5)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
@@ -175,7 +175,7 @@ class _StatusHeader(QFrame):
         super(_StatusHeader, self).__init__(parent)
         self._status = status
         self.setStyleSheet(f'''_StatusHeader {{
-                background: white;
+                background-color: {RELAXED_WHITE_COLOR};
                 border-bottom: 3px solid {self._status.color_hexa};
             }}''')
         hbox(self, margin=8)
