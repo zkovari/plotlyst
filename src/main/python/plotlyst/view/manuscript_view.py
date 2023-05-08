@@ -22,7 +22,7 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer
+from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget
@@ -41,6 +41,7 @@ from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEven
     ExclusiveOptionalButtonGroup, link_buttons_to_pages
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.display import Icon, ChartView
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
@@ -103,7 +104,9 @@ class ManuscriptView(AbstractNovelView):
         bold(self.ui.lblWordCount)
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
+        decr_icon(self._btnDistractionFree)
         self._wdgSprint = SprintWidget()
+        decr_icon(self._wdgSprint.btnTimer)
         self._spellCheckIcon = Icon()
         self._spellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
         self._cbSpellCheck = Toggle()
@@ -122,13 +125,9 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageReadability.layout().addWidget(self._wdgReadability, alignment=Qt.AlignmentFlag.AlignCenter)
         self.ui.pageReadability.layout().addWidget(vspacer())
 
-        self.ui.wdgTop.layout().addWidget(self._btnDistractionFree)
-        self.ui.wdgTop.layout().addWidget(self._wdgSprint)
-        self.ui.wdgTop.layout().addWidget(spacer())
-        self.ui.wdgTop.layout().addWidget(self._spellCheckIcon)
-        self.ui.wdgTop.layout().addWidget(self._cbSpellCheck)
-        self.ui.wdgTop.layout().addWidget(vline())
-        self.ui.wdgTop.layout().addWidget(self._btnContext)
+        self.ui.wdgTop.layout().addWidget(
+            group(self._btnDistractionFree, self._wdgSprint, spacer(), self._spellCheckIcon, self._cbSpellCheck,
+                  vline(), self._btnContext))
 
         self._addSceneMenu = MenuWidget(self.ui.btnAdd)
         self._addSceneMenu.addAction(action('Add scene', IconRegistry.scene_icon(), self.ui.treeChapters.addScene))
@@ -155,6 +154,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.setNovel(self.novel)
         self.ui.treeChapters.sceneSelected.connect(self._editScene)
         self.ui.treeChapters.chapterSelected.connect(self._editChapter)
+        self.ui.treeChapters.centralWidget().setProperty('bg', True)
 
         self.ui.wdgSide.setHidden(True)
         self.ui.wdgAddon.setHidden(True)

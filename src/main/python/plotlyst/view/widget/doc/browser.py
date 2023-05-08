@@ -23,7 +23,7 @@ from typing import Set, Optional, Dict
 from PyQt6.QtCore import pyqtSignal, Qt, QMimeData, QPointF, QModelIndex
 from PyQt6.QtWidgets import QListView
 from overrides import overrides
-from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation, incr_font
+from qthandy import clear_layout, vspacer, translucent, gc, ask_confirmation
 from qthandy.filter import DragEventFilter, DropEventFilter
 from qtmenu import MenuWidget
 
@@ -83,7 +83,6 @@ class DocumentWidget(ContainerNode):
         self._actionChangeIcon.setVisible(True)
         menu = DocumentAdditionMenu(self._novel, self._btnAdd)
         menu.documentTriggered.connect(self.added.emit)
-        incr_font(self._lblTitle, 2)
         self.refresh()
 
     def doc(self) -> Document:

@@ -24,7 +24,7 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QScrollArea, QFrame, QSizePolicy, QToolButton
 from PyQt6.QtWidgets import QWidget, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden
+from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action
@@ -162,6 +162,8 @@ class ContainerNode(BaseTreeWidget):
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._container)
 
+        incr_font(self._lblTitle, 2)
+
         self._icon.installEventFilter(self)
         self._wdgTitle.installEventFilter(self)
 
@@ -227,3 +229,6 @@ class TreeView(QScrollArea):
         self._centralWidget = QWidget(self)
         self.setWidget(self._centralWidget)
         vbox(self._centralWidget, spacing=0)
+
+    def centralWidget(self) -> QWidget:
+        return self._centralWidget

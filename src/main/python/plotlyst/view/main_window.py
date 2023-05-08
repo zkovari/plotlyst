@@ -53,6 +53,7 @@ from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.board_view import BoardView
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.comments_view import CommentsView
+from src.main.python.plotlyst.view.common import TooltipPositionEventFilter
 from src.main.python.plotlyst.view.dialog.about import AboutDialog
 from src.main.python.plotlyst.view.dialog.manuscript import ManuscriptPreviewDialog
 from src.main.python.plotlyst.view.dialog.template import customize_character_profile
@@ -128,6 +129,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         for btn in self.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
+            btn.installEventFilter(TooltipPositionEventFilter(btn))
 
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.info.connect(self.event_log_handler.on_info_event)
