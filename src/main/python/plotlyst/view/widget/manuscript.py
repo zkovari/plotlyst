@@ -457,7 +457,7 @@ class ManuscriptTextEditor(RichTextEditor):
         title_font.setPointSize(32)
         self._textTitle.setFont(title_font)
         self._textTitle.returnPressed.connect(self.textEdit.setFocus)
-        self._textTitle.textChanged.connect(self._titleChanged)
+        self._textTitle.textEdited.connect(self._titleChanged)
         self._wdgTitle = group(self._textTitle, margin=0, spacing=0)
         self._wdgTitle.setProperty('relaxed-white-bg', True)
         margins(self._wdgTitle, left=20)
