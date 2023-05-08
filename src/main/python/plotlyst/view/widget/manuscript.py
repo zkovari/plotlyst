@@ -445,6 +445,7 @@ class ManuscriptTextEditor(RichTextEditor):
     def __init__(self, parent=None):
         super(ManuscriptTextEditor, self).__init__(parent)
         self.toolbar().setHidden(True)
+        self._titleVisible: bool = True
         self.setCharacterWidth()
         self._scenes: List[Scene] = []
 
@@ -476,6 +477,10 @@ class ManuscriptTextEditor(RichTextEditor):
         _textedit.textChanged.connect(self._textChanged)
         _textedit.setProperty('borderless', True)
         return _textedit
+
+    def setTitleVisible(self, visible: bool):
+        self._titleVisible = visible
+        self._wdgTitle.setVisible(visible)
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.textEdit.setGrammarCheckEnabled(enabled)
@@ -619,7 +624,7 @@ class ManuscriptTextEditor(RichTextEditor):
     def _scrolled(self, value: int):
         if value > self._wdgTitle.height():
             self._wdgTitle.setHidden(True)
-        else:
+        elif self._titleVisible:
             self._wdgTitle.setVisible(True)
 
 
@@ -733,6 +738,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
     def activate(self, editor: ManuscriptTextEditor, timer: Optional[TimerModel] = None):
         self.editor = editor
         self.editor.installEventFilterOnEditors(self)
+        editor.setTitleVisible(False)
         clear_layout(self.wdgDistractionFreeEditor.layout())
         if timer and timer.isActive():
             self.wdgSprint.setModel(timer)
@@ -758,6 +764,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
 
     def deactivate(self):
         self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.editor.setTitleVisible(True)
         self.editor.removeEventFilterFromEditors(self)
         self.editor.setViewportMargins(0, 0, 0, 0)
         self.editor.setMargins(30, 30, 30, 30)
