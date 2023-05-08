@@ -273,7 +273,8 @@ class CharactersView(AbstractNovelView):
 
         self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
 
-    def _on_close_editor(self):
+    @busy
+    def _on_close_editor(self, _: bool):
         character = self.editor.character
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
