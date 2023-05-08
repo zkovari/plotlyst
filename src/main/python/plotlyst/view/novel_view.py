@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PyQt6.QtCore import QObject, QEvent, Qt
+from PyQt6.QtCore import QObject, QEvent
 from PyQt6.QtGui import QFont
 from overrides import overrides
 from qthandy import retain_when_hidden, transparent, decr_icon, incr_font
@@ -64,14 +64,11 @@ class NovelView(AbstractNovelView):
         self.ui.wdgTitle.installEventFilter(self)
         self.ui.btnEditNovel.setHidden(True)
 
-        transparent(self.ui.textPremise.textEdit)
         self.ui.textPremise.textEdit.setPlaceholderText('Premise')
         font = self.ui.textPremise.textEdit.font()
-        font.setFamily('Helvetica')
-        font.setBold(True)
+        font.setFamily('Garamond')
         font.setPointSize(16)
         self.ui.textPremise.textEdit.setFont(font)
-        self.ui.textPremise.textEdit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.ui.textPremise.textEdit.setAcceptRichText(False)
         self.ui.textPremise.textEdit.setSidebarEnabled(False)
         self.ui.textPremise.textEdit.setDocumentMargin(0)
@@ -87,7 +84,7 @@ class NovelView(AbstractNovelView):
         self._btnSynopsisExtendEdit = SecondaryActionToolButton()
         self._btnSynopsisExtendEdit.setToolTip('Edit in full view')
         self._btnSynopsisExtendEdit.setIcon(IconRegistry.expand_icon())
-        decr_icon(self._btnSynopsisExtendEdit, 2)
+        decr_icon(self._btnSynopsisExtendEdit, 3)
         self._btnSynopsisExtendEdit.installEventFilter(
             OpacityEventFilter(self._btnSynopsisExtendEdit, leaveOpacity=0.55))
         self.ui.subtitleSynopsis.addWidget(self._btnSynopsisExtendEdit)

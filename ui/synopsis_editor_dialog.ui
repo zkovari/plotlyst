@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Synopsis editor</string>
   </property>
+  <property name="relaxed-white-bg" stdset="0">
+   <bool>true</bool>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
     <number>3</number>

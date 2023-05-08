@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 from overrides import overrides
-from qthandy import clear_layout
+from qthandy import clear_layout, margins
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document, DocumentType
@@ -71,6 +71,7 @@ class DocumentsView(AbstractNovelView):
         self._clear_text_editor()
 
         self.textEditor = DocumentTextEditor(self.ui.docEditorPage)
+        margins(self.textEditor, top=50, right=10)
         self.ui.docEditorPage.layout().addWidget(self.textEditor)
         self.textEditor.textEdit.textChanged.connect(self._save)
         self.textEditor.titleChanged.connect(self._title_changed)

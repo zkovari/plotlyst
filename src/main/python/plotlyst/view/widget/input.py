@@ -438,7 +438,6 @@ class DocumentTextEditor(RichTextEditor):
         self.setProperty('relaxed-white-bg', True)
 
         self.textEdit.setViewportMargins(5, 5, 5, 5)
-        margins(self, top=50, right=10)
 
         self.highlighter = self._initHighlighter()
 
