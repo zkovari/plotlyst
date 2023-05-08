@@ -38,7 +38,7 @@ from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState, remove_
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
-    DEFAULT_MANUSCRIPT_INDENT
+    DEFAULT_MANUSCRIPT_INDENT, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, TextStatistics, DocumentStatistics
 from src.main.python.plotlyst.core.sprint import TimerModel
@@ -717,13 +717,17 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.wdgBottom.installEventFilter(self)
         self.btnReturn.setIcon(IconRegistry.from_name('mdi.arrow-collapse', 'white'))
         self.btnReturn.clicked.connect(self.exitRequested.emit)
-        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on='darkBlue'))
+        self.btnFocus.setIcon(IconRegistry.from_name('mdi.credit-card', color_on=PLOTLYST_MAIN_COLOR))
+        self.btnFocus.installEventFilter(InstantTooltipEventFilter(self.btnFocus))
         self.btnFocus.toggled.connect(self._toggle_manuscript_focus)
-        self.btnTypewriterMode.setIcon(IconRegistry.from_name('mdi.typewriter', color_on='darkBlue'))
+        self.btnTypewriterMode.setIcon(IconRegistry.from_name('mdi.typewriter', color_on=PLOTLYST_MAIN_COLOR))
+        self.btnTypewriterMode.installEventFilter(InstantTooltipEventFilter(self.btnTypewriterMode))
         self.btnTypewriterMode.toggled.connect(self._toggle_typewriter_mode)
-        self.btnNightMode.setIcon(IconRegistry.from_name('mdi.weather-night', color_on='darkBlue'))
+        self.btnNightMode.setIcon(IconRegistry.from_name('mdi.weather-night', color_on=PLOTLYST_MAIN_COLOR))
+        self.btnNightMode.installEventFilter(InstantTooltipEventFilter(self.btnNightMode))
         self.btnNightMode.toggled.connect(self._toggle_manuscript_night_mode)
-        self.btnWordCount.setIcon(IconRegistry.from_name('mdi6.counter', color_on='darkBlue'))
+        self.btnWordCount.setIcon(IconRegistry.from_name('mdi6.counter', color_on=PLOTLYST_MAIN_COLOR))
+        self.btnWordCount.installEventFilter(InstantTooltipEventFilter(self.btnWordCount))
         self.btnWordCount.clicked.connect(self._wordCountClicked)
 
     def activate(self, editor: ManuscriptTextEditor, timer: Optional[TimerModel] = None):
