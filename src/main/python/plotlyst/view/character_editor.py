@@ -53,8 +53,6 @@ class CharacterEditor:
         self.character = character
 
         self._emoji_font = emoji_font()
-        self.ui.btnCustomize.setIcon(IconRegistry.customization_icon())
-        self.ui.btnCustomize.clicked.connect(self._customize_profile)
         self.ui.btnNewBackstory.setIcon(IconRegistry.plus_icon('white'))
         self.ui.btnNewBackstory.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNewBackstory))
         self.ui.btnNewBackstory.clicked.connect(lambda: self.ui.wdgBackstory.add())
@@ -172,7 +170,6 @@ class CharacterEditor:
         if self.character.document and self.character.document.loaded:
             self.ui.textEdit.setText(self.character.document.content, self.character.name, title_read_only=True)
 
-        self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._save)
 
         if self.character.role:

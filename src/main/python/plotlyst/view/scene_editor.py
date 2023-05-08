@@ -117,7 +117,6 @@ class SceneEditor(QObject):
         self.ui.treeScenes.setNovel(self.novel, readOnly=True)
         self.ui.treeScenes.sceneSelected.connect(self._scene_selected)
 
-        self.ui.btnClose.setIcon(IconRegistry.return_icon())
         self.ui.btnClose.clicked.connect(self._on_close)
 
         flow(self.ui.wdgPlotContainer)

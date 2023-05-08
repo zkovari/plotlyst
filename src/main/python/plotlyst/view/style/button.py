@@ -150,6 +150,13 @@ QPushButton[lang-spellcheck-suggestion] {
     color: white;
 }
 
+QPushButton[return=true] {
+    border: 0px;
+    background-color: rgba(0, 0, 0, 0);
+    font-size: 16px;
+    color: #4B0763;
+}
+
 QToolButton::menu-indicator {
     width:0px;
 }

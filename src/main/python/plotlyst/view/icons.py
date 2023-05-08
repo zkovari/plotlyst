@@ -314,8 +314,8 @@ class IconRegistry:
         return qtawesome.icon('ei.arrow-left')
 
     @staticmethod
-    def return_icon() -> QIcon:
-        return qtawesome.icon('ei.return-key')
+    def return_icon(color: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
+        return IconRegistry.from_name('fa5s.chevron-circle-left', color=color)
 
     @staticmethod
     def eye_open_icon() -> QIcon:

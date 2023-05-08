@@ -22,10 +22,10 @@ from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
-from PyQt6.QtGui import QColor, QIcon
+from PyQt6.QtGui import QColor, QIcon, QMouseEvent
 from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu
 from overrides import overrides
-from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden
+from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline
 from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
@@ -318,3 +318,24 @@ class DotsMenuButton(QToolButton):
         if self._pressFilter is None:
             self._pressFilter = ButtonPressResizeEventFilter(self)
             self.installEventFilter(self._pressFilter)
+
+
+class ReturnButton(QPushButton):
+    def __init__(self, parent=None):
+        super(ReturnButton, self).__init__(parent)
+        self.setIcon(IconRegistry.return_icon())
+        self.setText('Back')
+        self.setProperty('return', True)
+        underline(self)
+        bold(self)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+
+    @overrides
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        translucent(self, 0.8)
+        super(ReturnButton, self).mousePressEvent(event)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        translucent(self, 1)
+        super(ReturnButton, self).mouseReleaseEvent(event)

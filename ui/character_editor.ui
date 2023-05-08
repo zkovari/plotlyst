@@ -56,51 +56,6 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item>
-       <widget class="QPushButton" name="btnClose">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="focusPolicy">
-         <enum>Qt::ClickFocus</enum>
-        </property>
-        <property name="text">
-         <string>Back</string>
-        </property>
-        <property name="shortcut">
-         <string>Return</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QToolButton" name="btnCustomize">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="focusPolicy">
-         <enum>Qt::ClickFocus</enum>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="base" stdset="0">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
@@ -117,6 +72,25 @@
        <property name="spacing">
         <number>3</number>
        </property>
+       <item alignment="Qt::AlignLeft">
+        <widget class="ReturnButton" name="btnClose">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::ClickFocus</enum>
+         </property>
+         <property name="text">
+          <string>Back</string>
+         </property>
+         <property name="shortcut">
+          <string>Return</string>
+         </property>
+         <property name="return" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QWidget" name="wdgBanner" native="true">
          <property name="sizePolicy">
@@ -642,8 +616,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>295</width>
-             <height>512</height>
+             <width>287</width>
+             <height>535</height>
             </rect>
            </property>
            <property name="bg-image" stdset="0">
@@ -748,8 +722,8 @@ border: 0px;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>297</width>
-             <height>551</height>
+             <width>289</width>
+             <height>574</height>
             </rect>
            </property>
            <property name="relaxed-white-bg" stdset="0">
@@ -828,6 +802,11 @@ border: 0px;
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.characters</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ReturnButton</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.button</header>
   </customwidget>
  </customwidgets>
  <tabstops>

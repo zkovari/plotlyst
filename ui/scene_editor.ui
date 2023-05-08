@@ -37,7 +37,7 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_8">
        <item alignment="Qt::AlignLeft">
-        <widget class="QPushButton" name="btnClose">
+        <widget class="ReturnButton" name="btnClose">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -768,6 +768,11 @@
    <class>CharacterAvatar</class>
    <extends>QWidget</extends>
    <header>src.main.python.plotlyst.view.widget.characters</header>
+  </customwidget>
+  <customwidget>
+   <class>ReturnButton</class>
+   <extends>QPushButton</extends>
+   <header>src.main.python.plotlyst.view.widget.button</header>
   </customwidget>
   <customwidget>
    <class>SceneStoryStructureWidget</class>
