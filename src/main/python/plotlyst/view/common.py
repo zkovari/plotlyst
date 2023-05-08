@@ -192,10 +192,6 @@ class MouseEventDelegate(QObject):
         return super(MouseEventDelegate, self).eventFilter(watched, event)
 
 
-from PyQt6.QtCore import QObject, QEvent, Qt
-from PyQt6.QtWidgets import QToolTip, QWidget
-
-
 class TooltipPositionEventFilter(QObject):
     def __init__(self, parent, tooltip_position=Qt.AlignmentFlag.AlignRight):
         super().__init__(parent)
