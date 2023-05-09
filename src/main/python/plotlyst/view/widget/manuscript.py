@@ -409,7 +409,7 @@ class ManuscriptTextEdit(TextEditBase):
             synopsis = self._sceneTextObject.sceneSynopsis(anchor.replace(SceneSeparatorTextFormatPrefix, ''))
             self.setToolTip(synopsis)
             return
-        elif not anchor:
+        else:
             QApplication.restoreOverrideCursor()
             self.setToolTip('')
         super(ManuscriptTextEdit, self).mouseMoveEvent(event)
@@ -484,12 +484,13 @@ class ManuscriptTextEdit(TextEditBase):
         cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
         cursor.deleteChar()
         for i, scene in enumerate(scenes):
+            self.textCursor().insertBlock(self._sceneSepBlockFormat)
+            self.textCursor().insertText(f'{OBJECT_REPLACEMENT_CHARACTER}', sceneCharFormat(scene))
+            self.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
+            self.insertNewBlock()
             self._addScene(scene)
-            if i < len(scenes) - 1:
-                self.textCursor().insertBlock(self._sceneSepBlockFormat)
-                self.textCursor().insertText(f'{OBJECT_REPLACEMENT_CHARACTER}', sceneCharFormat(scene))
-                self.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
-                self.insertNewBlock()
+
+        self._deleteBlock(0, force=True)
 
         self.document().clearUndoRedoStacks()
 
@@ -685,13 +686,13 @@ class ManuscriptTextEditor(RichTextEditor):
         else:
             scene_i = 0
             block: QTextBlock = self.textEdit.document().begin()
-            first_scene_block = block
+            first_scene_block = None
             while block.isValid():
                 if block.userState() == TextBlockState.UNEDITABLE.value:
-                    scene = self._scenes[scene_i]
-                    self._updateSceneManuscript(scene, first_scene_block, block.blockNumber() - 1)
-
-                    scene_i += 1
+                    if first_scene_block is not None:
+                        scene = self._scenes[scene_i]
+                        self._updateSceneManuscript(scene, first_scene_block, block.blockNumber() - 1)
+                        scene_i += 1
                     first_scene_block = block.next()
                 block = block.next()
 
