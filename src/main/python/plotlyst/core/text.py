@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import re
 
 import nltk
+from qttextedit import OBJECT_REPLACEMENT_CHARACTER
 from textstat import textstat
 
 from src.main.python.plotlyst.core.domain import StoryStructure
@@ -61,7 +62,7 @@ def parse_structure_to_richtext(structure: StoryStructure):
 
 def wc(text: str) -> int:
     text = re.sub(r'—', ' ', text)  # Override em dash to spaces
-    text = re.sub(u'\uFFFC', '', text)
+    text = re.sub(OBJECT_REPLACEMENT_CHARACTER, '', text)
     return textstat.lexicon_count(text)
 
 
