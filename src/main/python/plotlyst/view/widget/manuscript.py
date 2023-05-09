@@ -19,14 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import datetime
 from functools import partial
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import nltk
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize
+from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QTextCursor, QFont, QScreen
+    QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
+    QFontMetrics
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit
 from nltk import WhitespaceTokenizer
@@ -34,7 +35,7 @@ from overrides import overrides
 from qthandy import retain_when_hidden, translucent, clear_layout, gc, margins
 from qthandy.filter import OpacityEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget, group
-from qttextedit import RichTextEditor, EnhancedTextEdit, TextBlockState, remove_font
+from qttextedit import RichTextEditor, TextBlockState, remove_font, OBJECT_REPLACEMENT_CHARACTER
 from textstat import textstat
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, DEFAULT_MANUSCRIPT_LINE_SPACE, \
@@ -379,6 +380,14 @@ class ManuscriptTextEdit(TextEditBase):
         elif app_env.is_mac():
             self.setFont(QFont('Palatino'))
 
+        self._sceneSepBlockFormat = QTextBlockFormat()
+        self._sceneSepBlockFormat.setTextIndent(40)
+        self._sceneSepBlockFormat.setTopMargin(20)
+        self._sceneSepBlockFormat.setBottomMargin(20)
+
+        self._sceneTextObject = SceneSeparatorTextObject(self)
+        self.document().documentLayout().registerHandler(SceneSeparatorTextFormat, self._sceneTextObject)
+
         self._setDefaultStyleSheet()
 
     @overrides
@@ -390,6 +399,28 @@ class ManuscriptTextEdit(TextEditBase):
                 self.textCursor().deletePreviousChar()
                 self.textCursor().insertText('.')
         super(ManuscriptTextEdit, self).keyPressEvent(event)
+
+    @overrides
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        anchor = self.anchorAt(event.pos())
+        if anchor and anchor.startswith(SceneSeparatorTextFormatPrefix):
+            if QApplication.overrideCursor() is None:
+                QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+            synopsis = self._sceneTextObject.sceneSynopsis(anchor.replace(SceneSeparatorTextFormatPrefix, ''))
+            self.setToolTip(synopsis)
+            return
+        else:
+            QApplication.restoreOverrideCursor()
+            self.setToolTip('')
+        super(ManuscriptTextEdit, self).mouseMoveEvent(event)
+
+    @overrides
+    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
+        anchor = self.anchorAt(event.pos())
+        if anchor and anchor.startswith(SceneSeparatorTextFormatPrefix):
+            return
+
+        super(ManuscriptTextEdit, self).mouseReleaseEvent(event)
 
     def setGrammarCheckEnabled(self, enabled: bool):
         self.highlighter.setCheckEnabled(enabled)
@@ -428,6 +459,50 @@ class ManuscriptTextEdit(TextEditBase):
         if enabled:
             self._wordTagHighlighter = WordTagHighlighter(self)
 
+    def setScene(self, scene: Scene):
+        self._sceneTextObject.setScenes([scene])
+
+        self._addScene(scene)
+        self.setUneditableBlocksEnabled(False)
+        self.document().clearUndoRedoStacks()
+
+    def setScenes(self, scenes: List[Scene]):
+        def sceneCharFormat(scene: Scene) -> QTextCharFormat:
+            sceneSepCharFormat = QTextCharFormat()
+            sceneSepCharFormat.setObjectType(SceneSeparatorTextFormat)
+            sceneSepCharFormat.setToolTip(scene.synopsis)
+            sceneSepCharFormat.setAnchor(True)
+            sceneSepCharFormat.setAnchorHref(f'{SceneSeparatorTextFormatPrefix}{scene.id}')
+
+            return sceneSepCharFormat
+
+        self.setUneditableBlocksEnabled(True)
+        self._sceneTextObject.setScenes(scenes)
+
+        block = self.document().begin()
+        cursor = QTextCursor(block)
+        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
+        cursor.deleteChar()
+        for i, scene in enumerate(scenes):
+            self.textCursor().insertBlock(self._sceneSepBlockFormat)
+            self.textCursor().insertText(f'{OBJECT_REPLACEMENT_CHARACTER}', sceneCharFormat(scene))
+            self.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
+            self.insertNewBlock()
+            self._addScene(scene)
+
+        self._deleteBlock(0, force=True)
+
+        self.document().clearUndoRedoStacks()
+
+    def insertNewBlock(self):
+        self.textCursor().insertBlock(self._defaultBlockFormat)
+
+    def _addScene(self, scene: Scene):
+        if not scene.manuscript.loaded:
+            json_client.load_document(app_env.novel, scene.manuscript)
+
+        self.textCursor().insertHtml(remove_font(scene.manuscript.content))
+
     def _transparent(self):
         border = 0
         self.setStyleSheet(f'border-top: {border}px dashed {RELAXED_WHITE_COLOR}; background-color: rgba(0, 0, 0, 0);')
@@ -435,6 +510,50 @@ class ManuscriptTextEdit(TextEditBase):
     def _setDefaultStyleSheet(self):
         self.setStyleSheet(
             f'ManuscriptTextEdit {{background-color: {RELAXED_WHITE_COLOR};}}')
+
+
+SceneSeparatorTextFormat = QTextFormat.FormatType.UserFormat + 9999
+SceneSeparatorTextFormatPrefix = 'scene:/'
+
+
+class SceneSeparatorTextObject(QObject, QTextObjectInterface):
+    def __init__(self, textedit: ManuscriptTextEdit):
+        super(SceneSeparatorTextObject, self).__init__(textedit)
+        self._textedit = textedit
+        self._scenes: Dict[str, Scene] = {}
+
+    def setScenes(self, scenes: List[Scene]):
+        self._scenes.clear()
+        for scene in scenes:
+            self._scenes[str(scene.id)] = scene
+
+    def sceneTitle(self, id_str: str) -> str:
+        if id_str in self._scenes.keys():
+            return self._scenes[id_str].title or 'Scene'
+        else:
+            return 'Scene'
+
+    def sceneSynopsis(self, id_str: str) -> str:
+        if id_str in self._scenes.keys():
+            return self._scenes[id_str].synopsis
+        else:
+            return ''
+
+    @overrides
+    def intrinsicSize(self, doc: QTextDocument, posInDocument: int, format_: QTextFormat) -> QSizeF:
+        metrics = QFontMetrics(self._textedit.font())
+        return QSizeF(350, metrics.boundingRect('W').height())
+
+    @overrides
+    def drawObject(self, painter: QPainter, rect: QRectF, doc: QTextDocument, posInDocument: int,
+                   format_: QTextFormat) -> None:
+        match = doc.find(OBJECT_REPLACEMENT_CHARACTER, posInDocument)
+        if match:
+            anchor = match.charFormat().anchorHref()
+            if anchor:
+                painter.setPen(Qt.GlobalColor.lightGray)
+                scene_id = anchor.replace(SceneSeparatorTextFormatPrefix, "")
+                painter.drawText(rect, f'~{self.sceneTitle(scene_id)}~')
 
 
 class ManuscriptTextEditor(RichTextEditor):
@@ -469,7 +588,7 @@ class ManuscriptTextEditor(RichTextEditor):
         self._textedit.verticalScrollBar().valueChanged.connect(self._scrolled)
 
     @overrides
-    def _initTextEdit(self) -> EnhancedTextEdit:
+    def _initTextEdit(self) -> ManuscriptTextEdit:
         _textedit = ManuscriptTextEdit()
         _textedit.zoomIn(_textedit.font().pointSize() * 0.34)
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
@@ -493,11 +612,8 @@ class ManuscriptTextEditor(RichTextEditor):
 
     def setScene(self, scene: Scene):
         self.clear()
-        self.textEdit.setUneditableBlocksEnabled(False)
+        self._textedit.setScene(scene)
 
-        self._addScene(scene)
-
-        self.textEdit.document().clearUndoRedoStacks()
         self._scenes.append(scene)
         self._textTitle.setPlaceholderText('Scene title')
         self._textTitle.setText(scene.title)
@@ -505,21 +621,9 @@ class ManuscriptTextEditor(RichTextEditor):
 
     def setChapterScenes(self, scenes: List[Scene], title: str = ''):
         self.clear()
-        self.textEdit.setUneditableBlocksEnabled(True)
-        block = self.textEdit.document().begin()
-        cursor = QTextCursor(block)
-        cursor.select(QTextCursor.SelectionType.BlockUnderCursor)
-        cursor.deleteChar()
-        for i, scene in enumerate(scenes):
-            self._addScene(scene)
-            if i < len(scenes) - 1:
-                self.textEdit.textCursor().insertBlock()
-                self.textEdit.textCursor().insertText('-' * 15)
-                self.textEdit.textCursor().block().setUserState(TextBlockState.UNEDITABLE.value)
-                self.textEdit.textCursor().insertBlock()
-        self._scenes.extend(scenes)
+        self._textedit.setScenes(scenes)
 
-        self.textEdit.document().clearUndoRedoStacks()
+        self._scenes.extend(scenes)
         self._textTitle.setPlaceholderText('Chapter')
         self._textTitle.setText(title)
         self._textTitle.setReadOnly(True)
@@ -528,12 +632,6 @@ class ManuscriptTextEditor(RichTextEditor):
         self._scenes.clear()
         self.textEdit.document().clear()
         self.textEdit.clear()
-
-    def _addScene(self, scene: Scene):
-        if not scene.manuscript.loaded:
-            json_client.load_document(app_env.novel, scene.manuscript)
-
-        self.textEdit.textCursor().insertHtml(remove_font(scene.manuscript.content))
 
     def document(self) -> QTextDocument:
         return self.textEdit.document()
@@ -588,13 +686,13 @@ class ManuscriptTextEditor(RichTextEditor):
         else:
             scene_i = 0
             block: QTextBlock = self.textEdit.document().begin()
-            first_scene_block = block
+            first_scene_block = None
             while block.isValid():
                 if block.userState() == TextBlockState.UNEDITABLE.value:
-                    scene = self._scenes[scene_i]
-                    self._updateSceneManuscript(scene, first_scene_block, block.blockNumber() - 1)
-
-                    scene_i += 1
+                    if first_scene_block is not None:
+                        scene = self._scenes[scene_i]
+                        self._updateSceneManuscript(scene, first_scene_block, block.blockNumber() - 1)
+                        scene_i += 1
                     first_scene_block = block.next()
                 block = block.next()
 
@@ -678,6 +776,8 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         sentences_count = 0
         for i in range(doc.blockCount()):
             block = doc.findBlockByNumber(i)
+            if block.userState() == TextBlockState.UNEDITABLE.value:
+                continue
             block_text = block.text()
             if block_text:
                 sentences_count += sentence_count(block_text)
