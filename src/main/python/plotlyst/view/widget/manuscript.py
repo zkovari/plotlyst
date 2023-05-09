@@ -26,7 +26,8 @@ import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import QUrl, pyqtSignal, QTimer, Qt, QTextBoundaryFinder, QObject, QEvent, QSize, QSizeF, QRectF
 from PyQt6.QtGui import QTextDocument, QTextCharFormat, QColor, QTextBlock, QSyntaxHighlighter, QKeyEvent, \
-    QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat
+    QMouseEvent, QTextCursor, QFont, QScreen, QTextFormat, QTextObjectInterface, QPainter, QTextBlockFormat, \
+    QFontMetrics
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtWidgets import QWidget, QTextEdit, QApplication, QLineEdit
 from nltk import WhitespaceTokenizer
@@ -539,7 +540,8 @@ class SceneSeparatorTextObject(QObject, QTextObjectInterface):
 
     @overrides
     def intrinsicSize(self, doc: QTextDocument, posInDocument: int, format_: QTextFormat) -> QSizeF:
-        return QSizeF(300, 25)
+        metrics = QFontMetrics(self._textedit.font())
+        return QSizeF(350, metrics.boundingRect('W').height())
 
     @overrides
     def drawObject(self, painter: QPainter, rect: QRectF, doc: QTextDocument, posInDocument: int,
@@ -550,7 +552,7 @@ class SceneSeparatorTextObject(QObject, QTextObjectInterface):
             if anchor:
                 painter.setPen(Qt.GlobalColor.lightGray)
                 scene_id = anchor.replace(SceneSeparatorTextFormatPrefix, "")
-                painter.drawText(rect, f'----{self.sceneTitle(scene_id)}----')
+                painter.drawText(rect, f'~{self.sceneTitle(scene_id)}~')
 
 
 class ManuscriptTextEditor(RichTextEditor):
