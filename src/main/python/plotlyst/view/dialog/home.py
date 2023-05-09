@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from qthandy import incr_font
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
+from src.main.python.plotlyst.common import MAXIMUM_SIZE
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
 from src.main.python.plotlyst.env import app_env
@@ -104,6 +105,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         self._scrivenerNovel = importer.import_project(project)
 
         self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
+        self.setMaximumWidth(MAXIMUM_SIZE)
         self.wdgScrivenerImportDetails.setVisible(True)
         self.wdgScrivenerImportDetails.setNovel(self._scrivenerNovel)
         self.btnSaveScrivener.setEnabled(True)

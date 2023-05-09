@@ -1293,6 +1293,7 @@ class ImportOrigin:
     type: ImportOriginType
     source: str
     source_id: Optional[uuid.UUID] = None
+    sync: bool = False
 
 
 @dataclass

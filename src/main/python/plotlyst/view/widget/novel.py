@@ -606,6 +606,9 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
     def __init__(self, parent=None):
         super(ImportedNovelOverview, self).__init__(parent)
         self.setupUi(self)
+
+        self._novel: Optional[Novel] = None
+
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnLocations.setIcon(IconRegistry.location_icon())
         self.btnLocations.setHidden(True)
@@ -620,6 +623,8 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
 
         self._charactersModel: Optional[CharactersTableModel] = None
 
+        self.toggleSync.clicked.connect(self._syncClicked)
+
     def setNovel(self, novel: Novel):
         self.btnTitle.setText(novel.title)
 
@@ -631,3 +636,6 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
             self.btnCharacters.setDisabled(True)
 
         self.treeChapters.setNovel(novel, readOnly=True)
+
+    def _syncClicked(self, checked: bool):
+        self._novel.import_origin.sync = checked

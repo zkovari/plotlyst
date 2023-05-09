@@ -60,6 +60,8 @@ RELAXED_WHITE_COLOR: str = '#f8f9fa'
 DEFAULT_MANUSCRIPT_LINE_SPACE: int = 130
 DEFAULT_MANUSCRIPT_INDENT: int = 20
 
+MAXIMUM_SIZE: int = 16777215
+
 
 def emotion_color(emotion_value: int) -> str:
     if emotion_value == VERY_UNHAPPY:

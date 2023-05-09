@@ -333,7 +333,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="pageStructure">
       <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -450,7 +450,7 @@
              <string>ph.megaphone-bold</string>
             </property>
             <property name="top-level-nav" stdset="0">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -591,8 +591,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>98</width>
-            <height>28</height>
+            <width>94</width>
+            <height>24</height>
            </rect>
           </property>
           <property name="sizePolicy">
