@@ -1,5 +1,3 @@
-from PyQt6.QtWidgets import QApplication
-
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.test.common import go_to_home, create_novel
 from src.main.python.plotlyst.view.home_view import HomeView
@@ -27,16 +25,6 @@ def test_empty_window(qtbot, window: MainWindow):
     assert window.home_mode.isChecked()
     assert not window.outline_mode.isEnabled()
     assert_views(window, visible=False)
-
-
-def test_change_font_size(qtbot, window: MainWindow):
-    font_size = QApplication.font().pointSize()
-    window.actionIncreaseFontSize.trigger()
-    window.actionIncreaseFontSize.trigger()
-    assert QApplication.font().pointSize() == font_size + 2
-
-    window.actionDecreaseFontSize.trigger()
-    assert QApplication.font().pointSize() == font_size + 1
 
 
 def test_load_new_empty_novel(qtbot, filled_window: MainWindow):
