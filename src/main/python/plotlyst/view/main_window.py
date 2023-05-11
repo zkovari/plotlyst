@@ -65,7 +65,7 @@ from src.main.python.plotlyst.view.manuscript_view import ManuscriptView
 from src.main.python.plotlyst.view.novel_view import NovelView
 from src.main.python.plotlyst.view.reports_view import ReportsView
 from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
-from src.main.python.plotlyst.view.widget.button import ToolbarButton
+from src.main.python.plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
@@ -256,6 +256,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)
 
+        if self.novel and self.novel.is_scrivener_sync():
+            self._actionScrivener.setVisible(True)
+        else:
+            self._actionScrivener.setVisible(False)
+
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)
         self.characters_view = CharactersView(self.novel)
@@ -394,6 +399,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnComments.setToolTip('Comments are not available yet')
         self.btnComments.installEventFilter(InstantTooltipEventFilter(self.btnComments))
 
+        self.btnScrivener = NovelSyncButton()
+
         self.toolBar.addWidget(spacer(5))
         self.toolBar.addWidget(self.home_mode)
         self.toolBar.addWidget(spacer(5))
@@ -401,6 +408,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.toolBar.addWidget(spacer(5))
         self.toolBar.addWidget(self.outline_mode)
         self.toolBar.addWidget(spacer())
+        self._actionScrivener = self.toolBar.addWidget(self.btnScrivener)
         self.toolBar.addWidget(self.btnComments)
 
         self.wdgSidebar.setHidden(True)

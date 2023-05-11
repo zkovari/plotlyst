@@ -339,3 +339,16 @@ class ReturnButton(QPushButton):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         translucent(self, 1)
         super(ReturnButton, self).mouseReleaseEvent(event)
+
+
+class NovelSyncButton(QPushButton):
+    def __init__(self, parent=None):
+        super(NovelSyncButton, self).__init__(parent)
+        self.setText('Scrivener')
+        self.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color='#410253'))
+        self.setProperty('importer-sync', True)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
+        pointy(self)
+
+        self.toggled.connect(lambda x: bold(self, x))

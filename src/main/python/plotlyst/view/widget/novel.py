@@ -626,16 +626,17 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
         self.toggleSync.clicked.connect(self._syncClicked)
 
     def setNovel(self, novel: Novel):
-        self.btnTitle.setText(novel.title)
+        self._novel = novel
+        self.btnTitle.setText(self._novel.title)
 
         if novel.characters:
-            self._charactersModel = CharactersTableModel(novel)
+            self._charactersModel = CharactersTableModel(self._novel)
             self.lstCharacters.setModel(self._charactersModel)
             self.btnCharacters.setChecked(True)
         else:
             self.btnCharacters.setDisabled(True)
 
-        self.treeChapters.setNovel(novel, readOnly=True)
+        self.treeChapters.setNovel(self._novel, readOnly=True)
 
     def _syncClicked(self, checked: bool):
         self._novel.import_origin.sync = checked

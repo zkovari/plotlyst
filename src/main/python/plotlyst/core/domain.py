@@ -1310,6 +1310,16 @@ class NovelDescriptor:
     def __hash__(self):
         return hash(str(id))
 
+    def is_scrivener_sync(self) -> bool:
+        if self.import_origin is None:
+            return False
+        return self.import_origin.type == ImportOriginType.SCRIVENER and self.import_origin.sync
+
+    def is_readonly(self) -> bool:
+        if self.import_origin is None:
+            return False
+        return self.import_origin.sync
+
 
 @dataclass
 class CausalityItem(SelectionItem):
