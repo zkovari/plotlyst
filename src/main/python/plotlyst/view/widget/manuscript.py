@@ -565,7 +565,7 @@ class ManuscriptTextEditor(RichTextEditor):
         super(ManuscriptTextEditor, self).__init__(parent)
         self.toolbar().setHidden(True)
         self._titleVisible: bool = True
-        self.setCharacterWidth()
+        self.setCharacterWidth(50)
         self._scenes: List[Scene] = []
 
         self._textTitle = QLineEdit()
