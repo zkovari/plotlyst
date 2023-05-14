@@ -173,6 +173,10 @@ class ScenesTreeView(TreeView, EventListener):
         self.clearSelection()
         clear_layout(self._centralWidget, auto_delete=False)
 
+        refreshTitles = False
+        if self._scenes or self._chapters:
+            refreshTitles = True
+
         for scene in self._novel.scenes:
             if scene not in self._scenes.keys():
                 self.__initSceneWidget(scene)
@@ -201,6 +205,10 @@ class ScenesTreeView(TreeView, EventListener):
             self._centralWidget.layout().insertWidget(chapter_index, chapter_wdg)
 
         self._centralWidget.layout().addWidget(self._spacer)
+
+        if refreshTitles:
+            self._refreshChapterTitles()
+            self._refreshSceneTitles()
 
     def refreshScene(self, scene: Scene):
         if scene in self._scenes.keys():
