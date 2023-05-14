@@ -256,7 +256,8 @@ class ScenesTreeView(TreeView, EventListener):
                 self._selectedScenes.remove(event.scene)
             if event.scene in self._scenes.keys():
                 wdg = self._scenes.pop(event.scene)
-                wdg.parent().layout().removeWidget(wdg)
+                if wdg.parent():
+                    wdg.parent().layout().removeWidget(wdg)
                 gc(wdg)
             self._refreshSceneTitles()
         elif isinstance(event, SceneChangedEvent):
