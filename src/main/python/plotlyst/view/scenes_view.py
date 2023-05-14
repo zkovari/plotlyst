@@ -238,6 +238,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
         self.ui.cards.orderChanged.connect(self._on_scene_cards_swapped)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
+
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
 

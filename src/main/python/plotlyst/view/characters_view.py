@@ -192,6 +192,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnCardsView.setChecked(True)
 
         self.ui.cards.orderChanged.connect(self._characters_swapped)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
 
     @overrides
     def refresh(self):
