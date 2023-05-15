@@ -48,6 +48,7 @@ from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMen
     DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget
 from src.main.python.plotlyst.view.widget.progress import ProgressChart
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
+from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import MissingResourceManagerDialog
 
 
@@ -155,6 +156,7 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_editor.exitRequested.connect(self._exit_distraction_free)
         self.ui.pageDistractionFree.layout().addWidget(self._dist_free_editor)
 
+        self.ui.treeChapters.setSettings(TreeSettings(font_incr=2))
         self.ui.treeChapters.setNovel(self.novel)
         self.ui.treeChapters.sceneSelected.connect(self._editScene)
         self.ui.treeChapters.chapterSelected.connect(self._editChapter)

@@ -34,7 +34,7 @@ from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import fade_out_and_gc, pointy, action
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
 class DocumentAdditionMenu(MenuWidget):
@@ -75,8 +75,8 @@ class DocumentAdditionMenu(MenuWidget):
 class DocumentWidget(ContainerNode):
     added = pyqtSignal(Document)
 
-    def __init__(self, novel: Novel, doc: Document, parent=None):
-        super(DocumentWidget, self).__init__(doc.title, parent)
+    def __init__(self, novel: Novel, doc: Document, parent=None, settings: Optional[TreeSettings] = None):
+        super(DocumentWidget, self).__init__(doc.title, parent, settings=settings)
         self._novel = novel
         self._doc = doc
 
@@ -113,9 +113,10 @@ class DocumentsTreeView(TreeView):
     documentDeleted = pyqtSignal(Document)
     documentIconChanged = pyqtSignal(Document)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
         super(DocumentsTreeView, self).__init__(parent)
         self._novel: Optional[Novel] = None
+        self._settings = settings
         self._docs: Dict[Document, DocumentWidget] = {}
         self._selectedDocuments: Set[Document] = set()
 
@@ -125,6 +126,9 @@ class DocumentsTreeView(TreeView):
         self._centralWidget.setProperty('bg', True)
 
         self.repo = RepositoryPersistenceManager.instance()
+
+    def setSettings(self, settings: TreeSettings):
+        self._settings = settings
 
     def setNovel(self, novel: Novel):
         self._novel = novel
@@ -286,7 +290,7 @@ class DocumentsTreeView(TreeView):
         self.documentIconChanged.emit(doc)
 
     def __initDocWidget(self, doc: Document) -> DocumentWidget:
-        wdg = DocumentWidget(self._novel, doc)
+        wdg = DocumentWidget(self._novel, doc, settings=self._settings)
         wdg.selectionChanged.connect(partial(self._docSelectionChanged, wdg))
         wdg.deleted.connect(partial(self._deleteDocWidget, wdg))
         wdg.added.connect(partial(self._addDoc, wdg))

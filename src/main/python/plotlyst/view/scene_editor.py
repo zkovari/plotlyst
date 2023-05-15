@@ -24,12 +24,13 @@ import emoji
 import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QTableView
-from qthandy import flow, clear_layout, underline
+from qthandy import flow, clear_layout, underline, incr_font
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     SceneStoryBeat, Character, ScenePlotReference, TagReference
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_info
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -67,6 +68,9 @@ class SceneEditor(QObject):
         self.ui.btnStageCharacterLabel.setIcon(IconRegistry.character_icon(color_on='black'))
         underline(self.ui.btnStageCharacterLabel)
 
+        if app_env.is_mac():
+            incr_font(self.ui.lineTitle)
+            incr_font(self.ui.textSynopsis)
         self.ui.lineTitle.textEdited.connect(self._title_edited)
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)

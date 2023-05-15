@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from dataclasses import dataclass
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QEvent, QSize
@@ -31,6 +32,11 @@ from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, a
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.display import Icon
+
+
+@dataclass
+class TreeSettings:
+    font_incr: int = 0
 
 
 class BaseTreeWidget(QWidget):
@@ -150,7 +156,7 @@ class BaseTreeWidget(QWidget):
 
 class ContainerNode(BaseTreeWidget):
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None):
+    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
         super(ContainerNode, self).__init__(title, icon, parent)
         vbox(self, margin=1, spacing=3)
 
@@ -162,7 +168,8 @@ class ContainerNode(BaseTreeWidget):
         self.layout().addWidget(self._wdgTitle)
         self.layout().addWidget(self._container)
 
-        incr_font(self._lblTitle, 2)
+        if settings:
+            incr_font(self._lblTitle, settings.font_incr)
 
         self._icon.installEventFilter(self)
         self._wdgTitle.installEventFilter(self)

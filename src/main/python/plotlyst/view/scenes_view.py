@@ -24,6 +24,7 @@ from typing import Optional, List
 import qtanim
 from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
+from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp
@@ -31,6 +32,7 @@ from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
+from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
@@ -231,9 +233,13 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnNewWithMenu.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNewWithMenu))
         self.ui.btnNew.clicked.connect(self._new_scene)
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
+        if app_env.is_mac():
+            self.ui.btnDelete.setShortcut(QKeySequence('Ctrl+Backspace'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
         self.ui.cards.orderChanged.connect(self._on_scene_cards_swapped)
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
+
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
 

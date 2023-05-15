@@ -41,6 +41,7 @@ from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
+from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
 
@@ -103,7 +104,7 @@ class HomeView(AbstractView):
         menu = MenuWidget(self.ui.btnNovelSettings)
         menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self._on_delete()))
 
-        self._shelvesTreeView = ShelvesTreeView()
+        self._shelvesTreeView = ShelvesTreeView(settings=TreeSettings(font_incr=1))
         hbox(self.ui.wdgShelvesParent)
         self.ui.splitterLibrary.setSizes([150, 500])
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)

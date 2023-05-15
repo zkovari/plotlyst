@@ -32,6 +32,7 @@ from src.main.python.plotlyst.view.generated.notes_view_ui import Ui_NotesView
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.doc.browser import DocumentAdditionMenu
 from src.main.python.plotlyst.view.widget.input import DocumentTextEditor
+from src.main.python.plotlyst.view.widget.tree import TreeSettings
 
 
 class DocumentsView(AbstractNovelView):
@@ -47,6 +48,7 @@ class DocumentsView(AbstractNovelView):
         # self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
         # bold(self.ui.lblTitle)
 
+        self.ui.treeDocuments.setSettings(TreeSettings(font_incr=2))
         self.ui.treeDocuments.setNovel(self.novel)
         self.ui.treeDocuments.documentSelected.connect(self._edit)
         self.ui.treeDocuments.documentDeleted.connect(self._clear_text_editor)

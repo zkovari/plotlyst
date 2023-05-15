@@ -42,13 +42,14 @@ from src.main.python.plotlyst.service.persistence import RepositoryPersistenceMa
 from src.main.python.plotlyst.view.common import action, insert_before_the_end
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.display import Icon
-from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
 class SceneWidget(ContainerNode):
 
-    def __init__(self, scene: Scene, novel: Novel, parent=None, readOnly: bool = False):
-        super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent)
+    def __init__(self, scene: Scene, novel: Novel, parent=None, readOnly: bool = False,
+                 settings: Optional[TreeSettings] = None):
+        super(SceneWidget, self).__init__(scene.title_or_index(novel), parent=parent, settings=settings)
         self._scene = scene
         self._novel = novel
         self._readOnly = readOnly
@@ -92,8 +93,10 @@ class ChapterWidget(ContainerNode):
     addScene = pyqtSignal()
     addChapter = pyqtSignal()
 
-    def __init__(self, chapter: Chapter, novel: Novel, parent=None, readOnly: bool = False):
-        super(ChapterWidget, self).__init__(chapter.title_index(novel), IconRegistry.chapter_icon(), parent)
+    def __init__(self, chapter: Chapter, novel: Novel, parent=None, readOnly: bool = False,
+                 settings: Optional[TreeSettings] = None):
+        super(ChapterWidget, self).__init__(chapter.title_index(novel), IconRegistry.chapter_icon(), parent,
+                                            settings=settings)
         self._chapter = chapter
         self._novel = novel
         self._readOnly = readOnly
@@ -129,10 +132,11 @@ class ScenesTreeView(TreeView, EventListener):
     chapterSelected = pyqtSignal(Chapter)
 
     # noinspection PyTypeChecker
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
         super(ScenesTreeView, self).__init__(parent)
         self._novel: Optional[Novel] = None
         self._readOnly = False
+        self._settings = settings
 
         self._chapters: Dict[Chapter, ChapterWidget] = {}
         self._scenes: Dict[Scene, SceneWidget] = {}
@@ -158,6 +162,9 @@ class ScenesTreeView(TreeView, EventListener):
         event_dispatcher.register(self, SceneChangedEvent)
         self.repo = RepositoryPersistenceManager.instance()
 
+    def setSettings(self, settings: TreeSettings):
+        self._settings = settings
+
     def setNovel(self, novel: Novel, readOnly: bool = False):
         self._novel = novel
         self._readOnly = readOnly
@@ -172,6 +179,10 @@ class ScenesTreeView(TreeView, EventListener):
     def refresh(self):
         self.clearSelection()
         clear_layout(self._centralWidget, auto_delete=False)
+
+        refreshTitles = False
+        if self._scenes or self._chapters:
+            refreshTitles = True
 
         for scene in self._novel.scenes:
             if scene not in self._scenes.keys():
@@ -201,6 +212,10 @@ class ScenesTreeView(TreeView, EventListener):
             self._centralWidget.layout().insertWidget(chapter_index, chapter_wdg)
 
         self._centralWidget.layout().addWidget(self._spacer)
+
+        if refreshTitles:
+            self._refreshChapterTitles()
+            self._refreshSceneTitles()
 
     def refreshScene(self, scene: Scene):
         if scene in self._scenes.keys():
@@ -256,7 +271,8 @@ class ScenesTreeView(TreeView, EventListener):
                 self._selectedScenes.remove(event.scene)
             if event.scene in self._scenes.keys():
                 wdg = self._scenes.pop(event.scene)
-                wdg.parent().layout().removeWidget(wdg)
+                if wdg.parent():
+                    wdg.parent().layout().removeWidget(wdg)
                 gc(wdg)
             self._refreshSceneTitles()
         elif isinstance(event, SceneChangedEvent):
@@ -476,7 +492,7 @@ class ScenesTreeView(TreeView, EventListener):
 
     # noinspection PyTypeChecker
     def __initChapterWidget(self, chapter):
-        chapterWdg = ChapterWidget(chapter, self._novel, readOnly=self._readOnly)
+        chapterWdg = ChapterWidget(chapter, self._novel, readOnly=self._readOnly, settings=self._settings)
         chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
         chapterWdg.deleted.connect(partial(self._deleteChapter, chapterWdg))
         chapterWdg.addScene.connect(partial(self._addScene, chapterWdg))
@@ -500,7 +516,7 @@ class ScenesTreeView(TreeView, EventListener):
 
     # noinspection PyTypeChecker
     def __initSceneWidget(self, scene: Scene) -> SceneWidget:
-        sceneWdg = SceneWidget(scene, self._novel, readOnly=self._readOnly)
+        sceneWdg = SceneWidget(scene, self._novel, readOnly=self._readOnly, settings=self._settings)
         self._scenes[scene] = sceneWdg
         sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
         sceneWdg.deleted.connect(partial(self._deleteScene, sceneWdg))

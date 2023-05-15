@@ -717,6 +717,9 @@ class PlotEditor(QWidget, Ui_PlotEditor):
 
         self.repo = RepositoryPersistenceManager.instance()
 
+        if self.novel.plots:
+            self._wdgList.selectPlot(self.novel.plots[0])
+
     def widgetList(self) -> PlotList:
         return self._wdgList
 
