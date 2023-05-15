@@ -44,16 +44,7 @@ class ScrivenerParsingError(Exception):
 class ScrivenerParser:
 
     def parse_project(self, folder: str) -> Novel:
-        if not os.path.exists(folder):
-            raise ValueError(f'Input folder does not exist: {folder}')
-        if not os.path.isdir(folder):
-            raise ValueError(f'Input path is not a directory: {folder}')
-
-        scrivener_file = ''
-        for file in os.listdir(folder):
-            if file.endswith('.scrivx'):
-                scrivener_file = file
-                break
+        scrivener_file = self.find_scrivener_file(folder)
         if not scrivener_file:
             raise ValueError(f'Could not find main Scrivener file with .scrivx extension under given folder: {folder}')
 
@@ -65,6 +56,20 @@ class ScrivenerParser:
         novel.id = uuid.uuid4()
 
         return novel
+
+    def find_scrivener_file(self, folder: str) -> str:
+        if not os.path.exists(folder):
+            raise ValueError(f'Input folder does not exist: {folder}')
+        if not os.path.isdir(folder):
+            raise ValueError(f'Input path is not a directory: {folder}')
+
+        scrivener_file = ''
+        for file in os.listdir(folder):
+            if file.endswith('.scrivx'):
+                scrivener_file = file
+                break
+
+        return scrivener_file
 
     def _parse_scrivx(self, scrivener_path: Path, data_folder: Path) -> Novel:
         tree = ElementTree.parse(scrivener_path)
@@ -130,31 +135,31 @@ class ScrivenerParser:
                      chapters=chapters)
 
     def _parse_chapter(self, element: Element) -> Chapter:
-        uuid = element.attrib.get('UUID')
-        if not uuid:
+        uuid_ = element.attrib.get('UUID')
+        if not uuid_:
             raise ScrivenerParsingError('Could not extract chapter id as UUID attribute was not found')
         title = self._find_title(element)
-        return Chapter(title, id=UUID(uuid))
+        return Chapter(title, id=UUID(uuid_))
 
     def _parse_scene(self, element: Element, data_folder: Path) -> Scene:
-        uuid = element.attrib.get('UUID')
-        if not uuid:
+        uuid_ = element.attrib.get('UUID')
+        if not uuid_:
             raise ScrivenerParsingError('Could not extract scene id as UUID attribute was not found')
 
         title = self._find_title(element)
 
         scene = Novel.new_scene(title)
-        scene.id = UUID(uuid)
+        scene.id = UUID(uuid_)
         scene.synopsis = self._find_synopsis(scene.id, data_folder)
         scene.manuscript = self._find_content(scene.id, data_folder)
         return scene
 
     def _parse_character(self, element: Element, data_folder: Path) -> Optional[Character]:
-        uuid = element.attrib.get('UUID')
-        if not uuid:
+        uuid_ = element.attrib.get('UUID')
+        if not uuid_:
             return None
         name = self._find_title(element)
-        character = Character(name, id=UUID(uuid))
+        character = Character(name, id=UUID(uuid_))
         character.avatar = self._find_image(character.id, data_folder)
         return character
 

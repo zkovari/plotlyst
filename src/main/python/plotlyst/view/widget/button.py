@@ -372,7 +372,7 @@ class _NovelSyncWidget(QWidget):
         self.lblUpdateMessage.setProperty('description', True)
         self._wdgCenter.layout().addWidget(self.lblUpdateMessage, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.lblErrorNotFoundMessage = QLabel('Scrivener project not found. Location does not exist.')
+        self.lblErrorNotFoundMessage = QLabel('Project not found.')
         self.lblErrorNotFoundMessage.setProperty('error', True)
         self.lblErrorNotFoundMessage.setHidden(True)
         self._wdgCenter.layout().addWidget(self.lblErrorNotFoundMessage, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -421,6 +421,7 @@ class NovelSyncButton(QPushButton):
         self._menu.addWidget(self._wdgSync)
 
         self._wdgSync.btnCheck.clicked.connect(self._checkForUpdates)
+        self._wdgSync.btnSync.clicked.connect(self._sync)
 
     def setImporter(self, importer: SyncImporter, novel: Novel):
         self._importer = importer
@@ -442,29 +443,35 @@ class NovelSyncButton(QPushButton):
     def _checkForUpdates(self):
         prev_icon = self._wdgSync.btnCheck.icon()
         spin(self._wdgSync.btnCheck)
-        if not self._importer.location_exists(self._novel):
+        if self._importer.location_exists(self._novel):
+            self._wdgSync.lblErrorNotFoundMessage.setHidden(True)
+            self.setIcon(self._icon)
+
+            if self._importer.is_updated(self._novel):
+                fade_in(self._wdgSync.lblUpdateMessage)
+            else:
+                self._toggleUpToDate(False)
+                fade_in(self._wdgSync.lblUpdateMessage)
+                fade_in(self._wdgSync.btnSync)
+        else:
             self.setIcon(IconRegistry.from_name('ri.error-warning-fill', '#e76f51'))
             self._wdgSync.lblUpdateMessage.setHidden(True)
             self._wdgSync.lblErrorNotFoundMessage.setVisible(True)
-            return
-
-        self._wdgSync.lblErrorNotFoundMessage.setHidden(True)
-        self.setIcon(self._icon)
-
-        if self._importer.is_updated(self._novel):
-            fade_in(self._wdgSync.lblUpdateMessage)
-        else:
-            self._toggleUpToDate(False)
-            fade_in(self._wdgSync.lblUpdateMessage)
-            fade_in(self._wdgSync.btnSync)
 
         QTimer.singleShot(100, lambda: self._wdgSync.btnCheck.setIcon(prev_icon))
 
-    def _toggleUpToDate(self, updated: bool):
-        self._wdgSync.btnCheck.setEnabled(updated)
-        self._wdgSync.btnCheck.setVisible(updated)
+    def _sync(self):
+        self._importer.sync(self._novel)
 
-        self._wdgSync.btnSync.setDisabled(updated)
+        self._toggleUpToDate(True)
+        self.menu().close()
+
+    def _toggleUpToDate(self, updated: bool):
+        # hide all first to avoid layout problems
+        self._wdgSync.btnCheck.setHidden(True)
+        self._wdgSync.btnSync.setHidden(True)
+
+        self._wdgSync.btnCheck.setVisible(updated)
         self._wdgSync.btnSync.setHidden(updated)
 
         self._wdgSync.lblUpdateMessage.setText(self.UP_TO_DATE_MSG if updated else self.UPDATES_AVAILABLE_MSG)

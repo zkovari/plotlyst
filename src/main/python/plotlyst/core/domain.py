@@ -1294,6 +1294,7 @@ class ImportOrigin:
     source: str
     source_id: Optional[uuid.UUID] = None
     sync: bool = False
+    last_mod_time: int = 0
 
 
 @dataclass
