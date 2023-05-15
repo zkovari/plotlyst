@@ -22,8 +22,8 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap, QColor
 from overrides import overrides
-from qthandy import ask_confirmation, transparent, incr_font, hbox, italic, busy, retain_when_hidden
-from qthandy.filter import VisibilityToggleEventFilter
+from qthandy import ask_confirmation, transparent, incr_font, hbox, italic, busy, retain_when_hidden, incr_icon
+from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -73,6 +73,11 @@ class HomeView(AbstractView):
         self.ui.btnAddNewStoryMain.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnAddNewStoryMain.clicked.connect(self._add_new_novel)
         self.ui.btnAddNewStoryMain.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnAddNewStoryMain))
+
+        self.ui.iconImportOrigin.setIcon(IconRegistry.from_name('mdi.alpha-s-circle-outline', color='#410253'))
+        self.ui.iconImportOrigin.setToolTip('Synced from Scrivener')
+        self.ui.iconImportOrigin.installEventFilter(InstantTooltipEventFilter(self.ui.iconImportOrigin))
+        incr_icon(self.ui.iconImportOrigin, 8)
 
         self.ui.wdgTitle.setFixedHeight(150)
         apply_border_image(self.ui.wdgTitle, resource_registry.frame1)
@@ -163,6 +168,8 @@ class HomeView(AbstractView):
             self._iconSelector.selectIcon(novel.icon, novel.icon_color)
         else:
             self._iconSelector.reset()
+
+        self.ui.iconImportOrigin.setVisible(novel.is_scrivener_sync())
 
     def _add_new_novel(self):
         @busy

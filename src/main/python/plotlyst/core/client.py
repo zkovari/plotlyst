@@ -256,8 +256,8 @@ class JsonClient:
             os.mkdir(self.images_dir)
 
     def novels(self) -> List[NovelDescriptor]:
-        return [NovelDescriptor(title=x.title, id=x.id, lang_settings=x.lang_settings,
-                                subtitle=x.subtitle, icon=x.icon, icon_color=x.icon_color)
+        return [NovelDescriptor(title=x.title, id=x.id, import_origin=x.import_origin, lang_settings=x.lang_settings,
+                                subtitle=x.subtitle, icon=x.icon, icon_color=x.icon_color, )
                 for x in self.project.novels]
 
     def has_novel(self, id: uuid.UUID):

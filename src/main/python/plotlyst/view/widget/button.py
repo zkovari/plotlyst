@@ -350,5 +350,3 @@ class NovelSyncButton(QPushButton):
         self.installEventFilter(ButtonPressResizeEventFilter(self))
         self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
         pointy(self)
-
-        self.toggled.connect(lambda x: bold(self, x))
