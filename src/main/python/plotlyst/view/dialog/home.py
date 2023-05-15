@@ -27,7 +27,7 @@ from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import MAXIMUM_SIZE
 from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
+from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, ButtonPressResizeEventFilter
@@ -101,8 +101,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         if not project:
             return
 
-        importer = ScrivenerImporter()
-        self._scrivenerNovel = importer.import_project(project)
+        parser = ScrivenerParser()
+        self._scrivenerNovel = parser.parse_project(project)
 
         self.stackedWidget.setCurrentWidget(self.pageScrivenerPreview)
         self.setMaximumWidth(MAXIMUM_SIZE)

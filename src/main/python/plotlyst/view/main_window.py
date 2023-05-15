@@ -45,6 +45,7 @@ from src.main.python.plotlyst.resources import resource_manager, ResourceType, R
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
 from src.main.python.plotlyst.service.grammar import LanguageToolServerSetupWorker, dictionary, language_tool_proxy
+from src.main.python.plotlyst.service.importer import scrivener_sync_importer
 from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.service.resource import download_resource, download_nltk_resources
@@ -258,8 +259,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         if self.novel and self.novel.is_scrivener_sync():
             self._actionScrivener.setVisible(True)
+            self.btnScrivener.setImporter(scrivener_sync_importer, self.novel)
         else:
             self._actionScrivener.setVisible(False)
+            self.btnScrivener.clear()
 
         self._current_view: Optional[AbstractView] = None
         self.novel_view = NovelView(self.novel)

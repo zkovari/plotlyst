@@ -26,6 +26,10 @@ QLabel[description=true] {
     color: #8d99ae;
 }
 
+QLabel[error=true] {
+    color: #e76f51;
+}
+
 QTextBrowser {
     background-color: #f8f9fa;
 }

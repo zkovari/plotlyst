@@ -47,7 +47,7 @@ from src.main.python.plotlyst.core.text import wc, sentence_count, clean_text
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import scroll_to_top, spin
+from src.main.python.plotlyst.view.common import scroll_to_top, spin, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.distraction_free_manuscript_editor_ui import \
     Ui_DistractionFreeManuscriptEditor
 from src.main.python.plotlyst.view.generated.manuscript_context_menu_widget_ui import Ui_ManuscriptContextMenuWidget
@@ -731,8 +731,9 @@ class ReadabilityWidget(QWidget, Ui_ReadabilityWidget):
         super(ReadabilityWidget, self).__init__(parent)
         self.setupUi(self)
 
-        self.btnRefresh.setIcon(IconRegistry.from_name('ei.refresh', 'darkBlue'))
+        self.btnRefresh.setIcon(IconRegistry.refresh_icon())
         self.btnRefresh.installEventFilter(OpacityEventFilter(parent=self.btnRefresh))
+        self.btnRefresh.installEventFilter(ButtonPressResizeEventFilter(self.btnRefresh))
         retain_when_hidden(self.btnRefresh)
         self.btnRefresh.setHidden(True)
         self._updatedDoc: Optional[QTextDocument] = None

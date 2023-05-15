@@ -569,8 +569,8 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_delete(self):
         scene: Optional[Scene] = self._selected_scene()
         if scene and delete_scene(self.novel, scene):
-            self.refresh()
             emit_event(SceneDeletedEvent(self, scene))
+            self.refresh()
 
         # elif not scene:
         #     chapters = self.ui.treeChapters.selectedChapters()

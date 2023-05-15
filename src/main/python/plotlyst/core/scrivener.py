@@ -41,12 +41,9 @@ class ScrivenerParsingError(Exception):
     pass
 
 
-class ScrivenerImporter:
+class ScrivenerParser:
 
-    def sync_project(self, novel: Novel, folder: str):
-        pass
-
-    def import_project(self, folder: str) -> Novel:
+    def parse_project(self, folder: str) -> Novel:
         if not os.path.exists(folder):
             raise ValueError(f'Input folder does not exist: {folder}')
         if not os.path.isdir(folder):
