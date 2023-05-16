@@ -1421,7 +1421,7 @@ class NovelDescriptor:
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
 
 @dataclass
@@ -1773,4 +1773,4 @@ class Novel(NovelDescriptor):
 
     @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
