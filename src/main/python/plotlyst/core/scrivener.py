@@ -54,6 +54,7 @@ class ScrivenerParser:
 
         novel.import_origin = ImportOrigin(ImportOriginType.SCRIVENER, source=folder, source_id=novel.id)
         novel.id = uuid.uuid4()
+        novel.import_origin.last_mod_time = Path(folder).joinpath(scrivener_file).stat().st_mtime_ns
 
         return novel
 
