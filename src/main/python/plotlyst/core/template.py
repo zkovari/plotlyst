@@ -439,7 +439,9 @@ class Role(SelectionItem):
 
     @overrides
     def __eq__(self, other: 'Role'):
-        return self.text == other.text
+        if isinstance(other, Role):
+            return self.text == other.text
+        return False
 
     @overrides
     def __hash__(self):

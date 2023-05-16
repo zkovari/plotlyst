@@ -285,9 +285,11 @@ class CharactersView(AbstractNovelView):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
-        gc(self.editor.widget)
-        self.editor = None
+
         emit_event(CharacterChangedEvent(self, character))
+        gc(self.editor.widget)
+        gc(self.editor)
+        self.editor = None
         self.refresh()
 
     def _on_new(self):

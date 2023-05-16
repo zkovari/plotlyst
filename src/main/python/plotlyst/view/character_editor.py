@@ -95,7 +95,7 @@ class CharacterEditor(QObject, EventListener):
         self._roleSelector.rolePromoted.connect(self._role_promoted)
         if self.character.role:
             self._roleSelector.setActiveRole(self.character.role)
-        btn_popup(self.ui.btnRole, self._roleSelector)
+        self._rolePopup = btn_popup(self.ui.btnRole, self._roleSelector)
 
         italic(self.ui.btnAge)
         italic(self.ui.btnOccupation)
@@ -216,7 +216,7 @@ class CharacterEditor(QObject, EventListener):
                 self.ui.wdgAvatar.updateAvatar()
 
     def _role_changed(self, role: SelectionItem):
-        self.ui.btnRole.menu().hide()
+        self._rolePopup.close()
         if role.text == protagonist_role.text and self.character.gender == FEMALE:
             role.icon = 'fa5s.chess-queen'
         self.character.role = role

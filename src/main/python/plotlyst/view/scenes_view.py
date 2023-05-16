@@ -336,9 +336,10 @@ class ScenesOutlineView(AbstractNovelView):
         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
-        gc(self.editor.widget)
 
         emit_event(SceneChangedEvent(self, self.editor.scene))
+        gc(self.editor.widget)
+        gc(self.editor)
         self.editor = None
         self.refresh()
 

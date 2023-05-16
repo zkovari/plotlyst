@@ -129,8 +129,9 @@ class ScrivenerSyncImporter(SyncImporter):
 
         for new_character in new_novel.characters:
             if str(new_character.id) in current.keys():
-                current[str(new_character.id)].name = new_character.name
-                updates[new_character] = True
+                old_character = current[str(new_character.id)]
+                old_character.name = new_character.name
+                updates[old_character] = True
             else:
                 novel.characters.append(new_character)
                 self.repo.insert_character(novel, new_character)
