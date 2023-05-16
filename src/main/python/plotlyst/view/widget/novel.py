@@ -39,7 +39,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
-    CharacterChangedEvent, CharacterDeletedEvent
+    CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
@@ -409,6 +409,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
+        event_dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def event_received(self, event: Event):

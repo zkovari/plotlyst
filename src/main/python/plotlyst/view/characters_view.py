@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetw
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
@@ -65,6 +65,7 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
+        event_dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def event_received(self, event: Event):

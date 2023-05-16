@@ -32,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, SceneChangedEvent, SceneDeletedEvent, \
-    PlotCreatedEvent, CharacterDeletedEvent
+    PlotCreatedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, scrolled
 from src.main.python.plotlyst.view.generated.reports_view_ui import Ui_ReportsView
@@ -67,6 +67,8 @@ class ReportPage(QWidget, EventListener):
         self._scrollarea, self._wdgCenter = scrolled(self)
         vbox(self._wdgCenter)
         self._wdgCenter.setProperty('white-bg', True)
+
+        event_dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def showEvent(self, event: QShowEvent) -> None:
