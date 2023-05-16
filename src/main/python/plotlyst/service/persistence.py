@@ -239,8 +239,8 @@ def delete_scene(novel: Novel, scene: Scene) -> bool:
     return False
 
 
-def delete_character(novel: Novel, character: Character) -> bool:
-    if ask_confirmation(f'Are you sure you want to delete character "{character.name}"?'):
+def delete_character(novel: Novel, character: Character, forced: bool = False) -> bool:
+    if forced or ask_confirmation(f'Are you sure you want to delete character "{character.name}"?'):
         novel.characters.remove(character)
         repo = RepositoryPersistenceManager.instance()
         repo.delete_character(novel, character)

@@ -29,8 +29,8 @@ from qthandy import busy
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
+from src.main.python.plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent, CharacterDeletedEvent
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail, delete_character
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -132,15 +132,15 @@ class ScrivenerSyncImporter(SyncImporter):
                 current[str(new_character.id)].name = new_character.name
                 updates[new_character] = True
             else:
-                print(f'insert {new_character.name}')
-                pass  # insert
+                novel.characters.append(new_character)
+                self.repo.insert_character(novel, new_character)
 
         for character, update in updates.items():
             if update:
-                print(f'update {character.name}')
                 self.repo.update_character(character)
             else:
-                pass  # delete
+                delete_character(novel, character, forced=True)
+                emit_event(CharacterDeletedEvent(self, character))
 
     def _sync_chapters(self, novel: Novel, new_novel: Novel):
         self.repo.update_novel(novel)
