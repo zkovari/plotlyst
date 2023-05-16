@@ -106,6 +106,16 @@ class NovelStoryStructureUpdated(Event):
 
 
 @dataclass
+class NovelAboutToSyncEvent(Event):
+    novel: NovelDescriptor
+
+
+@dataclass
+class NovelSyncEvent(Event):
+    novel: NovelDescriptor
+
+
+@dataclass
 class PlotCreatedEvent(Event):
     pass
 

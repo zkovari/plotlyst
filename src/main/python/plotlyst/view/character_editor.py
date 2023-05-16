@@ -20,7 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from functools import partial
 
 import qtanim
+from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget, QAbstractButton, QLineEdit, QCompleter
+from overrides import overrides
 from qthandy import translucent, btn_popup, incr_font, bold, italic, margins
 from qthandy.filter import OpacityEventFilter
 
@@ -28,6 +30,9 @@ from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
 from src.main.python.plotlyst.core.template import protagonist_role
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import NovelAboutToSyncEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import emoji_font, set_tab_icon, wrap, ButtonPressResizeEventFilter
@@ -42,7 +47,8 @@ from src.main.python.plotlyst.view.widget.characters import CharacterRoleSelecto
 from src.main.python.plotlyst.view.widget.template import CharacterProfileTemplateView
 
 
-class CharacterEditor:
+class CharacterEditor(QObject, EventListener):
+    close = pyqtSignal()
 
     def __init__(self, novel: Novel, character: Character = None):
         super().__init__()
@@ -178,6 +184,12 @@ class CharacterEditor:
         self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
 
         self.repo = RepositoryPersistenceManager.instance()
+        event_dispatcher.register(self, NovelAboutToSyncEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelAboutToSyncEvent):
+            self._save()
 
     def _customize_profile(self):
         profile_index = 0
@@ -304,3 +316,5 @@ class CharacterEditor:
         if self.character.document.loaded:
             self.character.document.content = self.ui.textEdit.textEdit.toHtml()
             self.repo.update_doc(self.novel, self.character.document)
+
+        self.close.emit()

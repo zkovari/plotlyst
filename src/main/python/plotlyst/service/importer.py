@@ -28,6 +28,8 @@ from qthandy import busy
 
 from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.core.scrivener import ScrivenerParser
+from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
 from src.main.python.plotlyst.view.icons import IconRegistry
 
@@ -101,6 +103,7 @@ class ScrivenerSyncImporter(SyncImporter):
 
     @busy
     def sync(self, novel: Novel):
+        emit_event(NovelAboutToSyncEvent(self, novel))
         novel.import_origin.last_mod_time = self._mod_time(novel)
 
         new_novel = self._parser.parse_project(novel.import_origin.source)
@@ -111,6 +114,7 @@ class ScrivenerSyncImporter(SyncImporter):
         self._sync_scenes(novel, new_novel)
 
         self.repo.update_project_novel(novel)
+        emit_event(NovelSyncEvent(self, novel))
 
     def _mod_time(self, novel: Novel) -> int:
         scriv_file = self._parser.find_scrivener_file(novel.import_origin.source)
