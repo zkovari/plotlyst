@@ -47,7 +47,7 @@ class ResourceRegistry:
         self._cork = app_context.get_resource('cork.wav')
         self._frame1 = app_context.get_resource('frame_1.png')
         self._cover1 = app_context.get_resource('cover_1.jpg')
-        self._banner = app_context.get_resource('plotlyst_banner.jpg')
+        self._banner = app_context.get_resource('plotlyst_banner.png')
         self._circular_frame1 = app_context.get_resource('circular_frame1.png')
         self._manuscript_docx_template = app_context.get_resource('manuscript-template.docx')
 
