@@ -41,6 +41,12 @@ class TemplateValue:
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
+    def __eq__(self, other: 'TemplateValue'):
+        if isinstance(other, TemplateValue):
+            return self.id == other.id and self.value == other.value
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -69,6 +75,12 @@ class Topic:
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     description: str = field(default='', metadata=config(exclude=exclude_if_empty))
+
+    @overrides
+    def __eq__(self, other: 'Topic'):
+        if isinstance(other, Topic):
+            return self.id == other.id and self.text == other.text
+        return False
 
     @overrides
     def __hash__(self):
@@ -131,6 +143,12 @@ class CharacterGoal:
                 return goal_
 
     @overrides
+    def __eq__(self, other: 'CharacterGoal'):
+        if isinstance(other, CharacterGoal):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -141,6 +159,12 @@ class CharacterPlan:
     summary: str = ''
     external: bool = True
     goals: List[CharacterGoal] = field(default_factory=list)
+
+    @overrides
+    def __eq__(self, other: 'CharacterPlan'):
+        if isinstance(other, CharacterPlan):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
@@ -193,6 +217,12 @@ class BigFiveDimension:
     color: str = 'black'
     icon: str = ''
     facets: List[BigFiveFacet] = field(default_factory=list)
+
+    @overrides
+    def __eq__(self, other: 'BigFiveDimension'):
+        if isinstance(other, BigFiveDimension):
+            return self.name == other.name
+        return False
 
     @overrides
     def __hash__(self):
@@ -323,6 +353,12 @@ class Character:
         return all_goals
 
     @overrides
+    def __eq__(self, other: 'Character'):
+        if isinstance(other, Character):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -341,6 +377,12 @@ class Chapter:
 
     def title_index(self, novel: 'Novel') -> str:
         return f'Chapter {novel.chapters.index(self) + 1}'
+
+    @overrides
+    def __eq__(self, other: 'Chapter'):
+        if isinstance(other, Chapter):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
@@ -406,6 +448,12 @@ class StoryBeat:
     enabled: bool = True
 
     @overrides
+    def __eq__(self, other: 'StoryBeat'):
+        if isinstance(other, StoryBeat):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(id))
 
@@ -415,6 +463,12 @@ class SceneStage(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     @overrides
+    def __eq__(self, other: 'SceneStage'):
+        if isinstance(other, SceneStage):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(id))
 
@@ -422,6 +476,12 @@ class SceneStage(SelectionItem):
 @dataclass
 class DramaticQuestion(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    @overrides
+    def __eq__(self, other: 'DramaticQuestion'):
+        if isinstance(other, DramaticQuestion):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
@@ -438,6 +498,12 @@ class PlotType(Enum):
 class PlotValue(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     negative: str = ''
+
+    @overrides
+    def __eq__(self, other: 'PlotValue'):
+        if isinstance(other, PlotValue):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
@@ -538,6 +604,12 @@ class Plot(SelectionItem, CharacterBased):
         self._character: Optional[Character] = None
 
     @overrides
+    def __eq__(self, other: 'Plot'):
+        if isinstance(other, Plot):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(id))
 
@@ -574,6 +646,12 @@ class Conflict(SelectionItem, CharacterBased):
         return self._conflicting_character
 
     @overrides
+    def __eq__(self, other: 'Conflict'):
+        if isinstance(other, Conflict):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -582,6 +660,12 @@ class Conflict(SelectionItem, CharacterBased):
 class Goal(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     description: str = ''
+
+    @overrides
+    def __eq__(self, other: 'Goal'):
+        if isinstance(other, Goal):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
@@ -866,6 +950,12 @@ class Scene:
         return False
 
     @overrides
+    def __eq__(self, other: 'Scene'):
+        if isinstance(other, Scene):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -899,6 +989,12 @@ class WorldBuildingEntity:
     topics: List[TemplateValue] = field(default_factory=list)
 
     @overrides
+    def __eq__(self, other: 'WorldBuildingEntity'):
+        if isinstance(other, WorldBuildingEntity):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -915,6 +1011,12 @@ class TaskStatus(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     wip: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     resolves: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+
+    @overrides
+    def __eq__(self, other: 'TaskStatus'):
+        if isinstance(other, TaskStatus):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
@@ -944,6 +1046,12 @@ class Task(CharacterBased):
 
     def update_resolved_date(self):
         self.resolved_date = datetime.now()
+
+    @overrides
+    def __eq__(self, other: 'Task'):
+        if isinstance(other, Task):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
@@ -1308,8 +1416,14 @@ class NovelDescriptor:
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
 
     @overrides
+    def __eq__(self, other: 'NovelDescriptor'):
+        if isinstance(other, NovelDescriptor):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
-        return hash(str(id))
+        return hash(str(self.id))
 
     def is_scrivener_sync(self) -> bool:
         if self.import_origin is None:
@@ -1325,6 +1439,12 @@ class NovelDescriptor:
 @dataclass
 class CausalityItem(SelectionItem):
     links: List['CausalityItem'] = field(default_factory=list)
+
+    @overrides
+    def __eq__(self, other: 'CausalityItem'):
+        if isinstance(other, CausalityItem):
+            return self.text == other.text
+        return False
 
     @overrides
     def __hash__(self):
@@ -1410,6 +1530,12 @@ class Document(CharacterBased, SceneBased):
     statistics: Optional[DocumentStatistics] = field(default=None, metadata=config(exclude=exclude_if_empty))
 
     @overrides
+    def __eq__(self, other: 'Document'):
+        if isinstance(other, Document):
+            return self.id == other.id
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(str(self.id))
 
@@ -1433,6 +1559,12 @@ class TagType(SelectionItem):
     description: str = ''
 
     @overrides
+    def __eq__(self, other: 'TagType'):
+        if isinstance(other, TagType):
+            return self.text == other.text
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(self.text)
 
@@ -1442,6 +1574,12 @@ class Tag(SelectionItem):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     tag_type: str = 'General'
     builtin: bool = False
+
+    @overrides
+    def __eq__(self, other: 'Tag'):
+        if isinstance(other, Tag):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
@@ -1638,6 +1776,12 @@ class Novel(NovelDescriptor):
         self.scenes.insert(i + 1, new_scene)
 
         return new_scene
+
+    @overrides
+    def __eq__(self, other: 'Novel'):
+        if isinstance(other, Novel):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
