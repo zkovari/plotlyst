@@ -24,6 +24,7 @@ from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
+from qthandy.filter import InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -123,6 +124,12 @@ class CharactersView(AbstractNovelView):
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
+        if self.novel.is_readonly():
+            for btn in [self.ui.btnNew, self.ui.btnDelete]:
+                btn.setDisabled(True)
+                btn.setToolTip('Option disabled in Scrivener synchronization mode')
+                btn.installEventFilter(InstantTooltipEventFilter(btn))
+
         apply_bg_image(self.ui.scrollAreaBackstoryContent, resource_registry.cover1)
 
         self.selected_card: Optional[CharacterCard] = None
@@ -208,7 +215,9 @@ class CharactersView(AbstractNovelView):
         menu = MenuWidget()
         menu.addAction(action('Edit', IconRegistry.edit_icon(), self._on_edit))
         menu.addSeparator()
-        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click))
+        action_ = action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        action_.setDisabled(self.novel.is_readonly())
+        menu.addAction(action_)
         menu.exec()
 
     def _init_cards(self):
@@ -223,14 +232,16 @@ class CharactersView(AbstractNovelView):
         self._enable_action_buttons(len(selection.indexes()) > 0)
 
     def _enable_action_buttons(self, enabled: bool):
-        self.ui.btnDelete.setEnabled(enabled)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
 
     def _card_selected(self, card: CharacterCard):
         if self.selected_card and self.selected_card is not card:
             self.selected_card.clearSelection()
         self.selected_card = card
-        self.ui.btnDelete.setEnabled(True)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
 
     def _characters_swapped(self, characters: List[Character]):

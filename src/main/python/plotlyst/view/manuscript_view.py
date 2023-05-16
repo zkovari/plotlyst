@@ -157,7 +157,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageDistractionFree.layout().addWidget(self._dist_free_editor)
 
         self.ui.treeChapters.setSettings(TreeSettings(font_incr=2))
-        self.ui.treeChapters.setNovel(self.novel)
+        self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.sceneSelected.connect(self._editScene)
         self.ui.treeChapters.chapterSelected.connect(self._editChapter)
         self.ui.treeChapters.centralWidget().setProperty('bg', True)
@@ -174,6 +174,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.setMargins(30, 30, 30, 30)
         self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
         self.ui.textEdit.textEdit.setSidebarEnabled(False)
+        self.ui.textEdit.textEdit.setReadOnly(self.novel.is_readonly())
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)

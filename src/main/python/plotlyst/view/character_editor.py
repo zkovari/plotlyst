@@ -156,6 +156,7 @@ class CharacterEditor(QObject, EventListener):
 
         self.ui.splitter.setSizes([400, 400])
 
+        self.ui.lineName.setReadOnly(self.novel.is_readonly())
         self.ui.lineName.textEdited.connect(self._name_edited)
         self.ui.lineName.setText(self.character.name)
 

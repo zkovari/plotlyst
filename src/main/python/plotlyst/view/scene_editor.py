@@ -74,6 +74,7 @@ class SceneEditor(QObject, EventListener):
         if app_env.is_mac():
             incr_font(self.ui.lineTitle)
             incr_font(self.ui.textSynopsis)
+        self.ui.lineTitle.setReadOnly(self.novel.is_readonly())
         self.ui.lineTitle.textEdited.connect(self._title_edited)
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)

@@ -28,6 +28,7 @@ from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp
+from qthandy.filter import InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -152,7 +153,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._addSceneMenu.addAction(
             action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
 
-        self.ui.treeChapters.setNovel(self.novel)
+        self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
@@ -240,6 +241,12 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.btnDelete.setShortcut(QKeySequence('Ctrl+Backspace'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
+        if self.novel.is_readonly():
+            for btn in [self.ui.btnNew, self.ui.btnNewWithMenu, self.ui.btnDelete]:
+                btn.setDisabled(True)
+                btn.setToolTip('Option disabled in Scrivener synchronization mode')
+                btn.installEventFilter(InstantTooltipEventFilter(btn))
+
         self.ui.cards.orderChanged.connect(self._on_scene_cards_swapped)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
 
@@ -278,7 +285,8 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_scene_selected(self):
         indexes = self.ui.tblScenes.selectedIndexes()
         selection = len(indexes) > 0
-        self.ui.btnDelete.setEnabled(selection)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
         if selection:
             self.ui.treeChapters.clearSelection()
@@ -350,10 +358,14 @@ class ScenesOutlineView(AbstractNovelView):
     def _show_card_menu(self, card: SceneCard, _: QPoint):
         menu = MenuWidget(card)
         menu.addAction(action('Edit', IconRegistry.edit_icon(), self._on_edit))
-        menu.addAction(action('Insert new scene', IconRegistry.plus_icon('black'),
-                              partial(self._insert_scene_after, card.scene)))
+        action_ = action('Insert new scene', IconRegistry.plus_icon('black'),
+                         partial(self._insert_scene_after, card.scene))
+        action_.setDisabled(self.novel.is_readonly())
+        menu.addAction(action_)
         menu.addSeparator()
-        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click))
+        action_ = action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        action_.setDisabled(self.novel.is_readonly())
+        menu.addAction(action_)
         menu.exec()
 
     def _init_cards(self):
@@ -390,7 +402,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.clearSelection()
 
     def _enable_action_buttons(self, enabled: bool):
-        self.ui.btnDelete.setEnabled(enabled)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
 
     def _switch_view(self):
@@ -552,10 +565,12 @@ class ScenesOutlineView(AbstractNovelView):
 
         builder = PopupMenuBuilder.from_widget_position(self.ui.tblScenes, pos)
         builder.add_action('Toggle WIP status', IconRegistry.wip_icon(), lambda: toggle_wip(scene))
-        builder.add_action('Insert new scene', IconRegistry.plus_icon(),
-                           lambda: self._insert_scene_after(index.data(ScenesTableModel.SceneRole)))
+        action_ = builder.add_action('Insert new scene', IconRegistry.plus_icon(),
+                                     lambda: self._insert_scene_after(index.data(ScenesTableModel.SceneRole)))
+        action_.setDisabled(self.novel.is_readonly())
         builder.add_separator()
-        builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        action_ = builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        action_.setDisabled(self.novel.is_readonly())
 
         builder.popup()
 
