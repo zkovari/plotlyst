@@ -63,6 +63,12 @@ class SelectionItem:
     meta: Dict[str, Any] = field(default_factory=dict, metadata=config(exclude=exclude_if_empty))
 
     @overrides
+    def __eq__(self, other: 'SelectionItem'):
+        if isinstance(other, SelectionItem):
+            return self.text == other.text
+        return False
+
+    @overrides
     def __hash__(self):
         return hash(self.text)
 
@@ -109,6 +115,12 @@ class TemplateField:
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     color: str = field(default='', metadata=config(exclude=exclude_if_empty))
     has_notes: bool = field(default=False, metadata=config(exclude=exclude_if_false))
+
+    @overrides
+    def __eq__(self, other: 'TemplateField'):
+        if isinstance(other, TemplateField):
+            return self.id == other.id
+        return False
 
     @overrides
     def __hash__(self):
