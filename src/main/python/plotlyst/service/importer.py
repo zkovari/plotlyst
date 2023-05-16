@@ -19,13 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from abc import abstractmethod
 from pathlib import Path
+from typing import Dict
 
 from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QIcon
 from overrides import overrides
 from qthandy import busy
 
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, Character
 from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -116,8 +117,27 @@ class ScrivenerSyncImporter(SyncImporter):
         return Path(novel.import_origin.source).joinpath(scriv_file).stat().st_mtime_ns
 
     def _sync_characters(self, novel: Novel, new_novel: Novel):
-        pass
-    
+        current: Dict[str, Character] = {}
+        updates: Dict[Character, bool] = {}
+        for character in novel.characters:
+            current[str(character.id)] = character
+            updates[character] = False
+
+        for new_character in new_novel.characters:
+            if str(new_character.id) in current.keys():
+                current[str(new_character.id)].name = new_character.name
+                updates[new_character] = True
+            else:
+                print(f'insert {new_character.name}')
+                pass  # insert
+
+        for character, update in updates.items():
+            if update:
+                print(f'update {character.name}')
+                self.repo.update_character(character)
+            else:
+                pass  # delete
+
     def _sync_chapters(self, novel: Novel, new_novel: Novel):
         self.repo.update_novel(novel)
 
