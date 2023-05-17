@@ -123,6 +123,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.characters_distribution: Optional[CharactersScenesDistributionWidget] = None
 
         self.tblModel = ScenesTableModel(novel)
+        self.tblModel.setDragEnabled(not self.novel.is_readonly())
         self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
                                  ScenesTableModel.ColCharacters,
                                  ScenesTableModel.ColSynopsis]
