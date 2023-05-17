@@ -375,6 +375,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         for scene in self.novel.scenes:
             card = SceneCard(scene, self.novel, self.ui.cards)
+            card.setDragEnabled(not self.novel.is_readonly())
             self.ui.cards.addCard(card)
 
         # restore scrollbar that might have moved

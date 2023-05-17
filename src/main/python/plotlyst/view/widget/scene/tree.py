@@ -494,22 +494,23 @@ class ScenesTreeView(TreeView, EventListener):
     def __initChapterWidget(self, chapter):
         chapterWdg = ChapterWidget(chapter, self._novel, readOnly=self._readOnly, settings=self._settings)
         chapterWdg.selectionChanged.connect(partial(self._chapterSelectionChanged, chapterWdg))
-        chapterWdg.deleted.connect(partial(self._deleteChapter, chapterWdg))
-        chapterWdg.addScene.connect(partial(self._addScene, chapterWdg))
-        chapterWdg.addChapter.connect(partial(self._insertChapter, chapterWdg))
-        chapterWdg.installEventFilter(
-            DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
-                            grabbed=chapterWdg.titleWidget(),
-                            startedSlot=partial(self._dragStarted, chapterWdg),
-                            finishedSlot=partial(self._dragStopped, chapterWdg)))
-        chapterWdg.titleWidget().setAcceptDrops(True)
-        chapterWdg.titleWidget().installEventFilter(
-            DropEventFilter(chapterWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
-                            motionDetection=Qt.Orientation.Vertical,
-                            motionSlot=partial(self._dragMovedOnChapter, chapterWdg),
-                            droppedSlot=self._drop
-                            )
-        )
+        if not self._readOnly:
+            chapterWdg.deleted.connect(partial(self._deleteChapter, chapterWdg))
+            chapterWdg.addScene.connect(partial(self._addScene, chapterWdg))
+            chapterWdg.addChapter.connect(partial(self._insertChapter, chapterWdg))
+            chapterWdg.installEventFilter(
+                DragEventFilter(chapterWdg, self.CHAPTER_MIME_TYPE, dataFunc=lambda wdg: wdg.chapter(),
+                                grabbed=chapterWdg.titleWidget(),
+                                startedSlot=partial(self._dragStarted, chapterWdg),
+                                finishedSlot=partial(self._dragStopped, chapterWdg)))
+            chapterWdg.titleWidget().setAcceptDrops(True)
+            chapterWdg.titleWidget().installEventFilter(
+                DropEventFilter(chapterWdg, [self.SCENE_MIME_TYPE, self.CHAPTER_MIME_TYPE],
+                                motionDetection=Qt.Orientation.Vertical,
+                                motionSlot=partial(self._dragMovedOnChapter, chapterWdg),
+                                droppedSlot=self._drop
+                                )
+            )
         self._chapters[chapter] = chapterWdg
 
         return chapterWdg
@@ -519,18 +520,19 @@ class ScenesTreeView(TreeView, EventListener):
         sceneWdg = SceneWidget(scene, self._novel, readOnly=self._readOnly, settings=self._settings)
         self._scenes[scene] = sceneWdg
         sceneWdg.selectionChanged.connect(partial(self._sceneSelectionChanged, sceneWdg))
-        sceneWdg.deleted.connect(partial(self._deleteScene, sceneWdg))
-        sceneWdg.installEventFilter(
-            DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(),
-                            startedSlot=partial(self._dragStarted, sceneWdg),
-                            finishedSlot=partial(self._dragStopped, sceneWdg)))
-        sceneWdg.setAcceptDrops(True)
-        sceneWdg.installEventFilter(
-            DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE],
-                            motionDetection=Qt.Orientation.Vertical,
-                            motionSlot=partial(self._dragMovedOnScene, sceneWdg),
-                            droppedSlot=self._drop
-                            )
+        if not self._readOnly:
+            sceneWdg.deleted.connect(partial(self._deleteScene, sceneWdg))
+            sceneWdg.installEventFilter(
+                DragEventFilter(sceneWdg, self.SCENE_MIME_TYPE, dataFunc=lambda wdg: wdg.scene(),
+                                startedSlot=partial(self._dragStarted, sceneWdg),
+                                finishedSlot=partial(self._dragStopped, sceneWdg)))
+            sceneWdg.setAcceptDrops(True)
+            sceneWdg.installEventFilter(
+                DropEventFilter(sceneWdg, [self.SCENE_MIME_TYPE],
+                                motionDetection=Qt.Orientation.Vertical,
+                                motionSlot=partial(self._dragMovedOnScene, sceneWdg),
+                                droppedSlot=self._drop
+                                )
 
-        )
+            )
         return sceneWdg
