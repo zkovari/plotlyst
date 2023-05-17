@@ -1401,6 +1401,8 @@ class ImportOrigin:
     type: ImportOriginType
     source: str
     source_id: Optional[uuid.UUID] = None
+    sync: bool = False
+    last_mod_time: int = 0
 
 
 @dataclass
@@ -1422,6 +1424,16 @@ class NovelDescriptor:
     @overrides
     def __hash__(self):
         return hash(str(self.id))
+
+    def is_scrivener_sync(self) -> bool:
+        if self.import_origin is None:
+            return False
+        return self.import_origin.type == ImportOriginType.SCRIVENER and self.import_origin.sync
+
+    def is_readonly(self) -> bool:
+        if self.import_origin is None:
+            return False
+        return self.import_origin.sync
 
 
 @dataclass

@@ -450,7 +450,7 @@
              <string>ph.megaphone-bold</string>
             </property>
             <property name="top-level-nav" stdset="0">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>

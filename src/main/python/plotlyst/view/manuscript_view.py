@@ -30,9 +30,9 @@ from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
 from src.main.python.plotlyst.core.domain import Scene
-from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info
+from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, Event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
-    ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode
+    ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent
 from src.main.python.plotlyst.resources import resource_manager, ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
@@ -157,7 +157,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.pageDistractionFree.layout().addWidget(self._dist_free_editor)
 
         self.ui.treeChapters.setSettings(TreeSettings(font_incr=2))
-        self.ui.treeChapters.setNovel(self.novel)
+        self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.sceneSelected.connect(self._editScene)
         self.ui.treeChapters.chapterSelected.connect(self._editChapter)
         self.ui.treeChapters.centralWidget().setProperty('bg', True)
@@ -174,6 +174,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.setMargins(30, 30, 30, 30)
         self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
         self.ui.textEdit.textEdit.setSidebarEnabled(False)
+        self.ui.textEdit.textEdit.setReadOnly(self.novel.is_readonly())
         self.ui.textEdit.textChanged.connect(self._text_changed)
         self.ui.textEdit.selectionChanged.connect(self._text_selection_changed)
         self.ui.textEdit.sceneTitleChanged.connect(self._scene_title_changed)
@@ -187,6 +188,14 @@ class ManuscriptView(AbstractNovelView):
             self._editScene(self.novel.scenes[0])
 
         self._update_story_goal()
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelSyncEvent):
+            self.ui.textEdit.refresh()
+            self._text_changed()
+
+        super(ManuscriptView, self).event_received(event)
 
     @overrides
     def refresh(self):

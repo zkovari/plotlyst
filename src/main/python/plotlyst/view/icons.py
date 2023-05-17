@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import QLabel
 from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CONFLICT_CHARACTER_COLOR, \
     CONFLICT_SOCIETY_COLOR, CONFLICT_NATURE_COLOR, CONFLICT_TECHNOLOGY_COLOR, CONFLICT_SUPERNATURAL_COLOR, \
     CONFLICT_SELF_COLOR, CHARACTER_MAJOR_COLOR, CHARACTER_MINOR_COLOR, CHARACTER_SECONDARY_COLOR, \
-    PLOTLYST_SECONDARY_COLOR
+    PLOTLYST_SECONDARY_COLOR, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import Character, VERY_UNHAPPY, UNHAPPY, HAPPY, VERY_HAPPY, ConflictType, \
     Scene, SceneType, PlotType, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS
 from src.main.python.plotlyst.core.template import SelectionItem
@@ -611,6 +611,10 @@ class IconRegistry:
     @staticmethod
     def docx_icon() -> QIcon:
         return IconRegistry.from_name('mdi.file-word-outline')
+
+    @staticmethod
+    def refresh_icon(color: str = PLOTLYST_MAIN_COLOR) -> QIcon:
+        return IconRegistry.from_name('ei.refresh', color=color)
 
     @staticmethod
     def from_selection_item(item: SelectionItem) -> QIcon:

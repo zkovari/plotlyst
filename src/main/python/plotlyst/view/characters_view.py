@@ -24,6 +24,7 @@ from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
 from qthandy import busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
+from qthandy.filter import InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -31,7 +32,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetw
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
+from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import resource_registry
@@ -65,6 +66,7 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
+        event_dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -121,6 +123,12 @@ class CharactersView(AbstractNovelView):
             self.ui.btnDelete.setShortcut(QKeySequence('Ctrl+Backspace'))
         self.ui.btnDelete.setIcon(IconRegistry.trash_can_icon(color='white'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
+
+        if self.novel.is_readonly():
+            for btn in [self.ui.btnNew, self.ui.btnDelete]:
+                btn.setDisabled(True)
+                btn.setToolTip('Option disabled in Scrivener synchronization mode')
+                btn.installEventFilter(InstantTooltipEventFilter(btn))
 
         apply_bg_image(self.ui.scrollAreaBackstoryContent, resource_registry.cover1)
 
@@ -207,7 +215,9 @@ class CharactersView(AbstractNovelView):
         menu = MenuWidget()
         menu.addAction(action('Edit', IconRegistry.edit_icon(), self._on_edit))
         menu.addSeparator()
-        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click))
+        action_ = action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        action_.setDisabled(self.novel.is_readonly())
+        menu.addAction(action_)
         menu.exec()
 
     def _init_cards(self):
@@ -222,14 +232,16 @@ class CharactersView(AbstractNovelView):
         self._enable_action_buttons(len(selection.indexes()) > 0)
 
     def _enable_action_buttons(self, enabled: bool):
-        self.ui.btnDelete.setEnabled(enabled)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
 
     def _card_selected(self, card: CharacterCard):
         if self.selected_card and self.selected_card is not card:
             self.selected_card.clearSelection()
         self.selected_card = card
-        self.ui.btnDelete.setEnabled(True)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(True)
         self.ui.btnEdit.setEnabled(True)
 
     def _characters_swapped(self, characters: List[Character]):
@@ -276,17 +288,19 @@ class CharactersView(AbstractNovelView):
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
-        self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
+        self.editor.close.connect(self._on_close_editor)
 
     @busy
-    def _on_close_editor(self, _: bool):
+    def _on_close_editor(self):
         character = self.editor.character
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
-        gc(self.editor.widget)
-        self.editor = None
+
         emit_event(CharacterChangedEvent(self, character))
+        gc(self.editor.widget)
+        gc(self.editor)
+        self.editor = None
         self.refresh()
 
     def _on_new(self):

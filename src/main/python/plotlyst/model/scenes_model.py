@@ -75,6 +75,7 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         _headers[self.ColSynopsis] = 'Synopsis'
         super().__init__(_headers, parent)
         self._relax_colors = False
+        self._dragEnabled: bool = True
 
         self._action_icon = IconRegistry.action_scene_icon()
         self._resolved_action_icon = IconRegistry.action_scene_icon(resolved=True)
@@ -82,6 +83,9 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._reaction_icon = IconRegistry.reaction_scene_icon()
         self._wip_brush = QBrush(QColor(WIP_COLOR))
         self._pivotal_brush = QBrush(QColor(PIVOTAL_COLOR))
+
+    def setDragEnabled(self, enabled: bool):
+        self._dragEnabled = enabled
 
     @overrides
     def rowCount(self, parent: QModelIndex = Qt.ItemDataRole.DisplayRole) -> int:
@@ -144,17 +148,18 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         flags = super().flags(index)
-        flags = flags | Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsDropEnabled
+        if self._dragEnabled:
+            flags = flags | Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsDropEnabled
         if index.column() == self.ColSynopsis:
-            return flags | Qt.ItemIsEditable
+            return flags | Qt.ItemFlag.ItemIsEditable
         if index.column() == self.ColArc:
-            return flags | Qt.ItemIsEditable
+            return flags | Qt.ItemFlag.ItemIsEditable
         if index.column() == self.ColTime:
-            return flags | Qt.ItemIsEditable
+            return flags | Qt.ItemFlag.ItemIsEditable
         return flags
 
     @overrides
-    def setData(self, index: QModelIndex, value: Any, role: int = Qt.EditRole) -> bool:
+    def setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.EditRole) -> bool:
         scene: Scene = self._data[index.row()]
 
         if index.column() == self.ColSynopsis:
@@ -288,7 +293,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
         if role == Qt.ItemDataRole.FontRole:
             if index.column() > self.ColNoneStage:
                 return emoji_font()
-        if role == Qt.TextAlignmentRole:
+        if role == Qt.ItemDataRole.TextAlignmentRole:
             if index.column() > self.ColNoneStage:
                 return Qt.AlignmentFlag.AlignCenter
         if role == Qt.ItemDataRole.DisplayRole and index.column() > 1:
@@ -303,7 +308,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
         if index.column() == self.ColTitle:
-            return Qt.ItemIsEnabled
+            return Qt.ItemFlag.ItemIsEnabled
         return super(ScenesStageTableModel, self).flags(index)
 
     @overrides

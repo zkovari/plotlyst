@@ -141,7 +141,7 @@ QPushButton:checked[main-side-nav=true] {
     color: white;
 }
 
-QPushButton[lang-spellcheck-suggestion] {
+QPushButton[lang-spellcheck-suggestion=true] {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                           stop: 0 #4361ee, stop: 1 #4361ee);
     border: 1px solid #4361ee;
@@ -155,6 +155,19 @@ QPushButton[return=true] {
     background-color: rgba(0, 0, 0, 0);
     font-size: 16px;
     color: #4B0763;
+}
+
+QPushButton[importer-sync=true] {
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px hidden #410253;
+    background-color: rgba(0, 0, 0, 0);
+    color: #410253;
+}
+
+QPushButton:hover[importer-sync=true] {
+    border: 1px outset #410253;
+    background-color: #f8f9fa;
 }
 
 QToolButton::menu-indicator {

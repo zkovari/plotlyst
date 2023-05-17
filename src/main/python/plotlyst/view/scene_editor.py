@@ -24,6 +24,7 @@ import emoji
 import qtanim
 from PyQt6.QtCore import QObject, pyqtSignal, Qt
 from PyQt6.QtWidgets import QWidget, QTableView
+from overrides import overrides
 from qthandy import flow, clear_layout, underline, incr_font
 from qtmenu import MenuWidget, ScrollableMenuWidget
 
@@ -31,7 +32,9 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     SceneStoryBeat, Character, ScenePlotReference, TagReference
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_info
+from src.main.python.plotlyst.event.core import emit_info, EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.events import NovelAboutToSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -44,8 +47,8 @@ from src.main.python.plotlyst.view.widget.scene.plot import ScenePlotSelector
 from src.main.python.plotlyst.view.widget.scenes import SceneTagSelector
 
 
-class SceneEditor(QObject):
-    commands_sent = pyqtSignal(QWidget, list)
+class SceneEditor(QObject, EventListener):
+    close = pyqtSignal()
 
     def __init__(self, novel: Novel, scene: Optional[Scene] = None):
         super().__init__()
@@ -71,6 +74,7 @@ class SceneEditor(QObject):
         if app_env.is_mac():
             incr_font(self.ui.lineTitle)
             incr_font(self.ui.textSynopsis)
+        self.ui.lineTitle.setReadOnly(self.novel.is_readonly())
         self.ui.lineTitle.textEdited.connect(self._title_edited)
 
         self.ui.lblDayEmoji.setFont(self._emoji_font)
@@ -133,6 +137,13 @@ class SceneEditor(QObject):
 
         self.repo = RepositoryPersistenceManager.instance()
         self.ui.btnAttributes.setChecked(True)
+
+        event_dispatcher.register(self, NovelAboutToSyncEvent)
+
+    @overrides
+    def event_received(self, event: Event):
+        if isinstance(event, NovelAboutToSyncEvent):
+            self._on_close()
 
     def _update_view(self, scene: Optional[Scene] = None):
         if scene:
@@ -283,6 +294,7 @@ class SceneEditor(QObject):
 
     def _on_close(self):
         self._save_scene()
+        self.close.emit()
 
     def _scene_selected(self, scene: Scene):
         self._save_scene()

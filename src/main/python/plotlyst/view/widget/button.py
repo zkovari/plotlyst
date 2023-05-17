@@ -23,14 +23,17 @@ from typing import Optional
 import qtanim
 from PyQt6.QtCore import pyqtSignal, Qt, pyqtProperty, QTimer, QEvent
 from PyQt6.QtGui import QColor, QIcon, QMouseEvent
-from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu
+from PyQt6.QtWidgets import QPushButton, QSizePolicy, QToolButton, QAbstractButton, QLabel, QButtonGroup, QMenu, QWidget
 from overrides import overrides
-from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline
-from qthandy.filter import OpacityEventFilter
+from qtanim import fade_in
+from qthandy import hbox, translucent, bold, incr_font, transparent, retain_when_hidden, underline, vbox, decr_icon
+from qthandy.filter import OpacityEventFilter, VisibilityToggleEventFilter
+from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_TERTIARY_COLOR
-from src.main.python.plotlyst.core.domain import SelectionItem
-from src.main.python.plotlyst.view.common import pointy, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.core.domain import SelectionItem, Novel
+from src.main.python.plotlyst.service.importer import SyncImporter
+from src.main.python.plotlyst.view.common import pointy, ButtonPressResizeEventFilter, tool_btn, spin
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -339,3 +342,136 @@ class ReturnButton(QPushButton):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         translucent(self, 1)
         super(ReturnButton, self).mouseReleaseEvent(event)
+
+
+class _NovelSyncWidget(QWidget):
+    def __init__(self, parent=None):
+        super(_NovelSyncWidget, self).__init__(parent)
+        self.setProperty('relaxed-white-bg', True)
+
+        self._wdgTop = QWidget()
+        hbox(self._wdgTop)
+        self._wdgCenter = QWidget()
+        hbox(self._wdgCenter)
+        self._wdgBottom = QWidget()
+        hbox(self._wdgBottom)
+
+        self.lblTitle = QLabel('Novel synchronization')
+        underline(self.lblTitle)
+        bold(self.lblTitle)
+
+        self.btnChangeLocation = tool_btn(IconRegistry.from_name('fa5.folder-open'))
+        transparent(self.btnChangeLocation)
+        decr_icon(self.btnChangeLocation, 4)
+        retain_when_hidden(self.btnChangeLocation)
+        self.btnChangeLocation.installEventFilter(OpacityEventFilter(self.btnChangeLocation))
+        self._wdgTop.layout().addWidget(self.lblTitle, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgTop.layout().addWidget(self.btnChangeLocation, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.lblUpdateMessage = QLabel()
+        self.lblUpdateMessage.setProperty('description', True)
+        self._wdgCenter.layout().addWidget(self.lblUpdateMessage, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.lblErrorNotFoundMessage = QLabel('Project not found.')
+        self.lblErrorNotFoundMessage.setProperty('error', True)
+        self.lblErrorNotFoundMessage.setHidden(True)
+        self._wdgCenter.layout().addWidget(self.lblErrorNotFoundMessage, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.btnCheck = QPushButton('Check for updates')
+        self.btnCheck.setProperty('base', True)
+        pointy(self.btnCheck)
+        self.btnCheck.setIcon(IconRegistry.refresh_icon('black'))
+        self.btnCheck.installEventFilter(ButtonPressResizeEventFilter(self.btnCheck))
+
+        self.btnSync = QPushButton('Synchronize')
+        pointy(self.btnSync)
+        self.btnSync.setProperty('base', True)
+        self.btnSync.setProperty('positive', True)
+        self.btnSync.setIcon(IconRegistry.refresh_icon('white'))
+        self.btnSync.installEventFilter(ButtonPressResizeEventFilter(self.btnSync))
+
+        self._wdgBottom.layout().addWidget(self.btnCheck, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._wdgBottom.layout().addWidget(self.btnSync, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.installEventFilter(VisibilityToggleEventFilter(self.btnChangeLocation, self))
+
+        vbox(self)
+        self.layout().addWidget(self._wdgTop)
+        self.layout().addWidget(self._wdgCenter)
+        self.layout().addWidget(self._wdgBottom)
+
+
+class NovelSyncButton(QPushButton):
+    UP_TO_DATE_MSG: str = 'Up-to-date'
+    UPDATES_AVAILABLE_MSG: str = 'New updates are available'
+
+    def __init__(self, parent=None):
+        super(NovelSyncButton, self).__init__(parent)
+        self.setProperty('importer-sync', True)
+        self.installEventFilter(ButtonPressResizeEventFilter(self))
+        self.installEventFilter(OpacityEventFilter(self, leaveOpacity=0.7))
+        pointy(self)
+
+        self._icon = QIcon()
+        self._importer: Optional[SyncImporter] = None
+        self._novel: Optional[Novel] = None
+
+        self._menu = MenuWidget(self)
+        self._wdgSync = _NovelSyncWidget()
+        self._menu.addWidget(self._wdgSync)
+
+        self._wdgSync.btnCheck.clicked.connect(self._checkForUpdates)
+        self._wdgSync.btnSync.clicked.connect(self._sync)
+
+    def setImporter(self, importer: SyncImporter, novel: Novel):
+        self._importer = importer
+        self._novel = novel
+        self._icon = self._importer.icon()
+        self.setIcon(self._icon)
+        self.setText(self._importer.name())
+
+        location = self._importer.location(self._novel)
+        self._wdgSync.lblTitle.setText(location)
+        self._wdgSync.lblTitle.setToolTip(self._novel.import_origin.source)
+
+        self._toggleUpToDate(True)
+
+    def clear(self):
+        self._novel = None
+        self._importer = None
+
+    def _checkForUpdates(self):
+        prev_icon = self._wdgSync.btnCheck.icon()
+        spin(self._wdgSync.btnCheck)
+        if self._importer.location_exists(self._novel):
+            self._wdgSync.lblErrorNotFoundMessage.setHidden(True)
+            self.setIcon(self._icon)
+
+            if self._importer.is_updated(self._novel):
+                fade_in(self._wdgSync.lblUpdateMessage)
+            else:
+                self._toggleUpToDate(False)
+                fade_in(self._wdgSync.lblUpdateMessage)
+                fade_in(self._wdgSync.btnSync)
+        else:
+            self.setIcon(IconRegistry.from_name('ri.error-warning-fill', '#e76f51'))
+            self._wdgSync.lblUpdateMessage.setHidden(True)
+            self._wdgSync.lblErrorNotFoundMessage.setVisible(True)
+
+        QTimer.singleShot(100, lambda: self._wdgSync.btnCheck.setIcon(prev_icon))
+
+    def _sync(self):
+        self._importer.sync(self._novel)
+
+        self._toggleUpToDate(True)
+        self.menu().close()
+
+    def _toggleUpToDate(self, updated: bool):
+        # hide all first to avoid layout problems
+        self._wdgSync.btnCheck.setHidden(True)
+        self._wdgSync.btnSync.setHidden(True)
+
+        self._wdgSync.btnCheck.setVisible(updated)
+        self._wdgSync.btnSync.setHidden(updated)
+
+        self._wdgSync.lblUpdateMessage.setText(self.UP_TO_DATE_MSG if updated else self.UPDATES_AVAILABLE_MSG)

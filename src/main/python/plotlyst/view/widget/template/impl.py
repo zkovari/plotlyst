@@ -507,7 +507,7 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         if self.wdgEditor.toPlainText() and not self._filledBefore:
             self.valueFilled.emit(1)
             self._filledBefore = True
-        else:
+        elif not self.wdgEditor.toPlainText():
             self.valueReset.emit()
             self._filledBefore = False
 

@@ -39,7 +39,7 @@ from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
-    CharacterChangedEvent, CharacterDeletedEvent
+    CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
@@ -409,6 +409,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
         event_dispatcher.register(self, CharacterChangedEvent)
         event_dispatcher.register(self, CharacterDeletedEvent)
+        event_dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -606,6 +607,9 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
     def __init__(self, parent=None):
         super(ImportedNovelOverview, self).__init__(parent)
         self.setupUi(self)
+
+        self._novel: Optional[Novel] = None
+
         self.btnCharacters.setIcon(IconRegistry.character_icon())
         self.btnLocations.setIcon(IconRegistry.location_icon())
         self.btnLocations.setHidden(True)
@@ -620,14 +624,20 @@ class ImportedNovelOverview(QWidget, Ui_ImportedNovelOverview):
 
         self._charactersModel: Optional[CharactersTableModel] = None
 
+        self.toggleSync.clicked.connect(self._syncClicked)
+
     def setNovel(self, novel: Novel):
-        self.btnTitle.setText(novel.title)
+        self._novel = novel
+        self.btnTitle.setText(self._novel.title)
 
         if novel.characters:
-            self._charactersModel = CharactersTableModel(novel)
+            self._charactersModel = CharactersTableModel(self._novel)
             self.lstCharacters.setModel(self._charactersModel)
             self.btnCharacters.setChecked(True)
         else:
             self.btnCharacters.setDisabled(True)
 
-        self.treeChapters.setNovel(novel, readOnly=True)
+        self.treeChapters.setNovel(self._novel, readOnly=True)
+
+    def _syncClicked(self, checked: bool):
+        self._novel.import_origin.sync = checked

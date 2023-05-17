@@ -28,6 +28,7 @@ from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
 from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp
+from qthandy.filter import InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -37,7 +38,8 @@ from src.main.python.plotlyst.event.core import emit_event, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
-    ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent
+    ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
+    NovelAboutToSyncEvent, NovelSyncEvent
 from src.main.python.plotlyst.events import SceneOrderChangedEvent
 from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelStagesModel
@@ -88,6 +90,7 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
 
         event_dispatcher.register(self, SceneChangedEvent)
         event_dispatcher.register(self, SceneDeletedEvent)
+        event_dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -104,8 +107,10 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
 class ScenesOutlineView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelStoryStructureUpdated, SceneChangedEvent, ChapterChangedEvent, SceneDeletedEvent,
-                                 SceneOrderChangedEvent])
+        super().__init__(novel,
+                         [NovelStoryStructureUpdated, CharacterChangedEvent, SceneChangedEvent, ChapterChangedEvent,
+                          SceneDeletedEvent,
+                          SceneOrderChangedEvent, NovelAboutToSyncEvent])
         self.ui = Ui_ScenesView()
         self.ui.setupUi(self.widget)
 
@@ -119,6 +124,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.characters_distribution: Optional[CharactersScenesDistributionWidget] = None
 
         self.tblModel = ScenesTableModel(novel)
+        self.tblModel.setDragEnabled(not self.novel.is_readonly())
         self._default_columns = [ScenesTableModel.ColTitle, ScenesTableModel.ColPov, ScenesTableModel.ColType,
                                  ScenesTableModel.ColCharacters,
                                  ScenesTableModel.ColSynopsis]
@@ -149,7 +155,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._addSceneMenu.addAction(
             action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
 
-        self.ui.treeChapters.setNovel(self.novel)
+        self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
 
         self.ui.wgtChapters.setVisible(self.ui.btnChaptersToggle.isChecked())
@@ -237,11 +243,14 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.btnDelete.setShortcut(QKeySequence('Ctrl+Backspace'))
         self.ui.btnDelete.clicked.connect(self._on_delete)
 
+        if self.novel.is_readonly():
+            for btn in [self.ui.btnNew, self.ui.btnNewWithMenu, self.ui.btnDelete]:
+                btn.setDisabled(True)
+                btn.setToolTip('Option disabled in Scrivener synchronization mode')
+                btn.installEventFilter(InstantTooltipEventFilter(btn))
+
         self.ui.cards.orderChanged.connect(self._on_scene_cards_swapped)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
-
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -278,7 +287,8 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_scene_selected(self):
         indexes = self.ui.tblScenes.selectedIndexes()
         selection = len(indexes) > 0
-        self.ui.btnDelete.setEnabled(selection)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(selection)
         self.ui.btnEdit.setEnabled(selection)
         if selection:
             self.ui.treeChapters.clearSelection()
@@ -328,17 +338,18 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.pageEditor.layout().addWidget(self.editor.widget)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageEditor)
 
-        self.editor.ui.btnClose.clicked.connect(self._on_close_editor)
+        self.editor.close.connect(self._on_close_editor)
 
     @busy
-    def _on_close_editor(self, _: bool):
+    def _on_close_editor(self):
         self.ui.pageEditor.layout().removeWidget(self.editor.widget)
         self._scene_filter.povFilter.updateCharacters(self.novel.pov_characters(), checkAll=True)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
-        gc(self.editor.widget)
 
         emit_event(SceneChangedEvent(self, self.editor.scene))
+        gc(self.editor.widget)
+        gc(self.editor)
         self.editor = None
         self.refresh()
 
@@ -349,10 +360,14 @@ class ScenesOutlineView(AbstractNovelView):
     def _show_card_menu(self, card: SceneCard, _: QPoint):
         menu = MenuWidget(card)
         menu.addAction(action('Edit', IconRegistry.edit_icon(), self._on_edit))
-        menu.addAction(action('Insert new scene', IconRegistry.plus_icon('black'),
-                              partial(self._insert_scene_after, card.scene)))
+        action_ = action('Insert new scene', IconRegistry.plus_icon('black'),
+                         partial(self._insert_scene_after, card.scene))
+        action_.setDisabled(self.novel.is_readonly())
+        menu.addAction(action_)
         menu.addSeparator()
-        menu.addAction(action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click))
+        action_ = action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        action_.setDisabled(self.novel.is_readonly())
+        menu.addAction(action_)
         menu.exec()
 
     def _init_cards(self):
@@ -362,6 +377,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         for scene in self.novel.scenes:
             card = SceneCard(scene, self.novel, self.ui.cards)
+            card.setDragEnabled(not self.novel.is_readonly())
             self.ui.cards.addCard(card)
 
         # restore scrollbar that might have moved
@@ -389,7 +405,8 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.treeChapters.clearSelection()
 
     def _enable_action_buttons(self, enabled: bool):
-        self.ui.btnDelete.setEnabled(enabled)
+        if not self.novel.is_readonly():
+            self.ui.btnDelete.setEnabled(enabled)
         self.ui.btnEdit.setEnabled(enabled)
 
     def _switch_view(self):
@@ -551,10 +568,12 @@ class ScenesOutlineView(AbstractNovelView):
 
         builder = PopupMenuBuilder.from_widget_position(self.ui.tblScenes, pos)
         builder.add_action('Toggle WIP status', IconRegistry.wip_icon(), lambda: toggle_wip(scene))
-        builder.add_action('Insert new scene', IconRegistry.plus_icon(),
-                           lambda: self._insert_scene_after(index.data(ScenesTableModel.SceneRole)))
+        action_ = builder.add_action('Insert new scene', IconRegistry.plus_icon(),
+                                     lambda: self._insert_scene_after(index.data(ScenesTableModel.SceneRole)))
+        action_.setDisabled(self.novel.is_readonly())
         builder.add_separator()
-        builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        action_ = builder.add_action('Delete', IconRegistry.trash_can_icon(), self.ui.btnDelete.click)
+        action_.setDisabled(self.novel.is_readonly())
 
         builder.popup()
 
@@ -569,8 +588,8 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_delete(self):
         scene: Optional[Scene] = self._selected_scene()
         if scene and delete_scene(self.novel, scene):
-            self.refresh()
             emit_event(SceneDeletedEvent(self, scene))
+            self.refresh()
 
         # elif not scene:
         #     chapters = self.ui.treeChapters.selectedChapters()

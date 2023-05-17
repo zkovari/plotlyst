@@ -28,7 +28,7 @@ from qthandy import busy
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import CharacterDeletedEvent
+from src.main.python.plotlyst.events import CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 
 
@@ -106,7 +106,11 @@ class AbstractNovelView(AbstractView):
             events = event_types
         else:
             events = []
-        events.append(CharacterDeletedEvent)
+
+        if CharacterDeletedEvent not in events:
+            events.append(CharacterDeletedEvent)
+        if NovelSyncEvent not in events:
+            events.append(NovelSyncEvent)
         super().__init__(events)
         self.novel = novel
 

@@ -6,21 +6,21 @@ import pytest
 
 from src.main.python.plotlyst.core.domain import Novel, Chapter, Scene, SceneStructureAgenda, Character, ImportOrigin, \
     ImportOriginType
-from src.main.python.plotlyst.core.scrivener import ScrivenerImporter
+from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 
 
 def test_empty_folder(tmp_path):
-    importer = ScrivenerImporter()
+    importer = ScrivenerParser()
     with pytest.raises(ValueError) as excinfo:
-        importer.import_project(str(tmp_path))
+        importer.parse_project(str(tmp_path))
 
         assert 'Could not find main Scrivener file with .scrivx extension under given folder' in str(excinfo)
 
 
 def test_not_existing_input(tmp_path):
-    importer = ScrivenerImporter()
+    importer = ScrivenerParser()
     with pytest.raises(ValueError) as excinfo:
-        importer.import_project(str(tmp_path.joinpath('not-existing-directory')))
+        importer.parse_project(str(tmp_path.joinpath('not-existing-directory')))
 
         assert 'Input folder does not exist' in str(excinfo)
 
@@ -28,8 +28,8 @@ def test_not_existing_input(tmp_path):
 def test_import_with_acts(test_client):
     folder = Path(sys.path[0]).joinpath('resources/scrivener/v3/NovelWithParts')
 
-    importer = ScrivenerImporter()
-    novel: Novel = importer.import_project(str(folder))
+    importer = ScrivenerParser()
+    novel: Novel = importer.parse_project(str(folder))
 
     assert novel
     assert novel.chapters
@@ -67,8 +67,10 @@ def test_import_with_acts(test_client):
     assert novel.scenes[1].manuscript.statistics
     assert novel.scenes[1].manuscript.statistics.wc
     assert novel.id != novel.import_origin.source_id
+
+    novel.import_origin.last_mod_time = 0
     assert novel.import_origin == expected_novel.import_origin
-    
+
     novel.scenes[0].manuscript = None
     novel.scenes[1].manuscript = None
     assert novel.scenes == expected_novel.scenes
