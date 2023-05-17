@@ -26,7 +26,7 @@ from PyQt6.QtGui import QIcon
 from overrides import overrides
 from qthandy import busy
 
-from src.main.python.plotlyst.core.domain import Novel, Character
+from src.main.python.plotlyst.core.domain import Novel, Character, Chapter
 from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent, CharacterDeletedEvent
@@ -110,6 +110,8 @@ class ScrivenerSyncImporter(SyncImporter):
         flush_or_fail()
 
         self._sync_characters(novel, new_novel)
+        for scene in novel.scenes:
+            scene.chapter = None
         self._sync_chapters(novel, new_novel)
         self._sync_scenes(novel, new_novel)
 
@@ -121,15 +123,15 @@ class ScrivenerSyncImporter(SyncImporter):
         return Path(novel.import_origin.source).joinpath(scriv_file).stat().st_mtime_ns
 
     def _sync_characters(self, novel: Novel, new_novel: Novel):
-        current: Dict[str, Character] = {}
+        current: Dict[Character, Character] = {}
         updates: Dict[Character, bool] = {}
         for character in novel.characters:
-            current[str(character.id)] = character
+            current[character] = character
             updates[character] = False
 
         for new_character in new_novel.characters:
-            if str(new_character.id) in current.keys():
-                old_character = current[str(new_character.id)]
+            if new_character in current.keys():
+                old_character = current[new_character]
                 old_character.name = new_character.name
                 updates[old_character] = True
             else:
@@ -144,6 +146,18 @@ class ScrivenerSyncImporter(SyncImporter):
                 emit_event(CharacterDeletedEvent(self, character))
 
     def _sync_chapters(self, novel: Novel, new_novel: Novel):
+        current: Dict[Chapter, Chapter] = {}
+        for chapter in novel.chapters:
+            current[chapter] = chapter
+
+        new_chapters = []
+        for new_chapter in new_novel.chapters:
+            if new_chapter in current.keys():
+                new_chapters.append(current[new_chapter])
+            else:
+                new_chapters.append(new_chapter)
+
+        novel.chapters[:] = new_chapters
         self.repo.update_novel(novel)
 
     def _sync_scenes(self, novel: Novel, new_novel: Novel):

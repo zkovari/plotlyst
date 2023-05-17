@@ -213,6 +213,13 @@ class ScenesTreeView(TreeView, EventListener):
 
         self._centralWidget.layout().addWidget(self._spacer)
 
+        removed_chapters: List[ChapterWidget] = [self._chapters[x] for x in self._chapters.keys() if
+                                                 x not in self._novel.chapters]
+        self._chapters = {k: self._chapters[k] for k in self._chapters.keys() if k in self._novel.chapters}
+        for chapterWdg in removed_chapters:
+            chapterWdg.setHidden(True)
+            gc(chapterWdg)
+
         if refreshTitles:
             self._refreshChapterTitles()
             self._refreshSceneTitles()
