@@ -67,6 +67,8 @@ def test_import_with_acts(test_client):
     assert novel.scenes[1].manuscript.statistics
     assert novel.scenes[1].manuscript.statistics.wc
     assert novel.id != novel.import_origin.source_id
+
+    novel.import_origin.last_mod_time = 0
     assert novel.import_origin == expected_novel.import_origin
 
     novel.scenes[0].manuscript = None
