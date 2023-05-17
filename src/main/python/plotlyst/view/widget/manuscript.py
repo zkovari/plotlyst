@@ -597,6 +597,12 @@ class ManuscriptTextEditor(RichTextEditor):
         _textedit.setProperty('borderless', True)
         return _textedit
 
+    def refresh(self):
+        if len(self._scenes) == 1:
+            self.setScene(self._scenes[0])
+        elif len(self._scenes) > 1:
+            self.setChapterScenes(self._scenes, self._textTitle.text())
+
     def setTitleVisible(self, visible: bool):
         self._titleVisible = visible
         self._wdgTitle.setVisible(visible)

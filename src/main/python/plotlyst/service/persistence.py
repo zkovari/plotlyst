@@ -229,8 +229,8 @@ def delete_plot(novel: Novel, plot: Plot):
             repo.update_scene(scene)
 
 
-def delete_scene(novel: Novel, scene: Scene) -> bool:
-    if ask_confirmation(f'Are you sure you want to delete scene "{scene.title_or_index(novel)}"?'):
+def delete_scene(novel: Novel, scene: Scene, forced: bool = False) -> bool:
+    if forced or ask_confirmation(f'Are you sure you want to delete scene "{scene.title_or_index(novel)}"?'):
         novel.scenes.remove(scene)
         repo = RepositoryPersistenceManager.instance()
         repo.delete_scene(novel, scene)

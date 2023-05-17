@@ -26,11 +26,13 @@ from PyQt6.QtGui import QIcon
 from overrides import overrides
 from qthandy import busy
 
-from src.main.python.plotlyst.core.domain import Novel, Character, Chapter
+from src.main.python.plotlyst.core.domain import Novel, Character, Chapter, Scene
 from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 from src.main.python.plotlyst.event.core import emit_event
-from src.main.python.plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent, CharacterDeletedEvent
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail, delete_character
+from src.main.python.plotlyst.events import NovelSyncEvent, NovelAboutToSyncEvent, CharacterDeletedEvent, \
+    SceneDeletedEvent
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, flush_or_fail, delete_character, \
+    delete_scene
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -161,4 +163,36 @@ class ScrivenerSyncImporter(SyncImporter):
         self.repo.update_novel(novel)
 
     def _sync_scenes(self, novel: Novel, new_novel: Novel):
-        pass
+        current: Dict[Scene, Scene] = {}
+        chapters: Dict[Chapter, Chapter] = {}
+        for chapter in novel.chapters:
+            chapters[chapter] = chapter
+        for scene in novel.scenes:
+            current[scene] = scene
+
+        new_scenes = []
+        for new_scene in new_novel.scenes:
+            if new_scene in current.keys():
+                old_scene = current[new_scene]
+                old_scene.title = new_scene.title
+                old_scene.manuscript = new_scene.manuscript
+                if new_scene.chapter:
+                    old_scene.chapter = chapters[new_scene.chapter]
+                new_scenes.append(old_scene)
+                
+                self.repo.update_scene(old_scene)
+                if old_scene.manuscript:
+                    self.repo.update_doc(novel, old_scene.manuscript)
+            else:
+                new_scenes.append(new_scene)
+                self.repo.insert_scene(novel, new_scene)
+                if new_scene.manuscript:
+                    self.repo.update_doc(novel, new_scene.manuscript)
+
+        removed_scenes = [k for k in current.keys() if k not in new_novel.scenes]
+
+        for scene in removed_scenes:
+            delete_scene(novel, scene, forced=True)
+            emit_event(SceneDeletedEvent(self, scene))
+
+        novel.scenes[:] = new_scenes
