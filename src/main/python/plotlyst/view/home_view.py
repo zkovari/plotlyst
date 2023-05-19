@@ -23,7 +23,7 @@ from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap, QColor
 from overrides import overrides
 from qthandy import ask_confirmation, transparent, incr_font, italic, busy, retain_when_hidden, incr_icon
-from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter
+from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
@@ -36,12 +36,14 @@ from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action, \
+    TooltipPositionEventFilter
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
+from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -66,10 +68,19 @@ class HomeView(AbstractView):
 
         self.ui.btnLibrary.setIcon(
             IconRegistry.from_name('mdi.bookshelf', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnTutorials.setIcon(
+            IconRegistry.from_name('mdi6.school-outline', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.ui.btnProgress.setIcon(
             IconRegistry.from_name('fa5s.chart-line', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.ui.btnRoadmap.setIcon(
             IconRegistry.from_name('fa5s.road', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+
+        for btn in self.ui.buttonGroup.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
+            btn.installEventFilter(TooltipPositionEventFilter(btn))
+
+        self.ui.btnProgress.setHidden(True)
+        self.ui.btnRoadmap.setHidden(True)
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
@@ -123,10 +134,16 @@ class HomeView(AbstractView):
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
 
         link_buttons_to_pages(self.ui.stackedWidget,
-                              [(self.ui.btnLibrary, self.ui.pageLibrary), (self.ui.btnProgress, self.ui.pageProgress),
+                              [(self.ui.btnLibrary, self.ui.pageLibrary), (self.ui.btnTutorials, self.ui.pageTutorials),
+                               (self.ui.btnProgress, self.ui.pageProgress),
                                (self.ui.btnRoadmap, self.ui.pageRoadmap)])
 
-        self.ui.btnLibrary.setChecked(True)
+        self._tutorialsTreeView = TutorialsTreeView(settings=TreeSettings(font_incr=2))
+        self.ui.splitterTutorials.setSizes([150, 500])
+        self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
+
+        # self.ui.btnLibrary.setChecked(True)
+        self.ui.btnTutorials.setChecked(True)
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
 
         self._novels = client.novels()
