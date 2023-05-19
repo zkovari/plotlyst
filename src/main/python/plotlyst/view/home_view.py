@@ -22,11 +22,12 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal, QSize, Qt
 from PyQt6.QtGui import QPixmap, QColor
 from overrides import overrides
-from qthandy import ask_confirmation, transparent, incr_font, hbox, italic, busy, retain_when_hidden, incr_icon
+from qthandy import ask_confirmation, transparent, incr_font, italic, busy, retain_when_hidden, incr_icon
 from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
+    NAV_BAR_BUTTON_CHECKED_COLOR
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor
 from src.main.python.plotlyst.event.core import emit_event, Event
@@ -63,9 +64,12 @@ class HomeView(AbstractView):
         transparent(self.ui.btnInstagram)
         transparent(self.ui.btnFacebook)
 
-        self.ui.btnLibrary.setIcon(IconRegistry.from_name('mdi.bookshelf', color_on=PLOTLYST_SECONDARY_COLOR))
-        self.ui.btnProgress.setIcon(IconRegistry.from_name('fa5s.chart-line', color_on=PLOTLYST_SECONDARY_COLOR))
-        self.ui.btnRoadmap.setIcon(IconRegistry.from_name('fa5s.road', color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnLibrary.setIcon(
+            IconRegistry.from_name('mdi.bookshelf', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnProgress.setIcon(
+            IconRegistry.from_name('fa5s.chart-line', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnRoadmap.setIcon(
+            IconRegistry.from_name('fa5s.road', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
@@ -105,7 +109,6 @@ class HomeView(AbstractView):
         menu.addAction(action('Delete', IconRegistry.trash_can_icon(), lambda: self._on_delete()))
 
         self._shelvesTreeView = ShelvesTreeView(settings=TreeSettings(font_incr=1))
-        hbox(self.ui.wdgShelvesParent)
         self.ui.splitterLibrary.setSizes([150, 500])
         self.ui.wdgShelvesParent.layout().addWidget(self._shelvesTreeView)
         self._shelvesTreeView.novelSelected.connect(self._novel_selected)

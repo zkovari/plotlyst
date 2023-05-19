@@ -31,7 +31,8 @@ from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
-from src.main.python.plotlyst.common import EXIT_CODE_RESTART
+from src.main.python.plotlyst.common import EXIT_CODE_RESTART, NAV_BAR_BUTTON_DEFAULT_COLOR, \
+    NAV_BAR_BUTTON_CHECKED_COLOR
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
@@ -118,15 +119,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self._tasks_widget = TasksQuickAccessWidget()
         self._init_statusbar()
 
-        self.btnBoard.setIcon(IconRegistry.board_icon('#A89BC7', '#F9F9F9'))
-        self.btnNovel.setIcon(IconRegistry.book_icon('#A89BC7', '#F9F9F9'))
-        self.btnCharacters.setIcon(IconRegistry.character_icon('#A89BC7', '#F9F9F9'))
-        self.btnScenes.setIcon(IconRegistry.scene_icon('#A89BC7', '#F9F9F9'))
-        self.btnWorld.setIcon(IconRegistry.world_building_icon('#A89BC7', '#F9F9F9'))
+        self.btnBoard.setIcon(IconRegistry.board_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.btnNovel.setIcon(IconRegistry.book_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.btnCharacters.setIcon(
+            IconRegistry.character_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.btnScenes.setIcon(IconRegistry.scene_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.btnWorld.setIcon(
+            IconRegistry.world_building_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.btnWorld.setHidden(True)
-        self.btnNotes.setIcon(IconRegistry.document_edition_icon('#A89BC7', '#F9F9F9'))
-        self.btnManuscript.setIcon(IconRegistry.manuscript_icon('#A89BC7', '#F9F9F9'))
-        self.btnReports.setIcon(IconRegistry.reports_icon('#A89BC7', '#F9F9F9'))
+        self.btnNotes.setIcon(
+            IconRegistry.document_edition_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.btnManuscript.setIcon(
+            IconRegistry.manuscript_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.btnReports.setIcon(IconRegistry.reports_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
 
         for btn in self.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))

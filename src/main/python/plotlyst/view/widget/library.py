@@ -23,7 +23,7 @@ from typing import List, Set, Dict, Optional
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
 from overrides import overrides
-from qthandy import vspacer, spacer, sp
+from qthandy import vspacer, sp
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import NovelDescriptor
@@ -63,7 +63,6 @@ class ShelveNode(ContainerNode):
         super(ShelveNode, self).__init__(title, icon, parent, settings=settings)
         self.setMenuEnabled(False)
         sp(self._lblTitle).h_min()
-        self._wdgTitle.layout().addWidget(spacer())
         self._btnAdd.setIcon(IconRegistry.plus_icon(PLOTLYST_MAIN_COLOR))
         self._btnAdd.clicked.connect(self.newNovelRequested.emit)
 
@@ -78,6 +77,7 @@ class ShelvesTreeView(TreeView):
     def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
         super(ShelvesTreeView, self).__init__(parent)
         self._settings = settings
+        self._centralWidget.setProperty('bg', True)
 
         self._selectedNovels: Set[NovelDescriptor] = set()
         self._novels: Dict[NovelDescriptor, NovelNode] = {}
