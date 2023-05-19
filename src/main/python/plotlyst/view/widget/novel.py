@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
+from enum import Enum, auto
 from functools import partial
 from typing import Optional, List
 
@@ -25,13 +26,14 @@ import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QDialog, QGridLayout, \
-    QScrollArea, QApplication, QDialogButtonBox
+    QScrollArea, QApplication, QDialogButtonBox, QLabel
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_layout, flow, vbox, incr_font, \
-    retain_when_hidden, grid, decr_icon, ask_confirmation
+    retain_when_hidden, grid, decr_icon, ask_confirmation, hbox, margins, underline, line
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color
+from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey
@@ -45,14 +47,15 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
-from src.main.python.plotlyst.view.widget.display import Subtitle, IconText
+from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
+from src.main.python.plotlyst.view.widget.display import Subtitle, IconText, Icon
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget, SceneSelector
@@ -107,16 +110,22 @@ class BeatsPreview(QFrame):
         self._checkOccupiedBeats = checkOccupiedBeats
         self._layout: QGridLayout = grid(self)
         self._structurePreview: Optional[SceneStoryStructureWidget] = None
+        self._structure: Optional[StoryStructure] = None
 
-        self.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.setProperty('relaxed-white-bg', True)
 
     def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
         self._structurePreview = structurePreview
 
     def setStructure(self, structure: StoryStructure):
+        self._structure = structure
+        self.refresh()
+
+    def refresh(self):
+        clear_layout(self._layout)
         row = 0
         col = 0
-        for beat in structure.beats:
+        for beat in self._structure.beats:
             if beat.type != StoryBeatType.BEAT:
                 continue
             wdg = BeatWidget(beat, self._checkOccupiedBeats)
@@ -150,7 +159,12 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         transparent(self.btnIcon)
         if beat.icon:
             self.btnIcon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-        self.lblTitle.setStyleSheet(f'QLabel:enabled {{color: {beat.icon_color};}}')
+        self.lblTitle.setStyleSheet(f'''
+            QLabel {{
+                background-color: {RELAXED_WHITE_COLOR};
+            }}
+            QLabel:enabled {{color: {beat.icon_color};}}
+        ''')
 
         self.btnSceneSelector = SceneSelector(app_env.novel)
         decr_icon(self.btnSceneSelector, 2)
@@ -218,7 +232,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         elif event.type() == QEvent.Type.Leave:
             self.cbToggle.setHidden(True)
             self.btnSceneSelector.setHidden(True)
-            self.setStyleSheet('.BeatWidget {background-color: white;}')
+            self.setStyleSheet(f'.BeatWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         return super(BeatWidget, self).eventFilter(watched, event)
 
@@ -269,6 +283,7 @@ class _AbstractStructureEditorWidget(QWidget):
             self.wdgTitle.setIcon(IconRegistry.from_name(structure.icon, structure.icon_color))
         bold(self.wdgTitle)
         incr_font(self.wdgTitle, 2)
+        self.wdgCustom = QWidget()
 
         self.wdgPreview = SceneStoryStructureWidget(self)
         self.wdgPreview.setCheckOccupiedBeats(False)
@@ -287,6 +302,8 @@ class _AbstractStructureEditorWidget(QWidget):
         self.wdgPreview.setStructure(novel, self._structure)
         self.beatsPreview.setStructure(self._structure)
         self.layout().addWidget(self.wdgTitle)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.wdgCustom)
         self.layout().addWidget(vspacer(20))
         self.layout().addWidget(self.wdgPreview)
         self.layout().addWidget(self._scroll)
@@ -297,9 +314,62 @@ class _AbstractStructureEditorWidget(QWidget):
         return self._structure
 
 
+class _ThreeActBeginning(Enum):
+    Hook = auto()
+    Disturbance = auto()
+    Motion = auto()
+    Characteristic_moment = auto()
+    Normal_world = auto()
+
+
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super(_ThreeActStructureEditorWidget, self).__init__(novel, structure, parent)
+
+        hbox(self.wdgCustom)
+        margins(self.wdgCustom, top=20)
+
+        self.lblCustomization = QLabel('Customization:')
+        underline(self.lblCustomization)
+        bold(self.lblCustomization)
+
+        self.iconBeginning = Icon()
+        self.iconBeginning.setIcon(IconRegistry.cause_icon())
+        self.btnBeginning = SecondaryActionPushButton('Beginning')
+        menu = MenuWidget(self.btnBeginning)
+        menu.addAction(action('Hook', slot=lambda: self._beginningChanged(_ThreeActBeginning.Hook)))
+        menu.addAction(action('Disturbance', slot=lambda: self._beginningChanged(_ThreeActBeginning.Disturbance)))
+        menu.addAction(action('Motion', slot=lambda: self._beginningChanged(_ThreeActBeginning.Motion)))
+        menu.addAction(action('Characteristic moment',
+                              slot=lambda: self._beginningChanged(_ThreeActBeginning.Characteristic_moment)))
+        menu.addAction(action('Normal world', slot=lambda: self._beginningChanged(_ThreeActBeginning.Normal_world)))
+
+        self.iconInciting = Icon()
+        self.iconInciting.setIcon(IconRegistry.inciting_incident_icon())
+        self.btnInciting = SecondaryActionPushButton('Inciting incident')
+
+        self.iconSetback = Icon()
+        self.iconSetback.setIcon(IconRegistry.charge_icon(-2))
+        self.btnSetback = SecondaryActionPushButton('Act 2 complication')
+
+        self.iconDarkMoment = Icon()
+        self.iconDarkMoment.setIcon(IconRegistry.from_name('mdi.weather-night', '#494368'))
+        self.btnDarkMoment = SecondaryActionPushButton('Dark moment')
+
+        self.iconEnding = Icon()
+        self.iconEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
+        self.btnEnding = SecondaryActionPushButton('Ending')
+
+        wdg = group(spacer(), spacer(20), self.iconBeginning, self.btnBeginning, spacer(10),
+                    self.iconInciting, self.btnInciting,
+                    spacer(10), self.iconSetback, self.btnSetback, spacer(10), self.iconDarkMoment, self.btnDarkMoment,
+                    spacer(10), self.iconEnding, self.btnEnding, spacer())
+        wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
+        self.wdgCustom.layout().addWidget(wdg)
+
+    def _beginningChanged(self, beginning: _ThreeActBeginning):
+        self._structure.beats[0].text = beginning.name
+        self.beatsPreview.refresh()
 
 
 class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
@@ -319,8 +389,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self._novel = novel
         self.setWindowIcon(IconRegistry.story_structure_icon())
         self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
-        self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
-        self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask'))
+        self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on='white'))
+        self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on='white'))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
 
         self._structure: Optional[StoryStructure] = None
@@ -387,6 +457,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         flow(self.wdgTemplates)
 
         self.btnNew.setIcon(IconRegistry.plus_icon('white'))
+        self.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.btnNew))
         self.btnNew.clicked.connect(self._selectTemplateStructure)
 
         self.btnDelete.setIcon(IconRegistry.minus_icon())

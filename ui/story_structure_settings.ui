@@ -179,8 +179,8 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <property name="styleSheet">
-       <string notr="true">background-color: rgb(255, 255, 255);</string>
+      <property name="relaxed-white-bg" stdset="0">
+       <bool>true</bool>
       </property>
       <layout class="QGridLayout" name="gridLayout" rowstretch="0" columnstretch="0">
        <property name="leftMargin">
