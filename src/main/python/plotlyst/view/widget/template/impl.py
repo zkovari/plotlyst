@@ -550,6 +550,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(EnneagramFieldWidget, self).__init__(field, parent)
         self.wdgEditor = TextSelectionWidget(field, enneagram_help)
+        self._defaultTooltip: str = 'Select Enneagram personality'
         _layout = hbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
 
@@ -591,12 +592,16 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setValue(value)
         enneagram = enneagram_choices.get(value)
         if enneagram:
+            self.wdgEditor.setToolTip(enneagram_help[value])
             self._selectionChanged(new=enneagram, animated=False)
+        else:
+            self.wdgEditor.setToolTip(self._defaultTooltip)
 
     def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
                           animated: bool = True):
         if not new:
             self.wdgAttr.setHidden(True)
+            self.wdgEditor.setToolTip(self._defaultTooltip)
             self.valueReset.emit()
             return
 
@@ -606,6 +611,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
             self.wdgAttr.setVisible(True)
         self.lblDesire.setText(new.meta['desire'])
         self.lblFear.setText(new.meta['fear'])
+        self.wdgEditor.setToolTip(enneagram_help[new.text])
 
         self.valueFilled.emit(1)
 
@@ -614,6 +620,8 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(MbtiFieldWidget, self).__init__(field, parent)
         self.wdgEditor = TextSelectionWidget(field, mbti_help)
+        self._defaultTooltip: str = 'Select MBTI personality type'
+        self.wdgEditor.setToolTip(self._defaultTooltip)
 
         _layout = vbox(self)
         _layout.addWidget(self.wdgEditor)
@@ -631,14 +639,19 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
     def setValue(self, value: Any):
         self.wdgEditor.setValue(value)
         if value:
+            self.wdgEditor.setToolTip(mbti_help[value])
             self.valueFilled.emit(1)
+        else:
+            self.wdgEditor.setToolTip(self._defaultTooltip)
 
-    def _selectionChanged(self, old: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
+    def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
                           animated: bool = True):
         if not new:
             self.valueReset.emit()
+            self.wdgEditor.setToolTip(self._defaultTooltip)
             return
 
+        self.wdgEditor.setToolTip(mbti_help[new.text])
         self.valueFilled.emit(1)
 
 
