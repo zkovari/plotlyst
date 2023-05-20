@@ -43,7 +43,7 @@ from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
-from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView
+from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -139,8 +139,12 @@ class HomeView(AbstractView):
                                (self.ui.btnRoadmap, self.ui.pageRoadmap)])
 
         self._tutorialsTreeView = TutorialsTreeView(settings=TreeSettings(font_incr=2))
+        self._tutorialsTreeView.tutorialSelected.connect(self._tutorial_selected)
         self.ui.splitterTutorials.setSizes([150, 500])
+        self.ui.btnStartTutorial.setIcon(IconRegistry.from_name('fa5s.play-circle', 'white'))
+        self.ui.btnStartTutorial.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStartTutorial))
         self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
+        self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
 
         # self.ui.btnLibrary.setChecked(True)
         self.ui.btnTutorials.setChecked(True)
@@ -251,3 +255,9 @@ class HomeView(AbstractView):
                 self._selected_novel = None
                 self.reset()
             self.refresh()
+
+    def _tutorial_selected(self, tutorial: Tutorial):
+        if tutorial.is_container():
+            self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
+        else:
+            self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialDisplay)

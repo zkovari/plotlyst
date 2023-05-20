@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from dataclasses import dataclass
+from enum import Enum
 from functools import partial
 from typing import Optional
 
@@ -29,18 +29,29 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.tree import TreeView, TreeSettings, ContainerNode
 
 
-@dataclass
-class Tutorial:
-    pass
+class Tutorial(Enum):
+    ContainerBasic = 0
+    FirstNovel = 1
+    FirstProtagonist = 2
+    FirstScene = 3
+
+    def is_container(self) -> bool:
+        return self.name.startswith('Container')
 
 
 class TutorialNode(ContainerNode):
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
+    def __init__(self, title: str, icon: Optional[QIcon] = None, tutorial: Tutorial = Tutorial.ContainerBasic,
+                 parent=None,
+                 settings: Optional[TreeSettings] = None):
         super(TutorialNode, self).__init__(title, icon, parent, settings=settings)
         self.setMenuEnabled(False)
         self.setPlusButtonEnabled(False)
         retain_when_hidden(self._icon)
+        self._tutorial = tutorial
+
+    def tutorial(self) -> Tutorial:
+        return self._tutorial
 
 
 class TutorialsTreeView(TreeView):
@@ -53,10 +64,11 @@ class TutorialsTreeView(TreeView):
 
         self._selected: Optional[TutorialNode] = None
 
-        self._wdgBasic = self.__initNode('Basic', IconRegistry.tutorial_icon())
-        self._wdgBasic.addChild(self.__initNode('Create novel', IconRegistry.book_icon()))
-        self._wdgBasic.addChild(self.__initNode('Create protagonist', IconRegistry.character_icon()))
-        self._wdgBasic.addChild(self.__initNode('Create scenes', IconRegistry.scene_icon()))
+        self._wdgBasic = self.__initNode('Basic', Tutorial.ContainerBasic, IconRegistry.tutorial_icon())
+        self._wdgBasic.addChild(self.__initNode('Create novel', Tutorial.FirstNovel, IconRegistry.book_icon()))
+        self._wdgBasic.addChild(
+            self.__initNode('Create protagonist', Tutorial.FirstProtagonist, IconRegistry.character_icon()))
+        self._wdgBasic.addChild(self.__initNode('Create scenes', Tutorial.FirstScene, IconRegistry.scene_icon()))
 
         self._centralWidget.layout().addWidget(self._wdgBasic)
         self._centralWidget.layout().addWidget(vspacer())
@@ -70,8 +82,9 @@ class TutorialsTreeView(TreeView):
         self.clearSelection()
         if selected:
             self._selected = node
+            self.tutorialSelected.emit(node.tutorial())
 
-    def __initNode(self, title: str, icon: Optional[QIcon] = None):
-        node = TutorialNode(title, icon, settings=self._settings)
+    def __initNode(self, title: str, tutorial: Tutorial, icon: Optional[QIcon] = None):
+        node = TutorialNode(title, icon, tutorial=tutorial, settings=self._settings)
         node.selectionChanged.connect(partial(self._selectionChanged, node))
         return node
