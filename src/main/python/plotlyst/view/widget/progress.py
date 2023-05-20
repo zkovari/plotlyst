@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy
 from overrides import overrides
 
 from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR, \
-    RELAXED_WHITE_COLOR, ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
+    RELAXED_WHITE_COLOR, ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
 from src.main.python.plotlyst.core.template import RoleImportance
 from src.main.python.plotlyst.event.core import EventListener, Event
@@ -204,7 +204,7 @@ class CircularProgressBar(QWidget):
         self._value = value
         self._maxValue = maxValue
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-        self._tickPixmap = IconRegistry.ok_icon('#2a9d8f').pixmap(self._radius * 2 - 2, self._radius * 2 - 2)
+        self._tickPixmap = IconRegistry.ok_icon(PLOTLYST_MAIN_COLOR).pixmap(self._radius * 2 - 2, self._radius * 2 - 2)
 
         self._tooltipMode: ProgressTooltipMode = ProgressTooltipMode.NUMBERS
 
@@ -220,7 +220,7 @@ class CircularProgressBar(QWidget):
             self._value = 0
         self.update()
         if self._value == self._maxValue and self.isVisible():
-            qtanim.glow(self, color=QColor('#2a9d8f'))
+            qtanim.glow(self, color=QColor(PLOTLYST_MAIN_COLOR))
 
         self._updateTooltip()
 
@@ -260,7 +260,7 @@ class CircularProgressBar(QWidget):
         path.moveTo(self._center, self._penWidth)
         path.arcTo(self._penWidth, self._penWidth, self._radius * 2, self._radius * 2, 90,
                    -360 * self._value / self._maxValue if self._maxValue else 1)
-        painter.setPen(QPen(QColor('#2a9d8f'), self._penWidth, Qt.PenStyle.SolidLine))
+        painter.setPen(QPen(QColor(PLOTLYST_MAIN_COLOR), self._penWidth, Qt.PenStyle.SolidLine))
         painter.drawPath(path)
 
         if self._value == self._maxValue:
