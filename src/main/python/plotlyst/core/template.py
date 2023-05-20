@@ -361,7 +361,7 @@ wound_field = TemplateField('Wound', type=TemplateFieldType.SMALL_TEXT, emoji=':
                             placeholder='What past event harmed the character and left an emotional wound?',
                             id=uuid.UUID('587cace8-0326-4895-b51e-de1d92b9db1b'))
 fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
-                           placeholder='What does the character fear that developed from the wound?',
+                           placeholder='What does the character fear as a result of their wound?',
                            id=uuid.UUID('9601abef-c568-4ef6-9ff9-8da2e62e0572'))
 trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoji=':high_voltage:',
                               placeholder="What could aggravate the character's wound?",
