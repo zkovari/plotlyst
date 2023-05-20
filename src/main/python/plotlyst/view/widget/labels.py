@@ -24,15 +24,15 @@ from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QMouseEvent
 from PyQt6.QtWidgets import QWidget, QLabel, QFrame, QToolButton, QSizePolicy
 from overrides import overrides
-from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow
-from qthandy.filter import VisibilityToggleEventFilter
+from qthandy import hbox, vline, vbox, clear_layout, transparent, btn_popup, flow, pointy
+from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import truncate_string, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Conflict, SelectionItem, Novel, ScenePlotReference, \
     CharacterGoal, PlotValue, Scene, GoalReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.model.common import SelectionItemsModel
-from src.main.python.plotlyst.view.common import text_color_with_bg_color
+from src.main.python.plotlyst.view.common import text_color_with_bg_color, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.icons import set_avatar, IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.display import Icon
 from src.main.python.plotlyst.view.widget.input import RemovalButton
@@ -329,7 +329,11 @@ class LabelsEditorWidget(QFrame):
         self.clear()
 
         self.btnEdit = QToolButton(self)
+        transparent(self.btnEdit)
+        pointy(self.btnEdit)
         self.btnEdit.setIcon(IconRegistry.plus_edit_icon())
+        self.btnEdit.installEventFilter(OpacityEventFilter(self.btnEdit, leaveOpacity=0.8))
+        self.btnEdit.installEventFilter(ButtonPressResizeEventFilter(self.btnEdit))
 
         self._model = self._initModel()
         self._model.item_edited.connect(self._selectionChanged)
