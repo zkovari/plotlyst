@@ -376,7 +376,7 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
 
     @overrides
     def enterEvent(self, event: QtGui.QEnterEvent) -> None:
-        if self._toggle:
+        if self._toggle and self.progress.value() == 0:
             self._toggle.setVisible(True)
 
     @overrides
