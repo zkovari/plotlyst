@@ -334,7 +334,7 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
 
     def __init__(self, field: TemplateField, parent=None):
         super(HeaderTemplateDisplayWidget, self).__init__(field, parent)
-        hbox(self, margin=0, spacing=0)
+        hbox(self, margin=1, spacing=0)
         self.btnHeader = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
         self.btnHeader.setIconSize(QSize(16, 16))
         bold(self.btnHeader)
