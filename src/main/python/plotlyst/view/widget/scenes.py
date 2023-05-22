@@ -272,6 +272,10 @@ class _BeatButton(QToolButton):
         return self.beat
 
 
+def is_midpoint(beat: StoryBeat) -> bool:
+    return beat.text == 'Midpoint'
+
+
 class SceneStoryStructureWidget(QWidget):
     BeatMimeType = 'application/story-beat'
 
@@ -364,7 +368,7 @@ class SceneStoryStructureWidget(QWidget):
                 btn.toggled.connect(partial(self._beatToggled, btn))
                 btn.clicked.connect(partial(self._beatClicked, btn))
                 btn.installEventFilter(self)
-                if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
+                if self._beatsMoveable and not beat.ends_act and not is_midpoint(beat):
                     btn.installEventFilter(
                         DragEventFilter(btn, self.BeatMimeType, btn.dataFunc, hideTarget=True))
                     btn.setCursor(Qt.CursorShape.OpenHandCursor)
