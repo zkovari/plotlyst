@@ -496,6 +496,20 @@ class SceneStoryStructureWidget(QWidget):
         btn.setFixedSize(self._beatHeight + 6, self._beatHeight + 6)
         qtanim.glow(btn, color=QColor(beat.icon_color))
 
+    def refreshBeat(self, beat: StoryBeat):
+        if beat.type == StoryBeatType.BEAT:
+            btn = self._beats.get(beat)
+            if beat.icon:
+                btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+            btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
+
+    def replaceBeat(self, old: StoryBeat, new: StoryBeat):
+        if old.type == StoryBeatType.BEAT and new.type == StoryBeatType.BEAT:
+            btn = self._beats.pop(old)
+            self._beats[new] = btn
+            btn.setIcon(IconRegistry.from_name(new.icon, new.icon_color))
+            btn.setToolTip(f'<b style="color: {new.icon_color}">{new.text}')
+
     def highlightScene(self, scene: Scene):
         if not self.isVisible():
             return

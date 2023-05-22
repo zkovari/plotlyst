@@ -290,6 +290,7 @@ class BeatsPreview(QFrame):
     def refreshBeat(self, beat: StoryBeat):
         wdg = self._beats[beat]
         wdg.updateInfo()
+        self._structurePreview.refreshBeat(beat)
 
     def replaceBeat(self, oldBeat: StoryBeat, newBeat: StoryBeat):
         for i, beat in enumerate(self._structure.beats):
@@ -300,6 +301,7 @@ class BeatsPreview(QFrame):
         self._beats[newBeat] = newWdg
         self._layout.replaceWidget(oldWdg, newWdg)
         gc(oldWdg)
+        self._structurePreview.replaceBeat(oldBeat, newBeat)
 
     def __initBeatWidget(self, beat: StoryBeat) -> BeatWidget:
         wdg = BeatWidget(beat, self._checkOccupiedBeats)
