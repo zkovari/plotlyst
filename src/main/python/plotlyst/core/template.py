@@ -111,7 +111,7 @@ class TemplateField:
     enabled: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     custom: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     min_value: int = field(default=0, metadata=config(exclude=exclude_if_empty))
-    max_value = 2_147_483_647
+    max_value: int = 2_147_483_647
     compact: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     color: str = field(default='', metadata=config(exclude=exclude_if_empty))
@@ -341,7 +341,7 @@ internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.
 methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoji=':hammer_and_pick:',
                               placeholder="How does the character try to achieve their goals?",
                               id=uuid.UUID('40d50e34-8dbf-4491-8fa9-854f060be5ef'), has_notes=True)
-need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
+need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
                            placeholder='What does the character actually need?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
 weaknesses_field = TemplateField('Weakness', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
@@ -427,6 +427,26 @@ values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
                 SelectionItem('Trustworthiness', icon='fa5s.stamp'),
                 SelectionItem('Wealth', icon='fa5s.coins'), SelectionItem('Wisdom', icon='mdi.owl')]
 values_field.selections.extend(values_items)
+
+iq_field = TemplateField(name='IQ', type=TemplateFieldType.BAR,
+                         id=uuid.UUID('a27f2534-9933-4fc9-a70b-0f4f4480d619'), emoji=':brain:',
+                         min_value=0, max_value=100, placeholder='IQ', color='#0077b6')
+
+eq_field = TemplateField(name='Emotion intelligence', type=TemplateFieldType.BAR,
+                         id=uuid.UUID('b2452206-05af-44c9-8908-4d4ff1f669ba'), emoji=':handshake:',
+                         min_value=0, max_value=100, placeholder='EQ', color='#2a9d8f')
+
+rationalism_field = TemplateField(name='Rationalism', type=TemplateFieldType.BAR,
+                                  id=uuid.UUID('90bf2da5-d2f1-426d-9b0e-6a25859851b6'), emoji=':face_with_monocle:',
+                                  min_value=0, max_value=100, placeholder='Rationalism', color='#b7b7a4')
+
+creativity_field = TemplateField(name='Creativity', type=TemplateFieldType.BAR,
+                                 id=uuid.UUID('4ba586c3-1ad0-4fef-9a7a-bd11d90b268c'), emoji=':artist_palette:',
+                                 min_value=0, max_value=100, placeholder='Creativity', color='#9f86c0')
+
+willpower_field = TemplateField(name='Willpower', type=TemplateFieldType.BAR,
+                                id=uuid.UUID('ea8fb07d-d9ad-4f49-b8d1-4d2ec29343b5'), emoji=':fire:',
+                                min_value=0, max_value=100, placeholder='Willpower', color='#f6bd60')
 
 
 class RoleImportance(Enum):
@@ -578,6 +598,11 @@ def default_character_profiles() -> List[ProfileTemplate]:
               ProfileElement(faculties, 14, 0, col_span=2),
               ProfileElement(weaknesses_field, 15, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(strength_field, 16, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(iq_field, 17, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(eq_field, 18, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(rationalism_field, 19, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(willpower_field, 20, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(creativity_field, 21, 0, col_span=2, margins=Margins(left=15)),
 
               ]
     return [ProfileTemplate(title='Default character template',
