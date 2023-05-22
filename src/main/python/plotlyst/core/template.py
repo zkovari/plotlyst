@@ -552,12 +552,6 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    def arrow_field():
-        return TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON, color='darkBlue')
-
-    def internal_arrow_field():
-        return TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON, color='#94b0da')
-
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
