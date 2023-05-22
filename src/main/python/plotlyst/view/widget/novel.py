@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import copy
 from enum import Enum, auto
 from functools import partial
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
@@ -47,7 +47,8 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, \
+    ExclusiveOptionalButtonGroup
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
@@ -56,6 +57,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle, IconText, Icon
+from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget, SceneSelector
@@ -109,6 +111,7 @@ class BeatsPreview(QFrame):
         super().__init__(parent)
         self._checkOccupiedBeats = checkOccupiedBeats
         self._layout: QGridLayout = grid(self)
+        self._beats: Dict[StoryBeat, BeatWidget] = {}
         self._structurePreview: Optional[SceneStoryStructureWidget] = None
         self._structure: Optional[StoryStructure] = None
 
@@ -123,12 +126,14 @@ class BeatsPreview(QFrame):
 
     def refresh(self):
         clear_layout(self._layout)
+        self._beats.clear()
         row = 0
         col = 0
         for beat in self._structure.beats:
             if beat.type != StoryBeatType.BEAT:
                 continue
             wdg = BeatWidget(beat, self._checkOccupiedBeats)
+            self._beats[beat] = wdg
             wdg.setMinimumSize(200, 50)
             if beat.act - 1 > col:  # new act
                 self._layout.addWidget(vspacer(), row + 1, col)
@@ -138,6 +143,9 @@ class BeatsPreview(QFrame):
             row += 1
             wdg.beatHighlighted.connect(self._structurePreview.highlightBeat)
             wdg.beatToggled.connect(partial(self._structurePreview.toggleBeatVisibility, beat))
+
+    def replaceBeat(self, beat: StoryBeat, name: str):
+        self._beats[beat].lblTitle.setText(name)
 
 
 class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
@@ -314,12 +322,61 @@ class _AbstractStructureEditorWidget(QWidget):
         return self._structure
 
 
-class _ThreeActBeginning(Enum):
+class BeatCustomization(Enum):
+    pass
+
+
+class _ThreeActBeginning(BeatCustomization):
     Hook = auto()
     Disturbance = auto()
     Motion = auto()
     Characteristic_moment = auto()
     Normal_world = auto()
+
+
+def beat_option_title(option: BeatCustomization) -> str:
+    return option.name
+
+
+def beat_option_description(option: BeatCustomization) -> str:
+    return option.name
+
+
+class BeatOptionToggle(QWidget):
+    def __init__(self, option: BeatCustomization, parent=None):
+        super(BeatOptionToggle, self).__init__(parent)
+        hbox(self)
+        self.option = option
+        self.toggle = Toggle()
+        self.layout().addWidget(self.toggle, alignment=Qt.AlignmentFlag.AlignTop)
+        desc = QLabel(beat_option_description(option))
+        desc.setProperty('description', True)
+        self.layout().addWidget(group(QLabel(beat_option_title(option)), desc, vertical=False))
+        self.layout().addWidget(spacer())
+
+
+class StructureOptionsWidget(QWidget):
+    optionSelected = pyqtSignal(BeatCustomization)
+    optionsReset = pyqtSignal()
+
+    def __init__(self, options: List[BeatCustomization], parent=None):
+        super(StructureOptionsWidget, self).__init__(parent)
+        vbox(self)
+        self.btnGroup = ExclusiveOptionalButtonGroup()
+        for opt in options:
+            wdg = BeatOptionToggle(opt)
+            self.layout().addWidget(wdg)
+            self.btnGroup.addButton(wdg.toggle)
+
+            wdg.toggle.clicked.connect(partial(self._clicked, opt))
+
+    def _clicked(self, option: BeatCustomization, checked: bool):
+        if not checked:
+            if not self.btnGroup.checkedButton():
+                self.optionsReset.emit()
+            return
+
+        self.optionSelected.emit(option)
 
 
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
@@ -337,12 +394,20 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.iconBeginning.setIcon(IconRegistry.cause_icon())
         self.btnBeginning = SecondaryActionPushButton('Beginning')
         menu = MenuWidget(self.btnBeginning)
-        menu.addAction(action('Hook', slot=lambda: self._beginningChanged(_ThreeActBeginning.Hook)))
-        menu.addAction(action('Disturbance', slot=lambda: self._beginningChanged(_ThreeActBeginning.Disturbance)))
-        menu.addAction(action('Motion', slot=lambda: self._beginningChanged(_ThreeActBeginning.Motion)))
-        menu.addAction(action('Characteristic moment',
-                              slot=lambda: self._beginningChanged(_ThreeActBeginning.Characteristic_moment)))
-        menu.addAction(action('Normal world', slot=lambda: self._beginningChanged(_ThreeActBeginning.Normal_world)))
+        menu.addSection('Select the beginning')
+        menu.addSeparator()
+        wdg = StructureOptionsWidget([_ThreeActBeginning.Hook, _ThreeActBeginning.Disturbance,
+                                      _ThreeActBeginning.Motion, _ThreeActBeginning.Characteristic_moment,
+                                      _ThreeActBeginning.Normal_world])
+        menu.addWidget(wdg)
+        wdg.optionSelected.connect(self._beginningChanged)
+        wdg.optionsReset.connect(self._beginningReset)
+        # menu.addAction(action('Hook', slot=lambda: self._beginningChanged(_ThreeActBeginning.Hook)))
+        # menu.addAction(action('Disturbance', slot=lambda: self._beginningChanged(_ThreeActBeginning.Disturbance)))
+        # menu.addAction(action('Motion', slot=lambda: self._beginningChanged(_ThreeActBeginning.Motion)))
+        # menu.addAction(action('Characteristic moment',
+        #                       slot=lambda: self._beginningChanged(_ThreeActBeginning.Characteristic_moment)))
+        # menu.addAction(action('Normal world', slot=lambda: self._beginningChanged(_ThreeActBeginning.Normal_world)))
 
         self.iconInciting = Icon()
         self.iconInciting.setIcon(IconRegistry.inciting_incident_icon())
@@ -369,7 +434,11 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
 
     def _beginningChanged(self, beginning: _ThreeActBeginning):
         self._structure.beats[0].text = beginning.name
-        self.beatsPreview.refresh()
+        self.beatsPreview.replaceBeat(self._structure.beats[0], beginning.name)
+
+    def _beginningReset(self):
+        self._structure.beats[0].text = 'Hook'
+        self.beatsPreview.replaceBeat(self._structure.beats[0], 'Hook')
 
 
 class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):

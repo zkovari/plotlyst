@@ -73,7 +73,7 @@ class _Toggle(QCheckBox):
             0, 0,
             contRect.width() - handleRadius, contRect.height()
         )
-        barRect.moveCenter(contRect.center())
+        barRect.moveCenter(contRect.center().toPointF())
         rounding = barRect.height() / 2
 
         # the handle will move along this line
