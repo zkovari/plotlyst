@@ -553,26 +553,28 @@ class ProfileTemplate:
 
 def default_character_profiles() -> List[ProfileTemplate]:
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
-    characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    personality_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
     wounds_title = TemplateField('Wounds', type=TemplateFieldType.DISPLAY_HEADER)
     arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
-    weakness_strength = TemplateField('Weakness and strength', type=TemplateFieldType.DISPLAY_HEADER)
+    philosophy_title = TemplateField('Philosophy', type=TemplateFieldType.DISPLAY_HEADER)
+    faculties = TemplateField('Faculties', type=TemplateFieldType.DISPLAY_HEADER)
 
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
               ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(characterization_title, 2, 0, col_span=2),
+              ProfileElement(personality_title, 2, 0, col_span=2),
               ProfileElement(enneagram_field, 3, 0, margins=Margins(left=15)),
               ProfileElement(mbti_field, 3, 1),
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(values_field, 6, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(gmc_title, 7, 0, col_span=2),
-              ProfileElement(gmc_field, 8, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(wounds_title, 9, 0, col_span=2),
-              ProfileElement(wounds_field, 10, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(arcs_title, 12, 0, col_span=2),
-              ProfileElement(arcs_field, 13, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(weakness_strength, 14, 0, col_span=2),
+              ProfileElement(gmc_title, 6, 0, col_span=2),
+              ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(wounds_title, 8, 0, col_span=2),
+              ProfileElement(wounds_field, 9, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(arcs_title, 10, 0, col_span=2),
+              ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(philosophy_title, 12, 0, col_span=2),
+              ProfileElement(values_field, 13, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(faculties, 14, 0, col_span=2),
               ProfileElement(weaknesses_field, 15, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(strength_field, 16, 0, col_span=2, margins=Margins(left=15)),
 
