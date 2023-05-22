@@ -87,6 +87,7 @@ class TemplateFieldType(Enum):
     DISPLAY_HEADER = 10
     DISPLAY_ICON = 11
     COMPLEX = 12
+    BAR = 13
 
 
 class SelectionType(Enum):

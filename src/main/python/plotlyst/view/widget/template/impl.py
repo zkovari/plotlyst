@@ -25,9 +25,9 @@ import emoji
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize, QItemSelectionModel
-from PyQt6.QtGui import QMouseEvent, QIcon
+from PyQt6.QtGui import QMouseEvent, QIcon, QWheelEvent
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout, QSlider
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
     decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp
@@ -46,6 +46,7 @@ from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui impo
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
@@ -528,6 +529,51 @@ class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
         _layout.addWidget(self.wdgEditor)
         if self.field.compact:
             _layout.addWidget(spacer())
+
+        self.wdgEditor.valueChanged.connect(self._valueChanged)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+
+    def _valueChanged(self, value: int):
+        if value:
+            self.valueFilled.emit(1)
+        else:
+            self.valueReset.emit()
+
+
+class BarSlider(QSlider):
+    @overrides
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        event.ignore()
+
+
+class BarTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(BarTemplateFieldWidget, self).__init__(field, parent)
+        _layout = vbox(self)
+        self.wdgEditor = BarSlider(Qt.Orientation.Horizontal)
+        pointy(self.wdgEditor)
+        self.wdgEditor.setPageStep(5)
+        self.setMaximumWidth(600)
+
+        self.wdgEditor.setMinimum(field.min_value)
+        self.wdgEditor.setMaximum(field.max_value)
+        if field.color:
+            apply_slider_color(self.wdgEditor, field.color)
+
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        if self.field.compact:
+            editor = group(self.wdgEditor, spacer())
+            margins(editor, left=5)
+            _layout.addWidget(editor)
+        else:
+            _layout.addWidget(wrap(self.wdgEditor, margin_left=5))
 
         self.wdgEditor.valueChanged.connect(self._valueChanged)
 
