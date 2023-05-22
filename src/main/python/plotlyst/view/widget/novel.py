@@ -36,7 +36,8 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey, hook_beat, motion_beat
+    StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey, hook_beat, motion_beat, \
+    disturbance_beat, normal_world_beat, characteristic_moment_beat
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -289,8 +290,6 @@ class BeatsPreview(QFrame):
     def refreshBeat(self, beat: StoryBeat):
         wdg = self._beats[beat]
         wdg.updateInfo()
-        # wdg.lblTitle.setText(beat.text)
-        # wdg.lblDescription.setText(beat.description)
 
     def replaceBeat(self, oldBeat: StoryBeat, newBeat: StoryBeat):
         for i, beat in enumerate(self._structure.beats):
@@ -375,24 +374,24 @@ def beat_option_description(option: BeatCustomization) -> str:
     elif option == _ThreeActBeginning.Motion:
         return motion_beat.description
     elif option == _ThreeActBeginning.Disturbance:
-        return "An initial disturbance that already upends the protagonist's life early on."
+        return disturbance_beat.description
     elif option == _ThreeActBeginning.Normal_world:
-        return "Establishes the setting alongside the protagonist before the first major change in the story would happen."
+        return normal_world_beat.description
     elif option == _ThreeActBeginning.Characteristic_moment:
-        return "Introduces the protagonist, highlighting their character traits and core personality, possibly flaws as well."
+        return characteristic_moment_beat.description
 
 
 def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
     if option == _ThreeActBeginning.Hook:
         return hook_beat.icon, hook_beat.icon_color
     elif option == _ThreeActBeginning.Motion:
-        return 'mdi.motion-outline', '#d4a373'
+        return motion_beat.icon, motion_beat.icon_color
     elif option == _ThreeActBeginning.Disturbance:
-        return 'mdi.chemical-weapon', '#e63946'
+        return disturbance_beat.icon, disturbance_beat.icon_color
     elif option == _ThreeActBeginning.Normal_world:
-        return 'fa5.image', '#1ea896'
+        return normal_world_beat.icon, normal_world_beat.icon_color
     elif option == _ThreeActBeginning.Characteristic_moment:
-        return 'mdi6.human-scooter', '#457b9d'
+        return characteristic_moment_beat.icon, characteristic_moment_beat.icon_color
 
 
 def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
@@ -420,6 +419,7 @@ class BeatOptionToggle(QWidget):
         desc = QLabel(beat_option_description(option))
         desc.setProperty('description', True)
         btnTitle = QPushButton(beat_option_title(option))
+        btnTitle.setIcon(IconRegistry.from_name(*beat_option_icon(option)))
         pointy(btnTitle)
         transparent(btnTitle)
         btnTitle.clicked.connect(self.toggle.click)
@@ -507,12 +507,17 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.wdgCustom.layout().addWidget(wdg)
 
     def _beginningChanged(self, beginning: _ThreeActBeginning):
-        self._structure.beats[0].text = beat_option_title(beginning)
-        self._structure.beats[0].description = beat_option_description(beginning)
-        icon_name, color = beat_option_icon(beginning)
-        self._structure.beats[0].icon = icon_name
-        self._structure.beats[0].icon_color = color
-        self.beatsPreview.refreshBeat(self._structure.beats[0])
+        if beginning == _ThreeActBeginning.Hook:
+            beat = hook_beat
+        elif beginning == _ThreeActBeginning.Motion:
+            beat = motion_beat
+        elif beginning == _ThreeActBeginning.Disturbance:
+            beat = disturbance_beat
+        elif beginning == _ThreeActBeginning.Normal_world:
+            beat = normal_world_beat
+        elif beginning == _ThreeActBeginning.Characteristic_moment:
+            beat = characteristic_moment_beat
+        self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(beat))
 
     def _beginningReset(self):
         self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(three_act_structure.beats[0]))
