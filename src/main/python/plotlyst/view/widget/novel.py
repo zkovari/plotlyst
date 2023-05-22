@@ -56,6 +56,7 @@ from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui 
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle, IconText, Icon
 from src.main.python.plotlyst.view.widget.input import Toggle
@@ -347,6 +348,7 @@ class _AbstractStructureEditorWidget(QWidget):
         self.layout().addWidget(vspacer(20))
         self.layout().addWidget(self.wdgPreview)
         self.layout().addWidget(self._scroll)
+
         # self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
         # self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
 
@@ -474,6 +476,7 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.iconBeginning.setIcon(IconRegistry.cause_icon())
         self.btnBeginning = SecondaryActionPushButton('Beginning')
         menu = MenuWidget(self.btnBeginning)
+        apply_white_menu(menu)
         menu.addSection('Select the beginning')
         menu.addSeparator()
 

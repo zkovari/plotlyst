@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.common import action, fade_out_and_gc, Button
     insert_after
 from src.main.python.plotlyst.view.generated.scene_structure_editor_widget_ui import Ui_SceneStructureWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import FadeOutButtonGroup
 from src.main.python.plotlyst.view.widget.characters import CharacterConflictSelector, CharacterEmotionButton
 from src.main.python.plotlyst.view.widget.input import RemovalButton
@@ -263,26 +264,8 @@ class BeatSelectorMenu(GridMenuWidget):
 
         self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
         self.setSearchEnabled(True)
-        self.setStyleSheet(f'''
-                        MenuWidget {{
-                            background-color: {RELAXED_WHITE_COLOR};
-                        }}
-                        QFrame {{
-                            background-color: {RELAXED_WHITE_COLOR};
-                            padding-left: 2px;
-                            padding-right: 2px;
-                            border-radius: 5px;
-                        }}
-                        MenuItemWidget:hover {{
-                            background-color: #EDEDED;
-                        }}
-                        MenuItemWidget[pressed=true] {{
-                            background-color: #DCDCDC;
-                        }}
-                        QLabel[description=true] {{
-                            color: grey;
-                        }}
-                        ''')
+        apply_white_menu(self)
+
         self.addSection('Scene beats', 0, 0, icon=IconRegistry.action_scene_icon())
         self.addSeparator(1, 0, colSpan=2)
         self._addAction('Action', SceneStructureItemType.ACTION, 2, 0)

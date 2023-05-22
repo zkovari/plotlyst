@@ -22,6 +22,9 @@ from typing import Union
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget
+from qtmenu import MenuWidget
+
+from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 
 style = '''
 * {
@@ -117,3 +120,26 @@ def apply_bg_image(wdg: QWidget, resource_url: str):
 
 def apply_border_image(wdg: QWidget, resource_url: str):
     wdg.setStyleSheet(f'QWidget[border-image=true] {{border-image: url({resource_url}) 0 0 0 0 stretch stretch;}}')
+
+
+def apply_white_menu(menu: MenuWidget):
+    menu.setStyleSheet(f'''
+                        MenuWidget {{
+                            background-color: {RELAXED_WHITE_COLOR};
+                        }}
+                        QFrame {{
+                            background-color: {RELAXED_WHITE_COLOR};
+                            padding-left: 2px;
+                            padding-right: 2px;
+                            border-radius: 5px;
+                        }}
+                        MenuItemWidget:hover {{
+                            background-color: #EDEDED;
+                        }}
+                        MenuItemWidget[pressed=true] {{
+                            background-color: #DCDCDC;
+                        }}
+                        QLabel[description=true] {{
+                            color: grey;
+                        }}
+                        ''')
