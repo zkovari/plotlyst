@@ -1088,16 +1088,41 @@ class StoryStructure(CharacterBased):
         return [x for x in self.beats if x.ends_act]
 
 
+hook_beat = StoryBeat(text='Hook',
+                      id=uuid.UUID('40365047-e7df-4543-8816-f9f8dcce12da'),
+                      icon='mdi.hook',
+                      icon_color='#829399',
+                      description="Raises curiosity and hooks the reader's attention. May hint at what kind of story the reader can expect.",
+                      act=1, percentage=1)
+motion_beat = StoryBeat(text='Motion',
+                        id=uuid.UUID('f9120632-3e27-405e-b404-543f9c5b12ca'),
+                        icon='',
+                        icon_color='',
+                        description='Sets the story in motion with enough intrigue to create narrative drive, but without establishing the story yet.',
+                        act=1, percentage=1)
+disturbance_beat = StoryBeat(text='Disturbance',
+                             id=uuid.UUID(''),
+                             icon='',
+                             icon_color='',
+                             description='',
+                             act=1, percentage=1)
+characteristic_moment_beat = StoryBeat(text='Characteristic moment',
+                                       id=uuid.UUID(''),
+                                       icon='',
+                                       icon_color='',
+                                       description='',
+                                       act=1, percentage=1)
+normal_world_beat = StoryBeat(text='Normal world',
+                              id=uuid.UUID(''),
+                              icon='',
+                              icon_color='',
+                              description='',
+                              act=1, percentage=1)
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),
                                      icon='mdi.numeric-3-circle-outline',
                                      icon_color='#ff7800',
-                                     beats=[StoryBeat(text='Hook',
-                                                      id=uuid.UUID('40365047-e7df-4543-8816-f9f8dcce12da'),
-                                                      icon='mdi.hook',
-                                                      icon_color='#829399',
-                                                      description="Raises curiosity and hooks the reader's attention. May hint at what kind of story the reader can expect.",
-                                                      act=1, percentage=1),
+                                     beats=[hook_beat,
                                             StoryBeat(text='Inciting Incident',
                                                       icon='mdi.bell-alert-outline',
                                                       icon_color='#a2ad59',
