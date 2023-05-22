@@ -261,6 +261,17 @@ class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabPov), IconRegistry.character_icon())
 
 
+class _BeatButton(QToolButton):
+    def __init__(self, beat: StoryBeat, parent=None):
+        super(_BeatButton, self).__init__(parent)
+        self.beat = beat
+        self.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
+        self.installEventFilter(InstantTooltipEventFilter(self))
+
+    def dataFunc(self, _):
+        return self.beat
+
+
 class SceneStoryStructureWidget(QWidget):
     BeatMimeType = 'application/story-beat'
 
@@ -324,9 +335,6 @@ class SceneStoryStructureWidget(QWidget):
         self._beatCursor = value
 
     def setStructure(self, novel: Novel, structure: Optional[StoryStructure] = None):
-        def _beat(beat, btn):
-            return beat
-
         self.novel = novel
         self.structure = structure if structure else novel.active_story_structure
         self._acts.clear()
@@ -345,22 +353,20 @@ class SceneStoryStructureWidget(QWidget):
                 italic(btn)
                 translucent(btn)
             else:
-                btn = QToolButton(self)
+                btn = _BeatButton(beat, self)
                 self._beats[beat] = btn
-                btn.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
 
             if beat.icon:
                 btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
             btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
 
             if beat.type == StoryBeatType.BEAT:
-                btn.installEventFilter(InstantTooltipEventFilter(btn))
                 btn.toggled.connect(partial(self._beatToggled, btn))
-                btn.clicked.connect(partial(self._beatClicked, beat, btn))
+                btn.clicked.connect(partial(self._beatClicked, btn))
                 btn.installEventFilter(self)
                 if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
                     btn.installEventFilter(
-                        DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat), hideTarget=True))
+                        DragEventFilter(btn, self.BeatMimeType, btn.dataFunc, hideTarget=True))
                     btn.setCursor(Qt.CursorShape.OpenHandCursor)
                 else:
                     btn.setCursor(self._beatCursor)
@@ -509,6 +515,7 @@ class SceneStoryStructureWidget(QWidget):
             self._beats[new] = btn
             btn.setIcon(IconRegistry.from_name(new.icon, new.icon_color))
             btn.setToolTip(f'<b style="color: {new.icon_color}">{new.text}')
+            btn.beat = new
 
     def highlightScene(self, scene: Scene):
         if not self.isVisible():
@@ -611,13 +618,14 @@ class SceneStoryStructureWidget(QWidget):
     def _beatToggled(self, btn: QToolButton, toggled: bool):
         translucent(btn, 1.0 if toggled else 0.2)
 
-    def _beatClicked(self, beat: StoryBeat, btn: QToolButton):
+    def _beatClicked(self, btn: _BeatButton):
         if btn.isCheckable() and btn.isChecked():
-            self.beatSelected.emit(beat)
+            self.beatSelected.emit(btn.beat)
             btn.setCheckable(False)
         elif not btn.isCheckable() and self._removalContextMenuEnabled:
             builder = PopupMenuBuilder.from_widget_position(self, self.mapFromGlobal(QCursor.pos()))
-            builder.add_action('Remove', IconRegistry.trash_can_icon(), lambda: self.beatRemovalRequested.emit(beat))
+            builder.add_action('Remove', IconRegistry.trash_can_icon(),
+                               lambda: self.beatRemovalRequested.emit(btn.beat))
             builder.popup()
 
     def _actResized(self, pos: int, index: int):
