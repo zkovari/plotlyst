@@ -30,7 +30,7 @@ tutorial_titles: Dict[Tutorial, str] = {
 
 tutorial_descriptions: Dict[Tutorial, str] = {}
 
-tutorial_descriptions[Tutorial.FirstNovel] = '''In this tutorial, you will create your first novel. You will learn:
+tutorial_descriptions[Tutorial.FirstNovel] = '''In this tutorial, you will create your first novel. You will learn how to:
  * Use the Library panel to create and edit novels
  * Open the corresponding novel editor to navigate through the different story panels, e.g., characters, scenes, manuscript, etc.
 '''

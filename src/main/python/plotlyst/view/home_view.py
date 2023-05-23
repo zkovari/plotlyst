@@ -35,6 +35,7 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import flush_or_fail
+from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action, \
     TooltipPositionEventFilter
@@ -45,6 +46,7 @@ from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
 from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
+from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -53,11 +55,12 @@ class HomeView(AbstractView):
     loadNovel = pyqtSignal(NovelDescriptor)
 
     def __init__(self):
-        super(HomeView, self).__init__()
+        super(HomeView, self).__init__([LibraryTourEvent])
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
         self._selected_novel: Optional[NovelDescriptor] = None
         self._novels: List[NovelDescriptor] = []
+        self._tour_service = TourService()
 
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', 'white'))
@@ -144,6 +147,7 @@ class HomeView(AbstractView):
         self.ui.splitterTutorials.setSizes([150, 500])
         self.ui.btnStartTutorial.setIcon(IconRegistry.from_name('fa5s.play-circle', 'white'))
         self.ui.btnStartTutorial.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStartTutorial))
+        self.ui.btnStartTutorial.clicked.connect(self._start_tutorial)
         self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
         self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
 
@@ -182,6 +186,8 @@ class HomeView(AbstractView):
             if self._selected_novel and self._selected_novel.id == event.novel.id:
                 self.ui.lineNovelTitle.setText(self._selected_novel.title)
             self.refresh()
+        elif isinstance(event, LibraryTourEvent):
+            self._tour_service.addWidget(self.ui.btnLibrary)
         else:
             super(HomeView, self).event_received(event)
 
@@ -272,6 +278,10 @@ class HomeView(AbstractView):
         if tutorial.is_container():
             self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
         else:
+            self._tour_service.setTutorial(tutorial)
             self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialDisplay)
             self.ui.lineTutorialTitle.setText(tutorial_titles[tutorial])
             self.ui.textTutorial.setMarkdown(tutorial_descriptions.get(tutorial, 'Click Start to learn this tutorial.'))
+
+    def _start_tutorial(self):
+        self._tour_service.start()

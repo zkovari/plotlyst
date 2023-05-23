@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from enum import Enum
 
+from src.main.python.plotlyst.event.core import Event
+
 
 class Tutorial(Enum):
     ContainerBasic = 0
@@ -28,3 +30,14 @@ class Tutorial(Enum):
 
     def is_container(self) -> bool:
         return self.name.startswith('Container')
+
+
+COLOR_ON_NAVBAR: str = '#e9c46a'
+
+
+class TourEvent(Event):
+    message: str = ''
+
+
+class LibraryTourEvent(TourEvent):
+    pass
