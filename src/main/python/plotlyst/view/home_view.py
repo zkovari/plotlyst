@@ -20,9 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, QSize, Qt
-from PyQt6.QtGui import QPixmap, QColor
+from PyQt6.QtGui import QPixmap, QColor, QTextDocument
 from overrides import overrides
-from qthandy import ask_confirmation, transparent, incr_font, italic, busy, retain_when_hidden, incr_icon
+from qthandy import ask_confirmation, transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold
 from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -44,6 +44,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
+from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -145,6 +146,17 @@ class HomeView(AbstractView):
         self.ui.btnStartTutorial.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStartTutorial))
         self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
         self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
+
+        self.ui.textTutorial.setViewportMargins(20, 20, 20, 20)
+        document: QTextDocument = self.ui.textTutorial.document()
+        font = self.ui.textTutorial.font()
+        font.setPointSize(font.pointSize() + 2)
+        document.setDefaultFont(font)
+
+        transparent(self.ui.lineTutorialTitle)
+        self.ui.lineTutorialTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        incr_font(self.ui.lineTutorialTitle, 10)
+        bold(self.ui.lineTutorialTitle)
 
         # self.ui.btnLibrary.setChecked(True)
         self.ui.btnTutorials.setChecked(True)
@@ -261,3 +273,5 @@ class HomeView(AbstractView):
             self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
         else:
             self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialDisplay)
+            self.ui.lineTutorialTitle.setText(tutorial_titles[tutorial])
+            self.ui.textTutorial.setMarkdown(tutorial_descriptions.get(tutorial, 'Click Start to learn this tutorial.'))

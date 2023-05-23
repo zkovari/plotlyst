@@ -17,7 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from enum import Enum
 from functools import partial
 from typing import Optional
 
@@ -26,17 +25,8 @@ from PyQt6.QtGui import QIcon
 from qthandy import vspacer, retain_when_hidden
 
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.tour.core import Tutorial
 from src.main.python.plotlyst.view.widget.tree import TreeView, TreeSettings, ContainerNode
-
-
-class Tutorial(Enum):
-    ContainerBasic = 0
-    FirstNovel = 1
-    FirstProtagonist = 2
-    FirstScene = 3
-
-    def is_container(self) -> bool:
-        return self.name.startswith('Container')
 
 
 class TutorialNode(ContainerNode):
