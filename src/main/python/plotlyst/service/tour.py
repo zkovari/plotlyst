@@ -40,9 +40,10 @@ class TourService(QObject):
 
     def start(self):
         self._manager.start()
-        emit_event(LibraryTourEvent(self))
+        emit_event(LibraryTourEvent(self,
+                                    message='Navigate first to your library panel. This is where you will find all your stories.'))
 
-    def addWidget(self, widget: QWidget):
+    def addWidget(self, widget: QWidget, message: str = ''):
         sequence = TourSequence()
-        sequence.steps().append(TourStep(widget))
+        sequence.steps().append(TourStep(widget, message=message))
         self._manager.run(sequence)

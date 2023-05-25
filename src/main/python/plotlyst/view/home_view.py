@@ -187,7 +187,7 @@ class HomeView(AbstractView):
                 self.ui.lineNovelTitle.setText(self._selected_novel.title)
             self.refresh()
         elif isinstance(event, LibraryTourEvent):
-            self._tour_service.addWidget(self.ui.btnLibrary)
+            self._tour_service.addWidget(self.ui.btnLibrary, event.message)
         else:
             super(HomeView, self).event_received(event)
 

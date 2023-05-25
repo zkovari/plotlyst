@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from dataclasses import dataclass
 from enum import Enum
 
 from src.main.python.plotlyst.event.core import Event
@@ -35,6 +36,7 @@ class Tutorial(Enum):
 COLOR_ON_NAVBAR: str = '#e9c46a'
 
 
+@dataclass
 class TourEvent(Event):
     message: str = ''
 
