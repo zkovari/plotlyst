@@ -50,9 +50,11 @@ class TourService(QObject):
         step = TourStep(widget, message=message)
         step.finished.connect(self._nextEvent)
         sequence.steps().append(step)
-        self._manager.run(sequence)
+        self._manager.run(sequence, finishTour=False)
 
     def _nextEvent(self):
         event = next(self._events_iter, None)
         if event is not None:
             emit_event(event)
+        else:
+            self._manager.finish()
