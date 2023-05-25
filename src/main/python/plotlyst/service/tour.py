@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QWidget
@@ -25,7 +25,7 @@ from qttour import TourManager, TourSequence, TourStep
 
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.view.widget.tour import Tutorial
-from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent, COLOR_ON_NAVBAR
+from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, TourEvent, tour_events
 
 
 class TourService(QObject):
@@ -34,14 +34,16 @@ class TourService(QObject):
         self._manager = TourManager.instance()
         self._manager.setCoachColor(COLOR_ON_NAVBAR)
         self._tutorial: Optional[Tutorial] = None
+        self._events: List[TourEvent] = []
 
     def setTutorial(self, tutorial: Tutorial):
         self._tutorial = tutorial
+        self._events.clear()
 
     def start(self):
         self._manager.start()
-        emit_event(LibraryTourEvent(self,
-                                    message='Navigate first to your library panel. This is where you will find all your stories.'))
+        self._events = tour_events(self._tutorial, self)
+        emit_event(self._events[0])
 
     def addWidget(self, widget: QWidget, message: str = ''):
         sequence = TourSequence()

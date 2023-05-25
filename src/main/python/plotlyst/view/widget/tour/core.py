@@ -19,10 +19,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from dataclasses import dataclass
 from enum import Enum
+from typing import List
+
+from PyQt6.QtCore import QObject
 
 from src.main.python.plotlyst.event.core import Event
 
 
+# flake8: noqa
 class Tutorial(Enum):
     ContainerBasic = 0
     FirstNovel = 1
@@ -43,3 +47,15 @@ class TourEvent(Event):
 
 class LibraryTourEvent(TourEvent):
     pass
+
+
+def tour_events(tutorial: Tutorial, sender: QObject):
+    return tour_factories[tutorial](sender)
+
+
+def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
+    return [LibraryTourEvent(sender,
+                             message='Navigate first to your library panel. This is where you will find all your stories.')]
+
+
+tour_factories = {Tutorial.FirstNovel: first_novel_tour_factory}
