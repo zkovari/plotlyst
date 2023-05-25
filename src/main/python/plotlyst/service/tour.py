@@ -25,7 +25,7 @@ from qttour import TourManager, TourSequence, TourStep
 
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.view.widget.tour import Tutorial
-from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour_events
+from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour_events, TourEvent
 
 
 class TourService(QObject):
@@ -45,9 +45,9 @@ class TourService(QObject):
         self._events_iter = iter(tour_events(self._tutorial, self))
         self._nextEvent()
 
-    def addWidget(self, widget: QWidget, message: str = ''):
+    def addWidget(self, widget: QWidget, event: TourEvent):
         sequence = TourSequence()
-        step = TourStep(widget, message=message)
+        step = TourStep(widget, message=event.message, delegateClick=event.delegate_click, action=event.action)
         step.finished.connect(self._nextEvent)
         sequence.steps().append(step)
         self._manager.run(sequence, finishTour=False)

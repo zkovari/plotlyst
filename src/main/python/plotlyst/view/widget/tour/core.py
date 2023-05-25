@@ -43,6 +43,8 @@ COLOR_ON_NAVBAR: str = '#e9c46a'
 @dataclass
 class TourEvent(Event):
     message: str = ''
+    action: str = ''
+    delegate_click: bool = True
 
 
 class LibraryTourEvent(TourEvent):
