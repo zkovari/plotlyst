@@ -49,13 +49,18 @@ class LibraryTourEvent(TourEvent):
     pass
 
 
+class NewStoryButtonEvent(TourEvent):
+    pass
+
+
 def tour_events(tutorial: Tutorial, sender: QObject):
     return tour_factories[tutorial](sender)
 
 
 def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
     return [LibraryTourEvent(sender,
-                             message='Navigate first to your library panel. This is where you will find all your stories.')]
+                             message='Navigate first to your library panel. This is where you will find all your stories.'),
+            NewStoryButtonEvent(sender, message="Let's create a new story.")]
 
 
 tour_factories = {Tutorial.FirstNovel: first_novel_tour_factory}

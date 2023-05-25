@@ -46,7 +46,7 @@ from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
 from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
-from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent
+from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonEvent
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -55,7 +55,7 @@ class HomeView(AbstractView):
     loadNovel = pyqtSignal(NovelDescriptor)
 
     def __init__(self):
-        super(HomeView, self).__init__([LibraryTourEvent])
+        super(HomeView, self).__init__([LibraryTourEvent, NewStoryButtonEvent])
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
         self._selected_novel: Optional[NovelDescriptor] = None
@@ -188,6 +188,9 @@ class HomeView(AbstractView):
             self.refresh()
         elif isinstance(event, LibraryTourEvent):
             self._tour_service.addWidget(self.ui.btnLibrary, event.message)
+        elif isinstance(event, NewStoryButtonEvent):
+            self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
+            self._tour_service.addWidget(self.ui.btnAddNewStoryMain, event.message)
         else:
             super(HomeView, self).event_received(event)
 
