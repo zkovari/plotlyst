@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, List
+from typing import Optional
 
 from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QWidget
@@ -25,7 +25,7 @@ from qttour import TourManager, TourSequence, TourStep
 
 from src.main.python.plotlyst.event.core import emit_event
 from src.main.python.plotlyst.view.widget.tour import Tutorial
-from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, TourEvent, tour_events
+from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour_events
 
 
 class TourService(QObject):
@@ -34,18 +34,25 @@ class TourService(QObject):
         self._manager = TourManager.instance()
         self._manager.setCoachColor(COLOR_ON_NAVBAR)
         self._tutorial: Optional[Tutorial] = None
-        self._events: List[TourEvent] = []
+        self._events_iter = None
 
     def setTutorial(self, tutorial: Tutorial):
         self._tutorial = tutorial
-        self._events.clear()
+        self._events_iter = None
 
     def start(self):
         self._manager.start()
-        self._events = tour_events(self._tutorial, self)
-        emit_event(self._events[0])
+        self._events_iter = iter(tour_events(self._tutorial, self))
+        self._nextEvent()
 
     def addWidget(self, widget: QWidget, message: str = ''):
         sequence = TourSequence()
-        sequence.steps().append(TourStep(widget, message=message))
+        step = TourStep(widget, message=message)
+        step.finished.connect(self._nextEvent)
+        sequence.steps().append(step)
         self._manager.run(sequence)
+
+    def _nextEvent(self):
+        event = next(self._events_iter, None)
+        if event is not None:
+            emit_event(event)
