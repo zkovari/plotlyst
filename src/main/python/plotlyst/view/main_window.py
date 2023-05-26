@@ -482,7 +482,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             return
 
         self.repo.flush(sync=True)
-        event_dispatcher.clear()
         if self.novel:
             self._clear_novel_views()
 
@@ -516,22 +515,48 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)
         gc(self.novel_view.widget)
+        gc(self.novel_view)
+        self.novel_view = None
+
         self.pageCharacters.layout().removeWidget(self.characters_view.widget)
         gc(self.characters_view.widget)
+        gc(self.characters_view)
+        self.characters_view = None
+
         self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
         gc(self.scenes_outline_view.widget)
+        gc(self.scenes_outline_view)
+        self.scenes_outline_view = None
+
         self.pageNotes.layout().removeWidget(self.notes_view.widget)
         gc(self.notes_view.widget)
+        gc(self.notes_view)
+        self.notes_view = None
+
         self.pageWorld.layout().removeWidget(self.world_building_view.widget)
         gc(self.world_building_view.widget)
+        gc(self.world_building_view)
+        self.world_building_view = None
+
         self.pageBoard.layout().removeWidget(self.board_view.widget)
         gc(self.board_view.widget)
+        gc(self.board_view)
+        self.board_view = None
+
         self.pageBoard.layout().removeWidget(self.reports_view.widget)
         gc(self.reports_view.widget)
+        gc(self.reports_view)
+        self.reports_view = None
+
         self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
         gc(self.manuscript_view.widget)
+        gc(self.manuscript_view)
+        self.manuscript_view = None
+
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         gc(self.comments_view.widget)
+        gc(self.comments_view)
+        self.comments_view = None
 
         self.outline_mode.setDisabled(True)
         self.outline_mode.setText('')
