@@ -51,8 +51,21 @@ class LibraryTourEvent(TourEvent):
     pass
 
 
-class NewStoryButtonEvent(TourEvent):
+class NewStoryButtonTourEvent(TourEvent):
     pass
+
+
+# shows the dialog without hijacking the main eventloop
+class NewStoryDialogOpenTourEvent(TourEvent):
+    pass
+
+
+class NewStoryTitleInDialogTourEvent(TourEvent):
+    pass
+
+
+class NewStoryTitleFillInDialogTourEvent(TourEvent):
+    title: str
 
 
 def tour_events(tutorial: Tutorial, sender: QObject):
@@ -62,7 +75,12 @@ def tour_events(tutorial: Tutorial, sender: QObject):
 def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
     return [LibraryTourEvent(sender,
                              message='Navigate first to your library panel. This is where you will find all your stories.'),
-            NewStoryButtonEvent(sender, message="Let's create a new story.")]
+            NewStoryButtonTourEvent(sender, message="Let's create a new story.", delegate_click=False),
+            NewStoryDialogOpenTourEvent(sender),
+            NewStoryTitleInDialogTourEvent(sender,
+                                           message="Specify your story's name. You can change it later. Now click the button to autofill.",
+                                           action='Fill in',
+                                           delegate_click=False)]
 
 
 tour_factories = {Tutorial.FirstNovel: first_novel_tour_factory}

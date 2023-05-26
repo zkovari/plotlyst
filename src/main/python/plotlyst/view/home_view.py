@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSignal, QSize, Qt
+from PyQt6.QtCore import pyqtSignal, QSize, Qt, QTimer
 from PyQt6.QtGui import QPixmap, QColor, QTextDocument
 from overrides import overrides
 from qthandy import ask_confirmation, transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold
@@ -46,7 +46,8 @@ from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
 from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
-from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonEvent
+from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
+    NewStoryDialogOpenTourEvent
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -55,12 +56,12 @@ class HomeView(AbstractView):
     loadNovel = pyqtSignal(NovelDescriptor)
 
     def __init__(self):
-        super(HomeView, self).__init__([LibraryTourEvent, NewStoryButtonEvent])
+        super(HomeView, self).__init__([LibraryTourEvent, NewStoryButtonTourEvent, NewStoryDialogOpenTourEvent])
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
         self._selected_novel: Optional[NovelDescriptor] = None
         self._novels: List[NovelDescriptor] = []
-        self._tour_service = TourService()
+        self._tour_service = TourService.instance()
 
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', 'white'))
@@ -188,9 +189,13 @@ class HomeView(AbstractView):
             self.refresh()
         elif isinstance(event, LibraryTourEvent):
             self._tour_service.addWidget(self.ui.btnLibrary, event)
-        elif isinstance(event, NewStoryButtonEvent):
+        elif isinstance(event, NewStoryButtonTourEvent):
             self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
             self._tour_service.addWidget(self.ui.btnAddNewStoryMain, event)
+        elif isinstance(event, NewStoryDialogOpenTourEvent):
+            dialog = StoryCreationDialog(self.widget.window())
+            dialog.show()
+            QTimer.singleShot(100, self._tour_service.next)
         else:
             super(HomeView, self).event_received(event)
 

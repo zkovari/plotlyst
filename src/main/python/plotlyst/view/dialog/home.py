@@ -29,13 +29,18 @@ from src.main.python.plotlyst.common import MAXIMUM_SIZE
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 from src.main.python.plotlyst.env import app_env
+from src.main.python.plotlyst.event.core import EventListener, Event
+from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent
 
 
-class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
+class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
+
     def __init__(self, parent=None):
         super(StoryCreationDialog, self).__init__(parent)
         self.setupUi(self)
@@ -70,6 +75,9 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
         self.stackedWidget.currentChanged.connect(self._pageChanged)
         self.stackedWidget.setCurrentWidget(self.pageNewStory)
 
+        self._tour_service: TourService = TourService.instance()
+        event_dispatcher.register(self, NewStoryTitleInDialogTourEvent)
+
     def display(self) -> Optional[Novel]:
         self._scrivenerNovel = None
         result = self.exec()
@@ -82,6 +90,10 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog):
             return self._scrivenerNovel
 
         return None
+
+    def event_received(self, event: Event):
+        if isinstance(event, NewStoryTitleInDialogTourEvent):
+            self._tour_service.addDialogWidget(self, self.lineTitle, event)
 
     def _pageChanged(self):
         if self.stackedWidget.currentWidget() == self.pageNewStory:

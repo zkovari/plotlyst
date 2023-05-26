@@ -17,10 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import threading
 from typing import Optional
 
 from PyQt6.QtCore import QObject
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QDialog
 from qttour import TourManager, TourSequence, TourStep
 
 from src.main.python.plotlyst.event.core import emit_event
@@ -29,12 +30,23 @@ from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour
 
 
 class TourService(QObject):
+    __instance = None
+    __lock = threading.Lock()
+
     def __init__(self, parent=None):
         super(TourService, self).__init__(parent)
         self._manager = TourManager.instance()
         self._manager.setCoachColor(COLOR_ON_NAVBAR)
         self._tutorial: Optional[Tutorial] = None
         self._events_iter = None
+
+    @classmethod
+    def instance(cls):
+        if not cls.__instance:
+            with cls.__lock:
+                if not cls.__instance:
+                    cls.__instance = TourService()
+        return cls.__instance
 
     def setTutorial(self, tutorial: Tutorial):
         self._tutorial = tutorial
@@ -46,8 +58,19 @@ class TourService(QObject):
         self._nextEvent()
 
     def addWidget(self, widget: QWidget, event: TourEvent):
-        sequence = TourSequence()
         step = TourStep(widget, message=event.message, delegateClick=event.delegate_click, action=event.action)
+        self._run(step)
+
+    def addDialogWidget(self, dialog: QDialog, widget: QWidget, event: TourEvent):
+        step = TourStep(widget, message=event.message, delegateClick=event.delegate_click, action=event.action,
+                        dialog=dialog)
+        self._run(step)
+
+    def next(self):
+        self._nextEvent()
+
+    def _run(self, step: TourStep):
+        sequence = TourSequence()
         step.finished.connect(self._nextEvent)
         sequence.steps().append(step)
         self._manager.run(sequence, finishTour=False)
