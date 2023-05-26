@@ -23,7 +23,7 @@ import qtanim
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
-from qthandy import incr_font, gc
+from qthandy import incr_font
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import MAXIMUM_SIZE
@@ -99,7 +99,6 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
     def hideEvent(self, event):
         event_dispatcher.deregister(self, *self._eventTypes)
         super(StoryCreationDialog, self).hideEvent(event)
-        gc(self)
 
     def event_received(self, event: Event):
         if isinstance(event, NewStoryTitleInDialogTourEvent):
