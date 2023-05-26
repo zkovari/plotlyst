@@ -17,12 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import uuid
 from dataclasses import dataclass
 from enum import Enum
 from typing import List
 
 from PyQt6.QtCore import QObject
 
+from src.main.python.plotlyst.core.domain import NovelDescriptor
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -45,6 +47,9 @@ class TourEvent(Event):
     message: str = ''
     action: str = ''
     delegate_click: bool = True
+
+
+tutorial_novel = NovelDescriptor('My new novel', id=uuid.UUID('a1a88622-4612-4c90-9848-8ef93b423bda'))
 
 
 class LibraryTourEvent(TourEvent):
@@ -73,6 +78,14 @@ class NewStoryDialogOkayButtonTourEvent(TourEvent):
     pass
 
 
+class TutorialNovelSelectTourEvent(TourEvent):
+    pass
+
+
+class NovelDisplayTourEvent(TourEvent):
+    pass
+
+
 def tour_events(tutorial: Tutorial, sender: QObject):
     return tour_factories[tutorial](sender)
 
@@ -87,7 +100,11 @@ def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
                                            action='Fill in',
                                            delegate_click=False),
             NewStoryTitleFillInDialogTourEvent(sender, title='My new novel'),
-            NewStoryDialogOkayButtonTourEvent(sender)]
+            NewStoryDialogOkayButtonTourEvent(sender),
+            TutorialNovelSelectTourEvent(sender),
+            NovelDisplayTourEvent(sender,
+                                  message="This is your novel's main display. You can edit the title or subtitle.",
+                                  delegate_click=False, action='Next')]
 
 
 tour_factories = {Tutorial.FirstNovel: first_novel_tour_factory}

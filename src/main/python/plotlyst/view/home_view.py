@@ -47,7 +47,7 @@ from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
 from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
 from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
-    NewStoryDialogOpenTourEvent
+    NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent, NovelDisplayTourEvent, tutorial_novel
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -56,7 +56,9 @@ class HomeView(AbstractView):
     loadNovel = pyqtSignal(NovelDescriptor)
 
     def __init__(self):
-        super(HomeView, self).__init__([LibraryTourEvent, NewStoryButtonTourEvent, NewStoryDialogOpenTourEvent])
+        super(HomeView, self).__init__(
+            [LibraryTourEvent, NewStoryButtonTourEvent, NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent,
+             NovelDisplayTourEvent])
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
         self._selected_novel: Optional[NovelDescriptor] = None
@@ -196,6 +198,11 @@ class HomeView(AbstractView):
             dialog = StoryCreationDialog(self.widget.window())
             dialog.show()
             QTimer.singleShot(100, self._tour_service.next)
+        elif isinstance(event, TutorialNovelSelectTourEvent):
+            self._novel_selected(tutorial_novel)
+            self._tour_service.next()
+        elif isinstance(event, NovelDisplayTourEvent):
+            self._tour_service.addWidget(self.ui.pageNovelDisplay, event)
         else:
             super(HomeView, self).event_received(event)
 
