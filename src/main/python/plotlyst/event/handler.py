@@ -99,12 +99,13 @@ class EventDispatcher:
     def __init__(self):
         self._listeners: Dict[TEvent, List[EventListener]] = {}
 
-    def register(self, listener: EventListener, event_type):
-        if event_type not in self._listeners.keys():
-            self._listeners[event_type] = []
-        self._listeners[event_type].append(listener)
-        if isinstance(listener, QObject):
-            listener.destroyed.connect(lambda: self.deregister(listener, event_type))
+    def register(self, listener: EventListener, *event_types):
+        for event_type in event_types:
+            if event_type not in self._listeners.keys():
+                self._listeners[event_type] = []
+            self._listeners[event_type].append(listener)
+            if isinstance(listener, QObject):
+                listener.destroyed.connect(lambda: self.deregister(listener, event_type))
 
     def clear(self):
         self._listeners.clear()

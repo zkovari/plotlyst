@@ -64,8 +64,13 @@ class NewStoryTitleInDialogTourEvent(TourEvent):
     pass
 
 
+@dataclass
 class NewStoryTitleFillInDialogTourEvent(TourEvent):
-    title: str
+    title: str = ''
+
+
+class NewStoryDialogOkayButtonTourEvent(TourEvent):
+    pass
 
 
 def tour_events(tutorial: Tutorial, sender: QObject):
@@ -80,7 +85,9 @@ def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
             NewStoryTitleInDialogTourEvent(sender,
                                            message="Specify your story's name. You can change it later. Now click the button to autofill.",
                                            action='Fill in',
-                                           delegate_click=False)]
+                                           delegate_click=False),
+            NewStoryTitleFillInDialogTourEvent(sender, title='My new novel'),
+            NewStoryDialogOkayButtonTourEvent(sender)]
 
 
 tour_factories = {Tutorial.FirstNovel: first_novel_tour_factory}

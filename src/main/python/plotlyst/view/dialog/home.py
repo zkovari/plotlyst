@@ -36,7 +36,8 @@ from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent
+from src.main.python.plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
+    NewStoryTitleFillInDialogTourEvent, NewStoryDialogOkayButtonTourEvent
 
 
 class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
@@ -76,7 +77,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.stackedWidget.setCurrentWidget(self.pageNewStory)
 
         self._tour_service: TourService = TourService.instance()
-        event_dispatcher.register(self, NewStoryTitleInDialogTourEvent)
+        event_dispatcher.register(self, NewStoryTitleInDialogTourEvent, NewStoryTitleFillInDialogTourEvent,
+                                  NewStoryDialogOkayButtonTourEvent)
 
     def display(self) -> Optional[Novel]:
         self._scrivenerNovel = None
@@ -94,6 +96,11 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
     def event_received(self, event: Event):
         if isinstance(event, NewStoryTitleInDialogTourEvent):
             self._tour_service.addDialogWidget(self, self.lineTitle, event)
+        elif isinstance(event, NewStoryTitleFillInDialogTourEvent):
+            self.lineTitle.setText(event.title)
+            self._tour_service.next()
+        elif isinstance(event, NewStoryDialogOkayButtonTourEvent):
+            self._tour_service.addDialogWidget(self, self.btnSaveNewStory, event)
 
     def _pageChanged(self):
         if self.stackedWidget.currentWidget() == self.pageNewStory:
