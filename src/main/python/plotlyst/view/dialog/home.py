@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtanim
-from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from qthandy import incr_font
@@ -46,7 +45,6 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
     def __init__(self, parent=None):
         super(StoryCreationDialog, self).__init__(parent)
         self.setupUi(self)
-        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
         self._scrivenerNovel: Optional[Novel] = None
 
