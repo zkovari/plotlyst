@@ -110,11 +110,12 @@ class EventDispatcher:
     def clear(self):
         self._listeners.clear()
 
-    def deregister(self, listener: EventListener, event_type):
-        if event_type not in self._listeners.keys():
-            return
-        if listener in self._listeners[event_type]:
-            self._listeners[event_type].remove(listener)
+    def deregister(self, listener: EventListener, *event_types):
+        for event_type in event_types:
+            if event_type not in self._listeners.keys():
+                return
+            if listener in self._listeners[event_type]:
+                self._listeners[event_type].remove(listener)
 
     def dispatch(self, event: Event):
         if type(event) in self._listeners.keys():

@@ -20,9 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 
 import qtanim
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
-from qthandy import incr_font
+from qthandy import incr_font, gc
 from qthandy.filter import DisabledClickEventFilter, OpacityEventFilter
 
 from src.main.python.plotlyst.common import MAXIMUM_SIZE
@@ -45,6 +46,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
     def __init__(self, parent=None):
         super(StoryCreationDialog, self).__init__(parent)
         self.setupUi(self)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
         self._scrivenerNovel: Optional[Novel] = None
 
@@ -77,8 +79,9 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
         self.stackedWidget.setCurrentWidget(self.pageNewStory)
 
         self._tour_service: TourService = TourService.instance()
-        event_dispatcher.register(self, NewStoryTitleInDialogTourEvent, NewStoryTitleFillInDialogTourEvent,
-                                  NewStoryDialogOkayButtonTourEvent)
+        self._eventTypes = [NewStoryTitleInDialogTourEvent, NewStoryTitleFillInDialogTourEvent,
+                            NewStoryDialogOkayButtonTourEvent]
+        event_dispatcher.register(self, *self._eventTypes)
 
     def display(self) -> Optional[Novel]:
         self._scrivenerNovel = None
@@ -92,6 +95,11 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             return self._scrivenerNovel
 
         return None
+
+    def hideEvent(self, event):
+        event_dispatcher.deregister(self, *self._eventTypes)
+        super(StoryCreationDialog, self).hideEvent(event)
+        gc(self)
 
     def event_received(self, event: Event):
         if isinstance(event, NewStoryTitleInDialogTourEvent):
