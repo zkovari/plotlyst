@@ -88,7 +88,7 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             return None
 
         if self.stackedWidget.currentWidget() == self.pageNewStory:
-            return Novel(title=self.lineTitle.text())
+            return Novel.new_novel(self.lineTitle.text())
         elif self._scrivenerNovel is not None:
             return self._scrivenerNovel
 

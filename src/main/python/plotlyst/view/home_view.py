@@ -47,7 +47,8 @@ from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
 from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
 from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
 from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
-    NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent, NovelDisplayTourEvent, tutorial_novel
+    NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent, NovelDisplayTourEvent, tutorial_novel, \
+    NovelOpenButtonTourEvent, TutorialNovelCloseTourEvent
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -58,7 +59,7 @@ class HomeView(AbstractView):
     def __init__(self):
         super(HomeView, self).__init__(
             [LibraryTourEvent, NewStoryButtonTourEvent, NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent,
-             NovelDisplayTourEvent])
+             NovelDisplayTourEvent, NovelOpenButtonTourEvent, TutorialNovelCloseTourEvent])
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
         self._selected_novel: Optional[NovelDescriptor] = None
@@ -203,6 +204,10 @@ class HomeView(AbstractView):
             self._tour_service.next()
         elif isinstance(event, NovelDisplayTourEvent):
             self._tour_service.addWidget(self.ui.pageNovelDisplay, event)
+        elif isinstance(event, NovelOpenButtonTourEvent):
+            self._tour_service.addWidget(self.ui.btnActivate, event)
+        elif isinstance(event, TutorialNovelCloseTourEvent):
+            self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
         else:
             super(HomeView, self).event_received(event)
 

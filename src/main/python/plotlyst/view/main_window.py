@@ -50,6 +50,7 @@ from src.main.python.plotlyst.service.importer import ScrivenerSyncImporter
 from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.service.resource import download_resource, download_nltk_resources
+from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.board_view import BoardView
@@ -71,6 +72,8 @@ from src.main.python.plotlyst.view.widget.button import ToolbarButton, NovelSync
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
+from src.main.python.plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
+    TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent
 from src.main.python.plotlyst.view.widget.utility import ResourceManagerDialog
 from src.main.python.plotlyst.view.world_building_view import WorldBuildingView
 
@@ -142,10 +145,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
         event_sender.send.connect(event_dispatcher.dispatch)
         QApplication.instance().focusChanged.connect(self._focus_changed)
-        self._register_events()
+        event_dispatcher.register(self, NovelDeletedEvent, NovelUpdatedEvent, OpenDistractionFreeMode,
+                                  ExitDistractionFreeMode, ResourceDownloadedEvent, TutorialNovelOpenTourEvent,
+                                  TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent,
+                                  HomeTopLevelButtonTourEvent)
 
         self._init_views()
 
+        self._tour_service = TourService.instance()
         self.repo = RepositoryPersistenceManager.instance()
 
         self._threadpool = QThreadPool()
@@ -221,8 +228,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def event_received(self, event: Event):
         if isinstance(event, NovelDeletedEvent):
             if self.novel and event.novel.id == self.novel.id:
-                self.novel = None
-                self._clear_novel_views()
+                self.close_novel()
         elif isinstance(event, NovelUpdatedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel.title = event.novel.title
@@ -236,6 +242,19 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if event.type == ResourceType.JRE_8:
                 emit_info('Start initializing grammar checker...')
                 self._threadpool.start(self._language_tool_setup_worker)
+        elif isinstance(event, TutorialNovelOpenTourEvent):
+            self._load_new_novel(tutorial_novel)
+            self._tour_service.next()
+        elif isinstance(event, TutorialNovelCloseTourEvent):
+            self.close_novel()
+        elif isinstance(event, NovelTopLevelButtonTourEvent):
+            self._tour_service.addWidget(self.outline_mode, event)
+        elif isinstance(event, HomeTopLevelButtonTourEvent):
+            self._tour_service.addWidget(self.home_mode, event)
+
+    def close_novel(self):
+        self.novel = None
+        self._clear_novel_views()
 
     def _toggle_fullscreen(self, on: bool):
         self.wdgNavBar.setHidden(on)
@@ -508,13 +527,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.menuExport.setEnabled(True)
         self.actionPreview.setEnabled(True)
-
-    def _register_events(self):
-        event_dispatcher.register(self, NovelDeletedEvent)
-        event_dispatcher.register(self, NovelUpdatedEvent)
-        event_dispatcher.register(self, OpenDistractionFreeMode)
-        event_dispatcher.register(self, ExitDistractionFreeMode)
-        event_dispatcher.register(self, ResourceDownloadedEvent)
 
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)

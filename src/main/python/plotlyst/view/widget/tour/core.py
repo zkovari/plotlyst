@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import copy
 import uuid
 from dataclasses import dataclass
 from enum import Enum
@@ -24,7 +25,7 @@ from typing import List
 
 from PyQt6.QtCore import QObject
 
-from src.main.python.plotlyst.core.domain import NovelDescriptor
+from src.main.python.plotlyst.core.domain import Novel, three_act_structure
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -49,7 +50,9 @@ class TourEvent(Event):
     delegate_click: bool = True
 
 
-tutorial_novel = NovelDescriptor('My new novel', id=uuid.UUID('a1a88622-4612-4c90-9848-8ef93b423bda'))
+tutorial_novel = Novel('My new novel', id=uuid.UUID('a1a88622-4612-4c90-9848-8ef93b423bda'),
+                       story_structures=[copy.deepcopy(three_act_structure)],
+                       tutorial=True)
 
 
 class LibraryTourEvent(TourEvent):
@@ -86,6 +89,26 @@ class NovelDisplayTourEvent(TourEvent):
     pass
 
 
+class NovelOpenButtonTourEvent(TourEvent):
+    pass
+
+
+class TutorialNovelOpenTourEvent(TourEvent):
+    pass
+
+
+class TutorialNovelCloseTourEvent(TourEvent):
+    pass
+
+
+class NovelTopLevelButtonTourEvent(TourEvent):
+    pass
+
+
+class HomeTopLevelButtonTourEvent(TourEvent):
+    pass
+
+
 def tour_events(tutorial: Tutorial, sender: QObject):
     return tour_factories[tutorial](sender)
 
@@ -104,7 +127,13 @@ def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
             TutorialNovelSelectTourEvent(sender),
             NovelDisplayTourEvent(sender,
                                   message="This is your novel's main display. You can edit the title or subtitle.",
-                                  delegate_click=False, action='Next')]
+                                  delegate_click=False, action='Next'),
+            NovelOpenButtonTourEvent(sender, message="Let's open your new novel to start working on it.",
+                                     delegate_click=False),
+            TutorialNovelOpenTourEvent(sender),
+            NovelTopLevelButtonTourEvent(sender),
+            HomeTopLevelButtonTourEvent(sender), ]
 
 
 tour_factories = {Tutorial.FirstNovel: first_novel_tour_factory}
+tour_teardowns = {Tutorial.FirstNovel: TutorialNovelCloseTourEvent}
