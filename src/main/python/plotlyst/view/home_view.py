@@ -166,8 +166,7 @@ class HomeView(AbstractView):
         incr_font(self.ui.lineTutorialTitle, 10)
         bold(self.ui.lineTutorialTitle)
 
-        # self.ui.btnLibrary.setChecked(True)
-        self.ui.btnTutorials.setChecked(True)
+        self.ui.btnLibrary.setChecked(True)
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
 
         self._novels = client.novels()
