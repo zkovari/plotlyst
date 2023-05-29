@@ -23,7 +23,7 @@ import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
 from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QResizeEvent
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
-    QProgressDialog
+    QProgressDialog, QAbstractButton
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc
@@ -73,7 +73,9 @@ from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
 from src.main.python.plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
-    TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent
+    TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
+    AllNovelViewsTourEvent, GeneralNovelViewTourEvent, CharacterViewTourEvent, ScenesViewTourEvent, \
+    DocumentsViewTourEvent, ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent, BaseNovelViewTourEvent
 from src.main.python.plotlyst.view.widget.utility import ResourceManagerDialog
 from src.main.python.plotlyst.view.world_building_view import WorldBuildingView
 
@@ -148,7 +150,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_dispatcher.register(self, NovelDeletedEvent, NovelUpdatedEvent, OpenDistractionFreeMode,
                                   ExitDistractionFreeMode, ResourceDownloadedEvent, TutorialNovelOpenTourEvent,
                                   TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent,
-                                  HomeTopLevelButtonTourEvent)
+                                  HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, AllNovelViewsTourEvent,
+                                  GeneralNovelViewTourEvent,
+                                  CharacterViewTourEvent, ScenesViewTourEvent, DocumentsViewTourEvent,
+                                  ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent)
 
         self._init_views()
 
@@ -226,6 +231,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     @overrides
     def event_received(self, event: Event):
+        def handle_novel_navbar_tour_event(event_: BaseNovelViewTourEvent, btn: QAbstractButton):
+            if event_.click_before:
+                btn.click()
+            self._tour_service.addWidget(btn, event_)
+
         if isinstance(event, NovelDeletedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.close_novel()
@@ -248,10 +258,29 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, TutorialNovelCloseTourEvent):
             if self.novel and self.novel.tutorial:
                 self.close_novel()
+                self.home_mode.setChecked(True)
+        elif isinstance(event, NovelEditorDisplayTourEvent):
+            self._tour_service.addWidget(self.pageOutline, event)
         elif isinstance(event, NovelTopLevelButtonTourEvent):
             self._tour_service.addWidget(self.outline_mode, event)
         elif isinstance(event, HomeTopLevelButtonTourEvent):
             self._tour_service.addWidget(self.home_mode, event)
+        elif isinstance(event, AllNovelViewsTourEvent):
+            self._tour_service.addWidget(self.wdgNavBar, event)
+        elif isinstance(event, GeneralNovelViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnNovel)
+        elif isinstance(event, CharacterViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnCharacters)
+        elif isinstance(event, ScenesViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnScenes)
+        elif isinstance(event, DocumentsViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnNotes)
+        elif isinstance(event, ManuscriptViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnManuscript)
+        elif isinstance(event, AnalysisViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnReports)
+        elif isinstance(event, BoardViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnBoard)
 
     def close_novel(self):
         self.novel = None

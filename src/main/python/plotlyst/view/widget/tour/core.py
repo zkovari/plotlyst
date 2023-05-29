@@ -89,6 +89,10 @@ class NovelDisplayTourEvent(TourEvent):
     pass
 
 
+class NovelEditorDisplayTourEvent(TourEvent):
+    pass
+
+
 class NovelOpenButtonTourEvent(TourEvent):
     pass
 
@@ -106,6 +110,43 @@ class NovelTopLevelButtonTourEvent(TourEvent):
 
 
 class HomeTopLevelButtonTourEvent(TourEvent):
+    pass
+
+
+class AllNovelViewsTourEvent(TourEvent):
+    pass
+
+
+@dataclass
+class BaseNovelViewTourEvent(TourEvent):
+    click_before: bool = False
+
+
+class GeneralNovelViewTourEvent(BaseNovelViewTourEvent):
+    pass
+
+
+class CharacterViewTourEvent(BaseNovelViewTourEvent):
+    pass
+
+
+class ScenesViewTourEvent(BaseNovelViewTourEvent):
+    pass
+
+
+class DocumentsViewTourEvent(BaseNovelViewTourEvent):
+    pass
+
+
+class ManuscriptViewTourEvent(BaseNovelViewTourEvent):
+    pass
+
+
+class AnalysisViewTourEvent(BaseNovelViewTourEvent):
+    pass
+
+
+class BoardViewTourEvent(BaseNovelViewTourEvent):
     pass
 
 
@@ -131,8 +172,22 @@ def first_novel_tour_factory(sender: QObject) -> List[TourEvent]:
             NovelOpenButtonTourEvent(sender, message="Let's open your new novel to start working on it.",
                                      delegate_click=False),
             TutorialNovelOpenTourEvent(sender),
-            NovelTopLevelButtonTourEvent(sender),
-            HomeTopLevelButtonTourEvent(sender), ]
+            NovelEditorDisplayTourEvent(sender, message="This is your novel editor", delegate_click=False,
+                                        action='Next'),
+            AllNovelViewsTourEvent(sender, message="There are different panels you can navigate through",
+                                   delegate_click=False, action='Next'),
+            GeneralNovelViewTourEvent(sender, message="General story elements, e.g., structure and plot"),
+            CharacterViewTourEvent(sender, message="Characters", click_before=True),
+            ScenesViewTourEvent(sender, message="Scenes and chapters", click_before=True),
+            DocumentsViewTourEvent(sender, message="General research and documents", click_before=True),
+            ManuscriptViewTourEvent(sender, message="Manuscript", click_before=True),
+            AnalysisViewTourEvent(sender, message="Analysis", click_before=True),
+            BoardViewTourEvent(sender, message="Task management", click_before=True),
+            NovelTopLevelButtonTourEvent(sender,
+                                         message="You can switch among your novel editor and the home panel in the top.",
+                                         action='Next'),
+            HomeTopLevelButtonTourEvent(sender),
+            NovelTopLevelButtonTourEvent(sender), ]
 
 
 tour_factories = {Tutorial.FirstNovel: first_novel_tour_factory}
