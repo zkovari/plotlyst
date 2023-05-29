@@ -6,14 +6,14 @@ from src.main.python.plotlyst.test.conftest import init_project
 
 
 def test_insert_novel(test_client):
-    novel = Novel(title='test1')
+    novel = Novel.new_novel(title='test1')
     client.insert_novel(novel)
     assert novel.id
 
     novels = client.novels()
     persisted_novel = client.fetch_novel(novels[0].id)
-    novel.story_structures = [three_act_structure]
     assert novel == persisted_novel
+    assert novel.story_structures[0] is not three_act_structure
 
 
 def test_delete_novel(test_client):

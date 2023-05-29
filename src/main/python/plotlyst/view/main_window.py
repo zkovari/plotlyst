@@ -23,7 +23,7 @@ import qtawesome
 from PyQt6.QtCore import Qt, QThreadPool
 from PyQt6.QtGui import QCloseEvent, QPalette, QColor, QKeyEvent, QResizeEvent
 from PyQt6.QtWidgets import QMainWindow, QWidget, QApplication, QLineEdit, QTextEdit, QToolButton, QButtonGroup, \
-    QProgressDialog
+    QProgressDialog, QAbstractButton
 from fbs_runtime import platform
 from overrides import overrides
 from qthandy import spacer, busy, gc
@@ -50,6 +50,7 @@ from src.main.python.plotlyst.service.importer import ScrivenerSyncImporter
 from src.main.python.plotlyst.service.manuscript import export_manuscript_to_docx
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.service.resource import download_resource, download_nltk_resources
+from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.settings import settings
 from src.main.python.plotlyst.view._view import AbstractView
 from src.main.python.plotlyst.view.board_view import BoardView
@@ -71,6 +72,10 @@ from src.main.python.plotlyst.view.widget.button import ToolbarButton, NovelSync
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
 from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
+from src.main.python.plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
+    TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
+    AllNovelViewsTourEvent, GeneralNovelViewTourEvent, CharacterViewTourEvent, ScenesViewTourEvent, \
+    DocumentsViewTourEvent, ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent, BaseNovelViewTourEvent
 from src.main.python.plotlyst.view.widget.utility import ResourceManagerDialog
 from src.main.python.plotlyst.view.world_building_view import WorldBuildingView
 
@@ -142,10 +147,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
         event_sender.send.connect(event_dispatcher.dispatch)
         QApplication.instance().focusChanged.connect(self._focus_changed)
-        self._register_events()
+        event_dispatcher.register(self, NovelDeletedEvent, NovelUpdatedEvent, OpenDistractionFreeMode,
+                                  ExitDistractionFreeMode, ResourceDownloadedEvent, TutorialNovelOpenTourEvent,
+                                  TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent,
+                                  HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, AllNovelViewsTourEvent,
+                                  GeneralNovelViewTourEvent,
+                                  CharacterViewTourEvent, ScenesViewTourEvent, DocumentsViewTourEvent,
+                                  ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent)
 
         self._init_views()
 
+        self._tour_service = TourService.instance()
         self.repo = RepositoryPersistenceManager.instance()
 
         self._threadpool = QThreadPool()
@@ -217,10 +229,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     @overrides
     def event_received(self, event: Event):
+        def handle_novel_navbar_tour_event(event_: BaseNovelViewTourEvent, btn: QAbstractButton):
+            if event_.click_before:
+                btn.click()
+            self._tour_service.addWidget(btn, event_)
+
         if isinstance(event, NovelDeletedEvent):
             if self.novel and event.novel.id == self.novel.id:
-                self.novel = None
-                self._clear_novel_views()
+                self.close_novel()
         elif isinstance(event, NovelUpdatedEvent):
             if self.novel and event.novel.id == self.novel.id:
                 self.novel.title = event.novel.title
@@ -234,6 +250,39 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             if event.type == ResourceType.JRE_8:
                 emit_info('Start initializing grammar checker...')
                 self._threadpool.start(self._language_tool_setup_worker)
+        elif isinstance(event, TutorialNovelOpenTourEvent):
+            self._load_new_novel(tutorial_novel)
+            self._tour_service.next()
+        elif isinstance(event, TutorialNovelCloseTourEvent):
+            if self.novel and self.novel.tutorial:
+                self.close_novel()
+                self.home_mode.setChecked(True)
+        elif isinstance(event, NovelEditorDisplayTourEvent):
+            self._tour_service.addWidget(self.pageOutline, event)
+        elif isinstance(event, NovelTopLevelButtonTourEvent):
+            self._tour_service.addWidget(self.outline_mode, event)
+        elif isinstance(event, HomeTopLevelButtonTourEvent):
+            self._tour_service.addWidget(self.home_mode, event)
+        elif isinstance(event, AllNovelViewsTourEvent):
+            self._tour_service.addWidget(self.wdgNavBar, event)
+        elif isinstance(event, GeneralNovelViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnNovel)
+        elif isinstance(event, CharacterViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnCharacters)
+        elif isinstance(event, ScenesViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnScenes)
+        elif isinstance(event, DocumentsViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnNotes)
+        elif isinstance(event, ManuscriptViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnManuscript)
+        elif isinstance(event, AnalysisViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnReports)
+        elif isinstance(event, BoardViewTourEvent):
+            handle_novel_navbar_tour_event(event, self.btnBoard)
+
+    def close_novel(self):
+        self.novel = None
+        self._clear_novel_views()
 
     def _toggle_fullscreen(self, on: bool):
         self.wdgNavBar.setHidden(on)
@@ -305,8 +354,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnManuscript.setChecked(True)
         elif self.novel.prefs.panels.scenes_view == ScenesView.REPORTS:
             self.btnReports.setChecked(True)
-        elif self.novel.scenes:
-            self.btnScenes.setChecked(True)
         else:
             self.btnNovel.setChecked(True)
 
@@ -480,11 +527,14 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             return
 
         self.repo.flush(sync=True)
-        event_dispatcher.clear()
         if self.novel:
             self._clear_novel_views()
 
-        self.novel = client.fetch_novel(novel.id)
+        if novel.tutorial:
+            self.novel = novel
+        else:
+            self.novel = client.fetch_novel(novel.id)
+        self.repo.set_persistence_enabled(not novel.tutorial)
         acts_registry.set_novel(self.novel)
         dictionary.set_novel(self.novel)
         app_env.novel = self.novel
@@ -493,8 +543,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             language_tool_proxy.tool.language = self.novel.lang_settings.lang
 
         self._init_views()
-        settings.set_last_novel_id(self.novel.id)
-        self._register_events()
+        if not novel.tutorial:
+            settings.set_last_novel_id(self.novel.id)
 
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)
@@ -504,32 +554,51 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.menuExport.setEnabled(True)
         self.actionPreview.setEnabled(True)
 
-    def _register_events(self):
-        event_dispatcher.register(self, NovelDeletedEvent)
-        event_dispatcher.register(self, NovelUpdatedEvent)
-        event_dispatcher.register(self, OpenDistractionFreeMode)
-        event_dispatcher.register(self, ExitDistractionFreeMode)
-        event_dispatcher.register(self, ResourceDownloadedEvent)
-
     def _clear_novel_views(self):
         self.pageNovel.layout().removeWidget(self.novel_view.widget)
         gc(self.novel_view.widget)
+        gc(self.novel_view)
+        self.novel_view = None
+
         self.pageCharacters.layout().removeWidget(self.characters_view.widget)
         gc(self.characters_view.widget)
+        gc(self.characters_view)
+        self.characters_view = None
+
         self.pageScenes.layout().removeWidget(self.scenes_outline_view.widget)
         gc(self.scenes_outline_view.widget)
+        gc(self.scenes_outline_view)
+        self.scenes_outline_view = None
+
         self.pageNotes.layout().removeWidget(self.notes_view.widget)
         gc(self.notes_view.widget)
+        gc(self.notes_view)
+        self.notes_view = None
+
         self.pageWorld.layout().removeWidget(self.world_building_view.widget)
         gc(self.world_building_view.widget)
+        gc(self.world_building_view)
+        self.world_building_view = None
+
         self.pageBoard.layout().removeWidget(self.board_view.widget)
         gc(self.board_view.widget)
+        gc(self.board_view)
+        self.board_view = None
+
         self.pageBoard.layout().removeWidget(self.reports_view.widget)
         gc(self.reports_view.widget)
+        gc(self.reports_view)
+        self.reports_view = None
+
         self.pageManuscript.layout().removeWidget(self.manuscript_view.widget)
         gc(self.manuscript_view.widget)
+        gc(self.manuscript_view)
+        self.manuscript_view = None
+
         self.pageComments.layout().removeWidget(self.comments_view.widget)
         gc(self.comments_view.widget)
+        gc(self.comments_view)
+        self.comments_view = None
 
         self.outline_mode.setDisabled(True)
         self.outline_mode.setText('')

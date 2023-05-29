@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import codecs
+import copy
 import os
 import pathlib
 import uuid
@@ -448,7 +449,7 @@ class JsonClient:
             conflict_ids[str(conflict.id)] = conflict
 
         if not novel_info.story_structures:
-            novel_info.story_structures = [three_act_structure]
+            novel_info.story_structures = [copy.deepcopy(three_act_structure)]
 
         if all([not x.active for x in novel_info.story_structures]):
             novel_info.story_structures[0].active = True

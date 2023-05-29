@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSignal, QSize, Qt
-from PyQt6.QtGui import QPixmap, QColor
+from PyQt6.QtCore import pyqtSignal, QSize, Qt, QTimer
+from PyQt6.QtGui import QPixmap, QColor, QTextDocument
 from overrides import overrides
-from qthandy import ask_confirmation, transparent, incr_font, italic, busy, retain_when_hidden, incr_icon
-from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter
+from qthandy import ask_confirmation, transparent, incr_font, italic, busy, retain_when_hidden, incr_icon, bold
+from qthandy.filter import VisibilityToggleEventFilter, InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
@@ -35,13 +35,20 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import flush_or_fail
+from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.view._view import AbstractView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, action, \
+    TooltipPositionEventFilter
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
 from src.main.python.plotlyst.view.generated.home_view_ui import Ui_HomeView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.library import ShelvesTreeView
+from src.main.python.plotlyst.view.widget.tour import TutorialsTreeView, Tutorial
+from src.main.python.plotlyst.view.widget.tour.content import tutorial_titles, tutorial_descriptions
+from src.main.python.plotlyst.view.widget.tour.core import LibraryTourEvent, NewStoryButtonTourEvent, \
+    NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent, NovelDisplayTourEvent, tutorial_novel, \
+    NovelOpenButtonTourEvent, TutorialNovelCloseTourEvent
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
@@ -50,11 +57,14 @@ class HomeView(AbstractView):
     loadNovel = pyqtSignal(NovelDescriptor)
 
     def __init__(self):
-        super(HomeView, self).__init__()
+        super(HomeView, self).__init__(
+            [LibraryTourEvent, NewStoryButtonTourEvent, NewStoryDialogOpenTourEvent, TutorialNovelSelectTourEvent,
+             NovelDisplayTourEvent, NovelOpenButtonTourEvent, TutorialNovelCloseTourEvent])
         self.ui = Ui_HomeView()
         self.ui.setupUi(self.widget)
         self._selected_novel: Optional[NovelDescriptor] = None
         self._novels: List[NovelDescriptor] = []
+        self._tour_service = TourService.instance()
 
         self.ui.lblBanner.setPixmap(QPixmap(resource_registry.banner))
         self.ui.btnTwitter.setIcon(IconRegistry.from_name('fa5b.twitter', 'white'))
@@ -66,10 +76,19 @@ class HomeView(AbstractView):
 
         self.ui.btnLibrary.setIcon(
             IconRegistry.from_name('mdi.bookshelf', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+        self.ui.btnTutorials.setIcon(
+            IconRegistry.from_name('mdi6.school-outline', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.ui.btnProgress.setIcon(
             IconRegistry.from_name('fa5s.chart-line', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.ui.btnRoadmap.setIcon(
             IconRegistry.from_name('fa5s.road', NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
+
+        for btn in self.ui.buttonGroup.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
+            btn.installEventFilter(TooltipPositionEventFilter(btn))
+
+        self.ui.btnProgress.setHidden(True)
+        self.ui.btnRoadmap.setHidden(True)
 
         self.ui.btnActivate.setIcon(IconRegistry.book_icon(color='white', color_on='white'))
         self.ui.btnActivate.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnActivate))
@@ -123,8 +142,29 @@ class HomeView(AbstractView):
         self.ui.btnAddNewStoryMain.setIconSize(QSize(24, 24))
 
         link_buttons_to_pages(self.ui.stackedWidget,
-                              [(self.ui.btnLibrary, self.ui.pageLibrary), (self.ui.btnProgress, self.ui.pageProgress),
+                              [(self.ui.btnLibrary, self.ui.pageLibrary), (self.ui.btnTutorials, self.ui.pageTutorials),
+                               (self.ui.btnProgress, self.ui.pageProgress),
                                (self.ui.btnRoadmap, self.ui.pageRoadmap)])
+
+        self._tutorialsTreeView = TutorialsTreeView(settings=TreeSettings(font_incr=2))
+        self._tutorialsTreeView.tutorialSelected.connect(self._tutorial_selected)
+        self.ui.splitterTutorials.setSizes([150, 500])
+        self.ui.btnStartTutorial.setIcon(IconRegistry.from_name('fa5s.play-circle', 'white'))
+        self.ui.btnStartTutorial.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStartTutorial))
+        self.ui.btnStartTutorial.clicked.connect(self._start_tutorial)
+        self.ui.wdgTutorialsParent.layout().addWidget(self._tutorialsTreeView)
+        self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
+
+        self.ui.textTutorial.setViewportMargins(20, 20, 20, 20)
+        document: QTextDocument = self.ui.textTutorial.document()
+        font = self.ui.textTutorial.font()
+        font.setPointSize(font.pointSize() + 2)
+        document.setDefaultFont(font)
+
+        transparent(self.ui.lineTutorialTitle)
+        self.ui.lineTutorialTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        incr_font(self.ui.lineTutorialTitle, 10)
+        bold(self.ui.lineTutorialTitle)
 
         self.ui.btnLibrary.setChecked(True)
         self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
@@ -149,6 +189,24 @@ class HomeView(AbstractView):
             if self._selected_novel and self._selected_novel.id == event.novel.id:
                 self.ui.lineNovelTitle.setText(self._selected_novel.title)
             self.refresh()
+        elif isinstance(event, LibraryTourEvent):
+            self._tour_service.addWidget(self.ui.btnLibrary, event)
+        elif isinstance(event, NewStoryButtonTourEvent):
+            self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
+            self._tour_service.addWidget(self.ui.btnAddNewStoryMain, event)
+        elif isinstance(event, NewStoryDialogOpenTourEvent):
+            dialog = StoryCreationDialog(self.widget.window())
+            dialog.show()
+            QTimer.singleShot(100, self._tour_service.next)
+        elif isinstance(event, TutorialNovelSelectTourEvent):
+            self._novel_selected(tutorial_novel)
+            self._tour_service.next()
+        elif isinstance(event, NovelDisplayTourEvent):
+            self._tour_service.addWidget(self.ui.pageNovelDisplay, event)
+        elif isinstance(event, NovelOpenButtonTourEvent):
+            self._tour_service.addWidget(self.ui.btnActivate, event)
+        elif isinstance(event, TutorialNovelCloseTourEvent):
+            self.ui.stackWdgNovels.setCurrentWidget(self.ui.pageEmpty)
         else:
             super(HomeView, self).event_received(event)
 
@@ -234,3 +292,15 @@ class HomeView(AbstractView):
                 self._selected_novel = None
                 self.reset()
             self.refresh()
+
+    def _tutorial_selected(self, tutorial: Tutorial):
+        if tutorial.is_container():
+            self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialsEmpty)
+        else:
+            self._tour_service.setTutorial(tutorial)
+            self.ui.stackTutorial.setCurrentWidget(self.ui.pageTutorialDisplay)
+            self.ui.lineTutorialTitle.setText(tutorial_titles[tutorial])
+            self.ui.textTutorial.setMarkdown(tutorial_descriptions.get(tutorial, 'Click Start to learn this tutorial.'))
+
+    def _start_tutorial(self):
+        self._tour_service.start()
