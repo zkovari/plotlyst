@@ -246,7 +246,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self._load_new_novel(tutorial_novel)
             self._tour_service.next()
         elif isinstance(event, TutorialNovelCloseTourEvent):
-            self.close_novel()
+            if self.novel and self.novel.tutorial:
+                self.close_novel()
         elif isinstance(event, NovelTopLevelButtonTourEvent):
             self._tour_service.addWidget(self.outline_mode, event)
         elif isinstance(event, HomeTopLevelButtonTourEvent):
