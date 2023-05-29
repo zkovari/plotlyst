@@ -31,7 +31,7 @@ from src.main.python.plotlyst.view.widget.tree import TreeView, TreeSettings, Co
 
 class TutorialNode(ContainerNode):
 
-    def __init__(self, title: str, icon: Optional[QIcon] = None, tutorial: Tutorial = Tutorial.ContainerBasic,
+    def __init__(self, title: str, icon: Optional[QIcon] = None, tutorial: Tutorial = Tutorial.ContainerIntroduction,
                  parent=None,
                  settings: Optional[TreeSettings] = None):
         super(TutorialNode, self).__init__(title, icon, parent, settings=settings)
@@ -54,7 +54,7 @@ class TutorialsTreeView(TreeView):
 
         self._selected: Optional[TutorialNode] = None
 
-        self._wdgBasic = self.__initNode('Basic', Tutorial.ContainerBasic, IconRegistry.tutorial_icon())
+        self._wdgBasic = self.__initNode('Introduction', Tutorial.ContainerIntroduction, IconRegistry.tutorial_icon())
         self._wdgBasic.addChild(self.__initNode('Create novel', Tutorial.FirstNovel, IconRegistry.book_icon()))
         self._wdgBasic.addChild(
             self.__initNode('Create protagonist', Tutorial.FirstProtagonist, IconRegistry.character_icon()))

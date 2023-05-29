@@ -31,7 +31,7 @@ from src.main.python.plotlyst.event.core import Event
 
 # flake8: noqa
 class Tutorial(Enum):
-    ContainerBasic = 0
+    ContainerIntroduction = 0
     FirstNovel = 1
     FirstProtagonist = 2
     FirstScene = 3
