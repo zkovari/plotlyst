@@ -356,8 +356,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.btnManuscript.setChecked(True)
         elif self.novel.prefs.panels.scenes_view == ScenesView.REPORTS:
             self.btnReports.setChecked(True)
-        elif self.novel.scenes:
-            self.btnScenes.setChecked(True)
         else:
             self.btnNovel.setChecked(True)
 

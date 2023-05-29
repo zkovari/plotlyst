@@ -25,7 +25,7 @@ from typing import List
 
 from PyQt6.QtCore import QObject
 
-from src.main.python.plotlyst.core.domain import Novel, three_act_structure
+from src.main.python.plotlyst.core.domain import Novel, three_act_structure, Document
 from src.main.python.plotlyst.event.core import Event
 
 
@@ -50,9 +50,14 @@ class TourEvent(Event):
     delegate_click: bool = True
 
 
+first_scene = Novel.new_scene('First scene')
+first_scene.manuscript = Document('')
+first_scene.manuscript.loaded = True
+
 tutorial_novel = Novel('My new novel', id=uuid.UUID('a1a88622-4612-4c90-9848-8ef93b423bda'),
                        story_structures=[copy.deepcopy(three_act_structure)],
-                       tutorial=True)
+                       tutorial=True,
+                       scenes=[first_scene])
 
 
 class LibraryTourEvent(TourEvent):
