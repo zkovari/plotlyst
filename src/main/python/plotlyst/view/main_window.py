@@ -485,7 +485,11 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         if self.novel:
             self._clear_novel_views()
 
-        self.novel = client.fetch_novel(novel.id)
+        if novel.tutorial:
+            self.novel = novel
+        else:
+            self.novel = client.fetch_novel(novel.id)
+        self.repo.set_persistence_enabled(not novel.tutorial)
         acts_registry.set_novel(self.novel)
         dictionary.set_novel(self.novel)
         app_env.novel = self.novel
@@ -494,8 +498,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             language_tool_proxy.tool.language = self.novel.lang_settings.lang
 
         self._init_views()
-        settings.set_last_novel_id(self.novel.id)
-        self._register_events()
+        if not novel.tutorial:
+            settings.set_last_novel_id(self.novel.id)
 
         self.outline_mode.setEnabled(True)
         self.outline_mode.setVisible(True)

@@ -58,6 +58,7 @@ class RepositoryPersistenceManager(QObject):
         self._operations: List[Operation] = []
         self._pool = QThreadPool.globalInstance()
         self._finished_event = asyncio.Event()
+        self._persistence_enabled = True
 
         self._timer = QTimer()
         self._timer.setInterval(60 * 1000)  # 1 min
@@ -70,6 +71,9 @@ class RepositoryPersistenceManager(QObject):
         if not cls.__instance:
             cls.__instance = RepositoryPersistenceManager()
         return cls.__instance
+
+    def set_persistence_enabled(self, enabled: bool):
+        self._persistence_enabled = enabled
 
     def flush(self, sync: bool = False) -> bool:
         if self._finished_event.is_set():
@@ -89,52 +93,64 @@ class RepositoryPersistenceManager(QObject):
         return True
 
     def insert_novel(self, novel: Novel):
-        self._operations.append(Operation(OperationType.INSERT, novel=novel))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.INSERT, novel=novel))
+            self._persist_if_test_env()
 
     def delete_novel(self, novel: Novel):
-        self._operations.append(Operation(OperationType.DELETE, novel=novel))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.DELETE, novel=novel))
+            self._persist_if_test_env()
 
     def update_project_novel(self, novel: NovelDescriptor):
-        self._operations.append(Operation(OperationType.UPDATE, novel_descriptor=novel))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.UPDATE, novel_descriptor=novel))
+            self._persist_if_test_env()
 
     def update_novel(self, novel: Novel):
-        self._operations.append(Operation(OperationType.UPDATE, novel=novel))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.UPDATE, novel=novel))
+            self._persist_if_test_env()
 
     def insert_character(self, novel: Novel, character: Character):
-        self._operations.append(Operation(OperationType.INSERT, novel=novel, character=character))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.INSERT, novel=novel, character=character))
+            self._persist_if_test_env()
 
     def update_character(self, character: Character, update_avatar: bool = False):
-        self._operations.append(Operation(OperationType.UPDATE, character=character, update_image=update_avatar))
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.UPDATE, character=character, update_image=update_avatar))
         self._persist_if_test_env()
 
     def delete_character(self, novel: Novel, character: Character):
-        self._operations.append(Operation(OperationType.DELETE, novel=novel, character=character))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.DELETE, novel=novel, character=character))
+            self._persist_if_test_env()
 
     def update_scene(self, scene: Scene):
-        self._operations.append(Operation(OperationType.UPDATE, scene=scene))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.UPDATE, scene=scene))
+            self._persist_if_test_env()
 
     def insert_scene(self, novel: Novel, scene: Scene):
-        self._operations.append(Operation(OperationType.INSERT, novel=novel, scene=scene))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.INSERT, novel=novel, scene=scene))
+            self._persist_if_test_env()
 
     def delete_scene(self, novel: Novel, scene: Scene):
-        self._operations.append(Operation(OperationType.DELETE, novel=novel, scene=scene))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.DELETE, novel=novel, scene=scene))
+            self._persist_if_test_env()
 
     def update_doc(self, novel: Novel, document: Document):
-        self._operations.append(Operation(OperationType.UPDATE, novel=novel, doc=document))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.UPDATE, novel=novel, doc=document))
+            self._persist_if_test_env()
 
     def delete_doc(self, novel: Novel, document: Document):
-        self._operations.append(Operation(OperationType.DELETE, novel=novel, doc=document))
-        self._persist_if_test_env()
+        if self._persistence_enabled:
+            self._operations.append(Operation(OperationType.DELETE, novel=novel, doc=document))
+            self._persist_if_test_env()
 
     def _persist_if_test_env(self):
         if app_env.test_env():
