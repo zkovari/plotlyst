@@ -24,7 +24,7 @@ from typing import Optional, List, Dict, Iterable, Set, Any
 
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData
+from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QTimer
 from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction
 from PyQt6.QtWidgets import QFrame, QApplication, QToolButton
 from overrides import overrides
@@ -364,7 +364,7 @@ class CardsView(QFrame):
         for card in self._cards.values():
             card.setVisible(cardFilter.filter(card))
 
-    def _initCardWidget(self, card):
+    def _initCardWidget(self, card: Card):
         card.setAcceptDrops(True)
         if card.isDragEnabled():
             card.installEventFilter(DragEventFilter(card, card.mimeType(), lambda x: card.data(), hideTarget=True,
@@ -401,18 +401,18 @@ class CardsView(QFrame):
         self._resizeCard(self._dragPlaceholder)
         translucent(self._dragPlaceholder)
         self._dragPlaceholder.setHidden(True)
-        self._dragPlaceholder.setParent(self)
+        # self._dragPlaceholder.setParent(self)
         self._dragPlaceholder.setAcceptDrops(True)
         self._dragPlaceholder.installEventFilter(
             DropEventFilter(self._dragPlaceholder, mimeTypes=[card.mimeType()], droppedSlot=self._dropped))
 
     def _dragMoved(self, card: Card, edge: Qt.Edge, _: QPoint):
-        self._dragPlaceholder.setVisible(True)
         i = self._layout.indexOf(card)
         if edge == Qt.Edge.LeftEdge:
             self._layout.insertWidget(i, self._dragPlaceholder)
         else:
             self._layout.insertWidget(i + 1, self._dragPlaceholder)
+        self._dragPlaceholder.setVisible(True)
 
     def _dropped(self, _: QMimeData):
         card = self._dragged.copy()
@@ -421,13 +421,19 @@ class CardsView(QFrame):
         i = self._layout.indexOf(self._dragPlaceholder)
         self._layout.insertWidget(i, card)
 
-        data = []
-        for i in range(self._layout.count()):
-            card: Card = self._layout.itemAt(i).widget()
-            if card is self._dragPlaceholder or card is self._dragged:
-                continue
-            data.append(card.data())
-        self.orderChanged.emit(data)
+        # self._layout.replaceWidget(self._dragPlaceholder, card)
+        # gc(self._dragPlaceholder)
+        # self._dragPlaceholder = None
+
+        # data = []
+        # for i in range(self._layout.count()):
+        #     card: Card = self._layout.itemAt(i).widget()
+        #     if card is self._dragPlaceholder or card is self._dragged:
+        #         continue
+        #     data.append(card.data())
+
+        self._dragPlaceholder.setHidden(True)
+        self._layout.removeWidget(self._dragPlaceholder)
         gc(self._dragPlaceholder)
         self._dragPlaceholder = None
 
@@ -435,12 +441,22 @@ class CardsView(QFrame):
 
     def _dragFinished(self, card: Card):
         if self._dragPlaceholder:
+            self._dragPlaceholder.setHidden(True)
+            self._layout.removeWidget(self._dragPlaceholder)
             gc(self._dragPlaceholder)
             self._dragPlaceholder = None
         if self._wasDropped:
             card.setHidden(True)
             self._layout.removeWidget(card)
             gc(card)
-        self._dragged = None
 
+            data = []
+            for i in range(self._layout.count()):
+                card: Card = self._layout.itemAt(i).widget()
+                if card is self._dragPlaceholder or card is self._dragged:
+                    continue
+                data.append(card.data())
+            QTimer.singleShot(10, lambda: self.orderChanged.emit(data))
+
+        self._dragged = None
         self._wasDropped = False
