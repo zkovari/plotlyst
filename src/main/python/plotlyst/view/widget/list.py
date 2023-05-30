@@ -186,15 +186,11 @@ class ListView(QScrollArea):
 
     def _dragFinished(self, widget: ListItemWidget):
         if self._dragPlaceholder:
-            self._dragPlaceholder.setHidden(True)
-            self._centralWidget.layout().removeWidget(self._dragPlaceholder)
             gc(self._dragPlaceholder)
             self._dragPlaceholder = None
 
         self._dragged = None
         if self._toBeRemoved:
-            widget.setHidden(True)
-            self._centralWidget.layout().removeWidget(widget)
             gc(widget)
 
         self._toBeRemoved = False

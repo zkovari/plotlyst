@@ -421,19 +421,8 @@ class CardsView(QFrame):
         i = self._layout.indexOf(self._dragPlaceholder)
         self._layout.insertWidget(i, card)
 
-        # self._layout.replaceWidget(self._dragPlaceholder, card)
-        # gc(self._dragPlaceholder)
-        # self._dragPlaceholder = None
-
-        # data = []
-        # for i in range(self._layout.count()):
-        #     card: Card = self._layout.itemAt(i).widget()
-        #     if card is self._dragPlaceholder or card is self._dragged:
-        #         continue
-        #     data.append(card.data())
-
-        self._dragPlaceholder.setHidden(True)
-        self._layout.removeWidget(self._dragPlaceholder)
+        # self._dragPlaceholder.setHidden(True)
+        # self._layout.removeWidget(self._dragPlaceholder)
         gc(self._dragPlaceholder)
         self._dragPlaceholder = None
 
@@ -441,13 +430,9 @@ class CardsView(QFrame):
 
     def _dragFinished(self, card: Card):
         if self._dragPlaceholder:
-            self._dragPlaceholder.setHidden(True)
-            self._layout.removeWidget(self._dragPlaceholder)
             gc(self._dragPlaceholder)
             self._dragPlaceholder = None
         if self._wasDropped:
-            card.setHidden(True)
-            self._layout.removeWidget(card)
             gc(card)
 
             data = []
