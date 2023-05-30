@@ -57,7 +57,7 @@ from src.main.python.plotlyst.view.generated.story_structure_settings_ui import 
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.display import Subtitle, IconText, Icon
+from src.main.python.plotlyst.view.widget.display import Subtitle, IconText
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
@@ -434,6 +434,20 @@ class BeatOptionToggle(QWidget):
         self.layout().addWidget(spacer())
 
 
+class ActOptionsButton(QPushButton):
+    def __init__(self, text: str, act: int, parent=None):
+        super(ActOptionsButton, self).__init__(text, parent)
+        pointy(self)
+
+        self.setProperty('structure-customization', True)
+        if act == 1:
+            self.setProperty('act-one', True)
+        elif act == 2:
+            self.setProperty('act-two', True)
+        else:
+            self.setProperty('act-three', True)
+
+
 class StructureOptionsWidget(QWidget):
     optionSelected = pyqtSignal(BeatCustomization)
     optionsReset = pyqtSignal()
@@ -471,16 +485,8 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         underline(self.lblCustomization)
         bold(self.lblCustomization)
 
-        self.iconBeginning = Icon()
-        self.iconBeginning.setIcon(IconRegistry.cause_icon())
-        self.btnBeginning = QPushButton('Beginning')
-        self.btnBeginning.setStyleSheet(f'''
-        QPushButton {{
-            border: none;
-            border-bottom: 1px solid {self._structure.icon_color};
-            padding: 2px;
-        }}
-        ''')
+        self.btnBeginning = ActOptionsButton('Beginning', 1)
+        self.btnBeginning.setIcon(IconRegistry.cause_icon())
         menu = MenuWidget(self.btnBeginning)
         apply_white_menu(menu)
         menu.addSection('Select the beginning')
@@ -494,26 +500,21 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         wdg.optionSelected.connect(self._beginningChanged)
         wdg.optionsReset.connect(self._beginningReset)
 
-        self.iconInciting = Icon()
-        self.iconInciting.setIcon(IconRegistry.inciting_incident_icon())
-        self.btnInciting = QPushButton('Inciting incident')
+        self.btnInciting = ActOptionsButton('Inciting incident', 1)
+        self.btnInciting.setIcon(IconRegistry.inciting_incident_icon())
 
-        self.iconSetback = Icon()
-        self.iconSetback.setIcon(IconRegistry.charge_icon(-2))
-        self.btnSetback = QPushButton('Act 2 complication')
+        self.btnSetback = ActOptionsButton('Act 2 complication', 2)
+        self.btnSetback.setIcon(IconRegistry.charge_icon(-2))
 
-        self.iconDarkMoment = Icon()
-        self.iconDarkMoment.setIcon(IconRegistry.from_name('mdi.weather-night', '#494368'))
-        self.btnDarkMoment = QPushButton('Dark moment')
+        self.btnDarkMoment = ActOptionsButton('Dark moment', 2)
+        self.btnDarkMoment.setIcon(IconRegistry.from_name('mdi.weather-night', '#494368'))
 
-        self.iconEnding = Icon()
-        self.iconEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
-        self.btnEnding = QPushButton('Ending')
+        self.btnEnding = ActOptionsButton('Ending', 3)
+        self.btnEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
 
-        wdg = group(spacer(), spacer(20), self.iconBeginning, self.btnBeginning, spacer(10),
-                    self.iconInciting, self.btnInciting,
-                    spacer(10), self.iconSetback, self.btnSetback, spacer(10), self.iconDarkMoment, self.btnDarkMoment,
-                    spacer(10), self.iconEnding, self.btnEnding, spacer())
+        wdg = group(spacer(), spacer(20), self.btnBeginning, spacer(10), self.btnInciting,
+                    spacer(10), self.btnSetback, spacer(10), self.btnDarkMoment,
+                    spacer(10), self.btnEnding, spacer())
         wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
         self.wdgCustom.layout().addWidget(wdg)
 
