@@ -52,7 +52,7 @@ VERY_HAPPY_EMOTION_COLOR: str = '#00ca94'
 
 PLOTLYST_MAIN_COLOR: str = '#3C0764'  # Persian indigo, #4B0763: Indigo, #37065D: Russian violet
 PLOTLYST_MAIN_COMPLEMENTARY_COLOR: str = '#2C5D06'  # Dark moss green
-PLOTLYST_SECONDARY_COLOR: str = '#4B0763'  # Persian indigo
+PLOTLYST_SECONDARY_COLOR: str = '#4B0763'  # indigo
 PLOTLYST_TERTIARY_COLOR: str = '#D4B8E0'  # Thistle
 
 RELAXED_WHITE_COLOR: str = '#f8f9fa'
