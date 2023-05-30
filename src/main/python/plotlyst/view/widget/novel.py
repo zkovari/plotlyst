@@ -474,12 +474,12 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.iconBeginning = Icon()
         self.iconBeginning.setIcon(IconRegistry.cause_icon())
         self.btnBeginning = QPushButton('Beginning')
-        self.btnBeginning.setStyleSheet('''
-        QPushButton {
+        self.btnBeginning.setStyleSheet(f'''
+        QPushButton {{
             border: none;
-            border-bottom: 1px solid blue;
+            border-bottom: 1px solid {self._structure.icon_color};
             padding: 2px;
-        }
+        }}
         ''')
         menu = MenuWidget(self.btnBeginning)
         apply_white_menu(menu)
