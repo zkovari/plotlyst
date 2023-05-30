@@ -57,7 +57,6 @@ from src.main.python.plotlyst.view.generated.story_structure_settings_ui import 
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.style.base import apply_white_menu
-from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.display import Subtitle, IconText, Icon
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
@@ -474,7 +473,7 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
 
         self.iconBeginning = Icon()
         self.iconBeginning.setIcon(IconRegistry.cause_icon())
-        self.btnBeginning = SecondaryActionPushButton('Beginning')
+        self.btnBeginning = QPushButton('Beginning')
         menu = MenuWidget(self.btnBeginning)
         apply_white_menu(menu)
         menu.addSection('Select the beginning')
@@ -490,19 +489,19 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
 
         self.iconInciting = Icon()
         self.iconInciting.setIcon(IconRegistry.inciting_incident_icon())
-        self.btnInciting = SecondaryActionPushButton('Inciting incident')
+        self.btnInciting = QPushButton('Inciting incident')
 
         self.iconSetback = Icon()
         self.iconSetback.setIcon(IconRegistry.charge_icon(-2))
-        self.btnSetback = SecondaryActionPushButton('Act 2 complication')
+        self.btnSetback = QPushButton('Act 2 complication')
 
         self.iconDarkMoment = Icon()
         self.iconDarkMoment.setIcon(IconRegistry.from_name('mdi.weather-night', '#494368'))
-        self.btnDarkMoment = SecondaryActionPushButton('Dark moment')
+        self.btnDarkMoment = QPushButton('Dark moment')
 
         self.iconEnding = Icon()
         self.iconEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
-        self.btnEnding = SecondaryActionPushButton('Ending')
+        self.btnEnding = QPushButton('Ending')
 
         wdg = group(spacer(), spacer(20), self.iconBeginning, self.btnBeginning, spacer(10),
                     self.iconInciting, self.btnInciting,
