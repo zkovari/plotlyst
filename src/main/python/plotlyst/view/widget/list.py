@@ -70,7 +70,7 @@ class ListItemWidget(QWidget):
         self._btnRemoval.setHidden(True)
 
         self._btnDrag.installEventFilter(
-            DragEventFilter(self, LIST_ITEM_MIME_TYPE, dataFunc=lambda x: self.item(), hideTarget=True,
+            DragEventFilter(self, LIST_ITEM_MIME_TYPE, dataFunc=lambda x: self.item(),
                             grabbed=self._lineEdit, startedSlot=self.dragStarted.emit,
                             finishedSlot=self.dragFinished.emit))
 
@@ -159,6 +159,7 @@ class ListView(QScrollArea):
         fade_out_and_gc(self._centralWidget, widget)
 
     def _dragStarted(self, widget: ListItemWidget):
+        widget.setHidden(True)
         self._dragged = widget
         self._dragPlaceholder = ListItemWidget(widget.item(), self)
         margins(self._dragPlaceholder, left=3)
@@ -192,8 +193,10 @@ class ListView(QScrollArea):
 
         self._dragged = None
         if self._toBeRemoved:
-            widget.setHidden(True)
-            # gc(widget)
+            # widget.setHidden(True)
+            gc(widget)
+        else:
+            widget.setVisible(True)
 
         self._toBeRemoved = False
 
