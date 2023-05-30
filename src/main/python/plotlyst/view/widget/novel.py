@@ -474,6 +474,13 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.iconBeginning = Icon()
         self.iconBeginning.setIcon(IconRegistry.cause_icon())
         self.btnBeginning = QPushButton('Beginning')
+        self.btnBeginning.setStyleSheet('''
+        QPushButton {
+            border: none;
+            border-bottom: 1px solid blue;
+            padding: 2px;
+        }
+        ''')
         menu = MenuWidget(self.btnBeginning)
         apply_white_menu(menu)
         menu.addSection('Select the beginning')
