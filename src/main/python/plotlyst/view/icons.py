@@ -119,6 +119,10 @@ class IconRegistry:
         return qtawesome.icon('fa5s.history')
 
     @staticmethod
+    def tutorial_icon() -> QIcon:
+        return IconRegistry.from_name('mdi6.school')
+
+    @staticmethod
     def character_icon(color: str = 'black', color_on: str = PLOTLYST_SECONDARY_COLOR) -> QIcon:
         return qtawesome.icon('fa5s.user', color=color, color_on=color_on)
 

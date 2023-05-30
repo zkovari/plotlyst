@@ -65,6 +65,7 @@ jobs:
           pip install git+https://github.com/plotlyst/qt-uic.git
           pip install git+https://github.com/plotlyst/qt-anim.git
           pip install git+https://github.com/plotlyst/qt-menu.git
+          pip install git+https://github.com/plotlyst/qt-tour.git
           pip install git+https://github.com/plotlyst/qt-textedit.git
           pip install git+https://github.com/plotlyst/qt-handy.git
           pip install git+https://github.com/plotlyst/qt-emojipicker.git

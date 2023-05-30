@@ -87,6 +87,7 @@ class TemplateFieldType(Enum):
     DISPLAY_HEADER = 10
     DISPLAY_ICON = 11
     COMPLEX = 12
+    BAR = 13
 
 
 class SelectionType(Enum):
@@ -110,7 +111,7 @@ class TemplateField:
     enabled: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     custom: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     min_value: int = field(default=0, metadata=config(exclude=exclude_if_empty))
-    max_value = 2_147_483_647
+    max_value: int = 2_147_483_647
     compact: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     show_label: bool = field(default=True, metadata=config(exclude=exclude_if_true))
     color: str = field(default='', metadata=config(exclude=exclude_if_empty))
@@ -340,7 +341,7 @@ internal_stakes_field = TemplateField('Internal stakes', type=TemplateFieldType.
 methods_field = TemplateField('Methods', type=TemplateFieldType.SMALL_TEXT, emoji=':hammer_and_pick:',
                               placeholder="How does the character try to achieve their goals?",
                               id=uuid.UUID('40d50e34-8dbf-4491-8fa9-854f060be5ef'), has_notes=True)
-need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':face_with_monocle:',
+need_field = TemplateField('Need', type=TemplateFieldType.SMALL_TEXT, emoji=':old_key:',
                            placeholder='What does the character actually need?',
                            id=uuid.UUID('2adb45eb-5a6f-4958-82f1-f4ae65124322'))
 weaknesses_field = TemplateField('Weakness', type=TemplateFieldType.SMALL_TEXT, emoji=':nauseated_face:',
@@ -361,7 +362,7 @@ wound_field = TemplateField('Wound', type=TemplateFieldType.SMALL_TEXT, emoji=':
                             placeholder='What past event harmed the character and left an emotional wound?',
                             id=uuid.UUID('587cace8-0326-4895-b51e-de1d92b9db1b'))
 fear_field = TemplateField('Fear', type=TemplateFieldType.SMALL_TEXT, emoji=':fearful_face:',
-                           placeholder='What does the character fear that developed from the wound?',
+                           placeholder='What does the character fear as a result of their wound?',
                            id=uuid.UUID('9601abef-c568-4ef6-9ff9-8da2e62e0572'))
 trigger_field = TemplateField('Trigger', type=TemplateFieldType.SMALL_TEXT, emoji=':high_voltage:',
                               placeholder="What could aggravate the character's wound?",
@@ -426,6 +427,26 @@ values_items = [SelectionItem('Altruism', icon='fa5s.hand-holding-heart'),
                 SelectionItem('Trustworthiness', icon='fa5s.stamp'),
                 SelectionItem('Wealth', icon='fa5s.coins'), SelectionItem('Wisdom', icon='mdi.owl')]
 values_field.selections.extend(values_items)
+
+iq_field = TemplateField(name='IQ', type=TemplateFieldType.BAR,
+                         id=uuid.UUID('a27f2534-9933-4fc9-a70b-0f4f4480d619'), emoji=':brain:',
+                         min_value=0, max_value=100, placeholder='IQ', color='#0077b6')
+
+eq_field = TemplateField(name='Emotion intelligence', type=TemplateFieldType.BAR,
+                         id=uuid.UUID('b2452206-05af-44c9-8908-4d4ff1f669ba'), emoji=':handshake:',
+                         min_value=0, max_value=100, placeholder='EQ', color='#2a9d8f')
+
+rationalism_field = TemplateField(name='Rationalism', type=TemplateFieldType.BAR,
+                                  id=uuid.UUID('90bf2da5-d2f1-426d-9b0e-6a25859851b6'), emoji=':face_with_monocle:',
+                                  min_value=0, max_value=100, placeholder='Rationalism', color='#b7b7a4')
+
+creativity_field = TemplateField(name='Creativity', type=TemplateFieldType.BAR,
+                                 id=uuid.UUID('4ba586c3-1ad0-4fef-9a7a-bd11d90b268c'), emoji=':artist_palette:',
+                                 min_value=0, max_value=100, placeholder='Creativity', color='#9f86c0')
+
+willpower_field = TemplateField(name='Willpower', type=TemplateFieldType.BAR,
+                                id=uuid.UUID('ea8fb07d-d9ad-4f49-b8d1-4d2ec29343b5'), emoji=':fire:',
+                                min_value=0, max_value=100, placeholder='Willpower', color='#f6bd60')
 
 
 class RoleImportance(Enum):
@@ -552,35 +573,36 @@ class ProfileTemplate:
 
 
 def default_character_profiles() -> List[ProfileTemplate]:
-    def arrow_field():
-        return TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON, color='darkBlue')
-
-    def internal_arrow_field():
-        return TemplateField('ph.arrow-fat-lines-up-fill', type=TemplateFieldType.DISPLAY_ICON, color='#94b0da')
-
     summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
-    characterization_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
+    personality_title = TemplateField('Personality', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     gmc_title = TemplateField('Goals', type=TemplateFieldType.DISPLAY_HEADER)
     wounds_title = TemplateField('Wounds', type=TemplateFieldType.DISPLAY_HEADER)
     arcs_title = TemplateField('Arc', type=TemplateFieldType.DISPLAY_HEADER)
-    weakness_strength = TemplateField('Weakness and strength', type=TemplateFieldType.DISPLAY_HEADER)
+    philosophy_title = TemplateField('Philosophy', type=TemplateFieldType.DISPLAY_HEADER)
+    faculties = TemplateField('Faculties', type=TemplateFieldType.DISPLAY_HEADER)
 
     fields = [ProfileElement(summary_title, 0, 0, col_span=2),
               ProfileElement(summary_field, 1, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(characterization_title, 2, 0, col_span=2),
+              ProfileElement(personality_title, 2, 0, col_span=2),
               ProfileElement(enneagram_field, 3, 0, margins=Margins(left=15)),
               ProfileElement(mbti_field, 3, 1),
               ProfileElement(traits_field, 5, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(values_field, 6, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(gmc_title, 7, 0, col_span=2),
-              ProfileElement(gmc_field, 8, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(wounds_title, 9, 0, col_span=2),
-              ProfileElement(wounds_field, 10, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(arcs_title, 12, 0, col_span=2),
-              ProfileElement(arcs_field, 13, 0, col_span=2, margins=Margins(left=15)),
-              ProfileElement(weakness_strength, 14, 0, col_span=2),
+              ProfileElement(gmc_title, 6, 0, col_span=2),
+              ProfileElement(gmc_field, 7, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(wounds_title, 8, 0, col_span=2),
+              ProfileElement(wounds_field, 9, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(arcs_title, 10, 0, col_span=2),
+              ProfileElement(arcs_field, 11, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(philosophy_title, 12, 0, col_span=2),
+              ProfileElement(values_field, 13, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(faculties, 14, 0, col_span=2),
               ProfileElement(weaknesses_field, 15, 0, col_span=2, margins=Margins(left=15)),
               ProfileElement(strength_field, 16, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(iq_field, 17, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(eq_field, 18, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(rationalism_field, 19, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(willpower_field, 20, 0, col_span=2, margins=Margins(left=15)),
+              ProfileElement(creativity_field, 21, 0, col_span=2, margins=Margins(left=15)),
 
               ]
     return [ProfileTemplate(title='Default character template',

@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 # flake8: noqa
-
+import copy
 import uuid
 from abc import ABC
 from dataclasses import dataclass, field
@@ -1439,6 +1439,7 @@ class NovelDescriptor:
     subtitle: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    tutorial: bool = False
 
     @overrides
     def __eq__(self, other: 'NovelDescriptor'):
@@ -1787,6 +1788,12 @@ class Novel(NovelDescriptor):
     @staticmethod
     def new_scene(title: str = '') -> Scene:
         return Scene(title, agendas=[SceneStructureAgenda()])
+
+    @staticmethod
+    def new_novel(title: str = '') -> 'Novel':
+        novel = Novel(title)
+        novel.story_structures = [copy.deepcopy(three_act_structure)]
+        return novel
 
     def insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None) -> Scene:
         i = self.scenes.index(scene)

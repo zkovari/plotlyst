@@ -28,7 +28,6 @@ from qttextedit import RichTextEditor
 from src.main.python.plotlyst.core.domain import PlotType
 from src.main.python.plotlyst.view.characters_view import CharactersView
 from src.main.python.plotlyst.view.dialog.home import StoryCreationDialog
-from src.main.python.plotlyst.view.dialog.novel import NovelEditionDialog
 from src.main.python.plotlyst.view.docs_view import DocumentsView
 from src.main.python.plotlyst.view.home_view import HomeView
 from src.main.python.plotlyst.view.main_window import MainWindow
@@ -128,11 +127,15 @@ def go_to_scenes(window: MainWindow) -> ScenesOutlineView:
 
 
 def go_to_characters(window: MainWindow) -> CharactersView:
+    if not window.outline_mode.isChecked():
+        window.outline_mode.setChecked(True)
     window.btnCharacters.setChecked(True)
     return window.characters_view
 
 
 def go_to_novel(window: MainWindow) -> NovelView:
+    if not window.outline_mode.isChecked():
+        window.outline_mode.setChecked(True)
     window.btnNovel.setChecked(True)
     return window.novel_view
 
@@ -143,24 +146,17 @@ def go_to_home(window: MainWindow) -> HomeView:
 
 
 def go_to_reports(window: MainWindow) -> ReportsView:
+    if not window.outline_mode.isChecked():
+        window.outline_mode.setChecked(True)
     window.btnReports.setChecked(True)
     return window.reports_view
 
 
 def go_to_docs(window: MainWindow) -> DocumentsView:
+    if not window.outline_mode.isChecked():
+        window.outline_mode.setChecked(True)
     window.btnNotes.setChecked(True)
     return window.notes_view
-
-
-def edit_novel_dialog(new_title: str):
-    dialog: QDialog = QApplication.instance().activeModalWidget()
-    try:
-        assert isinstance(dialog, NovelEditionDialog)
-        edition_dialog: NovelEditionDialog = dialog
-        edition_dialog.lineTitle.setText(new_title)
-        edition_dialog.accept()
-    finally:
-        dialog.close()
 
 
 def create_story_dialog(new_title: str):

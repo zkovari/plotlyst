@@ -22,7 +22,7 @@ from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication
 from overrides import overrides
-from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon, line
+from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
@@ -63,10 +63,8 @@ class ManuscriptView(AbstractNovelView):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
 
         # self.ui.btnTitle.setText(self.novel.title)
-
-        # self.ui.btnStoryGoal.setText('80,000')
         # self.ui.btnTitle.clicked.connect(self._homepage)
-        # self.ui.btnStoryGoal.clicked.connect(self._homepage)
+        self.ui.lblWc.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
 
@@ -105,8 +103,10 @@ class ManuscriptView(AbstractNovelView):
         bold(self.ui.lblWordCount)
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
+        transparent(self._btnDistractionFree)
         decr_icon(self._btnDistractionFree)
         self._wdgSprint = SprintWidget()
+        transparent(self._wdgSprint.btnTimer)
         decr_icon(self._wdgSprint.btnTimer)
         self._spellCheckIcon = Icon()
         self._spellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
@@ -130,7 +130,6 @@ class ManuscriptView(AbstractNovelView):
                                  self._cbSpellCheck,
                                  vline(), self._btnContext)
         self.ui.wdgTop.layout().addWidget(self._wdgToolbar)
-        self.ui.wdgTop.layout().addWidget(line())
         margins(self._wdgToolbar, right=21)
 
         self._addSceneMenu = MenuWidget(self.ui.btnAdd)
@@ -225,7 +224,7 @@ class ManuscriptView(AbstractNovelView):
 
     def _update_story_goal(self):
         wc = sum([x.manuscript.statistics.wc for x in self.novel.scenes if x.manuscript and x.manuscript.statistics])
-        # self.ui.btnStoryGoal.setText(f'{wc} word{"s" if wc > 1 else ""}')
+        self.ui.lblWc.setText(f'{wc} word{"s" if wc > 1 else ""}')
         # self.ui.progressStory.setValue(int(wc / 80000 * 100))
         self._chartProgress.setValue(wc)
         self._chartProgress.refresh()

@@ -25,9 +25,9 @@ import emoji
 import qtanim
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent, QModelIndex, QSize, QItemSelectionModel
-from PyQt6.QtGui import QMouseEvent, QIcon
+from PyQt6.QtGui import QMouseEvent, QIcon, QWheelEvent
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QWidget, QLineEdit, QToolButton, QLabel, \
-    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout
+    QSpinBox, QButtonGroup, QSizePolicy, QListView, QPushButton, QMenu, QVBoxLayout, QSlider
 from overrides import overrides
 from qthandy import spacer, btn_popup, hbox, vbox, bold, line, underline, transparent, margins, \
     decr_font, retain_when_hidden, btn_popup_menu, vspacer, gc, italic, sp
@@ -46,6 +46,7 @@ from src.main.python.plotlyst.view.generated.field_text_selection_widget_ui impo
 from src.main.python.plotlyst.view.generated.trait_selection_widget_ui import Ui_TraitSelectionWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.slider import apply_slider_color
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton, CollapseButton
 from src.main.python.plotlyst.view.widget.display import Subtitle, Emoji, Icon
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, Toggle
@@ -334,7 +335,7 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
 
     def __init__(self, field: TemplateField, parent=None):
         super(HeaderTemplateDisplayWidget, self).__init__(field, parent)
-        hbox(self, margin=0, spacing=0)
+        hbox(self, margin=1, spacing=0)
         self.btnHeader = CollapseButton(Qt.Edge.BottomEdge, Qt.Edge.RightEdge)
         self.btnHeader.setIconSize(QSize(16, 16))
         bold(self.btnHeader)
@@ -376,7 +377,7 @@ class HeaderTemplateDisplayWidget(TemplateDisplayWidget):
 
     @overrides
     def enterEvent(self, event: QtGui.QEnterEvent) -> None:
-        if self._toggle:
+        if self._toggle and self.progress.value() == 0:
             self._toggle.setVisible(True)
 
     @overrides
@@ -546,10 +547,56 @@ class NumericTemplateFieldWidget(TemplateFieldWidgetBase):
             self.valueReset.emit()
 
 
+class BarSlider(QSlider):
+    @overrides
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        event.ignore()
+
+
+class BarTemplateFieldWidget(TemplateFieldWidgetBase):
+    def __init__(self, field: TemplateField, parent=None):
+        super(BarTemplateFieldWidget, self).__init__(field, parent)
+        _layout = vbox(self)
+        self.wdgEditor = BarSlider(Qt.Orientation.Horizontal)
+        pointy(self.wdgEditor)
+        self.wdgEditor.setPageStep(5)
+        self.setMaximumWidth(600)
+
+        self.wdgEditor.setMinimum(field.min_value)
+        self.wdgEditor.setMaximum(field.max_value)
+        if field.color:
+            apply_slider_color(self.wdgEditor, field.color)
+
+        _layout.addWidget(group(self.lblEmoji, self.lblName, spacer()))
+        if self.field.compact:
+            editor = group(self.wdgEditor, spacer())
+            margins(editor, left=5)
+            _layout.addWidget(editor)
+        else:
+            _layout.addWidget(wrap(self.wdgEditor, margin_left=5))
+
+        self.wdgEditor.valueChanged.connect(self._valueChanged)
+
+    @overrides
+    def value(self) -> Any:
+        return self.wdgEditor.value()
+
+    @overrides
+    def setValue(self, value: Any):
+        self.wdgEditor.setValue(value)
+
+    def _valueChanged(self, value: int):
+        if value:
+            self.valueFilled.emit(1)
+        else:
+            self.valueReset.emit()
+
+
 class EnneagramFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(EnneagramFieldWidget, self).__init__(field, parent)
         self.wdgEditor = TextSelectionWidget(field, enneagram_help)
+        self._defaultTooltip: str = 'Select Enneagram personality'
         _layout = hbox(self)
         _layout.addWidget(self.wdgEditor, alignment=Qt.AlignmentFlag.AlignTop)
 
@@ -591,12 +638,16 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
         self.wdgEditor.setValue(value)
         enneagram = enneagram_choices.get(value)
         if enneagram:
+            self.wdgEditor.setToolTip(enneagram_help[value])
             self._selectionChanged(new=enneagram, animated=False)
+        else:
+            self.wdgEditor.setToolTip(self._defaultTooltip)
 
     def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
                           animated: bool = True):
         if not new:
             self.wdgAttr.setHidden(True)
+            self.wdgEditor.setToolTip(self._defaultTooltip)
             self.valueReset.emit()
             return
 
@@ -606,6 +657,7 @@ class EnneagramFieldWidget(TemplateFieldWidgetBase):
             self.wdgAttr.setVisible(True)
         self.lblDesire.setText(new.meta['desire'])
         self.lblFear.setText(new.meta['fear'])
+        self.wdgEditor.setToolTip(enneagram_help[new.text])
 
         self.valueFilled.emit(1)
 
@@ -614,6 +666,8 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
     def __init__(self, field: TemplateField, parent=None):
         super(MbtiFieldWidget, self).__init__(field, parent)
         self.wdgEditor = TextSelectionWidget(field, mbti_help)
+        self._defaultTooltip: str = 'Select MBTI personality type'
+        self.wdgEditor.setToolTip(self._defaultTooltip)
 
         _layout = vbox(self)
         _layout.addWidget(self.wdgEditor)
@@ -631,14 +685,19 @@ class MbtiFieldWidget(TemplateFieldWidgetBase):
     def setValue(self, value: Any):
         self.wdgEditor.setValue(value)
         if value:
+            self.wdgEditor.setToolTip(mbti_help[value])
             self.valueFilled.emit(1)
+        else:
+            self.wdgEditor.setToolTip(self._defaultTooltip)
 
-    def _selectionChanged(self, old: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
+    def _selectionChanged(self, _: Optional[SelectionItem] = None, new: Optional[SelectionItem] = None,
                           animated: bool = True):
         if not new:
             self.valueReset.emit()
+            self.wdgEditor.setToolTip(self._defaultTooltip)
             return
 
+        self.wdgEditor.setToolTip(mbti_help[new.text])
         self.valueFilled.emit(1)
 
 

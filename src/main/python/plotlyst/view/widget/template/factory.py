@@ -26,7 +26,8 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template.impl import SubtitleTemplateDisplayWidget, \
     LabelTemplateDisplayWidget, HeaderTemplateDisplayWidget, LineTemplateDisplayWidget, IconTemplateDisplayWidget, \
     EnneagramFieldWidget, MbtiFieldWidget, TraitsFieldWidget, NumericTemplateFieldWidget, SmallTextTemplateFieldWidget, \
-    LineTextTemplateFieldWidget, LabelsTemplateFieldWidget, GmcFieldWidget, WoundsFieldWidget, ArcsFieldWidget
+    LineTextTemplateFieldWidget, LabelsTemplateFieldWidget, GmcFieldWidget, WoundsFieldWidget, ArcsFieldWidget, \
+    BarTemplateFieldWidget
 
 
 def _icon(item: SelectionItem) -> QIcon:
@@ -82,5 +83,7 @@ class TemplateFieldWidgetFactory:
             return LineTextTemplateFieldWidget(field, parent)
         elif field.type == TemplateFieldType.LABELS:
             return LabelsTemplateFieldWidget(field, parent)
+        elif field.type == TemplateFieldType.BAR:
+            return BarTemplateFieldWidget(field, parent)
         else:
             return SmallTextTemplateFieldWidget(field, parent)
