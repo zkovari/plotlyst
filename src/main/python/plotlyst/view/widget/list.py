@@ -164,6 +164,7 @@ class ListView(QScrollArea):
         margins(self._dragPlaceholder, left=3)
         translucent(self._dragPlaceholder)
         self._dragPlaceholder.setHidden(True)
+        self._dragPlaceholder.setParent(self._centralWidget)
         self._dragPlaceholder.setAcceptDrops(True)
         self._dragPlaceholder.installEventFilter(
             DropEventFilter(self._dragPlaceholder, mimeTypes=[LIST_ITEM_MIME_TYPE], droppedSlot=self._dropped))
@@ -191,7 +192,8 @@ class ListView(QScrollArea):
 
         self._dragged = None
         if self._toBeRemoved:
-            gc(widget)
+            widget.setHidden(True)
+            # gc(widget)
 
         self._toBeRemoved = False
 
