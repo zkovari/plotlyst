@@ -474,6 +474,18 @@ class StructureOptionsWidget(QWidget):
         self.optionSelected.emit(option)
 
 
+class StructureOptionsMenu(MenuWidget):
+    def __init__(self, parent: QWidget, title: str, options: List[BeatCustomization],
+                 checked: Optional[BeatCustomization] = None):
+        super(StructureOptionsMenu, self).__init__(parent)
+        apply_white_menu(self)
+        self.addSection(title)
+        self.addSeparator()
+
+        self.options = StructureOptionsWidget(options, self, checked=checked)
+        self.addWidget(self.options)
+
+
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super(_ThreeActStructureEditorWidget, self).__init__(novel, structure, parent)
@@ -487,18 +499,13 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
 
         self.btnBeginning = ActOptionsButton('Beginning', 1)
         self.btnBeginning.setIcon(IconRegistry.cause_icon())
-        menu = MenuWidget(self.btnBeginning)
-        apply_white_menu(menu)
-        menu.addSection('Select the beginning')
-        menu.addSeparator()
-
         checked = option_from_beat(structure.beats[0])
-        wdg = StructureOptionsWidget([_ThreeActBeginning.Hook, _ThreeActBeginning.Disturbance,
-                                      _ThreeActBeginning.Motion, _ThreeActBeginning.Characteristic_moment,
-                                      _ThreeActBeginning.Normal_world], checked=checked)
-        menu.addWidget(wdg)
-        wdg.optionSelected.connect(self._beginningChanged)
-        wdg.optionsReset.connect(self._beginningReset)
+        menu = StructureOptionsMenu(self.btnBeginning, 'Select the beginning',
+                                    [_ThreeActBeginning.Hook, _ThreeActBeginning.Disturbance,
+                                     _ThreeActBeginning.Motion, _ThreeActBeginning.Characteristic_moment,
+                                     _ThreeActBeginning.Normal_world], checked=checked)
+        menu.options.optionSelected.connect(self._beginningChanged)
+        menu.options.optionsReset.connect(self._beginningReset)
 
         self.btnInciting = ActOptionsButton('Inciting incident', 1)
         self.btnInciting.setIcon(IconRegistry.inciting_incident_icon())
@@ -512,9 +519,8 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.btnEnding = ActOptionsButton('Ending', 3)
         self.btnEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
 
-        wdg = group(spacer(), spacer(20), self.btnBeginning, spacer(10), self.btnInciting,
-                    spacer(10), self.btnSetback, spacer(10), self.btnDarkMoment,
-                    spacer(10), self.btnEnding, spacer())
+        wdg = group(spacer(), self.btnBeginning, self.btnInciting, self.btnSetback, self.btnDarkMoment,
+                    self.btnEnding, spacer(), spacing=10)
         wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
         self.wdgCustom.layout().addWidget(wdg)
 
