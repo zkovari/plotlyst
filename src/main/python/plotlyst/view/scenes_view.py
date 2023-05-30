@@ -611,7 +611,6 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesProgress.refresh()
         if self.characters_distribution:
             self.characters_distribution.refresh()
-        self.ui.treeChapters.refresh()
 
         self.repo.update_novel(self.novel)
 
