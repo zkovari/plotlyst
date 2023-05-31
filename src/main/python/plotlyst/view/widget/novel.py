@@ -866,7 +866,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         row = 0
         col = 0
         for beat in structure.beats:
-            if beat.type != StoryBeatType.BEAT:
+            if beat.type != StoryBeatType.BEAT or not beat.enabled:
                 continue
             wdg = BeatWidget(beat)
             if beat.act - 1 > col:  # new act
