@@ -18,23 +18,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import copy
+from enum import Enum, auto
 from functools import partial
-from typing import Optional, List
+from typing import Optional, List, Dict, Tuple
 
 import qtanim
 from PyQt6.QtCore import Qt, QEvent, QObject, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGroup, QDialog, QGridLayout, \
-    QScrollArea, QApplication, QDialogButtonBox
+    QScrollArea, QApplication, QDialogButtonBox, QLabel
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_layout, flow, vbox, incr_font, \
-    retain_when_hidden, grid, decr_icon, ask_confirmation
+    retain_when_hidden, grid, decr_icon, ask_confirmation, hbox, margins, underline, line, pointy
 from qthandy.filter import OpacityEventFilter
+from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color
+from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey
+    StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey, hook_beat, motion_beat, \
+    disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
+    midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -45,14 +49,17 @@ from src.main.python.plotlyst.model.common import SelectionItemsModel
 from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, \
+    ExclusiveOptionalButtonGroup
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
 from src.main.python.plotlyst.view.generated.story_structure_settings_ui import Ui_StoryStructureSettings
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import Subtitle, IconText
+from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.items_editor import ItemsEditorWidget
 from src.main.python.plotlyst.view.widget.labels import LabelsEditorWidget
 from src.main.python.plotlyst.view.widget.scenes import SceneStoryStructureWidget, SceneSelector
@@ -101,36 +108,6 @@ class _StoryStructureButton(QPushButton):
         self.setFont(font)
 
 
-class BeatsPreview(QFrame):
-    def __init__(self, checkOccupiedBeats: bool = True, parent=None):
-        super().__init__(parent)
-        self._checkOccupiedBeats = checkOccupiedBeats
-        self._layout: QGridLayout = grid(self)
-        self._structurePreview: Optional[SceneStoryStructureWidget] = None
-
-        self.setStyleSheet("background-color: rgb(255, 255, 255);")
-
-    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
-        self._structurePreview = structurePreview
-
-    def setStructure(self, structure: StoryStructure):
-        row = 0
-        col = 0
-        for beat in structure.beats:
-            if beat.type != StoryBeatType.BEAT:
-                continue
-            wdg = BeatWidget(beat, self._checkOccupiedBeats)
-            wdg.setMinimumSize(200, 50)
-            if beat.act - 1 > col:  # new act
-                self._layout.addWidget(vspacer(), row + 1, col)
-                col = beat.act - 1
-                row = 0
-            self._layout.addWidget(wdg, row, col)
-            row += 1
-            wdg.beatHighlighted.connect(self._structurePreview.highlightBeat)
-            wdg.beatToggled.connect(partial(self._structurePreview.toggleBeatVisibility, beat))
-
-
 class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     beatHighlighted = pyqtSignal(StoryBeat)
     beatToggled = pyqtSignal(StoryBeat)
@@ -141,16 +118,21 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.beat = beat
         self._checkOccupiedBeats = checkOccupiedBeats
 
-        self.lblTitle.setText(self.beat.text)
         bold(self.lblTitle)
         bold(self.lblSceneTitle)
-        self.lblDescription.setText(self.beat.description)
+        # self.lblTitle.setText(self.beat.text)
+        # self.lblDescription.setText(self.beat.description)
         transparent(self.lblTitle)
         transparent(self.lblDescription)
         transparent(self.btnIcon)
-        if beat.icon:
-            self.btnIcon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-        self.lblTitle.setStyleSheet(f'QLabel:enabled {{color: {beat.icon_color};}}')
+        # if beat.icon:
+        #     self.btnIcon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+        # self.lblTitle.setStyleSheet(f'''
+        #     QLabel {{
+        #         background-color: {RELAXED_WHITE_COLOR};
+        #     }}
+        #     QLabel:enabled {{color: {beat.icon_color};}}
+        # ''')
 
         self.btnSceneSelector = SceneSelector(app_env.novel)
         decr_icon(self.btnSceneSelector, 2)
@@ -173,6 +155,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.scene: Optional[Scene] = None
         self.repo = RepositoryPersistenceManager.instance()
 
+        self.updateInfo()
         self.refresh()
 
         self.installEventFilter(self)
@@ -180,6 +163,18 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.textSynopsis.textChanged.connect(self._synopsisEdited)
         event_dispatcher.register(self, SceneChangedEvent)
         event_dispatcher.register(self, SceneDeletedEvent)
+
+    def updateInfo(self):
+        self.lblTitle.setText(self.beat.text)
+        self.lblDescription.setText(self.beat.description)
+        if self.beat.icon:
+            self.btnIcon.setIcon(IconRegistry.from_name(self.beat.icon, self.beat.icon_color))
+        self.lblTitle.setStyleSheet(f'''
+            QLabel {{
+                background-color: {RELAXED_WHITE_COLOR};
+            }}
+            QLabel:enabled {{color: {self.beat.icon_color};}}
+        ''')
 
     def refresh(self):
         self.stackedWidget.setCurrentWidget(self.pageInfo)
@@ -218,7 +213,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         elif event.type() == QEvent.Type.Leave:
             self.cbToggle.setHidden(True)
             self.btnSceneSelector.setHidden(True)
-            self.setStyleSheet('.BeatWidget {background-color: white;}')
+            self.setStyleSheet(f'.BeatWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         return super(BeatWidget, self).eventFilter(watched, event)
 
@@ -258,6 +253,85 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             self.repo.update_scene(self.scene)
 
 
+class BeatsPreview(QFrame):
+    def __init__(self, checkOccupiedBeats: bool = True, parent=None):
+        super().__init__(parent)
+        self._checkOccupiedBeats = checkOccupiedBeats
+        self._layout: QGridLayout = grid(self)
+        self._beats: Dict[StoryBeat, BeatWidget] = {}
+        self._structurePreview: Optional[SceneStoryStructureWidget] = None
+        self._structure: Optional[StoryStructure] = None
+
+        self.setProperty('relaxed-white-bg', True)
+
+    def attachStructurePreview(self, structurePreview: SceneStoryStructureWidget):
+        self._structurePreview = structurePreview
+
+    def setStructure(self, structure: StoryStructure):
+        self._structure = structure
+        self.refresh()
+
+    def refresh(self):
+        clear_layout(self._layout)
+        self._beats.clear()
+        row = 0
+        col = 0
+        for beat in self._structure.beats:
+            if beat.type != StoryBeatType.BEAT:
+                continue
+            wdg = self.__initBeatWidget(beat)
+            self._beats[beat] = wdg
+            if beat.act - 1 > col:  # new act
+                self._layout.addWidget(vspacer(), row + 1, col)
+                col = beat.act - 1
+                row = 0
+            self._layout.addWidget(wdg, row, col)
+            row += 1
+
+    def refreshBeat(self, beat: StoryBeat):
+        wdg = self._beats[beat]
+        wdg.updateInfo()
+        self._structurePreview.refreshBeat(beat)
+
+    def replaceBeat(self, oldBeat: StoryBeat, newBeat: StoryBeat):
+        for i, beat in enumerate(self._structure.beats):
+            if beat == oldBeat:
+                self._structure.beats[i] = newBeat
+                break
+        oldWdg = self._beats.pop(oldBeat)
+        newWdg = self.__initBeatWidget(newBeat)
+        self._beats[newBeat] = newWdg
+        self._layout.replaceWidget(oldWdg, newWdg)
+        gc(oldWdg)
+        self._structurePreview.replaceBeat(oldBeat, newBeat)
+
+    def removeBeat(self, beat: StoryBeat):
+        self._structure.beats.remove(beat)
+        wdg = self._beats.pop(beat)
+        self._layout.removeWidget(wdg)
+        gc(wdg)
+        self.refresh()
+        self._structurePreview.removeBeat(beat)
+
+    def insertBeat(self, newBeat: StoryBeat):
+        insert_to = -1
+        for i, beat in enumerate(self._structure.beats):
+            if beat.percentage > newBeat.percentage:
+                insert_to = i
+                break
+        self._structure.beats.insert(insert_to, newBeat)
+        self.refresh()
+        self._structurePreview.insertBeat(newBeat)
+
+    def __initBeatWidget(self, beat: StoryBeat) -> BeatWidget:
+        wdg = BeatWidget(beat, self._checkOccupiedBeats)
+        wdg.setMinimumSize(200, 50)
+        wdg.beatHighlighted.connect(self._structurePreview.highlightBeat)
+        wdg.beatToggled.connect(partial(self._structurePreview.toggleBeatVisibility, beat))
+
+        return wdg
+
+
 class _AbstractStructureEditorWidget(QWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super(_AbstractStructureEditorWidget, self).__init__(parent)
@@ -269,6 +343,7 @@ class _AbstractStructureEditorWidget(QWidget):
             self.wdgTitle.setIcon(IconRegistry.from_name(structure.icon, structure.icon_color))
         bold(self.wdgTitle)
         incr_font(self.wdgTitle, 2)
+        self.wdgCustom = QWidget()
 
         self.wdgPreview = SceneStoryStructureWidget(self)
         self.wdgPreview.setCheckOccupiedBeats(False)
@@ -287,9 +362,12 @@ class _AbstractStructureEditorWidget(QWidget):
         self.wdgPreview.setStructure(novel, self._structure)
         self.beatsPreview.setStructure(self._structure)
         self.layout().addWidget(self.wdgTitle)
+        self.layout().addWidget(line())
+        self.layout().addWidget(self.wdgCustom)
         self.layout().addWidget(vspacer(20))
         self.layout().addWidget(self.wdgPreview)
         self.layout().addWidget(self._scroll)
+
         # self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
         # self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
 
@@ -297,9 +375,334 @@ class _AbstractStructureEditorWidget(QWidget):
         return self._structure
 
 
+class BeatCustomization(Enum):
+    pass
+
+
+class _ThreeActBeginning(BeatCustomization):
+    Hook = auto()
+    Disturbance = auto()
+    Motion = auto()
+    Characteristic_moment = auto()
+    Normal_world = auto()
+
+
+class _ThreeActFirstPlotPoint(BeatCustomization):
+    First_plot_point = auto()
+    Point_of_no_return = auto()
+
+
+class _ThreeActMidpoint(BeatCustomization):
+    Turning_point = auto()
+    Point_of_no_return = auto()
+    Mirror_moment = auto()
+    Proactive = auto()
+
+
+class _ThreeActEnding(BeatCustomization):
+    Crisis = auto()
+
+
+def beat_option_title(option: BeatCustomization) -> str:
+    return option.name.replace('_', ' ')
+
+
+def beat_option_description(option: BeatCustomization) -> str:
+    if option == _ThreeActBeginning.Hook:
+        return hook_beat.description
+    elif option == _ThreeActBeginning.Motion:
+        return motion_beat.description
+    elif option == _ThreeActBeginning.Disturbance:
+        return disturbance_beat.description
+    elif option == _ThreeActBeginning.Normal_world:
+        return normal_world_beat.description
+    elif option == _ThreeActBeginning.Characteristic_moment:
+        return characteristic_moment_beat.description
+
+    elif option == _ThreeActFirstPlotPoint.First_plot_point:
+        return first_plot_point.description
+    elif option == _ThreeActFirstPlotPoint.Point_of_no_return:
+        return first_plot_point_ponr.description
+
+    elif option == _ThreeActMidpoint.Turning_point:
+        return midpoint.description
+    elif option == _ThreeActMidpoint.Point_of_no_return:
+        return midpoint_ponr.description
+    elif option == _ThreeActMidpoint.Mirror_moment:
+        return midpoint_mirror.description
+    elif option == _ThreeActMidpoint.Proactive:
+        return midpoint_proactive.description
+
+    elif option == _ThreeActEnding.Crisis:
+        return crisis.description
+
+
+def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
+    if option == _ThreeActBeginning.Hook:
+        return hook_beat.icon, hook_beat.icon_color
+    elif option == _ThreeActBeginning.Motion:
+        return motion_beat.icon, motion_beat.icon_color
+    elif option == _ThreeActBeginning.Disturbance:
+        return disturbance_beat.icon, disturbance_beat.icon_color
+    elif option == _ThreeActBeginning.Normal_world:
+        return normal_world_beat.icon, normal_world_beat.icon_color
+    elif option == _ThreeActBeginning.Characteristic_moment:
+        return characteristic_moment_beat.icon, characteristic_moment_beat.icon_color
+
+    elif option == _ThreeActFirstPlotPoint.First_plot_point:
+        return first_plot_point.icon, first_plot_point.icon_color
+    elif option == _ThreeActFirstPlotPoint.Point_of_no_return:
+        return first_plot_point_ponr.icon, first_plot_point_ponr.icon_color
+
+    elif option == _ThreeActMidpoint.Turning_point:
+        return midpoint.icon, midpoint.icon_color
+    elif option == _ThreeActMidpoint.Point_of_no_return:
+        return midpoint_ponr.icon, midpoint_ponr.icon_color
+    elif option == _ThreeActMidpoint.Mirror_moment:
+        return midpoint_mirror.icon, midpoint_mirror.icon_color
+    elif option == _ThreeActMidpoint.Proactive:
+        return midpoint_proactive.icon, midpoint_proactive.icon_color
+
+    elif option == _ThreeActEnding.Crisis:
+        return crisis.icon, crisis.icon_color
+
+
+def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
+    if beat == hook_beat:
+        return _ThreeActBeginning.Hook
+    elif beat == motion_beat:
+        return _ThreeActBeginning.Motion
+    elif beat == disturbance_beat:
+        return _ThreeActBeginning.Disturbance
+    elif beat == normal_world_beat:
+        return _ThreeActBeginning.Normal_world
+    elif beat == characteristic_moment_beat:
+        return _ThreeActBeginning.Characteristic_moment
+
+    elif beat == first_plot_point:
+        return _ThreeActFirstPlotPoint.First_plot_point
+    elif beat == first_plot_point_ponr:
+        return _ThreeActFirstPlotPoint.Point_of_no_return
+
+    elif beat == midpoint:
+        return _ThreeActMidpoint.Turning_point
+    elif beat == midpoint_ponr:
+        return _ThreeActMidpoint.Point_of_no_return
+    elif beat == midpoint_mirror:
+        return _ThreeActMidpoint.Mirror_moment
+    elif beat == midpoint_proactive:
+        return _ThreeActMidpoint.Proactive
+
+    elif beat == crisis:
+        return _ThreeActEnding.Crisis
+
+    return None
+
+
+first_plot_points = (first_plot_point, first_plot_point_ponr)
+midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
+
+
+def find_first_plot_point(structure: StoryStructure) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x in first_plot_points), None)
+
+
+def find_midpoint(structure: StoryStructure) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x in midpoints), None)
+
+
+def find_crisis(structure: StoryStructure) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x == crisis), None)
+
+
+class BeatOptionToggle(QWidget):
+    def __init__(self, option: BeatCustomization, parent=None):
+        super(BeatOptionToggle, self).__init__(parent)
+        hbox(self, spacing=0)
+        self.option = option
+        self.toggle = Toggle()
+        self.layout().addWidget(self.toggle, alignment=Qt.AlignmentFlag.AlignTop)
+        desc = QLabel(beat_option_description(option))
+        desc.setProperty('description', True)
+        btnTitle = QPushButton(beat_option_title(option))
+        btnTitle.setIcon(IconRegistry.from_name(*beat_option_icon(option)))
+        pointy(btnTitle)
+        transparent(btnTitle)
+        btnTitle.clicked.connect(self.toggle.click)
+        wdgTop = QWidget()
+        vbox(wdgTop, 0)
+        wdgTop.layout().addWidget(btnTitle, alignment=Qt.AlignmentFlag.AlignLeft)
+        wdgTop.layout().addWidget(desc)
+        self.layout().addWidget(wdgTop)
+        self.layout().addWidget(spacer())
+
+
+class ActOptionsButton(QPushButton):
+    def __init__(self, text: str, act: int, parent=None):
+        super(ActOptionsButton, self).__init__(text, parent)
+        pointy(self)
+
+        self.setProperty('structure-customization', True)
+        if act == 1:
+            self.setProperty('act-one', True)
+        elif act == 2:
+            self.setProperty('act-two', True)
+        else:
+            self.setProperty('act-three', True)
+
+
+class StructureOptionsWidget(QWidget):
+    optionSelected = pyqtSignal(BeatCustomization)
+    optionsReset = pyqtSignal()
+
+    def __init__(self, options: List[BeatCustomization], parent=None, checked: Optional[BeatCustomization] = None):
+        super(StructureOptionsWidget, self).__init__(parent)
+        vbox(self)
+        self.btnGroup = ExclusiveOptionalButtonGroup()
+        for opt in options:
+            wdg = BeatOptionToggle(opt)
+            self.layout().addWidget(wdg)
+            self.btnGroup.addButton(wdg.toggle)
+            if opt == checked:
+                wdg.toggle.setChecked(True)
+
+            wdg.toggle.clicked.connect(partial(self._clicked, opt))
+
+    def _clicked(self, option: BeatCustomization, checked: bool):
+        if not checked:
+            if not self.btnGroup.checkedButton():
+                self.optionsReset.emit()
+            return
+
+        self.optionSelected.emit(option)
+
+
+class StructureOptionsMenu(MenuWidget):
+    def __init__(self, parent: QWidget, title: str, options: List[BeatCustomization],
+                 checked: Optional[BeatCustomization] = None):
+        super(StructureOptionsMenu, self).__init__(parent)
+        apply_white_menu(self)
+        self.addSection(title)
+        self.addSeparator()
+
+        self.options = StructureOptionsWidget(options, self, checked=checked)
+        self.addWidget(self.options)
+
+
 class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
     def __init__(self, novel: Novel, structure: StoryStructure, parent=None):
         super(_ThreeActStructureEditorWidget, self).__init__(novel, structure, parent)
+
+        hbox(self.wdgCustom)
+        margins(self.wdgCustom, top=20)
+
+        self.lblCustomization = QLabel('Customization:')
+        underline(self.lblCustomization)
+        bold(self.lblCustomization)
+
+        self.btnBeginning = ActOptionsButton('Beginning', 1)
+        self.btnBeginning.setIcon(IconRegistry.cause_icon())
+        checked = option_from_beat(structure.beats[0])
+        menu = StructureOptionsMenu(self.btnBeginning, 'Select the beginning',
+                                    [_ThreeActBeginning.Hook, _ThreeActBeginning.Disturbance,
+                                     _ThreeActBeginning.Motion, _ThreeActBeginning.Characteristic_moment,
+                                     _ThreeActBeginning.Normal_world], checked=checked)
+        menu.options.optionSelected.connect(self._beginningChanged)
+        menu.options.optionsReset.connect(self._beginningReset)
+
+        self.btnFirstPlotPoint = ActOptionsButton('First Plot Point', 1)
+        self.btnFirstPlotPoint.setIcon(IconRegistry.from_name('mdi6.chevron-double-right'))
+        fpp_beat = find_first_plot_point(self._structure)
+        checked = _ThreeActFirstPlotPoint.Point_of_no_return if fpp_beat == first_plot_point_ponr else None
+        menu = StructureOptionsMenu(self.btnFirstPlotPoint, 'Customize',
+                                    [_ThreeActFirstPlotPoint.Point_of_no_return], checked=checked)
+        menu.options.optionSelected.connect(self._firstPlotPointChanged)
+        menu.options.optionsReset.connect(self._firstPlotPointReset)
+
+        self.btnMidpoint = ActOptionsButton('Midpoint', 2)
+        self.btnMidpoint.setIcon(IconRegistry.from_name('mdi.middleware-outline', '#2e86ab'))
+
+        midpoint_beat = find_midpoint(self._structure)
+        checked = option_from_beat(midpoint_beat) if midpoint_beat else None
+        menu = StructureOptionsMenu(self.btnMidpoint, 'Select the midpoint',
+                                    [_ThreeActMidpoint.Turning_point, _ThreeActMidpoint.Point_of_no_return,
+                                     _ThreeActMidpoint.Mirror_moment, _ThreeActMidpoint.Proactive], checked=checked)
+        menu.options.optionSelected.connect(self._midpointChanged)
+        menu.options.optionsReset.connect(self._midpointReset)
+
+        crisis_beat = find_crisis(self._structure)
+        checked = option_from_beat(crisis_beat) if crisis_beat else None
+        self.btnEnding = ActOptionsButton('Ending', 3)
+        self.btnEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
+        menu = StructureOptionsMenu(self.btnEnding, 'Extend the ending',
+                                    [_ThreeActEnding.Crisis], checked=checked)
+        menu.options.optionSelected.connect(self._endingChanged)
+        menu.options.optionsReset.connect(self._endingReset)
+
+        wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint,
+                    self.btnEnding, spacer(), spacing=15)
+        wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
+        self.wdgCustom.layout().addWidget(wdg)
+
+    def _beginningChanged(self, beginning: _ThreeActBeginning):
+        if beginning == _ThreeActBeginning.Hook:
+            beat = hook_beat
+        elif beginning == _ThreeActBeginning.Motion:
+            beat = motion_beat
+        elif beginning == _ThreeActBeginning.Disturbance:
+            beat = disturbance_beat
+        elif beginning == _ThreeActBeginning.Normal_world:
+            beat = normal_world_beat
+        elif beginning == _ThreeActBeginning.Characteristic_moment:
+            beat = characteristic_moment_beat
+        else:
+            return
+        self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(beat))
+
+    def _beginningReset(self):
+        self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(three_act_structure.beats[0]))
+
+    def _firstPlotPointChanged(self, option: _ThreeActFirstPlotPoint):
+        if option == _ThreeActFirstPlotPoint.Point_of_no_return:
+            beat = first_plot_point_ponr
+        else:
+            beat = first_plot_point
+
+        current_pp = find_first_plot_point(self._structure)
+        if current_pp:
+            self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(beat))
+
+    def _firstPlotPointReset(self):
+        current_pp = find_first_plot_point(self._structure)
+        if current_pp:
+            self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(first_plot_point))
+
+    def _midpointChanged(self, midpoint_option: _ThreeActMidpoint):
+        if midpoint_option == _ThreeActMidpoint.Turning_point:
+            beat = midpoint
+        elif midpoint_option == _ThreeActMidpoint.Point_of_no_return:
+            beat = midpoint_ponr
+        elif midpoint_option == _ThreeActMidpoint.Mirror_moment:
+            beat = midpoint_mirror
+        elif midpoint_option == _ThreeActMidpoint.Proactive:
+            beat = midpoint_proactive
+        else:
+            return
+
+        current_midpoint = find_midpoint(self._structure)
+        if current_midpoint:
+            self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(beat))
+
+    def _midpointReset(self):
+        current_midpoint = find_midpoint(self._structure)
+        if current_midpoint:
+            self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(midpoint))
+
+    def _endingChanged(self, ending_option: _ThreeActEnding):
+        self.beatsPreview.insertBeat(copy.deepcopy(crisis))
+
+    def _endingReset(self):
+        self.beatsPreview.removeBeat(crisis)
 
 
 class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
@@ -319,8 +722,8 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         self._novel = novel
         self.setWindowIcon(IconRegistry.story_structure_icon())
         self.btnThreeAct.setIcon(IconRegistry.from_name('mdi.numeric-3-circle-outline', color_on=ACT_THREE_COLOR))
-        self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat'))
-        self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask'))
+        self.btnSaveTheCat.setIcon(IconRegistry.from_name('fa5s.cat', color_on='white'))
+        self.btnHerosJourney.setIcon(IconRegistry.from_name('fa5s.mask', color_on='white'))
         self.buttonGroup.buttonClicked.connect(self._structureChanged)
 
         self._structure: Optional[StoryStructure] = None
@@ -387,6 +790,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         flow(self.wdgTemplates)
 
         self.btnNew.setIcon(IconRegistry.plus_icon('white'))
+        self.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.btnNew))
         self.btnNew.clicked.connect(self._selectTemplateStructure)
 
         self.btnDelete.setIcon(IconRegistry.minus_icon())
@@ -505,7 +909,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         row = 0
         col = 0
         for beat in structure.beats:
-            if beat.type != StoryBeatType.BEAT:
+            if beat.type != StoryBeatType.BEAT or not beat.enabled:
                 continue
             wdg = BeatWidget(beat)
             if beat.act - 1 > col:  # new act

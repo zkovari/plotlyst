@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pickle
 from enum import Enum
 from functools import partial
-from typing import Dict, Optional
+from typing import Dict, Optional, Union, Set
 from typing import List
 
 import qtanim
@@ -30,9 +30,9 @@ from PyQt6.QtGui import QDragEnterEvent, QResizeEvent, QCursor, QColor, QDropEve
     QPen, QPainterPath, QShowEvent
 from PyQt6.QtWidgets import QSizePolicy, QWidget, QFrame, QToolButton, QSplitter, \
     QPushButton, QTreeView, QTextEdit, QLabel, QTableView, \
-    QAbstractItemView, QButtonGroup
+    QAbstractItemView, QButtonGroup, QAbstractButton
 from overrides import overrides
-from qthandy import busy, margins, vspacer, bold, incr_font
+from qthandy import busy, margins, vspacer, bold, incr_font, gc
 from qthandy import decr_font, transparent, translucent, underline, flow, \
     clear_layout, hbox, spacer, btn_popup, vbox, italic
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter, DragEventFilter
@@ -261,6 +261,21 @@ class SceneFilterWidget(QFrame, Ui_SceneFilterWidget):
         self.tabWidget.setTabIcon(self.tabWidget.indexOf(self.tabPov), IconRegistry.character_icon())
 
 
+class _BeatButton(QToolButton):
+    def __init__(self, beat: StoryBeat, parent=None):
+        super(_BeatButton, self).__init__(parent)
+        self.beat = beat
+        self.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
+        self.installEventFilter(InstantTooltipEventFilter(self))
+
+    def dataFunc(self, _):
+        return self.beat
+
+
+def is_midpoint(beat: StoryBeat) -> bool:
+    return beat.text == 'Midpoint'
+
+
 class SceneStoryStructureWidget(QWidget):
     BeatMimeType = 'application/story-beat'
 
@@ -324,9 +339,6 @@ class SceneStoryStructureWidget(QWidget):
         self._beatCursor = value
 
     def setStructure(self, novel: Novel, structure: Optional[StoryStructure] = None):
-        def _beat(beat, btn):
-            return beat
-
         self.novel = novel
         self.structure = structure if structure else novel.active_story_structure
         self._acts.clear()
@@ -345,32 +357,10 @@ class SceneStoryStructureWidget(QWidget):
                 italic(btn)
                 translucent(btn)
             else:
-                btn = QToolButton(self)
+                btn = _BeatButton(beat, self)
                 self._beats[beat] = btn
-                btn.setStyleSheet('QToolButton {background-color: rgba(0,0,0,0); border:0px;} QToolTip {border: 0px;}')
 
-            if beat.icon:
-                btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-            btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
-
-            if beat.type == StoryBeatType.BEAT:
-                btn.installEventFilter(InstantTooltipEventFilter(btn))
-                btn.toggled.connect(partial(self._beatToggled, btn))
-                btn.clicked.connect(partial(self._beatClicked, beat, btn))
-                btn.installEventFilter(self)
-                if self._beatsMoveable and not beat.ends_act and not beat.text == 'Midpoint':
-                    btn.installEventFilter(
-                        DragEventFilter(btn, self.BeatMimeType, partial(_beat, beat), hideTarget=True))
-                    btn.setCursor(Qt.CursorShape.OpenHandCursor)
-                else:
-                    btn.setCursor(self._beatCursor)
-                if self._checkOccupiedBeats and beat not in occupied_beats:
-                    if self._beatsCheckable:
-                        btn.setCheckable(True)
-                    self._beatToggled(btn, False)
-
-            if not beat.enabled:
-                btn.setHidden(True)
+            self.__initButton(beat, btn, occupied_beats)
 
         self._actsSplitter = QSplitter(self._wdgLine)
         self._actsSplitter.setContentsMargins(0, 0, 0, 0)
@@ -402,6 +392,27 @@ class SceneStoryStructureWidget(QWidget):
         self._actsSplitter.setEnabled(self._actsResizeable)
         self._actsSplitter.splitterMoved.connect(self._actResized)
         self.update()
+
+    def __initButton(self, beat: StoryBeat, btn: Union[QAbstractButton, _BeatButton], occupied_beats: Set[StoryBeat]):
+        if beat.icon:
+            btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+        btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
+        if beat.type == StoryBeatType.BEAT:
+            btn.toggled.connect(partial(self._beatToggled, btn))
+            btn.clicked.connect(partial(self._beatClicked, btn))
+            btn.installEventFilter(self)
+            if self._beatsMoveable and not beat.ends_act and not is_midpoint(beat):
+                btn.installEventFilter(
+                    DragEventFilter(btn, self.BeatMimeType, btn.dataFunc, hideTarget=True))
+                btn.setCursor(Qt.CursorShape.OpenHandCursor)
+            else:
+                btn.setCursor(self._beatCursor)
+            if self._checkOccupiedBeats and beat not in occupied_beats:
+                if self._beatsCheckable:
+                    btn.setCheckable(True)
+                self._beatToggled(btn, False)
+        if not beat.enabled:
+            btn.setHidden(True)
 
     @overrides
     def minimumSizeHint(self) -> QSize:
@@ -495,6 +506,34 @@ class SceneStoryStructureWidget(QWidget):
             'QToolButton {border: 3px dotted #9b2226; border-radius: 5;} QToolTip {border: 0px;}')
         btn.setFixedSize(self._beatHeight + 6, self._beatHeight + 6)
         qtanim.glow(btn, color=QColor(beat.icon_color))
+
+    def refreshBeat(self, beat: StoryBeat):
+        if beat.type == StoryBeatType.BEAT:
+            btn = self._beats.get(beat)
+            if beat.icon:
+                btn.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
+            btn.setToolTip(f'<b style="color: {beat.icon_color}">{beat.text}')
+
+    def replaceBeat(self, old: StoryBeat, new: StoryBeat):
+        if old.type == StoryBeatType.BEAT and new.type == StoryBeatType.BEAT:
+            btn = self._beats.pop(old)
+            self._beats[new] = btn
+            btn.setIcon(IconRegistry.from_name(new.icon, new.icon_color))
+            btn.setToolTip(f'<b style="color: {new.icon_color}">{new.text}')
+            btn.beat = new
+
+    def removeBeat(self, beat: StoryBeat):
+        if beat.type == StoryBeatType.BEAT:
+            btn = self._beats.pop(beat)
+            gc(btn)
+
+    def insertBeat(self, beat: StoryBeat):
+        if beat.type == StoryBeatType.BEAT:
+            btn = _BeatButton(beat, self)
+            self._beats[beat] = btn
+            self.__initButton(beat, btn, set())
+            self._rearrangeBeats()
+            btn.setVisible(True)
 
     def highlightScene(self, scene: Scene):
         if not self.isVisible():
@@ -597,13 +636,14 @@ class SceneStoryStructureWidget(QWidget):
     def _beatToggled(self, btn: QToolButton, toggled: bool):
         translucent(btn, 1.0 if toggled else 0.2)
 
-    def _beatClicked(self, beat: StoryBeat, btn: QToolButton):
+    def _beatClicked(self, btn: _BeatButton):
         if btn.isCheckable() and btn.isChecked():
-            self.beatSelected.emit(beat)
+            self.beatSelected.emit(btn.beat)
             btn.setCheckable(False)
         elif not btn.isCheckable() and self._removalContextMenuEnabled:
             builder = PopupMenuBuilder.from_widget_position(self, self.mapFromGlobal(QCursor.pos()))
-            builder.add_action('Remove', IconRegistry.trash_can_icon(), lambda: self.beatRemovalRequested.emit(beat))
+            builder.add_action('Remove', IconRegistry.trash_can_icon(),
+                               lambda: self.beatRemovalRequested.emit(btn.beat))
             builder.popup()
 
     def _actResized(self, pos: int, index: int):

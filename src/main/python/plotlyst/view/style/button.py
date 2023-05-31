@@ -170,6 +170,26 @@ QPushButton:hover[importer-sync=true] {
     background-color: #f8f9fa;
 }
 
+QPushButton[structure-customization=true] {
+    border: none;
+    padding: 2px;
+}
+QPushButton:hover[structure-customization=true] {
+    background: lightgrey;
+}
+
+QPushButton[structure-customization=true][act-one=true] {
+    border-bottom: 2px solid #02bcd4;
+}
+
+QPushButton[structure-customization=true][act-two=true] {
+    border-bottom: 2px solid #1bbc9c;
+}
+
+QPushButton[structure-customization=true][act-three=true] {
+    border-bottom: 2px solid #ff7800;
+}
+
 QToolButton::menu-indicator {
     width:0px;
 }
