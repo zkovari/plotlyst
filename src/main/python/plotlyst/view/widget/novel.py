@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBea
     SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
-    midpoint_proactive
+    midpoint_proactive, crisis
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -304,6 +304,12 @@ class BeatsPreview(QFrame):
         gc(oldWdg)
         self._structurePreview.replaceBeat(oldBeat, newBeat)
 
+    def removeBeat(self, beat: StoryBeat):
+        pass
+
+    def insertBeat(self, beat: StoryBeat):
+        pass
+
     def __initBeatWidget(self, beat: StoryBeat) -> BeatWidget:
         wdg = BeatWidget(beat, self._checkOccupiedBeats)
         wdg.setMinimumSize(200, 50)
@@ -375,6 +381,10 @@ class _ThreeActMidpoint(BeatCustomization):
     Proactive = auto()
 
 
+class _ThreeActEnding(BeatCustomization):
+    Crisis = auto()
+
+
 def beat_option_title(option: BeatCustomization) -> str:
     return option.name.replace('_', ' ')
 
@@ -400,6 +410,9 @@ def beat_option_description(option: BeatCustomization) -> str:
     elif option == _ThreeActMidpoint.Proactive:
         return midpoint_proactive.description
 
+    elif option == _ThreeActEnding.Crisis:
+        return crisis.description
+
 
 def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
     if option == _ThreeActBeginning.Hook:
@@ -421,6 +434,9 @@ def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
         return midpoint_mirror.icon, midpoint_mirror.icon_color
     elif option == _ThreeActMidpoint.Proactive:
         return midpoint_proactive.icon, midpoint_proactive.icon_color
+
+    elif option == _ThreeActEnding.Crisis:
+        return crisis.icon, crisis.icon_color
 
 
 def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
@@ -444,6 +460,9 @@ def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
     elif beat == midpoint_proactive:
         return _ThreeActMidpoint.Proactive
 
+    elif beat == crisis:
+        return _ThreeActEnding.Crisis
+
     return None
 
 
@@ -454,8 +473,9 @@ def find_midpoint(structure: StoryStructure) -> Optional[StoryBeat]:
     return next((x for x in structure.beats if x in midpoints), None)
 
 
-# def find_crisis(structure: StoryStructure) -> Optional[StoryBeat]:
-#     return next((x for x in structure.beats if x == crisis), None)
+def find_crisis(structure: StoryStructure) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x == crisis), None)
+
 
 class BeatOptionToggle(QWidget):
     def __init__(self, option: BeatCustomization, parent=None):
@@ -569,8 +589,14 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.btnDarkMoment = ActOptionsButton('Dark moment', 2)
         self.btnDarkMoment.setIcon(IconRegistry.from_name('mdi.weather-night', '#494368'))
 
+        crisis_beat = find_crisis(self._structure)
+        checked = option_from_beat(crisis_beat) if crisis_beat else None
         self.btnEnding = ActOptionsButton('Ending', 3)
         self.btnEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
+        menu = StructureOptionsMenu(self.btnEnding, 'Extend the ending',
+                                    [_ThreeActEnding.Crisis], checked=checked)
+        menu.options.optionSelected.connect(self._endingChanged)
+        menu.options.optionsReset.connect(self._endingReset)
 
         wdg = group(spacer(), self.btnBeginning, self.btnSetback, self.btnMidpoint, self.btnDarkMoment,
                     self.btnEnding, spacer(), spacing=15)
@@ -615,6 +641,12 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         current_midpoint = find_midpoint(self._structure)
         if current_midpoint:
             self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(midpoint))
+
+    def _endingChanged(self, ending_option: _ThreeActEnding):
+        self.beatsPreview.insertBeat(copy.deepcopy(crisis))
+
+    def _endingReset(self):
+        self.beatsPreview.removeBeat(crisis)
 
 
 class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
