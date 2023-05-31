@@ -630,9 +630,6 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         menu.options.optionSelected.connect(self._midpointChanged)
         menu.options.optionsReset.connect(self._midpointReset)
 
-        self.btnDarkMoment = ActOptionsButton('Dark moment', 2)
-        self.btnDarkMoment.setIcon(IconRegistry.from_name('mdi.weather-night', '#494368'))
-
         crisis_beat = find_crisis(self._structure)
         checked = option_from_beat(crisis_beat) if crisis_beat else None
         self.btnEnding = ActOptionsButton('Ending', 3)
@@ -642,7 +639,7 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         menu.options.optionSelected.connect(self._endingChanged)
         menu.options.optionsReset.connect(self._endingReset)
 
-        wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint, self.btnDarkMoment,
+        wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint,
                     self.btnEnding, spacer(), spacing=15)
         wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
         self.wdgCustom.layout().addWidget(wdg)
