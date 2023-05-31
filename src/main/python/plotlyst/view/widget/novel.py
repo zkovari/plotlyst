@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBea
     SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
-    midpoint_proactive, crisis
+    midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -387,6 +387,11 @@ class _ThreeActBeginning(BeatCustomization):
     Normal_world = auto()
 
 
+class _ThreeActFirstPlotPoint(BeatCustomization):
+    First_plot_point = auto()
+    Point_of_no_return = auto()
+
+
 class _ThreeActMidpoint(BeatCustomization):
     Turning_point = auto()
     Point_of_no_return = auto()
@@ -414,6 +419,11 @@ def beat_option_description(option: BeatCustomization) -> str:
     elif option == _ThreeActBeginning.Characteristic_moment:
         return characteristic_moment_beat.description
 
+    elif option == _ThreeActFirstPlotPoint.First_plot_point:
+        return first_plot_point.description
+    elif option == _ThreeActFirstPlotPoint.Point_of_no_return:
+        return first_plot_point_ponr.description
+
     elif option == _ThreeActMidpoint.Turning_point:
         return midpoint.description
     elif option == _ThreeActMidpoint.Point_of_no_return:
@@ -438,6 +448,11 @@ def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
         return normal_world_beat.icon, normal_world_beat.icon_color
     elif option == _ThreeActBeginning.Characteristic_moment:
         return characteristic_moment_beat.icon, characteristic_moment_beat.icon_color
+
+    elif option == _ThreeActFirstPlotPoint.First_plot_point:
+        return first_plot_point.icon, first_plot_point.icon_color
+    elif option == _ThreeActFirstPlotPoint.Point_of_no_return:
+        return first_plot_point_ponr.icon, first_plot_point_ponr.icon_color
 
     elif option == _ThreeActMidpoint.Turning_point:
         return midpoint.icon, midpoint.icon_color
@@ -464,6 +479,11 @@ def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
     elif beat == characteristic_moment_beat:
         return _ThreeActBeginning.Characteristic_moment
 
+    elif beat == first_plot_point:
+        return _ThreeActFirstPlotPoint.First_plot_point
+    elif beat == first_plot_point_ponr:
+        return _ThreeActFirstPlotPoint.Point_of_no_return
+
     elif beat == midpoint:
         return _ThreeActMidpoint.Turning_point
     elif beat == midpoint_ponr:
@@ -479,7 +499,12 @@ def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
     return None
 
 
+first_plot_points = (first_plot_point, first_plot_point_ponr)
 midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
+
+
+def find_first_plot_point(structure: StoryStructure) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x in first_plot_points), None)
 
 
 def find_midpoint(structure: StoryStructure) -> Optional[StoryBeat]:
@@ -585,8 +610,14 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         menu.options.optionSelected.connect(self._beginningChanged)
         menu.options.optionsReset.connect(self._beginningReset)
 
-        self.btnSetback = ActOptionsButton('Act 2 complication', 2)
-        self.btnSetback.setIcon(IconRegistry.charge_icon(-2))
+        self.btnFirstPlotPoint = ActOptionsButton('First Plot Point', 1)
+        self.btnFirstPlotPoint.setIcon(IconRegistry.from_name('mdi6.chevron-double-right'))
+        fpp_beat = find_first_plot_point(self._structure)
+        checked = _ThreeActFirstPlotPoint.Point_of_no_return if fpp_beat == first_plot_point_ponr else None
+        menu = StructureOptionsMenu(self.btnFirstPlotPoint, 'Customize',
+                                    [_ThreeActFirstPlotPoint.Point_of_no_return], checked=checked)
+        menu.options.optionSelected.connect(self._firstPlotPointChanged)
+        menu.options.optionsReset.connect(self._firstPlotPointReset)
 
         self.btnMidpoint = ActOptionsButton('Midpoint', 2)
         self.btnMidpoint.setIcon(IconRegistry.from_name('mdi.middleware-outline', '#2e86ab'))
@@ -611,7 +642,7 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         menu.options.optionSelected.connect(self._endingChanged)
         menu.options.optionsReset.connect(self._endingReset)
 
-        wdg = group(spacer(), self.btnBeginning, self.btnSetback, self.btnMidpoint, self.btnDarkMoment,
+        wdg = group(spacer(), self.btnBeginning, self.btnFirstPlotPoint, self.btnMidpoint, self.btnDarkMoment,
                     self.btnEnding, spacer(), spacing=15)
         wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
         self.wdgCustom.layout().addWidget(wdg)
@@ -633,6 +664,21 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
 
     def _beginningReset(self):
         self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(three_act_structure.beats[0]))
+
+    def _firstPlotPointChanged(self, option: _ThreeActFirstPlotPoint):
+        if option == _ThreeActFirstPlotPoint.Point_of_no_return:
+            beat = first_plot_point_ponr
+        else:
+            beat = first_plot_point
+
+        current_pp = find_first_plot_point(self._structure)
+        if current_pp:
+            self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(beat))
+
+    def _firstPlotPointReset(self):
+        current_pp = find_first_plot_point(self._structure)
+        if current_pp:
+            self.beatsPreview.replaceBeat(current_pp, copy.deepcopy(first_plot_point))
 
     def _midpointChanged(self, midpoint_option: _ThreeActMidpoint):
         if midpoint_option == _ThreeActMidpoint.Turning_point:
