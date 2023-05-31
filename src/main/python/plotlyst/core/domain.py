@@ -1149,7 +1149,7 @@ crisis = StoryBeat(text='Crisis',
                    icon_color='#ce2d4f',
                    description="The protagonist must decide between two equally bad or two irreconcilable good choices.",
                    id=uuid.UUID('466688f7-ebee-4d36-a655-83ff40e1c46d'),
-                   act=3, percentage=95, enabled=False)
+                   act=3, percentage=95)
 
 three_act_structure = StoryStructure(title='Three Act Structure',
                                      id=uuid.UUID('58013be5-1efb-4de4-9dd2-1433ce6edf90'),

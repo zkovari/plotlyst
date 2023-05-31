@@ -297,6 +297,7 @@ class BeatsPreview(QFrame):
         for i, beat in enumerate(self._structure.beats):
             if beat == oldBeat:
                 self._structure.beats[i] = newBeat
+                break
         oldWdg = self._beats.pop(oldBeat)
         newWdg = self.__initBeatWidget(newBeat)
         self._beats[newBeat] = newWdg
@@ -305,10 +306,22 @@ class BeatsPreview(QFrame):
         self._structurePreview.replaceBeat(oldBeat, newBeat)
 
     def removeBeat(self, beat: StoryBeat):
-        pass
+        self._structure.beats.remove(beat)
+        wdg = self._beats.pop(beat)
+        self._layout.removeWidget(wdg)
+        gc(wdg)
+        self.refresh()
+        self._structurePreview.removeBeat(beat)
 
-    def insertBeat(self, beat: StoryBeat):
-        pass
+    def insertBeat(self, newBeat: StoryBeat):
+        insert_to = -1
+        for i, beat in enumerate(self._structure.beats):
+            if beat.percentage > newBeat.percentage:
+                insert_to = i
+                break
+        self._structure.beats.insert(insert_to, newBeat)
+        self.refresh()
+        self._structurePreview.insertBeat(newBeat)
 
     def __initBeatWidget(self, beat: StoryBeat) -> BeatWidget:
         wdg = BeatWidget(beat, self._checkOccupiedBeats)
