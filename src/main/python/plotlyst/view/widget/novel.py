@@ -37,7 +37,8 @@ from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color, RELAXED_
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     SceneType, Scene, TagType, SelectionItem, Tag, \
     StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey, hook_beat, motion_beat, \
-    disturbance_beat, normal_world_beat, characteristic_moment_beat
+    disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
+    midpoint_proactive
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -367,6 +368,13 @@ class _ThreeActBeginning(BeatCustomization):
     Normal_world = auto()
 
 
+class _ThreeActMidpoint(BeatCustomization):
+    Turning_point = auto()
+    Point_of_no_return = auto()
+    Mirror_moment = auto()
+    Proactive = auto()
+
+
 def beat_option_title(option: BeatCustomization) -> str:
     return option.name.replace('_', ' ')
 
@@ -383,6 +391,15 @@ def beat_option_description(option: BeatCustomization) -> str:
     elif option == _ThreeActBeginning.Characteristic_moment:
         return characteristic_moment_beat.description
 
+    elif option == _ThreeActMidpoint.Turning_point:
+        return midpoint.description
+    elif option == _ThreeActMidpoint.Point_of_no_return:
+        return midpoint_ponr.description
+    elif option == _ThreeActMidpoint.Mirror_moment:
+        return midpoint_mirror.description
+    elif option == _ThreeActMidpoint.Proactive:
+        return midpoint_proactive.description
+
 
 def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
     if option == _ThreeActBeginning.Hook:
@@ -396,21 +413,49 @@ def beat_option_icon(option: BeatCustomization) -> Tuple[str, str]:
     elif option == _ThreeActBeginning.Characteristic_moment:
         return characteristic_moment_beat.icon, characteristic_moment_beat.icon_color
 
+    elif option == _ThreeActMidpoint.Turning_point:
+        return midpoint.icon, midpoint.icon_color
+    elif option == _ThreeActMidpoint.Point_of_no_return:
+        return midpoint_ponr.icon, midpoint_ponr.icon_color
+    elif option == _ThreeActMidpoint.Mirror_moment:
+        return midpoint_mirror.icon, midpoint_mirror.icon_color
+    elif option == _ThreeActMidpoint.Proactive:
+        return midpoint_proactive.icon, midpoint_proactive.icon_color
+
 
 def option_from_beat(beat: StoryBeat) -> Optional[BeatCustomization]:
-    if beat.text == 'Hook':
+    if beat == hook_beat:
         return _ThreeActBeginning.Hook
-    elif beat.text == 'Motion':
+    elif beat == motion_beat:
         return _ThreeActBeginning.Motion
-    elif beat.text == 'Disturbance':
+    elif beat == disturbance_beat:
         return _ThreeActBeginning.Disturbance
-    elif beat.text == 'Normal world':
+    elif beat == normal_world_beat:
         return _ThreeActBeginning.Normal_world
-    elif beat.text == 'Characteristic moment':
+    elif beat == characteristic_moment_beat:
         return _ThreeActBeginning.Characteristic_moment
+
+    elif beat == midpoint:
+        return _ThreeActMidpoint.Turning_point
+    elif beat == midpoint_ponr:
+        return _ThreeActMidpoint.Point_of_no_return
+    elif beat == midpoint_mirror:
+        return _ThreeActMidpoint.Mirror_moment
+    elif beat == midpoint_proactive:
+        return _ThreeActMidpoint.Proactive
 
     return None
 
+
+midpoints = (midpoint, midpoint_ponr, midpoint_mirror, midpoint_proactive)
+
+
+def find_midpoint(structure: StoryStructure) -> Optional[StoryBeat]:
+    return next((x for x in structure.beats if x in midpoints), None)
+
+
+# def find_crisis(structure: StoryStructure) -> Optional[StoryBeat]:
+#     return next((x for x in structure.beats if x == crisis), None)
 
 class BeatOptionToggle(QWidget):
     def __init__(self, option: BeatCustomization, parent=None):
@@ -507,11 +552,19 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         menu.options.optionSelected.connect(self._beginningChanged)
         menu.options.optionsReset.connect(self._beginningReset)
 
-        self.btnInciting = ActOptionsButton('Inciting incident', 1)
-        self.btnInciting.setIcon(IconRegistry.inciting_incident_icon())
-
         self.btnSetback = ActOptionsButton('Act 2 complication', 2)
         self.btnSetback.setIcon(IconRegistry.charge_icon(-2))
+
+        self.btnMidpoint = ActOptionsButton('Midpoint', 2)
+        self.btnMidpoint.setIcon(IconRegistry.from_name('mdi.middleware-outline', '#2e86ab'))
+
+        midpoint_beat = find_midpoint(self._structure)
+        checked = option_from_beat(midpoint_beat) if midpoint_beat else None
+        menu = StructureOptionsMenu(self.btnMidpoint, 'Select the midpoint',
+                                    [_ThreeActMidpoint.Turning_point, _ThreeActMidpoint.Point_of_no_return,
+                                     _ThreeActMidpoint.Mirror_moment, _ThreeActMidpoint.Proactive], checked=checked)
+        menu.options.optionSelected.connect(self._midpointChanged)
+        menu.options.optionsReset.connect(self._midpointReset)
 
         self.btnDarkMoment = ActOptionsButton('Dark moment', 2)
         self.btnDarkMoment.setIcon(IconRegistry.from_name('mdi.weather-night', '#494368'))
@@ -519,8 +572,8 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
         self.btnEnding = ActOptionsButton('Ending', 3)
         self.btnEnding.setIcon(IconRegistry.reversed_cause_and_effect_icon())
 
-        wdg = group(spacer(), self.btnBeginning, self.btnInciting, self.btnSetback, self.btnDarkMoment,
-                    self.btnEnding, spacer(), spacing=10)
+        wdg = group(spacer(), self.btnBeginning, self.btnSetback, self.btnMidpoint, self.btnDarkMoment,
+                    self.btnEnding, spacer(), spacing=15)
         wdg.layout().insertWidget(1, self.lblCustomization, alignment=Qt.AlignmentFlag.AlignTop)
         self.wdgCustom.layout().addWidget(wdg)
 
@@ -535,10 +588,33 @@ class _ThreeActStructureEditorWidget(_AbstractStructureEditorWidget):
             beat = normal_world_beat
         elif beginning == _ThreeActBeginning.Characteristic_moment:
             beat = characteristic_moment_beat
+        else:
+            return
         self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(beat))
 
     def _beginningReset(self):
         self.beatsPreview.replaceBeat(self._structure.beats[0], copy.deepcopy(three_act_structure.beats[0]))
+
+    def _midpointChanged(self, midpoint_option: _ThreeActMidpoint):
+        if midpoint_option == _ThreeActMidpoint.Turning_point:
+            beat = midpoint
+        elif midpoint_option == _ThreeActMidpoint.Point_of_no_return:
+            beat = midpoint_ponr
+        elif midpoint_option == _ThreeActMidpoint.Mirror_moment:
+            beat = midpoint_mirror
+        elif midpoint_option == _ThreeActMidpoint.Proactive:
+            beat = midpoint_proactive
+        else:
+            return
+
+        current_midpoint = find_midpoint(self._structure)
+        if current_midpoint:
+            self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(beat))
+
+    def _midpointReset(self):
+        current_midpoint = find_midpoint(self._structure)
+        if current_midpoint:
+            self.beatsPreview.replaceBeat(current_midpoint, copy.deepcopy(midpoint))
 
 
 class _SaveTheCatActStructureEditorWidget(_AbstractStructureEditorWidget):
