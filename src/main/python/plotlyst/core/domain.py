@@ -1135,10 +1135,17 @@ first_plot_point_ponr = StoryBeat(text='First Plot Point',
 
 second_plot_point = StoryBeat(text='Second Plot Point',
                               id=uuid.UUID('95705e5e-a6b8-4abe-b2ea-426f2ae8d020'),
-                              icon='mdi.dice-2',
-                              description="The last piece of key information is provided that launches the protagonist towards the climax.",
+                              icon='mdi6.chevron-triple-right',
+                              description="It propels the protagonist towards the climax to face the main conflict, often through a new twist, revelation, or turning point.",
                               icon_color='#6a0136',
                               act=2, ends_act=True, percentage=80)
+
+second_plot_point_aha = StoryBeat(text='Aha moment',
+                                  id=uuid.UUID('77e05b3c-27c3-42b2-bcbc-1f46dfc85d73'),
+                                  icon='fa5.lightbulb',
+                                  description="A-ha moment.",
+                                  icon_color='#6a0136',
+                                  act=2, ends_act=True, percentage=80)
 
 midpoint = StoryBeat(text='Midpoint',
                      icon='mdi.middleware-outline',
