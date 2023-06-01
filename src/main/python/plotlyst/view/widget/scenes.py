@@ -189,7 +189,7 @@ class SceneSelector(SecondaryActionPushButton):
         self.novel = novel
         self.setText(text)
         italic(self)
-        self.setIcon(IconRegistry.scene_icon())
+        self.setIcon(IconRegistry.scene_icon('grey'))
 
         self._lstScenes = QTableView()
         self._lstScenes.verticalHeader().setHidden(True)

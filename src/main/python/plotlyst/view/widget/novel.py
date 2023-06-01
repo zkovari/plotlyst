@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton, QSizePolicy, QFrame, QButtonGr
     QScrollArea, QApplication, QDialogButtonBox, QLabel
 from overrides import overrides
 from qthandy import vspacer, spacer, translucent, transparent, gc, bold, clear_layout, flow, vbox, incr_font, \
-    retain_when_hidden, grid, decr_icon, ask_confirmation, hbox, margins, underline, line, pointy
+    retain_when_hidden, grid, decr_icon, ask_confirmation, hbox, margins, underline, line, pointy, italic
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -120,19 +120,10 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
         bold(self.lblTitle)
         bold(self.lblSceneTitle)
-        # self.lblTitle.setText(self.beat.text)
-        # self.lblDescription.setText(self.beat.description)
+        italic(self.lblDescription)
         transparent(self.lblTitle)
         transparent(self.lblDescription)
         transparent(self.btnIcon)
-        # if beat.icon:
-        #     self.btnIcon.setIcon(IconRegistry.from_name(beat.icon, beat.icon_color))
-        # self.lblTitle.setStyleSheet(f'''
-        #     QLabel {{
-        #         background-color: {RELAXED_WHITE_COLOR};
-        #     }}
-        #     QLabel:enabled {{color: {beat.icon_color};}}
-        # ''')
 
         self.btnSceneSelector = SceneSelector(app_env.novel)
         decr_icon(self.btnSceneSelector, 2)
@@ -169,34 +160,39 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.lblDescription.setText(self.beat.description)
         if self.beat.icon:
             self.btnIcon.setIcon(IconRegistry.from_name(self.beat.icon, self.beat.icon_color))
+
         self.lblTitle.setStyleSheet(f'''
             QLabel {{
                 background-color: {RELAXED_WHITE_COLOR};
             }}
             QLabel:enabled {{color: {self.beat.icon_color};}}
+            QLabel:disabled {{color:grey;}}
         ''')
 
     def refresh(self):
         self.stackedWidget.setCurrentWidget(self.pageInfo)
         if not self._checkOccupiedBeats:
             return
-        for b in acts_registry.occupied_beats():
-            if b.id == self.beat.id:
-                self.stackedWidget.setCurrentWidget(self.pageScene)
-                self.scene = acts_registry.scene(b)
-                if self.scene:
-                    self.lblSceneTitle.setText(self.scene.title)
-                    self.textSynopsis.setText(self.scene.synopsis)
-                    if self.scene.pov:
-                        self.btnPov.setIcon(avatars.avatar(self.scene.pov))
-                    if self.scene.type == SceneType.ACTION:
-                        self.btnSceneType.setIcon(
-                            IconRegistry.action_scene_icon(self.scene.outcome_resolution(),
-                                                           self.scene.outcome_trade_off()))
-                    elif self.scene.type == SceneType.REACTION:
-                        self.btnSceneType.setIcon(IconRegistry.reaction_scene_icon())
-                else:
-                    self.textSynopsis.clear()
+
+        self.scene = acts_registry.scene(self.beat)
+        if self.scene:
+            self.lblTitle.setEnabled(True)
+            self.btnIcon.setEnabled(True)
+            self.stackedWidget.setCurrentWidget(self.pageScene)
+            self.lblSceneTitle.setText(self.scene.title)
+            self.textSynopsis.setText(self.scene.synopsis)
+            if self.scene.pov:
+                self.btnPov.setIcon(avatars.avatar(self.scene.pov))
+            if self.scene.type == SceneType.ACTION:
+                self.btnSceneType.setIcon(
+                    IconRegistry.action_scene_icon(self.scene.outcome_resolution(),
+                                                   self.scene.outcome_trade_off()))
+            elif self.scene.type == SceneType.REACTION:
+                self.btnSceneType.setIcon(IconRegistry.reaction_scene_icon())
+        else:
+            self.lblTitle.setDisabled(True)
+            self.btnIcon.setDisabled(True)
+            self.textSynopsis.clear()
 
     @overrides
     def event_received(self, event: Event):
