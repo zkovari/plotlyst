@@ -883,6 +883,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def _editStructure(self):
         StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
         self._activeStructureToggled(self.novel.active_story_structure, True)
+        emit_event(NovelStoryStructureUpdated(self))
 
     def _selectTemplateStructure(self):
         structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
