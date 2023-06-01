@@ -112,11 +112,12 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     beatHighlighted = pyqtSignal(StoryBeat)
     beatToggled = pyqtSignal(StoryBeat)
 
-    def __init__(self, beat: StoryBeat, checkOccupiedBeats: bool = True, parent=None):
+    def __init__(self, beat: StoryBeat, checkOccupiedBeats: bool = True, parent=None, toggleEnabled: bool = True):
         super(BeatWidget, self).__init__(parent)
         self.setupUi(self)
         self.beat = beat
         self._checkOccupiedBeats = checkOccupiedBeats
+        self._toggleEnabled = toggleEnabled
 
         bold(self.lblTitle)
         bold(self.lblSceneTitle)
@@ -220,7 +221,9 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         return self.stackedWidget.currentWidget() == self.pageScene
 
     def _canBeToggled(self):
-        if self.beat.text == 'Midpoint' or self.beat.ends_act:
+        if not self._toggleEnabled:
+            return False
+        if self.beat in midpoints or self.beat.ends_act:
             return False
         return True
 
@@ -908,7 +911,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         for beat in structure.beats:
             if beat.type != StoryBeatType.BEAT or not beat.enabled:
                 continue
-            wdg = BeatWidget(beat)
+            wdg = BeatWidget(beat, toggleEnabled=False)
             if beat.act - 1 > col:  # new act
                 self.beats.layout().addWidget(vspacer(), row + 1, col)
                 col = beat.act - 1
