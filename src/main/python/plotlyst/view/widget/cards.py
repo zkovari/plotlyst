@@ -364,10 +364,10 @@ class CardsView(QFrame):
         for card in self._cards.values():
             card.setVisible(cardFilter.filter(card))
 
-    def _initCardWidget(self, card):
+    def _initCardWidget(self, card: Card):
         card.setAcceptDrops(True)
         if card.isDragEnabled():
-            card.installEventFilter(DragEventFilter(card, card.mimeType(), lambda x: card.data(), hideTarget=True,
+            card.installEventFilter(DragEventFilter(card, card.mimeType(), lambda x: card.data(),
                                                     startedSlot=partial(self._dragStarted, card),
                                                     finishedSlot=partial(self._dragFinished, card)))
         card.selected.connect(lambda: self._cardSelected(card))
@@ -396,6 +396,7 @@ class CardsView(QFrame):
         self.cardSelected.emit(card)
 
     def _dragStarted(self, card: Card):
+        card.setHidden(True)
         self._dragged = card
         self._dragPlaceholder = card.copy()
         self._resizeCard(self._dragPlaceholder)
@@ -407,12 +408,12 @@ class CardsView(QFrame):
             DropEventFilter(self._dragPlaceholder, mimeTypes=[card.mimeType()], droppedSlot=self._dropped))
 
     def _dragMoved(self, card: Card, edge: Qt.Edge, _: QPoint):
-        self._dragPlaceholder.setVisible(True)
         i = self._layout.indexOf(card)
         if edge == Qt.Edge.LeftEdge:
             self._layout.insertWidget(i, self._dragPlaceholder)
         else:
             self._layout.insertWidget(i + 1, self._dragPlaceholder)
+        self._dragPlaceholder.setVisible(True)
 
     def _dropped(self, _: QMimeData):
         card = self._dragged.copy()
@@ -438,9 +439,10 @@ class CardsView(QFrame):
             gc(self._dragPlaceholder)
             self._dragPlaceholder = None
         if self._wasDropped:
-            card.setHidden(True)
             self._layout.removeWidget(card)
             gc(card)
+        else:
+            card.setVisible(True)
         self._dragged = None
 
         self._wasDropped = False
