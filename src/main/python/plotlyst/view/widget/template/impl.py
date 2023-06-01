@@ -38,7 +38,8 @@ from src.main.python.plotlyst.core.help import enneagram_help, mbti_help
 from src.main.python.plotlyst.core.template import TemplateField, SelectionItem, \
     enneagram_choices, goal_field, internal_goal_field, stakes_field, conflict_field, motivation_field, \
     internal_motivation_field, internal_conflict_field, internal_stakes_field, wound_field, trigger_field, fear_field, \
-    healing_field, methods_field, misbelief_field, positive_arc, negative_arc, need_field, ghost_field, desire_field
+    healing_field, methods_field, misbelief_field, positive_arc, negative_arc, need_field, ghost_field, desire_field, \
+    demon_field
 from src.main.python.plotlyst.model.template import TemplateFieldSelectionModel, TraitsFieldItemsSelectionModel, \
     TraitsProxyModel
 from src.main.python.plotlyst.view.common import pointy, wrap, emoji_font, hmax, action, ButtonPressResizeEventFilter
@@ -1055,16 +1056,14 @@ class WoundsFieldWidget(MultiLayerComplexTemplateWidgetBase):
         return 'Add new wound'
 
     @overrides
-    def _hasMenu(self) -> bool:
-        return False
-
-    @overrides
     def _primaryFields(self) -> List[TemplateField]:
-        return [wound_field]
+        return [wound_field, ghost_field, demon_field]
 
     @overrides
     def _secondaryFields(self, primary: TemplateField) -> List[TemplateField]:
-        return [fear_field, misbelief_field, trigger_field, healing_field]
+        if primary.id == wound_field.id:
+            return [fear_field, misbelief_field, trigger_field, healing_field]
+        return []
 
 
 class ArcsFieldWidget(MultiLayerComplexTemplateWidgetBase):
