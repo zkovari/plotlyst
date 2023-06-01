@@ -1482,6 +1482,11 @@ class NovelDescriptor:
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
     tutorial: bool = False
+    creation_date: Optional[datetime] = None
+
+    def __post_init__(self):
+        if self.creation_date is None:
+            self.creation_date = datetime.now()
 
     @overrides
     def __eq__(self, other: 'NovelDescriptor'):

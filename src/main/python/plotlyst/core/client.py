@@ -23,6 +23,7 @@ import os
 import pathlib
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
 from typing import List, Optional, Any, Dict, Set, Union
@@ -209,6 +210,7 @@ class ProjectNovelInfo:
     subtitle: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon_color: str = field(default='black', metadata=config(exclude=exclude_if_black))
+    creation_date: Optional[datetime] = None
 
 
 def _default_story_structures():
@@ -258,7 +260,8 @@ class JsonClient:
 
     def novels(self) -> List[NovelDescriptor]:
         return [NovelDescriptor(title=x.title, id=x.id, import_origin=x.import_origin, lang_settings=x.lang_settings,
-                                subtitle=x.subtitle, icon=x.icon, icon_color=x.icon_color)
+                                subtitle=x.subtitle, icon=x.icon, icon_color=x.icon_color,
+                                creation_date=x.creation_date)
                 for x in self.project.novels]
 
     def has_novel(self, id: uuid.UUID):
@@ -302,7 +305,8 @@ class JsonClient:
     def insert_novel(self, novel: Novel):
         project_novel_info = ProjectNovelInfo(title=novel.title, id=novel.id, lang_settings=novel.lang_settings,
                                               import_origin=novel.import_origin,
-                                              subtitle=novel.subtitle, icon=novel.icon, icon_color=novel.icon_color)
+                                              subtitle=novel.subtitle, icon=novel.icon, icon_color=novel.icon_color,
+                                              creation_date=novel.creation_date)
         self.project.novels.append(project_novel_info)
         self._persist_project()
         self._persist_novel(novel)
@@ -516,7 +520,7 @@ class JsonClient:
         novel = Novel(title=project_novel_info.title, id=novel_info.id, lang_settings=project_novel_info.lang_settings,
                       import_origin=project_novel_info.import_origin,
                       subtitle=project_novel_info.subtitle, icon=project_novel_info.icon,
-                      icon_color=project_novel_info.icon_color,
+                      icon_color=project_novel_info.icon_color, creation_date=project_novel_info.creation_date,
                       plots=novel_info.plots, characters=characters,
                       scenes=scenes, chapters=chapters, stages=novel_info.stages,
                       story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
