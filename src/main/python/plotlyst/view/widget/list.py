@@ -70,7 +70,7 @@ class ListItemWidget(QWidget):
         self._btnRemoval.setHidden(True)
 
         self._btnDrag.installEventFilter(
-            DragEventFilter(self, LIST_ITEM_MIME_TYPE, dataFunc=lambda x: self.item(), hideTarget=True,
+            DragEventFilter(self, LIST_ITEM_MIME_TYPE, dataFunc=lambda x: self.item(),
                             grabbed=self._lineEdit, startedSlot=self.dragStarted.emit,
                             finishedSlot=self.dragFinished.emit))
 
@@ -159,6 +159,7 @@ class ListView(QScrollArea):
         fade_out_and_gc(self._centralWidget, widget)
 
     def _dragStarted(self, widget: ListItemWidget):
+        widget.setHidden(True)
         self._dragged = widget
         self._dragPlaceholder = ListItemWidget(widget.item(), self)
         margins(self._dragPlaceholder, left=3)
@@ -168,28 +169,13 @@ class ListView(QScrollArea):
         self._dragPlaceholder.installEventFilter(
             DropEventFilter(self._dragPlaceholder, mimeTypes=[LIST_ITEM_MIME_TYPE], droppedSlot=self._dropped))
 
-    def _dragFinished(self, widget: ListItemWidget):
-        if self._dragPlaceholder:
-            self._dragPlaceholder.setHidden(True)
-            self._centralWidget.layout().removeWidget(self._dragPlaceholder)
-            gc(self._dragPlaceholder)
-            self._dragPlaceholder = None
-
-        self._dragged = None
-        if self._toBeRemoved:
-            widget.setHidden(True)
-            self._centralWidget.layout().removeWidget(widget)
-            gc(widget)
-
-        self._toBeRemoved = False
-
     def _dragMoved(self, widget: ListItemWidget, edge: Qt.Edge, _: QPoint):
-        self._dragPlaceholder.setVisible(True)
         i = self._centralWidget.layout().indexOf(widget)
         if edge == Qt.Edge.TopEdge:
             self._centralWidget.layout().insertWidget(i, self._dragPlaceholder)
         else:
             self._centralWidget.layout().insertWidget(i + 1, self._dragPlaceholder)
+        self._dragPlaceholder.setVisible(True)
 
     def _dropped(self, mimeData: ObjectReferenceMimeData):
         wdg = self.__newItemWidget(mimeData.reference())
@@ -198,6 +184,19 @@ class ListView(QScrollArea):
         self._dragPlaceholder = None
 
         self._toBeRemoved = True
+
+    def _dragFinished(self, widget: ListItemWidget):
+        if self._dragPlaceholder:
+            gc(self._dragPlaceholder)
+            self._dragPlaceholder = None
+
+        self._dragged = None
+        if self._toBeRemoved:
+            gc(widget)
+        else:
+            widget.setVisible(True)
+
+        self._toBeRemoved = False
 
     def __newItemWidget(self, item: Any):
         wdg = self._listItemWidgetClass()(item)
