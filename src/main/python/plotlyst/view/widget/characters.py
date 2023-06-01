@@ -813,11 +813,11 @@ class _ControlButtons(QWidget):
         if event.type() == QEvent.Type.Enter:
             self.btnPlaceholderCircle.setHidden(True)
             self.btnPlus.setVisible(True)
-            self.btnSeparator.setVisible(True)
+            # self.btnSeparator.setVisible(True)
         elif event.type() == QEvent.Type.Leave:
             self.btnPlaceholderCircle.setVisible(True)
             self.btnPlus.setHidden(True)
-            self.btnSeparator.setHidden(True)
+            # self.btnSeparator.setHidden(True)
 
         return super().eventFilter(watched, event)
 
