@@ -24,7 +24,7 @@ from typing import Optional, List, Dict, Iterable, Set, Any
 
 import qtanim
 from PyQt6 import QtGui
-from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData
+from PyQt6.QtCore import pyqtSignal, QSize, Qt, QEvent, QPoint, QMimeData, QTimer
 from PyQt6.QtGui import QDragEnterEvent, QDragMoveEvent, QColor, QAction
 from PyQt6.QtWidgets import QFrame, QApplication, QToolButton
 from overrides import overrides
@@ -428,7 +428,7 @@ class CardsView(QFrame):
             if card is self._dragPlaceholder or card is self._dragged:
                 continue
             data.append(card.data())
-        self.orderChanged.emit(data)
+        QTimer.singleShot(10, lambda: self.orderChanged.emit(data))
         gc(self._dragPlaceholder)
         self._dragPlaceholder = None
 
