@@ -46,6 +46,11 @@ class SceneChangedEvent(Event):
 
 
 @dataclass
+class SceneStoryBeatChangedEvent(Event):
+    scene: Scene
+
+
+@dataclass
 class SceneStatusChangedEvent(Event):
     scene: Scene
 

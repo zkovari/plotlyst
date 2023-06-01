@@ -32,9 +32,9 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
     Character, ScenePlotReference, TagReference
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_info, EventListener, Event
+from src.main.python.plotlyst.event.core import emit_info, EventListener, Event, emit_event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import NovelAboutToSyncEvent
+from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -208,12 +208,22 @@ class SceneEditor(QObject, EventListener):
         self.scene.link_beat(self.novel.active_story_structure, beat)
         self.ui.wdgStructure.highlightScene(self.scene)
 
+        emit_event(SceneStoryBeatChangedEvent(self, self.scene))
+
     def _beat_removed(self, beat: StoryBeat):
-        if self.scene.beat(self.novel) == beat:
-            self.scene.remove_beat(self.novel)
-            self.ui.wdgStructure.unhighlightBeats()
-            self.ui.wdgStructure.toggleBeat(beat, False)
+        scene = acts_registry.scene(beat)
+        if scene is None:
+            return
+
+        scene.remove_beat(self.novel)
+        self.ui.wdgStructure.unhighlightBeats()
+        self.ui.wdgStructure.toggleBeat(beat, False)
+        if self.scene == scene:
             self.ui.wdgStructure.highlightScene(self.scene)
+        else:
+            self.repo.update_scene(scene)
+
+        emit_event(SceneStoryBeatChangedEvent(self, scene))
 
     def _update_notes(self):
         if self.scene.document:

@@ -24,14 +24,13 @@ from overrides import overrides
 from src.main.python.plotlyst.core.domain import Novel, Scene, StoryBeat
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent
+from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, SceneStoryBeatChangedEvent
 
 
 class NovelActsRegistry(EventListener):
 
     def __init__(self):
-        event_dispatcher.register(self, SceneChangedEvent)
-        event_dispatcher.register(self, SceneDeletedEvent)
+        event_dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, SceneStoryBeatChangedEvent)
         self.novel: Optional[Novel] = None
         self._acts_per_scenes: Dict[Scene, int] = {}
         self._beats: Set[StoryBeat] = set()
