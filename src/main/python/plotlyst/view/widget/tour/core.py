@@ -58,6 +58,7 @@ tutorial_novel = Novel('My new novel', id=uuid.UUID('a1a88622-4612-4c90-9848-8ef
                        story_structures=[copy.deepcopy(three_act_structure)],
                        tutorial=True,
                        scenes=[first_scene])
+tutorial_novel.story_structures[0].active = True
 
 
 class LibraryTourEvent(TourEvent):
