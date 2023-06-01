@@ -42,6 +42,10 @@ QTextEdit {
     background-color: #f8f9fa;
 }
 
+QTextEdit[white-bg=true] {
+    background-color: #FcFcFc;
+}
+
 QLabel[night-mode=true] {
     color: #f8f9fa;
 }

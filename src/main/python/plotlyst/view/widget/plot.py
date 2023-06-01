@@ -199,6 +199,7 @@ class PlotPrincipleEditor(QWidget):
         self._label.setChecked(True)
 
         self._textedit = QTextEdit(self)
+        self._textedit.setProperty('white-bg', True)
         hint = principle_hints[principle.type]
         self._textedit.setPlaceholderText(hint)
         self._textedit.setToolTip(hint)
