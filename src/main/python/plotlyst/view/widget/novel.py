@@ -36,7 +36,7 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import ACT_THREE_COLOR, act_color, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBeat, \
     SceneType, Scene, TagType, SelectionItem, Tag, \
-    StoryBeatType, save_the_cat, three_act_structure, SceneStoryBeat, heros_journey, hook_beat, motion_beat, \
+    StoryBeatType, save_the_cat, three_act_structure, heros_journey, hook_beat, motion_beat, \
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr
 from src.main.python.plotlyst.env import app_env
@@ -241,7 +241,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.btnSceneSelector.setVisible(self._infoPage() and self._checkOccupiedBeats and self.beat.enabled)
 
     def _sceneLinked(self, scene: Scene):
-        scene.beats.append(SceneStoryBeat.of(app_env.novel.active_story_structure, self.beat))
+        scene.link_beat(app_env.novel.active_story_structure, self.beat)
         self.repo.update_scene(self.scene)
         emit_event(SceneChangedEvent(self, scene))
         self.refresh()

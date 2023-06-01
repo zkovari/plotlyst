@@ -30,7 +30,7 @@ from qtmenu import MenuWidget, ScrollableMenuWidget
 
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBeat, \
-    SceneStoryBeat, Character, ScenePlotReference, TagReference
+    Character, ScenePlotReference, TagReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_info, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
@@ -204,7 +204,8 @@ class SceneEditor(QObject, EventListener):
         if self.scene.beat(self.novel) and self.scene.beat(self.novel) != beat:
             self.ui.wdgStructure.toggleBeat(self.scene.beat(self.novel), False)
             self.scene.remove_beat(self.novel)
-        self.scene.beats.append(SceneStoryBeat.of(self.novel.active_story_structure, beat))
+
+        self.scene.link_beat(self.novel.active_story_structure, beat)
         self.ui.wdgStructure.highlightScene(self.scene)
 
     def _beat_removed(self, beat: StoryBeat):

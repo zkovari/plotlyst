@@ -590,7 +590,7 @@ class SceneStoryStructureWidget(QWidget):
         if toggled:
             btn.setCheckable(False)
         else:
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            pointy(btn)
             btn.setCheckable(True)
             self._beatToggled(btn, False)
 

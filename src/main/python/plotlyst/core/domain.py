@@ -901,6 +901,14 @@ class Scene:
             if b.structure_id == structure.id and b.character_id == structure.character_id:
                 return b.beat(structure)
 
+    def link_beat(self, structure: 'StoryStructure', beat: StoryBeat):
+        self.reset_structure(structure)
+        self.beats.append(SceneStoryBeat.of(structure, beat))
+
+    def reset_structure(self, structure: 'StoryStructure'):
+        self.beats[:] = [x for x in self.beats if
+                         x.structure_id != structure.id and x.character_id != structure.character_id]
+
     def remove_beat(self, novel: 'Novel'):
         beat = self.beat(novel)
         if not beat:
