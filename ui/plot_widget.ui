@@ -345,22 +345,5 @@ QToolButton:checked {
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>btnArcToggle</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>chartViewArcPreview</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>157</x>
-     <y>163</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>210</x>
-     <y>180</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

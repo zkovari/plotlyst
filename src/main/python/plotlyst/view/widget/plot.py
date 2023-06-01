@@ -519,10 +519,12 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self._lstEvents.eventsChanged.connect(self._eventsChanged)
         self.wdgEventsParent.layout().addWidget(self._lstEvents)
 
-        self._arcChart = PlotEventsArcChart(self.plot)
-        self.chartViewArcPreview.setChart(self._arcChart)
-        self.chartViewArcPreview.setMinimumHeight(300)
-        self._arcChart.refresh()
+        # self._arcChart = PlotEventsArcChart(self.plot)
+        # self.chartViewArcPreview.setChart(self._arcChart)
+        # self.chartViewArcPreview.setMinimumHeight(300)
+        # self._arcChart.refresh()
+        self.btnArcToggle.setHidden(True)
+        self.chartViewArcPreview.setHidden(True)
 
         self.installEventFilter(VisibilityToggleEventFilter(target=self.btnSettings, parent=self))
         self.installEventFilter(VisibilityToggleEventFilter(target=self._btnAddValue, parent=self))
@@ -589,7 +591,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.plot.icon_color = color.name()
         self._updateIcon()
         self._initFrameColor()
-        self._arcChart.refresh()
+        # self._arcChart.refresh()
         self._save()
         self.iconChanged.emit()
 
@@ -624,7 +626,7 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
         self.repo.update_novel(self.novel)
 
     def _eventsChanged(self):
-        self._arcChart.refresh()
+        # self._arcChart.refresh()
         self._save()
 
     def _initFrameColor(self):
