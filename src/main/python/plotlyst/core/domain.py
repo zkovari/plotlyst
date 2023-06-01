@@ -837,17 +837,9 @@ class SceneStoryBeat:
     beat_id: uuid.UUID
     character_id: Optional[uuid.UUID] = None
 
-    def __post_init__(self):
-        self._beat: Optional[StoryBeat] = None
-
     def beat(self, structure: 'StoryStructure') -> Optional[StoryBeat]:
-        if not self._beat and self.structure_id == structure.id:
-            for b in structure.beats:
-                if b.id == self.beat_id and self.character_id == structure.character_id:
-                    self._beat = b
-                    break
-
-        return self._beat
+        if self.structure_id == structure.id and self.character_id == structure.character_id:
+            return next((b for b in structure.beats if b.id == self.beat_id), None)
 
     @staticmethod
     def of(structure: 'StoryStructure', beat: StoryBeat) -> 'SceneStoryBeat':
