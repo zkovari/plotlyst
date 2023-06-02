@@ -255,6 +255,14 @@ QToolButton[transparent-circle-bg-on-hover=true][large=true] {
     padding: 4px;
 }
 
+QToolButton:hover[analysis-top-selector=true] {
+    background: lightgrey;
+}
+
+QToolButton:checked[analysis-top-selector=true] {
+    background: #D4B8E0
+}
+
 QToolButton:checked[emotion-very-unhappy=true] {
     background-color: rgb(239, 0, 0);
 }
