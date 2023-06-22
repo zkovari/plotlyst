@@ -30,6 +30,26 @@ QLabel[error=true] {
     color: #e76f51;
 }
 
+QLabel[night-mode=true] {
+    color: #f8f9fa;
+}
+
+QLabel[h1=true] {
+    font-size: 30pt;
+}
+
+QLabel[h2=true] {
+    font-size: 20pt;
+}
+
+QLabel[h3=true] {
+    font-size: 18pt;
+}
+
+QLabel[h4=true] {
+    font-size: 16pt;
+}
+
 QTextBrowser {
     background-color: #f8f9fa;
 }
@@ -44,10 +64,6 @@ QTextEdit {
 
 QTextEdit[white-bg=true] {
     background-color: #FcFcFc;
-}
-
-QLabel[night-mode=true] {
-    color: #f8f9fa;
 }
 
 HintWidget {

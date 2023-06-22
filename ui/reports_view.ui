@@ -172,7 +172,7 @@
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
         <property name="toolTip">
-         <string>Scenes</string>
+         <string>Conficts</string>
         </property>
         <property name="text">
          <string/>
