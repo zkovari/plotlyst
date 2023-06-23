@@ -45,9 +45,6 @@ class DocumentsView(AbstractNovelView):
 
         self.ui.splitter.setSizes([150, 500])
 
-        # self.ui.btnDocuments.setIcon(IconRegistry.document_edition_icon())
-        # bold(self.ui.lblTitle)
-
         self.ui.treeDocuments.setSettings(TreeSettings(font_incr=2))
         self.ui.treeDocuments.setNovel(self.novel)
         self.ui.treeDocuments.documentSelected.connect(self._edit)

@@ -47,7 +47,7 @@ class DocumentAdditionMenu(MenuWidget):
         self.addAction(action('Document', IconRegistry.document_edition_icon(), lambda: self._documentSelected()))
 
         self._character_menu = MenuWidget()
-        self._character_menu.setTitle('Characters')
+        self._character_menu.setTitle('Link characters')
         self._character_menu.setIcon(IconRegistry.character_icon())
         _view = QListView()
         pointy(_view)
@@ -89,17 +89,18 @@ class DocumentWidget(ContainerNode):
         return self._doc
 
     def refresh(self):
+        self._lblTitle.setText(self._doc.title)
+        
         if self._doc.icon:
             self._icon.setIcon(IconRegistry.from_name(self._doc.icon, self._doc.icon_color))
             self._icon.setVisible(True)
         elif self._doc.character_id:
             char = self._doc.character(app_env.novel)
+            self._lblTitle.setText(char.name)
             self._icon.setIcon(avatars.avatar(char))
             self._icon.setVisible(True)
         else:
             self._icon.setHidden(True)
-
-        self._lblTitle.setText(self._doc.title)
 
     @overrides
     def _iconChanged(self, iconName: str, iconColor: str):
