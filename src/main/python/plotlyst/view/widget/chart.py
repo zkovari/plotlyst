@@ -26,7 +26,8 @@ from PyQt6.QtGui import QColor, QCursor, QIcon
 from PyQt6.QtWidgets import QToolTip
 from overrides import overrides
 
-from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR
+from src.main.python.plotlyst.common import ACT_ONE_COLOR, ACT_TWO_COLOR, ACT_THREE_COLOR, CHARACTER_MAJOR_COLOR, \
+    CHARACTER_SECONDARY_COLOR, CHARACTER_MINOR_COLOR
 from src.main.python.plotlyst.core.domain import Character, MALE, FEMALE, TRANSGENDER, NON_BINARY, GENDERLESS, Novel
 from src.main.python.plotlyst.core.template import enneagram_choices, supporter_role, guide_role, sidekick_role, \
     antagonist_role, contagonist_role, adversary_role, henchmen_role, confidant_role, tertiary_role, SelectionItem, \
@@ -86,7 +87,6 @@ class GenderCharacterChart(BaseChart):
 
     def __init__(self, parent=None):
         super(GenderCharacterChart, self).__init__(parent)
-        self.setTitle('<b>Gender</b>')
         self._labelsVisible: bool = True
 
     def setLabelsVisible(self, visible: bool):
@@ -152,11 +152,61 @@ class GenderCharacterChart(BaseChart):
             return 'black'
 
 
+class RoleChart(BaseChart):
+    def __init__(self, parent=None):
+        super(RoleChart, self).__init__(parent)
+        self.setTitle('<b>Importance</b>')
+
+    def refresh(self, characters: List[Character]):
+        self.reset()
+        series = QPieSeries()
+        major = 0
+        secondary = 0
+        minor = 0
+        for char in characters:
+            if not char.role:
+                continue
+            if char.is_major():
+                major += 1
+            elif char.is_secondary():
+                secondary += 1
+            elif char.is_minor():
+                minor += 1
+
+        if major:
+            self._addSlice(series, major, IconRegistry.major_character_icon(), CHARACTER_MAJOR_COLOR,
+                           'Major characters')
+        if secondary:
+            self._addSlice(series, secondary, IconRegistry.secondary_character_icon(), CHARACTER_SECONDARY_COLOR,
+                           'Secondary characters')
+        if minor:
+            self._addSlice(series, minor, IconRegistry.minor_character_icon(), CHARACTER_MINOR_COLOR,
+                           'Minor characters')
+
+        for slice_ in series.slices():
+            slice_.setLabelVisible()
+            slice_.setLabelArmLengthFactor(0.2)
+
+        self.addSeries(series)
+
+    def _addSlice(self, series: QPieSeries, value: int, icon: QIcon, color: str, tooltip: str):
+        slice_ = series.append(
+            icon_to_html_img(icon), value)
+        slice_.setColor(QColor(color))
+        slice_.hovered.connect(partial(self._hovered, color, tooltip))
+
+    def _hovered(self, color: str, tooltip: str, state: bool):
+        if state:
+            QToolTip.showText(QCursor.pos(), f'<b style="color: {color}">{tooltip.capitalize()}</b>')
+        else:
+            QToolTip.hideText()
+
+
 class SupporterRoleChart(BaseChart):
 
     def __init__(self, parent=None):
         super(SupporterRoleChart, self).__init__(parent)
-        self.setTitle('<b>Supporter/adversary role</b>')
+        self.setTitle('<b>Supporter vs adversary</b>')
 
     def refresh(self, characters: List[Character]):
         series = QPieSeries()

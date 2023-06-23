@@ -70,19 +70,7 @@
    <item>
     <widget class="QWidget" name="widget_2" native="true">
      <property name="styleSheet">
-      <string notr="true">QToolButton {
-	border-radius: 17px;
-	border: 1px hidden lightgrey;
-	padding: 2px;
-}
-
-QToolButton:hover {
-	background: lightgrey;
-}
-
-QToolButton:checked {
-	background: #D4B8E0;
-}</string>
+      <string notr="true"/>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <property name="leftMargin">
@@ -184,7 +172,7 @@ QToolButton:checked {
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
         <property name="toolTip">
-         <string>Scenes</string>
+         <string>Conficts</string>
         </property>
         <property name="text">
          <string/>

@@ -52,7 +52,7 @@ class BaseTreeWidget(QWidget):
         self._selected: bool = False
         self._wdgTitle = QWidget(self)
         self._wdgTitle.setObjectName('wdgTitle')
-        hbox(self._wdgTitle, 0, 3)
+        hbox(self._wdgTitle)
 
         self._lblTitle = QLabel(title)
         self._lblTitle.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -158,11 +158,11 @@ class ContainerNode(BaseTreeWidget):
 
     def __init__(self, title: str, icon: Optional[QIcon] = None, parent=None, settings: Optional[TreeSettings] = None):
         super(ContainerNode, self).__init__(title, icon, parent)
-        vbox(self, margin=1, spacing=3)
+        vbox(self, 0, 0)
 
         self._container = QWidget(self)
         self._container.setHidden(True)
-        vbox(self._container, 1)
+        vbox(self._container, 1, spacing=0)
         margins(self._container, left=20)
         margins(self._wdgTitle, left=15)
         self.layout().addWidget(self._wdgTitle)

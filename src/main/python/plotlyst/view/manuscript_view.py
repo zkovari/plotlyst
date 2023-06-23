@@ -168,7 +168,9 @@ class ManuscriptView(AbstractNovelView):
         self.ui.wdgAddon.layout().addWidget(self.notesEditor)
 
         self.ui.btnNotes.setIcon(IconRegistry.document_edition_icon())
-        self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
+        self.ui.btnNotes.setDisabled(True)
+        self.ui.btnNotes.setHidden(True)
+        # self.ui.btnNotes.toggled.connect(self.ui.wdgAddon.setVisible)
 
         self.ui.textEdit.setMargins(30, 30, 30, 30)
         self.ui.textEdit.textEdit.setPlaceholderText('Write your story...')
