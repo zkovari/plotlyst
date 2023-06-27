@@ -1414,7 +1414,7 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
                 continue
             if not char.disabled_template_headers.get(str(header.header.id), header.header.enabled):
                 continue
-            if value.value:
+            if value.value or value.ignored:
                 if isinstance(value.value, dict):
                     count = 0
                     values = 0

@@ -433,3 +433,12 @@ class MissingResourceManagerDialog(QDialog, Ui_ResourceManagerDialog):
 
     def display(self):
         self.exec()
+
+
+def ask_for_resource(resource_type: ResourceType) -> bool:
+    if not resource_manager.has_resource(resource_type):
+        MissingResourceManagerDialog([resource_type]).display()
+        if not resource_manager.has_resource(resource_type):
+            return False
+
+    return True

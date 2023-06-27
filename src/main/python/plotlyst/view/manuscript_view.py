@@ -33,7 +33,7 @@ from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, Event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
     ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent
-from src.main.python.plotlyst.resources import resource_manager, ResourceType
+from src.main.python.plotlyst.resources import ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
@@ -49,7 +49,7 @@ from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMen
 from src.main.python.plotlyst.view.widget.progress import ProgressChart
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
-from src.main.python.plotlyst.view.widget.utility import MissingResourceManagerDialog
+from src.main.python.plotlyst.view.widget.utility import ask_for_resource
 
 
 class ManuscriptView(AbstractNovelView):
@@ -359,13 +359,11 @@ class ManuscriptView(AbstractNovelView):
             self.ui.textEdit.checkGrammar()
 
     def _analysis_clicked(self, checked: bool):
-        if checked and not resource_manager.has_resource(ResourceType.NLTK_PUNKT_TOKENIZER):
-            MissingResourceManagerDialog([ResourceType.NLTK_PUNKT_TOKENIZER]).display()
-            if not resource_manager.has_resource(ResourceType.NLTK_PUNKT_TOKENIZER):
-                self.ui.btnReadability.setChecked(False)
-                return
-
         if not checked:
+            return
+
+        if not ask_for_resource(ResourceType.NLTK_PUNKT_TOKENIZER):
+            self.ui.btnReadability.setChecked(False)
             return
 
         self._wdgReadability.checkTextDocument(self.ui.textEdit.document())

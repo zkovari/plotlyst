@@ -31,7 +31,7 @@ from qthandy import vbox, gc
 
 from src.main.python.plotlyst.core.domain import TemplateValue
 from src.main.python.plotlyst.core.template import ProfileTemplate, TemplateField, HAlignment, VAlignment, \
-    ProfileElement
+    ProfileElement, TemplateFieldType
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.template.base import TemplateWidgetBase, TemplateDisplayWidget, \
     EditableTemplateWidget
@@ -123,7 +123,11 @@ class _ProfileTemplateBase(QWidget):
         for widget in self.widgets:
             if isinstance(widget, TemplateDisplayWidget):
                 continue
-            values.append(TemplateValue(id=widget.field.id, value=widget.value(), notes=widget.notes()))
+            value = widget.value()
+            template_value = TemplateValue(id=widget.field.id, value=value, notes=widget.notes())
+            if widget.field.type == TemplateFieldType.TEXT_SELECTION and value is None:
+                template_value.ignored = True
+            values.append(template_value)
 
         return values
 

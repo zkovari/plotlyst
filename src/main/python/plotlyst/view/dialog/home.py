@@ -31,13 +31,14 @@ from src.main.python.plotlyst.core.scrivener import ScrivenerParser
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.resources import resource_registry
+from src.main.python.plotlyst.resources import resource_registry, ResourceType
 from src.main.python.plotlyst.service.tour import TourService
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, link_editor_to_btn, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.story_creation_dialog_ui import Ui_StoryCreationDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.tour.core import NewStoryTitleInDialogTourEvent, \
     NewStoryTitleFillInDialogTourEvent, NewStoryDialogOkayButtonTourEvent
+from src.main.python.plotlyst.view.widget.utility import ask_for_resource
 
 
 class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
@@ -112,6 +113,8 @@ class StoryCreationDialog(QDialog, Ui_StoryCreationDialog, EventListener):
             self.lineTitle.setFocus()
 
     def _loadFromScrivener(self):
+        if not ask_for_resource(ResourceType.PANDOC):
+            return
         if app_env.is_dev():
             default_path = 'resources/scrivener/v3/'
         else:
