@@ -28,8 +28,8 @@ from slugify import slugify
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
 from src.main.python.plotlyst.env import open_location, app_env
-from src.main.python.plotlyst.resources import resource_registry, resource_manager, ResourceType
-from src.main.python.plotlyst.view.widget.utility import MissingResourceManagerDialog
+from src.main.python.plotlyst.resources import resource_registry, ResourceType
+from src.main.python.plotlyst.view.widget.utility import ask_for_resource
 
 
 def prepare_content_for_convert(html: str) -> str:
@@ -50,10 +50,8 @@ def prepare_content_for_convert(html: str) -> str:
 
 
 def export_manuscript_to_docx(novel: Novel):
-    if not resource_manager.has_resource(ResourceType.PANDOC):
-        MissingResourceManagerDialog([ResourceType.PANDOC]).display()
-        if not resource_manager.has_resource(ResourceType.PANDOC):
-            return
+    if not ask_for_resource(ResourceType.PANDOC):
+        return
 
     json_client.load_manuscript(novel)
     if app_env.is_dev():
