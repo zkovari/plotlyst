@@ -38,6 +38,7 @@ from src.main.python.plotlyst.core.template import SelectionItem, exclude_if_emp
 class TemplateValue:
     id: uuid.UUID
     value: Any
+    ignored: bool = field(default=False, metadata=config(exclude=exclude_if_false))
     notes: str = field(default='', metadata=config(exclude=exclude_if_empty))
 
     @overrides
