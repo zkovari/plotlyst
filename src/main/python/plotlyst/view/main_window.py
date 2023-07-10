@@ -131,7 +131,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.btnScenes.setIcon(IconRegistry.scene_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.btnWorld.setIcon(
             IconRegistry.world_building_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
-        self.btnWorld.setHidden(True)
         self.btnNotes.setIcon(
             IconRegistry.document_edition_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
         self.btnManuscript.setIcon(
