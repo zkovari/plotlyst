@@ -47,13 +47,13 @@
          <number>6</number>
         </property>
         <property name="leftMargin">
-         <number>4</number>
+         <number>5</number>
         </property>
         <property name="topMargin">
-         <number>15</number>
+         <number>40</number>
         </property>
         <property name="rightMargin">
-         <number>4</number>
+         <number>5</number>
         </property>
         <item>
          <widget class="QPushButton" name="btnThreeAct">
