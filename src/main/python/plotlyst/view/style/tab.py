@@ -19,29 +19,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 style = '''
-QTabWidget::pane {
-    border: 1px solid black;
-    background: #f8f9fa;
-}
-
-QTabWidget::tab-bar:top {
+QTabWidget::tab-bar:top[centered=false] {
     top: 1px;
 }
 
-QTabWidget::tab-bar:bottom {
+QTabWidget::tab-bar:bottom[centered=false] {
     bottom: 1px;
 }
 
-QTabWidget::tab-bar:left {
+QTabWidget::tab-bar:left[centered=false] {
     right: 1px;
 }
 
-QTabWidget::tab-bar:right {
+QTabWidget::tab-bar:right[centered=false] {
     left: 1px;
 }
 
+QTabWidget::tab-bar[centered=true] {
+    alignment: center;
+}
+
 QTabBar::tab {
-    border: 1px solid black;
+    border: 1px solid lightgrey;
+    border-radius: 3px;
 }
 
 QTabBar::tab:selected {
@@ -53,11 +53,15 @@ QTabBar::tab:!selected {
 }
 
 QTabBar::tab:!selected:hover {
-    background: #999;
+    background: #B5B5B5;
 }
 
 QTabBar::tab:top:!selected {
     margin-top: 3px;
+}
+
+QTabBar::tab:top:!selected:hover {
+    margin-top: 1px;
 }
 
 QTabBar::tab:bottom:!selected {
