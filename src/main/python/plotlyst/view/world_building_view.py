@@ -17,14 +17,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPalette
 from overrides import overrides
+from qthandy import incr_font
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.template import default_location_profiles
 from src.main.python.plotlyst.view._view import AbstractNovelView
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
 from src.main.python.plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
+from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
+from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 from src.main.python.plotlyst.view.widget.world_building import WorldBuildingProfileTemplateView
 
 
@@ -35,21 +38,27 @@ class WorldBuildingView(AbstractNovelView):
         self.ui = Ui_WorldBuildingView()
         self.ui.setupUi(self.widget)
 
-        self.widget.setPalette(QPalette(Qt.GlobalColor.white))
-        # self.ui.btnEditorToggle.setIcon(IconRegistry.document_edition_icon())
+        self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
+        self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
 
-        # self._editor = WorldBuildingEditor(self.novel.world.root_entity)
-        # self.ui.wdgEditorParent.layout().addWidget(self._editor)
-        # self.ui.wdgSidebar.setVisible(self.ui.btnEditorToggle.isChecked())
         self._settingTemplate = WorldBuildingProfileTemplateView(self.novel, default_location_profiles()[0])
-        # self.ui.wdgSidebar.layout().addWidget(self._settingTemplate)
-        # self.ui.wdgSidebar.setDisabled(True)
-        # self.ui.splitter.setSizes([500, 150])
+        self.ui.splitter.setSizes([150, 500])
+        self._lineName = AutoAdjustableLineEdit()
+        self._lineName.setPlaceholderText('Name')
+        # transparent(self._lineName)
+        incr_font(self._lineName, 8)
+        # self.ui.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._btnIcon = IconSelectorButton()
+        self.ui.wdgName.layout().addWidget(self._btnIcon)
+        self.ui.wdgName.layout().addWidget(self._lineName)
 
         # self._editor.scene().modelChanged.connect(lambda: self.repo.update_novel(self.novel))
         # self._editor.scene().selectionChanged.connect(self._selectionChanged)
 
         # self.ui.btnEditorToggle.setChecked(False)
+        link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEditor),
+                                                      (self.ui.btnHistoryView, self.ui.pageHistory)])
+        self.ui.btnWorldView.setChecked(True)
 
     @overrides
     def refresh(self):
