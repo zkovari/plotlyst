@@ -27,8 +27,8 @@ from PyQt6.QtCore import Qt, QModelIndex, \
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
 from overrides import overrides
-from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp, transparent
+from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -190,6 +190,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.rbVertical.setIcon(IconRegistry.from_name('fa5s.grip-lines-vertical'))
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
+        transparent(self.ui.btnStageCustomize)
+        self.ui.btnStageCustomize.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStageCustomize))
+        self.ui.btnStageCustomize.installEventFilter(OpacityEventFilter(self.ui.btnStageCustomize, enterOpacity=0.7))
         self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
 
         self.selected_card: Optional[SceneCard] = None

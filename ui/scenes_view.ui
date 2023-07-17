@@ -702,7 +702,7 @@
            <item>
             <widget class="QStackedWidget" name="stackScenes">
              <property name="currentIndex">
-              <number>0</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="pageCards">
               <property name="relaxed-white-bg" stdset="0">
@@ -940,10 +940,13 @@
                       </property>
                      </spacer>
                     </item>
-                    <item alignment="Qt::AlignLeft|Qt::AlignBottom">
+                    <item alignment="Qt::AlignLeft|Qt::AlignTop">
                      <widget class="QToolButton" name="btnStageCustomize">
                       <property name="cursor">
                        <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="toolTip">
+                       <string>Customize stages</string>
                       </property>
                       <property name="text">
                        <string/>
