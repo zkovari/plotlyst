@@ -37,14 +37,10 @@ QTableView QTableCornerButton::section {
 }
 
 QHeaderView::section[main-header] {
-    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                                      stop:0 #D4B8E0, stop: 0.5 #4B0763,
-                                      stop: 0.6 #4B0763, stop:1 #3C0764);
-    color: white;
-    padding-left: 4px;
-    padding-bottom: 2px;
-    border: 1px solid #3C0764;
-    border-radius: 0px;
+    background: #622675;
+    color: #f8f0fa;
+    padding: 4px;
+    border-right: 1px solid #f8f0fa;
     font-size: 16px;
 }
 
