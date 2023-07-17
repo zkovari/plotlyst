@@ -26,7 +26,6 @@ from PyQt6.QtCore import QModelIndex, Qt, QVariant, QSortFilterProxyModel, QMime
 from PyQt6.QtGui import QFont, QBrush, QColor
 from overrides import overrides
 
-from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, CharacterArc, Character, \
     SelectionItem, SceneStage, SceneType, SceneStructureAgenda
 from src.main.python.plotlyst.event.core import emit_event
@@ -81,8 +80,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
         self._resolved_action_icon = IconRegistry.action_scene_icon(resolved=True)
         self._trade_off_action_icon = IconRegistry.action_scene_icon(trade_off=True)
         self._reaction_icon = IconRegistry.reaction_scene_icon()
-        self._wip_brush = QBrush(QColor(WIP_COLOR))
-        self._pivotal_brush = QBrush(QColor(PIVOTAL_COLOR))
 
     def setDragEnabled(self, enabled: bool):
         self._dragEnabled = enabled
@@ -104,12 +101,6 @@ class ScenesTableModel(AbstractHorizontalHeaderBasedTableModel, BaseScenesTableM
                 font = QFont()
                 font.setItalic(True)
                 return font
-        elif role == Qt.ItemDataRole.BackgroundRole:
-            if not self._relax_colors or index.column() == self.ColTitle or index.column() == self.ColPov:
-                if scene.wip:
-                    return self._wip_brush
-                elif scene.beat(self.novel):
-                    return self._pivotal_brush
         elif role == Qt.ItemDataRole.DisplayRole:
             if index.column() == self.ColTitle:
                 return scene.title_or_index(self.novel)

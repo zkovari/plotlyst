@@ -24,7 +24,6 @@ from src.main.python.plotlyst.core.domain import VERY_UNHAPPY, UNHAPPY, HAPPY, V
 EXIT_CODE_RESTART = 10
 
 WIP_COLOR: str = '#f6cd61'
-PIVOTAL_COLOR: str = '#3da4ab'
 
 ACT_ONE_COLOR: str = '#02bcd4'
 TRANS_ACT_ONE_COLOR: str = 'rgba(2, 188, 212, 45)'

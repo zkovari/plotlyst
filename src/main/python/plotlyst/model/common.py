@@ -25,7 +25,6 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemMode
 from PyQt6.QtGui import QFont, QColor, QBrush
 from overrides import overrides
 
-from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
 from src.main.python.plotlyst.core.domain import SelectionItem, Novel, Scene
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -330,10 +329,6 @@ class DistributionModel(QAbstractTableModel):
                 if self._highlighted_tags:
                     if not all([self._match_by_row_col(x.row(), index.column()) for x in self._highlighted_tags]):
                         return QBrush(QColor(Qt.GlobalColor.gray))
-                if self.novel.scenes[index.column() - 2].wip:
-                    return QBrush(QColor(WIP_COLOR))
-                if self.novel.scenes[index.column() - 2].beat(self.novel):
-                    return QBrush(QColor(PIVOTAL_COLOR))
                 return QBrush(QColor('darkblue'))
         return QVariant()
 
