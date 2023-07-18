@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from overrides import overrides
 from qthandy import incr_font, transparent
 
-from src.main.python.plotlyst.core.domain import Novel
+from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity
 from src.main.python.plotlyst.core.template import default_location_profiles
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
@@ -47,29 +47,27 @@ class WorldBuildingView(AbstractNovelView):
         self._lineName = AutoAdjustableLineEdit()
         self._lineName.setPlaceholderText('Name')
         transparent(self._lineName)
-        incr_font(self._lineName, 8)
+        incr_font(self._lineName, 15)
         self._btnIcon = IconSelectorButton()
         self.ui.wdgName.layout().addWidget(self._btnIcon)
         self.ui.wdgName.layout().addWidget(self._lineName)
 
+        self.ui.treeWorld.setSettings(TreeSettings(font_incr=2))
+        self.ui.treeWorld.setNovel(self.novel)
+        self.ui.treeWorld.entitySelected.connect(self._selection_changed)
+        self.ui.treeWorld.selectRoot()
+
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEditor),
                                                       (self.ui.btnHistoryView, self.ui.pageHistory)])
         self.ui.btnWorldView.setChecked(True)
-        self.ui.treeWorld.setSettings(TreeSettings(font_incr=2))
-        self.ui.treeWorld.setNovel(self.novel)
-        self.ui.treeWorld.selectRoot()
 
     @overrides
     def refresh(self):
         pass
 
-    # def _selectionChanged(self):
-    #     self._settingTemplate.clearValues()
-    #
-    #     items = self._editor.scene().selectedItems()
-    #     if len(items) == 1 and isinstance(items[0], WorldBuildingItem):
-    #         self.ui.wdgSidebar.setEnabled(True)
-    #         entity: WorldBuildingEntity = items[0].entity()
-    #         self._settingTemplate.setLocation(entity)
-    #     else:
-    #         self.ui.wdgSidebar.setDisabled(True)
+    def _selection_changed(self, entity: WorldBuildingEntity):
+        self._lineName.setText(entity.name)
+        if entity.icon:
+            self._btnIcon.selectIcon(entity.icon, entity.icon_color)
+        else:
+            self._btnIcon.reset()
