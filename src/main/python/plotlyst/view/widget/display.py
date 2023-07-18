@@ -157,6 +157,7 @@ class WordsDisplay(QLabel):
             self._text = f'{count} word{"s" if count > 1 else ""}'
             self.setText(self._text)
         else:
+            self._text = ''
             self.clear()
 
     def calculateSecondaryWordCount(self, text: str):

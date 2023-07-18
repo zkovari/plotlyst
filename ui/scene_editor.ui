@@ -657,7 +657,7 @@
           <enum>Qt::NoFocus</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="pageStructure">
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -716,6 +716,9 @@
           </layout>
          </widget>
          <widget class="QWidget" name="pageNotes">
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
+          </property>
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <property name="spacing">
             <number>0</number>

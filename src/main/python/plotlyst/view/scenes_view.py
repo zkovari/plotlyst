@@ -25,10 +25,10 @@ import qtanim
 from PyQt6.QtCore import Qt, QModelIndex, \
     QPoint
 from PyQt6.QtGui import QKeySequence
-from PyQt6.QtWidgets import QWidget, QHeaderView, QMenu
+from PyQt6.QtWidgets import QWidget, QHeaderView
 from overrides import overrides
-from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy import incr_font, translucent, btn_popup, clear_layout, busy, bold, gc, sp, transparent
+from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -190,6 +190,9 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.rbVertical.setIcon(IconRegistry.from_name('fa5s.grip-lines-vertical'))
 
         self.ui.btnStageCustomize.setIcon(IconRegistry.cog_icon())
+        transparent(self.ui.btnStageCustomize)
+        self.ui.btnStageCustomize.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnStageCustomize))
+        self.ui.btnStageCustomize.installEventFilter(OpacityEventFilter(self.ui.btnStageCustomize, enterOpacity=0.7))
         self.ui.btnStageCustomize.clicked.connect(self._customize_stages)
 
         self.selected_card: Optional[SceneCard] = None
@@ -539,12 +542,12 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.btnStageSelector.setOrientation(RotatedButtonOrientation.VerticalBottomToTop)
             self.ui.btnStageSelector.setIcon(IconRegistry.progress_check_icon())
 
-        menu = QMenu(self.ui.btnStageSelector)
+        menu = MenuWidget(self.ui.btnStageSelector)
         for stage in self.novel.stages:
-            menu.addAction(stage.text, partial(change_stage, stage))
+            menu.addAction(action(stage.text, slot=partial(change_stage, stage)))
         menu.addSeparator()
-        menu.addAction(IconRegistry.cog_icon(), 'Customize', self._customize_stages)
-        self.ui.btnStageSelector.setMenu(menu)
+        menu.addAction(action('Customize', IconRegistry.cog_icon(), slot=self._customize_stages))
+
         if not self.novel.prefs.active_stage_id:
             self.novel.prefs.active_stage_id = self.stagesProgress.stage().id
             self.repo.update_novel(self.novel)

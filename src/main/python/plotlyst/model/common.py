@@ -25,7 +25,7 @@ from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemMode
 from PyQt6.QtGui import QFont, QColor, QBrush
 from overrides import overrides
 
-from src.main.python.plotlyst.common import WIP_COLOR, PIVOTAL_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import SelectionItem, Novel, Scene
 from src.main.python.plotlyst.model.tree_model import TreeItemModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -289,6 +289,8 @@ class DistributionModel(QAbstractTableModel):
         self.novel = novel
         self._highlighted_scene: Optional[QModelIndex] = None
         self._highlighted_tags: List[QModelIndex] = []
+        self._active_brush = QBrush(QColor(PLOTLYST_MAIN_COLOR))
+        self._inactive_brush = QBrush(QColor(Qt.GlobalColor.lightGray))
 
     @overrides
     def columnCount(self, parent: QModelIndex = None) -> int:
@@ -326,15 +328,11 @@ class DistributionModel(QAbstractTableModel):
             if self._match(index):
                 if self._highlighted_scene:
                     if self._highlighted_scene.column() != index.column():
-                        return QBrush(QColor(Qt.GlobalColor.gray))
+                        return self._inactive_brush
                 if self._highlighted_tags:
                     if not all([self._match_by_row_col(x.row(), index.column()) for x in self._highlighted_tags]):
-                        return QBrush(QColor(Qt.GlobalColor.gray))
-                if self.novel.scenes[index.column() - 2].wip:
-                    return QBrush(QColor(WIP_COLOR))
-                if self.novel.scenes[index.column() - 2].beat(self.novel):
-                    return QBrush(QColor(PIVOTAL_COLOR))
-                return QBrush(QColor('darkblue'))
+                        return self._inactive_brush
+                return self._active_brush
         return QVariant()
 
     @overrides

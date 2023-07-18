@@ -310,8 +310,8 @@ class ManuscriptView(AbstractNovelView):
         self._wdgReadability.setTextDocumentUpdated(self.ui.textEdit.document())
 
     def _text_selection_changed(self):
-        fragment = self.ui.textEdit.textEdit.textCursor().selection()
-        if fragment:
+        if self.ui.textEdit.textEdit.textCursor().hasSelection():
+            fragment = self.ui.textEdit.textEdit.textCursor().selection()
             self.ui.lblWordCount.calculateSecondaryWordCount(fragment.toPlainText())
         else:
             self.ui.lblWordCount.clearSecondaryWordCount()
