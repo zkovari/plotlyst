@@ -50,6 +50,7 @@ class WorldBuildingTreeView(TreeView):
         self._root: Optional[RootNode] = None
         self._entities: Dict[WorldBuildingEntity, EntityNode] = {}
         self._selectedEntities: Set[WorldBuildingEntity] = set()
+        self._centralWidget.setProperty('bg', True)
 
     def selectRoot(self):
         self._root.select()

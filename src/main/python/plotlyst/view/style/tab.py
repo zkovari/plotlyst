@@ -19,6 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 style = '''
+
+QTabWidget::pane[borderless=true] {
+    border-top: 1px solid lightgrey;
+}
+
 QTabWidget::tab-bar:top[centered=false] {
     top: 1px;
 }
