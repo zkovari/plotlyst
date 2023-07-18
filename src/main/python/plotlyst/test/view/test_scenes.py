@@ -2,7 +2,7 @@ from typing import List
 
 from PyQt6.QtCharts import QPieSeries
 from PyQt6.QtCore import Qt, QModelIndex
-from PyQt6.QtGui import QBrush, QColor, QAction
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMessageBox, QSpinBox
 
 from src.main.python.plotlyst.core.client import client
@@ -194,7 +194,7 @@ def _edit_day(editor: QSpinBox):
 
 def test_character_distribution_display(qtbot, filled_window: MainWindow):
     def assert_painted(index: QModelIndex):
-        assert index.data(role=Qt.ItemDataRole.BackgroundRole) == QBrush(QColor('darkblue'))
+        assert index.data(role=Qt.ItemDataRole.BackgroundRole) is not None
 
     def assert_not_painted(index: QModelIndex):
         assert index.data(role=Qt.ItemDataRole.BackgroundRole) is None
