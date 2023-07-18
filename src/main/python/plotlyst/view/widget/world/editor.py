@@ -43,22 +43,25 @@ class RootNode(EntityNode):
 class WorldBuildingTreeView(TreeView):
     entitySelected = pyqtSignal(WorldBuildingEntity)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
         super(WorldBuildingTreeView, self).__init__(parent)
         self._novel: Optional[Novel] = None
+        self._settings: Optional[TreeSettings] = settings
         self._root: Optional[RootNode] = None
         self._entities: Dict[WorldBuildingEntity, EntityNode] = {}
         self._selectedEntities: Set[WorldBuildingEntity] = set()
 
     def selectRoot(self):
         self._root.select()
-        # self._entitySelectionChanged(self._root, self._root.isSelected())
+        self._entitySelectionChanged(self._root, self._root.isSelected())
+
+    def setSettings(self, settings: TreeSettings):
+        self._settings = settings
 
     def setNovel(self, novel: Novel):
         self._novel = novel
-        self._root = RootNode(self._novel.world.root_entity)
+        self._root = RootNode(self._novel.world.root_entity, settings=self._settings)
         self._root.selectionChanged.connect(partial(self._entitySelectionChanged, self._root))
-        self._entities[self._novel.world.root_entity] = self._root
         self.refresh()
 
     def refresh(self):
@@ -70,6 +73,7 @@ class WorldBuildingTreeView(TreeView):
         self._entities.clear()
         clear_layout(self._centralWidget)
 
+        self._entities[self._novel.world.root_entity] = self._root
         self._centralWidget.layout().addWidget(self._root)
         for entity in self._novel.world.root_entity.children:
             wdg = self.__initEntityWidget(entity)
@@ -91,7 +95,7 @@ class WorldBuildingTreeView(TreeView):
             self._selectedEntities.remove(node.entity())
 
     def __initEntityWidget(self, entity: WorldBuildingEntity) -> EntityNode:
-        node = EntityNode(entity)
+        node = EntityNode(entity, settings=self._settings)
         node.selectionChanged.connect(partial(self._entitySelectionChanged, node))
 
         self._entities[entity] = node

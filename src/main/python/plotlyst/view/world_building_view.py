@@ -27,6 +27,7 @@ from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPr
 from src.main.python.plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
+from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 from src.main.python.plotlyst.view.widget.world_building import WorldBuildingProfileTemplateView
 
@@ -54,6 +55,7 @@ class WorldBuildingView(AbstractNovelView):
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEditor),
                                                       (self.ui.btnHistoryView, self.ui.pageHistory)])
         self.ui.btnWorldView.setChecked(True)
+        self.ui.treeWorld.setSettings(TreeSettings(font_incr=2))
         self.ui.treeWorld.setNovel(self.novel)
         self.ui.treeWorld.selectRoot()
 
