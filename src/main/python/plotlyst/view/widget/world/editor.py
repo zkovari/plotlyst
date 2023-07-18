@@ -14,6 +14,7 @@ class EntityNode(ContainerNode):
     def __init__(self, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
         super(EntityNode, self).__init__(entity.name, parent=parent, settings=settings)
         self._entity = entity
+        self.setPlusButtonEnabled(True)
         self.refresh()
 
     def entity(self) -> WorldBuildingEntity:
@@ -34,6 +35,7 @@ class RootNode(EntityNode):
     def __init__(self, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
         super(RootNode, self).__init__(entity, parent=parent, settings=settings)
         self.setMenuEnabled(False)
+        self.setPlusButtonEnabled(False)
         # self._btnAdd.setIcon(IconRegistry.plus_icon(PLOTLYST_MAIN_COLOR))
         # self._btnAdd.clicked.connect(self.newNovelRequested.emit)
 
