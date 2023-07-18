@@ -1477,7 +1477,7 @@ class ImportOrigin:
 class NovelDescriptor:
     title: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
-    lang_settings: LanguageSettings = LanguageSettings()
+    lang_settings: LanguageSettings = field(default_factory=LanguageSettings)
     import_origin: Optional[ImportOrigin] = None
     subtitle: str = field(default='', metadata=config(exclude=exclude_if_empty))
     icon: str = field(default='', metadata=config(exclude=exclude_if_empty))
@@ -1782,8 +1782,8 @@ class Novel(NovelDescriptor):
     premise: str = ''
     synopsis: Optional['Document'] = None
     prefs: NovelPreferences = field(default_factory=NovelPreferences)
-    world: WorldBuilding = WorldBuilding()
-    board: Board = Board()
+    world: WorldBuilding = field(default_factory=WorldBuilding)
+    board: Board = field(default_factory=Board)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()

@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from overrides import overrides
-from qthandy import incr_font
+from qthandy import incr_font, transparent
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.core.template import default_location_profiles
@@ -45,20 +45,17 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.splitter.setSizes([150, 500])
         self._lineName = AutoAdjustableLineEdit()
         self._lineName.setPlaceholderText('Name')
-        # transparent(self._lineName)
+        transparent(self._lineName)
         incr_font(self._lineName, 8)
-        # self.ui.lineName.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._btnIcon = IconSelectorButton()
         self.ui.wdgName.layout().addWidget(self._btnIcon)
         self.ui.wdgName.layout().addWidget(self._lineName)
 
-        # self._editor.scene().modelChanged.connect(lambda: self.repo.update_novel(self.novel))
-        # self._editor.scene().selectionChanged.connect(self._selectionChanged)
-
-        # self.ui.btnEditorToggle.setChecked(False)
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEditor),
                                                       (self.ui.btnHistoryView, self.ui.pageHistory)])
         self.ui.btnWorldView.setChecked(True)
+        self.ui.treeWorld.setNovel(self.novel)
+        self.ui.treeWorld.selectRoot()
 
     @overrides
     def refresh(self):
