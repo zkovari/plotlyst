@@ -411,11 +411,7 @@ class ScenesTreeView(TreeView, EventListener):
         self._dummyWdg.setParent(self._centralWidget)
 
     def _dragMovedOnChapter(self, chapterWdg: ChapterWidget, edge: Qt.Edge, _: QPointF):
-        i = self._centralWidget.layout().indexOf(chapterWdg)
-        if edge == Qt.Edge.TopEdge:
-            self._centralWidget.layout().insertWidget(i, self._dummyWdg)
-        else:
-            chapterWdg.insertChild(0, self._dummyWdg)
+        chapterWdg.insertChild(0, self._dummyWdg)
         self._dummyWdg.setVisible(True)
 
     def _drop(self, mimeData: QMimeData):
