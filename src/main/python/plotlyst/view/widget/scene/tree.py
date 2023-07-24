@@ -370,9 +370,9 @@ class ScenesTreeView(TreeView, EventListener):
     def _dragStarted(self, wdg: QWidget):
         wdg.setHidden(True)
         if isinstance(wdg, SceneWidget):
-            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel())
+            self._dummyWdg = SceneWidget(wdg.scene(), wdg.novel(), settings=self._settings)
         elif isinstance(wdg, ChapterWidget):
-            self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel())
+            self._dummyWdg = ChapterWidget(wdg.chapter(), wdg.novel(), settings=self._settings)
             for v in self._scenes.values():
                 v.setDisabled(True)
         else:

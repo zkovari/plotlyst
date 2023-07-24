@@ -90,7 +90,7 @@ class DocumentWidget(ContainerNode):
 
     def refresh(self):
         self._lblTitle.setText(self._doc.title)
-        
+
         if self._doc.icon:
             self._icon.setIcon(IconRegistry.from_name(self._doc.icon, self._doc.icon_color))
             self._icon.setVisible(True)
@@ -177,7 +177,7 @@ class DocumentsTreeView(TreeView):
 
     def _dragStarted(self, wdg: DocumentWidget):
         wdg.setHidden(True)
-        self._dummyWdg = DocumentWidget(self._novel, wdg.doc())
+        self._dummyWdg = DocumentWidget(self._novel, wdg.doc(), settings=self._settings)
         self._dummyWdg.setPlusButtonEnabled(False)
         self._dummyWdg.setMenuEnabled(False)
         translucent(self._dummyWdg)
