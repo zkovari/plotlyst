@@ -616,6 +616,9 @@ class ManuscriptTextEditor(RichTextEditor):
     def asyncCheckGrammer(self):
         self.textEdit.asyncCheckGrammer()
 
+    def scenes(self) -> List[Scene]:
+        return self._scenes
+
     def setScene(self, scene: Scene):
         self.clear()
         self._textedit.setScene(scene)

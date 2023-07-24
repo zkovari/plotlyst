@@ -62,8 +62,6 @@ class ManuscriptView(AbstractNovelView):
         self.ui.splitterEditor.setSizes([400, 150])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
 
-        # self.ui.btnTitle.setText(self.novel.title)
-        # self.ui.btnTitle.clicked.connect(self._homepage)
         self.ui.lblWc.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.ui.btnAdd.setIcon(IconRegistry.plus_icon('white'))
@@ -195,7 +193,13 @@ class ManuscriptView(AbstractNovelView):
         if isinstance(event, NovelSyncEvent):
             self.ui.textEdit.refresh()
             self._text_changed()
-
+        elif isinstance(event, SceneDeletedEvent):
+            if event.scene in self.ui.textEdit.scenes():
+                if len(self.ui.textEdit.scenes()) == 1:
+                    self.ui.textEdit.clear()
+                    self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+                else:
+                    self._editChapter(event.scene.chapter)
         super(ManuscriptView, self).event_received(event)
 
     @overrides
@@ -337,10 +341,6 @@ class ManuscriptView(AbstractNovelView):
 
     def _scene_title_edited(self, text: str):
         pass
-
-    def _homepage(self):
-        self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
-        self.ui.treeChapters.clearSelection()
 
     def _spellcheck_toggled(self, toggled: bool):
         translucent(self._spellCheckIcon, 1 if toggled else 0.4)
