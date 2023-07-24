@@ -25,7 +25,7 @@ import emoji
 import qtanim
 from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize, QRectF, QEvent
 from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent, QEnterEvent, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QPushButton, QToolButton
+from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QSizePolicy, QPushButton, QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, decr_font, curved_flow, \
     gc, sp, decr_icon, translucent
@@ -39,7 +39,7 @@ from src.main.python.plotlyst.view.common import emoji_font, ButtonPressResizeEv
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
 from src.main.python.plotlyst.view.widget.button import DotsMenuButton
-from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableTextEdit, AutoAdjustableLineEdit
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
 
 
@@ -133,7 +133,7 @@ class _AbstractCharacterObjectiveWidget(QWidget):
         else:
             self.iconSelector.selectIcon('mdi.target', 'darkBlue')
 
-        self.lineText = QLineEdit()
+        self.lineText = AutoAdjustableLineEdit()
         self.lineText.setPlaceholderText('Subtask')
         self.lineText.setReadOnly(self._selectable)
         if self._selectable:
