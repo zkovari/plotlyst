@@ -29,7 +29,6 @@ from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 style = '''
 * {
     icon-size: 20px;
-    color: #040406;
 }
 
 QToolTip {
