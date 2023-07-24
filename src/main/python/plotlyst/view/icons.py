@@ -613,6 +613,10 @@ class IconRegistry:
         return IconRegistry.from_name('fa5s.expand-alt', vflip=True)
 
     @staticmethod
+    def group_icon() -> QIcon:
+        return IconRegistry.from_name('mdi.account-group')
+
+    @staticmethod
     def docx_icon() -> QIcon:
         return IconRegistry.from_name('mdi.file-word-outline')
 

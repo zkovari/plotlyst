@@ -1158,8 +1158,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>98</width>
-                    <height>28</height>
+                    <width>84</width>
+                    <height>16</height>
                    </rect>
                   </property>
                   <property name="sizePolicy">
@@ -1313,7 +1313,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="btnGroupStoryMapView"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupStoryMapView"/>
  </buttongroups>
 </ui>

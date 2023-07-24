@@ -58,7 +58,7 @@ class ManuscriptView(AbstractNovelView):
         super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent, ChapterChangedEvent, SceneDeletedEvent])
         self.ui = Ui_ManuscriptView()
         self.ui.setupUi(self.widget)
-        self.ui.splitter.setSizes([100, 500])
+        self.ui.splitter.setSizes([150, 500])
         self.ui.splitterEditor.setSizes([400, 150])
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageOverview)
 

@@ -56,6 +56,7 @@ class AutoAdjustableTextEdit(QTextEdit):
         super(AutoAdjustableTextEdit, self).__init__(parent)
         self.textChanged.connect(self._resizeToContent)
         self._minHeight = height
+        self._resizedOnShow: bool = False
         self.setAcceptRichText(False)
         self.setFixedHeight(self._minHeight)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -66,11 +67,38 @@ class AutoAdjustableTextEdit(QTextEdit):
 
     @overrides
     def showEvent(self, a0: QtGui.QShowEvent) -> None:
-        self._resizeToContent()
+        if not self._resizedOnShow:
+            self._resizeToContent()
+            self._resizedOnShow = True
 
     def _resizeToContent(self):
         size = self.document().size()
         self.setFixedHeight(max(self._minHeight, size.height()))
+
+
+class AutoAdjustableLineEdit(QLineEdit):
+    def __init__(self, parent=None, defaultWidth: int = 200):
+        super(AutoAdjustableLineEdit, self).__init__(parent)
+        self._padding = 10
+        self._defaultWidth = defaultWidth + self._padding
+        self._resizedOnShow: bool = False
+        self.setFixedWidth(self._defaultWidth)
+        self.textChanged.connect(self._resizeToContent)
+
+    @overrides
+    def showEvent(self, a0: QtGui.QShowEvent) -> None:
+        if not self._resizedOnShow:
+            self._resizeToContent()
+            self._resizedOnShow = True
+
+    def _resizeToContent(self):
+        text = self.text().strip()
+        if text:
+            text_width = self.fontMetrics().boundingRect(text).width()
+            width = max(text_width + self._padding, self._defaultWidth)
+            self.setFixedWidth(width)
+        else:
+            self.setFixedWidth(self._defaultWidth)
 
 
 class TextBlockData(QTextBlockUserData):
