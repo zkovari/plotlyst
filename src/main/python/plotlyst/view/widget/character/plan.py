@@ -25,13 +25,12 @@ import emoji
 import qtanim
 from PyQt6.QtCore import Qt, QPointF, pyqtSignal, QSize, QRectF, QEvent
 from PyQt6.QtGui import QPaintEvent, QPainter, QPen, QColor, QPainterPath, QShowEvent, QEnterEvent, QMouseEvent
-from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QMenu, \
-    QPushButton, QToolButton
+from PyQt6.QtWidgets import QWidget, QMainWindow, QApplication, QLabel, QLineEdit, QSizePolicy, QPushButton, QToolButton
 from overrides import overrides
 from qthandy import vbox, vspacer, hbox, spacer, transparent, margins, line, retain_when_hidden, decr_font, curved_flow, \
     gc, sp, decr_icon, translucent
 from qthandy.filter import VisibilityToggleEventFilter, OpacityEventFilter
-from qtmenu import MenuWidget
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.core.domain import Character, CharacterGoal, Novel, CharacterPlan, Goal
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -324,14 +323,16 @@ class CharacterPlanBarWidget(QWidget):
         hbox(self._wdgHeader)
         self._lblEmoji = QLabel()
         self._lblEmoji.setFont(emoji_font())
-        if self._plan.external:
-            self._lblEmoji.setText(emoji.emojize(':bullseye:'))
-        else:
-            self._lblEmoji.setText(emoji.emojize(':smiling_face_with_hearts:'))
         self._textSummary = AutoAdjustableTextEdit()
         sp(self._textSummary).h_exp()
         transparent(self._textSummary)
-        self._textSummary.setPlaceholderText('Summarize this goal')
+        if self._plan.external:
+            self._lblEmoji.setText(emoji.emojize(':bullseye:'))
+            self._textSummary.setPlaceholderText('Summarize this external goal')
+        else:
+            self._lblEmoji.setText(emoji.emojize(':smiling_face_with_hearts:'))
+            self._textSummary.setPlaceholderText('Summarize this internal goal')
+
         self._textSummary.setAcceptRichText(False)
         self._textSummary.setText(self._plan.summary)
         self._textSummary.setReadOnly(self._selectable)
@@ -498,10 +499,13 @@ class CharacterPlansWidget(QWidget):
         self._btnAdd.setIcon(IconRegistry.plus_icon('white'))
         pointy(self._btnAdd)
         self._btnAdd.setText('Add new goal')
-        menu = QMenu()
-        menu.addAction('External goal', self._addNewPlan)
-        menu.addAction('Internal goal', lambda: self._addNewPlan(external=False))
-        self._btnAdd.setMenu(menu)
+        menu = MenuWidget(self._btnAdd)
+        menu.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+        menu.addAction(action('External goal', IconRegistry.goal_icon(), slot=lambda: self._addNewPlan(external=True),
+                              tooltip='Tangible objectives pursued by the character'))
+        menu.addAction(action('Internal goal', IconRegistry.from_name('ri.user-heart-line', '#f08080'),
+                              slot=lambda: self._addNewPlan(external=False),
+                              tooltip='Emotional or psychological desires and growth pursued by the character'))
         self._btnAdd.installEventFilter(ButtonPressResizeEventFilter(self._btnAdd))
         self.layout().addWidget(group(self._btnAdd, spacer()))
 
@@ -510,7 +514,7 @@ class CharacterPlansWidget(QWidget):
             self.layout().addWidget(bar)
         self.layout().addWidget(vspacer())
 
-    def _addNewPlan(self, external: bool = True):
+    def _addNewPlan(self, external: bool):
         plan = CharacterPlan(external=external)
         self._character.plans.append(plan)
 
