@@ -3,18 +3,70 @@ from typing import Optional, Dict, Set
 
 from PyQt6.QtCore import pyqtSignal
 from qthandy import vspacer, clear_layout
+from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import recursive
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity
+from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType
+from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
+class EntityAdditionMenu(MenuWidget):
+    entityTriggered = pyqtSignal(WorldBuildingEntity)
+
+    def __init__(self, parent=None):
+        super(EntityAdditionMenu, self).__init__(parent)
+        self.setTooltipDisplayMode(ActionTooltipDisplayMode.DISPLAY_UNDER)
+
+        self.addAction(action('Location', IconRegistry.location_icon(),
+                              slot=lambda: self._triggered(WorldBuildingEntityType.SETTING),
+                              tooltip='Physical location in the world'))
+        self.addAction(action('Entity', IconRegistry.world_building_icon(),
+                              slot=lambda: self._triggered(WorldBuildingEntityType.ABSTRACT),
+                              tooltip='Abstract entity in the world, e.g., magic'))
+        self.addAction(action('Social group', IconRegistry.group_icon(),
+                              slot=lambda: self._triggered(WorldBuildingEntityType.GROUP),
+                              tooltip='Social group in the world, e.g., a guild or an organization'))
+        self.addSeparator()
+        self.addAction(action('Item', IconRegistry.from_name('mdi.ring', '#b6a6ca'),
+                              slot=lambda: self._triggered(WorldBuildingEntityType.ITEM),
+                              tooltip='Relevant item in the world, e.g., an artifact'))
+        self.addSeparator()
+        self.addAction(action('Container',
+                              slot=lambda: self._triggered(WorldBuildingEntityType.CONTAINER),
+                              tooltip='General container to group worldbuilding entities together'))
+
+    def _triggered(self, wdType: WorldBuildingEntityType):
+        if wdType == WorldBuildingEntityType.SETTING:
+            name = 'New location'
+            icon_name = 'fa5s.map-pin'
+        elif wdType == WorldBuildingEntityType.GROUP:
+            name = 'New group'
+            icon_name = 'mdi.account-group'
+        elif wdType == WorldBuildingEntityType.ITEM:
+            name = 'New item'
+        elif wdType == WorldBuildingEntityType.CONTAINER:
+            name = 'Container'
+        else:
+            name = 'New entity'
+            icon_name = ''
+
+        entity = WorldBuildingEntity(name, icon=icon_name, type=wdType)
+
+        self.entityTriggered.emit(entity)
+
+
 class EntityNode(ContainerNode):
+    addEntity = pyqtSignal(WorldBuildingEntity)
+
     def __init__(self, entity: WorldBuildingEntity, parent=None, settings: Optional[TreeSettings] = None):
         super(EntityNode, self).__init__(entity.name, parent=parent, settings=settings)
         self._entity = entity
         self.setPlusButtonEnabled(True)
+        self._additionMenu = EntityAdditionMenu(self._btnAdd)
+        self._additionMenu.entityTriggered.connect(self.addEntity.emit)
+        self.setPlusMenu(self._additionMenu)
         self.refresh()
 
     def entity(self) -> WorldBuildingEntity:
@@ -65,6 +117,10 @@ class WorldBuildingTreeView(TreeView):
         self._root.selectionChanged.connect(partial(self._entitySelectionChanged, self._root))
         self.refresh()
 
+    def addEntity(self, entity: WorldBuildingEntity):
+        wdg = self.__initEntityWidget(entity)
+        self._root.addChild(wdg)
+
     def refresh(self):
         def addChildWdg(parent: WorldBuildingEntity, child: WorldBuildingEntity):
             childWdg = self.__initEntityWidget(child)
@@ -95,9 +151,15 @@ class WorldBuildingTreeView(TreeView):
         elif node.entity() in self._selectedEntities:
             self._selectedEntities.remove(node.entity())
 
+    def _addEntity(self, parent: EntityNode, entity: WorldBuildingEntity):
+        wdg = self.__initEntityWidget(entity)
+        parent.addChild(wdg)
+        parent.entity().children.append(entity)
+
     def __initEntityWidget(self, entity: WorldBuildingEntity) -> EntityNode:
         node = EntityNode(entity, settings=self._settings)
         node.selectionChanged.connect(partial(self._entitySelectionChanged, node))
+        node.addEntity.connect(partial(self._addEntity, node))
 
         self._entities[entity] = node
         return node

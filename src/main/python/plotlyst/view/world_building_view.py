@@ -29,6 +29,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
+from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu
 from src.main.python.plotlyst.view.widget.world_building import WorldBuildingProfileTemplateView
 
 
@@ -41,6 +42,8 @@ class WorldBuildingView(AbstractNovelView):
 
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
+        self._additionMenu = EntityAdditionMenu(self.ui.btnNew)
+        self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
 
         self._settingTemplate = WorldBuildingProfileTemplateView(self.novel, default_location_profiles()[0])
         self.ui.splitter.setSizes([150, 500])

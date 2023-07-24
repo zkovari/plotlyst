@@ -972,6 +972,7 @@ class WorldBuildingEntityType(Enum):
     SETTING = 2
     GROUP = 3
     ITEM = 4
+    CONTAINER = 5
 
 
 @dataclass
