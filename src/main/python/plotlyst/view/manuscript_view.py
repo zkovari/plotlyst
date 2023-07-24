@@ -92,12 +92,6 @@ class ManuscriptView(AbstractNovelView):
                                (self.ui.btnLengthCharts, self.ui.pageCharts),
                                (self.ui.btnReadability, self.ui.pageReadability)])
 
-        # bold(self.ui.lineSceneTitle)
-        # incr_font(self.ui.lineSceneTitle)
-        # transparent(self.ui.lineSceneTitle)
-        # self.ui.lineSceneTitle.textEdited.connect(self._scene_title_edited)
-        # self.ui.lineSceneTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         bold(self.ui.lblWordCount)
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
@@ -157,6 +151,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.sceneSelected.connect(self._editScene)
         self.ui.treeChapters.chapterSelected.connect(self._editChapter)
+        self.ui.treeChapters.sceneAdded.connect(self._scene_added)
         self.ui.treeChapters.centralWidget().setProperty('bg', True)
 
         self.ui.wdgSide.setHidden(True)
@@ -197,7 +192,7 @@ class ManuscriptView(AbstractNovelView):
             if event.scene in self.ui.textEdit.scenes():
                 if len(self.ui.textEdit.scenes()) == 1:
                     self.ui.textEdit.clear()
-                    self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+                    self._empty_page()
                 else:
                     self._editChapter(event.scene.chapter)
         super(ManuscriptView, self).event_received(event)
@@ -287,15 +282,17 @@ class ManuscriptView(AbstractNovelView):
         else:
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
 
-        # self.ui.lineSceneTitle.setText(chapter.title_index(self.novel))
-        # self.ui.btnPov.setHidden(True)
-        # self.ui.btnSceneType.setHidden(True)
         self.ui.btnNotes.setChecked(False)
         self.ui.btnNotes.setDisabled(True)
         self.ui.btnStage.setDisabled(True)
 
         self._recheckDocument()
         self.ui.textEdit.setFocus()
+
+    def _scene_added(self, scene: Scene):
+        if self._is_empty_page():
+            self._editScene(scene)
+            self.ui.treeChapters.selectScene(scene)
 
     def _recheckDocument(self):
         if self.ui.stackedWidget.currentWidget() == self.ui.pageText:
@@ -382,3 +379,9 @@ class ManuscriptView(AbstractNovelView):
         self.repo.update_project_novel(self.novel)
         flush_or_fail()
         QTimer.singleShot(1000, QApplication.exit)
+
+    def _is_empty_page(self) -> bool:
+        return self.ui.stackedWidget.currentWidget() == self.ui.pageEmpty
+
+    def _empty_page(self):
+        self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)

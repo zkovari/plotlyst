@@ -130,6 +130,7 @@ class ScenesTreeView(TreeView, EventListener):
     CHAPTER_MIME_TYPE = 'application/tree-chapter-widget'
     sceneSelected = pyqtSignal(Scene)
     chapterSelected = pyqtSignal(Chapter)
+    sceneAdded = pyqtSignal(Scene)
 
     # noinspection PyTypeChecker
     def __init__(self, parent=None, settings: Optional[TreeSettings] = None):
@@ -250,6 +251,7 @@ class ScenesTreeView(TreeView, EventListener):
 
         self.repo.update_novel(self._novel)
         emit_event(SceneChangedEvent(self, scene))
+        self.sceneAdded.emit(scene)
 
     def selectChapter(self, chapter: Chapter):
         self.clearSelection()
@@ -298,6 +300,7 @@ class ScenesTreeView(TreeView, EventListener):
         chapterWdg.addChild(sceneWdg)
 
         self._reorderScenes()
+        self.sceneAdded.emit(scene)
 
     def _insertChapter(self, chapterWdg: ChapterWidget):
         i = self._centralWidget.layout().indexOf(chapterWdg) + 1
