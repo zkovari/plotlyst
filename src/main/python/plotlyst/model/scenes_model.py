@@ -294,7 +294,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
             if self.novel.stages[index.column() - 2] == self._highlighted_stage:
                 return QBrush(QColor('#c1e0f7'))
         if role == Qt.ItemDataRole.DisplayRole and index.column() == self.ColTitle:
-            return self._scene(index).title
+            return self._scene(index).title_or_index(self.novel)
 
     @overrides
     def flags(self, index: QModelIndex) -> Qt.ItemFlag:
