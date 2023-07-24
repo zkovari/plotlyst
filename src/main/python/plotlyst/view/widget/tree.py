@@ -28,6 +28,7 @@ from overrides import overrides
 from qthandy import vbox, hbox, bold, margins, clear_layout, transparent, retain_when_hidden, incr_font
 from qtmenu import MenuWidget
 
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.view.common import ButtonPressResizeEventFilter, action
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
@@ -123,6 +124,12 @@ class BaseTreeWidget(QWidget):
         self._btnAddPressFilter = ButtonPressResizeEventFilter(self._btnAdd)
         self._btnAdd.installEventFilter(self._btnAddPressFilter)
 
+    def highlightBorder(self):
+        self._reStyle(highlightBorder=True)
+
+    def clearHighlight(self):
+        self._reStyle()
+
     def _toggleSelection(self, selected: bool):
         self._selected = selected
         bold(self._lblTitle, self._selected)
@@ -143,13 +150,21 @@ class BaseTreeWidget(QWidget):
         self._btnMenu.setHidden(True)
         self._btnAdd.setHidden(True)
 
-    def _reStyle(self):
+    def _reStyle(self, highlightBorder: bool = False):
+        border = f'border-top: 4px solid {PLOTLYST_MAIN_COLOR};' if highlightBorder else ''
         if self._selected:
-            self._wdgTitle.setStyleSheet('''
-                    #wdgTitle {
+            self._wdgTitle.setStyleSheet(f'''
+                    #wdgTitle {{
                         background-color: #D8D5D5;
-                    }
+                        {border}
+                    }}
                 ''')
+        elif border:
+            self._wdgTitle.setStyleSheet(f'''
+                #wdgTitle {{
+                        {border}
+                    }}
+            ''')
         else:
             self._wdgTitle.setStyleSheet('')
 

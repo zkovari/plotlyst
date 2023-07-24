@@ -207,6 +207,7 @@ class DocumentsTreeView(TreeView):
         else:
             wdg.parent().layout().insertWidget(i + 1, self._dummyWdg)
 
+        self._dummyWdg.highlightBorder()
         self._dummyWdg.setVisible(True)
 
     def _drop(self, mimeData: QMimeData):
