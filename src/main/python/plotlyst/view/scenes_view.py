@@ -62,6 +62,7 @@ from src.main.python.plotlyst.view.widget.progress import SceneStageProgressChar
 from src.main.python.plotlyst.view.widget.scenes import SceneFilterWidget, SceneStoryStructureWidget, \
     ScenesPreferencesWidget, StoryMap, StoryMapDisplayMode
 from src.main.python.plotlyst.view.widget.scenes import StoryLinesMapWidget
+from src.main.python.plotlyst.view.widget.tree import TreeSettings
 
 
 class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
@@ -155,6 +156,7 @@ class ScenesOutlineView(AbstractNovelView):
         self._addSceneMenu.addAction(
             action('Add chapter', IconRegistry.chapter_icon(), self.ui.treeChapters.addChapter))
 
+        self.ui.treeChapters.setSettings(TreeSettings(font_incr=2))
         self.ui.treeChapters.setNovel(self.novel, readOnly=self.novel.is_readonly())
         self.ui.treeChapters.chapterSelected.connect(self._on_chapter_selected)
 
