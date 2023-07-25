@@ -32,7 +32,7 @@ from qttextedit.ops import DEFAULT_FONT_FAMILIES
 from textstat import textstat
 
 from src.main.python.plotlyst.common import EXIT_CODE_RESTART, NAV_BAR_BUTTON_DEFAULT_COLOR, \
-    NAV_BAR_BUTTON_CHECKED_COLOR
+    NAV_BAR_BUTTON_CHECKED_COLOR, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
@@ -93,7 +93,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.setWindowState(Qt.WindowState.WindowMaximized)
 
         palette = QApplication.palette()
-        palette.setColor(QPalette.ColorRole.Text, QColor('#040406'))
+        palette.setColor(QPalette.ColorRole.WindowText, QColor('#040406'))
+        palette.setColor(QPalette.ColorRole.ToolTipText, QColor(PLOTLYST_MAIN_COLOR))
         palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#8E9AAF'))
         QApplication.setPalette(palette)
 
