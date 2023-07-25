@@ -155,6 +155,9 @@ class WorldBuildingTreeView(TreeView):
             recursive(entity, lambda parent: parent.children, addChildWdg)
         self._centralWidget.layout().addWidget(vspacer())
 
+    def updateEntity(self, entity: WorldBuildingEntity):
+        self._entities[entity].refresh()
+
     def clearSelection(self):
         for entity in self._selectedEntities:
             self._entities[entity].deselect()
