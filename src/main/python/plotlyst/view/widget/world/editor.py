@@ -65,8 +65,10 @@ class EntityAdditionMenu(MenuWidget):
             icon_name = 'mdi.account-group'
         elif wdType == WorldBuildingEntityType.ITEM:
             name = 'New item'
+            icon_name = ''
         elif wdType == WorldBuildingEntityType.CONTAINER:
             name = 'Container'
+            icon_name = ''
         else:
             name = 'New entity'
             icon_name = ''
