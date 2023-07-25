@@ -489,6 +489,8 @@ class SmallTextTemplateFieldWidget(TemplateFieldWidgetBase):
         super(SmallTextTemplateFieldWidget, self).__init__(field, parent)
         _layout = vbox(self, margin=self._boxMargin, spacing=self._boxSpacing)
         self.wdgEditor = AutoAdjustableTextEdit(height=minHeight)
+        self.wdgEditor.setProperty('white-bg', True)
+        self.wdgEditor.setProperty('rounded', True)
         self.wdgEditor.setAcceptRichText(False)
         self.wdgEditor.setTabChangesFocus(True)
         self.wdgEditor.setPlaceholderText(field.placeholder)
