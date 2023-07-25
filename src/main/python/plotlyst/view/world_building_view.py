@@ -21,19 +21,20 @@ from typing import Optional
 
 from PyQt6.QtGui import QColor
 from overrides import overrides
-from qthandy import incr_font, transparent
+from qthandy import incr_font, transparent, hbox, retain_when_hidden
 
-from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity
+from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
+from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType
 from src.main.python.plotlyst.core.template import default_location_profiles
 from src.main.python.plotlyst.view._view import AbstractNovelView
-from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, set_tab_icon, \
+    set_tab_visible
 from src.main.python.plotlyst.view.generated.world_building_view_ui import Ui_WorldBuildingView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import IconSelectorButton
-from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu
-from src.main.python.plotlyst.view.widget.world_building import WorldBuildingProfileTemplateView
+from src.main.python.plotlyst.view.widget.world.editor import EntityAdditionMenu, WorldBuildingProfileTemplateView
 
 
 class WorldBuildingView(AbstractNovelView):
@@ -50,7 +51,6 @@ class WorldBuildingView(AbstractNovelView):
         self._additionMenu = EntityAdditionMenu(self.ui.btnNew)
         self._additionMenu.entityTriggered.connect(self.ui.treeWorld.addEntity)
 
-        self._settingTemplate = WorldBuildingProfileTemplateView(self.novel, default_location_profiles()[0])
         self.ui.splitter.setSizes([150, 500])
         self._lineName = AutoAdjustableLineEdit()
         self._lineName.setPlaceholderText('Name')
@@ -67,6 +67,19 @@ class WorldBuildingView(AbstractNovelView):
         self.ui.treeWorld.entitySelected.connect(self._selection_changed)
         self.ui.treeWorld.selectRoot()
 
+        retain_when_hidden(self.ui.tabWidget)
+        set_tab_icon(self.ui.tabWidget, self.ui.tabPerception,
+                     IconRegistry.from_name('mdi.radio-tower', color_on=PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabGoals, IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabTopics, IconRegistry.topics_icon(color_on=PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabHistory, IconRegistry.backstory_icon('black', PLOTLYST_MAIN_COLOR))
+        set_tab_icon(self.ui.tabWidget, self.ui.tabNotes, IconRegistry.document_edition_icon())
+
+        self._setting_template = WorldBuildingProfileTemplateView(self.novel, default_location_profiles()[0])
+        hbox(self.ui.tabPerception).addWidget(self._setting_template)
+        # self._group_template = WorldBuildingProfileTemplateView(self.novel, default_group_profile())
+        # hbox(self.ui.tabGoals).addWidget(self._group_template)
+
         link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnWorldView, self.ui.pageEditor),
                                                       (self.ui.btnHistoryView, self.ui.pageHistory)])
         self.ui.btnWorldView.setChecked(True)
@@ -78,10 +91,27 @@ class WorldBuildingView(AbstractNovelView):
     def _selection_changed(self, entity: WorldBuildingEntity):
         self._entity = entity
         self._lineName.setText(self._entity.name)
+        self._btnIcon.setVisible(True)
+        self.ui.tabWidget.setVisible(True)
         if entity.icon:
             self._btnIcon.selectIcon(self._entity.icon, self._entity.icon_color)
         else:
             self._btnIcon.reset()
+
+        if entity.type == WorldBuildingEntityType.SETTING:
+            set_tab_visible(self.ui.tabWidget, self.ui.tabPerception)
+            set_tab_visible(self.ui.tabWidget, self.ui.tabGoals, False)
+            self._setting_template.setEntity(self._entity)
+        elif entity.type == WorldBuildingEntityType.GROUP:
+            set_tab_visible(self.ui.tabWidget, self.ui.tabPerception, False)
+            set_tab_visible(self.ui.tabWidget, self.ui.tabGoals, False)
+            # self._group_template.setEntity(self._entity)
+        elif entity.type == WorldBuildingEntityType.CONTAINER:
+            self.ui.tabWidget.setHidden(True)
+            self._btnIcon.setHidden(True)
+        else:
+            set_tab_visible(self.ui.tabWidget, self.ui.tabPerception, False)
+            set_tab_visible(self.ui.tabWidget, self.ui.tabGoals, False)
 
     def _name_edited(self, name: str):
         self._entity.name = name

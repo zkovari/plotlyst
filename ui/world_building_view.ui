@@ -361,12 +361,17 @@
           <property name="borderless" stdset="0">
            <bool>true</bool>
           </property>
-          <widget class="QWidget" name="tabAttributes">
+          <widget class="QWidget" name="tabPerception">
            <property name="relaxed-white-bg" stdset="0">
             <bool>true</bool>
            </property>
            <attribute name="title">
-            <string>Attributes</string>
+            <string>Perception</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="tabGoals">
+           <attribute name="title">
+            <string>Goals</string>
            </attribute>
           </widget>
           <widget class="QWidget" name="tabTopics">

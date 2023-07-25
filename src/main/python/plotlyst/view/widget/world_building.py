@@ -24,57 +24,25 @@ from PyQt6.QtGui import QMouseEvent, QPainter, QColor, QPen, QFontMetrics, QFont
     QPainterPath, QResizeEvent
 from PyQt6.QtWidgets import QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
     QWidget, QGraphicsSceneMouseEvent, QGraphicsItem, QGraphicsScene, QGraphicsSceneHoverEvent, QGraphicsLineItem, \
-    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QFrame, QToolButton
+    QMenu, QTabWidget, QWidgetAction, QGraphicsPathItem, QTextEdit, QToolButton
 from overrides import overrides
 from qtemoji import EmojiPicker
 from qthandy import transparent, busy
 from qthandy.filter import OpacityEventFilter
 
-from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType, Novel
-from src.main.python.plotlyst.core.template import ProfileTemplate
+from src.main.python.plotlyst.core.domain import WorldBuildingEntity, WorldBuildingEntityType
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import pointy, set_tab_icon, link_buttons_to_pages, emoji_font
 from src.main.python.plotlyst.view.generated.world_building_item_editor_ui import Ui_WorldBuildingItemEditor
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.input import TextEditBase
-from src.main.python.plotlyst.view.widget.template.base import EditableTemplateWidget
-from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView
 from src.main.python.plotlyst.view.widget.utility import ColorPicker, IconSelectorWidget
 
 LINE_WIDTH: int = 4
 DEFAULT_COLOR: str = '#219ebc'
 ITEM_HORIZONTAL_DISTANCE = 20
 ITEM_VERTICAL_DISTANCE = 80
-
-
-class WorldBuildingProfileTemplateView(ProfileTemplateView):
-    def __init__(self, novel: Novel, profile: ProfileTemplate):
-        super().__init__([], profile, {})
-        self.novel = novel
-        self._entity: Optional[WorldBuildingEntity] = None
-        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
-        for wdg in self.widgets:
-            if isinstance(wdg, EditableTemplateWidget):
-                wdg.valueFilled.connect(self._save)
-                wdg.valueReset.connect(self._save)
-
-        self.repo = RepositoryPersistenceManager.instance()
-
-    def setLocation(self, entity: WorldBuildingEntity):
-        self._entity = entity
-        self.setValues(entity.template_values)
-
-    @overrides
-    def clearValues(self):
-        self._entity = None
-        super(WorldBuildingProfileTemplateView, self).clearValues()
-
-    def _save(self):
-        if self._entity:
-            self._entity.template_values = self.values()
-            self.repo.update_novel(self.novel)
 
 
 class ConnectorItem(QGraphicsPathItem):

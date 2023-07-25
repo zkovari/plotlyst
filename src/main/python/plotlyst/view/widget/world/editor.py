@@ -21,13 +21,19 @@ from functools import partial
 from typing import Optional, Dict, Set
 
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QFrame
+from overrides import overrides
 from qthandy import vspacer, clear_layout
 from qtmenu import MenuWidget, ActionTooltipDisplayMode
 
 from src.main.python.plotlyst.common import recursive
 from src.main.python.plotlyst.core.domain import Novel, WorldBuildingEntity, WorldBuildingEntityType
+from src.main.python.plotlyst.core.template import ProfileTemplate
+from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.widget.template.base import EditableTemplateWidget
+from src.main.python.plotlyst.view.widget.template.profile import ProfileTemplateView
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode, TreeSettings
 
 
@@ -43,7 +49,7 @@ class EntityAdditionMenu(MenuWidget):
                               tooltip='Physical location in the world'))
         self.addAction(action('Entity', IconRegistry.world_building_icon(),
                               slot=lambda: self._triggered(WorldBuildingEntityType.ABSTRACT),
-                              tooltip='Abstract entity in the world, e.g., magic'))
+                              tooltip='Abstract entity in the world, e.g., nation, kingdom, or magic'))
         self.addAction(action('Social group', IconRegistry.group_icon(),
                               slot=lambda: self._triggered(WorldBuildingEntityType.GROUP),
                               tooltip='Social group in the world, e.g., a guild or an organization'))
@@ -185,3 +191,32 @@ class WorldBuildingTreeView(TreeView):
 
         self._entities[entity] = node
         return node
+
+
+class WorldBuildingProfileTemplateView(ProfileTemplateView):
+    def __init__(self, novel: Novel, profile: ProfileTemplate):
+        super().__init__([], profile, {})
+        self.novel = novel
+        self._entity: Optional[WorldBuildingEntity] = None
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
+        for wdg in self.widgets:
+            if isinstance(wdg, EditableTemplateWidget):
+                wdg.valueFilled.connect(self._save)
+                wdg.valueReset.connect(self._save)
+
+        self.repo = RepositoryPersistenceManager.instance()
+
+    def setEntity(self, entity: WorldBuildingEntity):
+        self.clearValues()
+        self.setValues(entity.template_values)
+        self._entity = entity
+
+    @overrides
+    def clearValues(self):
+        self._entity = None
+        super(WorldBuildingProfileTemplateView, self).clearValues()
+
+    def _save(self):
+        if self._entity:
+            self._entity.template_values = self.values()
+            self.repo.update_novel(self.novel)

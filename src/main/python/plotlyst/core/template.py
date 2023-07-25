@@ -618,42 +618,36 @@ entity_summary_field = TemplateField('Summary', type=TemplateFieldType.SMALL_TEX
 sight_field = TemplateField('Sight', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('935e6595-27ae-426e-8b41-b315e9160ad9'),
                             emoji=':eyes:',
-                            show_label=False,
-                            placeholder='Sight')
+                            placeholder='Describe common sights for this location')
 
 smell_field = TemplateField('Smell', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('50245a33-599b-49c6-9746-094f12b4d667'),
                             emoji=':pig_nose:',
-                            show_label=False,
-                            placeholder='Smell')
+                            placeholder='Describe common smells for this location')
 noise_field = TemplateField('Sound', type=TemplateFieldType.SMALL_TEXT,
                             id=uuid.UUID('76659d94-8753-4945-8d5c-e811189e3b49'),
                             emoji=':bell:',
-                            show_label=False,
-                            placeholder='Sound')
-
-animals_field = TemplateField('Animals', type=TemplateFieldType.LABELS,
-                              id=uuid.UUID('3aa9cc09-312c-492a-bc19-6914bb1eeba6'),
-                              emoji=':paw_prints:',
-                              show_label=False,
-                              placeholder='Animals')
-nature_field = TemplateField('Nature', type=TemplateFieldType.LABELS,
-                             id=uuid.UUID('ab54bf84-1b69-4bb4-b1b4-c04ad2dd58b1'),
-                             emoji=':shamrock:',
-                             placeholder='Nature')
+                            placeholder='Describe common sounds for this location')
 
 
 def default_location_profiles() -> List[ProfileTemplate]:
-    summary_title = TemplateField('Summary', type=TemplateFieldType.DISPLAY_HEADER, required=True)
-    sensory_title = TemplateField('Sensory details', type=TemplateFieldType.DISPLAY_HEADER, required=True)
     fields = [
-        ProfileElement(summary_title, 0, 0),
-        ProfileElement(entity_summary_field, 1, 0, margins=Margins(left=15)),
-        ProfileElement(sensory_title, 2, 0),
-        ProfileElement(sight_field, 3, 0, margins=Margins(left=15)),
-        ProfileElement(smell_field, 4, 0, margins=Margins(left=15)),
-        ProfileElement(noise_field, 5, 0, margins=Margins(left=15)),
+        ProfileElement(sight_field, 0, 0, margins=Margins(left=10, top=5)),
+        ProfileElement(smell_field, 0, 1, margins=Margins(left=10, top=5, right=10)),
+        ProfileElement(noise_field, 1, 0, margins=Margins(left=10, top=5)),
     ]
     return [ProfileTemplate(title='Default location template',
                             id=uuid.UUID('8a95aa51-a975-416e-83d4-e349b84565b1'),
                             elements=fields)]
+
+
+def default_group_profile() -> ProfileTemplate:
+    fields = [
+        ProfileElement(values_field, 0, 0, col_span=2, margins=Margins(left=10, top=5, right=10)),
+        ProfileElement(gmc_field, 1, 0, col_span=2, margins=Margins(left=10, top=5, right=10)),
+    ]
+
+    return ProfileTemplate(title='Default group template',
+                           id=uuid.UUID('3d5c2743-2212-4058-b922-bb3026add9d6'),
+                           elements=fields
+                           )
