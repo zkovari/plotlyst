@@ -322,6 +322,11 @@ def set_tab_icon(tabs: QTabWidget, widget: QWidget, icon: QIcon):
     tabs.setTabIcon(i, icon)
 
 
+def set_tab_visible(tabs: QTabWidget, widget: QWidget, visible: bool = True):
+    i = tabs.indexOf(widget)
+    tabs.setTabVisible(i, visible)
+
+
 def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
     def destroy():
         widget.setHidden(True)
