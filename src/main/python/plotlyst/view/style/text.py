@@ -62,6 +62,12 @@ QTextEdit {
     background-color: #f8f9fa;
 }
 
+QTextEdit[rounded=true] {
+    border-radius: 6px;
+    padding: 4px;
+    border: 1px solid lightgrey;
+}
+
 QTextEdit[white-bg=true] {
     background-color: #FcFcFc;
 }
