@@ -17,6 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Optional
+
+from PyQt6.QtGui import QColor
 from overrides import overrides
 from qthandy import incr_font, transparent
 
@@ -40,6 +43,8 @@ class WorldBuildingView(AbstractNovelView):
         self.ui = Ui_WorldBuildingView()
         self.ui.setupUi(self.widget)
 
+        self._entity: Optional[WorldBuildingEntity] = None
+
         self.ui.btnNew.setIcon(IconRegistry.plus_icon(color='white'))
         self.ui.btnNew.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnNew))
         self._additionMenu = EntityAdditionMenu(self.ui.btnNew)
@@ -51,7 +56,9 @@ class WorldBuildingView(AbstractNovelView):
         self._lineName.setPlaceholderText('Name')
         transparent(self._lineName)
         incr_font(self._lineName, 15)
+        self._lineName.textEdited.connect(self._name_edited)
         self._btnIcon = IconSelectorButton()
+        self._btnIcon.iconSelected.connect(self._icon_changed)
         self.ui.wdgName.layout().addWidget(self._btnIcon)
         self.ui.wdgName.layout().addWidget(self._lineName)
 
@@ -69,8 +76,18 @@ class WorldBuildingView(AbstractNovelView):
         pass
 
     def _selection_changed(self, entity: WorldBuildingEntity):
-        self._lineName.setText(entity.name)
+        self._entity = entity
+        self._lineName.setText(self._entity.name)
         if entity.icon:
-            self._btnIcon.selectIcon(entity.icon, entity.icon_color)
+            self._btnIcon.selectIcon(self._entity.icon, self._entity.icon_color)
         else:
             self._btnIcon.reset()
+
+    def _name_edited(self, name: str):
+        self._entity.name = name
+        self.ui.treeWorld.updateEntity(self._entity)
+
+    def _icon_changed(self, icon_name: str, color: QColor):
+        self._entity.icon = icon_name
+        self._entity.icon_color = color.name()
+        self.ui.treeWorld.updateEntity(self._entity)
