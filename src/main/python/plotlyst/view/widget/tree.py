@@ -49,6 +49,7 @@ class BaseTreeWidget(QWidget):
         self._menuEnabled: bool = True
         self._plusEnabled: bool = True
 
+        self._selectionEnabled: bool = True
         self._selected: bool = False
         self._wdgTitle = QWidget(self)
         self._wdgTitle.setObjectName('wdgTitle')
@@ -111,6 +112,12 @@ class BaseTreeWidget(QWidget):
     def isSelected(self) -> bool:
         return self._selected
 
+    def setSelectionEnabled(self, enabled: bool):
+        self._selectionEnabled = enabled
+
+    def isSelectionEnabled(self) -> bool:
+        return self._selectionEnabled
+
     def setMenuEnabled(self, enabled: bool):
         self._menuEnabled = enabled
 
@@ -124,6 +131,8 @@ class BaseTreeWidget(QWidget):
         self._btnAdd.installEventFilter(self._btnAddPressFilter)
 
     def _toggleSelection(self, selected: bool):
+        if not self._selectionEnabled:
+            return
         self._selected = selected
         bold(self._lblTitle, self._selected)
         self._reStyle()
@@ -192,7 +201,7 @@ class ContainerNode(BaseTreeWidget):
                 self._btnAdd.setHidden(True)
                 if not self._selected:
                     self._wdgTitle.setStyleSheet('')
-        if event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled():
+        if event.type() == QEvent.Type.MouseButtonRelease and self.isEnabled() and self.isSelectionEnabled():
             if not self._selected:
                 self.select()
                 self.selectionChanged.emit(self._selected)
