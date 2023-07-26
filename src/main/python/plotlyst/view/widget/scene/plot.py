@@ -31,10 +31,10 @@ from qthandy import vbox, hbox, pointy, transparent, retain_when_hidden, spacer,
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Scene, ScenePlotReference, PlotValue, ScenePlotValueCharge, Plot
 from src.main.python.plotlyst.view.common import action, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton, SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel, SelectionItemLabel, ScenePlotValueLabel
 
@@ -187,17 +187,7 @@ class ScenePlotSelector(QWidget):
 
     def _plotValueClicked(self):
         menu = MenuWidget(self.label)
-        menu.setStyleSheet(f'''
-        MenuWidget {{
-                background-color: {RELAXED_WHITE_COLOR};
-            }}
-            QFrame {{
-                background-color: {RELAXED_WHITE_COLOR};
-                padding-left: 2px;
-                padding-right: 2px;
-                border-radius: 5px;
-            }}
-        ''')
+        apply_white_menu(menu)
         menu.addWidget(ScenePlotValueEditor(self.plotValue))
         menu.exec()
 

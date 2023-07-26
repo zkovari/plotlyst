@@ -127,7 +127,7 @@ def apply_white_menu(menu: MenuWidget):
                         MenuWidget {{
                             background-color: {RELAXED_WHITE_COLOR};
                         }}
-                        QFrame {{
+                        .QFrame {{
                             background-color: {RELAXED_WHITE_COLOR};
                             padding-left: 2px;
                             padding-right: 2px;
