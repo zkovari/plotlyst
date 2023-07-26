@@ -25,7 +25,7 @@ import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis
 from PyQt6.QtCore import pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QColor, QIcon, QPen, QCursor
-from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QTextEdit
+from PyQt6.QtWidgets import QWidget, QFrame, QWidgetAction, QMenu, QPushButton, QTextEdit, QLabel
 from overrides import overrides
 from qthandy import bold, flow, incr_font, \
     margins, btn_popup_menu, ask_confirmation, italic, retain_when_hidden, vbox, transparent, \
@@ -44,12 +44,13 @@ from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
-from src.main.python.plotlyst.view.common import action, fade_out_and_gc, pointy, ButtonPressResizeEventFilter
+from src.main.python.plotlyst.view.common import action, fade_out_and_gc, pointy, ButtonPressResizeEventFilter, wrap
 from src.main.python.plotlyst.view.dialog.novel import PlotValueEditorDialog
 from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.generated.plot_editor_widget_ui import Ui_PlotEditor
 from src.main.python.plotlyst.view.generated.plot_widget_ui import Ui_PlotWidget
 from src.main.python.plotlyst.view.icons import IconRegistry
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionPushButton
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorButton
 from src.main.python.plotlyst.view.widget.chart import BaseChart
@@ -136,6 +137,7 @@ class _PlotPrincipleToggle(QWidget):
     def __init__(self, pincipleType: PlotPrincipleType, parent=None):
         super(_PlotPrincipleToggle, self).__init__(parent)
         hbox(self)
+        margins(self, bottom=0)
         self._principleType = pincipleType
 
         self._label = QPushButton()
@@ -156,15 +158,16 @@ class _PlotPrincipleToggle(QWidget):
         self.toggle.toggled.connect(self._label.setChecked)
 
 
-class PlotPrincipleSelectorMenu(QMenu):
+class PlotPrincipleSelectorMenu(MenuWidget):
     principleToggled = pyqtSignal(PlotPrincipleType, bool)
 
     def __init__(self, plot: Plot, parent=None):
         super(PlotPrincipleSelectorMenu, self).__init__(parent)
         self._plot = plot
 
-        self._selector = QWidget()
-        vbox(self._selector)
+        self._selectors = QWidget()
+        apply_white_menu(self)
+        vbox(self._selectors, spacing=0)
 
         active_types = set([x.type for x in self._plot.principles])
 
@@ -175,11 +178,14 @@ class PlotPrincipleSelectorMenu(QMenu):
             if principle in active_types:
                 wdg.toggle.setChecked(True)
             wdg.toggle.toggled.connect(partial(self.principleToggled.emit, principle))
-            self._selector.layout().addWidget(wdg)
+            self._selectors.layout().addWidget(wdg)
+            desc = QLabel(principle_hints[principle])
+            desc.setProperty('description', True)
+            self._selectors.layout().addWidget(wrap(desc, margin_left=10, margin_bottom=5))
 
-        action = QWidgetAction(self)
-        action.setDefaultWidget(self._selector)
-        self.addAction(action)
+        self.addSection('Select those principles that are relevant to this plot line')
+        self.addSeparator()
+        self.addWidget(self._selectors)
 
 
 class PlotPrincipleEditor(QWidget):
@@ -478,7 +484,6 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self._principleSelectorMenu = PlotPrincipleSelectorMenu(self.plot, self.btnPincipleEditor)
         self._principleSelectorMenu.principleToggled.connect(self._principleToggled)
-        btn_popup_menu(self.btnPincipleEditor, self._principleSelectorMenu)
         self.btnPincipleEditor.installEventFilter(ButtonPressResizeEventFilter(self.btnPincipleEditor))
         self.btnPincipleEditor.installEventFilter(OpacityEventFilter(self.btnPincipleEditor, leaveOpacity=0.7))
         self._principles: Dict[PlotPrincipleType, PlotPrincipleEditor] = {}
