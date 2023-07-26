@@ -56,6 +56,8 @@ class ListItemWidget(QWidget):
 
         self._lineEdit = QLineEdit()
         self._lineEdit.setPlaceholderText('Fill out...')
+        self._lineEdit.setProperty('white-bg', True)
+        self._lineEdit.setProperty('rounded', True)
         self._lineEdit.textChanged.connect(self._textChanged)
 
         self._btnRemoval = RemovalButton(self)

@@ -200,6 +200,7 @@ class PlotPrincipleEditor(QWidget):
 
         self._textedit = QTextEdit(self)
         self._textedit.setProperty('white-bg', True)
+        self._textedit.setProperty('rounded', True)
         hint = principle_hints[principle.type]
         self._textedit.setPlaceholderText(hint)
         self._textedit.setToolTip(hint)
@@ -342,6 +343,7 @@ class PlotEventsList(ListView):
 
     def __init__(self, plot: Plot, parent=None):
         super(PlotEventsList, self).__init__(parent)
+        margins(self._centralWidget, bottom=40)
         self._plot = plot
         self._btnAdd.setText('Add new event')
         self._btnAdd.setToolTip('Add new event to reflect how the plot will progress or face setback')

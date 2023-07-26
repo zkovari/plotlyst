@@ -58,6 +58,16 @@ QLineEdit {
     background-color: #f8f9fa;
 }
 
+QLineEdit[white-bg=true] {
+    background-color: #FcFcFc;
+}
+
+QLineEdit[rounded=true] {
+    border-radius: 6px;
+    padding: 4px;
+    border: 1px solid lightgrey;
+}
+
 QTextEdit {
     background-color: #f8f9fa;
 }

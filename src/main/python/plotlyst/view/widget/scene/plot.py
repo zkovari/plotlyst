@@ -117,7 +117,8 @@ class ScenePlotValueEditor(QWidget):
 
         vbox(self)
         self.textComment = QTextEdit(self)
-        self.textComment.setProperty('relaxed-white-bg', True)
+        self.textComment.setProperty('white-bg', True)
+        self.textComment.setProperty('rounded', True)
         self.textComment.setAcceptRichText(False)
         self.textComment.setFixedHeight(100)
         self.textComment.setPlaceholderText('Describe how this scene is related to the selected plot')
