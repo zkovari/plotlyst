@@ -17,17 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-import sys
 from functools import partial
 from typing import Optional
 
 import qtanim
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QMouseEvent, QShowEvent
-from PyQt6.QtWidgets import QWidget, QToolButton, QTextEdit, QApplication, \
-    QMainWindow
+from PyQt6.QtWidgets import QWidget, QToolButton, QTextEdit, QLabel
 from overrides import overrides
-from qthandy import vbox, hbox, pointy, transparent, retain_when_hidden, spacer, sp, decr_icon, ask_confirmation
+from qthandy import vbox, hbox, pointy, transparent, retain_when_hidden, spacer, sp, decr_icon, ask_confirmation, line
 from qthandy.filter import OpacityEventFilter
 from qtmenu import MenuWidget
 
@@ -36,6 +34,7 @@ from src.main.python.plotlyst.view.common import action, fade_out_and_gc
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton, SecondaryActionPushButton
+from src.main.python.plotlyst.view.widget.display import IconText
 from src.main.python.plotlyst.view.widget.labels import PlotValueLabel, SelectionItemLabel, ScenePlotValueLabel
 
 
@@ -116,6 +115,13 @@ class ScenePlotValueEditor(QWidget):
         self.setProperty('relaxed-white-bg', True)
 
         vbox(self)
+
+        self._title = IconText()
+        if plotReference.plot.icon:
+            self._title.setIcon(IconRegistry.from_name(plotReference.plot.icon, plotReference.plot.icon_color))
+        self._title.setText(plotReference.plot.text)
+        self.layout().addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter)
+
         self.textComment = QTextEdit(self)
         self.textComment.setProperty('white-bg', True)
         self.textComment.setProperty('rounded', True)
@@ -125,6 +131,15 @@ class ScenePlotValueEditor(QWidget):
         self.textComment.setText(self.plotReference.data.comment)
         self.textComment.textChanged.connect(self._commentChanged)
         self.layout().addWidget(self.textComment)
+
+        if self.plotReference.plot.default_value_enabled:
+            wdg = ScenePlotValueChargeWidget(self.plotReference, self.plotReference.plot.default_value)
+            self.layout().addWidget(QLabel('General progress or setback'))
+            self.layout().addWidget(wdg)
+            self.layout().addWidget(line(color='lightgrey'))
+
+        if self.plotReference.plot.values:
+            self.layout().addWidget(QLabel('Custom values'))
 
         for value in self.plotReference.plot.values:
             wdg = ScenePlotValueChargeWidget(self.plotReference, value)
@@ -207,25 +222,3 @@ class ScenePlotSelector(QWidget):
         if ask_confirmation(f"Remove scene association for plot '{self.plotValue.plot.text}'?"):
             self.scene.plot_values.remove(self.plotValue)
             fade_out_and_gc(self.parent(), self)
-
-
-if __name__ == '__main__':
-    class MainWindow(QMainWindow):
-        def __init__(self, parent=None):
-            super(MainWindow, self).__init__(parent)
-
-            self.resize(500, 500)
-
-            novel = Novel('test')
-            novel.plots.append(Plot('Plot 1', icon='mdi.ray-start-arrow', icon_color='darkBlue'))
-            scene = Scene('Scene 1')
-            novel.scenes.append(scene)
-            self.widget = ScenePlotSelector(novel, scene, parent=self)
-            self.setCentralWidget(self.widget)
-
-
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-
-    app.exec()

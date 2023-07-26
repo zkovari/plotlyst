@@ -591,6 +591,10 @@ class SceneBased(ABC):
                     return s
 
 
+def default_plot_value() -> PlotValue:
+    return PlotValue('Progress', icon='fa5s.chart-line')
+
+
 @dataclass
 class Plot(SelectionItem, CharacterBased):
     id: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -600,6 +604,8 @@ class Plot(SelectionItem, CharacterBased):
     question: str = ''
     principles: List[PlotPrinciple] = field(default_factory=list)
     events: List[PlotEvent] = field(default_factory=list)
+    default_value: PlotValue = field(default_factory=default_plot_value)
+    default_value_enabled: bool = True
 
     def __post_init__(self):
         self._character: Optional[Character] = None
