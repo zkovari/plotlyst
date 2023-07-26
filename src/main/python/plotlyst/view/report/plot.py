@@ -124,15 +124,13 @@ class PlotValuesArcChart(BaseChart):
                                 charge += scene_p_value.charge
                                 series.append(i + 1, charge)
 
-                # points = series.point
-                # min_ = min(min([x.y() for x in points]), min_)
-                # max_ = max(max([x.y() for x in points]), max_)
+                points = series.points()
+                min_ = min(min([x.y() for x in points]), min_)
+                max_ = max(max([x.y() for x in points]), max_)
 
                 self.addSeries(series)
-                # series.attachAxis(axisX)
-                # series.attachAxis(axisY)
+                series.attachAxis(axisY)
 
         limit = max(abs(min_), max_)
-
-        axisY.setRange(-limit - 3, limit + 3)
+        axisY.setRange(-limit - 1, limit + 1)
         axisY.setVisible(False)
