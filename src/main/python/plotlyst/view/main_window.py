@@ -93,7 +93,9 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.setWindowState(Qt.WindowState.WindowMaximized)
 
         palette = QApplication.palette()
-        palette.setColor(QPalette.ColorRole.WindowText, QColor('#040406'))
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.WindowText, QColor('#040406'))
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.ButtonText, QColor('#040406'))
+        palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, QColor('#040406'))
         palette.setColor(QPalette.ColorRole.ToolTipText, QColor(PLOTLYST_MAIN_COLOR))
         palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#8E9AAF'))
         QApplication.setPalette(palette)
