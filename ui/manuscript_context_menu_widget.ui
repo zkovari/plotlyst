@@ -113,7 +113,7 @@
           <item>
            <widget class="QLabel" name="lblShutdownHint">
             <property name="text">
-             <string>To set a new language, the applicaton needs to be shut down.</string>
+             <string>To set a new language, the novel needs to be closed.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
@@ -132,7 +132,7 @@
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
             <property name="text">
-             <string>Apply and shut down</string>
+             <string>Close novel</string>
             </property>
             <property name="base" stdset="0">
              <bool>true</bool>

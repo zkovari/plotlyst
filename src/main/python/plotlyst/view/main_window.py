@@ -41,7 +41,7 @@ from src.main.python.plotlyst.event.core import event_log_reporter, EventListene
     emit_info
 from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, \
-    NovelUpdatedEvent, OpenDistractionFreeMode, ExitDistractionFreeMode
+    NovelUpdatedEvent, OpenDistractionFreeMode, ExitDistractionFreeMode, CloseNovelEvent
 from src.main.python.plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.dir import select_new_project_directory
@@ -156,7 +156,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                                   HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, AllNovelViewsTourEvent,
                                   GeneralNovelViewTourEvent,
                                   CharacterViewTourEvent, ScenesViewTourEvent, DocumentsViewTourEvent,
-                                  ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent)
+                                  ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent,
+                                  CloseNovelEvent)
 
         self._init_views()
 
@@ -237,7 +238,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
                 btn.click()
             self._tour_service.addWidget(btn, event_)
 
-        if isinstance(event, NovelDeletedEvent):
+        if isinstance(event, (NovelDeletedEvent, CloseNovelEvent)):
             if self.novel and event.novel.id == self.novel.id:
                 self.close_novel()
         elif isinstance(event, NovelUpdatedEvent):
@@ -259,7 +260,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         elif isinstance(event, TutorialNovelCloseTourEvent):
             if self.novel and self.novel.tutorial:
                 self.close_novel()
-                self.home_mode.setChecked(True)
         elif isinstance(event, NovelEditorDisplayTourEvent):
             self._tour_service.addWidget(self.pageOutline, event)
         elif isinstance(event, NovelTopLevelButtonTourEvent):
@@ -286,6 +286,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
     def close_novel(self):
         self.novel = None
         self._clear_novel_views()
+        self.home_mode.setChecked(True)
 
     def _toggle_fullscreen(self, on: bool):
         self.wdgNavBar.setHidden(on)

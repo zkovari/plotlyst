@@ -121,6 +121,11 @@ class NovelSyncEvent(Event):
 
 
 @dataclass
+class CloseNovelEvent(Event):
+    novel: NovelDescriptor
+
+
+@dataclass
 class PlotCreatedEvent(Event):
     pass
 

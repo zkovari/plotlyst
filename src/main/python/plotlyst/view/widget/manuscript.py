@@ -268,6 +268,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
             self.cbUkrainian.setChecked(True)
 
         self.btnShutDown.clicked.connect(self._languageChanged)
+        self.btnShutDown.installEventFilter(ButtonPressResizeEventFilter(self.btnShutDown))
 
     @overrides
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
@@ -293,7 +294,7 @@ class ManuscriptContextMenuWidget(QWidget, Ui_ManuscriptContextMenuWidget):
         qtanim.glow(self.btnShutDown, loop=3)
 
     def _languageChanged(self):
-        self.btnShutDown.setText('Shutting down ...')
+        self.btnShutDown.setText('Closing...')
         self.lblShutdownHint.setHidden(True)
         spin(self.btnShutDown, color='white')
         qtanim.glow(self.btnShutDown, loop=15)

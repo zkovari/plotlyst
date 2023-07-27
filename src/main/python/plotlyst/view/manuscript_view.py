@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import qtanim
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QApplication
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
@@ -32,7 +31,7 @@ from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
 from src.main.python.plotlyst.core.domain import Scene
 from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, Event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
-    ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent
+    ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
 from src.main.python.plotlyst.resources import ResourceType
 from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
@@ -377,11 +376,11 @@ class ManuscriptView(AbstractNovelView):
         self.ui.textEdit.setWordTagHighlighterEnabled(toggled)
 
     def _language_changed(self, lang: str):
-        emit_info('Application is shutting down. Persist workspace...')
+        emit_info('Novel is getting closed. Persist workspace...')
         self.novel.lang_settings.lang = lang
         self.repo.update_project_novel(self.novel)
         flush_or_fail()
-        QTimer.singleShot(1000, QApplication.exit)
+        emit_event(CloseNovelEvent(self, self.novel))
 
     def _is_empty_page(self) -> bool:
         return self.ui.stackedWidget.currentWidget() == self.ui.pageEmpty
