@@ -392,19 +392,19 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_3">
              <property name="spacing">
-              <number>3</number>
+              <number>0</number>
              </property>
              <property name="leftMargin">
-              <number>2</number>
+              <number>0</number>
              </property>
              <property name="topMargin">
-              <number>2</number>
+              <number>0</number>
              </property>
              <property name="rightMargin">
-              <number>9</number>
+              <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>2</number>
+              <number>0</number>
              </property>
              <item>
               <widget class="QStackedWidget" name="stackSide">
@@ -441,22 +441,65 @@
                 </layout>
                </widget>
                <widget class="QWidget" name="pageGoal">
+                <property name="cursor">
+                 <cursorShape>UpArrowCursor</cursorShape>
+                </property>
                 <layout class="QVBoxLayout" name="verticalLayout_13">
                  <property name="spacing">
-                  <number>3</number>
+                  <number>0</number>
                  </property>
                  <property name="leftMargin">
-                  <number>5</number>
+                  <number>0</number>
                  </property>
                  <property name="topMargin">
                   <number>5</number>
                  </property>
                  <property name="rightMargin">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
                  <property name="bottomMargin">
-                  <number>2</number>
+                  <number>0</number>
                  </property>
+                 <item alignment="Qt::AlignHCenter">
+                  <widget class="QWidget" name="wdgGoalTitle" native="true">
+                   <layout class="QHBoxLayout" name="horizontalLayout_5">
+                    <item>
+                     <widget class="Emoji" name="emojiGoal">
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="emoji" stdset="0">
+                       <string>bullseye</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="lblGoal">
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="btnEditGoal">
+                      <property name="cursor">
+                       <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_2">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
                <widget class="QWidget" name="pageReadability">
@@ -815,7 +858,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
+             <width>80</width>
              <height>70</height>
             </rect>
            </property>
@@ -905,6 +948,11 @@
    <class>ManuscriptTextEditor</class>
    <extends>QTextEdit</extends>
    <header>src.main.python.plotlyst.view.widget.manuscript</header>
+  </customwidget>
+  <customwidget>
+   <class>Emoji</class>
+   <extends>QLabel</extends>
+   <header>src.main.python.plotlyst.view.widget.display</header>
   </customwidget>
  </customwidgets>
  <resources/>

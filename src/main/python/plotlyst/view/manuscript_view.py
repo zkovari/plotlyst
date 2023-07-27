@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import qtanim
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QInputDialog
 from overrides import overrides
 from qthandy import translucent, bold, margins, spacer, vline, transparent, vspacer, decr_icon
 from qthandy.filter import OpacityEventFilter
@@ -37,7 +38,7 @@ from src.main.python.plotlyst.service.grammar import language_tool_proxy
 from src.main.python.plotlyst.service.persistence import flush_or_fail
 from src.main.python.plotlyst.view._view import AbstractNovelView
 from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEventFilter, action, \
-    ExclusiveOptionalButtonGroup, link_buttons_to_pages
+    ExclusiveOptionalButtonGroup, link_buttons_to_pages, icon_to_html_img
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
@@ -107,12 +108,24 @@ class ManuscriptView(AbstractNovelView):
         self._btnContext = tool_btn(IconRegistry.context_icon(), 'Manuscript settings')
         transparent(self._btnContext)
 
-        self._chartProgress = ProgressChart(maxValue=80000, emptySliceColor=RELAXED_WHITE_COLOR)
+        self.ui.lblGoal.setText('<html><b>80 000</b> words')
+        self.ui.btnEditGoal.setIcon(IconRegistry.edit_icon())
+        transparent(self.ui.btnEditGoal)
+        decr_icon(self.ui.btnEditGoal, 2)
+        self.ui.btnEditGoal.installEventFilter(OpacityEventFilter(self.ui.btnEditGoal))
+        self.ui.btnEditGoal.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditGoal))
+        self.ui.btnEditGoal.clicked.connect(self._edit_wc_goal)
+
+        self._chartProgress = ProgressChart(maxValue=80000,
+                                            title_prefix=icon_to_html_img(IconRegistry.goal_icon(PLOTLYST_MAIN_COLOR)),
+                                            color=PLOTLYST_MAIN_COLOR,
+                                            titleColor=PLOTLYST_MAIN_COLOR,
+                                            emptySliceColor=RELAXED_WHITE_COLOR)
         self._chartProgress.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
         self._chartProgressView = ChartView()
-        self._chartProgressView.setMaximumSize(200, 200)
+        self._chartProgressView.setFixedSize(200, 200)
         self._chartProgressView.setChart(self._chartProgress)
-        self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.ui.pageGoal.layout().addWidget(self._chartProgressView, alignment=Qt.AlignmentFlag.AlignTop)
         self.ui.pageGoal.layout().addWidget(vspacer())
 
         self._wdgReadability = ReadabilityWidget()
@@ -323,6 +336,13 @@ class ManuscriptView(AbstractNovelView):
         self.repo.update_scene(scene)
         emit_event(SceneChangedEvent(self, scene))
 
+    def _edit_wc_goal(self):
+        goal, changed = QInputDialog.getInt(self.ui.btnEditGoal, 'Edit word count target', 'Edit word count target',
+                                            value=80000,
+                                            min=1000, max=10000000, step=1000)
+        if changed:
+            self.ui.lblGoal.setText(f'<html><b>{goal}</b> words')
+
     def _side_bar_toggled(self, btn, toggled: bool):
         btn = self._btnGroupSideBar.checkedButton()
         if btn is None:
@@ -337,9 +357,6 @@ class ManuscriptView(AbstractNovelView):
             self._analysis_clicked(self.ui.btnReadability.isChecked())
         # elif btn is self.ui.btnSceneInfo:
         #     self.ui.stackSide.setCurrentWidget(self.ui.pageInfo)
-
-    def _scene_title_edited(self, text: str):
-        pass
 
     def _spellcheck_toggled(self, toggled: bool):
         translucent(self._spellCheckIcon, 1 if toggled else 0.4)
