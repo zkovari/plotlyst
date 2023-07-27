@@ -23,17 +23,36 @@ import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPen, QColor
+from PyQt6.QtWidgets import QToolButton
 from overrides import overrides
-from pydantic.main import partial
-from qthandy import clear_layout, vspacer, transparent
+from qthandy import clear_layout, vspacer, transparent, translucent, bold
 
 from src.main.python.plotlyst.core.domain import Novel, Plot
-from src.main.python.plotlyst.view.common import icon_to_html_img, tool_btn
+from src.main.python.plotlyst.view.common import icon_to_html_img, pointy
 from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
 from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
+
+
+class EyeToggle(QToolButton):
+    def __init__(self, parent=None):
+        super(EyeToggle, self).__init__(parent)
+        self.setCheckable(True)
+        pointy(self)
+        transparent(self)
+        self.toggled.connect(self._toggled)
+
+        self._toggled(False)
+
+    def _toggled(self, toggled: bool):
+        if toggled:
+            self.setIcon(IconRegistry.from_name('ei.eye-open'))
+            translucent(self, 1)
+        else:
+            self.setIcon(IconRegistry.from_name('ei.eye-close'))
+            translucent(self)
 
 
 class PlotArcNode(ContainerNode):
@@ -47,9 +66,9 @@ class PlotArcNode(ContainerNode):
         self.setMenuEnabled(False)
         self.setSelectionEnabled(False)
 
-        self._btnVisible = tool_btn(IconRegistry.from_name('ei.eye-open'), 'Toggle arc', checkable=True)
-        transparent(self._btnVisible)
-        self._btnVisible.toggled.connect(partial(self.plotToggled.emit, self._plot))
+        self._btnVisible = EyeToggle()
+        self._btnVisible.setToolTip('Toggle arc')
+        self._btnVisible.toggled.connect(self._toggled)
         self._wdgTitle.layout().addWidget(self._btnVisible)
 
         self.refresh()
@@ -61,6 +80,10 @@ class PlotArcNode(ContainerNode):
             self._icon.setVisible(True)
         else:
             self._icon.setHidden(True)
+
+    def _toggled(self, toggled: bool):
+        bold(self._lblTitle, toggled)
+        self.plotToggled.emit(self._plot, toggled)
 
 
 class ArcsTreeView(TreeView):
@@ -92,8 +115,6 @@ class PlotReport(AbstractReport, Ui_PlotReport):
         self._treeView = ArcsTreeView(novel)
         self._treeView.plotToggled.connect(self._plotToggled)
         self.wdgTreeParent.layout().addWidget(self._treeView)
-        # flow(self.wdgPlotContainer)
-        # self._btnGroupPlots: Optional[QButtonGroup] = None
         self.splitter.setSizes([150, 500])
 
         self.btnArcsToggle.clicked.connect(self._arcsSelectorClicked)
@@ -103,23 +124,12 @@ class PlotReport(AbstractReport, Ui_PlotReport):
     @overrides
     def refresh(self):
         self._treeView.refresh()
-        # clear_layout(self.wdgPlotContainer)
-        # self._btnGroupPlots = QButtonGroup()
-        # self._btnGroupPlots.setExclusive(False)
-        #
-        # for plot in self.novel.plots:
-        #     btn = _PlotButton(plot)
-        #     self._btnGroupPlots.addButton(btn)
-        #     self.wdgPlotContainer.layout().addWidget(btn)
-        #
-        # self._btnGroupPlots.buttonToggled.connect(self._plotToggled)
 
     def _arcsSelectorClicked(self, toggled: bool):
         qtanim.toggle_expansion(self.wdgTreeParent, toggled)
 
     def _plotToggled(self, plot: Plot, toggled: bool):
-        if toggled:
-            self.chartValues.refresh([plot])
+        self.chartValues.setPlotVisible(plot, toggled)
 
 
 class PlotValuesArcChart(BaseChart):
@@ -130,9 +140,19 @@ class PlotValuesArcChart(BaseChart):
         self.legend().setMarkerShape(QLegend.MarkerShape.MarkerShapeCircle)
         self.legend().show()
 
+        self._plots: List[Plot] = []
+
         self.setTitle('Plot value charges')
 
-    def refresh(self, plots: List[Plot]):
+    def setPlotVisible(self, plot: Plot, visible: bool):
+        if visible:
+            self._plots.append(plot)
+        else:
+            self._plots.remove(plot)
+
+        self.refresh()
+
+    def refresh(self):
         self.reset()
 
         axisX = QValueAxis()
@@ -145,7 +165,7 @@ class PlotValuesArcChart(BaseChart):
 
         min_ = 0
         max_ = 0
-        for plot in plots:
+        for plot in self._plots:
             for value in plot.values:
                 charge = 0
                 series = QSplineSeries()
