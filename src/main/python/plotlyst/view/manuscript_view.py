@@ -108,7 +108,6 @@ class ManuscriptView(AbstractNovelView):
         self._btnContext = tool_btn(IconRegistry.context_icon(), 'Manuscript settings')
         transparent(self._btnContext)
 
-        self.ui.lblGoal.setText('<html><b>80 000</b> words')
         self.ui.btnEditGoal.setIcon(IconRegistry.edit_icon())
         transparent(self.ui.btnEditGoal)
         decr_icon(self.ui.btnEditGoal, 2)
@@ -116,7 +115,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnEditGoal.installEventFilter(ButtonPressResizeEventFilter(self.ui.btnEditGoal))
         self.ui.btnEditGoal.clicked.connect(self._edit_wc_goal)
 
-        self._chartProgress = ProgressChart(maxValue=80000,
+        self._chartProgress = ProgressChart(maxValue=self.novel.manuscript_goals.target_wc,
                                             title_prefix=icon_to_html_img(IconRegistry.goal_icon(PLOTLYST_MAIN_COLOR)),
                                             color=PLOTLYST_MAIN_COLOR,
                                             titleColor=PLOTLYST_MAIN_COLOR,
@@ -337,13 +336,20 @@ class ManuscriptView(AbstractNovelView):
         emit_event(SceneChangedEvent(self, scene))
 
     def _edit_wc_goal(self):
-        goal, changed = QInputDialog.getInt(self.ui.btnEditGoal, 'Edit word count target', 'Edit word count target',
-                                            value=80000,
+        goal, changed = QInputDialog.getInt(self.ui.btnEditGoal, 'Word count goal', 'Edit word count target',
+                                            value=self.novel.manuscript_goals.target_wc,
                                             min=1000, max=10000000, step=1000)
         if changed:
-            self.ui.lblGoal.setText(f'<html><b>{goal}</b> words')
+            self.novel.manuscript_goals.target_wc = goal
+            self.repo.update_novel(self.novel)
+            self._refresh_target_wc()
 
-    def _side_bar_toggled(self, btn, toggled: bool):
+    def _refresh_target_wc(self):
+        self.ui.lblGoal.setText(f'<html><b>{self.novel.manuscript_goals.target_wc}</b> words')
+        self._chartProgress.setMaxValue(self.novel.manuscript_goals.target_wc)
+        self._chartProgress.refresh()
+
+    def _side_bar_toggled(self, _, toggled: bool):
         btn = self._btnGroupSideBar.checkedButton()
         if btn is None:
             qtanim.collapse(self.ui.wdgSide)
@@ -355,6 +361,8 @@ class ManuscriptView(AbstractNovelView):
         if btn is self.ui.btnReadability:
             # self.ui.stackSide.setCurrentWidget(self.ui.pageReadability)
             self._analysis_clicked(self.ui.btnReadability.isChecked())
+        elif btn is self.ui.btnGoals:
+            self._refresh_target_wc()
         # elif btn is self.ui.btnSceneInfo:
         #     self.ui.stackSide.setCurrentWidget(self.ui.pageInfo)
 

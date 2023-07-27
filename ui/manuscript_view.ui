@@ -465,6 +465,9 @@
                    <layout class="QHBoxLayout" name="horizontalLayout_5">
                     <item>
                      <widget class="Emoji" name="emojiGoal">
+                      <property name="toolTip">
+                       <string>Manuscript word count target</string>
+                      </property>
                       <property name="text">
                        <string/>
                       </property>
@@ -475,6 +478,9 @@
                     </item>
                     <item>
                      <widget class="QLabel" name="lblGoal">
+                      <property name="toolTip">
+                       <string>Manuscript word count target</string>
+                      </property>
                       <property name="text">
                        <string/>
                       </property>
@@ -484,6 +490,9 @@
                      <widget class="QToolButton" name="btnEditGoal">
                       <property name="cursor">
                        <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="toolTip">
+                       <string>Edit manuscript word count goal</string>
                       </property>
                       <property name="text">
                        <string/>
