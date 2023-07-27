@@ -42,6 +42,7 @@ from src.main.python.plotlyst.view.common import tool_btn, ButtonPressResizeEven
 from src.main.python.plotlyst.view.generated.manuscript_view_ui import Ui_ManuscriptView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.layout import group
+from src.main.python.plotlyst.view.style.base import apply_white_menu
 from src.main.python.plotlyst.view.widget.display import Icon, ChartView
 from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
@@ -133,6 +134,7 @@ class ManuscriptView(AbstractNovelView):
         self._contextMenuWidget = TextEditorSettingsWidget()
         self._contextMenuWidget.addTab(self._langSelectionWidget, IconRegistry.from_name('fa5s.spell-check'), '')
         menu = MenuWidget(self._btnContext)
+        apply_white_menu(menu)
         menu.addWidget(self._contextMenuWidget)
         self._contextMenuWidget.setSectionVisible(TextEditorSettingsSection.WIDTH, False)
         self.ui.textEdit.attachSettingsWidget(self._contextMenuWidget)
