@@ -74,6 +74,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.btnGoals.setIcon(IconRegistry.goal_icon('black', PLOTLYST_MAIN_COLOR))
         self.ui.btnReadability.setIcon(IconRegistry.from_name('fa5s.glasses', 'black', PLOTLYST_MAIN_COLOR))
         self.ui.btnLengthCharts.setIcon(IconRegistry.from_name('ri.bar-chart-2-fill', 'black', PLOTLYST_MAIN_COLOR))
+        self.ui.btnLengthCharts.setHidden(True)
         self.ui.btnExport.setIcon(IconRegistry.from_name('ei.download-alt', 'black', PLOTLYST_MAIN_COLOR))
 
         self._btnGroupSideBar = ExclusiveOptionalButtonGroup()
