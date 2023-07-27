@@ -43,7 +43,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, Scene, Chapte
     three_act_structure, SceneStoryBeat, Tag, default_general_tags, TagType, \
     default_tag_types, LanguageSettings, ImportOrigin, NovelPreferences, Goal, CharacterPreferences, TagReference, \
     ScenePlotReferenceData, MiceQuotient, SceneDrive, WorldBuilding, Board, \
-    default_big_five_values, CharacterPlan
+    default_big_five_values, CharacterPlan, ManuscriptGoals
 from src.main.python.plotlyst.core.template import Role, exclude_if_empty, exclude_if_black
 from src.main.python.plotlyst.env import app_env
 
@@ -197,8 +197,9 @@ class NovelInfo:
     synopsis: Optional['Document'] = None
     version: ApplicationNovelVersion = ApplicationNovelVersion.R0
     prefs: NovelPreferences = field(default_factory=NovelPreferences)
-    world: WorldBuilding = WorldBuilding()
-    board: Board = Board()
+    world: WorldBuilding = field(default_factory=WorldBuilding)
+    board: Board = field(default_factory=Board)
+    manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
 
 
 @dataclass
@@ -526,7 +527,7 @@ class JsonClient:
                       story_structures=novel_info.story_structures, character_profiles=novel_info.character_profiles,
                       conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
                       documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
-                      prefs=novel_info.prefs)
+                      prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals)
 
         world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
         if os.path.exists(world_path):
@@ -564,7 +565,7 @@ class JsonClient:
                                tag_types=list(novel.tags.keys()),
                                documents=novel.documents,
                                premise=novel.premise, synopsis=novel.synopsis,
-                               version=LATEST_VERSION, prefs=novel.prefs)
+                               version=LATEST_VERSION, prefs=novel.prefs, manuscript_goals=novel.manuscript_goals)
 
         self.__persist_info(self.novels_dir, novel_info)
         self._persist_world(novel.id, novel.world)

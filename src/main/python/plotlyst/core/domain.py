@@ -1773,6 +1773,11 @@ class NovelPreferences:
 
 
 @dataclass
+class ManuscriptGoals:
+    target_wc: int = 80000
+
+
+@dataclass
 class Novel(NovelDescriptor):
     story_structures: List[StoryStructure] = field(default_factory=list)
     characters: List[Character] = field(default_factory=list)
@@ -1791,6 +1796,7 @@ class Novel(NovelDescriptor):
     prefs: NovelPreferences = field(default_factory=NovelPreferences)
     world: WorldBuilding = field(default_factory=WorldBuilding)
     board: Board = field(default_factory=Board)
+    manuscript_goals: ManuscriptGoals = field(default_factory=ManuscriptGoals)
 
     def pov_characters(self) -> List[Character]:
         pov_ids = set()
