@@ -50,7 +50,7 @@ from src.main.python.plotlyst.model.novel import NovelTagsModel
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import link_buttons_to_pages, ButtonPressResizeEventFilter, \
-    ExclusiveOptionalButtonGroup
+    ExclusiveOptionalButtonGroup, DelayedSignalSlotConnector
 from src.main.python.plotlyst.view.generated.beat_widget_ui import Ui_BeatWidget
 from src.main.python.plotlyst.view.generated.imported_novel_overview_ui import Ui_ImportedNovelOverview
 from src.main.python.plotlyst.view.generated.story_structure_selector_dialog_ui import Ui_StoryStructureSelectorDialog
@@ -152,7 +152,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
 
         self.installEventFilter(self)
 
-        self.textSynopsis.textChanged.connect(self._synopsisEdited)
+        DelayedSignalSlotConnector(self.textSynopsis.textChanged, self._synopsisEdited, parent=self)
         event_dispatcher.register(self, SceneChangedEvent)
         event_dispatcher.register(self, SceneDeletedEvent)
 
@@ -250,6 +250,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         if self.scene:
             self.scene.synopsis = self.textSynopsis.toPlainText()
             self.repo.update_scene(self.scene)
+            emit_event(SceneChangedEvent(self, self.scene))
 
 
 class BeatsPreview(QFrame):
