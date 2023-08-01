@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import math
 from enum import Enum
 from functools import partial
 from typing import Optional
@@ -73,7 +74,7 @@ class AutoAdjustableTextEdit(QTextEdit):
 
     def _resizeToContent(self):
         size = self.document().size()
-        self.setFixedHeight(max(self._minHeight, size.height()))
+        self.setFixedHeight(max(self._minHeight, math.ceil(size.height())))
 
 
 class AutoAdjustableLineEdit(QLineEdit):
@@ -482,7 +483,7 @@ class DocumentTextEditor(RichTextEditor):
             family = 'Helvetica'
         self.textEdit.setFont(QFont(family))
         self.textEdit.setProperty('transparent', True)
-        self.textEdit.zoomIn(self.textEdit.font().pointSize() * 0.34)
+        self.textEdit.zoomIn(int(self.textEdit.font().pointSize() * 0.34))
         self.textEdit.setBlockFormat(lineSpacing=120)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setPlaceholderText('Write your notes...')

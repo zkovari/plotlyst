@@ -591,7 +591,7 @@ class ManuscriptTextEditor(RichTextEditor):
     @overrides
     def _initTextEdit(self) -> ManuscriptTextEdit:
         _textedit = ManuscriptTextEdit()
-        _textedit.zoomIn(_textedit.font().pointSize() * 0.34)
+        _textedit.zoomIn(int(_textedit.font().pointSize() * 0.34))
         _textedit.setBlockFormat(DEFAULT_MANUSCRIPT_LINE_SPACE, textIndent=DEFAULT_MANUSCRIPT_INDENT)
         _textedit.selectionChanged.connect(self.selectionChanged.emit)
         _textedit.textChanged.connect(self._textChanged)
@@ -823,8 +823,8 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.lblWords: Optional[WordsDisplay] = None
 
         self.sliderDocWidth.valueChanged.connect(
-            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(self.width() / 3 - x, 0,
-                                                                                self.width() / 3 - x, 0))
+            lambda x: self.wdgDistractionFreeEditor.layout().setContentsMargins(int(self.width() / 3) - x, 0,
+                                                                                int(self.width() / 3) - x, 0))
         self.wdgSprint = SprintWidget(self)
         self.wdgSprint.setCompactMode(True)
         self.wdgHeader.layout().insertWidget(0, self.wdgSprint, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -861,7 +861,7 @@ class DistractionFreeManuscriptEditor(QWidget, Ui_DistractionFreeManuscriptEdito
         self.editor.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self.wdgBottom.setVisible(True)
-        self.sliderDocWidth.setMaximum(self.width() / 3)
+        self.sliderDocWidth.setMaximum(int(self.width() / 3))
         if self.sliderDocWidth.value() <= 2:
             self.sliderDocWidth.setValue(self.sliderDocWidth.maximum() // 2)
 

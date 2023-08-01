@@ -895,7 +895,7 @@ class CharacterTimelineWidget(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setBrush(QBrush(QColor('#1d3557')))
-        painter.drawRect(self.width() / 2 - 3, 64, 6, self.height() - 64)
+        painter.drawRect(int(self.width() / 2) - 3, 64, 6, self.height() - 64)
 
         painter.end()
 

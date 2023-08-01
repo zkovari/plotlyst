@@ -469,10 +469,11 @@ class SceneStoryStructureWidget(QWidget):
                             self._beatHeight)
         self._wdgLine.setGeometry(0, 0, self.width(), self._lineHeight)
         if self.btnCurrentScene:
-            self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
-                                             self._lineHeight,
-                                             self._beatHeight,
-                                             self._beatHeight)
+            self.btnCurrentScene.setGeometry(
+                int(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2),
+                self._lineHeight,
+                self._beatHeight,
+                self._beatHeight)
 
     def _xForPercentage(self, percentage: int) -> int:
         return int(self.width() * percentage / 100 - self._lineHeight // 2)
