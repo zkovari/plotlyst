@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+import logging
 from typing import Optional, Set
 
 import language_tool_python
@@ -25,7 +26,7 @@ from language_tool_python import LanguageTool
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Event
-from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, EventListener
+from src.main.python.plotlyst.event.core import emit_event, emit_info, EventListener
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEvent
 
@@ -60,7 +61,8 @@ class LanguageToolProxy:
 
     def set_error(self, error_msg: str):
         self._error = error_msg
-        emit_critical('Could not initialize LanguageTool grammar checker', self._error)
+        logging.error(self._error)
+        emit_info('Could not initialize LanguageTool grammar checker')
 
     def is_set(self) -> bool:
         return self._language_tool is not None
