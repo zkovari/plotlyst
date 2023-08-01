@@ -22,7 +22,7 @@ from functools import partial
 from typing import Optional, Tuple, List
 
 import qtawesome
-from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt
+from PyQt6.QtCore import QRectF, QModelIndex, QRect, QPoint, QBuffer, QIODevice, QSize, QObject, QEvent, Qt, QTimer
 from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, QAction
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
@@ -384,3 +384,27 @@ class ExclusiveOptionalButtonGroup(QButtonGroup):
 
         if toggled:
             self._checkedButton = button
+
+
+class DelayedSignalSlotConnector(QObject):
+    def __init__(self, signal, slot, delay: int = 1000, parent=None):
+        super().__init__(parent)
+        self._slot = slot
+        self._delay = delay
+        self._signal_args = ()
+        self._signal_kwargs = {}
+
+        self._timer = QTimer()
+        self._timer.setSingleShot(True)
+        self._timer.timeout.connect(self._call)
+
+        signal.connect(self._on_signal_emitted)
+
+    def _call(self):
+        self._timer.stop()
+        self._slot(*self._signal_args, **self._signal_kwargs)
+
+    def _on_signal_emitted(self, *args, **kwargs):
+        self._signal_args = args
+        self._signal_kwargs = kwargs
+        self._timer.start(self._delay)
