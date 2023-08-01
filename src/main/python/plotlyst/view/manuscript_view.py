@@ -104,7 +104,9 @@ class ManuscriptView(AbstractNovelView):
         decr_icon(self._wdgSprint.btnTimer)
         self._spellCheckIcon = Icon()
         self._spellCheckIcon.setIcon(IconRegistry.from_name('fa5s.spell-check'))
+        self._spellCheckIcon.setToolTip('Spellcheck')
         self._cbSpellCheck = Toggle()
+        self._cbSpellCheck.setToolTip('Toggle spellcheck')
         self._btnContext = tool_btn(IconRegistry.context_icon(), 'Manuscript settings')
         transparent(self._btnContext)
 
