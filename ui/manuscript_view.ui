@@ -426,7 +426,20 @@
                   <number>2</number>
                  </property>
                  <item>
-                  <spacer name="verticalSpacer_3">
+                  <widget class="QTextEdit" name="textSynopsis">
+                   <property name="placeholderText">
+                    <string>Summarize this scene</string>
+                   </property>
+                   <property name="white-bg" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rounded" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="verticalSpacer">
                    <property name="orientation">
                     <enum>Qt::Vertical</enum>
                    </property>
@@ -867,7 +880,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>80</width>
+             <width>98</width>
              <height>70</height>
             </rect>
            </property>
