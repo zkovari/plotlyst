@@ -475,3 +475,22 @@ class NovelSyncButton(QPushButton):
         self._wdgSync.btnSync.setHidden(updated)
 
         self._wdgSync.lblUpdateMessage.setText(self.UP_TO_DATE_MSG if updated else self.UPDATES_AVAILABLE_MSG)
+
+
+class EyeToggle(QToolButton):
+    def __init__(self, parent=None):
+        super(EyeToggle, self).__init__(parent)
+        self.setCheckable(True)
+        pointy(self)
+        transparent(self)
+        self.toggled.connect(self._toggled)
+
+        self._toggled(False)
+
+    def _toggled(self, toggled: bool):
+        if toggled:
+            self.setIcon(IconRegistry.from_name('ei.eye-open'))
+            translucent(self, 1)
+        else:
+            self.setIcon(IconRegistry.from_name('ei.eye-close'))
+            translucent(self)

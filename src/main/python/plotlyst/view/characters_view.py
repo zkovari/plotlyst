@@ -48,6 +48,7 @@ from src.main.python.plotlyst.view.style.base import apply_bg_image
 from src.main.python.plotlyst.view.widget.cards import CharacterCard, CardSizeRatio
 from src.main.python.plotlyst.view.widget.character import CharacterComparisonWidget, LayoutType, \
     CharacterComparisonAttribute
+from src.main.python.plotlyst.view.widget.character.comp import CharactersTreeView
 from src.main.python.plotlyst.view.widget.character.relations import RelationsView, RelationsSelectorBox
 from src.main.python.plotlyst.view.widget.characters import CharacterTimelineWidget, CharactersProgressWidget
 
@@ -141,10 +142,6 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.setCardsWidth(142)
         self._init_cards()
 
-        self.ui.wdgComparisonCharacterSelector.setExclusive(False)
-        transparent(self.ui.btnCharactersLabel)
-        self.ui.btnCharactersLabel.setIcon(IconRegistry.character_icon())
-        underline(self.ui.btnCharactersLabel)
         transparent(self.ui.btnComparisonLabel)
         underline(self.ui.btnComparisonLabel)
         self.ui.btnComparisonLabel.setIcon(IconRegistry.from_name('mdi.compare-horizontal'))
@@ -154,9 +151,13 @@ class CharactersView(AbstractNovelView):
         self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon())
         self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon())
 
+        self.ui.splitterCompTree.setSizes([150, 500])
         self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
-        self.ui.wdgComparisonCharacterSelector.characterToggled.connect(self._wdgComparison.updateCharacter)
+        self._wdgCharactersCompTree = CharactersTreeView(self.novel)
+        self.ui.wdgCharactersCompTreeParent.layout().addWidget(self._wdgCharactersCompTree)
+
+        self._wdgCharactersCompTree.characterToggled.connect(self._wdgComparison.updateCharacter)
         self.ui.btnHorizontalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
         self.ui.btnVerticalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.VERTICAL))
         self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
@@ -262,7 +263,7 @@ class CharactersView(AbstractNovelView):
             self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
         elif self.ui.btnComparison.isChecked():
             self.ui.wdgToolbar.setVisible(False)
-            self.ui.wdgComparisonCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
+            self._wdgCharactersCompTree.refresh()
         else:
             self.ui.wdgToolbar.setVisible(False)
 

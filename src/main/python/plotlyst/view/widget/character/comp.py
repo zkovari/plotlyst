@@ -22,19 +22,21 @@ from enum import Enum
 from typing import Dict, Optional
 
 from PyQt6 import sip
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
 from overrides import overrides
-from qthandy import vbox, hbox, line, flow, gc, vspacer
+from qthandy import vbox, hbox, line, flow, gc, vspacer, clear_layout, bold
 
-from src.main.python.plotlyst.core.domain import Character
+from src.main.python.plotlyst.core.domain import Character, Novel
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
-from src.main.python.plotlyst.view.icons import set_avatar
+from src.main.python.plotlyst.view.icons import set_avatar, avatars
 from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
+from src.main.python.plotlyst.view.widget.button import EyeToggle
 from src.main.python.plotlyst.view.widget.display import RoleIcon, ChartView
+from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
 class CharacterComparisonAttribute(Enum):
@@ -193,3 +195,54 @@ class CharacterComparisonWidget(QWidget):
             wdg.display(attribute)
 
         self._currentDisplay = attribute
+
+
+class CharacterNode(ContainerNode):
+    characterToggled = pyqtSignal(Character, bool)
+
+    def __init__(self, character: Character, parent=None):
+        super(CharacterNode, self).__init__(character.name, parent)
+        self._character = character
+
+        self.setPlusButtonEnabled(False)
+        self.setMenuEnabled(False)
+        self.setSelectionEnabled(False)
+
+        self._btnVisible = EyeToggle()
+        self._btnVisible.setToolTip('Toggle arc')
+        self._btnVisible.toggled.connect(self._toggled)
+        self._wdgTitle.layout().addWidget(self._btnVisible)
+
+        self.refresh()
+
+    def refresh(self):
+        self._lblTitle.setText(self._character.name)
+        icon = avatars.avatar(self._character, fallback=False)
+        if icon:
+            self._icon.setIcon(icon)
+            self._icon.setVisible(True)
+        else:
+            self._icon.setHidden(True)
+
+    def _toggled(self, toggled: bool):
+        bold(self._lblTitle, toggled)
+        self.characterToggled.emit(self._character, toggled)
+
+
+class CharactersTreeView(TreeView):
+    characterToggled = pyqtSignal(Character, bool)
+
+    def __init__(self, novel: Novel, parent=None):
+        super(CharactersTreeView, self).__init__(parent)
+        self._novel = novel
+        self._centralWidget.setProperty('bg', True)
+
+    def refresh(self):
+        clear_layout(self._centralWidget)
+
+        for character in self._novel.characters:
+            node = CharacterNode(character)
+            node.characterToggled.connect(self.characterToggled.emit)
+            self._centralWidget.layout().addWidget(node)
+
+        self._centralWidget.layout().addWidget(vspacer())
