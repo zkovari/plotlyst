@@ -411,46 +411,20 @@
                <widget class="QWidget" name="pageInfo">
                 <layout class="QVBoxLayout" name="verticalLayout_11">
                  <property name="spacing">
-                  <number>3</number>
+                  <number>6</number>
                  </property>
                  <property name="leftMargin">
                   <number>5</number>
                  </property>
                  <property name="topMargin">
-                  <number>5</number>
+                  <number>15</number>
                  </property>
                  <property name="rightMargin">
-                  <number>2</number>
+                  <number>5</number>
                  </property>
                  <property name="bottomMargin">
                   <number>2</number>
                  </property>
-                 <item>
-                  <widget class="QTextEdit" name="textSynopsis">
-                   <property name="placeholderText">
-                    <string>Summarize this scene</string>
-                   </property>
-                   <property name="white-bg" stdset="0">
-                    <bool>true</bool>
-                   </property>
-                   <property name="rounded" stdset="0">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="verticalSpacer">
-                   <property name="orientation">
-                    <enum>Qt::Vertical</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
                 </layout>
                </widget>
                <widget class="QWidget" name="pageGoal">

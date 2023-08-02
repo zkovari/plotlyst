@@ -367,6 +367,8 @@ class WordTagHighlighter(QSyntaxHighlighter):
 
 
 class ManuscriptTextEdit(TextEditBase):
+    sceneSeparatorClicked = pyqtSignal(Scene)
+
     def __init__(self, parent=None):
         super(ManuscriptTextEdit, self).__init__(parent)
         self.highlighter = GrammarHighlighter(self.document(), checkEnabled=False,
@@ -419,6 +421,9 @@ class ManuscriptTextEdit(TextEditBase):
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         anchor = self.anchorAt(event.pos())
         if anchor and anchor.startswith(SceneSeparatorTextFormatPrefix):
+            scene = self._sceneTextObject.scene(anchor.replace(SceneSeparatorTextFormatPrefix, ''))
+            if scene:
+                self.sceneSeparatorClicked.emit(scene)
             return
 
         super(ManuscriptTextEdit, self).mouseReleaseEvent(event)
@@ -540,6 +545,9 @@ class SceneSeparatorTextObject(QObject, QTextObjectInterface):
         else:
             return ''
 
+    def scene(self, id_str: str) -> Optional[Scene]:
+        return self._scenes.get(id_str)
+
     @overrides
     def intrinsicSize(self, doc: QTextDocument, posInDocument: int, format_: QTextFormat) -> QSizeF:
         metrics = QFontMetrics(self._textedit.font())
@@ -597,6 +605,9 @@ class ManuscriptTextEditor(RichTextEditor):
         _textedit.textChanged.connect(self._textChanged)
         _textedit.setProperty('borderless', True)
         return _textedit
+
+    def manuscriptTextEdit(self) -> ManuscriptTextEdit:
+        return self._textedit
 
     def refresh(self):
         if len(self._scenes) == 1:

@@ -48,6 +48,7 @@ from src.main.python.plotlyst.view.widget.input import Toggle
 from src.main.python.plotlyst.view.widget.manuscript import ManuscriptContextMenuWidget, \
     DistractionFreeManuscriptEditor, SprintWidget, ReadabilityWidget
 from src.main.python.plotlyst.view.widget.progress import ProgressChart
+from src.main.python.plotlyst.view.widget.scene.editor import SceneMiniEditor
 from src.main.python.plotlyst.view.widget.scenes import SceneNotesEditor
 from src.main.python.plotlyst.view.widget.tree import TreeSettings
 from src.main.python.plotlyst.view.widget.utility import ask_for_resource
@@ -95,6 +96,11 @@ class ManuscriptView(AbstractNovelView):
                                (self.ui.btnReadability, self.ui.pageReadability)])
 
         bold(self.ui.lblWordCount)
+
+        self._miniSceneEditor = SceneMiniEditor(self.novel)
+        self.ui.pageInfo.layout().addWidget(self._miniSceneEditor)
+        self.ui.pageInfo.layout().addWidget(vspacer())
+        self.ui.textEdit.manuscriptTextEdit().sceneSeparatorClicked.connect(self._scene_separator_clicked)
 
         self._btnDistractionFree = tool_btn(IconRegistry.expand_icon(), 'Enter distraction-free mode', base=True)
         transparent(self._btnDistractionFree)
@@ -255,6 +261,7 @@ class ManuscriptView(AbstractNovelView):
             self.repo.update_scene(scene)
 
         self.ui.textEdit.setScene(scene)
+        self._miniSceneEditor.setScene(scene)
 
         # if scene.title:
         #     self.ui.lineSceneTitle.setText(scene.title)
@@ -295,8 +302,10 @@ class ManuscriptView(AbstractNovelView):
                 self.repo.update_scene(scene)
         if scenes:
             self.ui.textEdit.setChapterScenes(scenes, chapter.title_index(self.novel))
+            self._miniSceneEditor.setScenes(scenes)
         else:
             self.ui.stackedWidget.setCurrentWidget(self.ui.pageEmpty)
+            self._miniSceneEditor.reset()
 
         self.ui.btnNotes.setChecked(False)
         self.ui.btnNotes.setDisabled(True)
@@ -361,12 +370,9 @@ class ManuscriptView(AbstractNovelView):
             qtanim.expand(self.ui.wdgSide)
 
         if btn is self.ui.btnReadability:
-            # self.ui.stackSide.setCurrentWidget(self.ui.pageReadability)
             self._analysis_clicked(self.ui.btnReadability.isChecked())
         elif btn is self.ui.btnGoals:
             self._refresh_target_wc()
-        # elif btn is self.ui.btnSceneInfo:
-        #     self.ui.stackSide.setCurrentWidget(self.ui.pageInfo)
 
     def _spellcheck_toggled(self, toggled: bool):
         translucent(self._spellCheckIcon, 1 if toggled else 0.4)
@@ -401,6 +407,11 @@ class ManuscriptView(AbstractNovelView):
                 self.ui.textEdit.setGrammarCheckEnabled(False)
                 self.ui.textEdit.checkGrammar()
         self.ui.textEdit.setWordTagHighlighterEnabled(toggled)
+
+    def _scene_separator_clicked(self, scene: Scene):
+        if not self.ui.btnSceneInfo.isChecked():
+            self.ui.btnSceneInfo.setChecked(True)
+        self._miniSceneEditor.selectScene(scene)
 
     def _language_changed(self, lang: str):
         emit_info('Novel is getting closed. Persist workspace...')
