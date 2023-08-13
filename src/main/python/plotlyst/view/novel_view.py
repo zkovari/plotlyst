@@ -47,6 +47,7 @@ class NovelView(AbstractNovelView):
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
+        self.ui.btnEvents.setIcon(IconRegistry.from_name('ri.mind-map', color='white'))
         self.ui.btnStructure.setIcon(IconRegistry.story_structure_icon(color='white'))
         self.ui.btnPlot.setIcon(IconRegistry.plot_icon(color='white'))
         self.ui.btnSynopsis.setIcon(IconRegistry.from_name('fa5s.scroll', 'white'))
@@ -121,12 +122,13 @@ class NovelView(AbstractNovelView):
 
         self.ui.wdgTagsContainer.setNovel(self.novel)
 
-        link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnStructure, self.ui.pageStructure),
+        link_buttons_to_pages(self.ui.stackedWidget, [(self.ui.btnEvents, self.ui.pageEvents),
+                                                      (self.ui.btnStructure, self.ui.pageStructure),
                                                       (self.ui.btnPlot, self.ui.pagePlot),
                                                       (self.ui.btnSynopsis, self.ui.pageSynopsis),
                                                       (self.ui.btnTags, self.ui.pageTags),
                                                       (self.ui.btnSettings, self.ui.pageSettings)])
-        self.ui.btnStructure.setChecked(True)
+        self.ui.btnEvents.setChecked(True)
 
         for btn in self.ui.buttonGroup.buttons():
             btn.installEventFilter(OpacityEventFilter(parent=btn, leaveOpacity=0.7, ignoreCheckedButton=True))
