@@ -108,6 +108,8 @@ QPushButton[top-level-nav=true] {
     border-radius: 6px;
     color: white;
     padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
     font: bold;
 }
 QPushButton:disabled[top-level-nav=true] {
