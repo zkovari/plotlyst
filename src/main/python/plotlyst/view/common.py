@@ -327,6 +327,26 @@ def set_tab_visible(tabs: QTabWidget, widget: QWidget, visible: bool = True):
     tabs.setTabVisible(i, visible)
 
 
+def set_tab_enabled(tabs: QTabWidget, widget: QWidget, enabled: bool = True):
+    i = tabs.indexOf(widget)
+    tabs.setTabEnabled(i, enabled)
+
+
+def set_tab_settings(tabs: QTabWidget, widget: QWidget, text: Optional[str] = None, icon: Optional[QIcon] = None,
+                     tooltip: Optional[str] = None, visible: Optional[bool] = None, enabled: Optional[bool] = None):
+    i = tabs.indexOf(widget)
+    if text is not None:
+        tabs.setTabText(i, text)
+    if icon is not None:
+        tabs.setTabIcon(i, icon)
+    if tooltip is not None:
+        tabs.setTabToolTip(i, tooltip)
+    if visible is not None:
+        tabs.setTabVisible(i, visible)
+    if enabled is not None:
+        tabs.setTabEnabled(i, enabled)
+
+
 def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
     def destroy():
         widget.setHidden(True)
