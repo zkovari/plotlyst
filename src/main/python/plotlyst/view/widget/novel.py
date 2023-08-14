@@ -744,7 +744,7 @@ class StoryStructureSelectorDialog(QDialog, Ui_StoryStructureSelectorDialog):
         dialog = StoryStructureSelectorDialog(novel, structure)
         screen = QApplication.screenAt(dialog.pos())
         if screen:
-            dialog.resize(screen.size().width() * 0.9, screen.size().height() * 0.7)
+            dialog.resize(int(screen.size().width() * 0.9), int(screen.size().height() * 0.7))
         else:
             dialog.resize(600, 500)
 
