@@ -17,11 +17,45 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Any
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent
-from PyQt6.QtWidgets import QGraphicsView
+from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem
 from overrides import overrides
+
+from src.main.python.plotlyst.core.domain import Node
+
+
+class NodeItem(QAbstractGraphicsShapeItem):
+    def __init__(self, node: Node, parent=None):
+        super().__init__(parent)
+        self._node = node
+
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setAcceptHoverEvents(True)
+
+        self._posChangedTimer = QTimer()
+        self._posChangedTimer.setInterval(1000)
+        self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
+
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            self._posChangedTimer.start(1000)
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            self._onSelection(value)
+        return super(NodeItem, self).itemChange(change, value)
+
+    def _onSelection(self, selected: bool):
+        pass
+
+    def _posChangedOnTimeout(self):
+        self._posChangedTimer.stop()
+        self._node.x = self.scenePos().x()
+        self._node.y = self.scenePos().y()
 
 
 class BaseGraphicsView(QGraphicsView):
