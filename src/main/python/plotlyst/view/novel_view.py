@@ -38,6 +38,7 @@ from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
+from src.main.python.plotlyst.view.widget.events_map import EventsMindMapView
 from src.main.python.plotlyst.view.widget.plot import PlotEditor
 
 
@@ -115,6 +116,9 @@ class NovelView(AbstractNovelView):
             self.ui.lblSynopsisWords.setWordCount(self.ui.textSynopsis.textEdit.statistics().word_count)
         self.ui.textSynopsis.textEdit.textChanged.connect(self._synopsis_changed)
 
+        self._eventsMap = EventsMindMapView(self.novel)
+        self.ui.wdgEventsMapParent.layout().addWidget(self._eventsMap)
+
         self.ui.wdgStructure.setNovel(self.novel)
         self.ui.wdgTitle.setFixedHeight(150)
         apply_border_image(self.ui.wdgTitle, resource_registry.frame1)
@@ -123,7 +127,7 @@ class NovelView(AbstractNovelView):
         self.ui.wdgPlotContainer.layout().addWidget(self.plot_editor)
 
         self.ui.wdgTagsContainer.setNovel(self.novel)
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabSynopsis)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabEvents)
 
     @overrides
     def refresh(self):
