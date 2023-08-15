@@ -17,14 +17,50 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any
+from typing import Any, Optional
 
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent
-from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor
+from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node
+
+
+class ConnectorItem(QGraphicsPathItem):
+
+    def __init__(self, source: QAbstractGraphicsShapeItem, target: QAbstractGraphicsShapeItem,
+                 pen: Optional[QPen] = None):
+        super(ConnectorItem, self).__init__()
+        self._source = source
+        self._target = target
+        if pen:
+            self.setPen(pen)
+        else:
+            self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
+
+        self.setPos(self._source.sceneBoundingRect().center())
+
+        self.rearrange()
+
+    def rearrange(self):
+        path = QPainterPath()
+        target_x = self._target.scenePos().x() - self.pos().x()
+        target_y = self._target.scenePos().y()
+        # if self._target.scenePos().y() < 0:
+        path.quadTo(0, target_y / 2, target_x, target_y - self._source.scenePos().y())
+        # elif self._target.scenePos().y() > 0:
+        #     path.quadTo(0, target_y / 2, target_x, target_y)
+        # else:
+        #     path.lineTo(target_x, target_y)
+
+        self.setPath(path)
+
+    def source(self) -> QAbstractGraphicsShapeItem:
+        return self._source
+
+    def target(self) -> QAbstractGraphicsShapeItem:
+        return self._target
 
 
 class NodeItem(QAbstractGraphicsShapeItem):

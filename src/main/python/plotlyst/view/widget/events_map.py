@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import QRectF, Qt, QPointF
+from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal
 from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent
 from PyQt6.QtWidgets import QGraphicsScene, QWidget, QAbstractGraphicsShapeItem, QGraphicsSceneHoverEvent, \
     QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem
@@ -28,7 +28,7 @@ from overrides import overrides
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, CharacterNode
 from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, NodeItem
+from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, NodeItem, ConnectorItem
 
 
 def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
@@ -37,7 +37,7 @@ def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
 
 
 class SocketItem(QAbstractGraphicsShapeItem):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(SocketItem, self).__init__(parent)
         self._parent = parent
         self._size = 16
@@ -75,7 +75,15 @@ class SocketItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        self.mindMapScene().startLink()
+        self.mindMapScene().startLink(self)
+
+
+class PlaceholderItem(SocketItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setEnabled(False)
+        self.setAcceptHoverEvents(False)
+        self.setToolTip('Click to add a new node')
 
 
 class CharacterItem(NodeItem):
@@ -123,10 +131,14 @@ class CharacterItem(NodeItem):
 
 
 class EventsMindMapScene(QGraphicsScene):
+    addNewNode = pyqtSignal(PlaceholderItem)
+
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
         self._linkMode: bool = False
+        self._placeholder: Optional[PlaceholderItem] = None
+        self._connector: Optional[ConnectorItem] = None
 
         item = CharacterItem(novel.characters[0], CharacterNode(50, 50))
         item.setPos(50, 50)
@@ -135,22 +147,47 @@ class EventsMindMapScene(QGraphicsScene):
     def linkMode(self) -> bool:
         return self._linkMode
 
-    def startLink(self):
+    def startLink(self, source: QAbstractGraphicsShapeItem):
         self._linkMode = True
+        self._placeholder = PlaceholderItem()
+        self.addItem(self._placeholder)
+        self._connector = ConnectorItem(source, self._placeholder)
+        self.addItem(self._connector)
+
+        self._placeholder.setPos(source.scenePos())
+        self._connector.rearrange()
 
     def endLink(self):
         self._linkMode = False
+        self.removeItem(self._connector)
+        self.removeItem(self._placeholder)
+        self._connector = None
+        self._placeholder = None
 
     @overrides
     def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         if self.linkMode():
-            print(event.scenePos())
+            self._placeholder.setPos(event.scenePos())
+            self._connector.rearrange()
         super().mouseMoveEvent(event)
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape and self.linkMode():
             self.endLink()
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self.linkMode():
+            if event.button() & Qt.MouseButton.RightButton:
+                self.endLink()
+            else:
+                print('add new node')
+                self.addNewNode.emit(self._placeholder)
+            # view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
+            # self._itemEditor.edit(item, newItem, self.mapToGlobal(view_pos))
+                self.endLink()
+        super().mouseReleaseEvent(event)
 
 
 class EventsMindMapView(BaseGraphicsView):
