@@ -218,8 +218,6 @@ class EventItem(ConnectableNode):
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
         painter.drawRoundedRect(self._margin, self._margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
 
-        draw_helpers(painter, self)
-
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.mindMapScene().editEventText(self)
@@ -283,8 +281,6 @@ class CharacterItem(ConnectableNode):
             painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
             painter.drawRoundedRect(self._margin, self._margin, self._size, self._size, 2, 2)
 
-        draw_helpers(painter, self)
-
         avatar = avatars.avatar(self._character)
         avatar.paint(painter, self._margin, self._margin, self._size, self._size)
 
@@ -339,6 +335,7 @@ class EventsMindMapScene(QGraphicsScene):
     def startLink(self, source: SocketItem):
         self._linkMode = True
         self._placeholder = PlaceholderItem()
+        self._placeholder.setVisible(False)
         self.addItem(self._placeholder)
         self._connector = ConnectorItem(source, self._placeholder)
         self.addItem(self._connector)
