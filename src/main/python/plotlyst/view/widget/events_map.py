@@ -112,7 +112,7 @@ class PlaceholderItem(SocketItem):
 class EventItem(NodeItem):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
-        self._text: str = 'Type'
+        self._text: str = 'Type this event'
         self.setPos(node.x, node.y)
 
         self._margin = 30
@@ -124,6 +124,21 @@ class EventItem(NodeItem):
         self._height = 1
         self._nestedRectWidth = 1
         self._nestedRectHeight = 1
+
+        self._socketLeft = SocketItem(self)
+        self._socketTopLeft = SocketItem(self)
+        self._socketTopCenter = SocketItem(self)
+        self._socketTopRight = SocketItem(self)
+        self._socketRight = SocketItem(self)
+        self._socketBottomLeft = SocketItem(self)
+        self._socketBottomCenter = SocketItem(self)
+        self._socketBottomRight = SocketItem(self)
+        self._sockets = [self._socketLeft,
+                         self._socketTopLeft, self._socketTopCenter, self._socketTopRight,
+                         self._socketRight,
+                         self._socketBottomRight, self._socketBottomCenter, self._socketBottomLeft]
+        for socket in self._sockets:
+            socket.setVisible(False)
 
         self._recalculateRect()
 
@@ -146,7 +161,7 @@ class EventItem(NodeItem):
 
         painter.setPen(QPen(Qt.GlobalColor.black, 1))
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
-        painter.drawRoundedRect(self._margin, self._margin, self._nestedRectWidth, self._nestedRectHeight, 18, 18)
+        painter.drawRoundedRect(self._margin, self._margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
 
         draw_helpers(painter, self)
 
@@ -158,6 +173,24 @@ class EventItem(NodeItem):
 
         self._nestedRectWidth = self._textRect.width() + self._padding * 2
         self._nestedRectHeight = self._textRect.height() + self._padding * 2
+
+        socketWidth = self._socketLeft.boundingRect().width()
+        socketRad = socketWidth / 2
+        socketPadding = (self._margin - socketWidth) / 2
+        self._socketTopCenter.setPos(self._width / 2 - socketRad, socketPadding)
+        self._socketTopLeft.setPos(self._nestedRectWidth / 3 - socketRad, socketPadding)
+        self._socketTopRight.setPos(self._nestedRectWidth, socketPadding)
+        self._socketRight.setPos(self._width - self._margin + socketPadding, self._height / 2 - socketRad)
+        self._socketBottomCenter.setPos(self._width / 2 - socketRad, self._height - self._margin + socketPadding)
+        self._socketBottomLeft.setPos(self._nestedRectWidth / 3 - socketRad,
+                                      self._height - self._margin + socketPadding)
+        self._socketBottomRight.setPos(self._nestedRectWidth, self._height - self._margin + socketPadding)
+        self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        for socket in self._sockets:
+            socket.setVisible(selected)
 
 
 class CharacterItem(NodeItem):
@@ -173,9 +206,9 @@ class CharacterItem(NodeItem):
         self._socketBottom = SocketItem(self)
         self._socketLeft = SocketItem(self)
         self._sockets = [self._socketLeft, self._socketTop, self._socketRight, self._socketBottom]
-        width = self._socketTop.boundingRect().width()
-        half = self._margin + (self._size - width) / 2
-        padding = (self._margin - width) / 2
+        socketWidth = self._socketTop.boundingRect().width()
+        half = self._margin + (self._size - socketWidth) / 2
+        padding = (self._margin - socketWidth) / 2
         self._socketTop.setPos(half, padding)
         self._socketRight.setPos(self._size + self._margin + padding, half)
         self._socketBottom.setPos(half, self._size + self._margin + padding)
@@ -202,6 +235,7 @@ class CharacterItem(NodeItem):
         avatar = avatars.avatar(self._character)
         avatar.paint(painter, self._margin, self._margin, self._size, self._size)
 
+    @overrides
     def _onSelection(self, selected: bool):
         for socket in self._sockets:
             socket.setVisible(selected)
