@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal, QRect, QPoint
 from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics
@@ -57,6 +57,14 @@ def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
 
 class ItemType(Enum):
     Event = 0
+
+
+class MindMapNode(NodeItem):
+    def mindMapScene(self) -> 'EventsMindMapScene':
+        return self.scene()
+
+    def linkMode(self) -> bool:
+        return self.mindMapScene().linkMode()
 
 
 class SocketItem(QAbstractGraphicsShapeItem):
@@ -109,7 +117,31 @@ class PlaceholderItem(SocketItem):
         self.setToolTip('Click to add a new node')
 
 
-class EventItem(NodeItem):
+class ConnectableNode(MindMapNode):
+    def __init__(self, node: Node, parent=None):
+        super().__init__(node, parent)
+        self._sockets: List[SocketItem] = []
+
+    @overrides
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if self.linkMode():
+            self._setSocketsVisible()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        if not self.isSelected() and self.linkMode():
+            self._setSocketsVisible(False)
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        self._setSocketsVisible(selected)
+
+    def _setSocketsVisible(self, visible: bool = True):
+        for socket in self._sockets:
+            socket.setVisible(visible)
+
+
+class EventItem(ConnectableNode):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
         self._text: str = 'Type this event'
@@ -133,12 +165,11 @@ class EventItem(NodeItem):
         self._socketBottomLeft = SocketItem(self)
         self._socketBottomCenter = SocketItem(self)
         self._socketBottomRight = SocketItem(self)
-        self._sockets = [self._socketLeft,
-                         self._socketTopLeft, self._socketTopCenter, self._socketTopRight,
-                         self._socketRight,
-                         self._socketBottomRight, self._socketBottomCenter, self._socketBottomLeft]
-        for socket in self._sockets:
-            socket.setVisible(False)
+        self._sockets.extend([self._socketLeft,
+                              self._socketTopLeft, self._socketTopCenter, self._socketTopRight,
+                              self._socketRight,
+                              self._socketBottomRight, self._socketBottomCenter, self._socketBottomLeft])
+        self._setSocketsVisible(False)
 
         self._recalculateRect()
 
@@ -187,13 +218,8 @@ class EventItem(NodeItem):
         self._socketBottomRight.setPos(self._nestedRectWidth, self._height - self._margin + socketPadding)
         self._socketLeft.setPos(socketPadding, self._height / 2 - socketRad)
 
-    @overrides
-    def _onSelection(self, selected: bool):
-        for socket in self._sockets:
-            socket.setVisible(selected)
 
-
-class CharacterItem(NodeItem):
+class CharacterItem(ConnectableNode):
     def __init__(self, character: Character, node: CharacterNode, parent=None):
         super().__init__(node, parent)
         self._character = character
@@ -205,7 +231,7 @@ class CharacterItem(NodeItem):
         self._socketRight = SocketItem(self)
         self._socketBottom = SocketItem(self)
         self._socketLeft = SocketItem(self)
-        self._sockets = [self._socketLeft, self._socketTop, self._socketRight, self._socketBottom]
+        self._sockets.extend([self._socketLeft, self._socketTop, self._socketRight, self._socketBottom])
         socketWidth = self._socketTop.boundingRect().width()
         half = self._margin + (self._size - socketWidth) / 2
         padding = (self._margin - socketWidth) / 2
@@ -214,8 +240,7 @@ class CharacterItem(NodeItem):
         self._socketBottom.setPos(half, self._size + self._margin + padding)
         self._socketLeft.setPos(padding, half)
 
-        for socket in self._sockets:
-            socket.setVisible(False)
+        self._setSocketsVisible(False)
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -234,11 +259,6 @@ class CharacterItem(NodeItem):
 
         avatar = avatars.avatar(self._character)
         avatar.paint(painter, self._margin, self._margin, self._size, self._size)
-
-    @overrides
-    def _onSelection(self, selected: bool):
-        for socket in self._sockets:
-            socket.setVisible(selected)
 
 
 class EventsMindMapScene(QGraphicsScene):
