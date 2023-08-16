@@ -25,6 +25,7 @@ from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics
 from PyQt6.QtWidgets import QGraphicsScene, QWidget, QAbstractGraphicsShapeItem, QGraphicsSceneHoverEvent, \
     QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QGraphicsTextItem, QApplication
 from overrides import overrides
+from qthandy import transparent
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
@@ -32,6 +33,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, CharacterNode
 from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import avatars
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, NodeItem, ConnectorItem
+from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
 
 
 def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
@@ -179,6 +181,15 @@ class EventItem(ConnectableNode):
     def setText(self, text: str):
         self._text = text
         self._recalculateRect()
+        self.prepareGeometryChange()
+        self.setSelected(False)
+        self.update()
+
+    def textRect(self) -> QRect:
+        return self._textRect
+
+    def textSceneRect(self) -> QRectF:
+        return self.mapRectToScene(self._textRect.toRectF())
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -195,6 +206,10 @@ class EventItem(ConnectableNode):
         painter.drawRoundedRect(self._margin, self._margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
 
         draw_helpers(painter, self)
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.mindMapScene().editEventText(self)
 
     def _recalculateRect(self):
         self._textRect = self._metrics.boundingRect(self._text)
@@ -261,8 +276,29 @@ class CharacterItem(ConnectableNode):
         avatar.paint(painter, self._margin, self._margin, self._size, self._size)
 
 
+class TextLineEditorPopup(MenuWidget):
+
+    def __init__(self, text: str, rect: QRect, parent=None):
+        super().__init__(parent)
+        transparent(self)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._lineEdit = AutoAdjustableLineEdit(defaultWidth=rect.width())
+        self._lineEdit.setText(text)
+        self.addWidget(self._lineEdit)
+
+        self._lineEdit.editingFinished.connect(self.hide)
+
+    @overrides
+    def showEvent(self, QShowEvent):
+        self._lineEdit.setFocus()
+
+    def text(self) -> str:
+        return self._lineEdit.text()
+
+
 class EventsMindMapScene(QGraphicsScene):
     addNewNode = pyqtSignal(PlaceholderItem)
+    editEvent = pyqtSignal(EventItem)
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -300,6 +336,9 @@ class EventsMindMapScene(QGraphicsScene):
         self._connector = None
         self._placeholder = None
 
+    def editEventText(self, item: EventItem):
+        self.editEvent.emit(item)
+
     def addNewItem(self, pos: QPointF, itemType: ItemType):
         if itemType == ItemType.Event:
             item = QGraphicsTextItem('Type')
@@ -322,8 +361,15 @@ class EventsMindMapScene(QGraphicsScene):
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Escape and self.linkMode():
-            self.endLink()
+        if event.key() == Qt.Key.Key_Escape:
+            if self.linkMode():
+                self.endLink()
+            else:
+                self.clearSelection()
+        elif len(self.selectedItems()) == 1:
+            item = self.selectedItems()[0]
+            if isinstance(item, EventItem):
+                self.editEvent.emit(item)
 
     @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
@@ -331,7 +377,6 @@ class EventsMindMapScene(QGraphicsScene):
             if event.button() & Qt.MouseButton.RightButton:
                 self.endLink()
             else:
-                print('add new node')
                 self.addNewNode.emit(self._placeholder)
         super().mouseReleaseEvent(event)
 
@@ -348,12 +393,23 @@ class EventsMindMapView(BaseGraphicsView):
         # self.scale(0.6, 0.6)
 
         self._scene.addNewNode.connect(self._displayNewNodeMenu)
+        self._scene.editEvent.connect(self._editEvent)
 
     def _displayNewNodeMenu(self, placeholder: PlaceholderItem):
-        view_pos = self.mapFromScene(placeholder.sceneBoundingRect().center())
         menu = MenuWidget(self)
         menu.addAction(
             action('Event',
                    slot=lambda: self._scene.addNewItem(placeholder.sceneBoundingRect().center(), ItemType.Event)))
+
+        view_pos = self.mapFromScene(placeholder.sceneBoundingRect().center())
         menu.exec(self.mapToGlobal(view_pos))
-        # self._itemEditor.edit(item, newItem, self.mapToGlobal(view_pos))
+
+    def _editEvent(self, item: EventItem):
+        def setText(text: str):
+            item.setText(text)
+
+        popup = TextLineEditorPopup(item.text(), item.textRect(), parent=self)
+        view_pos = self.mapFromScene(item.textSceneRect().topLeft())
+        popup.exec(self.mapToGlobal(view_pos))
+
+        popup.aboutToHide.connect(lambda: setText(popup.text()))
