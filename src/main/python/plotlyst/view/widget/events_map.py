@@ -388,7 +388,8 @@ class EventsMindMapView(BaseGraphicsView):
         self._novel = novel
         self._scene = EventsMindMapScene(self._novel)
         self.setScene(self._scene)
-        self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
+        # self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
+        self.setBackgroundBrush(QColor('#e9ecef'))
 
         # self.scale(0.6, 0.6)
 
