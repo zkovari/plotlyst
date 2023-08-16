@@ -28,7 +28,7 @@ from overrides import overrides
 from qthandy import transparent
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import RELAXED_WHITE_COLOR, PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, CharacterNode, Node
 from src.main.python.plotlyst.view.common import action
 from src.main.python.plotlyst.view.icons import avatars
@@ -76,7 +76,8 @@ class SocketItem(QAbstractGraphicsShapeItem):
         self._size = 16
         self.setAcceptHoverEvents(True)
         self._hovered = False
-        self.setToolTip('Link')
+        self._linkAvailable = True
+        self.setToolTip('Connect')
 
     @overrides
     def boundingRect(self):
@@ -84,31 +85,43 @@ class SocketItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR)))
-        painter.setBrush(QColor(PLOTLYST_SECONDARY_COLOR))
+        if self._linkAvailable:
+            painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
+        else:
+            painter.setPen(QPen(QColor('lightgrey'), 2))
+
         radius = 7 if self._hovered else 5
         painter.drawEllipse(QPointF(self._size / 2, self._size // 2), radius, radius)
+        if self._hovered and self.mindMapScene().linkMode():
+            painter.drawEllipse(QPointF(self._size / 2, self._size // 2), 2, 2)
 
     @overrides
     def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         self._hovered = True
+        if self.mindMapScene().linkMode() and self.mindMapScene().linkSource().parentItem() == self.parentItem():
+            self._linkAvailable = False
+        else:
+            self._linkAvailable = True
+        self.setToolTip('Connect' if self._linkAvailable else 'Cannot connect to itself')
         self.update()
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         self._hovered = False
+        self._linkAvailable = True
+        self.setToolTip('Connect')
         self.update()
 
     @overrides
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         event.accept()
 
+    @overrides
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self.mindMapScene().startLink(self)
+
     def mindMapScene(self) -> 'EventsMindMapScene':
         return self.scene()
-
-    @overrides
-    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        self.mindMapScene().startLink(self)
 
 
 class PlaceholderItem(SocketItem):
@@ -319,7 +332,11 @@ class EventsMindMapScene(QGraphicsScene):
     def linkMode(self) -> bool:
         return self._linkMode
 
-    def startLink(self, source: QAbstractGraphicsShapeItem):
+    def linkSource(self) -> Optional[SocketItem]:
+        if self._connector is not None:
+            return self._connector.source()
+
+    def startLink(self, source: SocketItem):
         self._linkMode = True
         self._placeholder = PlaceholderItem()
         self.addItem(self._placeholder)
@@ -366,7 +383,7 @@ class EventsMindMapScene(QGraphicsScene):
                 self.endLink()
             else:
                 self.clearSelection()
-        elif len(self.selectedItems()) == 1:
+        elif not event.modifiers() and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
             if isinstance(item, EventItem):
                 self.editEvent.emit(item)
