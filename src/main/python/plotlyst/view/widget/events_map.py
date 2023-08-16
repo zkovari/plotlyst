@@ -118,7 +118,11 @@ class SocketItem(QAbstractGraphicsShapeItem):
 
     @overrides
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        self.mindMapScene().startLink(self)
+        if self.mindMapScene().linkMode():
+            if self.mindMapScene().linkSource().parentItem() != self.parentItem():
+                self.mindMapScene().link(self)
+        else:
+            self.mindMapScene().startLink(self)
 
     def mindMapScene(self) -> 'EventsMindMapScene':
         return self.scene()
@@ -336,6 +340,7 @@ class EventsMindMapScene(QGraphicsScene):
         self._linkMode = True
         self._placeholder = PlaceholderItem()
         self._placeholder.setVisible(False)
+        self._placeholder.setEnabled(False)
         self.addItem(self._placeholder)
         self._connector = ConnectorItem(source, self._placeholder)
         self.addItem(self._connector)
@@ -349,6 +354,11 @@ class EventsMindMapScene(QGraphicsScene):
         self.removeItem(self._placeholder)
         self._connector = None
         self._placeholder = None
+
+    def link(self, target: SocketItem):
+        connector = ConnectorItem(self._connector.source(), target)
+        self.addItem(connector)
+        self.endLink()
 
     def editEventText(self, item: EventItem):
         self.editEvent.emit(item)
@@ -390,8 +400,9 @@ class EventsMindMapScene(QGraphicsScene):
         if self.linkMode():
             if event.button() & Qt.MouseButton.RightButton:
                 self.endLink()
-            else:
-                self.addNewNode.emit(self._placeholder)
+            # else:
+            #     print('add new from scene')
+            #     self.addNewNode.emit(self._placeholder)
         super().mouseReleaseEvent(event)
 
 
