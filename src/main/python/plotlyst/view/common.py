@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import hbox, vbox, margins, gc
+from qthandy import hbox, vbox, margins, gc, transparent
 
 from src.main.python.plotlyst.env import app_env
 
@@ -372,7 +372,7 @@ def insert_after(parent: QWidget, widget: QWidget, reference: QWidget):
 
 
 def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
-             icon_resize: bool = True) -> QToolButton:
+             icon_resize: bool = True, transparent_: bool = False, parent=None) -> QToolButton:
     btn = QToolButton()
     btn.setIcon(icon)
     btn.setToolTip(tooltip)
@@ -382,7 +382,10 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
         btn.setProperty('base', True)
     if icon_resize:
         btn.installEventFilter(ButtonPressResizeEventFilter(btn))
-
+    if transparent_:
+        transparent(btn)
+    if parent:
+        btn.setParent(parent)
     return btn
 
 

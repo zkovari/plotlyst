@@ -21,17 +21,17 @@ from enum import Enum
 from typing import Optional, List
 
 from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal, QRect, QPoint
-from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics
+from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent
 from PyQt6.QtWidgets import QGraphicsScene, QWidget, QAbstractGraphicsShapeItem, QGraphicsSceneHoverEvent, \
-    QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QGraphicsTextItem, QApplication
+    QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QGraphicsTextItem, QApplication, QFrame
 from overrides import overrides
-from qthandy import transparent
+from qthandy import transparent, hbox
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, CharacterNode, Node
-from src.main.python.plotlyst.view.common import action
-from src.main.python.plotlyst.view.icons import avatars
+from src.main.python.plotlyst.view.common import action, tool_btn, shadow
+from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, NodeItem, ConnectorItem
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
 
@@ -435,6 +435,28 @@ class EventsMindMapView(BaseGraphicsView):
         self._scene.addNewNode.connect(self._displayNewNodeMenu)
         self._scene.editEvent.connect(self._editEvent)
 
+        self._wdgZoomBar = QFrame(self)
+        self._wdgZoomBar.setFrameShape(QFrame.Shape.StyledPanel)
+        self._wdgZoomBar.setProperty('relaxed-white-bg', True)
+        shadow(self._wdgZoomBar)
+        hbox(self._wdgZoomBar, 0, spacing=1)
+
+        self._btnZoomIn = tool_btn(IconRegistry.plus_circle_icon('lightgrey'), 'Zoom in', transparent_=True,
+                                   parent=self._wdgZoomBar)
+        self._btnZoomOut = tool_btn(IconRegistry.minus_icon('lightgrey'), 'Zoom out', transparent_=True,
+                                    parent=self._wdgZoomBar)
+        self._btnZoomIn.clicked.connect(lambda: self.scale(1.1, 1.1))
+        self._btnZoomOut.clicked.connect(lambda: self.scale(0.9, 0.9))
+
+        self._wdgZoomBar.layout().addWidget(self._btnZoomOut)
+        self._wdgZoomBar.layout().addWidget(self._btnZoomIn)
+        self.__arrangeZoomButtons()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super(EventsMindMapView, self).resizeEvent(event)
+        self.__arrangeZoomButtons()
+
     def _displayNewNodeMenu(self, placeholder: PlaceholderItem):
         menu = MenuWidget(self)
         menu.addAction(
@@ -453,3 +475,7 @@ class EventsMindMapView(BaseGraphicsView):
         popup.exec(self.mapToGlobal(view_pos))
 
         popup.aboutToHide.connect(lambda: setText(popup.text()))
+
+    def __arrangeZoomButtons(self):
+        self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.height() - 10, self._wdgZoomBar.width(),
+                                     self._wdgZoomBar.height())
