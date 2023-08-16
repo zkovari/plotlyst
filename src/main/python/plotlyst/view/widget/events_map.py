@@ -70,14 +70,16 @@ class MindMapNode(NodeItem):
 
 
 class SocketItem(QAbstractGraphicsShapeItem):
-    def __init__(self, parent=None):
+    def __init__(self, parent: 'ConnectableNode'):
         super(SocketItem, self).__init__(parent)
-        self._parent = parent
+
         self._size = 16
         self.setAcceptHoverEvents(True)
         self._hovered = False
         self._linkAvailable = True
         self.setToolTip('Connect')
+
+        self._connectors: List[ConnectorItem] = []
 
     @overrides
     def boundingRect(self):
@@ -124,6 +126,13 @@ class SocketItem(QAbstractGraphicsShapeItem):
         else:
             self.mindMapScene().startLink(self)
 
+    def addConnector(self, connector: ConnectorItem):
+        self._connectors.append(connector)
+
+    def rearrangeConnectors(self):
+        for con in self._connectors:
+            con.rearrange()
+
     def mindMapScene(self) -> 'EventsMindMapScene':
         return self.scene()
 
@@ -150,6 +159,11 @@ class ConnectableNode(MindMapNode):
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
         if not self.isSelected() and self.linkMode():
             self._setSocketsVisible(False)
+
+    @overrides
+    def _onPosChanged(self):
+        for socket in self._sockets:
+            socket.rearrangeConnectors()
 
     @overrides
     def _onSelection(self, selected: bool):
@@ -318,23 +332,21 @@ class EventsMindMapScene(QGraphicsScene):
         self._novel = novel
         self._linkMode: bool = False
         self._placeholder: Optional[PlaceholderItem] = None
-        self._connector: Optional[ConnectorItem] = None
+        self._connectorPlaceholder: Optional[ConnectorItem] = None
 
         characterItem = CharacterItem(novel.characters[0], CharacterNode(50, 50))
         characterItem.setPos(50, 50)
 
         eventItem = EventItem(Node(400, 100))
-        connector = ConnectorItem(characterItem.rightSocket(), eventItem)
         self.addItem(characterItem)
         self.addItem(eventItem)
-        self.addItem(connector)
 
     def linkMode(self) -> bool:
         return self._linkMode
 
     def linkSource(self) -> Optional[SocketItem]:
-        if self._connector is not None:
-            return self._connector.source()
+        if self._connectorPlaceholder is not None:
+            return self._connectorPlaceholder.source()
 
     def startLink(self, source: SocketItem):
         self._linkMode = True
@@ -342,21 +354,23 @@ class EventsMindMapScene(QGraphicsScene):
         self._placeholder.setVisible(False)
         self._placeholder.setEnabled(False)
         self.addItem(self._placeholder)
-        self._connector = ConnectorItem(source, self._placeholder)
-        self.addItem(self._connector)
+        self._connectorPlaceholder = ConnectorItem(source, self._placeholder)
+        self.addItem(self._connectorPlaceholder)
 
         self._placeholder.setPos(source.scenePos())
-        self._connector.rearrange()
+        self._connectorPlaceholder.rearrange()
 
     def endLink(self):
         self._linkMode = False
-        self.removeItem(self._connector)
+        self.removeItem(self._connectorPlaceholder)
         self.removeItem(self._placeholder)
-        self._connector = None
+        self._connectorPlaceholder = None
         self._placeholder = None
 
     def link(self, target: SocketItem):
-        connector = ConnectorItem(self._connector.source(), target)
+        connector = ConnectorItem(self._connectorPlaceholder.source(), target)
+        self._connectorPlaceholder.source().addConnector(connector)
+        target.addConnector(connector)
         self.addItem(connector)
         self.endLink()
 
@@ -370,7 +384,7 @@ class EventsMindMapScene(QGraphicsScene):
             return
 
         item.setPos(pos)
-        connector = ConnectorItem(self._connector.source(), item)
+        connector = ConnectorItem(self._connectorPlaceholder.source(), item)
         self.addItem(item)
         self.addItem(connector)
 
@@ -380,7 +394,7 @@ class EventsMindMapScene(QGraphicsScene):
     def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         if self.linkMode():
             self._placeholder.setPos(event.scenePos())
-            self._connector.rearrange()
+            self._connectorPlaceholder.rearrange()
         super().mouseMoveEvent(event)
 
     @overrides

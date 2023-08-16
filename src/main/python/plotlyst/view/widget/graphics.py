@@ -39,16 +39,17 @@ class ConnectorItem(QGraphicsPathItem):
         else:
             self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
 
-        self.setPos(self._source.sceneBoundingRect().center())
-
+        # self.setPos(self._source.sceneBoundingRect().center())
         self.rearrange()
 
     def rearrange(self):
+        self.setPos(self._source.sceneBoundingRect().center())
+
         path = QPainterPath()
         target_x = self._target.scenePos().x() - self.pos().x()
         target_y = self._target.scenePos().y()
-        # if self._target.scenePos().y() < 0:
         path.quadTo(0, target_y / 2, target_x, target_y - self._source.scenePos().y())
+        # if self._target.scenePos().y() < 0:
         # elif self._target.scenePos().y() > 0:
         #     path.quadTo(0, target_y / 2, target_x, target_y)
         # else:
@@ -81,9 +82,13 @@ class NodeItem(QAbstractGraphicsShapeItem):
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self._posChangedTimer.start(1000)
+            self._onPosChanged()
         elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             self._onSelection(value)
         return super(NodeItem, self).itemChange(change, value)
+
+    def _onPosChanged(self):
+        pass
 
     def _onSelection(self, selected: bool):
         pass
