@@ -79,6 +79,8 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
         self._blockSave = False
         self.setToolTip('Character summary')
         self.setPlaceholderText('Character summary...')
+        self.setProperty('rounded', True)
+        self.setProperty('white-bg', True)
         self.setMaximumSize(250, 100)
         self.setMinimumWidth(200)
         self.setTabChangesFocus(True)
