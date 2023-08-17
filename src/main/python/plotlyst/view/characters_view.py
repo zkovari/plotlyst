@@ -165,6 +165,8 @@ class CharactersView(AbstractNovelView):
         self.ui.btnGridComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.FLOW))
         self.ui.btnSummaryComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.SUMMARY))
+        self.ui.btnFacultiesComparison.clicked.connect(
+            lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.FACULTIES))
         self.ui.btnBigFiveComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
         for btn in self.ui.btnGroupComparison.buttons():

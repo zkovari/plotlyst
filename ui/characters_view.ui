@@ -555,8 +555,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>98</width>
-                <height>28</height>
+                <width>84</width>
+                <height>16</height>
                </rect>
               </property>
               <property name="bg-image" stdset="0">
@@ -930,6 +930,34 @@
                       </widget>
                      </item>
                      <item>
+                      <widget class="QPushButton" name="btnFacultiesComparison">
+                       <property name="cursor">
+                        <cursorShape>PointingHandCursor</cursorShape>
+                       </property>
+                       <property name="toolTip">
+                        <string>Compare faculties, e.g., IQ, EQ, etc.</string>
+                       </property>
+                       <property name="text">
+                        <string>Faculties</string>
+                       </property>
+                       <property name="checkable">
+                        <bool>true</bool>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                       <property name="transparent-rounded-bg-on-hover" stdset="0">
+                        <bool>true</bool>
+                       </property>
+                       <property name="secondary-selector" stdset="0">
+                        <bool>true</bool>
+                       </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">btnGroupComparison</string>
+                       </attribute>
+                      </widget>
+                     </item>
+                     <item>
                       <widget class="QPushButton" name="btnBigFiveComparison">
                        <property name="cursor">
                         <cursorShape>PointingHandCursor</cursorShape>
@@ -1148,7 +1176,7 @@
  <connections/>
  <buttongroups>
   <buttongroup name="btnGroupComparison"/>
-  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupComparisonView"/>
+  <buttongroup name="btnGroupViews"/>
  </buttongroups>
 </ui>

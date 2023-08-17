@@ -26,9 +26,11 @@ from PyQt6 import sip
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
 from overrides import overrides
-from qthandy import vbox, hbox, line, flow, gc, vspacer, clear_layout, bold
+from qthandy import vbox, hbox, line, flow, gc, vspacer, clear_layout, bold, margins
 
-from src.main.python.plotlyst.core.domain import Character, Novel
+from src.main.python.plotlyst.core.domain import Character, Novel, TemplateValue
+from src.main.python.plotlyst.core.template import iq_field, eq_field, rationalism_field, creativity_field, \
+    willpower_field, TemplateField
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent, CharacterDeletedEvent
@@ -38,12 +40,14 @@ from src.main.python.plotlyst.view.icons import set_avatar, avatars
 from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from src.main.python.plotlyst.view.widget.button import EyeToggle
 from src.main.python.plotlyst.view.widget.display import RoleIcon, ChartView
+from src.main.python.plotlyst.view.widget.template.impl import BarTemplateFieldWidget
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
 
 
 class CharacterComparisonAttribute(Enum):
     SUMMARY = 0
     BIG_FIVE = 1
+    FACULTIES = 2
 
 
 class BaseDisplay:
@@ -105,6 +109,77 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
         emit_event(CharacterSummaryChangedEvent(self, self._character))
 
 
+class FacultiesDisplay(QWidget, BaseDisplay):
+    def __init__(self, character: Character, parent=None):
+        super().__init__(parent)
+        self._character = character
+        self._blockSave = False
+
+        vbox(self)
+        margins(self, left=10, right=10)
+
+        self._iqEditor = self.FacultyEditor(self, self._character, iq_field)
+        self._eqEditor = self.FacultyEditor(self, self._character, eq_field)
+        self._ratEditor = self.FacultyEditor(self, self._character, rationalism_field)
+        self._creaEditor = self.FacultyEditor(self, self._character, creativity_field)
+        self._willEditor = self.FacultyEditor(self, self._character, willpower_field)
+
+        self.layout().addWidget(self._iqEditor)
+        self.layout().addWidget(self._eqEditor)
+        self.layout().addWidget(self._ratEditor)
+        self.layout().addWidget(self._creaEditor)
+        self.layout().addWidget(self._willEditor)
+
+        self.setMaximumWidth(300)
+        self.setMinimumWidth(250)
+
+        self.repo = RepositoryPersistenceManager.instance()
+        self.refresh()
+
+    @overrides
+    def refresh(self):
+        self._blockSave = True
+        for value in self._character.template_values:
+            if value.id == iq_field.id:
+                self._iqEditor.setValue(value)
+            elif value.id == eq_field.id:
+                self._eqEditor.setValue(value)
+            elif value.id == rationalism_field.id:
+                self._ratEditor.setValue(value)
+            elif value.id == creativity_field.id:
+                self._creaEditor.setValue(value)
+            elif value.id == willpower_field.id:
+                self._willEditor.setValue(value)
+
+        self._blockSave = False
+
+    def save(self):
+        if self._blockSave:
+            return
+        self.repo.update_character(self._character)
+
+    class FacultyEditor(BarTemplateFieldWidget):
+
+        def __init__(self, display: 'FacultiesDisplay', character: Character, field: TemplateField, parent=None):
+            super().__init__(field, parent)
+            self._character = character
+            self._display = display
+            self._value: Optional[TemplateValue] = None
+
+            self.lblName.setProperty('description', True)
+            self.lblEmoji.setVisible(False)
+
+        @overrides
+        def setValue(self, value: TemplateValue):
+            self._value = value
+            super().setValue(value.value)
+
+        @overrides
+        def _valueChanged(self, value: int):
+            self._value.value = value
+            self._display.save()
+
+
 class CharacterOverviewWidget(QWidget, EventListener):
     def __init__(self, character: Character, parent=None):
         super().__init__(parent)
@@ -148,6 +223,9 @@ class CharacterOverviewWidget(QWidget, EventListener):
         elif attribute == CharacterComparisonAttribute.SUMMARY:
             self._display = SummaryDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display, alignment=Qt.AlignmentFlag.AlignCenter)
+        elif attribute == CharacterComparisonAttribute.FACULTIES:
+            self._display = FacultiesDisplay(self._character)
+            self._displayContainer.layout().addWidget(self._display)
 
 
 class LayoutType(Enum):
@@ -244,10 +322,13 @@ class CharactersTreeView(TreeView, EventListener):
         self._novel = novel
         self._centralWidget.setProperty('bg', True)
         self._nodes: Dict[Character, CharacterNode] = {}
+
+        margins(self._centralWidget, top=20)
         self.refresh()
 
         event_dispatcher.register(self, CharacterDeletedEvent)
 
+    @overrides
     def event_received(self, event: Event):
         if isinstance(event, CharacterDeletedEvent):
             node = self._nodes.pop(event.character, None)
@@ -256,7 +337,6 @@ class CharactersTreeView(TreeView, EventListener):
                     self.characterToggled.emit(event.character, False)
                 self._centralWidget.layout().removeWidget(node)
                 gc(node)
-
 
     def refresh(self):
         clear_layout(self._centralWidget, auto_delete=False)
