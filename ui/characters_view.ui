@@ -555,8 +555,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>84</width>
-                <height>16</height>
+                <width>98</width>
+                <height>28</height>
                </rect>
               </property>
               <property name="bg-image" stdset="0">
@@ -825,6 +825,9 @@
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
+             <property name="childrenCollapsible">
+              <bool>false</bool>
+             </property>
              <widget class="QWidget" name="wdgCharactersCompTreeParent" native="true">
               <layout class="QVBoxLayout" name="verticalLayout_10">
                <property name="spacing">
@@ -844,7 +847,7 @@
                </property>
               </layout>
              </widget>
-             <widget class="QWidget" name="">
+             <widget class="QWidget" name="layoutWidget">
               <layout class="QVBoxLayout" name="verticalLayout_7">
                <property name="spacing">
                 <number>0</number>
@@ -989,8 +992,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>313</width>
-                    <height>528</height>
+                    <width>873</width>
+                    <height>520</height>
                    </rect>
                   </property>
                   <property name="relaxed-white-bg" stdset="0">
@@ -1144,8 +1147,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupComparisonView"/>
-  <buttongroup name="btnGroupViews"/>
   <buttongroup name="btnGroupComparison"/>
+  <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupComparisonView"/>
  </buttongroups>
 </ui>
