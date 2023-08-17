@@ -226,12 +226,12 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.tag-plus')
 
     @staticmethod
-    def tags_icon(color: str = 'black') -> QIcon:
-        return qtawesome.icon('ei.tags', color=color)
+    def tags_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('ei.tags', **kwargs)
 
     @staticmethod
     def graph_icon() -> QIcon:
-        return qtawesome.icon('ei.graph')
+        return IconRegistry.from_name('ei.graph')
 
     @staticmethod
     def wip_icon() -> QIcon:
@@ -430,8 +430,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.human-cane')
 
     @staticmethod
-    def cog_icon(color: str = 'black') -> QIcon:
-        return IconRegistry.from_name('fa5s.cog', color=color)
+    def cog_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('fa5s.cog', **kwargs)
 
     @staticmethod
     def cause_icon(color: str = 'black') -> QIcon:

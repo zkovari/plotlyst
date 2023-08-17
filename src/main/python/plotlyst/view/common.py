@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemVie
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import hbox, vbox, margins, gc
+from qthandy import hbox, vbox, margins, gc, transparent
 
 from src.main.python.plotlyst.env import app_env
 
@@ -327,6 +327,26 @@ def set_tab_visible(tabs: QTabWidget, widget: QWidget, visible: bool = True):
     tabs.setTabVisible(i, visible)
 
 
+def set_tab_enabled(tabs: QTabWidget, widget: QWidget, enabled: bool = True):
+    i = tabs.indexOf(widget)
+    tabs.setTabEnabled(i, enabled)
+
+
+def set_tab_settings(tabs: QTabWidget, widget: QWidget, text: Optional[str] = None, icon: Optional[QIcon] = None,
+                     tooltip: Optional[str] = None, visible: Optional[bool] = None, enabled: Optional[bool] = None):
+    i = tabs.indexOf(widget)
+    if text is not None:
+        tabs.setTabText(i, text)
+    if icon is not None:
+        tabs.setTabIcon(i, icon)
+    if tooltip is not None:
+        tabs.setTabToolTip(i, tooltip)
+    if visible is not None:
+        tabs.setTabVisible(i, visible)
+    if enabled is not None:
+        tabs.setTabEnabled(i, enabled)
+
+
 def fade_out_and_gc(parent: QWidget, widget: QWidget, duration: int = 200):
     def destroy():
         widget.setHidden(True)
@@ -352,7 +372,8 @@ def insert_after(parent: QWidget, widget: QWidget, reference: QWidget):
 
 
 def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
-             icon_resize: bool = True) -> QToolButton:
+             icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+             parent=None) -> QToolButton:
     btn = QToolButton()
     btn.setIcon(icon)
     btn.setToolTip(tooltip)
@@ -362,8 +383,20 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
         btn.setProperty('base', True)
     if icon_resize:
         btn.installEventFilter(ButtonPressResizeEventFilter(btn))
-
+    if transparent_:
+        transparent(btn)
+    if properties:
+        for prop in properties:
+            btn.setProperty(prop, True)
+    if parent:
+        btn.setParent(parent)
     return btn
+
+
+def frame(parent=None):
+    frame_ = QFrame(parent)
+    frame_.setFrameShape(QFrame.Shape.StyledPanel)
+    return frame_
 
 
 class ExclusiveOptionalButtonGroup(QButtonGroup):
