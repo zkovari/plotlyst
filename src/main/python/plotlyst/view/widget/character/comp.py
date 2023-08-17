@@ -253,8 +253,8 @@ class CharactersTreeView(TreeView, EventListener):
             node = self._nodes.pop(event.character, None)
             if node and node.isToggled():
                 self.characterToggled.emit(event.character, False)
-            self._centralWidget.layout().removeWidget(node)
-            gc(node)
+                self._centralWidget.layout().removeWidget(node)
+                gc(node)
 
 
     def refresh(self):
