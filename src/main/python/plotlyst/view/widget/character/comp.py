@@ -21,6 +21,7 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Dict, Optional
 
+import qtanim
 from PyQt6 import sip
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit
@@ -32,6 +33,7 @@ from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
 from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
+from src.main.python.plotlyst.view.common import fade_out_and_gc
 from src.main.python.plotlyst.view.icons import set_avatar, avatars
 from src.main.python.plotlyst.view.widget.big_five import BigFiveChart, dimension_from
 from src.main.python.plotlyst.view.widget.button import EyeToggle
@@ -165,10 +167,10 @@ class CharacterComparisonWidget(QWidget):
             wdg.display(self._currentDisplay)
             self._characters[character] = wdg
             self.layout().addWidget(wdg)
+            qtanim.fade_in(wdg)
         else:
             wdg = self._characters.pop(character)
-            self.layout().removeWidget(wdg)
-            gc(wdg)
+            fade_out_and_gc(self, wdg)
 
     def updateLayout(self, layoutType: LayoutType):
         widgets = []
