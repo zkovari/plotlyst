@@ -372,7 +372,8 @@ def insert_after(parent: QWidget, widget: QWidget, reference: QWidget):
 
 
 def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool = False,
-             icon_resize: bool = True, transparent_: bool = False, parent=None) -> QToolButton:
+             icon_resize: bool = True, transparent_: bool = False, properties: List[str] = None,
+             parent=None) -> QToolButton:
     btn = QToolButton()
     btn.setIcon(icon)
     btn.setToolTip(tooltip)
@@ -384,9 +385,18 @@ def tool_btn(icon: QIcon, tooltip: str = '', checkable: bool = False, base: bool
         btn.installEventFilter(ButtonPressResizeEventFilter(btn))
     if transparent_:
         transparent(btn)
+    if properties:
+        for prop in properties:
+            btn.setProperty(prop, True)
     if parent:
         btn.setParent(parent)
     return btn
+
+
+def frame(parent=None):
+    frame_ = QFrame(parent)
+    frame_.setFrameShape(QFrame.Shape.StyledPanel)
+    return frame_
 
 
 class ExclusiveOptionalButtonGroup(QButtonGroup):
