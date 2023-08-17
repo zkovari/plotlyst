@@ -257,6 +257,26 @@ QToolButton[transparent-circle-bg-on-hover=true][large=true] {
     padding: 4px;
 }
 
+QToolButton[transparent-rounded-bg-on-hover=true] {
+    border-radius: 4px;
+    border: 1px hidden lightgrey;
+    padding: 2px;
+}
+QToolButton::menu-indicator[transparent-rounded-bg-on-hover=true] {
+    width:0px;
+}
+QToolButton:hover[transparent-rounded-bg-on-hover=true] {
+    background: #EDEDED;
+}
+
+QToolButton:hover[events-sidebar=true] {
+    background: lightgrey;
+}
+
+QToolButton:checked[events-sidebar=true] {
+    background: #D4B8E0
+}
+
 QToolButton:hover[analysis-top-selector=true] {
     background: lightgrey;
 }

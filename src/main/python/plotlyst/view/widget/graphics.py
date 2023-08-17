@@ -17,11 +17,86 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Any, Optional
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent
-from PyQt6.QtWidgets import QGraphicsView
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor
+from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem
 from overrides import overrides
+
+from src.main.python.plotlyst.core.domain import Node
+
+
+class ConnectorItem(QGraphicsPathItem):
+
+    def __init__(self, source: QAbstractGraphicsShapeItem, target: QAbstractGraphicsShapeItem,
+                 pen: Optional[QPen] = None):
+        super(ConnectorItem, self).__init__()
+        self._source = source
+        self._target = target
+        if pen:
+            self.setPen(pen)
+        else:
+            self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
+
+        # self.setPos(self._source.sceneBoundingRect().center())
+        self.rearrange()
+
+    def rearrange(self):
+        self.setPos(self._source.sceneBoundingRect().center())
+
+        path = QPainterPath()
+        target_x = self._target.scenePos().x() - self.pos().x()
+        target_y = self._target.scenePos().y()
+        path.quadTo(0, target_y / 2, target_x, target_y - self._source.scenePos().y())
+        # if self._target.scenePos().y() < 0:
+        # elif self._target.scenePos().y() > 0:
+        #     path.quadTo(0, target_y / 2, target_x, target_y)
+        # else:
+        #     path.lineTo(target_x, target_y)
+
+        self.setPath(path)
+
+    def source(self) -> QAbstractGraphicsShapeItem:
+        return self._source
+
+    def target(self) -> QAbstractGraphicsShapeItem:
+        return self._target
+
+
+class NodeItem(QAbstractGraphicsShapeItem):
+    def __init__(self, node: Node, parent=None):
+        super().__init__(parent)
+        self._node = node
+
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
+            QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setAcceptHoverEvents(True)
+
+        self._posChangedTimer = QTimer()
+        self._posChangedTimer.setInterval(1000)
+        self._posChangedTimer.timeout.connect(self._posChangedOnTimeout)
+
+    @overrides
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            self._posChangedTimer.start(1000)
+            self._onPosChanged()
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            self._onSelection(value)
+        return super(NodeItem, self).itemChange(change, value)
+
+    def _onPosChanged(self):
+        pass
+
+    def _onSelection(self, selected: bool):
+        pass
+
+    def _posChangedOnTimeout(self):
+        self._posChangedTimer.stop()
+        self._node.x = self.scenePos().x()
+        self._node.y = self.scenePos().y()
 
 
 class BaseGraphicsView(QGraphicsView):

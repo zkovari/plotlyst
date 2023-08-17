@@ -46,8 +46,6 @@ jobs:
           DISPLAY: ':99.0'
         run: |
           ./test.sh
-          pip install coveralls
-          coveralls --service=github
 
   core-windows-test:
     runs-on: windows-2019
