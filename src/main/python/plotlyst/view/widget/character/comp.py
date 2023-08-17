@@ -251,8 +251,9 @@ class CharactersTreeView(TreeView, EventListener):
     def event_received(self, event: Event):
         if isinstance(event, CharacterDeletedEvent):
             node = self._nodes.pop(event.character, None)
-            if node and node.isToggled():
-                self.characterToggled.emit(event.character, False)
+            if node is not None:
+                if node.isToggled():
+                    self.characterToggled.emit(event.character, False)
                 self._centralWidget.layout().removeWidget(node)
                 gc(node)
 
