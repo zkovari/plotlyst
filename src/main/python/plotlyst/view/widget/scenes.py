@@ -569,10 +569,11 @@ class SceneStoryStructureWidget(QWidget):
                     max_index - min_index) * (index - min_index)
 
             self.btnCurrentScene.setVisible(True)
-            self.btnCurrentScene.setGeometry(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2,
-                                             self._lineHeight,
-                                             self._beatHeight,
-                                             self._beatHeight)
+            self.btnCurrentScene.setGeometry(
+                int(self.width() * self._currentScenePercentage / 100 - self._lineHeight // 2),
+                self._lineHeight,
+                self._beatHeight,
+                self._beatHeight)
 
     def unhighlightBeats(self):
         for btn in self._beats.values():

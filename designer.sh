@@ -4,4 +4,4 @@
 set -e
 export QT_DEBUG_PLUGINS=0
 
-pyqt6-tools designer &
+qt6-tools designer &

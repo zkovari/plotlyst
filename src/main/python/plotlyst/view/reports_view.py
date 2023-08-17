@@ -195,7 +195,7 @@ class ReportsView(AbstractNovelView):
             btn.installEventFilter(OpacityEventFilter(btn, leaveOpacity=0.7, ignoreCheckedButton=True))
             btn.setProperty('transparent-circle-bg-on-hover', True)
             btn.setProperty('large', True)
-            btn.setProperty('analysis-top-selector', True)
+            btn.setProperty('top-selector', True)
 
         self._page_characters = CharactersReportPage(self.novel)
         self.ui.stackedWidget.addWidget(self._page_characters)

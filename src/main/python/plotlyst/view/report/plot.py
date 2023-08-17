@@ -23,36 +23,17 @@ import qtanim
 from PyQt6.QtCharts import QSplineSeries, QValueAxis, QLegend
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPen, QColor
-from PyQt6.QtWidgets import QToolButton
 from overrides import overrides
-from qthandy import clear_layout, vspacer, transparent, translucent, bold
+from qthandy import clear_layout, vspacer, bold
 
 from src.main.python.plotlyst.core.domain import Novel, Plot
-from src.main.python.plotlyst.view.common import icon_to_html_img, pointy
+from src.main.python.plotlyst.view.common import icon_to_html_img
 from src.main.python.plotlyst.view.generated.report.plot_report_ui import Ui_PlotReport
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.report import AbstractReport
+from src.main.python.plotlyst.view.widget.button import EyeToggle
 from src.main.python.plotlyst.view.widget.chart import BaseChart
 from src.main.python.plotlyst.view.widget.tree import TreeView, ContainerNode
-
-
-class EyeToggle(QToolButton):
-    def __init__(self, parent=None):
-        super(EyeToggle, self).__init__(parent)
-        self.setCheckable(True)
-        pointy(self)
-        transparent(self)
-        self.toggled.connect(self._toggled)
-
-        self._toggled(False)
-
-    def _toggled(self, toggled: bool):
-        if toggled:
-            self.setIcon(IconRegistry.from_name('ei.eye-open'))
-            translucent(self, 1)
-        else:
-            self.setIcon(IconRegistry.from_name('ei.eye-close'))
-            translucent(self)
 
 
 class PlotArcNode(ContainerNode):

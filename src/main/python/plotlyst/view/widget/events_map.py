@@ -469,11 +469,11 @@ class EventsMindMapView(BaseGraphicsView):
 
         self._btnAddEvent = tool_btn(
             IconRegistry.from_name('mdi.calendar-plus'), 'Add new event', True,
-            icon_resize=False, properties=['transparent-rounded-bg-on-hover', 'events-sidebar'],
+            icon_resize=False, properties=['transparent-rounded-bg-on-hover', 'top-selector'],
             parent=self._controlsNavBar)
         self._btnAddCharacter = tool_btn(
             IconRegistry.character_icon('#040406'), 'Add new character', True,
-            icon_resize=False, properties=['transparent-rounded-bg-on-hover', 'events-sidebar'],
+            icon_resize=False, properties=['transparent-rounded-bg-on-hover', 'top-selector'],
             parent=self._controlsNavBar)
         self._btnGroup = ExclusiveOptionalButtonGroup()
         self._btnGroup.addButton(self._btnAddEvent)
