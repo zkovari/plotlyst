@@ -31,7 +31,7 @@ from qthandy import vbox, hbox, line, flow, gc, vspacer, clear_layout, bold
 from src.main.python.plotlyst.core.domain import Character, Novel
 from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
 from src.main.python.plotlyst.event.handler import event_dispatcher
-from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent
+from src.main.python.plotlyst.events import CharacterSummaryChangedEvent, CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import fade_out_and_gc
 from src.main.python.plotlyst.view.icons import set_avatar, avatars
@@ -228,25 +228,43 @@ class CharacterNode(ContainerNode):
         else:
             self._icon.setHidden(True)
 
+    def isToggled(self) -> bool:
+        return self._btnVisible.isChecked()
+
     def _toggled(self, toggled: bool):
         bold(self._lblTitle, toggled)
         self.characterToggled.emit(self._character, toggled)
 
 
-class CharactersTreeView(TreeView):
+class CharactersTreeView(TreeView, EventListener):
     characterToggled = pyqtSignal(Character, bool)
 
     def __init__(self, novel: Novel, parent=None):
         super(CharactersTreeView, self).__init__(parent)
         self._novel = novel
         self._centralWidget.setProperty('bg', True)
+        self._nodes: Dict[Character, CharacterNode] = {}
+        self.refresh()
+
+        event_dispatcher.register(self, CharacterDeletedEvent)
+
+    def event_received(self, event: Event):
+        if isinstance(event, CharacterDeletedEvent):
+            node = self._nodes.pop(event.character, None)
+            if node and node.isToggled():
+                self.characterToggled.emit(event.character, False)
+            self._centralWidget.layout().removeWidget(node)
+            gc(node)
+
 
     def refresh(self):
-        clear_layout(self._centralWidget)
+        clear_layout(self._centralWidget, auto_delete=False)
 
         for character in self._novel.characters:
-            node = CharacterNode(character)
-            node.characterToggled.connect(self.characterToggled.emit)
-            self._centralWidget.layout().addWidget(node)
+            if character not in self._nodes.keys():
+                node = CharacterNode(character)
+                node.characterToggled.connect(self.characterToggled.emit)
+                self._nodes[character] = node
+            self._centralWidget.layout().addWidget(self._nodes[character])
 
         self._centralWidget.layout().addWidget(vspacer())

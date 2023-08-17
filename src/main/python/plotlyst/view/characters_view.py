@@ -215,6 +215,7 @@ class CharactersView(AbstractNovelView):
 
         self._init_cards()
         self._progress.refresh()
+        self._wdgCharactersCompTree.refresh()
 
     def _show_card_menu(self, card: CharacterCard, pos: QPoint):
         menu = MenuWidget()
@@ -267,7 +268,6 @@ class CharactersView(AbstractNovelView):
             self.ui.wdgCharacterSelector.updateCharacters(self.novel.characters, checkAll=False)
         elif self.ui.btnComparison.isChecked():
             self.ui.wdgToolbar.setVisible(False)
-            self._wdgCharactersCompTree.refresh()
         else:
             self.ui.wdgToolbar.setVisible(False)
 
