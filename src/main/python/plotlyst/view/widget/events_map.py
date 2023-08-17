@@ -342,11 +342,12 @@ class EventsMindMapScene(QGraphicsScene):
         self._placeholder: Optional[PlaceholderItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
 
-        characterItem = CharacterItem(novel.characters[0], CharacterNode(50, 50))
-        characterItem.setPos(50, 50)
+        if novel.characters:
+            characterItem = CharacterItem(novel.characters[0], CharacterNode(50, 50))
+            characterItem.setPos(50, 50)
 
+            self.addItem(characterItem)
         eventItem = EventItem(Node(400, 100))
-        self.addItem(characterItem)
         self.addItem(eventItem)
 
     def linkMode(self) -> bool:
