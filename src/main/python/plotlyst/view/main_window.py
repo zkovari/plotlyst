@@ -98,6 +98,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         palette.setColor(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, QColor('#040406'))
         palette.setColor(QPalette.ColorRole.ToolTipText, QColor(PLOTLYST_MAIN_COLOR))
         palette.setColor(QPalette.ColorRole.PlaceholderText, QColor('#8E9AAF'))
+        palette.setColor(QPalette.ColorRole.Window, QColor('#EFEFF4'))
         QApplication.setPalette(palette)
 
         if app_env.is_mac():

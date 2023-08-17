@@ -127,7 +127,7 @@ class NovelView(AbstractNovelView):
         self.ui.wdgPlotContainer.layout().addWidget(self.plot_editor)
 
         self.ui.wdgTagsContainer.setNovel(self.novel)
-        self.ui.tabWidget.setCurrentWidget(self.ui.tabEvents)
+        self.ui.tabWidget.setCurrentWidget(self.ui.tabSynopsis)
 
     @overrides
     def refresh(self):

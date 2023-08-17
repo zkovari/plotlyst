@@ -32,7 +32,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <property name="centered" stdset="0">
       <bool>true</bool>
@@ -41,6 +41,9 @@
       <bool>true</bool>
      </property>
      <widget class="QWidget" name="tabSynopsis">
+      <property name="relaxed-white-bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string>Synopsis</string>
       </attribute>
@@ -461,6 +464,9 @@
       </layout>
      </widget>
      <widget class="QWidget" name="tabTags">
+      <property name="relaxed-white-bg" stdset="0">
+       <bool>true</bool>
+      </property>
       <attribute name="title">
        <string>Tags</string>
       </attribute>
@@ -488,13 +494,16 @@
          <property name="widgetResizable">
           <bool>true</bool>
          </property>
+         <property name="relaxed-white-bg" stdset="0">
+          <bool>true</bool>
+         </property>
          <widget class="TagsEditor" name="wdgTagsContainer">
           <property name="geometry">
            <rect>
             <x>0</x>
             <y>0</y>
             <width>626</width>
-            <height>511</height>
+            <height>512</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -502,6 +511,9 @@
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="relaxed-white-bg" stdset="0">
+           <bool>true</bool>
           </property>
          </widget>
         </widget>
