@@ -153,12 +153,12 @@ class ConnectableNode(MindMapNode):
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.linkMode():
+        if self.linkMode() or event.modifiers() & Qt.KeyboardModifier.AltModifier:
             self._setSocketsVisible()
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if not self.isSelected() and self.linkMode():
+        if not self.isSelected():
             self._setSocketsVisible(False)
 
     @overrides
