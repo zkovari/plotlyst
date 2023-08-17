@@ -167,8 +167,8 @@ class IconRegistry:
         return qtawesome.icon('fa5s.book-open', color_on=color_on, color=color)
 
     @staticmethod
-    def synopsis_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.file-document')
+    def synopsis_icon(**kwargs) -> QIcon:
+        return IconRegistry.from_name('mdi.file-document', **kwargs)
 
     @staticmethod
     def general_info_icon() -> QIcon:

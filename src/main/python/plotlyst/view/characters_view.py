@@ -17,14 +17,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from functools import partial
 from typing import Optional, List
 
+import qtanim
 from PyQt6.QtCore import QItemSelection, QPoint
 from PyQt6.QtGui import QKeySequence
 from PyQt6.QtWidgets import QWidget
 from overrides import overrides
-from qthandy import busy, gc, incr_font, bold, vbox, vspacer, transparent, underline
-from qthandy.filter import InstantTooltipEventFilter
+from qthandy import busy, gc, incr_font, bold, vbox, vspacer
+from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -142,20 +144,20 @@ class CharactersView(AbstractNovelView):
         self.ui.cards.setCardsWidth(142)
         self._init_cards()
 
-        transparent(self.ui.btnComparisonLabel)
-        underline(self.ui.btnComparisonLabel)
-        self.ui.btnComparisonLabel.setIcon(IconRegistry.from_name('mdi.compare-horizontal'))
         self.ui.btnHorizontalComparison.setIcon(IconRegistry.from_name('ph.columns-bold'))
         self.ui.btnVerticalComparison.setIcon(IconRegistry.from_name('ph.rows-bold'))
         self.ui.btnGridComparison.setIcon(IconRegistry.from_name('ph.grid-four-bold'))
-        self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon())
-        self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon())
+        self.ui.btnSummaryComparison.setIcon(IconRegistry.synopsis_icon(color_on=PLOTLYST_SECONDARY_COLOR))
+        self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
 
         self.ui.splitterCompTree.setSizes([150, 500])
         self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
         self._wdgCharactersCompTree = CharactersTreeView(self.novel)
         self.ui.wdgCharactersCompTreeParent.layout().addWidget(self._wdgCharactersCompTree)
+        self.ui.btnCharactersToggle.setIcon(IconRegistry.character_icon())
+        self.ui.btnCharactersToggle.clicked.connect(
+            partial(qtanim.toggle_expansion, self.ui.wdgCharactersCompTreeParent))
 
         self._wdgCharactersCompTree.characterToggled.connect(self._wdgComparison.updateCharacter)
         self.ui.btnHorizontalComparison.clicked.connect(lambda: self._wdgComparison.updateLayout(LayoutType.HORIZONTAL))
@@ -165,6 +167,8 @@ class CharactersView(AbstractNovelView):
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.SUMMARY))
         self.ui.btnBigFiveComparison.clicked.connect(
             lambda: self._wdgComparison.displayAttribute(CharacterComparisonAttribute.BIG_FIVE))
+        for btn in self.ui.btnGroupComparison.buttons():
+            btn.installEventFilter(OpacityEventFilter(btn, ignoreCheckedButton=True))
 
         self._relations = RelationsView(self.novel)
         self.ui.relationsParent.layout().addWidget(self._relations)

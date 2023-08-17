@@ -257,32 +257,35 @@ QToolButton[transparent-circle-bg-on-hover=true][large=true] {
     padding: 4px;
 }
 
-QToolButton[transparent-rounded-bg-on-hover=true] {
+QAbstractButton[transparent-rounded-bg-on-hover=true] {
     border-radius: 4px;
     border: 1px hidden lightgrey;
     padding: 2px;
 }
-QToolButton::menu-indicator[transparent-rounded-bg-on-hover=true] {
+QAbstractButton::menu-indicator[transparent-rounded-bg-on-hover=true] {
     width:0px;
 }
-QToolButton:hover[transparent-rounded-bg-on-hover=true] {
+QAbstractButton:hover[transparent-rounded-bg-on-hover=true] {
     background: #EDEDED;
 }
 
-QToolButton:hover[events-sidebar=true] {
+QAbstractButton:hover[top-selector=true] {
     background: lightgrey;
 }
 
-QToolButton:checked[events-sidebar=true] {
-    background: #D4B8E0
+QAbstractButton:checked[top-selector=true] {
+    background: #D4B8E0;
 }
 
-QToolButton:hover[analysis-top-selector=true] {
-    background: lightgrey;
+QAbstractButton:hover[secondary-selector=true] {
+    border-bottom: 1px solid lightgrey;
 }
 
-QToolButton:checked[analysis-top-selector=true] {
-    background: #D4B8E0
+QAbstractButton:checked[secondary-selector=true] {
+    border-bottom: 2px solid #4B0763;
+    border-radius: 0px;
+    color: #4B0763;
+    
 }
 
 QToolButton:checked[emotion-very-unhappy=true] {

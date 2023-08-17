@@ -6,12 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>719</width>
-    <height>626</height>
+    <width>910</width>
+    <height>656</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
+  </property>
+  <property name="bg" stdset="0">
+   <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -552,8 +555,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>686</width>
-                <height>533</height>
+                <width>84</width>
+                <height>16</height>
                </rect>
               </property>
               <property name="bg-image" stdset="0">
@@ -659,13 +662,43 @@
           </layout>
          </widget>
          <widget class="QWidget" name="pageComparison">
-          <layout class="QVBoxLayout" name="verticalLayout_7">
+          <property name="bg" stdset="0">
+           <bool>true</bool>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_11">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_6">
              <item>
               <widget class="QPushButton" name="btnCharactersToggle">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
-                <string>Characters:</string>
+                <string>Characters</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+               <property name="base" stdset="0">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -782,107 +815,6 @@
             </layout>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
-             <property name="leftMargin">
-              <number>4</number>
-             </property>
-             <property name="topMargin">
-              <number>3</number>
-             </property>
-             <item>
-              <widget class="QPushButton" name="btnComparisonLabel">
-               <property name="text">
-                <string>Compare:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QWidget" name="wdgComparisonSelectorParent" native="true">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <layout class="QHBoxLayout" name="horizontalLayout_8">
-                <property name="spacing">
-                 <number>3</number>
-                </property>
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QToolButton" name="btnSummaryComparison">
-                  <property name="cursor">
-                   <cursorShape>PointingHandCursor</cursorShape>
-                  </property>
-                  <property name="toolTip">
-                   <string>Compare summary</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                  <attribute name="buttonGroup">
-                   <string notr="true">btnGroupComparison</string>
-                  </attribute>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btnBigFiveComparison">
-                  <property name="cursor">
-                   <cursorShape>PointingHandCursor</cursorShape>
-                  </property>
-                  <property name="toolTip">
-                   <string>Compare Big Five traits</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="checked">
-                   <bool>false</bool>
-                  </property>
-                  <attribute name="buttonGroup">
-                   <string notr="true">btnGroupComparison</string>
-                  </attribute>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_3">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
             <widget class="QSplitter" name="splitterCompTree">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -892,9 +824,6 @@
              </property>
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="childrenCollapsible">
-              <bool>false</bool>
              </property>
              <widget class="QWidget" name="wdgCharactersCompTreeParent" native="true">
               <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -915,43 +844,179 @@
                </property>
               </layout>
              </widget>
-             <widget class="QScrollArea" name="scrollArea_3">
-              <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
-              </property>
-              <property name="lineWidth">
-               <number>0</number>
-              </property>
-              <property name="widgetResizable">
-               <bool>true</bool>
-              </property>
-              <widget class="QWidget" name="scrollAreaComparisonContent">
-               <property name="geometry">
-                <rect>
-                 <x>0</x>
-                 <y>0</y>
-                 <width>519</width>
-                 <height>468</height>
-                </rect>
+             <widget class="QWidget" name="">
+              <layout class="QVBoxLayout" name="verticalLayout_7">
+               <property name="spacing">
+                <number>0</number>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_8">
-                <property name="spacing">
-                 <number>4</number>
-                </property>
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-               </layout>
-              </widget>
+               <item>
+                <widget class="QWidget" name="wdgCompSelectorsParent" native="true">
+                 <property name="relaxed-white-bg" stdset="0">
+                  <bool>true</bool>
+                 </property>
+                 <layout class="QHBoxLayout" name="horizontalLayout_7">
+                  <property name="leftMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>6</number>
+                  </property>
+                  <item>
+                   <widget class="QWidget" name="wdgComparisonSelectorParent" native="true">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_8">
+                     <property name="spacing">
+                      <number>3</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>0</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <spacer name="horizontalSpacer_7">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btnSummaryComparison">
+                       <property name="cursor">
+                        <cursorShape>PointingHandCursor</cursorShape>
+                       </property>
+                       <property name="toolTip">
+                        <string>Compare summary</string>
+                       </property>
+                       <property name="text">
+                        <string>Summary</string>
+                       </property>
+                       <property name="checkable">
+                        <bool>true</bool>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                       <property name="transparent-rounded-bg-on-hover" stdset="0">
+                        <bool>true</bool>
+                       </property>
+                       <property name="secondary-selector" stdset="0">
+                        <bool>true</bool>
+                       </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">btnGroupComparison</string>
+                       </attribute>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btnBigFiveComparison">
+                       <property name="cursor">
+                        <cursorShape>PointingHandCursor</cursorShape>
+                       </property>
+                       <property name="toolTip">
+                        <string>Compare Big Five traits</string>
+                       </property>
+                       <property name="text">
+                        <string>Big Five</string>
+                       </property>
+                       <property name="checkable">
+                        <bool>true</bool>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                       <property name="transparent-rounded-bg-on-hover" stdset="0">
+                        <bool>true</bool>
+                       </property>
+                       <property name="secondary-selector" stdset="0">
+                        <bool>true</bool>
+                       </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">btnGroupComparison</string>
+                       </attribute>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_3">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QScrollArea" name="scrollArea_3">
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
+                 <property name="lineWidth">
+                  <number>0</number>
+                 </property>
+                 <property name="widgetResizable">
+                  <bool>true</bool>
+                 </property>
+                 <widget class="QWidget" name="scrollAreaComparisonContent">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>313</width>
+                    <height>528</height>
+                   </rect>
+                  </property>
+                  <property name="relaxed-white-bg" stdset="0">
+                   <bool>true</bool>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_8">
+                   <property name="spacing">
+                    <number>4</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                  </layout>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
              </widget>
             </widget>
            </item>
@@ -990,8 +1055,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>720</width>
-                <height>562</height>
+                <width>100</width>
+                <height>30</height>
                </rect>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -1079,8 +1144,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupComparison"/>
   <buttongroup name="btnGroupComparisonView"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupComparison"/>
  </buttongroups>
 </ui>
