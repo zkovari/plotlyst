@@ -57,6 +57,7 @@ class TopicWidget(QWidget):
         bold(self.btnHeader)
 
         self.textEdit = AutoAdjustableTextEdit(height=80)
+        self.textEdit.setProperty('rounded', True)
         self.textEdit.setAutoFormatting(QTextEdit.AutoFormattingFlag.AutoAll)
         self.textEdit.setTabChangesFocus(True)
         self.textEdit.setMarkdown(value.value)
