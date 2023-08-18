@@ -37,9 +37,10 @@ from src.main.python.plotlyst.core.client import client, json_client
 from src.main.python.plotlyst.core.domain import Novel, NovelPanel, ScenesView
 from src.main.python.plotlyst.core.text import sentence_count
 from src.main.python.plotlyst.env import app_env, open_location
-from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, event_sender, \
-    emit_info
-from src.main.python.plotlyst.event.handler import EventLogHandler, event_dispatcher
+from src.main.python.plotlyst.event.core import event_log_reporter, EventListener, Event, global_event_sender, \
+    emit_info, event_senders, EventSender
+from src.main.python.plotlyst.event.handler import EventLogHandler, global_event_dispatcher, event_dispatchers, \
+    EventDispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, \
     NovelUpdatedEvent, OpenDistractionFreeMode, ExitDistractionFreeMode, CloseNovelEvent
 from src.main.python.plotlyst.resources import resource_manager, ResourceType, ResourceDownloadedEvent
@@ -71,7 +72,6 @@ from src.main.python.plotlyst.view.scenes_view import ScenesOutlineView
 from src.main.python.plotlyst.view.widget.button import ToolbarButton, NovelSyncButton
 from src.main.python.plotlyst.view.widget.hint import reset_hints
 from src.main.python.plotlyst.view.widget.input import CapitalizationEventFilter
-from src.main.python.plotlyst.view.widget.task import TasksQuickAccessWidget
 from src.main.python.plotlyst.view.widget.tour.core import TutorialNovelOpenTourEvent, tutorial_novel, \
     TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent, HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, \
     AllNovelViewsTourEvent, GeneralNovelViewTourEvent, CharacterViewTourEvent, ScenesViewTourEvent, \
@@ -126,7 +126,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self._init_menubar()
         self._init_toolbar()
-        self._tasks_widget = TasksQuickAccessWidget()
         self._init_statusbar()
 
         self.btnBoard.setIcon(IconRegistry.board_icon(NAV_BAR_BUTTON_DEFAULT_COLOR, NAV_BAR_BUTTON_CHECKED_COLOR))
@@ -149,16 +148,17 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.event_log_handler = EventLogHandler(self.statusBar())
         event_log_reporter.info.connect(self.event_log_handler.on_info_event)
         event_log_reporter.error.connect(self.event_log_handler.on_error_event)
-        event_sender.send.connect(event_dispatcher.dispatch)
+        global_event_sender.send.connect(global_event_dispatcher.dispatch)
         QApplication.instance().focusChanged.connect(self._focus_changed)
-        event_dispatcher.register(self, NovelDeletedEvent, NovelUpdatedEvent, OpenDistractionFreeMode,
-                                  ExitDistractionFreeMode, ResourceDownloadedEvent, TutorialNovelOpenTourEvent,
-                                  TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent,
-                                  HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent, AllNovelViewsTourEvent,
-                                  GeneralNovelViewTourEvent,
-                                  CharacterViewTourEvent, ScenesViewTourEvent, DocumentsViewTourEvent,
-                                  ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent,
-                                  CloseNovelEvent)
+        global_event_dispatcher.register(self, NovelDeletedEvent, NovelUpdatedEvent, OpenDistractionFreeMode,
+                                         ExitDistractionFreeMode, ResourceDownloadedEvent, TutorialNovelOpenTourEvent,
+                                         TutorialNovelCloseTourEvent, NovelTopLevelButtonTourEvent,
+                                         HomeTopLevelButtonTourEvent, NovelEditorDisplayTourEvent,
+                                         AllNovelViewsTourEvent,
+                                         GeneralNovelViewTourEvent,
+                                         CharacterViewTourEvent, ScenesViewTourEvent, DocumentsViewTourEvent,
+                                         ManuscriptViewTourEvent, AnalysisViewTourEvent, BoardViewTourEvent,
+                                         CloseNovelEvent)
 
         self._init_views()
 
@@ -286,7 +286,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
     def close_novel(self):
         self.novel = None
-        self._clear_novel_views()
+        self._clear_novel()
         self.home_mode.setChecked(True)
 
     def _toggle_fullscreen(self, on: bool):
@@ -309,6 +309,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             for btn in self.buttonGroup.buttons():
                 btn.setHidden(True)
             return
+
+        sender: EventSender = event_senders.instance(self.novel)
+        dispatcher: EventDispatcher = event_dispatchers.instance(self.novel)
+        sender.send.connect(dispatcher.dispatch)
 
         for btn in self.buttonGroup.buttons():
             btn.setVisible(True)
@@ -485,7 +489,8 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.outline_mode.setText('')
 
     def _init_statusbar(self):
-        self.statusbar.addPermanentWidget(self._tasks_widget)
+        pass
+        # self.statusbar.addPermanentWidget(self._tasks_widget)
 
     def _panel_toggled(self):
         if self.home_mode.isChecked():
@@ -500,8 +505,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
             self.home_mode.setChecked(True)
             settings.set_workspace(workspace)
             if self.novel:
-                self._clear_novel_views()
-                self.novel = None
+                self.close_novel()
 
             json_client.init(workspace)
             self.home_view.refresh()
@@ -535,7 +539,7 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.repo.flush(sync=True)
         if self.novel:
-            self._clear_novel_views()
+            self._clear_novel()
 
         if novel.tutorial:
             self.novel = novel
@@ -561,7 +565,10 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
         self.menuExport.setEnabled(True)
         self.actionPreview.setEnabled(True)
 
-    def _clear_novel_views(self):
+    def _clear_novel(self):
+        event_senders.pop(self.novel)
+        event_dispatchers.pop(self.novel)
+
         self.pageNovel.layout().removeWidget(self.novel_view.widget)
         gc(self.novel_view.widget)
         gc(self.novel_view)
@@ -612,8 +619,6 @@ class MainWindow(QMainWindow, Ui_MainWindow, EventListener):
 
         self.menuExport.setDisabled(True)
         self.actionPreview.setDisabled(True)
-
-        self._tasks_widget.reset()
 
     def _focus_changed(self, old_widget: QWidget, current_widget: QWidget):
         if isinstance(current_widget, (QLineEdit, QTextEdit)):
