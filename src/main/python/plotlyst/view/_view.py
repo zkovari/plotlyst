@@ -24,10 +24,9 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QWidget, QButtonGroup
 from overrides import overrides
 from qthandy import busy
-
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import global_event_dispatcher, event_dispatchers
 from src.main.python.plotlyst.events import CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 
@@ -46,7 +45,7 @@ class AbstractView(QObject, EventListener):
             self._event_types = []
 
         for event in self._event_types:
-            event_dispatcher.register(self, event)
+            global_event_dispatcher.register(self, event)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -102,17 +101,17 @@ class AbstractView(QObject, EventListener):
 class AbstractNovelView(AbstractView):
 
     def __init__(self, novel: Novel, event_types: Optional[List[Any]] = None):
-        if event_types:
-            events = event_types
-        else:
-            events = []
+        events = event_types if event_types else []
 
         if CharacterDeletedEvent not in events:
             events.append(CharacterDeletedEvent)
         if NovelSyncEvent not in events:
             events.append(NovelSyncEvent)
-        super().__init__(events)
+        super().__init__()
+
         self.novel = novel
+        self._dispatcher = event_dispatchers.instance(self.novel)
+        self._dispatcher.register(self, events)
 
     @busy
     @abstractmethod
