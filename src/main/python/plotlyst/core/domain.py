@@ -310,7 +310,6 @@ class Character:
     prefs: CharacterPreferences = field(default_factory=CharacterPreferences)
     topics: List[TemplateValue] = field(default_factory=list)
     big_five: Dict[str, List[int]] = field(default_factory=default_big_five_values)
-    novel: Optional['Novel'] = None
 
     def enneagram(self) -> Optional[SelectionItem]:
         for value in self.template_values:
@@ -894,7 +893,6 @@ class Scene:
     document: Optional['Document'] = None
     manuscript: Optional['Document'] = None
     drive: SceneDrive = SceneDrive()
-    novel: Optional['Novel'] = None
 
     def beat(self, novel: 'Novel') -> Optional[StoryBeat]:
         structure = novel.active_story_structure

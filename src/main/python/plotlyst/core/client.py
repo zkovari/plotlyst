@@ -528,10 +528,6 @@ class JsonClient:
                       conflicts=conflicts, goals=[x for x in novel_info.goals if str(x.id) in goal_ids], tags=tags_dict,
                       documents=novel_info.documents, premise=novel_info.premise, synopsis=novel_info.synopsis,
                       prefs=novel_info.prefs, manuscript_goals=novel_info.manuscript_goals)
-        for character in novel.characters:
-            character.novel = novel
-        for scene in novel.scenes:
-            scene.novel = novel
 
         world_path = self.novels_dir.joinpath(str(novel_info.id)).joinpath('world.json')
         if os.path.exists(world_path):
