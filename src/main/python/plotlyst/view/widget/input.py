@@ -38,7 +38,7 @@ from src.main.python.plotlyst.core.domain import TextStatistics, Character
 from src.main.python.plotlyst.core.text import wc
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
@@ -178,7 +178,7 @@ class GrammarHighlighter(AbstractTextBlockHighlighter, EventListener):
         self._asyncTimer.setInterval(20)
         self._asyncTimer.timeout.connect(self._highlightNextBlock)
 
-        event_dispatcher.register(self, LanguageToolSet)
+        global_event_dispatcher.register(self, LanguageToolSet)
 
     def checkEnabled(self) -> bool:
         return self._checkEnabled
