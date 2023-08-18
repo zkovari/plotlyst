@@ -26,6 +26,7 @@ from PyQt6.QtCore import QTimer, Qt, QObject
 from PyQt6.QtGui import QCursor
 from PyQt6.QtWidgets import QMessageBox, QWidget, QStatusBar, QApplication
 
+from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventLog, Severity, \
     emit_critical, EventListener, Event
@@ -124,4 +125,22 @@ class EventDispatcher:
                     listener.event_received(event)
 
 
-event_dispatcher = EventDispatcher()
+class EventDispatchersRepository:
+    def __init__(self):
+        self._dispatchers: Dict[Novel, EventDispatcher] = {}
+
+    def instance(self, novel: Novel) -> EventDispatcher:
+        if novel not in self._dispatchers.keys():
+            self._dispatchers[novel] = EventDispatcher()
+
+        return self._dispatchers[novel]
+
+    def pop(self, novel: Novel):
+        dispatcher = self._dispatchers.pop(novel, None)
+        if dispatcher:
+            dispatcher.clear()
+
+
+event_dispatchers = EventDispatchersRepository()
+
+global_event_dispatcher = EventDispatcher()
