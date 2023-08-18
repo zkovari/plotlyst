@@ -32,7 +32,7 @@ from src.main.python.plotlyst.common import CHARACTER_MAJOR_COLOR, CHARACTER_SEC
 from src.main.python.plotlyst.core.domain import Novel, SceneStage
 from src.main.python.plotlyst.core.template import RoleImportance
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneStatusChangedEvent
 from src.main.python.plotlyst.service.cache import acts_registry
 from src.main.python.plotlyst.view.common import icon_to_html_img
@@ -74,7 +74,8 @@ class SceneStageProgressCharts(EventListener):
 
         self._act_colors = {1: ACT_ONE_COLOR, 2: ACT_TWO_COLOR, 3: ACT_THREE_COLOR}
 
-        event_dispatcher.register(self, SceneStatusChangedEvent)
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, SceneStatusChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
