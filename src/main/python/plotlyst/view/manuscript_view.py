@@ -30,7 +30,7 @@ from qttextedit.ops import TextEditorSettingsWidget, TextEditorSettingsSection
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Document, Chapter
 from src.main.python.plotlyst.core.domain import Scene
-from src.main.python.plotlyst.event.core import emit_event, emit_critical, emit_info, Event
+from src.main.python.plotlyst.event.core import emit_global_event, emit_critical, emit_info, Event, emit_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, SceneChangedEvent, OpenDistractionFreeMode, \
     ChapterChangedEvent, SceneDeletedEvent, ExitDistractionFreeMode, NovelSyncEvent, CloseNovelEvent
 from src.main.python.plotlyst.resources import ResourceType
@@ -224,7 +224,7 @@ class ManuscriptView(AbstractNovelView):
         self.ui.treeChapters.refresh()
 
     def _enter_distraction_free(self):
-        emit_event(OpenDistractionFreeMode(self))
+        emit_global_event(OpenDistractionFreeMode(self))
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageDistractionFree)
         margins(self.widget, 0, 0, 0, 0)
         self.ui.wdgTitle.setHidden(True)
@@ -233,7 +233,7 @@ class ManuscriptView(AbstractNovelView):
         self._dist_free_editor.setWordDisplay(self.ui.lblWordCount)
 
     def _exit_distraction_free(self):
-        emit_event(ExitDistractionFreeMode(self))
+        emit_global_event(ExitDistractionFreeMode(self))
         self._dist_free_editor.deactivate()
         margins(self.widget, 4, 2, 2, 2)
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageText)
@@ -344,7 +344,7 @@ class ManuscriptView(AbstractNovelView):
 
     def _scene_title_changed(self, scene: Scene):
         self.repo.update_scene(scene)
-        emit_event(SceneChangedEvent(self, scene))
+        emit_event(self.novel, SceneChangedEvent(self, scene))
 
     def _edit_wc_goal(self):
         goal, changed = QInputDialog.getInt(self.ui.btnEditGoal, 'Word count goal', 'Edit word count target',
@@ -418,7 +418,7 @@ class ManuscriptView(AbstractNovelView):
         self.novel.lang_settings.lang = lang
         self.repo.update_project_novel(self.novel)
         flush_or_fail()
-        emit_event(CloseNovelEvent(self, self.novel))
+        emit_global_event(CloseNovelEvent(self, self.novel))
 
     def _is_empty_page(self) -> bool:
         return self.ui.stackedWidget.currentWidget() == self.ui.pageEmpty
