@@ -34,8 +34,8 @@ from qtmenu import MenuWidget
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Scene, Novel, Chapter, SceneStage, Event, SceneType
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_event, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import EventListener, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent, SceneDeletedEvent, NovelStoryStructureUpdated, \
     SceneSelectedEvent, SceneSelectionClearedEvent, ActiveSceneStageChanged, \
     ChapterChangedEvent, AvailableSceneStagesChanged, CharacterChangedEvent, CharacterDeletedEvent, \
@@ -89,9 +89,8 @@ class ScenesTitle(QWidget, Ui_ScenesTitle, EventListener):
         sp(self._chartDistributionView).h_exp().v_exp()
         self.refresh()
 
-        event_dispatcher.register(self, SceneChangedEvent)
-        event_dispatcher.register(self, SceneDeletedEvent)
-        event_dispatcher.register(self, NovelSyncEvent)
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent, NovelSyncEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -297,8 +296,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.btnEdit.setEnabled(selection)
         if selection:
             self.ui.treeChapters.clearSelection()
-            emit_event(
-                SceneSelectedEvent(self, indexes[0].data(ScenesTableModel.SceneRole)))
+            emit_event(self.novel, SceneSelectedEvent(self, indexes[0].data(ScenesTableModel.SceneRole)))
 
     def _on_chapter_selected(self, chapter: Chapter):
         self.ui.tblScenes.clearSelection()
@@ -352,7 +350,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
 
-        emit_event(SceneChangedEvent(self, self.editor.scene))
+        emit_event(self.novel, SceneChangedEvent(self, self.editor.scene))
         gc(self.editor.widget)
         gc(self.editor)
         self.editor = None
@@ -403,7 +401,7 @@ class ScenesOutlineView(AbstractNovelView):
         self.selected_card = card
         self._enable_action_buttons(True)
         self.ui.treeChapters.selectScene(card.scene)
-        emit_event(SceneSelectedEvent(self, card.scene))
+        emit_event(self.novel, SceneSelectedEvent(self, card.scene))
 
     def _selection_cleared(self):
         self._enable_action_buttons(False)
@@ -473,7 +471,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.ui.tblScenes.hideColumn(col)
         self.ui.tblScenes.verticalHeader().setDefaultSectionSize(height)
 
-        emit_event(SceneSelectionClearedEvent(self))
+        emit_event(self.novel, SceneSelectionClearedEvent(self))
 
     def _customize_stages(self):
         diag = ItemsEditorDialog(NovelStagesModel(copy.deepcopy(self.novel.stages)))
@@ -492,7 +490,7 @@ class ScenesOutlineView(AbstractNovelView):
 
             self.repo.update_novel(self.novel)
             self._init_stages_view()
-            emit_event(AvailableSceneStagesChanged(self))
+            emit_event(self.novel, AvailableSceneStagesChanged(self))
 
     def _init_stages_view(self):
         def change_stage(stage: SceneStage):
@@ -501,7 +499,7 @@ class ScenesOutlineView(AbstractNovelView):
             self.stagesModel.setHighlightedStage(stage)
             self.novel.prefs.active_stage_id = stage.id
             self.repo.update_novel(self.novel)
-            emit_event(ActiveSceneStageChanged(self, stage))
+            emit_event(self.novel, ActiveSceneStageChanged(self, stage))
 
         def header_clicked(col: int):
             if col > 1:
@@ -585,7 +583,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _insert_scene_after(self, scene: Scene, chapter: Optional[Chapter] = None):
         new_scene = self.novel.insert_scene_after(scene, chapter)
         self.repo.insert_scene(self.novel, new_scene)
-        emit_event(SceneChangedEvent(self, new_scene))
+        emit_event(self.novel, SceneChangedEvent(self, new_scene))
 
         self.refresh()
         self._switch_to_editor(new_scene)
@@ -593,7 +591,7 @@ class ScenesOutlineView(AbstractNovelView):
     def _on_delete(self):
         scene: Optional[Scene] = self._selected_scene()
         if scene and delete_scene(self.novel, scene):
-            emit_event(SceneDeletedEvent(self, scene))
+            emit_event(self.novel, SceneDeletedEvent(self, scene))
             self.refresh()
 
         # elif not scene:
@@ -619,7 +617,7 @@ class ScenesOutlineView(AbstractNovelView):
 
         self.repo.update_novel(self.novel)
 
-        emit_event(SceneOrderChangedEvent(self))
+        emit_event(self.novel, SceneOrderChangedEvent(self))
 
     def _on_scene_moved(self):
         self.repo.update_novel(self.novel)
