@@ -31,7 +31,7 @@ from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Character, Document, MALE, FEMALE, SelectionItem
 from src.main.python.plotlyst.core.template import protagonist_role
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelAboutToSyncEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
@@ -185,7 +185,8 @@ class CharacterEditor(QObject, EventListener):
         self.ui.tabAttributes.setCurrentWidget(self.ui.tabBackstory)
 
         self.repo = RepositoryPersistenceManager.instance()
-        event_dispatcher.register(self, NovelAboutToSyncEvent)
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, NovelAboutToSyncEvent)
 
     @overrides
     def event_received(self, event: Event):
