@@ -24,7 +24,7 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QWidget, QDialog
 from qttour import TourManager, TourSequence, TourStep
 
-from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.event.core import emit_global_event
 from src.main.python.plotlyst.view.widget.tour import Tutorial
 from src.main.python.plotlyst.view.widget.tour.core import COLOR_ON_NAVBAR, tour_events, TourEvent, tour_teardowns
 
@@ -79,11 +79,11 @@ class TourService(QObject):
     def _nextEvent(self):
         event = next(self._events_iter, None)
         if event is not None:
-            emit_event(event)
+            emit_global_event(event)
         else:
             self._manager.finish()
 
     def _tourFinished(self):
         teardown = tour_teardowns.get(self._tutorial)
         if teardown:
-            emit_event(teardown(self))
+            emit_global_event(teardown(self))
