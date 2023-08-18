@@ -30,8 +30,8 @@ from src.main.python.plotlyst.common import NAV_BAR_BUTTON_DEFAULT_COLOR, \
     NAV_BAR_BUTTON_CHECKED_COLOR
 from src.main.python.plotlyst.core.client import client
 from src.main.python.plotlyst.core.domain import NovelDescriptor
-from src.main.python.plotlyst.event.core import emit_event, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import emit_global_event, Event
+from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.events import NovelDeletedEvent, NovelUpdatedEvent
 from src.main.python.plotlyst.resources import resource_registry
 from src.main.python.plotlyst.service.persistence import flush_or_fail
@@ -172,7 +172,7 @@ class HomeView(AbstractView):
         self._novels = client.novels()
         self.refresh()
 
-        event_dispatcher.register(self, NovelUpdatedEvent)
+        global_event_dispatcher.register(self, NovelUpdatedEvent)
 
     def novels(self) -> List[NovelDescriptor]:
         return self._novels
@@ -260,7 +260,7 @@ class HomeView(AbstractView):
             self._selected_novel.title = title
             self._shelvesTreeView.updateNovel(self._selected_novel)
             self.repo.update_project_novel(self._selected_novel)
-            emit_event(NovelUpdatedEvent(self, self._selected_novel))
+            emit_global_event(NovelUpdatedEvent(self, self._selected_novel))
 
     def _subtitle_edited(self, subtitle: str):
         self._selected_novel.subtitle = subtitle
@@ -287,7 +287,7 @@ class HomeView(AbstractView):
         if ask_confirmation(f'Are you sure you want to delete the novel "{novel.title}"?'):
             self.repo.delete_novel(novel)
             self._novels.remove(novel)
-            emit_event(NovelDeletedEvent(self, novel))
+            emit_global_event(NovelDeletedEvent(self, novel))
             if self._selected_novel and novel.id == self._selected_novel.id:
                 self._selected_novel = None
                 self.reset()
