@@ -27,8 +27,8 @@ from qthandy import vbox, vspacer, transparent, sp, line, incr_font
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.core.domain import Scene, Novel
-from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneChangedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 from src.main.python.plotlyst.view.common import DelayedSignalSlotConnector, action
@@ -67,7 +67,8 @@ class SceneMiniEditor(QWidget, EventListener):
         DelayedSignalSlotConnector(self._textSynopsis.textChanged, self._save, parent=self)
 
         self._repo = RepositoryPersistenceManager.instance()
-        event_dispatcher.register(self, SceneChangedEvent)
+        dispatcher = event_dispatchers.instance(self._novel)
+        dispatcher.register(self, SceneChangedEvent)
 
     def setScene(self, scene: Scene):
         self.setScenes([scene])
@@ -116,4 +117,4 @@ class SceneMiniEditor(QWidget, EventListener):
         if self._currentScene and self._currentScene.synopsis != self._textSynopsis.toPlainText():
             self._currentScene.synopsis = self._textSynopsis.toPlainText()
             self._repo.update_scene(self._currentScene)
-            emit_event(SceneChangedEvent(self, self._currentScene))
+            emit_event(self._novel, SceneChangedEvent(self, self._currentScene))
