@@ -26,8 +26,8 @@ from language_tool_python import LanguageTool
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Novel, Event
-from src.main.python.plotlyst.event.core import emit_event, emit_info, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import emit_global_event, emit_info, EventListener
+from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEvent
 
 
@@ -57,7 +57,7 @@ class LanguageToolProxy:
         self._language_tool = language_tool
         self._error = None
         emit_info('Grammar checker was set up.')
-        emit_event(LanguageToolSet(self, self._language_tool))
+        emit_global_event(LanguageToolSet(self, self._language_tool))
 
     def set_error(self, error_msg: str):
         self._error = error_msg
