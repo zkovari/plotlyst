@@ -325,7 +325,7 @@ class ScenesStageTableModel(QAbstractTableModel, BaseScenesTableModel):
 
         RepositoryPersistenceManager.instance().update_scene(scene)
         self.modelReset.emit()
-        emit_event(SceneStatusChangedEvent(self, scene))
+        emit_event(self.novel, SceneStatusChangedEvent(self, scene))
 
     def setHighlightedStage(self, stage: SceneStage):
         self._highlighted_stage = stage
