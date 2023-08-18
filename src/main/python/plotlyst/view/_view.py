@@ -111,7 +111,7 @@ class AbstractNovelView(AbstractView):
 
         self.novel = novel
         self._dispatcher = event_dispatchers.instance(self.novel)
-        self._dispatcher.register(self, events)
+        self._dispatcher.register(self, *events)
 
     @busy
     @abstractmethod
