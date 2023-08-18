@@ -151,7 +151,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
 
         self.ui.splitterCompTree.setSizes([150, 500])
-        self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
+        self._wdgComparison = CharacterComparisonWidget(self.novel, self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
         self._wdgCharactersCompTree = CharactersTreeView(self.novel)
         self.ui.wdgCharactersCompTreeParent.layout().addWidget(self._wdgCharactersCompTree)

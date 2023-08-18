@@ -77,8 +77,9 @@ class BigFiveDisplay(ChartView, BaseDisplay):
 
 
 class SummaryDisplay(QTextEdit, BaseDisplay):
-    def __init__(self, character: Character, parent=None):
+    def __init__(self, novel: Novel, character: Character, parent=None):
         super(SummaryDisplay, self).__init__(parent)
+        self._novel = novel
         self._character = character
         self._blockSave = False
         self.setToolTip('Character summary')
@@ -106,7 +107,7 @@ class SummaryDisplay(QTextEdit, BaseDisplay):
 
         self._character.set_summary(self.toPlainText())
         self.repo.update_character(self._character)
-        emit_event(self._character.novel, CharacterSummaryChangedEvent(self, self._character))
+        emit_event(self._novel, CharacterSummaryChangedEvent(self, self._character))
 
 
 class FacultiesDisplay(QWidget, BaseDisplay):
@@ -181,8 +182,9 @@ class FacultiesDisplay(QWidget, BaseDisplay):
 
 
 class CharacterOverviewWidget(QWidget, EventListener):
-    def __init__(self, character: Character, parent=None):
+    def __init__(self, novel: Novel, character: Character, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._character = character
 
         self._avatar = QLabel(self)
@@ -204,7 +206,7 @@ class CharacterOverviewWidget(QWidget, EventListener):
         self.layout().addWidget(self._displayContainer)
         self.layout().addWidget(vspacer())
 
-        dispatcher = event_dispatchers.instance(self._character.novel)
+        dispatcher = event_dispatchers.instance(self._novel)
         dispatcher.register(self, CharacterChangedEvent)
 
     @overrides
@@ -223,7 +225,7 @@ class CharacterOverviewWidget(QWidget, EventListener):
             self._display = BigFiveDisplay(self._character)
             self._displayContainer.layout().addWidget(self._display)
         elif attribute == CharacterComparisonAttribute.SUMMARY:
-            self._display = SummaryDisplay(self._character)
+            self._display = SummaryDisplay(self._novel, self._character)
             self._displayContainer.layout().addWidget(self._display, alignment=Qt.AlignmentFlag.AlignCenter)
         elif attribute == CharacterComparisonAttribute.FACULTIES:
             self._display = FacultiesDisplay(self._character)
@@ -237,15 +239,16 @@ class LayoutType(Enum):
 
 
 class CharacterComparisonWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._characters: Dict[Character, CharacterOverviewWidget] = {}
         hbox(self)
         self._currentDisplay: CharacterComparisonAttribute = CharacterComparisonAttribute.SUMMARY
 
     def updateCharacter(self, character: Character, enabled: bool):
         if enabled:
-            wdg = CharacterOverviewWidget(character)
+            wdg = CharacterOverviewWidget(self._novel, character)
             wdg.display(self._currentDisplay)
             self._characters[character] = wdg
             self.layout().addWidget(wdg)
