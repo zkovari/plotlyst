@@ -30,7 +30,7 @@ from qthandy.filter import OpacityEventFilter
 
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COMPLEMENTARY_COLOR
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import global_event_dispatcher
 from src.main.python.plotlyst.model.common import proxy
 from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDescriptor, \
     ResourceStatusChangedEvent
@@ -391,7 +391,7 @@ class ResourceManagerWidget(QWidget, EventListener):
             self._gridLayout.addWidget(contr.btnDownload, i + 2, 3, alignment=Qt.AlignmentFlag.AlignCenter)
             self._gridLayout.addWidget(spacer(), i + 2, 4)
 
-        event_dispatcher.register(self, ResourceStatusChangedEvent)
+        global_event_dispatcher.register(self, ResourceStatusChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
