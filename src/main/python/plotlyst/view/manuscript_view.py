@@ -285,7 +285,7 @@ class ManuscriptView(AbstractNovelView):
         self.notesEditor.setScene(scene)
         self.ui.btnNotes.setEnabled(True)
         self.ui.btnStage.setEnabled(True)
-        self.ui.btnStage.setScene(scene)
+        self.ui.btnStage.setScene(scene, self.novel)
 
         self._recheckDocument()
 

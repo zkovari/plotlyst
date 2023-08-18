@@ -213,7 +213,7 @@ class SceneCard(Ui_SceneCard, Card):
         else:
             self.lblType.clear()
 
-        self.btnStage.setScene(self.scene)
+        self.btnStage.setScene(self.scene, self.novel)
 
         self._setStyleSheet()
 
