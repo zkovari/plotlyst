@@ -79,6 +79,7 @@ class EventSendersRepository:
     def pop(self, novel: Novel):
         self._senders.pop(novel, None)
 
+
 event_senders = EventSendersRepository()
 
 global_event_sender = EventSender()
