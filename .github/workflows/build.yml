@@ -96,17 +96,16 @@ jobs:
 
       - if: matrix.os == 'macos-11'
         name: "Notarize Macos App"
-        uses: devbotsxyz/xcode-notarize@v1
+        uses: lando/notarize-action@v2.0.2
         with:
           product-path: "target/Plotlyst.app"
           appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
           appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
-          verbose: "true"
-        continue-on-error: true
+          appstore-connect-team-id: W527JJ9SK4
 
       - if: matrix.os == 'macos-11'
         name: "Staple Macos App"
-        uses: devbotsxyz/xcode-staple@v1
+        uses: BoundfoxStudios/action-xcode-staple@v1
         with:
           product-path: "target/Plotlyst.app"
 
