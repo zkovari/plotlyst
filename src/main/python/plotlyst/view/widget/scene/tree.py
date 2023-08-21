@@ -248,7 +248,7 @@ class ScenesTreeView(TreeView, EventListener):
         wdg = self.__initSceneWidget(scene)
         insert_before_the_end(self._centralWidget, wdg)
 
-        self.repo.update_novel(self._novel)
+        self.repo.insert_scene(self._novel, scene)
         emit_event(self._novel, SceneChangedEvent(self, scene))
         self.sceneAdded.emit(scene)
 
@@ -294,6 +294,7 @@ class ScenesTreeView(TreeView, EventListener):
         scene = self._novel.new_scene()
         scene.chapter = chapterWdg.chapter()
         self._novel.scenes.append(scene)
+
         self.repo.insert_scene(self._novel, scene)
         sceneWdg = self.__initSceneWidget(scene)
         chapterWdg.addChild(sceneWdg)
