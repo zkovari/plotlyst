@@ -557,11 +557,14 @@ class EventsMindMapView(BaseGraphicsView):
         elif self._btnAddCharacter.isChecked():
             self._scene.startAdditionMode(AdditionMode.CHARACTER)
 
+        if not QApplication.overrideCursor():
+            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+
     def _endAddition(self):
         btn = self._btnGroup.checkedButton()
         if btn:
             btn.setChecked(False)
-
+        QApplication.restoreOverrideCursor()
         self._scene.endAdditionMode()
 
     def __arrangeSideBars(self):
