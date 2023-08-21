@@ -105,8 +105,8 @@ class EventDispatcher:
             if event_type not in self._listeners.keys():
                 self._listeners[event_type] = []
             self._listeners[event_type].append(listener)
-            if isinstance(listener, QObject):
-                listener.destroyed.connect(lambda: self.deregister(listener, event_type))
+        if isinstance(listener, QObject):
+            listener.destroyed.connect(lambda: self.deregister(listener, *event_types))
 
     def clear(self):
         self._listeners.clear()
