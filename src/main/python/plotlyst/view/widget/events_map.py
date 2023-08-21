@@ -134,6 +134,11 @@ class SocketItem(QAbstractGraphicsShapeItem):
         for con in self._connectors:
             con.rearrange()
 
+    def removeConnectors(self):
+        for con in self._connectors:
+            self.scene().removeItem(con)
+        self._connectors.clear()
+
     def mindMapScene(self) -> 'EventsMindMapScene':
         return self.scene()
 
@@ -150,6 +155,10 @@ class ConnectableNode(MindMapNode):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
         self._sockets: List[SocketItem] = []
+
+    def removeConnectors(self):
+        for socket in self._sockets:
+            socket.removeConnectors()
 
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
@@ -419,6 +428,11 @@ class EventsMindMapScene(QGraphicsScene):
                 self.endLink()
             else:
                 self.clearSelection()
+        elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
+            for item in self.selectedItems():
+                if isinstance(item, ConnectableNode):
+                    item.removeConnectors()
+                self.removeItem(item)
         elif not event.modifiers() and len(self.selectedItems()) == 1:
             item = self.selectedItems()[0]
             if isinstance(item, EventItem):
