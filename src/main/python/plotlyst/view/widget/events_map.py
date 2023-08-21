@@ -340,6 +340,7 @@ class AdditionMode(Enum):
 
 
 class EventsMindMapScene(QGraphicsScene):
+    cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal()
     editEvent = pyqtSignal(EventItem)
 
@@ -408,6 +409,9 @@ class EventsMindMapScene(QGraphicsScene):
 
         self.endLink()
 
+    def isAdditionMode(self) -> bool:
+        return self._additionMode != AdditionMode.NONE
+
     def startAdditionMode(self, mode: AdditionMode):
         self._additionMode = mode
 
@@ -426,6 +430,8 @@ class EventsMindMapScene(QGraphicsScene):
         if event.key() == Qt.Key.Key_Escape:
             if self.linkMode():
                 self.endLink()
+            elif self.isAdditionMode():
+                self.cancelItemAddition.emit()
             else:
                 self.clearSelection()
         elif event.key() == Qt.Key.Key_Delete or event.key() == Qt.Key.Key_Backspace:
@@ -443,6 +449,8 @@ class EventsMindMapScene(QGraphicsScene):
         if self.linkMode():
             if event.button() & Qt.MouseButton.RightButton:
                 self.endLink()
+        if self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
+            self.cancelItemAddition.emit()
         elif self._additionMode == AdditionMode.EVENT:
             item = EventItem(self.toEventNode(event))
             self.addItem(item)
@@ -473,6 +481,7 @@ class EventsMindMapView(BaseGraphicsView):
         # self.scale(0.6, 0.6)
 
         self._scene.itemAdded.connect(self._endAddition)
+        self._scene.cancelItemAddition.connect(self._endAddition)
         self._scene.editEvent.connect(self._editEvent)
 
         self._controlsNavBar = frame(self)
