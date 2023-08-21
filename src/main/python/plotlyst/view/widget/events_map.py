@@ -33,6 +33,7 @@ from src.main.python.plotlyst.core.domain import Novel, Character, CharacterNode
 from src.main.python.plotlyst.view.common import tool_btn, shadow, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, NodeItem, ConnectorItem
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
 
@@ -299,12 +300,13 @@ class EventItem(ConnectableNode):
 
 
 class CharacterItem(ConnectableNode):
-    def __init__(self, character: Character, node: CharacterNode, parent=None):
-        super().__init__(node, parent)
-        self._character = character
+    Margin: int = 25
 
+    def __init__(self, node: Node, character: Optional[Character], parent=None):
+        super().__init__(node, parent)
+        self._character: Optional[Character] = character
+        self.setPos(node.x, node.y)
         self._size: int = 68
-        self._margin = 25
 
         self._socketTop = SocketItem(self)
         self._socketRight = SocketItem(self)
@@ -312,30 +314,34 @@ class CharacterItem(ConnectableNode):
         self._socketLeft = SocketItem(self)
         self._sockets.extend([self._socketLeft, self._socketTop, self._socketRight, self._socketBottom])
         socketWidth = self._socketTop.boundingRect().width()
-        half = self._margin + (self._size - socketWidth) / 2
-        padding = (self._margin - socketWidth) / 2
+        half = self.Margin + (self._size - socketWidth) / 2
+        padding = (self.Margin - socketWidth) / 2
         self._socketTop.setPos(half, padding)
-        self._socketRight.setPos(self._size + self._margin + padding, half)
-        self._socketBottom.setPos(half, self._size + self._margin + padding)
+        self._socketRight.setPos(self._size + self.Margin + padding, half)
+        self._socketBottom.setPos(half, self._size + self.Margin + padding)
         self._socketLeft.setPos(padding, half)
 
         self._setSocketsVisible(False)
 
     @overrides
     def boundingRect(self) -> QRectF:
-        return QRectF(0, 0, self._size + self._margin * 2, self._size + self._margin * 2)
+        return QRectF(0, 0, self._size + self.Margin * 2, self._size + self.Margin * 2)
 
-    def rightSocket(self) -> SocketItem:
-        return self._socketRight
+    def setCharacter(self, character: Character):
+        self._character = character
+        self.update()
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
         if self.isSelected():
             painter.setPen(QPen(Qt.GlobalColor.gray, 2, Qt.PenStyle.DashLine))
-            painter.drawRoundedRect(self._margin, self._margin, self._size, self._size, 2, 2)
+            painter.drawRoundedRect(self.Margin, self.Margin, self._size, self._size, 2, 2)
 
-        avatar = avatars.avatar(self._character)
-        avatar.paint(painter, self._margin, self._margin, self._size, self._size)
+        if self._character is None:
+            avatar = IconRegistry.character_icon()
+        else:
+            avatar = avatars.avatar(self._character)
+        avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
 
 
 class TextLineEditorPopup(MenuWidget):
@@ -367,6 +373,7 @@ class AdditionMode(Enum):
 class EventsMindMapScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal()
+    characterAdded = pyqtSignal(CharacterItem)
     editEvent = pyqtSignal(EventItem)
 
     def __init__(self, novel: Novel, parent=None):
@@ -384,8 +391,7 @@ class EventsMindMapScene(QGraphicsScene):
         self._connectorPlaceholder: Optional[ConnectorItem] = None
 
         if novel.characters:
-            characterItem = CharacterItem(novel.characters[0], CharacterNode(50, 50))
-            characterItem.setPos(50, 50)
+            characterItem = CharacterItem(CharacterNode(50, 50), novel.characters[0])
 
             self.addItem(characterItem)
         eventItem = EventItem(Node(400, 100))
@@ -470,7 +476,8 @@ class EventsMindMapScene(QGraphicsScene):
 
     @overrides
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform()):
+        if not self.isAdditionMode() and event.button() & Qt.MouseButton.LeftButton and not self.itemAt(
+                event.scenePos(), QTransform()):
             self._selectionRect.start(event.scenePos())
             self._selectionMode = True
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
@@ -500,13 +507,21 @@ class EventsMindMapScene(QGraphicsScene):
             self._selectionRect.setVisible(False)
             self._updateSelection()
         elif self._additionMode == AdditionMode.EVENT:
-            item = EventItem(self.toEventNode(event))
-            self.addItem(item)
-            self.itemAdded.emit()
+            self._addNewEvent(event.scenePos())
         elif self._additionMode == AdditionMode.CHARACTER:
-            self.itemAdded.emit()
+            self._addNewCharacter(event.scenePos())
 
         super().mouseReleaseEvent(event)
+
+    def _addNewEvent(self, scenePos: QPointF):
+        item = EventItem(self.toEventNode(scenePos))
+        self.addItem(item)
+        self.itemAdded.emit()
+
+    def _addNewCharacter(self, scenePos: QPointF):
+        item = CharacterItem(self.toCharacterNode(scenePos), character=None)
+        self.addItem(item)
+        self.characterAdded.emit(item)
 
     def _updateSelection(self):
         if not self._selectionRect.rect().isValid():
@@ -517,10 +532,17 @@ class EventsMindMapScene(QGraphicsScene):
             item.setSelected(True)
 
     @staticmethod
-    def toEventNode(event: 'QGraphicsSceneMouseEvent') -> Node:
-        node = Node(event.scenePos().x(), event.scenePos().y())
+    def toEventNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y())
         node.x = node.x - EventItem.Margin - EventItem.Padding
         node.y = node.y - EventItem.Margin - EventItem.Padding
+        return node
+
+    @staticmethod
+    def toCharacterNode(scenePos: QPointF) -> Node:
+        node = Node(scenePos.x(), scenePos.y())
+        node.x = node.x - CharacterItem.Margin
+        node.y = node.y - CharacterItem.Margin
         return node
 
 
@@ -534,6 +556,7 @@ class EventsMindMapView(BaseGraphicsView):
         self.setBackgroundBrush(QColor('#e9ecef'))
 
         self._scene.itemAdded.connect(self._endAddition)
+        self._scene.characterAdded.connect(self._endCharacterAddition)
         self._scene.cancelItemAddition.connect(self._endAddition)
         self._scene.editEvent.connect(self._editEvent)
 
@@ -619,6 +642,16 @@ class EventsMindMapView(BaseGraphicsView):
             btn.setChecked(False)
         QApplication.restoreOverrideCursor()
         self._scene.endAdditionMode()
+
+    def _endCharacterAddition(self, item: CharacterItem):
+        def select(character: Character):
+            item.setCharacter(character)
+
+        self._endAddition()
+        popup = CharacterSelectorMenu(self._novel, parent=self)
+        popup.selected.connect(select)
+        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
+        popup.exec(self.mapToGlobal(view_pos))
 
     def __arrangeSideBars(self):
         self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 10,
