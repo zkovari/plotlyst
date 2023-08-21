@@ -45,7 +45,7 @@ from src.main.python.plotlyst.view.widget.plot import PlotEditor
 class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent])
+        super().__init__(novel, [SceneChangedEvent], global_event_types=[NovelUpdatedEvent])
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
