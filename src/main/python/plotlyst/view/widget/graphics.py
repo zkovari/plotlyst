@@ -32,6 +32,7 @@ class ConnectorItem(QGraphicsPathItem):
     def __init__(self, source: QAbstractGraphicsShapeItem, target: QAbstractGraphicsShapeItem,
                  pen: Optional[QPen] = None):
         super(ConnectorItem, self).__init__()
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self._source = source
         self._target = target
         if pen:
@@ -39,7 +40,6 @@ class ConnectorItem(QGraphicsPathItem):
         else:
             self.setPen(QPen(QColor(Qt.GlobalColor.darkBlue), 2))
 
-        # self.setPos(self._source.sceneBoundingRect().center())
         self.rearrange()
 
     def rearrange(self):
