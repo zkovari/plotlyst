@@ -47,8 +47,8 @@ from src.main.python.plotlyst.core.domain import Scene, Novel, SceneStructureIte
 from src.main.python.plotlyst.core.help import scene_disaster_outcome_help, scene_trade_off_outcome_help, \
     scene_resolution_outcome_help
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_critical, emit_event, Event, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import emit_critical, Event, EventListener, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import SceneStatusChangedEvent, \
     ActiveSceneStageChanged, AvailableSceneStagesChanged, SceneOrderChangedEvent
 from src.main.python.plotlyst.model.novel import NovelTagsTreeModel, TagNode
@@ -1122,10 +1122,11 @@ class StoryMap(QWidget, EventListener):
         self.setStyleSheet(f'QWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
         self._refreshOnShow = False
-        event_dispatcher.register(self, SceneOrderChangedEvent)
 
     def setNovel(self, novel: Novel):
         self.novel = novel
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, SceneOrderChangedEvent)
         self.refresh()
 
     @overrides
@@ -1241,7 +1242,7 @@ class SceneNotesEditor(DocumentTextEditor):
 
 class SceneStageButton(QToolButton, EventListener):
     def __init__(self, parent=None):
-        super(SceneStageButton, self).__init__(parent)
+        super().__init__(parent)
         self._scene: Optional[Scene] = None
         self._novel: Optional[Novel] = None
         self._stageOk: bool = False
@@ -1252,10 +1253,6 @@ class SceneStageButton(QToolButton, EventListener):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-        event_dispatcher.register(self, ActiveSceneStageChanged)
-        event_dispatcher.register(self, SceneStatusChangedEvent)
-        event_dispatcher.register(self, AvailableSceneStagesChanged)
-
     @overrides
     def event_received(self, event: Event):
         if isinstance(event, (ActiveSceneStageChanged, AvailableSceneStagesChanged)):
@@ -1263,9 +1260,13 @@ class SceneStageButton(QToolButton, EventListener):
         elif isinstance(event, SceneStatusChangedEvent) and event.scene == self._scene:
             self.updateStage()
 
-    def setScene(self, scene: Scene):
+    def setScene(self, scene: Scene, novel: Novel):
         self._scene = scene
-        self._novel = app_env.novel
+        self._novel = novel
+
+        dispatcher = event_dispatchers.instance(self._novel)
+        dispatcher.register(self, ActiveSceneStageChanged, SceneStatusChangedEvent, AvailableSceneStagesChanged)
+
         self.updateStage()
 
     def stageOk(self) -> bool:
@@ -1298,7 +1299,7 @@ class SceneStageButton(QToolButton, EventListener):
         self.updateStage()
         self.repo.update_scene(self._scene)
 
-        emit_event(SceneStatusChangedEvent(self, self._scene))
+        emit_event(self._novel, SceneStatusChangedEvent(self, self._scene))
 
 
 class SceneDriveTrackingEditor(QWidget, Ui_SceneDriveTrackingEditor):

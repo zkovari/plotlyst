@@ -28,12 +28,11 @@ from overrides import overrides
 from qthandy import busy, gc, incr_font, bold, vbox, vspacer
 from qthandy.filter import InstantTooltipEventFilter, OpacityEventFilter
 from qtmenu import MenuWidget
-
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
 from src.main.python.plotlyst.model.common import proxy
@@ -67,9 +66,10 @@ class CharactersTitle(QWidget, Ui_CharactersTitle, EventListener):
 
         self.refresh()
 
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
-        event_dispatcher.register(self, NovelSyncEvent)
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterChangedEvent)
+        dispatcher.register(self, CharacterDeletedEvent)
+        dispatcher.register(self, NovelSyncEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -151,7 +151,7 @@ class CharactersView(AbstractNovelView):
         self.ui.btnBigFiveComparison.setIcon(IconRegistry.big_five_icon(color_on=PLOTLYST_SECONDARY_COLOR))
 
         self.ui.splitterCompTree.setSizes([150, 500])
-        self._wdgComparison = CharacterComparisonWidget(self.ui.pageComparison)
+        self._wdgComparison = CharacterComparisonWidget(self.novel, self.ui.pageComparison)
         self.ui.scrollAreaComparisonContent.layout().addWidget(self._wdgComparison)
         self._wdgCharactersCompTree = CharactersTreeView(self.novel)
         self.ui.wdgCharactersCompTreeParent.layout().addWidget(self._wdgCharactersCompTree)
@@ -304,7 +304,7 @@ class CharactersView(AbstractNovelView):
         self.ui.stackedWidget.setCurrentWidget(self.ui.pageView)
         self.title.setVisible(True)
 
-        emit_event(CharacterChangedEvent(self, character))
+        emit_event(self.novel, CharacterChangedEvent(self, character))
         gc(self.editor.widget)
         gc(self.editor)
         self.editor = None
@@ -329,7 +329,7 @@ class CharactersView(AbstractNovelView):
 
         if character and delete_character(self.novel, character):
             self.ui.wdgCharacterSelector.removeCharacter(character)
-            emit_event(CharacterDeletedEvent(self, character))
+            emit_event(self.novel, CharacterDeletedEvent(self, character))
             self.refresh()
 
     @busy

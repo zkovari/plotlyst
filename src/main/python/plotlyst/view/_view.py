@@ -27,26 +27,26 @@ from qthandy import busy
 
 from src.main.python.plotlyst.core.domain import Novel
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import global_event_dispatcher, event_dispatchers
 from src.main.python.plotlyst.events import CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager
 
 
 class AbstractView(QObject, EventListener):
 
-    def __init__(self, event_types: Optional[List[Any]] = None):
+    def __init__(self, global_event_types: Optional[List[Any]] = None):
         super().__init__(None)
         self._refresh_on_activation: bool = False
         self.widget = QWidget()
         self.title: Optional[QWidget] = None
         self._navigable_button_group: Optional[QButtonGroup] = None
-        if event_types:
-            self._event_types = event_types
+        if global_event_types:
+            self._global_event_types = global_event_types
         else:
-            self._event_types = []
+            self._global_event_types = []
 
-        for event in self._event_types:
-            event_dispatcher.register(self, event)
+        for event in self._global_event_types:
+            global_event_dispatcher.register(self, event)
 
         self.repo = RepositoryPersistenceManager.instance()
 
@@ -57,15 +57,10 @@ class AbstractView(QObject, EventListener):
 
     @overrides
     def event_received(self, event: Event):
-        refresh = False
-        for et in self._event_types:
-            if isinstance(event, et):
-                refresh = True
-        if refresh:
-            if self.widget.isVisible():
-                self.refresh()
-            else:
-                self._refresh_on_activation = True
+        if self.widget.isVisible():
+            self.refresh()
+        else:
+            self._refresh_on_activation = True
 
     def activate(self):
         if self._refresh_on_activation:
@@ -101,18 +96,19 @@ class AbstractView(QObject, EventListener):
 
 class AbstractNovelView(AbstractView):
 
-    def __init__(self, novel: Novel, event_types: Optional[List[Any]] = None):
-        if event_types:
-            events = event_types
-        else:
-            events = []
+    def __init__(self, novel: Novel, event_types: Optional[List[Any]] = None,
+                 global_event_types: Optional[List[Any]] = None):
+        events = event_types if event_types else []
 
         if CharacterDeletedEvent not in events:
             events.append(CharacterDeletedEvent)
         if NovelSyncEvent not in events:
             events.append(NovelSyncEvent)
-        super().__init__(events)
+        super().__init__(global_event_types)
+
         self.novel = novel
+        self._dispatcher = event_dispatchers.instance(self.novel)
+        self._dispatcher.register(self, *events)
 
     @busy
     @abstractmethod

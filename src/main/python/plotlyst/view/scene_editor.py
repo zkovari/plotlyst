@@ -33,7 +33,7 @@ from src.main.python.plotlyst.core.domain import Novel, Scene, Document, StoryBe
     Character, ScenePlotReference, TagReference
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_info, EventListener, Event, emit_event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelAboutToSyncEvent, SceneStoryBeatChangedEvent
 from src.main.python.plotlyst.model.characters_model import CharactersSceneAssociationTableModel
 from src.main.python.plotlyst.service.cache import acts_registry
@@ -138,7 +138,8 @@ class SceneEditor(QObject, EventListener):
         self.repo = RepositoryPersistenceManager.instance()
         self.ui.btnAttributes.setChecked(True)
 
-        event_dispatcher.register(self, NovelAboutToSyncEvent)
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, NovelAboutToSyncEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -208,7 +209,7 @@ class SceneEditor(QObject, EventListener):
         self.scene.link_beat(self.novel.active_story_structure, beat)
         self.ui.wdgStructure.highlightScene(self.scene)
 
-        emit_event(SceneStoryBeatChangedEvent(self, self.scene))
+        emit_event(self.novel, SceneStoryBeatChangedEvent(self, self.scene))
 
     def _beat_removed(self, beat: StoryBeat):
         scene = acts_registry.scene(beat)
@@ -223,7 +224,7 @@ class SceneEditor(QObject, EventListener):
         else:
             self.repo.update_scene(scene)
 
-        emit_event(SceneStoryBeatChangedEvent(self, scene))
+        emit_event(self.novel, SceneStoryBeatChangedEvent(self, scene))
 
     def _update_notes(self):
         if self.scene.document:

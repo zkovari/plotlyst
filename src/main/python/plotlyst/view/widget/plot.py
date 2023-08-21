@@ -40,7 +40,7 @@ from src.main.python.plotlyst.core.template import antagonist_role
 from src.main.python.plotlyst.core.text import html
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterChangedEvent, CharacterDeletedEvent
 from src.main.python.plotlyst.service.persistence import RepositoryPersistenceManager, delete_plot
 from src.main.python.plotlyst.settings import STORY_LINE_COLOR_CODES
@@ -574,8 +574,8 @@ class PlotWidget(QFrame, Ui_PlotWidget, EventListener):
 
         self.repo = RepositoryPersistenceManager.instance()
 
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent)
 
     @overrides
     def event_received(self, event: Event):

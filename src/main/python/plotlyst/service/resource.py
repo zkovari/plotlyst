@@ -29,7 +29,7 @@ from overrides import overrides
 from pypandoc import download_pandoc
 
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.event.core import emit_global_event
 from src.main.python.plotlyst.resources import ResourceType, resource_manager, ResourceDownloadedEvent, \
     ResourceRemovedEvent, is_nltk, PANDOC_VERSION
 
@@ -51,7 +51,7 @@ def remove_resource(resource_type: ResourceType):
 
     if os.path.exists(resource_path):
         shutil.rmtree(resource_path)
-    emit_event(ResourceRemovedEvent(resource, resource_type))
+    emit_global_event(ResourceRemovedEvent(resource, resource_type))
 
 
 def download_resource(resource_type: ResourceType):
@@ -99,7 +99,7 @@ class NltkResourceDownloadWorker(QRunnable):
             with zipfile.ZipFile(resource_zip_path) as zip_ref:
                 zip_ref.extractall(resource_path)
 
-            emit_event(ResourceDownloadedEvent(self, resource_type))
+            emit_global_event(ResourceDownloadedEvent(self, resource_type))
             print(f'Resource {resource.name} was successfully downloaded')
 
 
@@ -123,7 +123,7 @@ class JreResourceDownloadWorker(QRunnable):
         with tarfile.open(resource_tar_path) as tar_ref:
             tar_ref.extractall(resource_path)
 
-        emit_event(ResourceDownloadedEvent(self, self._type))
+        emit_global_event(ResourceDownloadedEvent(self, self._type))
 
 
 class PandocResourceDownloadWorker(QRunnable):
@@ -144,4 +144,4 @@ class PandocResourceDownloadWorker(QRunnable):
         os.makedirs(target_path, exist_ok=True)
 
         download_pandoc(version=PANDOC_VERSION, targetfolder=target_path, download_folder=resource_path)
-        emit_event(ResourceDownloadedEvent(self, self._type))
+        emit_global_event(ResourceDownloadedEvent(self, self._type))

@@ -27,7 +27,7 @@ from qthandy.filter import OpacityEventFilter
 from src.main.python.plotlyst.common import PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.client import json_client
 from src.main.python.plotlyst.core.domain import Novel, Document
-from src.main.python.plotlyst.event.core import emit_event
+from src.main.python.plotlyst.event.core import emit_global_event
 from src.main.python.plotlyst.events import NovelUpdatedEvent, \
     SceneChangedEvent
 from src.main.python.plotlyst.resources import resource_registry
@@ -45,7 +45,7 @@ from src.main.python.plotlyst.view.widget.plot import PlotEditor
 class NovelView(AbstractNovelView):
 
     def __init__(self, novel: Novel):
-        super().__init__(novel, [NovelUpdatedEvent, SceneChangedEvent])
+        super().__init__(novel, [SceneChangedEvent], global_event_types=[NovelUpdatedEvent])
         self.ui = Ui_NovelView()
         self.ui.setupUi(self.widget)
 
@@ -148,7 +148,7 @@ class NovelView(AbstractNovelView):
             self.novel.title = title
             self.repo.update_project_novel(self.novel)
             self.ui.lblTitle.setText(self.novel.title)
-            emit_event(NovelUpdatedEvent(self, self.novel))
+            emit_global_event(NovelUpdatedEvent(self, self.novel))
 
     def _premise_changed(self):
         text = self.ui.textPremise.textEdit.toPlainText()

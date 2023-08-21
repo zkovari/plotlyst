@@ -105,7 +105,7 @@ class ScrivenerSyncImporter(SyncImporter):
 
     @busy
     def sync(self, novel: Novel):
-        emit_event(NovelAboutToSyncEvent(self, novel))
+        emit_event(novel, NovelAboutToSyncEvent(self, novel))
         novel.import_origin.last_mod_time = self._mod_time(novel)
 
         new_novel = self._parser.parse_project(novel.import_origin.source)
@@ -118,7 +118,7 @@ class ScrivenerSyncImporter(SyncImporter):
         self._sync_scenes(novel, new_novel)
 
         self.repo.update_project_novel(novel)
-        emit_event(NovelSyncEvent(self, novel))
+        emit_event(novel, NovelSyncEvent(self, novel))
 
     def _mod_time(self, novel: Novel) -> int:
         scriv_file = self._parser.find_scrivener_file(novel.import_origin.source)
@@ -145,7 +145,7 @@ class ScrivenerSyncImporter(SyncImporter):
                 self.repo.update_character(character)
             else:
                 delete_character(novel, character, forced=True)
-                emit_event(CharacterDeletedEvent(self, character))
+                emit_event(novel, CharacterDeletedEvent(self, character))
 
     def _sync_chapters(self, novel: Novel, new_novel: Novel):
         current: Dict[Chapter, Chapter] = {}
@@ -179,7 +179,7 @@ class ScrivenerSyncImporter(SyncImporter):
                 if new_scene.chapter:
                     old_scene.chapter = chapters[new_scene.chapter]
                 new_scenes.append(old_scene)
-                
+
                 self.repo.update_scene(old_scene)
                 if old_scene.manuscript:
                     self.repo.update_doc(novel, old_scene.manuscript)
@@ -193,6 +193,6 @@ class ScrivenerSyncImporter(SyncImporter):
 
         for scene in removed_scenes:
             delete_scene(novel, scene, forced=True)
-            emit_event(SceneDeletedEvent(self, scene))
+            emit_event(novel, SceneDeletedEvent(self, scene))
 
         novel.scenes[:] = new_scenes

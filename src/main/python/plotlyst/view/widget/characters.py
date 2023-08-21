@@ -48,7 +48,7 @@ from src.main.python.plotlyst.core.template import secondary_role, guide_role, l
     promote_role, demote_role
 from src.main.python.plotlyst.env import app_env
 from src.main.python.plotlyst.event.core import emit_critical, EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import CharacterSummaryChangedEvent
 from src.main.python.plotlyst.model.common import DistributionFilterProxyModel
 from src.main.python.plotlyst.model.distribution import CharactersScenesDistributionTableModel, \
@@ -1311,10 +1311,10 @@ class CharactersProgressWidget(QWidget, Ui_CharactersProgressWidget, EventListen
         self._chartSecondary.refresh()
         self._chartMinor.refresh()
 
-        event_dispatcher.register(self, CharacterSummaryChangedEvent)
-
     def setNovel(self, novel: Novel):
         self.novel = novel
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterSummaryChangedEvent)
 
     @overrides
     def event_received(self, event: Event):

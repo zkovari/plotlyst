@@ -40,8 +40,8 @@ from src.main.python.plotlyst.core.domain import StoryStructure, Novel, StoryBea
     disturbance_beat, normal_world_beat, characteristic_moment_beat, midpoint, midpoint_ponr, midpoint_mirror, \
     midpoint_proactive, crisis, first_plot_point, first_plot_point_ponr
 from src.main.python.plotlyst.env import app_env
-from src.main.python.plotlyst.event.core import emit_event, EventListener, Event
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import EventListener, Event, emit_event
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import NovelStoryStructureUpdated, SceneChangedEvent, SceneDeletedEvent, \
     CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent
 from src.main.python.plotlyst.model.characters_model import CharactersTableModel
@@ -112,9 +112,11 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     beatHighlighted = pyqtSignal(StoryBeat)
     beatToggled = pyqtSignal(StoryBeat)
 
-    def __init__(self, beat: StoryBeat, checkOccupiedBeats: bool = True, parent=None, toggleEnabled: bool = True):
-        super(BeatWidget, self).__init__(parent)
+    def __init__(self, novel: Novel, beat: StoryBeat, checkOccupiedBeats: bool = True, parent=None,
+                 toggleEnabled: bool = True):
+        super().__init__(parent)
         self.setupUi(self)
+        self._novel = novel
         self.beat = beat
         self._checkOccupiedBeats = checkOccupiedBeats
         self._toggleEnabled = toggleEnabled
@@ -153,8 +155,8 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         self.installEventFilter(self)
 
         DelayedSignalSlotConnector(self.textSynopsis.textChanged, self._synopsisEdited, parent=self)
-        event_dispatcher.register(self, SceneChangedEvent)
-        event_dispatcher.register(self, SceneDeletedEvent)
+        dispatcher = event_dispatchers.instance(self._novel)
+        dispatcher.register(self, SceneChangedEvent, SceneDeletedEvent)
 
     def updateInfo(self):
         self.lblTitle.setText(self.beat.text)
@@ -212,7 +214,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
             self.btnSceneSelector.setHidden(True)
             self.setStyleSheet(f'.BeatWidget {{background-color: {RELAXED_WHITE_COLOR};}}')
 
-        return super(BeatWidget, self).eventFilter(watched, event)
+        return super().eventFilter(watched, event)
 
     def _infoPage(self) -> bool:
         return self.stackedWidget.currentWidget() == self.pageInfo
@@ -242,7 +244,7 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
     def _sceneLinked(self, scene: Scene):
         scene.link_beat(app_env.novel.active_story_structure, self.beat)
         self.repo.update_scene(self.scene)
-        emit_event(SceneChangedEvent(self, scene))
+        emit_event(self._novel, SceneChangedEvent(self, scene))
         self.refresh()
         qtanim.glow(self.lblTitle, color=QColor(self.beat.icon_color))
 
@@ -250,12 +252,13 @@ class BeatWidget(QFrame, Ui_BeatWidget, EventListener):
         if self.scene:
             self.scene.synopsis = self.textSynopsis.toPlainText()
             self.repo.update_scene(self.scene)
-            emit_event(SceneChangedEvent(self, self.scene))
+            emit_event(self._novel, SceneChangedEvent(self, self.scene))
 
 
 class BeatsPreview(QFrame):
-    def __init__(self, checkOccupiedBeats: bool = True, parent=None):
+    def __init__(self, novel: Novel, checkOccupiedBeats: bool = True, parent=None):
         super().__init__(parent)
+        self._novel = novel
         self._checkOccupiedBeats = checkOccupiedBeats
         self._layout: QGridLayout = grid(self)
         self._beats: Dict[StoryBeat, BeatWidget] = {}
@@ -324,7 +327,7 @@ class BeatsPreview(QFrame):
         self._structurePreview.insertBeat(newBeat)
 
     def __initBeatWidget(self, beat: StoryBeat) -> BeatWidget:
-        wdg = BeatWidget(beat, self._checkOccupiedBeats)
+        wdg = BeatWidget(self._novel, beat, self._checkOccupiedBeats)
         wdg.setMinimumSize(200, 50)
         wdg.beatHighlighted.connect(self._structurePreview.highlightBeat)
         wdg.beatToggled.connect(partial(self._structurePreview.toggleBeatVisibility, beat))
@@ -356,7 +359,7 @@ class _AbstractStructureEditorWidget(QWidget):
         self._scroll.setWidgetResizable(True)
         vbox(self._scroll)
 
-        self.beatsPreview = BeatsPreview(checkOccupiedBeats=False)
+        self.beatsPreview = BeatsPreview(novel, checkOccupiedBeats=False)
         self._scroll.setWidget(self.beatsPreview)
         self.beatsPreview.attachStructurePreview(self.wdgPreview)
         self.wdgPreview.setStructure(novel, self._structure)
@@ -811,10 +814,6 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.beats.installEventFilter(self)
         self.repo = RepositoryPersistenceManager.instance()
 
-        event_dispatcher.register(self, CharacterChangedEvent)
-        event_dispatcher.register(self, CharacterDeletedEvent)
-        event_dispatcher.register(self, NovelSyncEvent)
-
     @overrides
     def event_received(self, event: Event):
         self._activeStructureToggled(self.novel.active_story_structure, True)
@@ -828,6 +827,9 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
 
     def setNovel(self, novel: Novel):
         self.novel = novel
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterChangedEvent, CharacterDeletedEvent, NovelSyncEvent)
+
         for structure in self.novel.story_structures:
             self._addStructureWidget(structure)
 
@@ -846,7 +848,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.novel.story_structures.append(structure)
         self._addStructureWidget(structure)
         self.btnGroupStructure.buttons()[-1].setChecked(True)
-        emit_event(NovelStoryStructureUpdated(self))
+        emit_event(self.novel, NovelStoryStructureUpdated(self))
 
     def _removeStructure(self):
         if len(self.novel.story_structures) < 2:
@@ -870,7 +872,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.novel.story_structures.remove(structure)
         if self.btnGroupStructure.buttons():
             self.btnGroupStructure.buttons()[-1].setChecked(True)
-            emit_event(NovelStoryStructureUpdated(self))
+            emit_event(self.novel, NovelStoryStructureUpdated(self))
         self.repo.update_novel(self.novel)
 
         self._toggleDeleteButton()
@@ -883,7 +885,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
     def _editStructure(self):
         StoryStructureSelectorDialog.display(self.novel, self.novel.active_story_structure)
         self._activeStructureToggled(self.novel.active_story_structure, True)
-        emit_event(NovelStoryStructureUpdated(self))
+        emit_event(self.novel, NovelStoryStructureUpdated(self))
 
     def _selectTemplateStructure(self):
         structure: Optional[StoryStructure] = StoryStructureSelectorDialog.display(self.novel)
@@ -912,7 +914,7 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         for beat in structure.beats:
             if beat.type != StoryBeatType.BEAT or not beat.enabled:
                 continue
-            wdg = BeatWidget(beat, toggleEnabled=False)
+            wdg = BeatWidget(self.novel, beat, toggleEnabled=False)
             if beat.act - 1 > col:  # new act
                 self.beats.layout().addWidget(vspacer(), row + 1, col)
                 col = beat.act - 1
@@ -928,15 +930,15 @@ class StoryStructureEditor(QWidget, Ui_StoryStructureSettings, EventListener):
         self.wdgPreview.setBeatsMoveable(True)
         self.wdgPreview.setActsClickable(False)
         self.wdgPreview.setActsResizeable(True)
-        self.wdgPreview.actsResized.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
-        self.wdgPreview.beatMoved.connect(lambda: emit_event(NovelStoryStructureUpdated(self)))
+        self.wdgPreview.actsResized.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
+        self.wdgPreview.beatMoved.connect(lambda: emit_event(self.novel, NovelStoryStructureUpdated(self)))
 
-    def _activeStructureClicked(self, structure: StoryStructure, toggled: bool):
+    def _activeStructureClicked(self, _: StoryStructure, toggled: bool):
         if not toggled:
             return
 
         self.repo.update_novel(self.novel)
-        emit_event(NovelStoryStructureUpdated(self))
+        emit_event(self.novel, NovelStoryStructureUpdated(self))
 
     def _beatToggled(self, beat: StoryBeat):
         self.wdgPreview.toggleBeatVisibility(beat)

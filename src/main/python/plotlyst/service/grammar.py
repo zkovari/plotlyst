@@ -24,10 +24,9 @@ import language_tool_python
 from PyQt6.QtCore import QRunnable
 from language_tool_python import LanguageTool
 from overrides import overrides
-
 from src.main.python.plotlyst.core.domain import Novel, Event
-from src.main.python.plotlyst.event.core import emit_event, emit_info, EventListener
-from src.main.python.plotlyst.event.handler import event_dispatcher
+from src.main.python.plotlyst.event.core import emit_global_event, emit_info, EventListener
+from src.main.python.plotlyst.event.handler import event_dispatchers
 from src.main.python.plotlyst.events import LanguageToolSet, CharacterChangedEvent
 
 
@@ -57,7 +56,7 @@ class LanguageToolProxy:
         self._language_tool = language_tool
         self._error = None
         emit_info('Grammar checker was set up.')
-        emit_event(LanguageToolSet(self, self._language_tool))
+        emit_global_event(LanguageToolSet(self, self._language_tool))
 
     def set_error(self, error_msg: str):
         self._error = error_msg
@@ -89,8 +88,6 @@ class Dictionary(EventListener):
     def __init__(self):
         self.novel: Optional[Novel] = None
         self.words: Set[str] = set()
-        event_dispatcher.register(self, CharacterChangedEvent)
-        # event_dispatcher.register(self, LocationChangedEvent)
 
     @overrides
     def event_received(self, event: Event):
@@ -98,6 +95,8 @@ class Dictionary(EventListener):
 
     def set_novel(self, novel: Novel):
         self.novel = novel
+        dispatcher = event_dispatchers.instance(self.novel)
+        dispatcher.register(self, CharacterChangedEvent)
         self.refresh()
 
     def refresh(self):
