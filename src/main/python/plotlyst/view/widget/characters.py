@@ -524,6 +524,22 @@ class CharacterConflictSelector(QWidget):
         gc(self)
 
 
+class CharacterSelectorMenu(MenuWidget):
+    selected = pyqtSignal(Character)
+
+    def __init__(self, novel: Novel, parent=None):
+        super().__init__(parent)
+        self._novel = novel
+        self.aboutToShow.connect(self._fillUpMenu)
+
+    def _fillUpMenu(self):
+        self.clear()
+
+        for char in self._novel.characters:
+            self.addAction(
+                action(char.name, avatars.avatar(char), slot=partial(self.selected.emit, char), parent=self))
+
+
 class CharacterSelectorButton(QToolButton):
     characterSelected = pyqtSignal(Character)
 
@@ -538,8 +554,8 @@ class CharacterSelectorButton(QToolButton):
             self._opacityFilter = OpacityEventFilter(self)
         else:
             self._opacityFilter = None
-        self._menu = MenuWidget(self)
-        self._menu.aboutToShow.connect(self._fillUpMenu)
+        self._menu = CharacterSelectorMenu(self._novel, self)
+        self._menu.selected.connect(self._selected)
         self.clear()
 
     def setCharacter(self, character: Character):
@@ -568,13 +584,6 @@ class CharacterSelectorButton(QToolButton):
     def _selected(self, character: Character):
         self.setCharacter(character)
         self.characterSelected.emit(character)
-
-    def _fillUpMenu(self):
-        self._menu.clear()
-
-        for char in self._novel.characters:
-            self._menu.addAction(
-                action(char.name, avatars.avatar(char), slot=partial(self._selected, char), parent=self._menu))
 
 
 class CharacterLinkWidget(QWidget):
