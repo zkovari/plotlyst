@@ -21,9 +21,9 @@ from enum import Enum
 from typing import Optional, List
 
 from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal, QRect, QPoint
-from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent
+from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent, QTransform
 from PyQt6.QtWidgets import QGraphicsScene, QWidget, QAbstractGraphicsShapeItem, QGraphicsSceneHoverEvent, \
-    QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QGraphicsTextItem, QApplication
+    QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QGraphicsTextItem, QApplication, QGraphicsRectItem
 from overrides import overrides
 from qthandy import transparent, hbox, vbox, sp, margins, incr_icon
 from qtmenu import MenuWidget
@@ -141,6 +141,31 @@ class SocketItem(QAbstractGraphicsShapeItem):
 
     def mindMapScene(self) -> 'EventsMindMapScene':
         return self.scene()
+
+
+class SelectorRectItem(QGraphicsRectItem):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._startingPoint: QPointF = QPointF(0, 0)
+        self._rect = QRectF()
+
+        self.setPen(QPen(Qt.GlobalColor.gray, 1, Qt.PenStyle.DashLine))
+
+    def start(self, pos: QPointF):
+        self._startingPoint = pos
+        self._rect.setTopLeft(pos)
+        self.setRect(self._rect)
+
+    def adjust(self, pos: QPointF):
+        x1 = min(self._startingPoint.x(), pos.x())
+        y1 = min(self._startingPoint.y(), pos.y())
+        x2 = max(self._startingPoint.x(), pos.x())
+        y2 = max(self._startingPoint.y(), pos.y())
+
+        self._rect.setTopLeft(QPointF(x1, y1))
+        self._rect.setBottomRight(QPointF(x2, y2))
+
+        self.setRect(self._rect)
 
 
 class PlaceholderItem(SocketItem):
@@ -349,6 +374,12 @@ class EventsMindMapScene(QGraphicsScene):
         self._novel = novel
         self._linkMode: bool = False
         self._additionMode: AdditionMode = AdditionMode.NONE
+
+        self._selectionMode = False
+        self._selectionRect = SelectorRectItem()
+        self.addItem(self._selectionRect)
+        self._selectionRect.setVisible(False)
+
         self._placeholder: Optional[PlaceholderItem] = None
         self._connectorPlaceholder: Optional[ConnectorItem] = None
 
@@ -419,13 +450,6 @@ class EventsMindMapScene(QGraphicsScene):
         self._additionMode = AdditionMode.NONE
 
     @overrides
-    def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.linkMode():
-            self._placeholder.setPos(event.scenePos())
-            self._connectorPlaceholder.rearrange()
-        super().mouseMoveEvent(event)
-
-    @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
             if self.linkMode():
@@ -445,12 +469,36 @@ class EventsMindMapScene(QGraphicsScene):
                 self.editEvent.emit(item)
 
     @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform()):
+            self._selectionRect.start(event.scenePos())
+            self._selectionMode = True
+        elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
+            return
+        super().mousePressEvent(event)
+
+    @overrides
+    def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self.linkMode():
+            self._placeholder.setPos(event.scenePos())
+            self._connectorPlaceholder.rearrange()
+        elif self._selectionMode:
+            self._selectionRect.adjust(event.scenePos())
+            self._selectionRect.setVisible(True)
+            self._updateSelection()
+        super().mouseMoveEvent(event)
+
+    @overrides
     def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         if self.linkMode():
             if event.button() & Qt.MouseButton.RightButton:
                 self.endLink()
-        if self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
+        elif self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
             self.cancelItemAddition.emit()
+        elif self._selectionMode and event.button() & Qt.MouseButton.LeftButton:
+            self._selectionMode = False
+            self._selectionRect.setVisible(False)
+            self._updateSelection()
         elif self._additionMode == AdditionMode.EVENT:
             item = EventItem(self.toEventNode(event))
             self.addItem(item)
@@ -459,6 +507,14 @@ class EventsMindMapScene(QGraphicsScene):
             self.itemAdded.emit()
 
         super().mouseReleaseEvent(event)
+
+    def _updateSelection(self):
+        if not self._selectionRect.rect().isValid():
+            return
+        self.clearSelection()
+        items_in_rect = self.items(self._selectionRect.rect(), Qt.ItemSelectionMode.IntersectsItemBoundingRect)
+        for item in items_in_rect:
+            item.setSelected(True)
 
     @staticmethod
     def toEventNode(event: 'QGraphicsSceneMouseEvent') -> Node:
@@ -475,10 +531,7 @@ class EventsMindMapView(BaseGraphicsView):
         self._novel = novel
         self._scene = EventsMindMapScene(self._novel)
         self.setScene(self._scene)
-        # self.setBackgroundBrush(QColor(RELAXED_WHITE_COLOR))
         self.setBackgroundBrush(QColor('#e9ecef'))
-
-        # self.scale(0.6, 0.6)
 
         self._scene.itemAdded.connect(self._endAddition)
         self._scene.cancelItemAddition.connect(self._endAddition)
