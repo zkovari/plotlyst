@@ -278,8 +278,8 @@ class CharacterItem(ConnectableNode):
         super().__init__(node, parent)
         self._character = character
 
-        self._size: int = 108
-        self._margin = 30
+        self._size: int = 68
+        self._margin = 25
 
         self._socketTop = SocketItem(self)
         self._socketRight = SocketItem(self)
