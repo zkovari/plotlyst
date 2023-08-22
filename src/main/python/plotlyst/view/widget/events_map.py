@@ -34,7 +34,7 @@ from src.main.python.plotlyst.view.common import tool_btn, shadow, frame, Exclus
     TooltipPositionEventFilter
 from src.main.python.plotlyst.view.icons import avatars, IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, NodeItem, ConnectorItem
+from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, NodeItem, ConnectorItem, AbstractSocketItem
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit
 
 
@@ -71,21 +71,15 @@ class MindMapNode(NodeItem):
         return self.mindMapScene().linkMode()
 
 
-class SocketItem(QAbstractGraphicsShapeItem):
-    def __init__(self, parent: 'ConnectableNode'):
-        super(SocketItem, self).__init__(parent)
+class SocketItem(AbstractSocketItem):
+    def __init__(self, orientation: Qt.Edge, parent: 'ConnectableNode'):
+        super().__init__(orientation, parent)
 
         self._size = 16
         self.setAcceptHoverEvents(True)
         self._hovered = False
         self._linkAvailable = True
         self.setToolTip('Connect')
-
-        self._connectors: List[ConnectorItem] = []
-
-    @overrides
-    def boundingRect(self):
-        return QRectF(0, 0, self._size, self._size)
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
@@ -128,18 +122,6 @@ class SocketItem(QAbstractGraphicsShapeItem):
         else:
             self.mindMapScene().startLink(self)
 
-    def addConnector(self, connector: ConnectorItem):
-        self._connectors.append(connector)
-
-    def rearrangeConnectors(self):
-        for con in self._connectors:
-            con.rearrange()
-
-    def removeConnectors(self):
-        for con in self._connectors:
-            self.scene().removeItem(con)
-        self._connectors.clear()
-
     def mindMapScene(self) -> 'EventsMindMapScene':
         return self.scene()
 
@@ -171,7 +153,7 @@ class SelectorRectItem(QGraphicsRectItem):
 
 class PlaceholderItem(SocketItem):
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(Qt.Edge.RightEdge, parent)
         self.setEnabled(False)
         self.setAcceptHoverEvents(False)
         self.setToolTip('Click to add a new node')
@@ -219,21 +201,23 @@ class EventItem(ConnectableNode):
         self._text: str = 'New event'
         self.setPos(node.x, node.y)
 
-        self._metrics = QFontMetrics(QApplication.font())
+        self._font = QApplication.font()
+        # self._font.setPointSize(16)
+        self._metrics = QFontMetrics(self._font)
         self._textRect: QRect = QRect(0, 0, 1, 1)
         self._width = 1
         self._height = 1
         self._nestedRectWidth = 1
         self._nestedRectHeight = 1
 
-        self._socketLeft = SocketItem(self)
-        self._socketTopLeft = SocketItem(self)
-        self._socketTopCenter = SocketItem(self)
-        self._socketTopRight = SocketItem(self)
-        self._socketRight = SocketItem(self)
-        self._socketBottomLeft = SocketItem(self)
-        self._socketBottomCenter = SocketItem(self)
-        self._socketBottomRight = SocketItem(self)
+        self._socketLeft = SocketItem(Qt.Edge.LeftEdge, self)
+        self._socketTopLeft = SocketItem(Qt.Edge.TopEdge, self)
+        self._socketTopCenter = SocketItem(Qt.Edge.TopEdge, self)
+        self._socketTopRight = SocketItem(Qt.Edge.TopEdge, self)
+        self._socketRight = SocketItem(Qt.Edge.RightEdge, self)
+        self._socketBottomLeft = SocketItem(Qt.Edge.BottomEdge, self)
+        self._socketBottomCenter = SocketItem(Qt.Edge.BottomEdge, self)
+        self._socketBottomRight = SocketItem(Qt.Edge.BottomEdge, self)
         self._sockets.extend([self._socketLeft,
                               self._socketTopLeft, self._socketTopCenter, self._socketTopRight,
                               self._socketRight,
@@ -269,6 +253,7 @@ class EventItem(ConnectableNode):
             painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 2, 2)
 
         painter.setPen(QPen(Qt.GlobalColor.black, 1))
+        painter.setFont(self._font)
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
         painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
 
@@ -308,10 +293,10 @@ class CharacterItem(ConnectableNode):
         self.setPos(node.x, node.y)
         self._size: int = 68
 
-        self._socketTop = SocketItem(self)
-        self._socketRight = SocketItem(self)
-        self._socketBottom = SocketItem(self)
-        self._socketLeft = SocketItem(self)
+        self._socketTop = SocketItem(Qt.Edge.TopEdge, self)
+        self._socketRight = SocketItem(Qt.Edge.RightEdge, self)
+        self._socketBottom = SocketItem(Qt.Edge.BottomEdge, self)
+        self._socketLeft = SocketItem(Qt.Edge.LeftEdge, self)
         self._sockets.extend([self._socketLeft, self._socketTop, self._socketRight, self._socketBottom])
         socketWidth = self._socketTop.boundingRect().width()
         half = self.Margin + (self._size - socketWidth) / 2

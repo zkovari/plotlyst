@@ -17,14 +17,40 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any, Optional
+from typing import Any, Optional, List
 
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QRectF
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node
+
+
+class AbstractSocketItem(QAbstractGraphicsShapeItem):
+    def __init__(self, orientation: Qt.Edge, parent=None):
+        super().__init__(parent)
+        self._size = 16
+        self.setAcceptHoverEvents(True)
+        self._orientation = orientation
+
+        self._connectors: List[ConnectorItem] = []
+
+    @overrides
+    def boundingRect(self):
+        return QRectF(0, 0, self._size, self._size)
+
+    def addConnector(self, connector: 'ConnectorItem'):
+        self._connectors.append(connector)
+
+    def rearrangeConnectors(self):
+        for con in self._connectors:
+            con.rearrange()
+
+    def removeConnectors(self):
+        for con in self._connectors:
+            self.scene().removeItem(con)
+        self._connectors.clear()
 
 
 class ConnectorItem(QGraphicsPathItem):
