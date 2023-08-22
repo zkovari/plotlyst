@@ -46,14 +46,13 @@ class ConnectorItem(QGraphicsPathItem):
         self.setPos(self._source.sceneBoundingRect().center())
 
         path = QPainterPath()
-        target_x = self._target.scenePos().x() - self.pos().x()
-        target_y = self._target.scenePos().y()
-        path.quadTo(0, target_y / 2, target_x, target_y - self._source.scenePos().y())
-        # if self._target.scenePos().y() < 0:
-        # elif self._target.scenePos().y() > 0:
-        #     path.quadTo(0, target_y / 2, target_x, target_y)
-        # else:
-        #     path.lineTo(target_x, target_y)
+        width = self._target.scenePos().x() - self.scenePos().x()
+        height = self._target.scenePos().y() - self._source.scenePos().y()
+
+        if abs(height) < 5:
+            path.lineTo(width, height)
+        else:
+            path.quadTo(0, height / 2, width, height)
 
         self.setPath(path)
 
