@@ -23,9 +23,10 @@ from typing import Optional, List
 from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal, QRect, QPoint
 from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent, QTransform
 from PyQt6.QtWidgets import QGraphicsScene, QWidget, QAbstractGraphicsShapeItem, QGraphicsSceneHoverEvent, \
-    QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QGraphicsTextItem, QApplication, QGraphicsRectItem
+    QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QGraphicsTextItem, QApplication, QGraphicsRectItem, QFrame, \
+    QButtonGroup
 from overrides import overrides
-from qthandy import transparent, hbox, vbox, sp, margins, incr_icon
+from qthandy import transparent, hbox, vbox, sp, margins, incr_icon, grid
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -349,6 +350,35 @@ class TextLineEditorPopup(MenuWidget):
         return self._lineEdit.text()
 
 
+class StickerSelectorWidget(QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setProperty('relaxed-white-bg', True)
+        self.setProperty('rounded', True)
+        shadow(self)
+        self._grid = grid(self)
+
+        self._btnComment = tool_btn(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new comment',
+                                    True, icon_resize=False,
+                                    properties=['transparent-rounded-bg-on-hover', 'top-selector'],
+                                    parent=self)
+        self._btnTool = tool_btn(IconRegistry.tool_icon('black', 'black'), 'Add new tool',
+                                 True, icon_resize=False,
+                                 properties=['transparent-rounded-bg-on-hover', 'top-selector'],
+                                 parent=self)
+        self._btnCost = tool_btn(IconRegistry.cost_icon('black', 'black'), 'Add new cost',
+                                 True, icon_resize=False,
+                                 properties=['transparent-rounded-bg-on-hover', 'top-selector'],
+                                 parent=self)
+        self._btnGroup = QButtonGroup()
+        self._btnGroup.addButton(self._btnComment)
+        self._btnGroup.addButton(self._btnTool)
+        self._btnGroup.addButton(self._btnCost)
+        self._grid.layout().addWidget(self._btnComment, 0, 0)
+        self._grid.layout().addWidget(self._btnTool, 0, 1)
+        self._grid.layout().addWidget(self._btnCost, 1, 0)
+
+
 class AdditionMode(Enum):
     NONE = 0
     EVENT = 1
@@ -461,11 +491,12 @@ class EventsMindMapScene(QGraphicsScene):
 
     @overrides
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if not self.isAdditionMode() and event.button() & Qt.MouseButton.LeftButton and not self.itemAt(
+        if not self.isAdditionMode() and not self.linkMode() and event.button() & Qt.MouseButton.LeftButton and not self.itemAt(
                 event.scenePos(), QTransform()):
             self._selectionRect.start(event.scenePos())
             self._selectionMode = True
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
+            # disallow view movement to clear item selection
             return
         super().mousePressEvent(event)
 
@@ -545,9 +576,7 @@ class EventsMindMapView(BaseGraphicsView):
         self._scene.cancelItemAddition.connect(self._endAddition)
         self._scene.editEvent.connect(self._editEvent)
 
-        self._controlsNavBar = frame(self)
-        self._controlsNavBar.setProperty('relaxed-white-bg', True)
-        self._controlsNavBar.setProperty('rounded', True)
+        self._controlsNavBar = self.__roundedFrame(self)
         sp(self._controlsNavBar).h_max()
         shadow(self._controlsNavBar)
 
@@ -559,9 +588,14 @@ class EventsMindMapView(BaseGraphicsView):
             IconRegistry.character_icon('#040406'), 'Add new character', True,
             icon_resize=False, properties=['transparent-rounded-bg-on-hover', 'top-selector'],
             parent=self._controlsNavBar)
+        self._btnAddSticker = tool_btn(IconRegistry.from_name('mdi6.sticker-circle-outline'), 'Add new sticker',
+                                       True, icon_resize=False,
+                                       properties=['transparent-rounded-bg-on-hover', 'top-selector'],
+                                       parent=self._controlsNavBar)
         self._btnGroup = ExclusiveOptionalButtonGroup()
         self._btnGroup.addButton(self._btnAddEvent)
         self._btnGroup.addButton(self._btnAddCharacter)
+        self._btnGroup.addButton(self._btnAddSticker)
         for btn in self._btnGroup.buttons():
             btn.installEventFilter(TooltipPositionEventFilter(btn))
             incr_icon(btn, 2)
@@ -569,10 +603,14 @@ class EventsMindMapView(BaseGraphicsView):
         vbox(self._controlsNavBar, 5, 6)
         self._controlsNavBar.layout().addWidget(self._btnAddEvent)
         self._controlsNavBar.layout().addWidget(self._btnAddCharacter)
+        self._controlsNavBar.layout().addWidget(self._btnAddSticker)
 
-        self._wdgZoomBar = frame(self)
-        self._wdgZoomBar.setProperty('relaxed-white-bg', True)
-        self._wdgZoomBar.setProperty('rounded', True)
+        self._wdgSecondaryEventSelector = self.__roundedFrame(self)
+        self._wdgSecondaryEventSelector.setVisible(False)
+        self._wdgSecondaryStickerSelector = StickerSelectorWidget(self)
+        self._wdgSecondaryStickerSelector.setVisible(False)
+
+        self._wdgZoomBar = self.__roundedFrame(self)
         shadow(self._wdgZoomBar)
         hbox(self._wdgZoomBar, 2, spacing=6)
         margins(self._wdgZoomBar, left=10, right=10)
@@ -613,19 +651,29 @@ class EventsMindMapView(BaseGraphicsView):
         popup.aboutToHide.connect(lambda: setText(popup.text()))
 
     def _startAddition(self):
+        self._wdgSecondaryEventSelector.setHidden(True)
+        self._wdgSecondaryStickerSelector.setHidden(True)
+
+        if not QApplication.overrideCursor():
+            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+
         if self._btnAddEvent.isChecked():
             self._scene.startAdditionMode(AdditionMode.EVENT)
         elif self._btnAddCharacter.isChecked():
             self._scene.startAdditionMode(AdditionMode.CHARACTER)
-
-        if not QApplication.overrideCursor():
-            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+        elif self._btnAddSticker.isChecked():
+            self._wdgSecondaryStickerSelector.setVisible(True)
+            return
+        else:
+            self._endAddition()
 
     def _endAddition(self):
         btn = self._btnGroup.checkedButton()
         if btn:
             btn.setChecked(False)
         QApplication.restoreOverrideCursor()
+        self._wdgSecondaryEventSelector.setHidden(True)
+        self._wdgSecondaryStickerSelector.setHidden(True)
         self._scene.endAdditionMode()
 
     def _endCharacterAddition(self, item: CharacterItem):
@@ -644,3 +692,16 @@ class EventsMindMapView(BaseGraphicsView):
                                      self._wdgZoomBar.sizeHint().height())
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
+
+        secondary_x = self._controlsNavBar.pos().x() + self._controlsNavBar.sizeHint().width() + 5
+        secondary_y = self._controlsNavBar.pos().y() + self._btnAddSticker.pos().y()
+        self._wdgSecondaryStickerSelector.setGeometry(secondary_x, secondary_y,
+                                                      self._wdgSecondaryStickerSelector.sizeHint().width(),
+                                                      self._wdgSecondaryStickerSelector.sizeHint().height())
+
+    @staticmethod
+    def __roundedFrame(parent=None) -> QFrame:
+        frame_ = frame(parent)
+        frame_.setProperty('relaxed-white-bg', True)
+        frame_.setProperty('rounded', True)
+        return frame_
