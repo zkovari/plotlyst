@@ -498,6 +498,14 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.arrow-decision-outline', color=color, color_on=color_on)
 
     @staticmethod
+    def tool_icon(color: str = '#d4a373', color_on: str = '#d4a373') -> QIcon:
+        return IconRegistry.from_name('fa5s.hammer', color, color_on)
+
+    @staticmethod
+    def cost_icon(color: str = '#e9c46a', color_on: str = '#e9c46a') -> QIcon:
+        return IconRegistry.from_name('ph.coin-bold', color, color_on)
+
+    @staticmethod
     def ticking_clock_icon() -> QIcon:
         return IconRegistry.from_name('mdi.clock-alert-outline', '#f7cb15')
 
