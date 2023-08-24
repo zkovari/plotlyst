@@ -20,11 +20,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from enum import Enum
 from typing import Optional, List
 
-from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal, QRect, QPoint
-from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent, QTransform, QIcon
+import qtanim
+from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal, QRect, QPoint, QEvent, QTimer
+from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent, QTransform, QIcon, QEnterEvent
 from PyQt6.QtWidgets import QGraphicsScene, QWidget, QAbstractGraphicsShapeItem, QGraphicsSceneHoverEvent, \
     QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QApplication, QGraphicsRectItem, QFrame, \
-    QButtonGroup, QToolButton, QLabel, QGraphicsItem
+    QButtonGroup, QToolButton, QLabel, QGraphicsItem, QTextEdit
 from overrides import overrides
 from qthandy import transparent, hbox, vbox, sp, margins, incr_icon, grid
 from qtmenu import MenuWidget
@@ -176,6 +177,8 @@ class PlaceholderItem(SocketItem):
 
 
 class StickerItem(MindMapNode):
+    displayMessage = pyqtSignal()
+
     def __init__(self, node: Node, type: ItemType, parent=None):
         super().__init__(node, parent)
         self._size = 28
@@ -196,8 +199,16 @@ class StickerItem(MindMapNode):
         self._icon.paint(painter, 0, 0, self._size, self._size)
 
     @overrides
-    def mouseDoubleClickEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        print('dclick')
+    def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self.mindMapScene().displayStickerMessage(self)
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        QTimer.singleShot(300, self.mindMapScene().hideStickerMessage)
+
+    @overrides
+    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        self.mindMapScene().hideStickerMessage()
 
 
 class ConnectableNode(MindMapNode):
@@ -394,6 +405,32 @@ class CharacterItem(ConnectableNode):
         avatar.paint(painter, self.Margin, self.Margin, self._size, self._size)
 
 
+class StickerEditor(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._text = QTextEdit()
+        self._text.setProperty('relaxed-white-bg', True)
+        self._text.setProperty('rounded', True)
+        self._text.setPlaceholderText('Leave a comment')
+
+        hbox(self).addWidget(self._text)
+        margins(self, left=3)
+
+        self.setFixedSize(200, 200)
+
+    def setText(self, text: str):
+        self._text.setText(text)
+
+    @overrides
+    def enterEvent(self, event: QEnterEvent) -> None:
+        self.setVisible(True)
+        self._text.setFocus()
+
+    @overrides
+    def leaveEvent(self, event: QEvent) -> None:
+        self.setHidden(True)
+
+
 class TextLineEditorPopup(MenuWidget):
 
     def __init__(self, text: str, rect: QRect, parent=None):
@@ -488,6 +525,8 @@ class EventsMindMapScene(QGraphicsScene):
     cancelItemAddition = pyqtSignal()
     itemAdded = pyqtSignal(ItemType, MindMapNode)
     editEvent = pyqtSignal(EventItem)
+    editSticker = pyqtSignal(StickerItem)
+    closeSticker = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -615,6 +654,12 @@ class EventsMindMapScene(QGraphicsScene):
 
         super().mouseReleaseEvent(event)
 
+    def displayStickerMessage(self, sticker: StickerItem):
+        self.editSticker.emit(sticker)
+
+    def hideStickerMessage(self):
+        self.closeSticker.emit()
+
     def _addNewEvent(self, itemType: ItemType, scenePos: QPointF):
         if itemType == ItemType.CHARACTER:
             item = CharacterItem(self.toCharacterNode(scenePos), character=None)
@@ -658,10 +703,6 @@ class EventsMindMapView(BaseGraphicsView):
         self.setScene(self._scene)
         self.setBackgroundBrush(QColor('#e9ecef'))
 
-        self._scene.itemAdded.connect(self._endAddition)
-        self._scene.cancelItemAddition.connect(self._endAddition)
-        self._scene.editEvent.connect(self._editEvent)
-
         self._controlsNavBar = self.__roundedFrame(self)
         sp(self._controlsNavBar).h_max()
         shadow(self._controlsNavBar)
@@ -698,6 +739,9 @@ class EventsMindMapView(BaseGraphicsView):
         self._wdgSecondaryStickerSelector.setVisible(False)
         self._wdgSecondaryStickerSelector.selected.connect(self._startAddition)
 
+        self._stickerEditor = StickerEditor(self)
+        self._stickerEditor.setVisible(False)
+
         self._wdgZoomBar = self.__roundedFrame(self)
         shadow(self._wdgZoomBar)
         hbox(self._wdgZoomBar, 2, spacing=6)
@@ -712,6 +756,13 @@ class EventsMindMapView(BaseGraphicsView):
 
         self._wdgZoomBar.layout().addWidget(self._btnZoomOut)
         self._wdgZoomBar.layout().addWidget(self._btnZoomIn)
+
+        self._scene.itemAdded.connect(self._endAddition)
+        self._scene.cancelItemAddition.connect(self._endAddition)
+        self._scene.editEvent.connect(self._editEvent)
+        self._scene.editSticker.connect(self._editSticker)
+        self._scene.closeSticker.connect(self._hideSticker)
+
         self.__arrangeSideBars()
 
     @overrides
@@ -728,6 +779,15 @@ class EventsMindMapView(BaseGraphicsView):
         popup.exec(self.mapToGlobal(view_pos))
 
         popup.aboutToHide.connect(lambda: setText(popup.text()))
+
+    def _editSticker(self, sticker: StickerItem):
+        view_pos = self.mapFromScene(sticker.sceneBoundingRect().topRight())
+        self._stickerEditor.move(view_pos)
+        qtanim.fade_in(self._stickerEditor)
+
+    def _hideSticker(self):
+        if not self._stickerEditor.underMouse():
+            self._stickerEditor.setHidden(True)
 
     def _mainControlClicked(self):
         self._wdgSecondaryEventSelector.setHidden(True)
