@@ -119,9 +119,9 @@ def plot_event_icon(type: PlotEventType) -> QIcon:
     elif type == PlotEventType.CRISIS:
         return IconRegistry.crisis_icon()
     elif type == PlotEventType.COST:
-        return IconRegistry.from_name('ph.coin-bold', '#e9c46a')
+        return IconRegistry.cost_icon()
     elif type == PlotEventType.TOOL:
-        return IconRegistry.from_name('fa5s.hammer', '#d4a373')
+        return IconRegistry.tool_icon()
 
 
 plot_event_type_hint = {

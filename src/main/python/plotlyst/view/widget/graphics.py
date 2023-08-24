@@ -94,6 +94,8 @@ class NodeItem(QAbstractGraphicsShapeItem):
         super().__init__(parent)
         self._node = node
 
+        self.setPos(node.x, node.y)
+
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
