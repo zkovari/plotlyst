@@ -21,10 +21,10 @@ from enum import Enum
 from typing import Optional, List
 
 from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal, QRect, QPoint
-from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent, QTransform
+from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent, QTransform, QIcon
 from PyQt6.QtWidgets import QGraphicsScene, QWidget, QAbstractGraphicsShapeItem, QGraphicsSceneHoverEvent, \
     QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QGraphicsTextItem, QApplication, QGraphicsRectItem, QFrame, \
-    QButtonGroup
+    QButtonGroup, QToolButton
 from overrides import overrides
 from qthandy import transparent, hbox, vbox, sp, margins, incr_icon, grid
 from qtmenu import MenuWidget
@@ -350,7 +350,7 @@ class TextLineEditorPopup(MenuWidget):
         return self._lineEdit.text()
 
 
-class StickerSelectorWidget(QFrame):
+class SecondarySelectorWidget(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setProperty('relaxed-white-bg', True)
@@ -358,25 +358,43 @@ class StickerSelectorWidget(QFrame):
         shadow(self)
         self._grid = grid(self)
 
-        self._btnComment = tool_btn(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new comment',
-                                    True, icon_resize=False,
-                                    properties=['transparent-rounded-bg-on-hover', 'top-selector'],
-                                    parent=self)
-        self._btnTool = tool_btn(IconRegistry.tool_icon('black', 'black'), 'Add new tool',
-                                 True, icon_resize=False,
-                                 properties=['transparent-rounded-bg-on-hover', 'top-selector'],
-                                 parent=self)
-        self._btnCost = tool_btn(IconRegistry.cost_icon('black', 'black'), 'Add new cost',
-                                 True, icon_resize=False,
-                                 properties=['transparent-rounded-bg-on-hover', 'top-selector'],
-                                 parent=self)
         self._btnGroup = QButtonGroup()
-        self._btnGroup.addButton(self._btnComment)
-        self._btnGroup.addButton(self._btnTool)
-        self._btnGroup.addButton(self._btnCost)
-        self._grid.layout().addWidget(self._btnComment, 0, 0)
-        self._grid.layout().addWidget(self._btnTool, 0, 1)
-        self._grid.layout().addWidget(self._btnCost, 1, 0)
+
+    def _newButton(self, icon: QIcon, tooltip: str, row: int, col: int) -> QToolButton:
+        btn = tool_btn(icon, tooltip,
+                       True, icon_resize=False,
+                       properties=['transparent-rounded-bg-on-hover', 'top-selector'],
+                       parent=self)
+
+        self._btnGroup.addButton(btn)
+        self._grid.layout().addWidget(btn, row, col)
+
+        return btn
+
+
+class EventSelectorWidget(SecondarySelectorWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._btnGeneral = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new event', 0, 0)
+        self._btnGoal = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new event', 0, 1)
+        self._btnConflict = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new event', 0, 2)
+        self._btnDisturbance = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new event', 1,
+                                               0)
+        self._btnBackstory = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new event', 1, 1)
+        self._btnMystery = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new event', 1, 2)
+        self._btnSetup = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new event', 2, 0)
+        self._btnForeshadowing = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new event', 2,
+                                                 1)
+
+
+class StickerSelectorWidget(SecondarySelectorWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._btnComment = self._newButton(IconRegistry.from_name('mdi.comment-text-outline'), 'Add new comment', 0, 0)
+        self._btnTool = self._newButton(IconRegistry.tool_icon('black', 'black'), 'Add new tool', 0, 1)
+        self._btnCost = self._newButton(IconRegistry.cost_icon('black', 'black'), 'Add new cost', 1, 0)
+
+        self._btnComment.setChecked(True)
 
 
 class AdditionMode(Enum):
@@ -491,8 +509,8 @@ class EventsMindMapScene(QGraphicsScene):
 
     @overrides
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if not self.isAdditionMode() and not self.linkMode() and event.button() & Qt.MouseButton.LeftButton and not self.itemAt(
-                event.scenePos(), QTransform()):
+        if (not self.isAdditionMode() and not self.linkMode() and
+                event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
             self._selectionRect.start(event.scenePos())
             self._selectionMode = True
         elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
@@ -605,7 +623,7 @@ class EventsMindMapView(BaseGraphicsView):
         self._controlsNavBar.layout().addWidget(self._btnAddCharacter)
         self._controlsNavBar.layout().addWidget(self._btnAddSticker)
 
-        self._wdgSecondaryEventSelector = self.__roundedFrame(self)
+        self._wdgSecondaryEventSelector = EventSelectorWidget(self)
         self._wdgSecondaryEventSelector.setVisible(False)
         self._wdgSecondaryStickerSelector = StickerSelectorWidget(self)
         self._wdgSecondaryStickerSelector.setVisible(False)
@@ -631,15 +649,6 @@ class EventsMindMapView(BaseGraphicsView):
         super(EventsMindMapView, self).resizeEvent(event)
         self.__arrangeSideBars()
 
-    # def _displayNewNodeMenu(self, placeholder: PlaceholderItem):
-    #     menu = MenuWidget(self)
-    #     menu.addAction(
-    #         action('Event',
-    #                slot=lambda: self._scene.addNewItem(placeholder.sceneBoundingRect().center(), ItemType.Event)))
-    #
-    #     view_pos = self.mapFromScene(placeholder.sceneBoundingRect().center())
-    #     menu.exec(self.mapToGlobal(view_pos))
-
     def _editEvent(self, item: EventItem):
         def setText(text: str):
             item.setText(text)
@@ -658,12 +667,12 @@ class EventsMindMapView(BaseGraphicsView):
             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
         if self._btnAddEvent.isChecked():
+            self._wdgSecondaryEventSelector.setVisible(True)
             self._scene.startAdditionMode(AdditionMode.EVENT)
         elif self._btnAddCharacter.isChecked():
             self._scene.startAdditionMode(AdditionMode.CHARACTER)
         elif self._btnAddSticker.isChecked():
             self._wdgSecondaryStickerSelector.setVisible(True)
-            return
         else:
             self._endAddition()
 
@@ -692,6 +701,12 @@ class EventsMindMapView(BaseGraphicsView):
                                      self._wdgZoomBar.sizeHint().height())
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
+
+        secondary_x = self._controlsNavBar.pos().x() + self._controlsNavBar.sizeHint().width() + 5
+        secondary_y = self._controlsNavBar.pos().y() + self._btnAddEvent.pos().y()
+        self._wdgSecondaryEventSelector.setGeometry(secondary_x, secondary_y,
+                                                    self._wdgSecondaryEventSelector.sizeHint().width(),
+                                                    self._wdgSecondaryEventSelector.sizeHint().height())
 
         secondary_x = self._controlsNavBar.pos().x() + self._controlsNavBar.sizeHint().width() + 5
         secondary_y = self._controlsNavBar.pos().y() + self._btnAddSticker.pos().y()
