@@ -478,8 +478,8 @@ class IconRegistry:
         return IconRegistry.from_name('mdi.circle-medium', **kwargs)
 
     @staticmethod
-    def inciting_incident_icon() -> QIcon:
-        return IconRegistry.from_name('mdi.bell-alert-outline', '#a2ad59')
+    def inciting_incident_icon(color: str = '#a2ad59') -> QIcon:
+        return IconRegistry.from_name('mdi.bell-alert-outline', color)
 
     @staticmethod
     def hook_icon() -> QIcon:
