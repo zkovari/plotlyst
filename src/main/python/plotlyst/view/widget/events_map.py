@@ -24,12 +24,12 @@ from PyQt6.QtCore import QRectF, Qt, QPointF, pyqtSignal, QRect, QPoint
 from PyQt6.QtGui import QColor, QPainter, QPen, QKeyEvent, QFontMetrics, QResizeEvent, QTransform, QIcon
 from PyQt6.QtWidgets import QGraphicsScene, QWidget, QAbstractGraphicsShapeItem, QGraphicsSceneHoverEvent, \
     QGraphicsSceneMouseEvent, QStyleOptionGraphicsItem, QApplication, QGraphicsRectItem, QFrame, \
-    QButtonGroup, QToolButton, QLabel
+    QButtonGroup, QToolButton, QLabel, QGraphicsItem
 from overrides import overrides
 from qthandy import transparent, hbox, vbox, sp, margins, incr_icon, grid
 from qtmenu import MenuWidget
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Novel, Character, CharacterNode, Node
 from src.main.python.plotlyst.view.common import tool_btn, shadow, frame, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter
@@ -175,6 +175,31 @@ class PlaceholderItem(SocketItem):
         self.setToolTip('Click to add a new node')
 
 
+class StickerItem(MindMapNode):
+    def __init__(self, node: Node, type: ItemType, parent=None):
+        super().__init__(node, parent)
+        self._size = 28
+        self._icon = IconRegistry.from_name('mdi.comment-text', PLOTLYST_SECONDARY_COLOR)
+
+        self.setFlag(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
+    @overrides
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self._size, self._size)
+
+    @overrides
+    def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+        painter.drawRect(3, 3, self._size - 6, self._size - 10)
+        self._icon.paint(painter, 0, 0, self._size, self._size)
+
+    @overrides
+    def mouseDoubleClickEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        print('dclick')
+
+
 class ConnectableNode(MindMapNode):
     def __init__(self, node: Node, parent=None):
         super().__init__(node, parent)
@@ -216,7 +241,6 @@ class EventItem(ConnectableNode):
         super().__init__(node, parent)
         self._text: str = 'New event'
         self._itemType = itemType
-        self.setPos(node.x, node.y)
         self._icon: Optional[QIcon] = None
         self._iconSize: int = 0
         self._iconTextSpacing: int = 3
@@ -332,7 +356,6 @@ class CharacterItem(ConnectableNode):
     def __init__(self, node: Node, character: Optional[Character], parent=None):
         super().__init__(node, parent)
         self._character: Optional[Character] = character
-        self.setPos(node.x, node.y)
         self._size: int = 68
 
         self._socketTop = SocketItem(Qt.Edge.TopEdge, self)
@@ -487,6 +510,9 @@ class EventsMindMapScene(QGraphicsScene):
         eventItem = EventItem(Node(400, 100), ItemType.EVENT)
         self.addItem(eventItem)
 
+        sticker = StickerItem(Node(200, 0), ItemType.COMMENT)
+        self.addItem(sticker)
+
     def linkMode(self) -> bool:
         return self._linkMode
 
@@ -592,6 +618,8 @@ class EventsMindMapScene(QGraphicsScene):
     def _addNewEvent(self, itemType: ItemType, scenePos: QPointF):
         if itemType == ItemType.CHARACTER:
             item = CharacterItem(self.toCharacterNode(scenePos), character=None)
+        elif itemType == ItemType.COMMENT:
+            item = StickerItem(Node(scenePos.x(), scenePos.y()), itemType)
         else:
             item = EventItem(self.toEventNode(scenePos), itemType)
 
@@ -712,6 +740,7 @@ class EventsMindMapView(BaseGraphicsView):
             self._startAddition(ItemType.CHARACTER)
         elif self._btnAddSticker.isChecked():
             self._wdgSecondaryStickerSelector.setVisible(True)
+            self._startAddition(ItemType.COMMENT)
         else:
             self._endAddition()
 
@@ -721,7 +750,7 @@ class EventsMindMapView(BaseGraphicsView):
         if not QApplication.overrideCursor():
             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
 
-    def _endAddition(self, itemType: ItemType, item: MindMapNode):
+    def _endAddition(self, itemType: Optional[ItemType] = None, item: Optional[MindMapNode] = None):
         btn = self._btnGroup.checkedButton()
         if btn:
             btn.setChecked(False)
