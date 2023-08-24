@@ -60,6 +60,10 @@ def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
     draw_zero(painter)
 
 
+def v_center(ref_height: int, item_height: int) -> int:
+    return (ref_height - item_height) // 2
+
+
 class ItemType(Enum):
     Event = 0
 
@@ -201,6 +205,9 @@ class EventItem(ConnectableNode):
         super().__init__(node, parent)
         self._text: str = 'New event'
         self.setPos(node.x, node.y)
+        self._icon: Optional[QIcon] = None
+        self._iconSize: int = 0
+        self._iconTextSpacing: int = 3
 
         self._font = QApplication.font()
         # self._font.setPointSize(16)
@@ -258,17 +265,25 @@ class EventItem(ConnectableNode):
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
         painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
 
+        if self._icon:
+            self._icon.paint(painter, self.Margin + self.Padding - self._iconTextSpacing,
+                             self.Margin + v_center(self.Padding * 2 + self._textRect.height(), self._iconSize),
+                             self._iconSize, self._iconSize)
+
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.mindMapScene().editEventText(self)
 
     def _recalculateRect(self):
         self._textRect = self._metrics.boundingRect(self._text)
+        self._iconSize = int(self._textRect.height() * 1.25) if self._icon else 0
         self._textRect.moveTopLeft(QPoint(self.Margin + self.Padding, self.Margin + self.Padding))
-        self._width = self._textRect.width() + self.Margin * 2 + self.Padding * 2
+        self._textRect.moveTopLeft(QPoint(self._textRect.x() + self._iconSize, self._textRect.y()))
+
+        self._width = self._textRect.width() + self._iconSize + self.Margin * 2 + self.Padding * 2
         self._height = self._textRect.height() + self.Margin * 2 + self.Padding * 2
 
-        self._nestedRectWidth = self._textRect.width() + self.Padding * 2
+        self._nestedRectWidth = self._textRect.width() + self.Padding * 2 + self._iconSize
         self._nestedRectHeight = self._textRect.height() + self.Padding * 2
 
         socketWidth = self._socketLeft.boundingRect().width()
@@ -299,9 +314,9 @@ class CharacterItem(ConnectableNode):
         self._socketBottom = SocketItem(Qt.Edge.BottomEdge, self)
         self._socketLeft = SocketItem(Qt.Edge.LeftEdge, self)
         self._sockets.extend([self._socketLeft, self._socketTop, self._socketRight, self._socketBottom])
-        socketWidth = self._socketTop.boundingRect().width()
-        half = self.Margin + (self._size - socketWidth) / 2
-        padding = (self.Margin - socketWidth) / 2
+        socketSize = self._socketTop.boundingRect().width()
+        half = self.Margin + v_center(self._size, socketSize)
+        padding = v_center(self.Margin, socketSize)
         self._socketTop.setPos(half, padding)
         self._socketRight.setPos(self._size + self.Margin + padding, half)
         self._socketBottom.setPos(half, self._size + self.Margin + padding)
