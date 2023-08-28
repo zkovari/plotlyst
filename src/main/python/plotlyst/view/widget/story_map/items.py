@@ -174,7 +174,12 @@ class StickerItem(MindMapNode):
     def __init__(self, node: Node, type: ItemType, parent=None):
         super().__init__(node, parent)
         self._size = 28
-        self._icon = IconRegistry.from_name('mdi.comment-text', PLOTLYST_SECONDARY_COLOR)
+        if type == ItemType.COMMENT:
+            self._icon = IconRegistry.from_name('mdi.comment-text', PLOTLYST_SECONDARY_COLOR)
+        elif type == ItemType.TOOL:
+            self._icon = IconRegistry.tool_icon()
+        if type == ItemType.COST:
+            self._icon = IconRegistry.cost_icon()
 
         self.setFlag(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)

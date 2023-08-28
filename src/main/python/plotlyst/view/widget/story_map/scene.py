@@ -173,7 +173,7 @@ class EventsMindMapScene(QGraphicsScene):
     def _addNewEvent(self, itemType: ItemType, scenePos: QPointF):
         if itemType == ItemType.CHARACTER:
             item = CharacterItem(self.toCharacterNode(scenePos), character=None)
-        elif itemType == ItemType.COMMENT:
+        elif itemType in [ItemType.COMMENT, ItemType.TOOL, ItemType.COST]:
             item = StickerItem(Node(scenePos.x(), scenePos.y()), itemType)
         else:
             item = EventItem(self.toEventNode(scenePos), itemType)
