@@ -23,7 +23,7 @@ from PyQt6.QtCore import Qt, QEvent, QRect
 from PyQt6.QtGui import QEnterEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QFrame
 from overrides import overrides
-from qthandy import hbox, margins, transparent, vbox, retain_when_hidden, sp, vline
+from qthandy import hbox, margins, transparent, vbox, sp, vline
 from qtmenu import MenuWidget
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
@@ -91,12 +91,13 @@ class EventItemEditor(QWidget):
         shadow(self._toolbar)
 
         hbox(self._toolbar, spacing=6)
+        margins(self._toolbar, left=5, right=5)
         self.layout().addWidget(self._toolbar)
 
         self._item: Optional[EventItem] = None
 
         self._btnType = tool_btn(IconRegistry.from_name('mdi.square-rounded-outline'), 'Change type', transparent_=True)
-        self._btnType.clicked.connect(self._showEventSelector)
+        self._btnType.clicked.connect(self._toggleEventSelector)
         self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color=PLOTLYST_SECONDARY_COLOR), 'Change style',
                                   transparent_=True)
         self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
@@ -116,7 +117,7 @@ class EventItemEditor(QWidget):
         self._btnUnderline.clicked.connect(self._textStyleChanged)
 
         self._eventSelector = EventSelectorWidget(self)
-        retain_when_hidden(self._eventSelector)
+        # retain_when_hidden(self._eventSelector)
         self._eventSelector.setVisible(False)
         sp(self._eventSelector).h_max()
         self.layout().addWidget(self._eventSelector, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -132,6 +133,8 @@ class EventItemEditor(QWidget):
         self._toolbar.layout().addWidget(self._btnBold)
         self._toolbar.layout().addWidget(self._btnItalic)
         self._toolbar.layout().addWidget(self._btnUnderline)
+
+        self.setFixedHeight(self._toolbar.sizeHint().height())
 
     def setItem(self, item: EventItem):
         self._item = item
@@ -152,13 +155,18 @@ class EventItemEditor(QWidget):
         if self._item:
             self._item.setItemType(itemType)
 
-    def _showEventSelector(self):
-        self._eventSelector.setVisible(True)
+    def _toggleEventSelector(self):
+        self._eventSelector.setVisible(not self._eventSelector.isVisible())
+        if self._eventSelector.isVisible():
+            self.setFixedHeight(self._toolbar.sizeHint().height() + self._eventSelector.sizeHint().height())
+        else:
+            self.setFixedHeight(self._toolbar.sizeHint().height())
 
     def _showIconSelector(self):
-        icon, color = IconSelectorDialog().display()
-        if icon and self._item:
-            self._item.setIcon(IconRegistry.from_name(icon, color.name()))
+        result = IconSelectorDialog().display()
+        if result and self._item:
+            self._item.setIcon(IconRegistry.from_name(result[0], result[1].name()))
 
     def _hideSecondarySelectors(self):
         self._eventSelector.setVisible(False)
+        self.setFixedHeight(self._toolbar.sizeHint().height())

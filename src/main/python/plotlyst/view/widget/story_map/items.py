@@ -355,6 +355,7 @@ class EventItem(ConnectableNode):
 
     @overrides
     def _onPosChanged(self):
+        super()._onPosChanged()
         if self.isSelected():
             self.mindMapScene().hideEditor()
 

@@ -72,6 +72,7 @@ class EventsMindMapScene(QGraphicsScene):
             return self._connectorPlaceholder.source()
 
     def startLink(self, source: SocketItem):
+        self.hideEditor()
         self._linkMode = True
         self._placeholder = PlaceholderItem()
         self._placeholder.setVisible(False)
@@ -82,6 +83,7 @@ class EventsMindMapScene(QGraphicsScene):
 
         self._placeholder.setPos(source.scenePos())
         self._connectorPlaceholder.rearrange()
+
 
     def endLink(self):
         self._linkMode = False

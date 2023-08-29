@@ -173,6 +173,7 @@ class EventsMindMapView(BaseGraphicsView):
 
     def _startAddition(self, itemType: ItemType):
         self._scene.startAdditionMode(itemType)
+        self._hideItemEditor()
 
         if not QApplication.overrideCursor():
             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
