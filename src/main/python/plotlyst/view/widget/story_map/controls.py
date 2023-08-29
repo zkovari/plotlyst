@@ -62,24 +62,24 @@ class EventSelectorWidget(SecondarySelectorWidget):
         self._grid.addWidget(QLabel('Events'), 0, 0, 1, 3)
 
         self._btnGeneral = self._newButton(ItemType.EVENT, IconRegistry.from_name('mdi.square-rounded-outline'),
-                                           'Add new event', 1, 0)
+                                           'General event', 1, 0)
         self._btnGoal = self._newButton(ItemType.GOAL, IconRegistry.goal_icon('black', 'black'), 'Add new goal', 1, 1)
         self._btnConflict = self._newButton(ItemType.CONFLICT, IconRegistry.conflict_icon('black', 'black'),
-                                            'Add new Conflict', 1, 2)
+                                            'Conflict', 1, 2)
         self._btnDisturbance = self._newButton(ItemType.DISTURBANCE, IconRegistry.inciting_incident_icon('black'),
-                                               'Add new disturbance', 2,
+                                               'Inciting incident', 2,
                                                0)
         self._btnBackstory = self._newButton(ItemType.BACKSTORY, IconRegistry.backstory_icon('black', 'black'),
-                                             'Add new backstory', 2, 1)
+                                             'Backstory', 2, 1)
 
         self._grid.addWidget(QLabel('Narrative'), 3, 0, 1, 3)
         self._btnQuestion = self._newButton(ItemType.QUESTION, IconRegistry.from_name('ei.question-sign'),
-                                            "Add new reader's question", 4,
+                                            "Reader's question", 4,
                                             0)
         self._btnSetup = self._newButton(ItemType.SETUP, IconRegistry.from_name('ri.seedling-fill'),
-                                         'Add new setup and payoff', 4, 1)
+                                         'Setup and payoff', 4, 1)
         self._btnForeshadowing = self._newButton(ItemType.FORESHADOWING, IconRegistry.from_name('mdi6.crystal-ball'),
-                                                 'Add new foreshadowing',
+                                                 'Foreshadowing',
                                                  4,
                                                  2)
 

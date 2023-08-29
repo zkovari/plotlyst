@@ -234,6 +234,7 @@ class ConnectableNode(MindMapNode):
 
     @overrides
     def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
         self._setSocketsVisible(selected)
 
     def _setSocketsVisible(self, visible: bool = True):
@@ -252,23 +253,9 @@ class EventItem(ConnectableNode):
         self._icon: Optional[QIcon] = None
         self._iconSize: int = 0
         self._iconTextSpacing: int = 3
-        if itemType == ItemType.GOAL:
-            self._icon = IconRegistry.goal_icon()
-        elif itemType == ItemType.CONFLICT:
-            self._icon = IconRegistry.conflict_icon()
-        elif itemType == ItemType.BACKSTORY:
-            self._icon = IconRegistry.backstory_icon()
-        elif itemType == ItemType.DISTURBANCE:
-            self._icon = IconRegistry.inciting_incident_icon()
-        elif itemType == ItemType.QUESTION:
-            self._icon = IconRegistry.from_name('ei.question-sign')
-        elif itemType == ItemType.SETUP:
-            self._icon = IconRegistry.from_name('ri.seedling-fill')
-        elif itemType == ItemType.FORESHADOWING:
-            self._icon = IconRegistry.from_name('mdi6.crystal-ball')
+        self._updateIcon()
 
         self._font = QApplication.font()
-        # self._font.setPointSize(16)
         self._metrics = QFontMetrics(self._font)
         self._textRect: QRect = QRect(0, 0, 1, 1)
         self._width = 1
@@ -297,10 +284,36 @@ class EventItem(ConnectableNode):
 
     def setText(self, text: str):
         self._text = text
-        self._recalculateRect()
-        self.prepareGeometryChange()
         self.setSelected(False)
-        self.update()
+        self._refresh()
+
+    def itemType(self) -> ItemType:
+        return self._itemType
+
+    def setIcon(self, icon: QIcon):
+        self._icon = icon
+        self._refresh()
+
+    def setFontSettings(self, size: Optional[int] = None, bold: Optional[bool] = None, italic: Optional[bool] = None,
+                        underline: Optional[bool] = None):
+        if size is not None:
+            self._font.setPointSize(size)
+        if bold is not None:
+            self._font.setBold(bold)
+        if italic is not None:
+            self._font.setItalic(italic)
+        if underline is not None:
+            self._font.setUnderline(underline)
+
+        self._metrics = QFontMetrics(self._font)
+
+        self._refresh()
+
+    def setItemType(self, itemType: ItemType):
+        self._itemType = itemType
+        self._updateIcon()
+
+        self._refresh()
 
     def textRect(self) -> QRect:
         return self._textRect
@@ -331,6 +344,41 @@ class EventItem(ConnectableNode):
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.mindMapScene().editEventText(self)
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
+        if selected:
+            self.mindMapScene().showEditor(self)
+        else:
+            self.mindMapScene().hideEditor()
+
+    @overrides
+    def _onPosChanged(self):
+        super()._onPosChanged()
+        if self.isSelected():
+            self.mindMapScene().hideEditor()
+
+    def _refresh(self):
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+
+    def _updateIcon(self):
+        if self._itemType == ItemType.GOAL:
+            self._icon = IconRegistry.goal_icon()
+        elif self._itemType == ItemType.CONFLICT:
+            self._icon = IconRegistry.conflict_icon()
+        elif self._itemType == ItemType.BACKSTORY:
+            self._icon = IconRegistry.backstory_icon()
+        elif self._itemType == ItemType.DISTURBANCE:
+            self._icon = IconRegistry.inciting_incident_icon()
+        elif self._itemType == ItemType.QUESTION:
+            self._icon = IconRegistry.from_name('ei.question-sign')
+        elif self._itemType == ItemType.SETUP:
+            self._icon = IconRegistry.from_name('ri.seedling-fill')
+        elif self._itemType == ItemType.FORESHADOWING:
+            self._icon = IconRegistry.from_name('mdi6.crystal-ball')
 
     def _recalculateRect(self):
         self._textRect = self._metrics.boundingRect(self._text)

@@ -38,8 +38,8 @@ from src.main.python.plotlyst.view.generated.novel_view_ui import Ui_NovelView
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.style.base import apply_border_image
 from src.main.python.plotlyst.view.widget.button import SecondaryActionToolButton
-from src.main.python.plotlyst.view.widget.events_map import EventsMindMapView
 from src.main.python.plotlyst.view.widget.plot import PlotEditor
+from src.main.python.plotlyst.view.widget.story_map import EventsMindMapView
 
 
 class NovelView(AbstractNovelView):
