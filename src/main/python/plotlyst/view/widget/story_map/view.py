@@ -34,7 +34,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
 from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
 from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget, StickerSelectorWidget
-from src.main.python.plotlyst.view.widget.story_map.editors import StickerEditor, TextLineEditorPopup
+from src.main.python.plotlyst.view.widget.story_map.editors import StickerEditor, TextLineEditorPopup, EventItemEditor
 from src.main.python.plotlyst.view.widget.story_map.items import EventItem, StickerItem, ItemType, MindMapNode, \
     CharacterItem
 from src.main.python.plotlyst.view.widget.story_map.scene import EventsMindMapScene
@@ -103,11 +103,16 @@ class EventsMindMapView(BaseGraphicsView):
         self._wdgZoomBar.layout().addWidget(self._btnZoomOut)
         self._wdgZoomBar.layout().addWidget(self._btnZoomIn)
 
+        self._itemEditor = EventItemEditor(self)
+        self._itemEditor.setVisible(False)
+
         self._scene.itemAdded.connect(self._endAddition)
         self._scene.cancelItemAddition.connect(self._endAddition)
         self._scene.editEvent.connect(self._editEvent)
         self._scene.editSticker.connect(self._editSticker)
         self._scene.closeSticker.connect(self._hideSticker)
+        self._scene.showItemEditor.connect(self._showItemEditor)
+        self._scene.hideItemEditor.connect(self._hideItemEditor)
 
         self.__arrangeSideBars()
 
@@ -134,6 +139,22 @@ class EventsMindMapView(BaseGraphicsView):
     def _hideSticker(self):
         if not self._stickerEditor.underMouse():
             self._stickerEditor.setHidden(True)
+
+    def _showItemEditor(self, item: MindMapNode):
+        self._itemEditor.setItem(item)
+
+        item_w = item.sceneBoundingRect().width()
+        editor_w = self._itemEditor.sizeHint().width()
+        diff_w = int(editor_w - item_w) // 2
+
+        view_pos = self.mapFromScene(item.sceneBoundingRect().topLeft())
+        view_pos.setX(view_pos.x() - diff_w)
+        view_pos.setY(view_pos.y() - 50)
+        self._itemEditor.move(view_pos)
+        self._itemEditor.setVisible(True)
+
+    def _hideItemEditor(self):
+        self._itemEditor.setVisible(False)
 
     def _mainControlClicked(self):
         self._wdgSecondaryEventSelector.setHidden(True)

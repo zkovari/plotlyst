@@ -37,6 +37,8 @@ class EventsMindMapScene(QGraphicsScene):
     editEvent = pyqtSignal(EventItem)
     editSticker = pyqtSignal(StickerItem)
     closeSticker = pyqtSignal()
+    showItemEditor = pyqtSignal(MindMapNode)
+    hideItemEditor = pyqtSignal()
 
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
@@ -106,6 +108,14 @@ class EventsMindMapScene(QGraphicsScene):
 
     def endAdditionMode(self):
         self._additionMode = None
+
+    def showEditor(self, item: MindMapNode):
+        if not self._selectionMode:
+            self.showItemEditor.emit(item)
+
+    def hideEditor(self):
+        if len(self.selectedItems()) == 1:
+            self.hideItemEditor.emit()
 
     @overrides
     def keyPressEvent(self, event: QKeyEvent) -> None:

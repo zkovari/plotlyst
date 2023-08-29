@@ -79,6 +79,13 @@ class MindMapNode(NodeItem):
     def linkMode(self) -> bool:
         return self.mindMapScene().linkMode()
 
+    @overrides
+    def _onSelection(self, selected: bool):
+        if selected:
+            self.mindMapScene().showEditor(self)
+        else:
+            self.mindMapScene().hideEditor()
+
 
 class SocketItem(AbstractSocketItem):
     def __init__(self, orientation: Qt.Edge, parent: 'ConnectableNode'):
@@ -234,6 +241,7 @@ class ConnectableNode(MindMapNode):
 
     @overrides
     def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
         self._setSocketsVisible(selected)
 
     def _setSocketsVisible(self, visible: bool = True):
