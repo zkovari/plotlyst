@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
+import sys
 from functools import partial
 from typing import Optional, Tuple, List
 
@@ -27,11 +28,11 @@ from PyQt6.QtGui import QPixmap, QPainterPath, QPainter, QFont, QColor, QIcon, Q
 from PyQt6.QtWidgets import QWidget, QSizePolicy, QColorDialog, QAbstractItemView, \
     QMenu, QAbstractButton, \
     QStackedWidget, QAbstractScrollArea, QLineEdit, QHeaderView, QScrollArea, QFrame, QTabWidget, \
-    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip
+    QGraphicsDropShadowEffect, QTableView, QPushButton, QToolButton, QButtonGroup, QToolTip, QApplication, QMainWindow
 from fbs_runtime import platform
 from overrides import overrides
 from qtanim import fade_out
-from qthandy import hbox, vbox, margins, gc, transparent
+from qthandy import hbox, vbox, margins, gc, transparent, spacer, sp
 
 from src.main.python.plotlyst.env import app_env
 
@@ -441,3 +442,30 @@ class DelayedSignalSlotConnector(QObject):
         self._signal_args = args
         self._signal_kwargs = kwargs
         self._timer.start(self._delay)
+
+
+def spawn(cls):
+    app = QApplication(sys.argv)
+    main_window = QMainWindow()
+    wdgCentral = QWidget()
+    vbox(wdgCentral)
+    main_window.setCentralWidget(wdgCentral)
+
+    widget = cls()
+    wdgDisplay = QWidget()
+    hbox(wdgDisplay)
+    wdgDisplay.layout().addWidget(spacer())
+    wdgDisplay.layout().addWidget(widget)
+    wdgDisplay.layout().addWidget(spacer())
+
+    btnClose = QPushButton("Close")
+    sp(btnClose).h_max()
+    btnClose.clicked.connect(main_window.close)
+    wdgCentral.layout().addWidget(spacer())
+    wdgCentral.layout().addWidget(wdgDisplay)
+    wdgCentral.layout().addWidget(btnClose, alignment=Qt.AlignmentFlag.AlignCenter)
+    wdgCentral.layout().addWidget(spacer())
+
+    main_window.show()
+
+    sys.exit(app.exec())
