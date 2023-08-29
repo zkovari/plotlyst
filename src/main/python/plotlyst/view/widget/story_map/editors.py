@@ -23,15 +23,16 @@ from PyQt6.QtCore import Qt, QEvent, QRect
 from PyQt6.QtGui import QEnterEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QFrame
 from overrides import overrides
-from qthandy import hbox, margins, transparent, line
+from qthandy import hbox, margins, transparent, vbox, retain_when_hidden, sp, vline
 from qtmenu import MenuWidget
-from typing_extensions import Optional
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR
 from src.main.python.plotlyst.view.common import shadow, tool_btn
+from src.main.python.plotlyst.view.dialog.utility import IconSelectorDialog
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.input import AutoAdjustableLineEdit, FontSizeSpinBox
-from src.main.python.plotlyst.view.widget.story_map.items import MindMapNode, EventItem
+from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget
+from src.main.python.plotlyst.view.widget.story_map.items import EventItem, ItemType
 
 
 class StickerEditor(QWidget):
@@ -80,19 +81,26 @@ class TextLineEditorPopup(MenuWidget):
         return self._lineEdit.text()
 
 
-class EventItemEditor(QFrame):
+class EventItemEditor(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setProperty('relaxed-white-bg', True)
-        self.setProperty('rounded', True)
-        shadow(self)
-        hbox(self, spacing=6)
+        vbox(self, spacing=5)
+        self._toolbar = QFrame(self)
+        self._toolbar.setProperty('relaxed-white-bg', True)
+        self._toolbar.setProperty('rounded', True)
+        shadow(self._toolbar)
+
+        hbox(self._toolbar, spacing=6)
+        self.layout().addWidget(self._toolbar)
 
         self._item: Optional[EventItem] = None
 
         self._btnType = tool_btn(IconRegistry.from_name('mdi.square-rounded-outline'), 'Change type', transparent_=True)
+        self._btnType.clicked.connect(self._showEventSelector)
         self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color=PLOTLYST_SECONDARY_COLOR), 'Change style',
                                   transparent_=True)
+        self._btnIcon = tool_btn(IconRegistry.from_name('mdi.emoticon-outline'), 'Change icon', transparent_=True)
+        self._btnIcon.clicked.connect(self._showIconSelector)
         self._sbFont = FontSizeSpinBox()
         self._sbFont.fontChanged.connect(self._fontChanged)
         self._btnBold = tool_btn(IconRegistry.from_name('fa5s.bold'), 'Bold', checkable=True, icon_resize=False,
@@ -107,29 +115,50 @@ class EventItemEditor(QFrame):
         self._btnItalic.clicked.connect(self._textStyleChanged)
         self._btnUnderline.clicked.connect(self._textStyleChanged)
 
-        self.layout().addWidget(self._btnType)
-        self.layout().addWidget(line())
-        self.layout().addWidget(self._btnColor)
-        self.layout().addWidget(line())
-        self.layout().addWidget(self._sbFont)
-        self.layout().addWidget(line())
-        self.layout().addWidget(self._btnBold)
-        self.layout().addWidget(self._btnItalic)
-        self.layout().addWidget(self._btnUnderline)
+        self._eventSelector = EventSelectorWidget(self)
+        retain_when_hidden(self._eventSelector)
+        self._eventSelector.setVisible(False)
+        sp(self._eventSelector).h_max()
+        self.layout().addWidget(self._eventSelector, alignment=Qt.AlignmentFlag.AlignLeft)
+        self._eventSelector.selected.connect(self._typeChanged)
+
+        self._toolbar.layout().addWidget(self._btnType)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._btnIcon)
+        self._toolbar.layout().addWidget(self._btnColor)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._sbFont)
+        self._toolbar.layout().addWidget(vline())
+        self._toolbar.layout().addWidget(self._btnBold)
+        self._toolbar.layout().addWidget(self._btnItalic)
+        self._toolbar.layout().addWidget(self._btnUnderline)
 
     def setItem(self, item: EventItem):
         self._item = item
-        is_event = isinstance(self._item, EventItem)
-        self._btnType.setVisible(is_event)
-        self._btnBold.setVisible(is_event)
-        self._btnItalic.setVisible(is_event)
-        self._btnUnderline.setVisible(is_event)
+        self._hideSecondarySelectors()
 
     def _fontChanged(self, size: int):
+        self._hideSecondarySelectors()
         if self._item:
             self._item.setFontSettings(size=size)
 
     def _textStyleChanged(self):
+        self._hideSecondarySelectors()
         if self._item:
             self._item.setFontSettings(bold=self._btnBold.isChecked(), italic=self._btnItalic.isChecked(),
                                        underline=self._btnUnderline.isChecked())
+
+    def _typeChanged(self, itemType: ItemType):
+        if self._item:
+            self._item.setItemType(itemType)
+
+    def _showEventSelector(self):
+        self._eventSelector.setVisible(True)
+
+    def _showIconSelector(self):
+        icon, color = IconSelectorDialog().display()
+        if icon and self._item:
+            self._item.setIcon(IconRegistry.from_name(icon, color.name()))
+
+    def _hideSecondarySelectors(self):
+        self._eventSelector.setVisible(False)
