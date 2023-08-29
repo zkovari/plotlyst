@@ -28,7 +28,7 @@ from PyQt6.QtGui import QFont, QTextCursor, QTextCharFormat, QKeyEvent, QPaintEv
     QColor, QSyntaxHighlighter, \
     QTextDocument, QTextBlockUserData, QIcon
 from PyQt6.QtWidgets import QTextEdit, QFrame, QPushButton, QStylePainter, QStyleOptionButton, QStyle, QMenu, \
-    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView
+    QApplication, QToolButton, QLineEdit, QWidgetAction, QListView, QSpinBox, QWidget, QLabel
 from language_tool_python import LanguageTool
 from overrides import overrides
 from qthandy import transparent, hbox, margins
@@ -725,3 +725,45 @@ class RemovalButton(QToolButton):
         elif event.type() == QEvent.Type.Leave:
             self.setIcon(IconRegistry.close_icon('grey'))
         return super(RemovalButton, self).eventFilter(watched, event)
+
+
+class ButtonsOnlySpinBox(QSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.lineEdit().setVisible(False)
+        self.setFixedWidth(18)
+        self.setFrame(False)
+
+
+class FontSizeSpinBox(QWidget):
+    def __init__(self, font_size_prefix: str = "Font Size:"):
+        super().__init__()
+
+        self.setWindowTitle("Font Size Spinner")
+        self.setGeometry(100, 100, 300, 150)
+
+        # Create a list of common font sizes
+        self._font_sizes = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32]
+
+        # Create widgets
+        self._label = QLabel(font_size_prefix, self)
+        self._font_size_spinner = ButtonsOnlySpinBox(self)
+        self._font_size_spinner.setRange(0, len(self._font_sizes) - 1)
+        self._font_size_spinner.setValue(2)
+        self._font_size_spinner.setButtonSymbols(QSpinBox.ButtonSymbols.UpDownArrows)  # Show only up/down buttons
+        self._font_size_spinner.valueChanged.connect(self._updateFontSize)
+
+        # Layout
+        hbox(self)
+        self.layout().addWidget(self._label)
+        self.layout().addWidget(self._font_size_spinner)
+
+        # Initial font size
+        self._updateFontSize()
+
+    def _updateFontSize(self):
+        selected_index = self._font_size_spinner.value()
+        font_size = self._font_sizes[selected_index]
+
+        # Update the label to display the current font size
+        self._label.setText(f"{font_size} pt")
