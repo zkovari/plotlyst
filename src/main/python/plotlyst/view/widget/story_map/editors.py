@@ -23,7 +23,7 @@ from PyQt6.QtCore import Qt, QEvent, QRect
 from PyQt6.QtGui import QEnterEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QFrame
 from overrides import overrides
-from qthandy import hbox, margins, transparent
+from qthandy import hbox, margins, transparent, line
 from qtmenu import MenuWidget
 from typing_extensions import Optional
 
@@ -88,11 +88,13 @@ class EventItemEditor(QFrame):
         shadow(self)
         hbox(self, spacing=6)
 
-        self._item: Optional[MindMapNode] = None
+        self._item: Optional[EventItem] = None
 
         self._btnType = tool_btn(IconRegistry.from_name('mdi.square-rounded-outline'), 'Change type', transparent_=True)
         self._btnColor = tool_btn(IconRegistry.from_name('fa5s.circle', color=PLOTLYST_SECONDARY_COLOR), 'Change style',
                                   transparent_=True)
+        self._sbFont = FontSizeSpinBox()
+        self._sbFont.fontChanged.connect(self._fontChanged)
         self._btnBold = tool_btn(IconRegistry.from_name('fa5s.bold'), 'Bold', checkable=True, icon_resize=False,
                                  properties=['transparent-rounded-bg-on-hover', 'top-selector'])
         self._btnItalic = tool_btn(IconRegistry.from_name('fa5s.italic'), 'Italic',
@@ -101,20 +103,33 @@ class EventItemEditor(QFrame):
         self._btnUnderline = tool_btn(IconRegistry.from_name('fa5s.underline'), 'Underline',
                                       checkable=True, icon_resize=False,
                                       properties=['transparent-rounded-bg-on-hover', 'top-selector'])
-
-        self._sbFont = FontSizeSpinBox()
+        self._btnBold.clicked.connect(self._textStyleChanged)
+        self._btnItalic.clicked.connect(self._textStyleChanged)
+        self._btnUnderline.clicked.connect(self._textStyleChanged)
 
         self.layout().addWidget(self._btnType)
+        self.layout().addWidget(line())
         self.layout().addWidget(self._btnColor)
+        self.layout().addWidget(line())
         self.layout().addWidget(self._sbFont)
+        self.layout().addWidget(line())
         self.layout().addWidget(self._btnBold)
         self.layout().addWidget(self._btnItalic)
         self.layout().addWidget(self._btnUnderline)
 
-    def setItem(self, item: MindMapNode):
+    def setItem(self, item: EventItem):
         self._item = item
         is_event = isinstance(self._item, EventItem)
         self._btnType.setVisible(is_event)
         self._btnBold.setVisible(is_event)
         self._btnItalic.setVisible(is_event)
         self._btnUnderline.setVisible(is_event)
+
+    def _fontChanged(self, size: int):
+        if self._item:
+            self._item.setFontSettings(size=size)
+
+    def _textStyleChanged(self):
+        if self._item:
+            self._item.setFontSettings(bold=self._btnBold.isChecked(), italic=self._btnItalic.isChecked(),
+                                       underline=self._btnUnderline.isChecked())

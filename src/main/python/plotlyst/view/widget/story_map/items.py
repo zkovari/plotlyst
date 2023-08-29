@@ -79,13 +79,6 @@ class MindMapNode(NodeItem):
     def linkMode(self) -> bool:
         return self.mindMapScene().linkMode()
 
-    @overrides
-    def _onSelection(self, selected: bool):
-        if selected:
-            self.mindMapScene().showEditor(self)
-        else:
-            self.mindMapScene().hideEditor()
-
 
 class SocketItem(AbstractSocketItem):
     def __init__(self, orientation: Qt.Edge, parent: 'ConnectableNode'):
@@ -276,7 +269,6 @@ class EventItem(ConnectableNode):
             self._icon = IconRegistry.from_name('mdi6.crystal-ball')
 
         self._font = QApplication.font()
-        # self._font.setPointSize(16)
         self._metrics = QFontMetrics(self._font)
         self._textRect: QRect = QRect(0, 0, 1, 1)
         self._width = 1
@@ -310,6 +302,23 @@ class EventItem(ConnectableNode):
         self.setSelected(False)
         self.update()
 
+    def setFontSettings(self, size: Optional[int] = None, bold: Optional[bool] = None, italic: Optional[bool] = None,
+                        underline: Optional[bool] = None):
+        if size is not None:
+            self._font.setPointSize(size)
+        if bold is not None:
+            self._font.setBold(bold)
+        if italic is not None:
+            self._font.setItalic(italic)
+        if underline is not None:
+            self._font.setUnderline(underline)
+
+        self._metrics = QFontMetrics(self._font)
+
+        self._recalculateRect()
+        self.prepareGeometryChange()
+        self.update()
+
     def textRect(self) -> QRect:
         return self._textRect
 
@@ -339,6 +348,19 @@ class EventItem(ConnectableNode):
     @overrides
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         self.mindMapScene().editEventText(self)
+
+    @overrides
+    def _onSelection(self, selected: bool):
+        super()._onSelection(selected)
+        if selected:
+            self.mindMapScene().showEditor(self)
+        else:
+            self.mindMapScene().hideEditor()
+
+    @overrides
+    def _onPosChanged(self):
+        if self.isSelected():
+            self.mindMapScene().hideEditor()
 
     def _recalculateRect(self):
         self._textRect = self._metrics.boundingRect(self._text)
