@@ -332,9 +332,10 @@ class EventItem(ConnectableNode):
             painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 2, 2)
 
         painter.setPen(QPen(Qt.GlobalColor.black, 1))
+        painter.setBrush(QColor(RELAXED_WHITE_COLOR))
+        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
         painter.setFont(self._font)
         painter.drawText(self._textRect, Qt.AlignmentFlag.AlignCenter, self._text)
-        painter.drawRoundedRect(self.Margin, self.Margin, self._nestedRectWidth, self._nestedRectHeight, 24, 24)
 
         if self._icon:
             self._icon.paint(painter, self.Margin + self.Padding - self._iconTextSpacing,
