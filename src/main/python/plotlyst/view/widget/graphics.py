@@ -17,13 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from abc import abstractmethod
 from enum import Enum
+from functools import partial
 from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
-from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent, QTransform
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
-    QToolButton, QApplication
+    QToolButton, QApplication, QGraphicsScene, QGraphicsSceneMouseEvent
 from overrides import overrides
 from qthandy import hbox, margins, sp, incr_icon, vbox
 
@@ -197,10 +199,72 @@ class NetworkItemType(Enum):
     pass
 
 
+class NetworkScene(QGraphicsScene):
+    cancelItemAddition = pyqtSignal()
+    itemAdded = pyqtSignal(NetworkItemType, NodeItem)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._linkMode: bool = False
+        self._additionMode: Optional[NetworkItemType] = None
+
+    def isAdditionMode(self) -> bool:
+        return self._additionMode is not None
+
+    def startAdditionMode(self, itemType: NetworkItemType):
+        self._additionMode = itemType
+
+    def endAdditionMode(self):
+        self._additionMode = None
+
+    def linkMode(self) -> bool:
+        return self._linkMode
+
+    def startLink(self):
+        self._linkMode = True
+
+    def endLink(self):
+        self._linkMode = False
+
+    @overrides
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if (not self.isAdditionMode() and not self.linkMode() and
+                event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
+            pass
+            # self._selectionRect.start(event.scenePos())
+            # self._selectionMode = True
+        elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
+            # disallow view movement to clear item selection
+            return
+        super().mousePressEvent(event)
+
+    @overrides
+    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+        if self.linkMode():
+            if event.button() & Qt.MouseButton.RightButton:
+                self.endLink()
+        elif self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
+            self.cancelItemAddition.emit()
+        # elif self._selectionMode and event.button() & Qt.MouseButton.LeftButton:
+        #     self._selectionMode = False
+        #     self._selectionRect.setVisible(False)
+        #     self._updateSelection()
+        elif self._additionMode is not None:
+            self._addNewItem(self._additionMode, event.scenePos())
+
+        super().mouseReleaseEvent(event)
+
+    @abstractmethod
+    def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
+        pass
+
+
 class NetworkGraphicsView(BaseGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setBackgroundBrush(QColor('#e9ecef'))
+        self._scene = self._initScene()
+        self.setScene(self._scene)
 
         self._wdgZoomBar = ZoomBar(self)
         self._wdgZoomBar.zoomed.connect(lambda x: self.scale(1.0 + x, 1.0 + x))
@@ -212,13 +276,19 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         self._btnGroup = ExclusiveOptionalButtonGroup()
 
+        self._scene.itemAdded.connect(self._endAddition)
+        self._scene.cancelItemAddition.connect(self._endAddition)
+
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         self.__arrangeSideBars()
 
-    def _mainControlClicked(self, itemType: NetworkItemType):
-        self._startAddition(itemType)
+    def _mainControlClicked(self, itemType: NetworkItemType, checked: bool):
+        if checked:
+            self._startAddition(itemType)
+        else:
+            self._endAddition()
 
     def _newControlButton(self, icon: QIcon, tooltip: str, itemType: NetworkItemType) -> QToolButton:
         btn = tool_btn(icon, tooltip,
@@ -231,7 +301,7 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         self._btnGroup.addButton(btn)
         self._controlsNavBar.layout().addWidget(btn)
-        btn.clicked.connect(lambda: self._mainControlClicked(itemType))
+        btn.clicked.connect(partial(self._mainControlClicked, itemType))
 
         return btn
 
@@ -242,6 +312,8 @@ class NetworkGraphicsView(BaseGraphicsView):
 
         if not QApplication.overrideCursor():
             QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+
+        self._scene.startAdditionMode(itemType)
 
     def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
         for btn in self._btnGroup.buttons():
@@ -262,6 +334,9 @@ class NetworkGraphicsView(BaseGraphicsView):
                                      self._wdgZoomBar.sizeHint().height())
         self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
                                          self._controlsNavBar.sizeHint().height())
+
+    def _initScene(self):
+        return NetworkScene()
 
 
 class ZoomBar(QFrame):

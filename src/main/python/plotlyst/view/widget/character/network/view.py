@@ -26,23 +26,22 @@ from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem, \
     NetworkItemType, CharacterNetworkItemType
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, NetworkGraphicsView
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, NetworkGraphicsView, NetworkScene
 
 
 class CharacterNetworkView(NetworkGraphicsView):
     def __init__(self, novel: Novel, parent=None):
-        super(CharacterNetworkView, self).__init__(parent)
         self._novel = novel
-        self._scene = RelationsEditorScene(self._novel)
-        self.setScene(self._scene)
+        super(CharacterNetworkView, self).__init__(parent)
 
         self._btnAddCharacter = self._newControlButton(IconRegistry.character_icon('#040406'), 'Add new character',
                                                        CharacterNetworkItemType.CHARACTER)
         self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
                                                      'Add new sticker', CharacterNetworkItemType.STICKER)
 
-        self._scene.itemAdded.connect(self._endAddition)
-        self._scene.cancelItemAddition.connect(self._endAddition)
+    @overrides
+    def _initScene(self) -> NetworkScene:
+        return RelationsEditorScene(self._novel)
 
     def relationsScene(self) -> RelationsEditorScene:
         return self._scene

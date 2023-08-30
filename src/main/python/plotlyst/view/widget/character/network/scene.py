@@ -21,8 +21,8 @@ import math
 from typing import Optional
 
 from PyQt6.QtCore import QRectF, pyqtSignal, Qt, QPointF
-from PyQt6.QtGui import QPainter, QPen, QKeyEvent, QColor, QBrush, QTransform
-from PyQt6.QtWidgets import QWidget, QGraphicsScene, QStyleOptionGraphicsItem, QGraphicsSceneHoverEvent, \
+from PyQt6.QtGui import QPainter, QPen, QKeyEvent, QColor, QBrush
+from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHoverEvent, \
     QGraphicsSceneMouseEvent
 from overrides import overrides
 
@@ -30,7 +30,8 @@ from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_T
 from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, draw_helpers, AbstractSocketItem, NetworkItemType
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, draw_helpers, AbstractSocketItem, NetworkItemType, \
+    NetworkScene
 
 
 class CharacterNetworkItemType(NetworkItemType):
@@ -162,10 +163,7 @@ class CharacterItem(NodeItem):
         self.update()
 
 
-class RelationsEditorScene(QGraphicsScene):
-    cancelItemAddition = pyqtSignal()
-    itemAdded = pyqtSignal(NetworkItemType, NodeItem)
-    # old ones
+class RelationsEditorScene(NetworkScene):
     charactersChanged = pyqtSignal(RelationsNetwork)
     charactersLinked = pyqtSignal(CharacterItem)
 
@@ -173,8 +171,6 @@ class RelationsEditorScene(QGraphicsScene):
         super(RelationsEditorScene, self).__init__(parent)
         self._novel = novel
         self._network: Optional[RelationsNetwork] = None
-        self._linkMode: bool = False
-        self._additionMode: Optional[NetworkItemType] = None
 
         node = CharacterNode(50, 50)
         if self._novel.characters:
@@ -183,43 +179,6 @@ class RelationsEditorScene(QGraphicsScene):
 
     def setNetwork(self, network: RelationsNetwork):
         self._network = network
-
-    def isAdditionMode(self) -> bool:
-        return self._additionMode is not None
-
-    def startAdditionMode(self, itemType: NetworkItemType):
-        self._additionMode = itemType
-
-    def endAdditionMode(self):
-        self._additionMode = None
-
-    @overrides
-    def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if (not self.isAdditionMode() and not self.linkMode() and
-                event.button() & Qt.MouseButton.LeftButton and not self.itemAt(event.scenePos(), QTransform())):
-            pass
-            # self._selectionRect.start(event.scenePos())
-            # self._selectionMode = True
-        elif event.button() & Qt.MouseButton.RightButton or event.button() & Qt.MouseButton.MiddleButton:
-            # disallow view movement to clear item selection
-            return
-        super().mousePressEvent(event)
-
-    @overrides
-    def mouseReleaseEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.linkMode():
-            if event.button() & Qt.MouseButton.RightButton:
-                self.endLink()
-        elif self.isAdditionMode() and event.button() & Qt.MouseButton.RightButton:
-            self.cancelItemAddition.emit()
-        # elif self._selectionMode and event.button() & Qt.MouseButton.LeftButton:
-        #     self._selectionMode = False
-        #     self._selectionRect.setVisible(False)
-        #     self._updateSelection()
-        elif self._additionMode is not None:
-            self._addNewItem(self._additionMode, event.scenePos())
-
-        super().mouseReleaseEvent(event)
 
     @overrides
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
@@ -231,15 +190,6 @@ class RelationsEditorScene(QGraphicsScene):
                     self.removeItem(item)
                     # self.charactersChanged.emit(self._network)
 
-    def linkMode(self) -> bool:
-        return self._linkMode
-
-    def startLink(self):
-        self._linkMode = True
-
-    def endLink(self):
-        self._linkMode = False
-
     def link(self, item: CharacterItem):
         self.charactersLinked.emit(item)
 
@@ -250,7 +200,8 @@ class RelationsEditorScene(QGraphicsScene):
         node.y = node.y - CharacterItem.Margin
         return node
 
-    def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
+    @overrides
+    def _addNewItem(self, itemType: CharacterNetworkItemType, scenePos: QPointF):
         if itemType == CharacterNetworkItemType.CHARACTER:
             item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
             # elif itemType in [ItemType.COMMENT, ItemType.TOOL, ItemType.COST]:
