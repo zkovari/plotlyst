@@ -24,7 +24,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QResizeEvent
 from PyQt6.QtWidgets import QFrame, QApplication
 from overrides import overrides
-from qthandy import vbox, hbox, margins, sp, incr_icon
+from qthandy import vbox, sp, incr_icon
 
 from src.main.python.plotlyst.core.domain import Character
 from src.main.python.plotlyst.core.domain import Novel
@@ -32,7 +32,7 @@ from src.main.python.plotlyst.view.common import frame, shadow, tool_btn, Exclus
     TooltipPositionEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView
+from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, ZoomBar
 from src.main.python.plotlyst.view.widget.story_map.controls import EventSelectorWidget, StickerSelectorWidget
 from src.main.python.plotlyst.view.widget.story_map.editors import StickerEditor, TextLineEditorPopup, EventItemEditor
 from src.main.python.plotlyst.view.widget.story_map.items import EventItem, StickerItem, ItemType, MindMapNode, \
@@ -88,20 +88,8 @@ class EventsMindMapView(BaseGraphicsView):
         self._stickerEditor = StickerEditor(self)
         self._stickerEditor.setVisible(False)
 
-        self._wdgZoomBar = self.__roundedFrame(self)
-        shadow(self._wdgZoomBar)
-        hbox(self._wdgZoomBar, 2, spacing=6)
-        margins(self._wdgZoomBar, left=10, right=10)
-
-        self._btnZoomIn = tool_btn(IconRegistry.plus_circle_icon('lightgrey'), 'Zoom in', transparent_=True,
-                                   parent=self._wdgZoomBar)
-        self._btnZoomOut = tool_btn(IconRegistry.minus_icon('lightgrey'), 'Zoom out', transparent_=True,
-                                    parent=self._wdgZoomBar)
-        self._btnZoomIn.clicked.connect(lambda: self.scale(1.1, 1.1))
-        self._btnZoomOut.clicked.connect(lambda: self.scale(0.9, 0.9))
-
-        self._wdgZoomBar.layout().addWidget(self._btnZoomOut)
-        self._wdgZoomBar.layout().addWidget(self._btnZoomIn)
+        self._wdgZoomBar = ZoomBar(self)
+        self._wdgZoomBar.zoomed.connect(lambda x: self.scale(1.0 + x, 1.0 + x))
 
         self._itemEditor = EventItemEditor(self)
         self._itemEditor.setVisible(False)

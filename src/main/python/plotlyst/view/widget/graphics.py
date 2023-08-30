@@ -19,12 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any, Optional, List
 
-from PyQt6.QtCore import Qt, QTimer, QRectF
+from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor
-from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem
+from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame
 from overrides import overrides
+from qthandy import hbox, margins
 
 from src.main.python.plotlyst.core.domain import Node
+from src.main.python.plotlyst.view.common import shadow, tool_btn
+from src.main.python.plotlyst.view.icons import IconRegistry
 
 
 class AbstractSocketItem(QAbstractGraphicsShapeItem):
@@ -164,3 +167,27 @@ class BaseGraphicsView(QGraphicsView):
             diff = event.angleDelta().y()
             scale = diff / 1200
             self.scale(1 + scale, 1 + scale)
+
+
+class ZoomBar(QFrame):
+    zoomed = pyqtSignal(float)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setProperty('relaxed-white-bg', True)
+        self.setProperty('rounded', True)
+
+        shadow(self)
+        hbox(self, 2, spacing=6)
+        margins(self, left=10, right=10)
+
+        self._btnZoomIn = tool_btn(IconRegistry.plus_circle_icon('lightgrey'), 'Zoom in', transparent_=True,
+                                   parent=self)
+        self._btnZoomOut = tool_btn(IconRegistry.minus_icon('lightgrey'), 'Zoom out', transparent_=True,
+                                    parent=self)
+        self._btnZoomIn.clicked.connect(lambda: self.zoomed.emit(0.1))
+        self._btnZoomOut.clicked.connect(lambda: self.zoomed.emit(-0.1))
+
+        self.layout().addWidget(self._btnZoomOut)
+        self.layout().addWidget(self._btnZoomIn)
