@@ -28,23 +28,26 @@ from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
+from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, draw_helpers, AbstractSocketItem
 
 
 class SocketItem(AbstractSocketItem):
-    def __init__(self, parent=None):
-        super().__init__(Qt.Edge.TopEdge, parent)
+    Size: int = 14
 
-        self._size = 10
+    def __init__(self, parent=None):
+        self._size = self.Size
+        super().__init__(Qt.Edge.TopEdge, parent)
+        pointy(self)
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 2))
+        painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 1))
         painter.setBrush(QColor(PLOTLYST_SECONDARY_COLOR))
 
-        radius = self._size // 2
-        painter.drawEllipse(QPointF(self._size / 2, self._size // 2), radius, radius)
+        radius = self.Size // 2
+        painter.drawEllipse(QPointF(self.Size / 2, self.Size // 2), radius, radius)
 
 
 class CharacterItem(NodeItem):
@@ -125,9 +128,8 @@ class CharacterItem(NodeItem):
                 event.pos().y() - self._center.y(), event.pos().x() - self._center.x()
             ))
             angle_radians = math.radians(angle)
-            # rad = self._size // 2 + self.Margin // 2
-            x = self._center.x() + self._outerRadius * math.cos(angle_radians) - self.PenWidth * 2
-            y = self._center.y() + self._outerRadius * math.sin(angle_radians) - self.PenWidth * 2
+            x = self._center.x() + self._outerRadius * math.cos(angle_radians) - SocketItem.Size //2
+            y = self._center.y() + self._outerRadius * math.sin(angle_radians) - SocketItem.Size //2
 
             self.prepareGeometryChange()
             self._socket.setPos(x, y)
