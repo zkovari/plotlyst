@@ -282,7 +282,7 @@ class NetworkGraphicsView(BaseGraphicsView):
     @overrides
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
-        self.__arrangeSideBars()
+        self._arrangeSideBars()
 
     def _mainControlClicked(self, itemType: NetworkItemType, checked: bool):
         if checked:
@@ -328,7 +328,7 @@ class NetworkGraphicsView(BaseGraphicsView):
         frame_.setProperty('rounded', True)
         return frame_
 
-    def __arrangeSideBars(self):
+    def _arrangeSideBars(self):
         self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 10,
                                      self._wdgZoomBar.sizeHint().width(),
                                      self._wdgZoomBar.sizeHint().height())

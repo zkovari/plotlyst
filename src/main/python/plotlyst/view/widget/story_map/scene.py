@@ -21,19 +21,16 @@ from typing import Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 from PyQt6.QtGui import QKeyEvent, QTransform
-from PyQt6.QtWidgets import QGraphicsScene
 from overrides import overrides
 
 from src.main.python.plotlyst.core.domain import Node, CharacterNode
 from src.main.python.plotlyst.core.domain import Novel
-from src.main.python.plotlyst.view.widget.graphics import ConnectorItem
+from src.main.python.plotlyst.view.widget.graphics import ConnectorItem, NetworkScene
 from src.main.python.plotlyst.view.widget.story_map.items import ItemType, MindMapNode, EventItem, StickerItem, \
     SelectorRectItem, PlaceholderItem, CharacterItem, SocketItem, ConnectableNode
 
 
-class EventsMindMapScene(QGraphicsScene):
-    cancelItemAddition = pyqtSignal()
-    itemAdded = pyqtSignal(ItemType, MindMapNode)
+class EventsMindMapScene(NetworkScene):
     editEvent = pyqtSignal(EventItem)
     editSticker = pyqtSignal(StickerItem)
     closeSticker = pyqtSignal()
@@ -43,8 +40,6 @@ class EventsMindMapScene(QGraphicsScene):
     def __init__(self, novel: Novel, parent=None):
         super().__init__(parent)
         self._novel = novel
-        self._linkMode: bool = False
-        self._additionMode: Optional[ItemType] = None
 
         self._selectionMode = False
         self._selectionRect = SelectorRectItem()
@@ -63,9 +58,6 @@ class EventsMindMapScene(QGraphicsScene):
 
         sticker = StickerItem(Node(200, 0), ItemType.COMMENT)
         self.addItem(sticker)
-
-    def linkMode(self) -> bool:
-        return self._linkMode
 
     def linkSource(self) -> Optional[SocketItem]:
         if self._connectorPlaceholder is not None:
@@ -100,15 +92,6 @@ class EventsMindMapScene(QGraphicsScene):
 
     def editEventText(self, item: EventItem):
         self.editEvent.emit(item)
-
-    def isAdditionMode(self) -> bool:
-        return self._additionMode is not None
-
-    def startAdditionMode(self, mode: ItemType):
-        self._additionMode = mode
-
-    def endAdditionMode(self):
-        self._additionMode = None
 
     def showEditor(self, item: MindMapNode):
         if not self._selectionMode:
@@ -191,6 +174,7 @@ class EventsMindMapScene(QGraphicsScene):
 
         self.addItem(item)
         self.itemAdded.emit(itemType, item)
+        self.endAdditionMode()
 
     def _updateSelection(self):
         if not self._selectionRect.rect().isValid():

@@ -17,29 +17,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from enum import Enum
 from typing import Optional, List
 
 from PyQt6.QtCore import Qt, pyqtSignal, QRect, QRectF, QPoint, QPointF, QTimer
 from PyQt6.QtGui import QIcon, QColor, QPainter, QPen, QFontMetrics
-from PyQt6.QtWidgets import QWidget, QApplication, QAbstractGraphicsShapeItem, QStyleOptionGraphicsItem, \
+from PyQt6.QtWidgets import QWidget, QApplication, QStyleOptionGraphicsItem, \
     QGraphicsSceneHoverEvent, QGraphicsSceneMouseEvent, QGraphicsRectItem, QGraphicsItem
 from overrides import overrides
 
 from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, RELAXED_WHITE_COLOR
 from src.main.python.plotlyst.core.domain import Character, Node
 from src.main.python.plotlyst.view.icons import IconRegistry, avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem
-
-
-
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkItemType
 
 
 def v_center(ref_height: int, item_height: int) -> int:
     return (ref_height - item_height) // 2
 
 
-class ItemType(Enum):
+class ItemType(NetworkItemType):
     EVENT = 1
     CHARACTER = 2
     GOAL = 3
