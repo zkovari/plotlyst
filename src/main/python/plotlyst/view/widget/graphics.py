@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any, Optional, List
 
-from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal
+from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
 from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor
 from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame
 from overrides import overrides
@@ -28,6 +28,27 @@ from qthandy import hbox, margins
 from src.main.python.plotlyst.core.domain import Node
 from src.main.python.plotlyst.view.common import shadow, tool_btn
 from src.main.python.plotlyst.view.icons import IconRegistry
+
+
+def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
+    painter.setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.DashLine))
+    painter.drawRoundedRect(item.boundingRect(), 2, 2)
+
+
+def draw_center(painter: QPainter, item: QAbstractGraphicsShapeItem):
+    painter.setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.DashLine))
+    painter.drawEllipse(item.boundingRect().center(), 1, 1)
+
+
+def draw_zero(painter: QPainter):
+    painter.setPen(QPen(Qt.GlobalColor.blue, 1, Qt.PenStyle.DashLine))
+    painter.drawEllipse(QPointF(0, 0), 1, 1)
+
+
+def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
+    draw_rect(painter, item)
+    draw_center(painter, item)
+    draw_zero(painter)
 
 
 class AbstractSocketItem(QAbstractGraphicsShapeItem):

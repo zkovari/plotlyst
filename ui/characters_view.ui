@@ -187,7 +187,7 @@
           <item>
            <widget class="QToolButton" name="btnRelationsView">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
@@ -451,7 +451,7 @@
        <item>
         <widget class="QStackedWidget" name="stackCharacters">
          <property name="currentIndex">
-          <number>4</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="pageTableView">
           <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -555,8 +555,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>84</width>
-                <height>16</height>
+                <width>98</width>
+                <height>28</height>
                </rect>
               </property>
               <property name="bg-image" stdset="0">
@@ -1175,8 +1175,8 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGroupComparison"/>
   <buttongroup name="btnGroupComparisonView"/>
   <buttongroup name="btnGroupViews"/>
+  <buttongroup name="btnGroupComparison"/>
  </buttongroups>
 </ui>

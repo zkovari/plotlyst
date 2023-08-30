@@ -32,25 +32,7 @@ from src.main.python.plotlyst.view.icons import IconRegistry, avatars
 from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem
 
 
-def draw_rect(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    painter.setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.DashLine))
-    painter.drawRoundedRect(item.boundingRect(), 2, 2)
 
-
-def draw_center(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    painter.setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.DashLine))
-    painter.drawEllipse(item.boundingRect().center(), 1, 1)
-
-
-def draw_zero(painter: QPainter):
-    painter.setPen(QPen(Qt.GlobalColor.blue, 1, Qt.PenStyle.DashLine))
-    painter.drawEllipse(QPointF(0, 0), 1, 1)
-
-
-def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
-    draw_rect(painter, item)
-    draw_center(painter, item)
-    draw_zero(painter)
 
 
 def v_center(ref_height: int, item_height: int) -> int:
@@ -84,7 +66,6 @@ class SocketItem(AbstractSocketItem):
     def __init__(self, orientation: Qt.Edge, parent: 'ConnectableNode'):
         super().__init__(orientation, parent)
 
-        self._size = 16
         self.setAcceptHoverEvents(True)
         self._hovered = False
         self._linkAvailable = True
