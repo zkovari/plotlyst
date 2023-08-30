@@ -17,16 +17,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from enum import Enum
 from typing import Any, Optional, List
 
 from PyQt6.QtCore import Qt, QTimer, QRectF, pyqtSignal, QPointF
-from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor
-from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame
+from PyQt6.QtGui import QPainter, QWheelEvent, QMouseEvent, QPen, QPainterPath, QColor, QIcon, QResizeEvent
+from PyQt6.QtWidgets import QGraphicsView, QAbstractGraphicsShapeItem, QGraphicsItem, QGraphicsPathItem, QFrame, \
+    QToolButton, QApplication
 from overrides import overrides
-from qthandy import hbox, margins
+from qthandy import hbox, margins, sp, incr_icon, vbox
 
 from src.main.python.plotlyst.core.domain import Node
-from src.main.python.plotlyst.view.common import shadow, tool_btn
+from src.main.python.plotlyst.view.common import shadow, tool_btn, frame, ExclusiveOptionalButtonGroup, \
+    TooltipPositionEventFilter
 from src.main.python.plotlyst.view.icons import IconRegistry
 
 
@@ -190,10 +193,75 @@ class BaseGraphicsView(QGraphicsView):
             self.scale(1 + scale, 1 + scale)
 
 
+class NetworkItemType(Enum):
+    pass
+
+
 class NetworkGraphicsView(BaseGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setBackgroundBrush(QColor('#e9ecef'))
+
+        self._wdgZoomBar = ZoomBar(self)
+        self._wdgZoomBar.zoomed.connect(lambda x: self.scale(1.0 + x, 1.0 + x))
+
+        self._controlsNavBar = self.__roundedFrame()
+        sp(self._controlsNavBar).h_max()
+        shadow(self._controlsNavBar)
+        vbox(self._controlsNavBar, 5, 6)
+
+        self._btnGroup = ExclusiveOptionalButtonGroup()
+
+    @overrides
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        self.__arrangeSideBars()
+
+    def _mainControlClicked(self, itemType: NetworkItemType):
+        self._startAddition(itemType)
+
+    def _newControlButton(self, icon: QIcon, tooltip: str, itemType: NetworkItemType) -> QToolButton:
+        btn = tool_btn(icon, tooltip,
+                       True, icon_resize=False,
+                       properties=['transparent-rounded-bg-on-hover', 'top-selector'],
+                       parent=self._controlsNavBar)
+
+        btn.installEventFilter(TooltipPositionEventFilter(btn))
+        incr_icon(btn, 2)
+
+        self._btnGroup.addButton(btn)
+        self._controlsNavBar.layout().addWidget(btn)
+        btn.clicked.connect(lambda: self._mainControlClicked(itemType))
+
+        return btn
+
+    def _startAddition(self, itemType: NetworkItemType):
+        for btn in self._btnGroup.buttons():
+            if not btn.isChecked():
+                btn.setDisabled(True)
+
+        if not QApplication.overrideCursor():
+            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+
+    def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
+        for btn in self._btnGroup.buttons():
+            btn.setEnabled(True)
+            if btn.isChecked():
+                btn.setChecked(False)
+        QApplication.restoreOverrideCursor()
+
+    def __roundedFrame(self) -> QFrame:
+        frame_ = frame(self)
+        frame_.setProperty('relaxed-white-bg', True)
+        frame_.setProperty('rounded', True)
+        return frame_
+
+    def __arrangeSideBars(self):
+        self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 10,
+                                     self._wdgZoomBar.sizeHint().width(),
+                                     self._wdgZoomBar.sizeHint().height())
+        self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
+                                         self._controlsNavBar.sizeHint().height())
 
 
 class ZoomBar(QFrame):

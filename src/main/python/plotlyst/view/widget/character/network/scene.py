@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import math
-from enum import Enum
 from typing import Optional
 
 from PyQt6.QtCore import QRectF, pyqtSignal, Qt, QPointF
@@ -31,10 +30,10 @@ from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_T
 from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, draw_helpers, AbstractSocketItem
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, draw_helpers, AbstractSocketItem, NetworkItemType
 
 
-class NetworkItemType(Enum):
+class CharacterNetworkItemType(NetworkItemType):
     CHARACTER = 1
     STICKER = 2
 
@@ -252,7 +251,7 @@ class RelationsEditorScene(QGraphicsScene):
         return node
 
     def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
-        if itemType == NetworkItemType.CHARACTER:
+        if itemType == CharacterNetworkItemType.CHARACTER:
             item = CharacterItem(PlaceholderCharacter('Character'), self.toCharacterNode(scenePos))
             # elif itemType in [ItemType.COMMENT, ItemType.TOOL, ItemType.COST]:
             #     item = StickerItem(Node(scenePos.x(), scenePos.y()), itemType)

@@ -19,66 +19,30 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Optional
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QResizeEvent, QColor
-from PyQt6.QtWidgets import QFrame, QApplication
 from overrides import overrides
-from qthandy import sp, incr_icon, vbox
 
 from src.main.python.plotlyst.core.domain import Novel, RelationsNetwork, Character
-from src.main.python.plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup, \
-    TooltipPositionEventFilter, frame
 from src.main.python.plotlyst.view.icons import IconRegistry
 from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem, \
-    NetworkItemType
+    NetworkItemType, CharacterNetworkItemType
 from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
-from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, ZoomBar, NodeItem
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, NetworkGraphicsView
 
 
-class CharacterNetworkView(BaseGraphicsView):
+class CharacterNetworkView(NetworkGraphicsView):
     def __init__(self, novel: Novel, parent=None):
         super(CharacterNetworkView, self).__init__(parent)
         self._novel = novel
         self._scene = RelationsEditorScene(self._novel)
         self.setScene(self._scene)
-        self.setBackgroundBrush(QColor('#e9ecef'))
 
-        # self._linkEditorMenu = QMenu(self)
-        # self._linkEditorMenu.addAction('Friendship')
-        # self._linkEditorMenu.addAction('Colleagues')
-        # self._linkEditorMenu.addAction('Love')
-
-        self._wdgZoomBar = ZoomBar(self)
-        self._wdgZoomBar.zoomed.connect(lambda x: self.scale(1.0 + x, 1.0 + x))
-
-        self._controlsNavBar = self.__roundedFrame(self)
-        sp(self._controlsNavBar).h_max()
-        shadow(self._controlsNavBar)
-
-        self._btnAddCharacter = tool_btn(
-            IconRegistry.character_icon('#040406'), 'Add new character', True,
-            icon_resize=False, properties=['transparent-rounded-bg-on-hover', 'top-selector'],
-            parent=self._controlsNavBar)
-        self._btnAddSticker = tool_btn(IconRegistry.from_name('mdi6.sticker-circle-outline'), 'Add new sticker',
-                                       True, icon_resize=False,
-                                       properties=['transparent-rounded-bg-on-hover', 'top-selector'],
-                                       parent=self._controlsNavBar)
-
-        self._btnGroup = ExclusiveOptionalButtonGroup()
-        self._btnGroup.addButton(self._btnAddCharacter)
-        self._btnGroup.addButton(self._btnAddSticker)
-
-        for btn in self._btnGroup.buttons():
-            btn.installEventFilter(TooltipPositionEventFilter(btn))
-            incr_icon(btn, 2)
-        self._btnGroup.buttonClicked.connect(self._mainControlClicked)
-        vbox(self._controlsNavBar, 5, 6)
-        self._controlsNavBar.layout().addWidget(self._btnAddCharacter)
-        self._controlsNavBar.layout().addWidget(self._btnAddSticker)
+        self._btnAddCharacter = self._newControlButton(IconRegistry.character_icon('#040406'), 'Add new character',
+                                                       CharacterNetworkItemType.CHARACTER)
+        self._btnAddSticker = self._newControlButton(IconRegistry.from_name('mdi6.sticker-circle-outline'),
+                                                     'Add new sticker', CharacterNetworkItemType.STICKER)
 
         self._scene.itemAdded.connect(self._endAddition)
         self._scene.cancelItemAddition.connect(self._endAddition)
-        self._scene.charactersLinked.connect(self._charactersLinked)
 
     def relationsScene(self) -> RelationsEditorScene:
         return self._scene
@@ -94,43 +58,14 @@ class CharacterNetworkView(BaseGraphicsView):
         self.centerOn(0, 0)
 
     @overrides
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        super().resizeEvent(event)
-        self.__arrangeSideBars()
-
-    def _charactersLinked(self, item: CharacterItem):
-        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
-        self._linkEditorMenu.popup(self.mapToGlobal(view_pos))
-
-    def _mainControlClicked(self):
-        # self._wdgSecondaryEventSelector.setHidden(True)
-        # self._wdgSecondaryStickerSelector.setHidden(True)
-
-        if self._btnAddCharacter.isChecked():
-            self._startAddition(NetworkItemType.CHARACTER)
-        # elif self._btnAddSticker.isChecked():
-        #     self._wdgSecondaryStickerSelector.setVisible(True)
-        #     self._startAddition(ItemType.COMMENT)
-        # else:
-        #     self._endAddition()
-
-    def _startAddition(self, itemType: NetworkItemType):
+    def _startAddition(self, itemType: CharacterNetworkItemType):
+        super()._startAddition(itemType)
         self._scene.startAdditionMode(itemType)
-        for btn in self._btnGroup.buttons():
-            if not btn.isChecked():
-                btn.setDisabled(True)
 
-        if not QApplication.overrideCursor():
-            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
-
+    @overrides
     def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
-        for btn in self._btnGroup.buttons():
-            btn.setEnabled(True)
-            if btn.isChecked():
-                btn.setChecked(False)
-        QApplication.restoreOverrideCursor()
-
-        if itemType == NetworkItemType.CHARACTER:
+        super()._endAddition(itemType, item)
+        if itemType == CharacterNetworkItemType.CHARACTER:
             self._finishCharacterAddition(item)
 
     def _finishCharacterAddition(self, item: CharacterItem):
@@ -141,17 +76,3 @@ class CharacterNetworkView(BaseGraphicsView):
         popup.selected.connect(select)
         view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
         popup.exec(self.mapToGlobal(view_pos))
-
-    def __arrangeSideBars(self):
-        self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 10,
-                                     self._wdgZoomBar.sizeHint().width(),
-                                     self._wdgZoomBar.sizeHint().height())
-        self._controlsNavBar.setGeometry(10, 100, self._controlsNavBar.sizeHint().width(),
-                                         self._controlsNavBar.sizeHint().height())
-
-    @staticmethod
-    def __roundedFrame(parent=None) -> QFrame:
-        frame_ = frame(parent)
-        frame_.setProperty('relaxed-white-bg', True)
-        frame_.setProperty('rounded', True)
-        return frame_
