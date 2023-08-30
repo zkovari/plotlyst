@@ -84,7 +84,6 @@ class EventsMindMapScene(QGraphicsScene):
         self._placeholder.setPos(source.scenePos())
         self._connectorPlaceholder.rearrange()
 
-
     def endLink(self):
         self._linkMode = False
         self.removeItem(self._connectorPlaceholder)

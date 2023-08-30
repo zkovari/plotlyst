@@ -190,6 +190,12 @@ class BaseGraphicsView(QGraphicsView):
             self.scale(1 + scale, 1 + scale)
 
 
+class NetworkGraphicsView(BaseGraphicsView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setBackgroundBrush(QColor('#e9ecef'))
+
+
 class ZoomBar(QFrame):
     zoomed = pyqtSignal(float)
 

@@ -17,17 +17,22 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from typing import Optional
+
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QResizeEvent, QColor
-from PyQt6.QtWidgets import QFrame
+from PyQt6.QtWidgets import QFrame, QApplication
 from overrides import overrides
 from qthandy import sp, incr_icon, vbox
 
-from src.main.python.plotlyst.core.domain import Novel, RelationsNetwork
+from src.main.python.plotlyst.core.domain import Novel, RelationsNetwork, Character
 from src.main.python.plotlyst.view.common import shadow, tool_btn, ExclusiveOptionalButtonGroup, \
     TooltipPositionEventFilter, frame
 from src.main.python.plotlyst.view.icons import IconRegistry
-from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem
-from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, ZoomBar
+from src.main.python.plotlyst.view.widget.character.network.scene import RelationsEditorScene, CharacterItem, \
+    NetworkItemType
+from src.main.python.plotlyst.view.widget.characters import CharacterSelectorMenu
+from src.main.python.plotlyst.view.widget.graphics import BaseGraphicsView, ZoomBar, NodeItem
 
 
 class CharacterNetworkView(BaseGraphicsView):
@@ -37,7 +42,6 @@ class CharacterNetworkView(BaseGraphicsView):
         self._scene = RelationsEditorScene(self._novel)
         self.setScene(self._scene)
         self.setBackgroundBrush(QColor('#e9ecef'))
-        # self.setMouseTracking(True)
 
         # self._linkEditorMenu = QMenu(self)
         # self._linkEditorMenu.addAction('Friendship')
@@ -72,6 +76,8 @@ class CharacterNetworkView(BaseGraphicsView):
         self._controlsNavBar.layout().addWidget(self._btnAddCharacter)
         self._controlsNavBar.layout().addWidget(self._btnAddSticker)
 
+        self._scene.itemAdded.connect(self._endAddition)
+        self._scene.cancelItemAddition.connect(self._endAddition)
         self._scene.charactersLinked.connect(self._charactersLinked)
 
     def relationsScene(self) -> RelationsEditorScene:
@@ -97,17 +103,44 @@ class CharacterNetworkView(BaseGraphicsView):
         self._linkEditorMenu.popup(self.mapToGlobal(view_pos))
 
     def _mainControlClicked(self):
-        pass
         # self._wdgSecondaryEventSelector.setHidden(True)
         # self._wdgSecondaryStickerSelector.setHidden(True)
 
-        # if self._btnAddCharacter.isChecked():
-        #     self._startAddition(ItemType.CHARACTER)
+        if self._btnAddCharacter.isChecked():
+            self._startAddition(NetworkItemType.CHARACTER)
         # elif self._btnAddSticker.isChecked():
         #     self._wdgSecondaryStickerSelector.setVisible(True)
         #     self._startAddition(ItemType.COMMENT)
         # else:
         #     self._endAddition()
+
+    def _startAddition(self, itemType: NetworkItemType):
+        self._scene.startAdditionMode(itemType)
+        for btn in self._btnGroup.buttons():
+            if not btn.isChecked():
+                btn.setDisabled(True)
+
+        if not QApplication.overrideCursor():
+            QApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+
+    def _endAddition(self, itemType: Optional[NetworkItemType] = None, item: Optional[NodeItem] = None):
+        for btn in self._btnGroup.buttons():
+            btn.setEnabled(True)
+            if btn.isChecked():
+                btn.setChecked(False)
+        QApplication.restoreOverrideCursor()
+
+        if itemType == NetworkItemType.CHARACTER:
+            self._finishCharacterAddition(item)
+
+    def _finishCharacterAddition(self, item: CharacterItem):
+        def select(character: Character):
+            item.setCharacter(character)
+
+        popup = CharacterSelectorMenu(self._novel, parent=self)
+        popup.selected.connect(select)
+        view_pos = self.mapFromScene(item.sceneBoundingRect().topRight())
+        popup.exec(self.mapToGlobal(view_pos))
 
     def __arrangeSideBars(self):
         self._wdgZoomBar.setGeometry(10, self.height() - self._wdgZoomBar.sizeHint().height() - 10,
