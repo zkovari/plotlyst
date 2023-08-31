@@ -85,6 +85,9 @@ class CharacterItem(NodeItem):
 
     def addSocket(self, socket: SocketItem):
         self._sockets.append(socket)
+        socket.setVisible(False)
+        self._socket = SocketItem(self)
+        self._socket.setVisible(False)
 
     @overrides
     def boundingRect(self) -> QRectF:
@@ -153,10 +156,14 @@ class RelationsEditorScene(NetworkScene):
         self._novel = novel
         self._network: Optional[RelationsNetwork] = None
 
-        node = CharacterNode(50, 50)
         if self._novel.characters:
+            node = CharacterNode(50, 50)
             node.set_character(self._novel.characters[0])
             self.addItem(CharacterItem(self._novel.characters[0], node))
+
+            node = CharacterNode(200, -50)
+            node.set_character(self._novel.characters[1])
+            self.addItem(CharacterItem(self._novel.characters[1], node))
 
     def setNetwork(self, network: RelationsNetwork):
         self._network = network
