@@ -59,9 +59,9 @@ def draw_helpers(painter: QPainter, item: QAbstractGraphicsShapeItem):
 
 
 class AbstractSocketItem(QAbstractGraphicsShapeItem):
-    def __init__(self, orientation: Qt.Edge, parent=None):
+    def __init__(self, orientation: Qt.Edge, size: int = 16, parent=None):
         super().__init__(parent)
-        self._size = 16
+        self._size = size
         self._orientation: Qt.Edge = orientation
         self._hovered = False
         self._linkAvailable = True
@@ -83,6 +83,7 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         else:
             self._linkAvailable = True
         self.setToolTip('Connect' if self._linkAvailable else 'Cannot connect to itself')
+        self.prepareGeometryChange()
         self.update()
 
     @overrides
@@ -90,6 +91,7 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
         self._hovered = False
         self._linkAvailable = True
         self.setToolTip('Connect')
+        self.prepareGeometryChange()
         self.update()
 
     @overrides
@@ -122,7 +124,7 @@ class AbstractSocketItem(QAbstractGraphicsShapeItem):
 
 class PlaceholderSocketItem(AbstractSocketItem):
     def __init__(self, parent=None):
-        super().__init__(Qt.Edge.RightEdge, parent)
+        super().__init__(Qt.Edge.RightEdge, parent=parent)
         self.setEnabled(False)
         self.setAcceptHoverEvents(False)
 

@@ -46,8 +46,7 @@ class SocketItem(AbstractSocketItem):
     Size: int = 20
 
     def __init__(self, parent=None):
-        self._size = self.Size
-        super().__init__(Qt.Edge.TopEdge, parent)
+        super().__init__(Qt.Edge.TopEdge, self.Size, parent)
         pointy(self)
 
     @overrides

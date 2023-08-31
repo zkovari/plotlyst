@@ -60,6 +60,9 @@ class MindMapNode(NodeItem):
 
 class SocketItem(AbstractSocketItem):
 
+    def __init__(self, orientation: Qt.Edge, parent=None):
+        super().__init__(orientation, parent=parent)
+
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         if self._linkAvailable:
