@@ -90,7 +90,6 @@ class CharacterItem(NodeItem):
 
     @overrides
     def paint(self, painter: QPainter, option: 'QStyleOptionGraphicsItem', widget: Optional[QWidget] = ...) -> None:
-        draw_helpers(painter, self)
         if self._linkMode:
             painter.setPen(QPen(QColor(PLOTLYST_TERTIARY_COLOR), self.PenWidth, Qt.PenStyle.DashLine))
             brush = QBrush(QColor(PLOTLYST_TERTIARY_COLOR), Qt.BrushStyle.Dense5Pattern)
@@ -109,30 +108,16 @@ class CharacterItem(NodeItem):
             self.relationsScene().link(self)
         super(CharacterItem, self).mousePressEvent(event)
 
-    # @overrides
-    # def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
-    #     if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-    #         self._posChangedTimer.start(1000)
-    #     elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
-    #         if value:
-    #             self._plusItem.setVisible(True)
-    #             self._animation = qtanim.fade_in(self._plusItem)
-    #         else:
-    #             self.relationsScene().endLink()
-    #             self._plusItem.setVisible(False)
-    #             self._plusItem.reset()
-    #     return super(CharacterItem, self).itemChange(change, value)
-
     @overrides
     def hoverEnterEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.relationsScene().linkMode():
-            self._linkMode = True
-        self.update()
+        if self.relationsScene().linkMode() or event.modifiers() & Qt.KeyboardModifier.AltModifier:
+            self._setConnectionEnabled(True)
+            self.update()
 
     @overrides
     def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
-        if self.relationsScene().linkMode() and not self.isSelected():
-            self._linkMode = False
+        if self._linkMode and not self.isSelected():
+            self._setConnectionEnabled(False)
             self.update()
 
     @overrides
