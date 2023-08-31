@@ -26,11 +26,11 @@ from PyQt6.QtWidgets import QWidget, QStyleOptionGraphicsItem, QGraphicsSceneHov
     QGraphicsSceneMouseEvent
 from overrides import overrides
 
-from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR
+from src.main.python.plotlyst.common import PLOTLYST_SECONDARY_COLOR, PLOTLYST_TERTIARY_COLOR, PLOTLYST_MAIN_COLOR
 from src.main.python.plotlyst.core.domain import Character, Novel, RelationsNetwork, CharacterNode
 from src.main.python.plotlyst.view.common import pointy
 from src.main.python.plotlyst.view.icons import avatars
-from src.main.python.plotlyst.view.widget.graphics import NodeItem, draw_helpers, AbstractSocketItem, NetworkItemType, \
+from src.main.python.plotlyst.view.widget.graphics import NodeItem, AbstractSocketItem, NetworkItemType, \
     NetworkScene
 
 
@@ -44,17 +44,29 @@ class PlaceholderCharacter(Character):
 
 
 class SocketItem(AbstractSocketItem):
-    Size: int = 14
+    Size: int = 20
 
     def __init__(self, parent=None):
         self._size = self.Size
         super().__init__(Qt.Edge.TopEdge, parent)
         pointy(self)
+        self._hovered: bool = False
+
+    @overrides
+    def hoverEnterEvent(self, event: QGraphicsSceneHoverEvent) -> None:
+        self._hovered = True
+        self.update()
+
+    @overrides
+    def hoverLeaveEvent(self, event: 'QGraphicsSceneHoverEvent') -> None:
+        self._hovered = False
+        self.update()
 
     @overrides
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        painter.setPen(QPen(QColor(PLOTLYST_SECONDARY_COLOR), 1))
-        painter.setBrush(QColor(PLOTLYST_SECONDARY_COLOR))
+        color = PLOTLYST_SECONDARY_COLOR if self._hovered else PLOTLYST_TERTIARY_COLOR
+        painter.setPen(QPen(QColor(color), 1))
+        painter.setBrush(QColor(color))
 
         radius = self.Size // 2
         painter.drawEllipse(QPointF(self.Size / 2, self.Size // 2), radius, radius)
