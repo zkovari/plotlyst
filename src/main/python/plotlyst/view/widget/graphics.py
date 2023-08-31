@@ -223,7 +223,8 @@ class NodeItem(QAbstractGraphicsShapeItem):
         return super(NodeItem, self).itemChange(change, value)
 
     def _onPosChanged(self):
-        pass
+        for socket in self._sockets:
+            socket.rearrangeConnectors()
 
     def _onSelection(self, selected: bool):
         pass
@@ -331,6 +332,8 @@ class NetworkScene(QGraphicsScene):
         self._placeholder = None
 
     def link(self, target: AbstractSocketItem):
+        self._onLink(self._connectorPlaceholder.source().parentItem(), self._connectorPlaceholder.source(),
+                     target.parentItem(), target)
         connector = ConnectorItem(self._connectorPlaceholder.source(), target)
         self._connectorPlaceholder.source().addConnector(connector)
         target.addConnector(connector)
@@ -392,6 +395,10 @@ class NetworkScene(QGraphicsScene):
 
     @abstractmethod
     def _addNewItem(self, itemType: NetworkItemType, scenePos: QPointF):
+        pass
+
+    def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
+                targetSocket: AbstractSocketItem):
         pass
 
     def _updateSelection(self):

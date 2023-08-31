@@ -131,11 +131,6 @@ class ConnectableNode(MindMapNode):
             self._setSocketsVisible(False)
 
     @overrides
-    def _onPosChanged(self):
-        for socket in self._sockets:
-            socket.rearrangeConnectors()
-
-    @overrides
     def _onSelection(self, selected: bool):
         super()._onSelection(selected)
         self._setSocketsVisible(selected)

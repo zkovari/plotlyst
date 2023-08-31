@@ -85,6 +85,9 @@ class CharacterItem(NodeItem):
         self._character = character
         self.update()
 
+    def addSocket(self, socket: SocketItem):
+        self._sockets.append(socket)
+
     @overrides
     def boundingRect(self) -> QRectF:
         return QRectF(0, 0, self._size + self.Margin * 2, self._size + self.Margin * 2)
@@ -180,3 +183,9 @@ class RelationsEditorScene(NetworkScene):
             self.addItem(item)
             self.itemAdded.emit(itemType, item)
         self.endAdditionMode()
+
+    @overrides
+    def _onLink(self, sourceNode: NodeItem, sourceSocket: AbstractSocketItem, targetNode: NodeItem,
+                targetSocket: AbstractSocketItem):
+        sourceNode.addSocket(sourceSocket)
+        targetNode.addSocket(targetSocket)
